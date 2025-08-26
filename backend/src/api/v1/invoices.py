@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Response
 from typing import List, Optional
 from datetime import datetime, timedelta
 import uuid
@@ -43,7 +43,7 @@ def calculate_invoice_totals(items: List, tax_rate: float, discount: float) -> d
     
     return {
         "subtotal": round(subtotal, 2),
-        "discount": round(discount_amount, 2),
+        "discountAmount": round(discount_amount, 2),
         "taxAmount": round(tax_amount, 2),
         "total": round(total, 2)
     }
@@ -704,3 +704,71 @@ def get_payments(
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch payments: {str(e)}")
+
+@router.get("/{invoice_id}/download")
+def download_invoice_pdf(
+    invoice_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Download invoice as PDF"""
+    try:
+        # Get the invoice
+        invoice = db.query(Invoice).filter(
+            and_(
+                Invoice.id == invoice_id,
+                Invoice.tenantId == str(current_user.tenant_id)
+            )
+        ).first()
+        
+        if not invoice:
+            raise HTTPException(status_code=404, detail="Invoice not found")
+        
+        # For now, return a simple text response
+        # You can implement actual PDF generation later
+        pdf_content = f"""
+INVOICE
+
+Invoice Number: {invoice.invoiceNumber}
+Date: {invoice.issueDate.strftime('%Y-%m-%d')}
+Due Date: {invoice.dueDate.strftime('%Y-%m-%d')}
+
+Customer: {invoice.customerName}
+Email: {invoice.customerEmail}
+Address: {invoice.billingAddress}
+
+Items:
+"""
+        
+        if invoice.items:
+            for item in invoice.items:
+                pdf_content += f"""
+- {item.get('description', 'N/A')}
+  Quantity: {item.get('quantity', 0)}
+  Unit Price: ${item.get('unitPrice', 0):.2f}
+  Total: ${item.get('total', 0):.2f}
+"""
+        
+        pdf_content += f"""
+
+Subtotal: ${invoice.subtotal:.2f}
+Tax Rate: {invoice.taxRate}%
+Tax Amount: ${invoice.taxAmount:.2f}
+Discount: {invoice.discount}%
+Total: ${invoice.total:.2f}
+
+Status: {invoice.status}
+        """
+        
+        return Response(
+            content=pdf_content,
+            media_type="text/plain",
+            headers={
+                "Content-Disposition": f"attachment; filename=invoice-{invoice.invoiceNumber}.txt"
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate invoice download: {str(e)}")

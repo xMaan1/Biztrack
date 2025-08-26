@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { Invoice } from "../../models/sales";
 import InvoiceService from "../../services/InvoiceService";
+import { SessionManager } from "../../services/SessionManager";
 
 interface InvoiceListProps {
   invoices: Invoice[];
@@ -56,6 +57,41 @@ export function InvoiceList({
   totalPages,
   onPageChange,
 }: InvoiceListProps) {
+  
+  const handleDownload = async (invoiceId: string) => {
+    try {
+      const sessionManager = new SessionManager();
+      const token = sessionManager.getToken();
+      
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+      
+      const response = await fetch(`http://localhost:8000/invoices/${invoiceId}/download`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `invoice-${invoiceId}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        console.error('Download failed');
+      }
+    } catch (error) {
+      console.error('Download error:', error);
+    }
+  };
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -190,7 +226,7 @@ export function InvoiceList({
                           Mark as Paid
                         </DropdownMenuItem>
                       )}
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDownload(invoice.id)}>
                         <Download className="h-4 w-4 mr-2" />
                         Download PDF
                       </DropdownMenuItem>

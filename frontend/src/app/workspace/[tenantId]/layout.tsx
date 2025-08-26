@@ -20,6 +20,7 @@ import {
 } from "../../../components/ui/dropdown-menu";
 import { Separator } from "../../../components/ui/separator";
 import { useAuth } from "../../../contexts/AuthContext";
+import { SessionManager } from "../../../services/SessionManager";
 import {
   Menu as MenuIcon,
   Building2,
@@ -51,11 +52,20 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
 
   const fetchTenantInfo = useCallback(async () => {
     try {
+      const sessionManager = new SessionManager();
+      const token = sessionManager.getToken();
+      
+      if (!token) {
+        console.error('No authentication token found');
+        router.push("/");
+        return;
+      }
+      
       const response = await axios.get(
         `http://localhost:8000/api/tenants/${tenantId}`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${token}`,
           },
         },
       );

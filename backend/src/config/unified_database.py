@@ -1826,6 +1826,7 @@ class Invoice(Base):
     taxRate = Column(Float, default=0.0)
     taxAmount = Column(Float, default=0.0)
     discount = Column(Float, default=0.0)
+    discountAmount = Column(Float, default=0.0)
     total = Column(Float, default=0.0)
     totalPaid = Column(Float, default=0.0)
     balance = Column(Float, default=0.0)
