@@ -1840,6 +1840,9 @@ class Invoice(Base):
     notes = Column(Text)
     terms = Column(Text)
     
+    # Invoice items (stored as JSON)
+    items = Column(JSON, nullable=False, default=list)
+    
     # Related entities
     opportunityId = Column(String)
     quoteId = Column(String)

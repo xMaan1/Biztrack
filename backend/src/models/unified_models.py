@@ -2,6 +2,8 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from enum import Enum
+from uuid import UUID
+import uuid
 
 # Common Models
 class Pagination(BaseModel):
@@ -1828,7 +1830,7 @@ class PaymentStatus(str, Enum):
     CANCELLED = "cancelled"
 
 class InvoiceItem(BaseModel):
-    id: str
+    id: UUID
     description: str
     quantity: float
     unitPrice: float
@@ -1868,8 +1870,8 @@ class InvoiceBase(BaseModel):
     customerEmail: str
     billingAddress: str
     shippingAddress: Optional[str] = None
-    issueDate: str
-    dueDate: str
+    issueDate: datetime
+    dueDate: datetime
     paymentTerms: str = "Net 30"
     currency: str = "USD"
     subtotal: float = 0.0
@@ -1918,9 +1920,9 @@ class InvoiceUpdate(BaseModel):
     items: Optional[List[InvoiceItemCreate]] = None
 
 class Invoice(InvoiceBase):
-    id: str
-    tenantId: str
-    createdBy: str
+    id: UUID
+    tenantId: UUID
+    createdBy: UUID
     opportunityId: Optional[str] = None
     quoteId: Optional[str] = None
     projectId: Optional[str] = None
@@ -1937,6 +1939,46 @@ class Invoice(InvoiceBase):
 
     class Config:
         from_attributes = True
+        
+    @classmethod
+    def from_orm(cls, obj):
+        # Convert JSON items to InvoiceItem objects for validation
+        if hasattr(obj, 'items') and obj.items:
+            # Ensure items have required fields
+            validated_items = []
+            for item in obj.items:
+                if isinstance(item, dict):
+                    # Calculate missing fields if they don't exist
+                    quantity = item.get('quantity', 0.0)
+                    unit_price = item.get('unitPrice', 0.0)
+                    discount = item.get('discount', 0.0)
+                    tax_rate = item.get('taxRate', 0.0)
+                    
+                    # Calculate item total if missing
+                    item_subtotal = quantity * unit_price
+                    item_discount_amount = item_subtotal * (discount / 100) if discount > 0 else 0
+                    item_tax_amount = (item_subtotal - item_discount_amount) * (tax_rate / 100) if tax_rate > 0 else 0
+                    item_total = item_subtotal - item_discount_amount + item_tax_amount
+                    
+                    # Ensure required fields exist
+                    validated_item = InvoiceItem(
+                        id=item.get('id', str(uuid.uuid4())),
+                        description=item.get('description', ''),
+                        quantity=quantity,
+                        unitPrice=unit_price,
+                        discount=discount,
+                        taxRate=tax_rate,
+                        taxAmount=item.get('taxAmount', round(item_tax_amount, 2)),
+                        total=item.get('total', round(item_total, 2)),
+                        productId=item.get('productId'),
+                        projectId=item.get('projectId'),
+                        taskId=item.get('taskId')
+                    )
+                    validated_items.append(validated_item)
+                else:
+                    validated_items.append(item)
+            obj.items = validated_items
+        return super().from_orm(obj)
 
 # Payment Models
 class PaymentBase(BaseModel):
@@ -1965,9 +2007,9 @@ class PaymentUpdate(BaseModel):
     status: Optional[PaymentStatus] = None
 
 class Payment(PaymentBase):
-    id: str
-    tenantId: str
-    createdBy: str
+    id: UUID
+    tenantId: UUID
+    createdBy: UUID
     processedAt: Optional[datetime] = None
     createdAt: datetime
     updatedAt: datetime

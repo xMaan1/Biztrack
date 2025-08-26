@@ -3,7 +3,7 @@ from typing import List, Optional
 from datetime import datetime, timedelta
 import uuid
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, func, desc
+from sqlalchemy import and_, or_, func, desc, text
 
 from ...config.unified_database import get_db
 from ...api.dependencies import get_current_user
@@ -33,9 +33,9 @@ def generate_invoice_number(tenant_id: str, db: Session) -> str:
     
     return f"INV-{year}{month:02d}-{(count + 1):04d}"
 
-def calculate_invoice_totals(items: List[dict], tax_rate: float, discount: float) -> dict:
+def calculate_invoice_totals(items: List, tax_rate: float, discount: float) -> dict:
     """Calculate invoice totals"""
-    subtotal = sum(item['quantity'] * item['unitPrice'] for item in items)
+    subtotal = sum(item.quantity * item.unitPrice for item in items)
     discount_amount = subtotal * (discount / 100) if discount > 0 else 0
     taxable_amount = subtotal - discount_amount
     tax_amount = taxable_amount * (tax_rate / 100) if tax_rate > 0 else 0
@@ -89,11 +89,45 @@ def create_invoice(
             updatedAt=datetime.utcnow()
         )
         
+        # Create invoice items as JSON data
+        invoice_items = []
+        for item_data in invoice_data.items:
+            # Calculate item total
+            item_subtotal = item_data.quantity * item_data.unitPrice
+            item_discount = item_subtotal * (item_data.discount / 100) if item_data.discount > 0 else 0
+            item_tax = (item_subtotal - item_discount) * (item_data.taxRate / 100) if item_data.taxRate > 0 else 0
+            item_total = item_subtotal - item_discount + item_tax
+            
+            # Create item as dict with all required fields
+            invoice_item = {
+                "id": str(uuid.uuid4()),
+                "description": item_data.description,
+                "quantity": item_data.quantity,
+                "unitPrice": item_data.unitPrice,
+                "discount": item_data.discount,
+                "taxRate": item_data.taxRate,
+                "taxAmount": round(item_tax, 2),
+                "total": round(item_total, 2),
+                "productId": item_data.productId,
+                "projectId": item_data.projectId,
+                "taskId": item_data.taskId
+            }
+            invoice_items.append(invoice_item)
+        
+        # Set the items
+        db_invoice.items = invoice_items
+        
         db.add(db_invoice)
         db.commit()
         db.refresh(db_invoice)
         
-        return InvoiceResponse(invoice=db_invoice)
+        try:
+            return InvoiceResponse(invoice=db_invoice)
+        except Exception as validation_error:
+            # Log the validation error for debugging
+            print(f"Validation error in InvoiceResponse: {validation_error}")
+            print(f"Invoice items: {db_invoice.items}")
+            raise HTTPException(status_code=500, detail=f"Failed to create invoice response: {str(validation_error)}")
         
     except Exception as e:
         db.rollback()
@@ -178,7 +212,13 @@ def get_invoice(
         if not invoice:
             raise HTTPException(status_code=404, detail="Invoice not found")
         
-        return InvoiceResponse(invoice=invoice)
+        try:
+            return InvoiceResponse(invoice=invoice)
+        except Exception as validation_error:
+            # Log the validation error for debugging
+            print(f"Validation error in InvoiceResponse: {validation_error}")
+            print(f"Invoice items: {invoice.items}")
+            raise HTTPException(status_code=500, detail=f"Failed to create invoice response: {str(validation_error)}")
         
     except HTTPException:
         raise
@@ -208,18 +248,53 @@ def update_invoice(
         update_data = invoice_data.dict(exclude_unset=True)
         for field, value in update_data.items():
             if field == "items" and value:
-                # Recalculate totals if items changed
+                # Convert InvoiceItemCreate objects to JSON data
+                converted_items = []
+                for item_data in value:
+                    # Calculate item total
+                    item_subtotal = item_data.quantity * item_data.unitPrice
+                    item_discount = item_subtotal * (item_data.discount / 100) if item_data.discount > 0 else 0
+                    item_tax = (item_subtotal - item_discount) * (item_data.taxRate / 100) if item_data.taxRate > 0 else 0
+                    item_total = item_subtotal - item_discount + item_tax
+                    
+                    # Create item as dict with all required fields
+                    converted_item = {
+                        "id": str(uuid.uuid4()),
+                        "description": item_data.description,
+                        "quantity": item_data.quantity,
+                        "unitPrice": item_data.unitPrice,
+                        "discount": item_data.discount,
+                        "taxRate": item_data.taxRate,
+                        "taxAmount": round(item_tax, 2),
+                        "total": round(item_total, 2),
+                        "productId": item_data.productId,
+                        "projectId": item_data.projectId,
+                        "taskId": item_data.taskId
+                    }
+                    converted_items.append(converted_item)
+                
+                # Set the converted items
+                invoice.items = converted_items
+                
+                # Recalculate invoice totals
                 totals = calculate_invoice_totals(value, invoice.taxRate, invoice.discount)
                 invoice.subtotal = totals["subtotal"]
                 invoice.taxAmount = totals["taxAmount"]
                 invoice.total = totals["total"]
-            setattr(invoice, field, value)
+            else:
+                setattr(invoice, field, value)
         
         invoice.updatedAt = datetime.utcnow()
         db.commit()
         db.refresh(invoice)
         
-        return InvoiceResponse(invoice=invoice)
+        try:
+            return InvoiceResponse(invoice=invoice)
+        except Exception as validation_error:
+            # Log the validation error for debugging
+            print(f"Validation error in InvoiceResponse: {validation_error}")
+            print(f"Invoice items: {invoice.items}")
+            raise HTTPException(status_code=500, detail=f"Failed to create invoice response: {str(validation_error)}")
         
     except HTTPException:
         raise
@@ -248,6 +323,30 @@ def delete_invoice(
         if invoice.status != InvoiceStatus.DRAFT:
             raise HTTPException(status_code=400, detail="Only draft invoices can be deleted")
         
+        # Handle foreign key constraint by deleting related invoice_items first
+        try:
+            # Check if invoice_items table exists and has references
+            check_items_query = text("""
+                SELECT COUNT(*) FROM information_schema.tables 
+                WHERE table_name = 'invoice_items'
+            """)
+            result = db.execute(check_items_query)
+            items_table_exists = result.fetchone()[0] > 0
+            
+            if items_table_exists:
+                # Delete related invoice items first
+                delete_items_query = text("""
+                    DELETE FROM invoice_items 
+                    WHERE "invoiceId" = :invoice_id
+                """)
+                db.execute(delete_items_query, {"invoice_id": invoice_id})
+                print(f"🗑️  Deleted related invoice items for invoice {invoice_id}")
+        
+        except Exception as items_error:
+            print(f"⚠️  Could not delete invoice items: {str(items_error)}")
+            # Continue with invoice deletion - the constraint might not exist
+        
+        # Now delete the invoice
         db.delete(invoice)
         db.commit()
         
