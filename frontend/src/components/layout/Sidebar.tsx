@@ -60,7 +60,7 @@ const allMenuItems: MenuItem[] = [
   {
     text: "Dashboard",
     icon: LayoutDashboard,
-    path: "/",
+    path: "/dashboard",
     roles: ["*"],
     gradient: "from-blue-500 to-cyan-500",
   },

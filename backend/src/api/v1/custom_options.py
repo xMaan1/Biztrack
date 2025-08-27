@@ -4,10 +4,10 @@ from typing import List, Optional
 from datetime import datetime
 import uuid
 
-from ...config.unified_database import get_db
+from ...config.database import get_db
 from ..dependencies import get_current_user
 from ...models.unified_models import User as UserModel
-from ...config.unified_database import (
+from ...config.database import (
     CustomEventType, CustomDepartment, CustomLeaveType, CustomLeadSource,
     CustomContactSource, CustomCompanyIndustry, CustomContactType, CustomIndustry
 )

@@ -16,7 +16,7 @@ from ...models.unified_models import (
     SalesDashboard, SalesMetrics, SalesPipeline,
     LeadStatus, LeadSource, OpportunityStage, QuoteStatus, ContractStatus, ContactType, ActivityType
 )
-from ...config.unified_database import (
+from ...config.database import (
     get_db, get_user_by_id
 )
 from ...api.dependencies import get_current_user, get_tenant_context, require_tenant_admin_or_super_admin

@@ -31,7 +31,7 @@ export default function RootLayout({
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
         <AuthProvider>
-          <AuthGuard>{children}</AuthGuard>
+          {children}
         </AuthProvider>
       </body>
     </html>

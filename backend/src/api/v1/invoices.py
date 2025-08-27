@@ -5,7 +5,7 @@ import uuid
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func, desc, text
 
-from ...config.unified_database import get_db
+from ...config.database import get_db
 from ...api.dependencies import get_current_user
 from ...models.unified_models import (
     InvoiceCreate, InvoiceUpdate, InvoiceStatus,
@@ -13,7 +13,7 @@ from ...models.unified_models import (
     InvoicesResponse, InvoiceResponse, PaymentsResponse, PaymentResponse,
     InvoiceDashboard, InvoiceMetrics, InvoiceFilters, PaymentFilters
 )
-from ...config.unified_database import User, Invoice, Payment
+from ...config.database import User, Invoice, Payment
 
 router = APIRouter(prefix="/invoices", tags=["Invoices"])
 

@@ -4,7 +4,7 @@ from typing import List, Optional
 from datetime import datetime, timedelta
 import uuid
 
-from ...config.unified_database import get_db, get_event_by_id, get_all_events, create_event, update_event, delete_event, get_events_by_project, get_events_by_user, get_upcoming_events
+from ...config.database import get_db, get_event_by_id, get_all_events, create_event, update_event, delete_event, get_events_by_project, get_events_by_user, get_upcoming_events
 from ...models.unified_models import EventCreate, EventUpdate, Event, EventResponse, EventType, EventStatus, RecurrenceType
 from ...api.dependencies import get_current_user, get_current_tenant
 from ...services.google_meet_service import GoogleMeetService

@@ -98,6 +98,35 @@ class CompanySize(str, Enum):
     LARGE = "large"
     ENTERPRISE = "enterprise"
 
+# Subscription and Billing Models
+class PlanUpgradeRequest(BaseModel):
+    tenant_id: str
+    old_plan_id: Optional[str] = None
+    new_plan_id: str
+
+class UsageSummary(BaseModel):
+    tenant_id: str
+    plan_type: str
+    subscription_status: str
+    trial_ends: Optional[datetime] = None
+    usage: Dict[str, Any]
+    limits: Dict[str, Any]
+    usage_percentages: Dict[str, float]
+    last_updated: str
+
+class PlanLimits(BaseModel):
+    max_users: Optional[int] = None
+    max_projects: Optional[int] = None
+    max_storage_mb: Optional[int] = None
+    features: List[str] = []
+
+class SubscriptionStatus(str, Enum):
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    CANCELLED = "cancelled"
+    EXPIRED = "expired"
+    TRIAL = "trial"
+
 class Industry(str, Enum):
     TECHNOLOGY = "technology"
     HEALTHCARE = "healthcare"

@@ -1,401 +1,404 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
 import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
-import { Progress } from "../components/ui/progress";
-import { Separator } from "../components/ui/separator";
-import {
-  TrendingUp,
-  FolderOpen,
-  Users,
-  Clock,
-  Plus,
-  ArrowRight,
-  CheckCircle2,
-  Star,
-  BarChart3,
-  Loader2,
-  Warehouse,
-} from "lucide-react";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
 import { useAuth } from "../contexts/AuthContext";
 import { apiService } from "../services/ApiService";
-import { Project } from "../models/project/Project";
-import { DashboardLayout } from "../components/layout";
+import { LandingNav } from "../components/landing/LandingNav";
+import {
+  Check,
+  Star,
+  Users,
+  FolderOpen,
+  BarChart3,
+  Shield,
+  Zap,
+  Globe,
+  ArrowRight,
+  Loader2,
+  Building2
+} from "lucide-react";
 
-import { cn, getStatusColor, getInitials, formatDate } from "../lib/utils";
-
-interface DashboardStats {
-  totalProjects: number;
-  activeProjects: number;
-  completedProjects: number;
-  totalTeamMembers: number;
-  averageProgress: number;
+interface Plan {
+  id: string;
+  name: string;
+  planType: string;
+  price: number;
+  maxProjects: number;
+  maxUsers: number;
+  features: string[];
+  description: string;
 }
 
-export default function DashboardPage() {
-  const { user } = useAuth();
+interface SubscriptionModalProps {
+  plan: Plan | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (tenantName: string) => void;
+  loading: boolean;
+}
+
+const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
+  plan,
+  isOpen,
+  onClose,
+  onSubmit,
+  loading
+}) => {
+  const [tenantName, setTenantName] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (tenantName.trim()) {
+      onSubmit(tenantName.trim());
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Create Your Workspace</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="tenantName">Workspace Name</Label>
+            <Input
+              id="tenantName"
+              placeholder="Enter your company/workspace name"
+              value={tenantName}
+              onChange={(e) => setTenantName(e.target.value)}
+              required
+            />
+            <p className="text-sm text-muted-foreground">
+              This will be the name of your workspace in SparkCo ERP
+            </p>
+          </div>
+          
+          {plan && (
+            <div className="p-3 bg-muted rounded-lg">
+              <div className="flex items-center justify-between">
+                <span className="font-medium">{plan.name} Plan</span>
+                <Badge variant="secondary">${plan.price}/month</Badge>
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                {plan.maxProjects} projects • {plan.maxUsers} users
+              </p>
+            </div>
+          )}
+          
+          <div className="flex space-x-2">
+            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+              Cancel
+            </Button>
+            <Button type="submit" className="flex-1" disabled={loading || !tenantName.trim()}>
+              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Create Workspace
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default function LandingPage() {
   const router = useRouter();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [stats, setStats] = useState<DashboardStats>({
-    totalProjects: 0,
-    activeProjects: 0,
-    completedProjects: 0,
-    totalTeamMembers: 0,
-    averageProgress: 0,
-  });
-  const [loading, setLoading] = useState(true);
-  const [starredProjects, setStarredProjects] = useState<string[]>([]);
+  const { user, isAuthenticated } = useAuth();
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [subscriptionModal, setSubscriptionModal] = useState<{
+    isOpen: boolean;
+    plan: Plan | null;
+  }>({ isOpen: false, plan: null });
 
   useEffect(() => {
-    // AuthGuard ensures user is authenticated, so we can directly fetch data
-    fetchDashboardData();
+    fetchPlans();
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchPlans = async () => {
+    try {
+      const response = await apiService.get("/tenants/plans");
+      setPlans(response.plans || []);
+    } catch (error) {
+      console.error("Error fetching plans:", error);
+    }
+  };
+
+  const handleSubscribe = (plan: Plan) => {
+    if (!isAuthenticated) {
+      // Redirect to login if not authenticated
+      router.push("/login");
+      return;
+    }
+    
+    setSubscriptionModal({ isOpen: true, plan });
+  };
+
+  const handleCreateTenant = async (tenantName: string) => {
+    if (!subscriptionModal.plan) return;
+    
     try {
       setLoading(true);
-      const [projectsResponse, usersResponse] = await Promise.all([
-        apiService.getProjects(),
-        apiService.getUsers().catch(() => ({ users: [] })),
-      ]);
-
-      const projectsData = projectsResponse.projects || [];
-      const usersData = usersResponse.users || [];
-
-      setProjects(projectsData);
-
-      // Calculate stats
-      const totalProjects = projectsData.length;
-      const activeProjects = projectsData.filter(
-        (p: Project) => p.status === "in_progress",
-      ).length;
-      const completedProjects = projectsData.filter(
-        (p: Project) => p.status === "completed",
-      ).length;
-      const totalTeamMembers = usersData.length;
-      const averageProgress =
-        totalProjects > 0
-          ? Math.round(
-              projectsData.reduce(
-                (sum: number, p: Project) => sum + p.completionPercent,
-                0,
-              ) / totalProjects,
-            )
-          : 0;
-
-      setStats({
-        totalProjects,
-        activeProjects,
-        completedProjects,
-        totalTeamMembers,
-        averageProgress,
+      const response = await apiService.createTenantFromLanding({
+        planId: subscriptionModal.plan.id,
+        tenantName,
+        domain: tenantName.toLowerCase().replace(/\s+/g, '-')
       });
+
+      if (response.success) {
+        // Close modal and redirect to dashboard
+        setSubscriptionModal({ isOpen: false, plan: null });
+        router.push("/dashboard");
+      }
     } catch (error) {
-      console.error("Failed to fetch dashboard data:", error);
+      console.error("Error creating tenant:", error);
+      alert("Failed to create workspace. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const toggleStarred = (projectId: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-    setStarredProjects((prev) =>
-      prev.includes(projectId)
-        ? prev.filter((id) => id !== projectId)
-        : [...prev, projectId],
-    );
-  };
+  const features = [
+    {
+      icon: FolderOpen,
+      title: "Project Management",
+      description: "Plan, track, and manage projects with ease. Set milestones, assign tasks, and monitor progress in real-time."
+    },
+    {
+      icon: Users,
+      title: "Team Collaboration",
+      description: "Work together seamlessly with team chat, file sharing, and real-time collaboration tools."
+    },
+    {
+      icon: BarChart3,
+      title: "Advanced Analytics",
+      description: "Get insights into your business performance with comprehensive dashboards and reports."
+    },
+    {
+      icon: Shield,
+      title: "Enterprise Security",
+      description: "Bank-level security with role-based access control, audit logs, and data encryption."
+    },
+    {
+      icon: Zap,
+      title: "Automation",
+      description: "Automate repetitive tasks and workflows to boost productivity and reduce errors."
+    },
+    {
+      icon: Globe,
+      title: "Multi-tenant",
+      description: "Scale your business with our robust multi-tenant architecture designed for growth."
+    }
+  ];
 
-  const recentProjects = projects
-    .sort(
-      (a, b) =>
-        new Date(b.updatedAt || b.createdAt).getTime() -
-        new Date(a.updatedAt || a.createdAt).getTime(),
-    )
-    .slice(0, 6);
-
-  if (loading) {
     return (
-      <DashboardLayout>
-        <div className="container mx-auto px-6 py-8">
-          <div className="flex justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+    <div className="min-h-screen bg-background">
+      {/* Navigation */}
+      <LandingNav />
+
+      {/* Hero Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto text-center">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
+            Complete Business Management
+            <span className="text-primary block">All in One Platform</span>
+          </h1>
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
+            Streamline your business operations with our comprehensive ERP solution. 
+            Manage projects, sales, HR, inventory, and more from a single dashboard.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" onClick={() => router.push("/signup")}>
+              Start Free Trial
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="lg" onClick={() => router.push("/login")}>
+              View Demo
+            </Button>
           </div>
         </div>
-      </DashboardLayout>
-    );
-  }
+      </section>
 
-  return (
-    <DashboardLayout>
-      <div className="container mx-auto px-6 py-8 space-y-8">
-        {/* Welcome Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Welcome back, {user?.firstName || user?.userName}!
-            </h1>
-            <p className="text-gray-600 mt-2">
-              Here&apos;s what&apos;s happening with your projects today.
+      {/* Features Section */}
+      <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/50">
+        <div className="container mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+              Everything You Need to Scale
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Powerful features designed to help your business grow and succeed
             </p>
-          </div>
-          <Button
-            onClick={() => router.push("/projects")}
-            className="modern-button"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            New Project
-          </Button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="modern-card">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <FolderOpen className="h-6 w-6 text-blue-600" />
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
+              <Card key={index} className="text-center">
+                <CardHeader>
+                  <div className="mx-auto w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                    <feature.icon className="h-6 w-6 text-primary" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {stats.totalProjects}
-                  </p>
-                  <p className="text-sm text-gray-600">Total Projects</p>
-                </div>
-              </div>
+                  <CardTitle className="text-xl">{feature.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">{feature.description}</p>
             </CardContent>
           </Card>
-
-          <Card className="modern-card">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <CheckCircle2 className="h-6 w-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {stats.activeProjects}
-                  </p>
-                  <p className="text-sm text-gray-600">Active Projects</p>
+            ))}
                 </div>
               </div>
-            </CardContent>
-          </Card>
+      </section>
 
-          <Card className="modern-card">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-purple-100 rounded-lg">
-                  <Users className="h-6 w-6 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {stats.totalTeamMembers}
-                  </p>
-                  <p className="text-sm text-gray-600">Team Members</p>
-                </div>
+      {/* Pricing Section */}
+      <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+              Choose Your Plan
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Start free and scale as you grow. All plans include a 14-day free trial.
+            </p>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="modern-card">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-orange-100 rounded-lg">
-                  <TrendingUp className="h-6 w-6 text-orange-600" />
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
+            {plans.map((plan) => (
+              <Card key={plan.id} className={`relative ${plan.planType === 'enterprise' ? 'border-primary shadow-lg' : ''}`}>
+                {plan.planType === 'enterprise' && (
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                    <Badge className="bg-primary text-primary-foreground">
+                      Most Popular
+                    </Badge>
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {stats.averageProgress}%
-                  </p>
-                  <p className="text-sm text-gray-600">Avg Progress</p>
+                )}
+                
+                <CardHeader className="text-center">
+                  <CardTitle className="text-xl">{plan.name}</CardTitle>
+                  <div className="text-3xl font-bold">
+                    ${plan.price}
+                    <span className="text-sm font-normal text-muted-foreground">/month</span>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Recent Projects */}
-          <div className="lg:col-span-2">
-            <Card className="modern-card">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <FolderOpen className="h-5 w-5" />
-                    Recent Projects
-                  </CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => router.push("/projects")}
-                    className="text-blue-600 hover:text-blue-700"
-                  >
-                    View All
-                    <ArrowRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </div>
+                  <p className="text-sm text-muted-foreground">{plan.description}</p>
               </CardHeader>
 
               <CardContent className="space-y-4">
-                {recentProjects.map((project) => (
-                  <div
-                    key={project.id}
-                    className="p-4 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer group"
-                    onClick={() => router.push(`/projects/${project.id}`)}
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                          {project.name}
-                        </h3>
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            "text-xs",
-                            getStatusColor(project.status),
-                          )}
-                        >
-                          {project.status.replace("_", " ").toUpperCase()}
-                        </Badge>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => toggleStarred(project.id, e)}
-                        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <Star
-                          className={cn(
-                            "h-4 w-4",
-                            starredProjects.includes(project.id)
-                              ? "fill-yellow-400 text-yellow-400"
-                              : "text-gray-400",
-                          )}
-                        />
-                      </Button>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Projects</span>
+                      <span className="font-medium">{plan.maxProjects}</span>
                     </div>
-
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                      {project.description}
-                    </p>
-
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="flex -space-x-2">
-                          <Avatar className="h-6 w-6 border-2 border-white">
-                            <AvatarImage src={project.projectManager.name} />
-                            <AvatarFallback className="text-xs bg-gradient-primary text-white">
-                              {getInitials(project.projectManager.name)}
-                            </AvatarFallback>
-                          </Avatar>
-                          {project.teamMembers.slice(0, 2).map((member) => (
-                            <Avatar
-                              key={member.id}
-                              className="h-6 w-6 border-2 border-white"
-                            >
-                              <AvatarImage src={member.name} />
-                              <AvatarFallback className="text-xs bg-gradient-secondary text-white">
-                                {getInitials(member.name)}
-                              </AvatarFallback>
-                            </Avatar>
-                          ))}
-                          {project.teamMembers.length > 2 && (
-                            <div className="h-6 w-6 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center">
-                              <span className="text-xs text-gray-600">
-                                +{project.teamMembers.length - 2}
-                              </span>
-                            </div>
-                          )}
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Team Members</span>
+                      <span className="font-medium">{plan.maxUsers}</span>
                         </div>
-                        <span className="text-xs text-gray-500">
-                          Due: {formatDate(project.endDate)}
-                        </span>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-600">
-                          {project.completionPercent}%
-                        </span>
-                        <Progress
-                          value={project.completionPercent}
-                          className="w-16 h-2"
-                        />
+                  <div className="space-y-2">
+                    {plan.features.map((feature, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <Check className="h-4 w-4 text-green-500" />
+                        <span className="text-sm">{feature}</span>
                       </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
-
-                {recentProjects.length === 0 && (
-                  <div className="text-center py-8">
-                    <FolderOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      No projects yet
-                    </h3>
-                    <p className="text-gray-600 mb-4">
-                      Create your first project to get started
-                    </p>
+                  
                     <Button
-                      onClick={() => router.push("/projects")}
-                      className="modern-button"
+                    className="w-full" 
+                    variant={plan.planType === 'enterprise' ? 'default' : 'outline'}
+                    onClick={() => handleSubscribe(plan)}
                     >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create Project
+                    {isAuthenticated ? 'Subscribe Now' : 'Start Free Trial'}
                     </Button>
-                  </div>
-                )}
               </CardContent>
             </Card>
+            ))}
           </div>
         </div>
+      </section>
 
-        {/* Quick Actions */}
-        <Card className="modern-card">
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* CTA Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-primary text-primary-foreground">
+        <div className="container mx-auto text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+            Ready to Transform Your Business?
+          </h2>
+          <p className="text-xl mb-8 opacity-90">
+            Join thousands of companies already using SparkCo ERP to streamline their operations
+          </p>
               <Button
-                variant="outline"
-                className="h-20 flex-col gap-2"
-                onClick={() => router.push("/projects")}
-              >
-                <FolderOpen className="h-6 w-6" />
-                <span>Manage Projects</span>
+            size="lg" 
+            variant="secondary"
+            onClick={() => router.push("/signup")}
+          >
+            Get Started Today
+            <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
+        </div>
+      </section>
 
-              <Button
-                variant="outline"
-                className="h-20 flex-col gap-2"
-                onClick={() => router.push("/team")}
-              >
-                <Users className="h-6 w-6" />
-                <span>Team Management</span>
-              </Button>
-
-              <Button
-                variant="outline"
-                className="h-20 flex-col gap-2"
-                onClick={() => router.push("/inventory")}
-              >
-                <Warehouse className="h-6 w-6" />
-                <span>Inventory Management</span>
-              </Button>
+      {/* Footer */}
+      <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t bg-muted/50">
+        <div className="container mx-auto">
+          <div className="grid md:grid-cols-4 gap-8">
+            <div>
+              <div className="flex items-center space-x-2 mb-4">
+                <Building2 className="h-6 w-6 text-primary" />
+                <span className="text-lg font-bold">SparkCo ERP</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Complete business management solution for modern companies
+              </p>
             </div>
-          </CardContent>
-        </Card>
+            
+            <div>
+              <h3 className="font-semibold mb-4">Product</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="#features" className="hover:text-foreground">Features</a></li>
+                <li><a href="#pricing" className="hover:text-foreground">Pricing</a></li>
+                <li><a href="/docs" className="hover:text-foreground">Documentation</a></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-4">Company</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="#about" className="hover:text-foreground">About</a></li>
+                <li><a href="/contact" className="hover:text-foreground">Contact</a></li>
+                <li><a href="/careers" className="hover:text-foreground">Careers</a></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-4">Support</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="/help" className="hover:text-foreground">Help Center</a></li>
+                <li><a href="/status" className="hover:text-foreground">System Status</a></li>
+                <li><a href="/contact" className="hover:text-foreground">Contact Support</a></li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
+            <p>&copy; 2024 SparkCo ERP. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
+
+      {/* Subscription Modal */}
+      <SubscriptionModal
+        plan={subscriptionModal.plan}
+        isOpen={subscriptionModal.isOpen}
+        onClose={() => setSubscriptionModal({ isOpen: false, plan: null })}
+        onSubmit={handleCreateTenant}
+        loading={loading}
+      />
       </div>
-    </DashboardLayout>
   );
 }

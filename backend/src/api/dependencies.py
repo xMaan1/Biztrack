@@ -2,7 +2,7 @@
 from fastapi import Depends, HTTPException, status, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from ..core.auth import verify_token
-from ..config.unified_database import get_db, get_user_by_email, get_user_tenants, get_tenant_by_id
+from ..config.database import get_db, get_user_by_email, get_user_tenants, get_tenant_by_id
 from sqlalchemy.orm import Session
 from typing import Optional
 

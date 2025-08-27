@@ -7,7 +7,7 @@ from ...models.unified_models import (
     Project, ProjectCreate, ProjectUpdate, ProjectsResponse, TeamMember,
     TasksResponse, Task
 )
-from ...config.unified_database import (
+from ...config.database import (
     get_db, get_user_by_id, create_project, get_project_by_id,
     get_all_projects, update_project, delete_project, get_tasks_by_project,
     User, Project as DBProject, Task as DBTask
@@ -259,7 +259,7 @@ async def get_project_team_members(
 ):
     """Get all available team members for project assignment"""
     from ...models.unified_models import UserRole
-    from ...config.unified_database import get_all_users
+    from ...config.database import get_all_users
     
     # Get all active users who can be team members
     tenant_id = tenant_context["tenant_id"] if tenant_context else None

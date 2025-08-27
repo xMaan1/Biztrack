@@ -321,6 +321,14 @@ export class ApiService {
     return this.post("/tenants/subscribe", data);
   }
 
+  async createTenantFromLanding(data: {
+    planId: string;
+    tenantName: string;
+    domain?: string;
+  }) {
+    return this.post("/tenants/create-tenant", data);
+  }
+
   // Tenant endpoints
   async getMyTenants() {
     return this.get("/tenants/my-tenants");

@@ -5,7 +5,7 @@ from datetime import datetime
 import uuid
 
 from ..dependencies import get_current_user, get_current_tenant
-from ...config.unified_database import get_db
+from ...config.database import get_db
 from ...models.unified_models import (
     User, Tenant,
     Warehouse, WarehouseCreate, WarehouseUpdate, WarehouseResponse, WarehousesResponse,
@@ -16,7 +16,7 @@ from ...models.unified_models import (
     Receiving, ReceivingCreate, ReceivingUpdate, ReceivingResponse, ReceivingsResponse,
     InventoryDashboardStats, StockAlert
 )
-from ...config.unified_database import (
+from ...config.database import (
     get_warehouses, get_warehouse_by_id, create_warehouse, update_warehouse, delete_warehouse,
     get_storage_locations, get_storage_location_by_id, create_storage_location, update_storage_location, delete_storage_location,
     get_stock_movements, get_stock_movement_by_id, create_stock_movement, update_stock_movement,

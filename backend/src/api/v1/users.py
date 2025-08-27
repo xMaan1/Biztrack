@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 
 from ...models.unified_models import User, UserCreate, UserUpdate, UsersResponse
-from ...config.unified_database import (
+from ...config.database import (
     get_db, get_user_by_email, get_user_by_username,
     get_user_by_id, create_user, get_all_users
 )

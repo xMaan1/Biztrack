@@ -11,7 +11,7 @@ from ...models.unified_models import (
     POSTransaction, POSTransactionCreate, POSTransactionUpdate, POSTransactionsResponse, POSTransactionResponse,
     POSDashboard, POSMetrics, ProductFilters, POSTransactionFilters, POSShiftFilters
 )
-from ...config.unified_database import (
+from ...config.database import (
     get_db, get_user_by_id,
     get_products, get_product_by_id, create_product, update_product, delete_product,
     get_pos_shifts, get_pos_shift_by_id, get_open_pos_shift, create_pos_shift, update_pos_shift,

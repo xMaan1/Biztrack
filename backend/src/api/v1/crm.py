@@ -14,7 +14,7 @@ from ...models.unified_models import (
     CRMDashboard, CRMMetrics, CRMPipeline,
     LeadStatus, LeadSource, OpportunityStage, ContactType, ActivityType
 )
-from ...config.unified_database import (
+from ...config.database import (
     get_db, get_user_by_id,
     get_leads, get_lead_by_id, create_lead, update_lead, delete_lead,
     get_contacts, get_contact_by_id, create_contact, update_contact, delete_contact,

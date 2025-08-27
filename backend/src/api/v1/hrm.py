@@ -19,7 +19,7 @@ from ...models.unified_models import (
     HRMDashboard, HRMEmployeeFilters, HRMJobFilters, HRMApplicationFilters, HRMReviewFilters,
     HRMTimeFilters, HRMLeaveFilters, HRMPayrollFilters, HRMTrainingFilters
 )
-from ...config.unified_database import (
+from ...config.database import (
     get_db, get_user_by_id,
     get_employees, get_employee_by_id, create_employee, update_employee, delete_employee,
     get_job_postings, get_job_posting_by_id, create_job_posting, update_job_posting, delete_job_posting,

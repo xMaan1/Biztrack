@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from datetime import timedelta
 
 from ...models.unified_models import LoginCredentials, AuthResponse, User, UserCreate, RefreshTokenRequest, RefreshTokenResponse
-from ...config.unified_database import get_db, get_user_by_email, get_user_by_username, create_user
+from ...config.database import get_db, get_user_by_email, get_user_by_username, create_user
 from ...core.auth import (
     verify_password, get_password_hash, create_access_token, create_refresh_token,
     ACCESS_TOKEN_EXPIRE_MINUTES

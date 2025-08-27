@@ -1,0 +1,309 @@
+from datetime import datetime
+from typing import List, Optional, Dict, Any
+from sqlalchemy.orm import Session
+from .crm_models import Lead, Contact, Company, Opportunity, SalesActivity
+
+# Lead functions
+def get_lead_by_id(lead_id: str, db: Session, tenant_id: str = None) -> Optional[Lead]:
+    query = db.query(Lead).filter(Lead.id == lead_id)
+    if tenant_id:
+        query = query.filter(Lead.tenant_id == tenant_id)
+    return query.first()
+
+def get_all_leads(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Lead]:
+    query = db.query(Lead)
+    if tenant_id:
+        query = query.filter(Lead.tenant_id == tenant_id)
+    return query.order_by(Lead.createdAt.desc()).offset(skip).limit(limit).all()
+
+# Alias functions for backward compatibility
+def get_leads(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Lead]:
+    """Get all leads (alias for get_all_leads)"""
+    return get_all_leads(db, tenant_id, skip, limit)
+
+def get_leads_by_status(status: str, db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Lead]:
+    query = db.query(Lead).filter(Lead.status == status)
+    if tenant_id:
+        query = query.filter(Lead.tenant_id == tenant_id)
+    return query.order_by(Lead.createdAt.desc()).offset(skip).limit(limit).all()
+
+def get_leads_by_assignee(assignee_id: str, db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Lead]:
+    query = db.query(Lead).filter(Lead.assignedToId == assignee_id)
+    if tenant_id:
+        query = query.filter(Lead.tenant_id == tenant_id)
+    return query.order_by(Lead.createdAt.desc()).offset(skip).limit(limit).all()
+
+def create_lead(lead_data: dict, db: Session) -> Lead:
+    db_lead = Lead(**lead_data)
+    db.add(db_lead)
+    db.commit()
+    db.refresh(db_lead)
+    return db_lead
+
+def update_lead(lead_id: str, update_data: dict, db: Session, tenant_id: str = None) -> Optional[Lead]:
+    lead = get_lead_by_id(lead_id, db, tenant_id)
+    if lead:
+        for key, value in update_data.items():
+            if hasattr(lead, key) and value is not None:
+                setattr(lead, key, value)
+        lead.updatedAt = datetime.utcnow()
+        db.commit()
+        db.refresh(lead)
+    return lead
+
+def delete_lead(lead_id: str, db: Session, tenant_id: str = None) -> bool:
+    lead = get_lead_by_id(lead_id, db, tenant_id)
+    if lead:
+        db.delete(lead)
+        db.commit()
+        return True
+    return False
+
+# Contact functions
+def get_contact_by_id(contact_id: str, db: Session, tenant_id: str = None) -> Optional[Contact]:
+    query = db.query(Contact).filter(Contact.id == contact_id)
+    if tenant_id:
+        query = query.filter(Contact.tenant_id == tenant_id)
+    return query.first()
+
+def get_all_contacts(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Contact]:
+    query = db.query(Contact)
+    if tenant_id:
+        query = query.filter(Contact.tenant_id == tenant_id)
+    return query.order_by(Contact.createdAt.desc()).offset(skip).limit(limit).all()
+
+# Alias functions for backward compatibility
+def get_contacts(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Contact]:
+    """Get all contacts (alias for get_all_contacts)"""
+    return get_all_contacts(db, tenant_id, skip, limit)
+
+def get_contacts_by_company(company_id: str, db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Contact]:
+    query = db.query(Contact).filter(Contact.companyId == company_id)
+    if tenant_id:
+        query = query.filter(Contact.tenant_id == tenant_id)
+    return query.order_by(Contact.createdAt.desc()).offset(skip).limit(limit).all()
+
+def create_contact(contact_data: dict, db: Session) -> Contact:
+    db_contact = Contact(**contact_data)
+    db.add(db_contact)
+    db.commit()
+    db.refresh(db_contact)
+    return db_contact
+
+def update_contact(contact_id: str, update_data: dict, db: Session, tenant_id: str = None) -> Optional[Contact]:
+    contact = get_contact_by_id(contact_id, db, tenant_id)
+    if contact:
+        for key, value in update_data.items():
+            if hasattr(contact, key) and value is not None:
+                setattr(contact, key, value)
+        contact.updatedAt = datetime.utcnow()
+        db.commit()
+        db.refresh(contact)
+    return contact
+
+def delete_contact(contact_id: str, db: Session, tenant_id: str = None) -> bool:
+    contact = get_contact_by_id(contact_id, db, tenant_id)
+    if contact:
+        db.delete(contact)
+        db.commit()
+        return True
+    return False
+
+# Company functions
+def get_company_by_id(company_id: str, db: Session, tenant_id: str = None) -> Optional[Company]:
+    query = db.query(Company).filter(Company.id == company_id)
+    if tenant_id:
+        query = query.filter(Company.tenant_id == tenant_id)
+    return query.first()
+
+def get_all_companies(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Company]:
+    query = db.query(Company)
+    if tenant_id:
+        query = query.filter(Company.tenant_id == tenant_id)
+    return query.order_by(Company.createdAt.desc()).offset(skip).limit(limit).all()
+
+# Alias functions for backward compatibility
+def get_companies(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Company]:
+    """Get all companies (alias for get_all_companies)"""
+    return get_all_companies(db, tenant_id, skip, limit)
+
+def get_companies_by_industry(industry: str, db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Company]:
+    query = db.query(Company).filter(Company.industry == industry)
+    if tenant_id:
+        query = query.filter(Company.tenant_id == tenant_id)
+    return query.order_by(Company.createdAt.desc()).offset(skip).limit(limit).all()
+
+def create_company(company_data: dict, db: Session) -> Company:
+    db_company = Company(**company_data)
+    db.add(db_company)
+    db.commit()
+    db.refresh(db_company)
+    return db_company
+
+def update_company(company_id: str, update_data: dict, db: Session, tenant_id: str = None) -> Optional[Company]:
+    company = get_company_by_id(company_id, db, tenant_id)
+    if company:
+        for key, value in update_data.items():
+            if hasattr(company, key) and value is not None:
+                setattr(company, key, value)
+        company.updatedAt = datetime.utcnow()
+        db.commit()
+        db.refresh(company)
+    return company
+
+def delete_company(company_id: str, db: Session, tenant_id: str = None) -> bool:
+    company = get_company_by_id(company_id, db, tenant_id)
+    if company:
+        db.delete(company)
+        db.commit()
+        return True
+    return False
+
+# Opportunity functions
+def get_opportunity_by_id(opportunity_id: str, db: Session, tenant_id: str = None) -> Optional[Opportunity]:
+    query = db.query(Opportunity).filter(Opportunity.id == opportunity_id)
+    if tenant_id:
+        query = query.filter(Opportunity.tenant_id == tenant_id)
+    return query.first()
+
+def get_all_opportunities(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Opportunity]:
+    query = db.query(Opportunity)
+    if tenant_id:
+        query = query.filter(Opportunity.tenant_id == tenant_id)
+    return query.order_by(Opportunity.createdAt.desc()).offset(skip).limit(limit).all()
+
+# Alias functions for backward compatibility
+def get_opportunities(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Opportunity]:
+    """Get all opportunities (alias for get_all_opportunities)"""
+    return get_all_opportunities(db, tenant_id, skip, limit)
+
+def get_opportunities_by_stage(stage: str, db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Opportunity]:
+    query = db.query(Opportunity).filter(Opportunity.stage == stage)
+    if tenant_id:
+        query = query.filter(Opportunity.tenant_id == tenant_id)
+    return query.order_by(Opportunity.createdAt.desc()).offset(skip).limit(limit).all()
+
+def get_opportunities_by_assignee(assignee_id: str, db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Opportunity]:
+    query = db.query(Opportunity).filter(Opportunity.assignedToId == assignee_id)
+    if tenant_id:
+        query = query.filter(Opportunity.tenant_id == tenant_id)
+    return query.order_by(Opportunity.createdAt.desc()).offset(skip).limit(limit).all()
+
+def create_opportunity(opportunity_data: dict, db: Session) -> Opportunity:
+    db_opportunity = Opportunity(**opportunity_data)
+    db.add(db_opportunity)
+    db.commit()
+    db.refresh(db_opportunity)
+    return db_opportunity
+
+def update_opportunity(opportunity_id: str, update_data: dict, db: Session, tenant_id: str = None) -> Optional[Opportunity]:
+    opportunity = get_opportunity_by_id(opportunity_id, db, tenant_id)
+    if opportunity:
+        for key, value in update_data.items():
+            if hasattr(opportunity, key) and value is not None:
+                setattr(opportunity, key, value)
+        opportunity.updatedAt = datetime.utcnow()
+        db.commit()
+        db.refresh(opportunity)
+    return opportunity
+
+def delete_opportunity(opportunity_id: str, db: Session, tenant_id: str = None) -> bool:
+    opportunity = get_opportunity_by_id(opportunity_id, db, tenant_id)
+    if opportunity:
+        db.delete(opportunity)
+        db.commit()
+        return True
+    return False
+
+# SalesActivity functions
+def get_sales_activity_by_id(activity_id: str, db: Session, tenant_id: str = None) -> Optional[SalesActivity]:
+    query = db.query(SalesActivity).filter(SalesActivity.id == activity_id)
+    if tenant_id:
+        query = query.filter(SalesActivity.tenant_id == tenant_id)
+    return query.first()
+
+def get_all_sales_activities(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[SalesActivity]:
+    query = db.query(SalesActivity)
+    if tenant_id:
+        query = query.filter(SalesActivity.tenant_id == tenant_id)
+    return query.order_by(SalesActivity.createdAt.desc()).offset(skip).limit(limit).all()
+
+# Alias functions for backward compatibility
+def get_sales_activities(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[SalesActivity]:
+    """Get all sales activities (alias for get_all_sales_activities)"""
+    return get_all_sales_activities(db, tenant_id, skip, limit)
+
+def get_sales_activities_by_assignee(assignee_id: str, db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[SalesActivity]:
+    query = db.query(SalesActivity).filter(SalesActivity.assignedToId == assignee_id)
+    if tenant_id:
+        query = query.filter(SalesActivity.tenant_id == tenant_id)
+    return query.order_by(SalesActivity.dueDate.asc()).offset(skip).limit(limit).all()
+
+def create_sales_activity(activity_data: dict, db: Session) -> SalesActivity:
+    db_activity = SalesActivity(**activity_data)
+    db.add(db_activity)
+    db.commit()
+    db.refresh(db_activity)
+    return db_activity
+
+def update_sales_activity(activity_id: str, update_data: dict, db: Session, tenant_id: str = None) -> Optional[SalesActivity]:
+    activity = get_sales_activity_by_id(activity_id, db, tenant_id)
+    if activity:
+        for key, value in update_data.items():
+            if hasattr(activity, key) and value is not None:
+                setattr(activity, key, value)
+        activity.updatedAt = datetime.utcnow()
+        db.commit()
+        db.refresh(activity)
+    return activity
+
+def delete_sales_activity(activity_id: str, db: Session, tenant_id: str = None) -> bool:
+    activity = get_sales_activity_by_id(activity_id, db, tenant_id)
+    if activity:
+        db.delete(activity)
+        db.commit()
+        return True
+    return False
+
+# CRM Dashboard functions
+def get_crm_dashboard_data(db: Session, tenant_id: str) -> Dict[str, Any]:
+    """Get CRM dashboard statistics"""
+    total_leads = db.query(Lead).filter(Lead.tenant_id == tenant_id).count()
+    active_leads = db.query(Lead).filter(
+        Lead.tenant_id == tenant_id,
+        Lead.status.in_(["new", "contacted", "qualified"])
+    ).count()
+    converted_leads = db.query(Lead).filter(
+        Lead.tenant_id == tenant_id,
+        Lead.status == "converted"
+    ).count()
+    
+    total_opportunities = db.query(Opportunity).filter(Opportunity.tenant_id == tenant_id).count()
+    active_opportunities = db.query(Opportunity).filter(
+        Opportunity.tenant_id == tenant_id,
+        Opportunity.stage.in_(["prospecting", "qualification", "proposal", "negotiation"])
+    ).count()
+    won_opportunities = db.query(Opportunity).filter(
+        Opportunity.tenant_id == tenant_id,
+        Opportunity.stage == "closed_won"
+    ).count()
+    
+    total_contacts = db.query(Contact).filter(Contact.tenant_id == tenant_id).count()
+    total_companies = db.query(Company).filter(Company.tenant_id == tenant_id).count()
+    
+    return {
+        "leads": {
+            "total": total_leads,
+            "active": active_leads,
+            "converted": converted_leads,
+            "conversion_rate": (converted_leads / total_leads * 100) if total_leads > 0 else 0
+        },
+        "opportunities": {
+            "total": total_opportunities,
+            "active": active_opportunities,
+            "won": won_opportunities,
+            "win_rate": (won_opportunities / total_opportunities * 100) if total_opportunities > 0 else 0
+        },
+        "contacts": total_contacts,
+        "companies": total_companies
+    }

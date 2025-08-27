@@ -1,0 +1,450 @@
+from datetime import datetime
+from typing import List, Optional, Dict, Any
+from sqlalchemy.orm import Session
+from sqlalchemy import func
+from .inventory_models import Product, Warehouse, Supplier, PurchaseOrder, Receiving, StorageLocation
+
+# Product functions
+def get_product_by_id(product_id: str, db: Session, tenant_id: str = None) -> Optional[Product]:
+    query = db.query(Product).filter(Product.id == product_id)
+    if tenant_id:
+        query = query.filter(Product.tenant_id == tenant_id)
+    return query.first()
+
+def get_product_by_sku(sku: str, db: Session, tenant_id: str = None) -> Optional[Product]:
+    query = db.query(Product).filter(Product.sku == sku)
+    if tenant_id:
+        query = query.filter(Product.tenant_id == tenant_id)
+    return query.first()
+
+def get_all_products(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Product]:
+    query = db.query(Product)
+    if tenant_id:
+        query = query.filter(Product.tenant_id == tenant_id)
+    return query.order_by(Product.createdAt.desc()).offset(skip).limit(limit).all()
+
+# Alias functions for backward compatibility
+def get_products(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Product]:
+    """Get all products (alias for get_all_products)"""
+    return get_all_products(db, tenant_id, skip, limit)
+
+def get_products_by_category(category: str, db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Product]:
+    query = db.query(Product).filter(Product.category == category)
+    if tenant_id:
+        query = query.filter(Product.tenant_id == tenant_id)
+    return query.order_by(Product.createdAt.desc()).offset(skip).limit(limit).all()
+
+def get_low_stock_products(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Product]:
+    query = db.query(Product).filter(
+        Product.stockQuantity <= Product.minStockLevel,
+        Product.isActive == True
+    )
+    if tenant_id:
+        query = query.filter(Product.tenant_id == tenant_id)
+    return query.order_by(Product.stockQuantity.asc()).offset(skip).limit(limit).all()
+
+def create_product(product_data: dict, db: Session) -> Product:
+    db_product = Product(**product_data)
+    db.add(db_product)
+    db.commit()
+    db.refresh(db_product)
+    return db_product
+
+def update_product(product_id: str, update_data: dict, db: Session, tenant_id: str = None) -> Optional[Product]:
+    product = get_product_by_id(product_id, db, tenant_id)
+    if product:
+        for key, value in update_data.items():
+            if hasattr(product, key) and value is not None:
+                setattr(product, key, value)
+        product.updatedAt = datetime.utcnow()
+        db.commit()
+        db.refresh(product)
+    return product
+
+def delete_product(product_id: str, db: Session, tenant_id: str = None) -> bool:
+    product = get_product_by_id(product_id, db, tenant_id)
+    if product:
+        db.delete(product)
+        db.commit()
+        return True
+    return False
+
+# Warehouse functions
+def get_warehouse_by_id(warehouse_id: str, db: Session, tenant_id: str = None) -> Optional[Warehouse]:
+    query = db.query(Warehouse).filter(Warehouse.id == warehouse_id)
+    if tenant_id:
+        query = query.filter(Warehouse.tenant_id == tenant_id)
+    return query.first()
+
+def get_warehouse_by_code(code: str, db: Session, tenant_id: str = None) -> Optional[Warehouse]:
+    query = db.query(Warehouse).filter(Warehouse.code == code)
+    if tenant_id:
+        query = query.filter(Warehouse.tenant_id == tenant_id)
+    return query.first()
+
+def get_all_warehouses(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Warehouse]:
+    query = db.query(Warehouse)
+    if tenant_id:
+        query = query.filter(Warehouse.tenant_id == tenant_id)
+    return query.order_by(Warehouse.createdAt.desc()).offset(skip).limit(limit).all()
+
+def get_active_warehouses(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Warehouse]:
+    query = db.query(Warehouse).filter(Warehouse.isActive == True)
+    if tenant_id:
+        query = query.filter(Warehouse.tenant_id == tenant_id)
+    return query.order_by(Warehouse.createdAt.desc()).offset(skip).limit(limit).all()
+
+# Alias functions for backward compatibility
+def get_warehouses(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Warehouse]:
+    """Get all warehouses (alias for get_all_warehouses)"""
+    return get_all_warehouses(db, tenant_id, skip, limit)
+
+def create_warehouse(warehouse_data: dict, db: Session) -> Warehouse:
+    db_warehouse = Warehouse(**warehouse_data)
+    db.add(db_warehouse)
+    db.commit()
+    db.refresh(db_warehouse)
+    return db_warehouse
+
+def update_warehouse(warehouse_id: str, update_data: dict, db: Session, tenant_id: str = None) -> Optional[Warehouse]:
+    warehouse = get_warehouse_by_id(warehouse_id, db, tenant_id)
+    if warehouse:
+        for key, value in update_data.items():
+            if hasattr(warehouse, key) and value is not None:
+                setattr(warehouse, key, value)
+        warehouse.updatedAt = datetime.utcnow()
+        db.commit()
+        db.refresh(warehouse)
+    return warehouse
+
+def delete_warehouse(warehouse_id: str, db: Session, tenant_id: str = None) -> bool:
+    warehouse = get_warehouse_by_id(warehouse_id, db, tenant_id)
+    if warehouse:
+        db.delete(warehouse)
+        db.commit()
+        return True
+    return False
+
+# Supplier functions
+def get_supplier_by_id(supplier_id: str, db: Session, tenant_id: str = None) -> Optional[Supplier]:
+    query = db.query(Supplier).filter(Supplier.id == supplier_id)
+    if tenant_id:
+        query = query.filter(Supplier.tenant_id == tenant_id)
+    return query.first()
+
+def get_supplier_by_code(code: str, db: Session, tenant_id: str = None) -> Optional[Supplier]:
+    query = db.query(Supplier).filter(Supplier.code == code)
+    if tenant_id:
+        query = query.filter(Supplier.tenant_id == tenant_id)
+    return query.first()
+
+def get_all_suppliers(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Supplier]:
+    query = db.query(Supplier)
+    if tenant_id:
+        query = query.filter(Supplier.tenant_id == tenant_id)
+    return query.order_by(Supplier.createdAt.desc()).offset(skip).limit(limit).all()
+
+# Alias function for backward compatibility
+def get_suppliers(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Supplier]:
+    """Get all suppliers (alias for get_all_suppliers)"""
+    return get_all_suppliers(db, tenant_id, skip, limit)
+
+def get_active_suppliers(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Supplier]:
+    query = db.query(Supplier).filter(Supplier.isActive == True)
+    if tenant_id:
+        query = query.filter(Supplier.tenant_id == tenant_id)
+    return query.order_by(Supplier.createdAt.desc()).offset(skip).limit(limit).all()
+
+def create_supplier(supplier_data: dict, db: Session) -> Supplier:
+    db_supplier = Supplier(**supplier_data)
+    db.add(db_supplier)
+    db.commit()
+    db.refresh(db_supplier)
+    return db_supplier
+
+def update_supplier(supplier_id: str, update_data: dict, db: Session, tenant_id: str = None) -> Optional[Supplier]:
+    supplier = get_supplier_by_id(supplier_id, db, tenant_id)
+    if supplier:
+        for key, value in update_data.items():
+            if hasattr(supplier, key) and value is not None:
+                setattr(supplier, key, value)
+        supplier.updatedAt = datetime.utcnow()
+        db.commit()
+        db.refresh(supplier)
+    return supplier
+
+def delete_supplier(supplier_id: str, db: Session, tenant_id: str = None) -> bool:
+    supplier = get_supplier_by_id(supplier_id, db, tenant_id)
+    if supplier:
+        db.delete(supplier)
+        db.commit()
+        return True
+    return False
+
+# PurchaseOrder functions
+def get_purchase_order_by_id(po_id: str, db: Session, tenant_id: str = None) -> Optional[PurchaseOrder]:
+    query = db.query(PurchaseOrder).filter(PurchaseOrder.id == po_id)
+    if tenant_id:
+        query = query.filter(PurchaseOrder.tenant_id == tenant_id)
+    return query.first()
+
+def get_purchase_order_by_number(po_number: str, db: Session, tenant_id: str = None) -> Optional[PurchaseOrder]:
+    query = db.query(PurchaseOrder).filter(PurchaseOrder.poNumber == po_number)
+    if tenant_id:
+        query = query.filter(PurchaseOrder.tenant_id == tenant_id)
+    return query.first()
+
+def get_all_purchase_orders(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[PurchaseOrder]:
+    query = db.query(PurchaseOrder)
+    if tenant_id:
+        query = query.filter(PurchaseOrder.tenant_id == tenant_id)
+    return query.order_by(PurchaseOrder.orderDate.desc()).offset(skip).limit(limit).all()
+
+# Alias function for backward compatibility
+def get_purchase_orders(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[PurchaseOrder]:
+    """Get all purchase orders (alias for get_all_purchase_orders)"""
+    return get_all_purchase_orders(db, tenant_id, skip, limit)
+
+def get_purchase_orders_by_status(status: str, db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[PurchaseOrder]:
+    query = db.query(PurchaseOrder).filter(PurchaseOrder.status == status)
+    if tenant_id:
+        query = query.filter(PurchaseOrder.tenant_id == tenant_id)
+    return query.order_by(PurchaseOrder.orderDate.desc()).offset(skip).limit(limit).all()
+
+def get_purchase_orders_by_supplier(supplier_id: str, db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[PurchaseOrder]:
+    query = db.query(PurchaseOrder).filter(PurchaseOrder.supplierId == supplier_id)
+    if tenant_id:
+        query = query.filter(PurchaseOrder.tenant_id == tenant_id)
+    return query.order_by(PurchaseOrder.orderDate.desc()).offset(skip).limit(limit).all()
+
+def create_purchase_order(po_data: dict, db: Session) -> PurchaseOrder:
+    db_po = PurchaseOrder(**po_data)
+    db.add(db_po)
+    db.commit()
+    db.refresh(db_po)
+    return db_po
+
+def update_purchase_order(po_id: str, update_data: dict, db: Session, tenant_id: str = None) -> Optional[PurchaseOrder]:
+    po = get_purchase_order_by_id(po_id, db, tenant_id)
+    if po:
+        for key, value in update_data.items():
+            if hasattr(po, key) and value is not None:
+                setattr(po, key, value)
+        po.updatedAt = datetime.utcnow()
+        db.commit()
+        db.refresh(po)
+    return po
+
+def delete_purchase_order(po_id: str, db: Session, tenant_id: str = None) -> bool:
+    po = get_purchase_order_by_id(po_id, db, tenant_id)
+    if po:
+        db.delete(po)
+        db.commit()
+        return True
+    return False
+
+# Receiving functions
+def get_receiving_by_id(receiving_id: str, db: Session, tenant_id: str = None) -> Optional[Receiving]:
+    query = db.query(Receiving).filter(Receiving.id == receiving_id)
+    if tenant_id:
+        query = query.filter(Receiving.tenant_id == tenant_id)
+    return query.first()
+
+def get_receiving_by_number(receiving_number: str, db: Session, tenant_id: str = None) -> Optional[Receiving]:
+    query = db.query(Receiving).filter(Receiving.receivingNumber == receiving_number)
+    if tenant_id:
+        query = query.filter(Receiving.tenant_id == tenant_id)
+    return query.first()
+
+def get_all_receivings(db: Session, tenant_id: str = None, status: str = None, skip: int = 0, limit: int = 100) -> List[Receiving]:
+    query = db.query(Receiving)
+    if tenant_id:
+        query = query.filter(Receiving.tenant_id == tenant_id)
+    if status:
+        query = query.filter(Receiving.status == status)
+    return query.order_by(Receiving.createdAt.desc()).offset(skip).limit(limit).all()
+
+# Alias function for backward compatibility
+def get_receivings(db: Session, tenant_id: str = None, status: str = None, skip: int = 0, limit: int = 100) -> List[Receiving]:
+    """Get all receivings (alias for get_all_receivings)"""
+    return get_all_receivings(db, tenant_id, status, skip, limit)
+
+def get_receivings_by_purchase_order(po_id: str, db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Receiving]:
+    query = db.query(Receiving).filter(Receiving.purchaseOrderId == po_id)
+    if tenant_id:
+        query = query.filter(Receiving.tenant_id == tenant_id)
+    return query.order_by(Receiving.createdAt.desc()).offset(skip).limit(limit).all()
+
+def create_receiving(receiving_data: dict, db: Session) -> Receiving:
+    db_receiving = Receiving(**receiving_data)
+    db.add(db_receiving)
+    db.commit()
+    db.refresh(db_receiving)
+    return db_receiving
+
+def update_receiving(receiving_id: str, update_data: dict, db: Session, tenant_id: str = None) -> Optional[Receiving]:
+    receiving = get_receiving_by_id(receiving_id, db, tenant_id)
+    if receiving:
+        for key, value in update_data.items():
+            if hasattr(receiving, key) and value is not None:
+                setattr(receiving, key, value)
+        receiving.updatedAt = datetime.utcnow()
+        db.commit()
+        db.refresh(receiving)
+    return receiving
+
+def delete_receiving(receiving_id: str, db: Session, tenant_id: str = None) -> bool:
+    receiving = get_receiving_by_id(receiving_id, db, tenant_id)
+    if receiving:
+        db.delete(receiving)
+        db.commit()
+        return True
+    return False
+
+# StorageLocation functions
+def get_active_storage_locations(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[StorageLocation]:
+    query = db.query(StorageLocation).filter(StorageLocation.isActive == True)
+    if tenant_id:
+        query = query.filter(StorageLocation.tenant_id == tenant_id)
+    return query.order_by(StorageLocation.createdAt.desc()).offset(skip).limit(limit).all()
+
+def get_storage_location_by_id(location_id: str, db: Session, tenant_id: str = None) -> Optional[StorageLocation]:
+    query = db.query(StorageLocation).filter(StorageLocation.id == location_id)
+    if tenant_id:
+        query = query.filter(StorageLocation.tenant_id == tenant_id)
+    return query.first()
+
+def create_storage_location(storage_location_data: dict, db: Session) -> StorageLocation:
+    db_storage_location = StorageLocation(**storage_location_data)
+    db.add(db_storage_location)
+    db.commit()
+    db.refresh(db_storage_location)
+    return db_storage_location
+
+def update_storage_location(location_id: str, update_data: dict, db: Session, tenant_id: str = None) -> Optional[StorageLocation]:
+    location = get_storage_location_by_id(location_id, db, tenant_id)
+    if location:
+        for key, value in update_data.items():
+            if hasattr(location, key) and value is not None:
+                setattr(location, key, value)
+        location.updatedAt = datetime.utcnow()
+        db.commit()
+        db.refresh(location)
+    return location
+
+def delete_storage_location(location_id: str, db: Session, tenant_id: str = None) -> bool:
+    location = get_storage_location_by_id(location_id, db, tenant_id)
+    if location:
+        db.delete(location)
+        db.commit()
+        return True
+    return False
+
+def get_storage_locations_by_warehouse(warehouse_id: str, db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[StorageLocation]:
+    query = db.query(StorageLocation).filter(StorageLocation.warehouseId == warehouse_id)
+    if tenant_id:
+        query = query.filter(StorageLocation.tenant_id == tenant_id)
+    return query.order_by(StorageLocation.createdAt.desc()).offset(skip).limit(limit).all()
+
+def get_all_storage_locations(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[StorageLocation]:
+    query = db.query(StorageLocation)
+    if tenant_id:
+        query = query.filter(StorageLocation.tenant_id == tenant_id)
+    return query.order_by(StorageLocation.createdAt.desc()).offset(skip).limit(limit).all()
+
+# Alias function for backward compatibility
+def get_storage_locations(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[StorageLocation]:
+    """Get all storage locations (alias for get_all_storage_locations)"""
+    return get_all_storage_locations(db, tenant_id, skip, limit)
+
+# Stock Movement functions
+def get_stock_movement_by_id(movement_id: str, db: Session, tenant_id: str = None) -> Optional[Any]:
+    """Get a stock movement by ID"""
+    # Note: This function needs the StockMovement model to be imported
+    # For now, returning None as placeholder
+    return None
+
+def get_stock_movements(db: Session, tenant_id: str = None, product_id: str = None, warehouse_id: str = None, skip: int = 0, limit: int = 100) -> List[Any]:
+    """Get stock movements with optional filters"""
+    # Note: This function needs the StockMovement model to be imported
+    # For now, returning empty list as placeholder
+    return []
+
+def create_stock_movement(movement_data: dict, db: Session) -> Any:
+    """Create a new stock movement"""
+    # Note: This function needs the StockMovement model to be imported
+    # For now, returning None as placeholder
+    return None
+
+def update_stock_movement(movement_id: str, update_data: dict, db: Session, tenant_id: str = None) -> Optional[Any]:
+    """Update a stock movement"""
+    # Note: This function needs the StockMovement model to be imported
+    # For now, returning None as placeholder
+    return None
+
+# Inventory dashboard functions
+def get_inventory_dashboard_stats(db: Session, tenant_id: str) -> Dict[str, Any]:
+    # Get basic counts
+    total_products = db.query(Product).filter(Product.tenant_id == tenant_id, Product.isActive == True).count()
+    low_stock_products = db.query(Product).filter(
+        Product.tenant_id == tenant_id,
+        Product.isActive == True,
+        Product.stockQuantity <= Product.minStockLevel
+    ).count()
+    out_of_stock_products = db.query(Product).filter(
+        Product.tenant_id == tenant_id,
+        Product.isActive == True,
+        Product.stockQuantity == 0
+    ).count()
+    total_warehouses = db.query(Warehouse).filter(Warehouse.tenant_id == tenant_id, Warehouse.isActive == True).count()
+    total_suppliers = db.query(Supplier).filter(Supplier.tenant_id == tenant_id, Supplier.isActive == True).count()
+    pending_purchase_orders = db.query(PurchaseOrder).filter(
+        PurchaseOrder.tenant_id == tenant_id,
+        PurchaseOrder.status.in_(["draft", "submitted", "approved", "ordered"])
+    ).count()
+    pending_receivings = db.query(Receiving).filter(
+        Receiving.tenant_id == tenant_id,
+        Receiving.status.in_(["pending", "in_progress"])
+    ).count()
+    
+    # Calculate total stock value
+    total_stock_value = db.query(
+        func.sum(Product.stockQuantity * Product.costPrice)
+    ).filter(
+        Product.tenant_id == tenant_id,
+        Product.isActive == True
+    ).scalar() or 0.0
+    
+    # Get low stock alerts
+    low_stock_alerts = []
+    low_stock_products_list = db.query(Product).filter(
+        Product.tenant_id == tenant_id,
+        Product.isActive == True,
+        Product.stockQuantity <= Product.minStockLevel
+    ).limit(10).all()
+    
+    for product in low_stock_products_list:
+        alert_type = "out_of_stock" if product.stockQuantity == 0 else "low_stock"
+        message = f"Product {product.name} (SKU: {product.sku}) is running low on stock. Current: {product.stockQuantity}, Minimum: {product.minStockLevel}"
+        
+        low_stock_alerts.append({
+            "productId": str(product.id),
+            "productName": product.name,
+            "sku": product.sku,
+            "currentStock": product.stockQuantity,
+            "minStockLevel": product.minStockLevel,
+            "alertType": alert_type,
+            "message": message
+        })
+    
+    return {
+        "totalProducts": total_products,
+        "lowStockProducts": low_stock_products,
+        "outOfStockProducts": out_of_stock_products,
+        "totalWarehouses": total_warehouses,
+        "totalSuppliers": total_suppliers,
+        "pendingPurchaseOrders": pending_purchase_orders,
+        "pendingReceivings": pending_receivings,
+        "totalStockValue": total_stock_value,
+        "lowStockAlerts": low_stock_alerts
+    }

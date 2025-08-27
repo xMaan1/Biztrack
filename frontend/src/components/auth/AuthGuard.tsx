@@ -15,7 +15,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   const pathname = usePathname();
 
   // List of public routes that don't require authentication
-  const publicRoutes = ["/login", "/signup", "/client-portal"];
+  const publicRoutes = ["/", "/login", "/signup", "/client-portal"];
 
   useEffect(() => {
     if (!loading) {
@@ -26,7 +26,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
       if (!isAuthenticated && !isPublicRoute) {
         router.push("/login");
       } else if (isAuthenticated && pathname === "/login") {
-        router.push("/");
+        router.push("/dashboard");
       }
     }
   }, [isAuthenticated, loading, pathname, router, user]);

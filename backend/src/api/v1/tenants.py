@@ -7,7 +7,7 @@ import uuid
 
 router = APIRouter(prefix="/tenants", tags=["tenants"])
 
-from ...config.unified_database import (
+from ...config.database import (
     get_db, get_plans, get_plan_by_id, create_tenant, 
     create_subscription, create_tenant_user, get_user_tenants,
     get_tenant_by_id, get_tenant_users, get_subscription_by_tenant,
@@ -22,9 +22,15 @@ from ...models.unified_models import (
 
 from ...api.dependencies import get_current_user, require_super_admin, require_tenant_admin_or_super_admin
 
-@router.get("/plans", response_model=PlansResponse, dependencies=[Depends(require_super_admin)])
+@router.get("/plans", response_model=PlansResponse)
 async def get_available_plans(db: Session = Depends(get_db)):
-    """Get all available subscription plans"""
+    """Get all available subscription plans (public endpoint)"""
+    plans = get_plans(db)
+    return PlansResponse(plans=plans)
+
+@router.get("/plans/admin", response_model=PlansResponse, dependencies=[Depends(require_super_admin)])
+async def get_available_plans_admin(db: Session = Depends(get_db)):
+    """Get all available subscription plans (admin only)"""
     plans = get_plans(db)
     return PlansResponse(plans=plans)
 
@@ -91,6 +97,90 @@ async def subscribe_to_plan(
             "id": str(subscription.id),
             "status": subscription.status,
             "trial_ends": subscription.endDate
+        }
+    }
+
+@router.post("/create-tenant", dependencies=[Depends(get_current_user)])
+async def create_tenant_from_landing(
+    req: SubscribeRequest,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Create a new tenant from landing page subscription"""
+    plan_id = req.planId
+    tenant_name = req.tenantName
+    domain = req.domain
+    
+    # Verify plan exists
+    plan = get_plan_by_id(plan_id, db)
+    if not plan:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Plan not found"
+        )
+    
+    # Check if user already has a tenant with this name
+    existing_tenants = get_user_tenants(current_user.id, db)
+    for tenant in existing_tenants:
+        if tenant.name.lower() == tenant_name.lower():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="You already have a tenant with this name"
+            )
+    
+    # Create tenant
+    tenant_data = {
+        "name": tenant_name,
+        "domain": f"{tenant_name.lower().replace(' ', '-')}-{str(uuid.uuid4())[:8]}",
+        "description": f"{tenant_name} workspace",
+        "settings": {
+            "plan_type": plan.planType,
+            "features": plan.features or [],
+            "max_projects": plan.maxProjects,
+            "max_users": plan.maxUsers
+        }
+    }
+    
+    tenant = create_tenant(tenant_data, db)
+    
+    # Create subscription (trial for now)
+    subscription_data = {
+        "tenantId": tenant.id,
+        "planId": plan.id,
+        "status": SubscriptionStatus.TRIAL.value,
+        "startDate": datetime.utcnow(),
+        "endDate": datetime.utcnow() + timedelta(days=14),  # 14-day trial
+        "autoRenew": True
+    }
+    
+    subscription = create_subscription(subscription_data, db)
+    
+    # Add user as owner
+    tenant_user_data = {
+        "tenantId": tenant.id,
+        "userId": current_user.id,
+        "role": TenantRole.OWNER.value,
+        "permissions": ["*"],  # Full permissions for owner
+        "isActive": True
+    }
+    
+    tenant_user = create_tenant_user(tenant_user_data, db)
+    
+    return {
+        "success": True,
+        "message": "Tenant created successfully! Welcome to SparkCo ERP",
+        "tenant": {
+            "id": str(tenant.id),
+            "name": tenant.name,
+            "domain": tenant.domain,
+            "plan_type": plan.planType,
+            "features": plan.features or []
+        },
+        "subscription": {
+            "id": str(subscription.id),
+            "status": subscription.status,
+            "trial_ends": subscription.endDate,
+            "plan_name": plan.name
         }
     }
 
@@ -166,7 +256,7 @@ async def get_tenant_users_list(
             detail="Access denied to this tenant"
         )
     tenant_users = get_tenant_users(tenant_id, db)
-    from ...config.unified_database import User as DBUser
+    from ...config.database import User as DBUser
     user_ids = [tu.userId for tu in tenant_users]
     users = db.query(DBUser).filter(DBUser.id.in_(user_ids)).all() if user_ids else []
     user_id_to_role = {str(tu.userId): tu.role for tu in tenant_users}
