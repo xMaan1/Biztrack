@@ -55,7 +55,19 @@ export default function AuthForm({ mode, onSuccess }: AuthFormProps) {
         } as RegisterData);
 
         if (user) {
-          onSuccess();
+          // After successful registration, automatically log the user in
+          const loginSuccess = await login({
+            email: formData.email,
+            password: formData.password,
+          } as LoginCredentials);
+
+          if (loginSuccess) {
+            onSuccess();
+          } else {
+            setError(
+              "Registration successful but automatic login failed. Please sign in manually.",
+            );
+          }
         }
       }
     } catch (err: any) {

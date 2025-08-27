@@ -7,7 +7,7 @@ import logging
 # Configure logging
 logger = logging.getLogger(__name__)
 
-from .config.database import create_tables
+from .config.database import create_tables, get_plans
 from .api.v1 import auth, users, projects, tasks, tenants, plans, sales, crm, hrm, custom_options, invoices, pos, inventory, subscriptions
 from .core.security import security_middleware
 from .core.tenant_middleware import tenant_middleware
@@ -16,14 +16,15 @@ from .core.monitoring import system_monitor, perform_health_check
 from .core.error_handling import error_handler
 from .core.security import security_middleware as security_middleware_instance
 from fastapi.exceptions import RequestValidationError
+from sqlalchemy.orm import Session
 
-app = FastAPI(title="SparkCo ERP - Project Management & Sales API", version="1.0.0")
+app = FastAPI(title="BizTrack - Project Management & Sales API", version="1.0.0")
 
 # Ensure tables are created at startup
 @app.on_event("startup")
 async def on_startup():
     create_tables()
-    logging.info("🚀 SparkCo ERP API started successfully")
+    logging.info("🚀 BizTrack API started successfully")
     logging.info("🔒 Security middleware enabled")
     logging.info("🏢 Tenant isolation middleware enabled")
     logging.info("📊 Monitoring system enabled")
@@ -109,12 +110,9 @@ async def security_middleware(request: Request, call_next):
         )
     except Exception as e:
         logger.error(f"Unexpected error in security middleware: {str(e)}")
-        return JSONResponse(
-            status_code=500,
-            content={"detail": "Internal server error", "error_code": "INTERNAL_ERROR"}
-        )
+        raise
 
-# Request/Response middleware for audit logging
+# Audit middleware
 @app.middleware("http")
 async def audit_middleware(request: Request, call_next):
     start_time = time.time()
@@ -197,7 +195,7 @@ async def generic_exception_handler(request: Request, exc: Exception):
 @app.get("/")
 def read_root():
     return {
-        "message": "SparkCo ERP - Project Management & Sales API", 
+        "message": "BizTrack - Project Management & Sales API", 
         "status": "running",
         "landing_page": "/landing",
         "api_docs": "/docs",
@@ -212,7 +210,7 @@ async def health_check():
 @app.get("/health/simple")
 async def simple_health_check():
     """Simple health check for load balancers"""
-    return {"status": "healthy", "service": "SparkCo ERP API", "timestamp": time.time()}
+    return {"status": "healthy", "service": "BizTrack API", "timestamp": time.time()}
 
 @app.get("/metrics")
 async def get_metrics():
@@ -223,3 +221,41 @@ async def get_metrics():
 async def get_metrics_history(hours: int = 24):
     """Get metrics history for specified time period"""
     return await system_monitor.get_metrics_history(hours=hours)
+
+# Public plans endpoint - completely bypasses all middleware
+@app.get("/public/plans")
+async def get_public_plans():
+    """Public endpoint to get all available plans - no authentication required"""
+    try:
+        # Get database session
+        from .config.database import get_db
+        db = next(get_db())
+        
+        # Get all active plans
+        plans = get_plans(db)
+        
+        # Convert to response format
+        plans_response = []
+        for plan in plans:
+            plan_dict = {
+                "id": str(plan.id),
+                "name": plan.name,
+                "description": plan.description,
+                "planType": plan.planType,
+                "price": plan.price,
+                "billingCycle": plan.billingCycle,
+                "maxProjects": plan.maxProjects,
+                "maxUsers": plan.maxUsers,
+                "features": plan.features,
+                "isActive": plan.isActive
+            }
+            plans_response.append(plan_dict)
+        
+        return {"plans": plans_response}
+        
+    except Exception as e:
+        logger.error(f"Error fetching public plans: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch plans"
+        )

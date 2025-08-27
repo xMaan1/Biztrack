@@ -29,7 +29,6 @@ env.bak/
 venv.bak/
 Include/
 Lib/
-Scripts/
 pyvenv.cfg
 
 # Environment Variables

@@ -57,28 +57,30 @@ export function InvoiceList({
   totalPages,
   onPageChange,
 }: InvoiceListProps) {
-  
   const handleDownload = async (invoiceId: string) => {
     try {
       const sessionManager = new SessionManager();
       const token = sessionManager.getToken();
-      
+
       if (!token) {
-        console.error('No authentication token found');
+        console.error("No authentication token found");
         return;
       }
-      
-      const response = await fetch(`http://localhost:8000/invoices/${invoiceId}/download`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
+
+      const response = await fetch(
+        `http://localhost:8000/invoices/${invoiceId}/download`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
-      
+      );
+
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
         a.download = `invoice-${invoiceId}.txt`;
         document.body.appendChild(a);
@@ -86,10 +88,10 @@ export function InvoiceList({
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       } else {
-        console.error('Download failed');
+        console.error("Download failed");
       }
     } catch (error) {
-      console.error('Download error:', error);
+      console.error("Download error:", error);
     }
   };
   if (loading) {
@@ -117,6 +119,7 @@ export function InvoiceList({
           <TableHeader>
             <TableRow>
               <TableHead>Invoice #</TableHead>
+              <TableHead>Order #</TableHead>
               <TableHead>Customer</TableHead>
               <TableHead>Issue Date</TableHead>
               <TableHead>Due Date</TableHead>
@@ -132,12 +135,18 @@ export function InvoiceList({
                 <TableCell className="font-medium">
                   {invoice.invoiceNumber}
                 </TableCell>
+                <TableCell>{invoice.orderNumber || "-"}</TableCell>
                 <TableCell>
                   <div>
                     <div className="font-medium">{invoice.customerName}</div>
                     <div className="text-sm text-gray-500">
                       {invoice.customerEmail}
                     </div>
+                    {invoice.customerPhone && (
+                      <div className="text-sm text-gray-500">
+                        {invoice.customerPhone}
+                      </div>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell>
@@ -226,7 +235,9 @@ export function InvoiceList({
                           Mark as Paid
                         </DropdownMenuItem>
                       )}
-                      <DropdownMenuItem onClick={() => handleDownload(invoice.id)}>
+                      <DropdownMenuItem
+                        onClick={() => handleDownload(invoice.id)}
+                      >
                         <Download className="h-4 w-4 mr-2" />
                         Download PDF
                       </DropdownMenuItem>

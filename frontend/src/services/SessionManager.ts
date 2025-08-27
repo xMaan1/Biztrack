@@ -12,12 +12,48 @@ class SessionManager {
   private readonly USER_KEY = "user_data";
   private readonly EXPIRES_KEY = "token_expires";
   private readonly REFRESH_TOKEN_KEY = "refresh_token";
+  private readonly COOKIE_TOKEN_KEY = "auth-token";
+
+  // Helper function to set cookie
+  private setCookie(name: string, value: string, days: number = 7): void {
+    if (typeof window === "undefined") return;
+
+    const expires = new Date();
+    expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+    document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Strict`;
+  }
+
+  // Helper function to get cookie
+  private getCookie(name: string): string | null {
+    if (typeof window === "undefined") return null;
+
+    const nameEQ = name + "=";
+    const ca = document.cookie.split(";");
+    for (let i = 0; i < ca.length; i++) {
+      let c = ca[i];
+      while (c.charAt(0) === " ") c = c.substring(1, c.length);
+      if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+    }
+    return null;
+  }
+
+  // Helper function to remove cookie
+  private removeCookie(name: string): void {
+    if (typeof window === "undefined") return;
+
+    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+  }
 
   // Token management
   setToken(token: string, expiresIn?: number): void {
     if (typeof window === "undefined") return;
 
+    // Store in localStorage
     localStorage.setItem(this.TOKEN_KEY, token);
+
+    // Also store in cookie for middleware access
+    const days = expiresIn ? Math.ceil(expiresIn / (24 * 60 * 60)) : 7;
+    this.setCookie(this.COOKIE_TOKEN_KEY, token, days);
 
     if (expiresIn) {
       const expiresAt = Date.now() + expiresIn * 1000;
@@ -28,7 +64,12 @@ class SessionManager {
   getToken(): string | null {
     if (typeof window === "undefined") return null;
 
-    const token = localStorage.getItem(this.TOKEN_KEY);
+    // Try localStorage first, then cookie as fallback
+    let token = localStorage.getItem(this.TOKEN_KEY);
+    if (!token) {
+      token = this.getCookie(this.COOKIE_TOKEN_KEY);
+    }
+
     const expiresAt = localStorage.getItem(this.EXPIRES_KEY);
 
     if (token && expiresAt) {
@@ -47,6 +88,7 @@ class SessionManager {
 
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.EXPIRES_KEY);
+    this.removeCookie(this.COOKIE_TOKEN_KEY);
   }
 
   // Refresh token management
@@ -132,6 +174,8 @@ class SessionManager {
     if (typeof window !== "undefined") {
       localStorage.removeItem("currentTenantId");
       localStorage.removeItem("userTenants");
+      // Clear all auth-related cookies
+      this.removeCookie(this.COOKIE_TOKEN_KEY);
     }
   }
 

@@ -398,7 +398,7 @@ export default function Sidebar() {
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-center">
           <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            TestApi
+            BizTrack
           </h2>
         </div>
       </div>
@@ -605,7 +605,7 @@ export default function Sidebar() {
         <div className="text-center">
           <p className="text-xs text-gray-500 mb-1">Powered by</p>
           <p className="text-sm font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            SparkCo Technologies
+            BizTrack Technologies
           </p>
         </div>
       </div>

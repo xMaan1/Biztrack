@@ -168,7 +168,7 @@ async def create_tenant_from_landing(
     
     return {
         "success": True,
-        "message": "Tenant created successfully! Welcome to SparkCo ERP",
+        "message": "Tenant created successfully! Welcome to BizTrack",
         "tenant": {
             "id": str(tenant.id),
             "name": tenant.name,

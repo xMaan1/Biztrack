@@ -50,10 +50,13 @@ export interface Invoice {
   customerId: string;
   customerName: string;
   customerEmail: string;
+  customerPhone?: string;
   billingAddress: string;
   shippingAddress?: string;
   issueDate: string;
   dueDate: string;
+  orderNumber?: string;
+  orderTime?: string;
   paymentTerms: string;
   currency: string;
   subtotal: number;
@@ -84,10 +87,13 @@ export interface InvoiceCreate {
   customerId: string;
   customerName: string;
   customerEmail: string;
+  customerPhone?: string;
   billingAddress: string;
   shippingAddress?: string;
   issueDate: string;
   dueDate: string;
+  orderNumber?: string;
+  orderTime?: string;
   paymentTerms: string;
   currency: string;
   taxRate: number;
@@ -103,10 +109,13 @@ export interface InvoiceCreate {
 export interface InvoiceUpdate {
   customerName?: string;
   customerEmail?: string;
+  customerPhone?: string;
   billingAddress?: string;
   shippingAddress?: string;
   issueDate?: string;
   dueDate?: string;
+  orderNumber?: string;
+  orderTime?: string;
   paymentTerms?: string;
   currency?: string;
   taxRate?: number;

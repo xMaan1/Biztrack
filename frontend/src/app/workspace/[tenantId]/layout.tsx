@@ -54,13 +54,13 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
     try {
       const sessionManager = new SessionManager();
       const token = sessionManager.getToken();
-      
+
       if (!token) {
-        console.error('No authentication token found');
+        console.error("No authentication token found");
         router.push("/");
         return;
       }
-      
+
       const response = await axios.get(
         `http://localhost:8000/api/tenants/${tenantId}`,
         {

@@ -51,12 +51,15 @@ export function InvoiceDialog({
     customerId: "",
     customerName: "",
     customerEmail: "",
+    customerPhone: "", // New field
     billingAddress: "",
     shippingAddress: "",
     issueDate: new Date().toISOString().split("T")[0],
     dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       .toISOString()
       .split("T")[0],
+    orderNumber: "", // New field
+    orderTime: new Date().toISOString().slice(0, 16), // New field - current date/time
     paymentTerms: "Net 30",
     currency: "USD",
     taxRate: 0,
@@ -79,10 +82,13 @@ export function InvoiceDialog({
         customerId: invoice.customerId,
         customerName: invoice.customerName,
         customerEmail: invoice.customerEmail,
+        customerPhone: invoice.customerPhone || "",
         billingAddress: invoice.billingAddress,
         shippingAddress: invoice.shippingAddress || "",
         issueDate: invoice.issueDate,
         dueDate: invoice.dueDate,
+        orderNumber: invoice.orderNumber || "",
+        orderTime: invoice.orderTime || new Date().toISOString().slice(0, 16),
         paymentTerms: invoice.paymentTerms,
         currency: invoice.currency,
         taxRate: invoice.taxRate,
@@ -112,12 +118,15 @@ export function InvoiceDialog({
         customerId: "",
         customerName: "",
         customerEmail: "",
+        customerPhone: "",
         billingAddress: "",
         shippingAddress: "",
         issueDate: new Date().toISOString().split("T")[0],
         dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
           .toISOString()
           .split("T")[0],
+        orderNumber: "",
+        orderTime: new Date().toISOString().slice(0, 16),
         paymentTerms: "Net 30",
         currency: "USD",
         taxRate: 0,
@@ -309,6 +318,19 @@ export function InvoiceDialog({
                 )}
               </div>
 
+              <div>
+                <Label htmlFor="customerPhone">Customer Phone (Optional)</Label>
+                <Input
+                  id="customerPhone"
+                  type="tel"
+                  value={formData.customerPhone}
+                  onChange={(e) =>
+                    handleInputChange("customerPhone", e.target.value)
+                  }
+                  placeholder="Enter customer phone number"
+                />
+              </div>
+
               <div className="md:col-span-2">
                 <Label htmlFor="billingAddress">Billing Address *</Label>
                 <Textarea
@@ -382,6 +404,31 @@ export function InvoiceDialog({
                 {errors.dueDate && (
                   <p className="text-red-500 text-sm mt-1">{errors.dueDate}</p>
                 )}
+              </div>
+
+              <div>
+                <Label htmlFor="orderNumber">Order Number (Optional)</Label>
+                <Input
+                  id="orderNumber"
+                  value={formData.orderNumber}
+                  onChange={(e) =>
+                    handleInputChange("orderNumber", e.target.value)
+                  }
+                  placeholder="Enter order number"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="orderTime">Order Time (Optional)</Label>
+                <Input
+                  id="orderTime"
+                  type="datetime-local"
+                  value={formData.orderTime}
+                  onChange={(e) =>
+                    handleInputChange("orderTime", e.target.value)
+                  }
+                  placeholder="Select order time"
+                />
               </div>
 
               <div>

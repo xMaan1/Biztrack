@@ -15,7 +15,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SparkCo ERP - Project Management System",
+  title: "BizTrack - Project Management System",
   description:
     "Professional project management and team collaboration platform",
 };
@@ -31,7 +31,7 @@ export default function RootLayout({
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
         <AuthProvider>
-          {children}
+          <AuthGuard>{children}</AuthGuard>
         </AuthProvider>
       </body>
     </html>

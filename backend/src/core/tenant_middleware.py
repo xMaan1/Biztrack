@@ -26,13 +26,8 @@ class TenantMiddleware:
             return await call_next(request)
         
         try:
-            # Extract tenant ID from header
-            tenant_id = request.headers.get("X-Tenant-ID")
-            if not tenant_id:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="X-Tenant-ID header is required"
-                )
+            # Extract tenant ID from header or JWT token
+            tenant_id = await self._extract_tenant_id(request)
             
             # Validate tenant and subscription
             tenant_context = await self._validate_tenant_and_subscription(tenant_id, request)
@@ -72,6 +67,8 @@ class TenantMiddleware:
             "/auth/login",
             "/auth/register",
             "/auth/refresh",
+            "/auth/select-tenant",
+            "/auth/my-tenants",
             "/health",
             "/health/simple",
             "/metrics",
@@ -169,6 +166,32 @@ class TenantMiddleware:
             
         finally:
             db.close()
+    
+    async def _extract_tenant_id(self, request: Request) -> str:
+        """Extract tenant ID from either header or JWT token"""
+        # First try to get from header
+        tenant_id = request.headers.get("X-Tenant-ID")
+        if tenant_id:
+            return tenant_id
+        
+        # If no header, try to extract from JWT token
+        try:
+            from ..core.auth import verify_token
+            auth_header = request.headers.get("Authorization")
+            if auth_header and auth_header.startswith("Bearer "):
+                token = auth_header.split(" ")[1]
+                payload = verify_token(token, "access")
+                tenant_id = payload.get("tenant_id")
+                if tenant_id:
+                    return tenant_id
+        except Exception:
+            pass
+        
+        # If neither header nor token has tenant_id, raise error
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="X-Tenant-ID header or tenant-specific JWT token is required"
+        )
     
     async def _check_plan_limits(self, tenant_context: Dict[str, Any], request: Request):
         """Check if request exceeds plan limits"""

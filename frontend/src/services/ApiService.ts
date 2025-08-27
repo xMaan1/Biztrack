@@ -20,7 +20,7 @@ export interface PaginatedResponse<T> {
 export class ApiService {
   private client: AxiosInstance;
   private sessionManager: SessionManager;
-  private publicEndpoints = ["/auth/login", "/auth/register"];
+  private publicEndpoints = ["/auth/login", "/auth/register", "/public/plans"];
   private currentTenantId: string | null = null;
 
   constructor() {
@@ -119,9 +119,10 @@ export class ApiService {
         // Only check auth on client side
         if (typeof window !== "undefined") {
           // Check if this is a public endpoint
-          const isPublicEndpoint = this.publicEndpoints.some((endpoint) =>
-            config.url?.includes(endpoint),
-          );
+          const isPublicEndpoint = this.publicEndpoints.some((endpoint) => {
+            const matches = config.url?.includes(endpoint);
+            return matches;
+          });
 
           if (!isPublicEndpoint) {
             // Check if user is authenticated for protected endpoints

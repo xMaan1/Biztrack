@@ -16,21 +16,30 @@ export function LandingNav() {
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center space-x-4">
             <Building2 className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold">SparkCo ERP</span>
+            <span className="text-xl font-bold">BizTrack</span>
           </div>
-          
+
           <div className="hidden md:flex items-center space-x-8">
-            <a href="#features" className="text-sm font-medium hover:text-primary transition-colors">
+            <a
+              href="#features"
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
               Features
             </a>
-            <a href="#pricing" className="text-sm font-medium hover:text-primary transition-colors">
+            <a
+              href="#pricing"
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
               Pricing
             </a>
-            <a href="#about" className="text-sm font-medium hover:text-primary transition-colors">
+            <a
+              href="#about"
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
               About
             </a>
           </div>
-          
+
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
               <Button onClick={() => router.push("/dashboard")}>

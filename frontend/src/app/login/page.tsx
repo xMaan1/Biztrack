@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "../../components/ui/button";
-import { UserPlus } from "lucide-react";
+import { UserPlus, Home } from "lucide-react";
 import { AuthForm } from "../../components/auth";
 
 export default function LoginPage() {
@@ -16,6 +16,17 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      {/* Home Navigation Link */}
+      <div className="absolute top-4 left-4">
+        <Link href="/">
+          <Button variant="outline" className="gap-2">
+            <Home className="h-4 w-4" />
+            Home
+          </Button>
+        </Link>
+      </div>
+
+      {/* Sign Up Button */}
       <div className="absolute top-4 right-4">
         <Link href="/signup">
           <Button variant="outline" className="gap-2">

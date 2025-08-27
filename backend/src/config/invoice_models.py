@@ -16,10 +16,13 @@ class Invoice(Base):
     customerId = Column(String, nullable=True)
     customerName = Column(String, nullable=False)
     customerEmail = Column(String, nullable=True)
+    customerPhone = Column(String, nullable=True)  # New field for customer phone
     billingAddress = Column(Text, nullable=True)
     shippingAddress = Column(Text, nullable=True)
     issueDate = Column(DateTime, nullable=False)
     dueDate = Column(DateTime, nullable=False)
+    orderNumber = Column(String, nullable=True)  # New field for order number
+    orderTime = Column(DateTime, nullable=True)  # New field for order time
     paymentTerms = Column(String, nullable=True)
     currency = Column(String, default="USD")
     taxRate = Column(Float, default=0.0)

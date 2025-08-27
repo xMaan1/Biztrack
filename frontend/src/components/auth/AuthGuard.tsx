@@ -15,21 +15,70 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   const pathname = usePathname();
 
   // List of public routes that don't require authentication
-  const publicRoutes = ["/", "/login", "/signup", "/client-portal"];
+  const publicRoutes = [
+    "/", // Landing page
+    "/login", // Login page
+    "/signup", // Signup page
+    "/client-portal", // Client portal (if exists)
+    "/api", // API routes
+    "/_next", // Next.js internal routes
+    "/favicon.ico", // Favicon
+    "/manifest.json", // PWA manifest
+  ];
+
+  // List of protected routes that require authentication
+  const protectedRoutes = [
+    "/dashboard",
+    "/inventory",
+    "/pos",
+    "/crm",
+    "/sales",
+    "/time-tracking",
+    "/team",
+    "/projects",
+    "/events",
+    "/tasks",
+    "/users",
+    "/workspace",
+    "/reports",
+    "/hrm",
+  ];
+
+  // Check if current route is public
+  const isPublicRoute = useMemo(() => {
+    return publicRoutes.some((route) => pathname?.startsWith(route));
+  }, [pathname]);
+
+  // Check if current route is protected
+  const isProtectedRoute = useMemo(() => {
+    return protectedRoutes.some((route) => pathname?.startsWith(route));
+  }, [pathname]);
 
   useEffect(() => {
     if (!loading) {
-      const isPublicRoute = publicRoutes.some((route) =>
-        pathname?.startsWith(route),
-      );
-
-      if (!isAuthenticated && !isPublicRoute) {
+      // If user is not authenticated and trying to access protected route
+      if (!isAuthenticated && isProtectedRoute) {
+        console.log(
+          "Unauthenticated user trying to access protected route:",
+          pathname,
+        );
         router.push("/login");
-      } else if (isAuthenticated && pathname === "/login") {
+        return;
+      }
+
+      // If user is authenticated and trying to access login/signup pages
+      if (
+        isAuthenticated &&
+        (pathname === "/login" || pathname === "/signup")
+      ) {
+        console.log(
+          "Authenticated user trying to access auth pages, redirecting to dashboard",
+        );
         router.push("/dashboard");
+        return;
       }
     }
-  }, [isAuthenticated, loading, pathname, router, user]);
+  }, [isAuthenticated, loading, pathname, router, isProtectedRoute]);
 
   // Show loading spinner while checking authentication
   if (loading) {
@@ -47,9 +96,6 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   }
 
   // For public routes, render children without authentication check
-  const isPublicRoute = publicRoutes.some((route) =>
-    pathname?.startsWith(route),
-  );
   if (isPublicRoute) {
     return <>{children}</>;
   }

@@ -247,11 +247,30 @@ class LoginCredentials(BaseModel):
     email: EmailStr
     password: str
 
+class TenantInfo(BaseModel):
+    id: str
+    name: str
+    domain: Optional[str] = None
+    role: str  # user's role in this tenant
+    isActive: bool = True
+
 class AuthResponse(BaseModel):
     success: bool
     user: User
     token: str
     refresh_token: str
+    expires_in: int
+    available_tenants: List[TenantInfo] = []
+    requires_tenant_selection: bool = False
+
+class TenantSelectionRequest(BaseModel):
+    tenant_id: str
+
+class TenantSelectionResponse(BaseModel):
+    success: bool
+    message: str
+    tenant: TenantInfo
+    access_token: str
     expires_in: int
 
 class RefreshTokenRequest(BaseModel):
@@ -1897,10 +1916,13 @@ class InvoiceBase(BaseModel):
     customerId: str
     customerName: str
     customerEmail: str
+    customerPhone: Optional[str] = None  # New field for customer phone
     billingAddress: str
     shippingAddress: Optional[str] = None
     issueDate: datetime
     dueDate: datetime
+    orderNumber: Optional[str] = None  # New field for order number
+    orderTime: Optional[datetime] = None  # New field for order time
     paymentTerms: str = "Net 30"
     currency: str = "USD"
     subtotal: float = 0.0
@@ -1917,10 +1939,13 @@ class InvoiceCreate(BaseModel):
     customerId: str
     customerName: str
     customerEmail: str
+    customerPhone: Optional[str] = None  # New field for customer phone
     billingAddress: str
     shippingAddress: Optional[str] = None
     issueDate: str
     dueDate: str
+    orderNumber: Optional[str] = None  # New field for order number
+    orderTime: Optional[str] = None  # New field for order time
     paymentTerms: str = "Net 30"
     currency: str = "USD"
     taxRate: float = 0.0

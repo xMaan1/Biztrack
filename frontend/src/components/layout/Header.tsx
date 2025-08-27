@@ -21,7 +21,7 @@ interface HeaderProps {
 }
 
 export default function Header({ onMenuClick }: HeaderProps) {
-  const { user, logout } = useAuth();
+  const { user, currentTenant, logout } = useAuth();
   const [notifications] = useState(3); // Mock notification count
 
   const handleLogout = async () => {
@@ -93,7 +93,9 @@ export default function Header({ onMenuClick }: HeaderProps) {
                     {user?.email}
                   </p>
                   <Badge variant="secondary" className="w-fit text-xs mt-1">
-                    {user?.userRole?.replace("_", " ").toUpperCase()}
+                    {currentTenant?.role?.toUpperCase() ||
+                      user?.userRole?.replace("_", " ").toUpperCase() ||
+                      "MEMBER"}
                   </Badge>
                 </div>
               </DropdownMenuLabel>
@@ -102,6 +104,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </DropdownMenuItem>
+
               <DropdownMenuItem>
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Settings</span>

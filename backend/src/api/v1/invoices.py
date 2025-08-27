@@ -71,10 +71,13 @@ def create_invoice(
             customerId=invoice_data.customerId,
             customerName=invoice_data.customerName,
             customerEmail=invoice_data.customerEmail,
+            customerPhone=invoice_data.customerPhone,  # New field
             billingAddress=invoice_data.billingAddress,
             shippingAddress=invoice_data.shippingAddress,
             issueDate=invoice_data.issueDate,
             dueDate=invoice_data.dueDate,
+            orderNumber=invoice_data.orderNumber,  # New field
+            orderTime=datetime.fromisoformat(invoice_data.orderTime) if invoice_data.orderTime else None,  # New field
             paymentTerms=invoice_data.paymentTerms,
             currency=invoice_data.currency,
             taxRate=invoice_data.taxRate,
@@ -281,6 +284,9 @@ def update_invoice(
                 invoice.subtotal = totals["subtotal"]
                 invoice.taxAmount = totals["taxAmount"]
                 invoice.total = totals["total"]
+            elif field == "orderTime" and value:
+                # Convert orderTime string to datetime
+                setattr(invoice, field, datetime.fromisoformat(value))
             else:
                 setattr(invoice, field, value)
         
