@@ -64,7 +64,7 @@ async def subscribe_to_plan(
     
     # Create subscription (trial for now)
     subscription_data = {
-        "tenantId": tenant.id,
+        "tenant_id": tenant.id,
         "planId": plan.id,
         "status": SubscriptionStatus.TRIAL.value,
         "startDate": datetime.utcnow(),
@@ -76,7 +76,7 @@ async def subscribe_to_plan(
     
     # Add user as owner
     tenant_user_data = {
-        "tenantId": tenant.id,
+        "tenant_id": tenant.id,
         "userId": current_user.id,
         "role": TenantRole.OWNER.value,
         "permissions": ["*"],  # Full permissions for owner
@@ -145,7 +145,7 @@ async def create_tenant_from_landing(
     
     # Create subscription (trial for now)
     subscription_data = {
-        "tenantId": tenant.id,
+        "tenant_id": tenant.id,
         "planId": plan.id,
         "status": SubscriptionStatus.TRIAL.value,
         "startDate": datetime.utcnow(),
@@ -157,7 +157,7 @@ async def create_tenant_from_landing(
     
     # Add user as owner
     tenant_user_data = {
-        "tenantId": tenant.id,
+        "tenant_id": tenant.id,
         "userId": current_user.id,
         "role": TenantRole.OWNER.value,
         "permissions": ["*"],  # Full permissions for owner
@@ -194,7 +194,7 @@ async def get_my_tenants(
     
     tenants = []
     for tenant_user in tenant_users:
-        tenant = get_tenant_by_id(str(tenant_user.tenantId), db)
+        tenant = get_tenant_by_id(str(tenant_user.tenant_id), db)
         if tenant:
             tenants.append({
                 "id": str(tenant.id),
@@ -222,7 +222,7 @@ async def get_tenant(
     
     # Check if user has access to this tenant
     tenant_users = get_user_tenants(str(current_user.id), db)
-    user_tenant = next((tu for tu in tenant_users if str(tu.tenantId) == tenant_id), None)
+    user_tenant = next((tu for tu in tenant_users if str(tu.tenant_id) == tenant_id), None)
     
     if not user_tenant:
         raise HTTPException(
@@ -249,7 +249,7 @@ async def get_tenant_users_list(
     """Get all users in a tenant, with their tenant role info"""
     # Verify user has access to tenant
     user_tenants = get_user_tenants(str(current_user.id), db)
-    user_tenant = next((tu for tu in user_tenants if str(tu.tenantId) == tenant_id), None)
+    user_tenant = next((tu for tu in user_tenants if str(tu.tenant_id) == tenant_id), None)
     if not user_tenant:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

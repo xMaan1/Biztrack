@@ -49,7 +49,7 @@ def get_tenant_context(
 
     # Verify user has access to this tenant
     user_tenants = get_user_tenants(str(current_user.id), db)
-    user_tenant = next((tu for tu in user_tenants if str(tu.tenantId) == x_tenant_id), None)
+    user_tenant = next((tu for tu in user_tenants if str(tu.tenant_id) == x_tenant_id), None)
 
     if not user_tenant:
         raise HTTPException(

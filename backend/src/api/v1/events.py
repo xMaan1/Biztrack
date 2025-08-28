@@ -40,7 +40,7 @@ def convert_event_to_response(event):
         "projectId": str(event.projectId) if event.projectId else None,
         "status": event.status,
         "createdBy": str(event.createdById),
-        "tenantId": str(event.tenant_id),
+        "tenant_id": str(event.tenant_id),
         "createdAt": event.createdAt,
         "updatedAt": event.updatedAt
     }

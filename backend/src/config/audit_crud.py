@@ -10,7 +10,7 @@ def get_audit_log_by_id(audit_log_id: str, db: Session) -> Optional[AuditLog]:
 def get_all_audit_logs(db: Session, tenant_id: str = None, user_id: str = None, skip: int = 0, limit: int = 100) -> List[AuditLog]:
     query = db.query(AuditLog)
     if tenant_id:
-        query = query.filter(AuditLog.tenantId == tenant_id)
+        query = query.filter(AuditLog.tenant_id == tenant_id)
     if user_id:
         query = query.filter(AuditLog.userId == user_id)
     return query.order_by(AuditLog.timestamp.desc()).offset(skip).limit(limit).all()
@@ -18,13 +18,13 @@ def get_all_audit_logs(db: Session, tenant_id: str = None, user_id: str = None, 
 def get_audit_logs_by_event_type(event_type: str, db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[AuditLog]:
     query = db.query(AuditLog).filter(AuditLog.eventType == event_type)
     if tenant_id:
-        query = query.filter(AuditLog.tenantId == tenant_id)
+        query = query.filter(AuditLog.tenant_id == tenant_id)
     return query.order_by(AuditLog.timestamp.desc()).offset(skip).limit(limit).all()
 
 def get_audit_logs_by_severity(severity: str, db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[AuditLog]:
     query = db.query(AuditLog).filter(AuditLog.severity == severity)
     if tenant_id:
-        query = query.filter(AuditLog.tenantId == tenant_id)
+        query = query.filter(AuditLog.tenant_id == tenant_id)
     return query.order_by(AuditLog.timestamp.desc()).offset(skip).limit(limit).all()
 
 def get_audit_logs_by_resource(resource_type: str, resource_id: str, db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[AuditLog]:
@@ -33,7 +33,7 @@ def get_audit_logs_by_resource(resource_type: str, resource_id: str, db: Session
         AuditLog.resourceId == resource_id
     )
     if tenant_id:
-        query = query.filter(AuditLog.tenantId == tenant_id)
+        query = query.filter(AuditLog.tenant_id == tenant_id)
     return query.order_by(AuditLog.timestamp.desc()).offset(skip).limit(limit).all()
 
 def create_audit_log(audit_log_data: dict, db: Session) -> AuditLog:
@@ -67,19 +67,19 @@ def get_audit_logs_by_date_range(start_date: datetime, end_date: datetime, db: S
         AuditLog.timestamp <= end_date
     )
     if tenant_id:
-        query = query.filter(AuditLog.tenantId == tenant_id)
+        query = query.filter(AuditLog.tenant_id == tenant_id)
     return query.order_by(AuditLog.timestamp.desc()).offset(skip).limit(limit).all()
 
 def get_audit_logs_by_action(action: str, db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[AuditLog]:
     query = db.query(AuditLog).filter(AuditLog.action == action)
     if tenant_id:
-        query = query.filter(AuditLog.tenantId == tenant_id)
+        query = query.filter(AuditLog.tenant_id == tenant_id)
     return query.order_by(AuditLog.timestamp.desc()).offset(skip).limit(limit).all()
 
 def get_failed_audit_logs(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[AuditLog]:
     query = db.query(AuditLog).filter(AuditLog.success == False)
     if tenant_id:
-        query = query.filter(AuditLog.tenantId == tenant_id)
+        query = query.filter(AuditLog.tenant_id == tenant_id)
     return query.order_by(AuditLog.timestamp.desc()).offset(skip).limit(limit).all()
 
 # Permission functions
@@ -135,19 +135,19 @@ def get_custom_roles(db: Session, tenant_id: str = None) -> List[CustomRole]:
 def get_custom_role_by_id(role_id: str, db: Session, tenant_id: str = None) -> Optional[CustomRole]:
     query = db.query(CustomRole).filter(CustomRole.id == role_id)
     if tenant_id:
-        query = query.filter(CustomRole.tenantId == tenant_id)
+        query = query.filter(CustomRole.tenant_id == tenant_id)
     return query.first()
 
 def get_custom_role_by_name(role_name: str, db: Session, tenant_id: str = None) -> Optional[CustomRole]:
     query = db.query(CustomRole).filter(CustomRole.name == role_name)
     if tenant_id:
-        query = query.filter(CustomRole.tenantId == tenant_id)
+        query = query.filter(CustomRole.tenant_id == tenant_id)
     return query.first()
 
 def get_all_custom_roles(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[CustomRole]:
     query = db.query(CustomRole)
     if tenant_id:
-        query = query.filter(CustomRole.tenantId == tenant_id)
+        query = query.filter(CustomRole.tenant_id == tenant_id)
     return query.order_by(CustomRole.createdAt.desc()).offset(skip).limit(limit).all()
 
 def create_custom_role(role_data: dict, db: Session) -> CustomRole:
@@ -179,7 +179,7 @@ def delete_custom_role(role_id: str, db: Session, tenant_id: str = None) -> bool
 def get_custom_roles_by_permission(permission_code: str, db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[CustomRole]:
     query = db.query(CustomRole).filter(CustomRole.permissions.contains([permission_code]))
     if tenant_id:
-        query = query.filter(CustomRole.tenantId == tenant_id)
+        query = query.filter(CustomRole.tenant_id == tenant_id)
     return query.order_by(CustomRole.createdAt.desc()).offset(skip).limit(limit).all()
 
 # Audit statistics functions
@@ -191,7 +191,7 @@ def get_audit_statistics(db: Session, tenant_id: str = None, days: int = 30) -> 
     
     query = db.query(AuditLog).filter(AuditLog.timestamp >= start_date, AuditLog.timestamp <= end_date)
     if tenant_id:
-        query = query.filter(AuditLog.tenantId == tenant_id)
+        query = query.filter(AuditLog.tenant_id == tenant_id)
     
     total_events = query.count()
     successful_events = query.filter(AuditLog.success == True).count()
@@ -203,7 +203,7 @@ def get_audit_statistics(db: Session, tenant_id: str = None, days: int = 30) -> 
         AuditLog.timestamp <= end_date
     )
     if tenant_id:
-        event_types = event_types.filter(AuditLog.tenantId == tenant_id)
+        event_types = event_types.filter(AuditLog.tenant_id == tenant_id)
     
     event_types = event_types.group_by(AuditLog.eventType).all()
     
@@ -213,7 +213,7 @@ def get_audit_statistics(db: Session, tenant_id: str = None, days: int = 30) -> 
         AuditLog.timestamp <= end_date
     )
     if tenant_id:
-        severities = severities.filter(AuditLog.tenantId == tenant_id)
+        severities = severities.filter(AuditLog.tenant_id == tenant_id)
     
     severities = severities.group_by(AuditLog.severity).all()
     

@@ -165,7 +165,7 @@ class AuditLogger:
                 eventType=audit_record["event_type"],
                 severity=audit_record["severity"],
                 userId=audit_record["user_id"],
-                tenantId=audit_record["tenant_id"],
+                tenant_id=audit_record["tenant_id"],
                 resourceType=audit_record["resource_type"],
                 resourceId=audit_record["resource_id"],
                 action=audit_record["action"],

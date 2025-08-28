@@ -49,7 +49,7 @@ async def get_leads(
         query = db.query(Lead)
         
         if tenant_context:
-            query = query.filter(Lead.tenantId == tenant_context["tenant_id"])
+            query = query.filter(Lead.tenant_id == tenant_context["tenant_id"])
         
         if status:
             query = query.filter(Lead.status == status)
@@ -93,7 +93,7 @@ async def create_lead(
         lead = Lead(
             id=str(uuid.uuid4()),
             **lead_data.dict(),
-            tenantId=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             createdBy=str(current_user.id),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
@@ -118,7 +118,7 @@ async def get_lead(
     try:
         query = db.query(Lead).filter(Lead.id == lead_id)
         if tenant_context:
-            query = query.filter(Lead.tenantId == tenant_context["tenant_id"])
+            query = query.filter(Lead.tenant_id == tenant_context["tenant_id"])
         
         lead = query.first()
         if not lead:
@@ -141,7 +141,7 @@ async def update_lead(
     try:
         query = db.query(Lead).filter(Lead.id == lead_id)
         if tenant_context:
-            query = query.filter(Lead.tenantId == tenant_context["tenant_id"])
+            query = query.filter(Lead.tenant_id == tenant_context["tenant_id"])
         
         lead = query.first()
         if not lead:
@@ -171,7 +171,7 @@ async def delete_lead(
     try:
         query = db.query(Lead).filter(Lead.id == lead_id)
         if tenant_context:
-            query = query.filter(Lead.tenantId == tenant_context["tenant_id"])
+            query = query.filter(Lead.tenant_id == tenant_context["tenant_id"])
         
         lead = query.first()
         if not lead:
@@ -203,7 +203,7 @@ async def get_contacts(
         query = db.query(Contact)
         
         if tenant_context:
-            query = query.filter(Contact.tenantId == tenant_context["tenant_id"])
+            query = query.filter(Contact.tenant_id == tenant_context["tenant_id"])
         
         if company_id:
             query = query.filter(Contact.companyId == company_id)
@@ -244,7 +244,7 @@ async def create_contact(
         contact = Contact(
             id=str(uuid.uuid4()),
             **contact_data.dict(),
-            tenantId=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             createdBy=str(current_user.id),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
@@ -270,7 +270,7 @@ async def update_contact(
     try:
         query = db.query(Contact).filter(Contact.id == contact_id)
         if tenant_context:
-            query = query.filter(Contact.tenantId == tenant_context["tenant_id"])
+            query = query.filter(Contact.tenant_id == tenant_context["tenant_id"])
         
         contact = query.first()
         if not contact:
@@ -300,7 +300,7 @@ async def delete_contact(
     try:
         query = db.query(Contact).filter(Contact.id == contact_id)
         if tenant_context:
-            query = query.filter(Contact.tenantId == tenant_context["tenant_id"])
+            query = query.filter(Contact.tenant_id == tenant_context["tenant_id"])
         
         contact = query.first()
         if not contact:
@@ -331,7 +331,7 @@ async def get_companies(
         query = db.query(Company)
         
         if tenant_context:
-            query = query.filter(Company.tenantId == tenant_context["tenant_id"])
+            query = query.filter(Company.tenant_id == tenant_context["tenant_id"])
         
         if industry:
             query = query.filter(Company.industry == industry)
@@ -369,7 +369,7 @@ async def create_company(
         company = Company(
             id=str(uuid.uuid4()),
             **company_data.dict(),
-            tenantId=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             createdBy=str(current_user.id),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
@@ -395,7 +395,7 @@ async def update_company(
     try:
         query = db.query(Company).filter(Company.id == company_id)
         if tenant_context:
-            query = query.filter(Company.tenantId == tenant_context["tenant_id"])
+            query = query.filter(Company.tenant_id == tenant_context["tenant_id"])
         
         company = query.first()
         if not company:
@@ -425,7 +425,7 @@ async def delete_company(
     try:
         query = db.query(Company).filter(Company.id == company_id)
         if tenant_context:
-            query = query.filter(Company.tenantId == tenant_context["tenant_id"])
+            query = query.filter(Company.tenant_id == tenant_context["tenant_id"])
         
         company = query.first()
         if not company:
@@ -457,7 +457,7 @@ async def get_opportunities(
         query = db.query(Opportunity)
         
         if tenant_context:
-            query = query.filter(Opportunity.tenantId == tenant_context["tenant_id"])
+            query = query.filter(Opportunity.tenant_id == tenant_context["tenant_id"])
         
         if stage:
             query = query.filter(Opportunity.stage == stage)
@@ -498,7 +498,7 @@ async def create_opportunity(
         opportunity = Opportunity(
             id=str(uuid.uuid4()),
             **opportunity_data.dict(),
-            tenantId=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             createdBy=str(current_user.id),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
@@ -524,7 +524,7 @@ async def update_opportunity(
     try:
         query = db.query(Opportunity).filter(Opportunity.id == opportunity_id)
         if tenant_context:
-            query = query.filter(Opportunity.tenantId == tenant_context["tenant_id"])
+            query = query.filter(Opportunity.tenant_id == tenant_context["tenant_id"])
         
         opportunity = query.first()
         if not opportunity:
@@ -554,7 +554,7 @@ async def delete_opportunity(
     try:
         query = db.query(Opportunity).filter(Opportunity.id == opportunity_id)
         if tenant_context:
-            query = query.filter(Opportunity.tenantId == tenant_context["tenant_id"])
+            query = query.filter(Opportunity.tenant_id == tenant_context["tenant_id"])
         
         opportunity = query.first()
         if not opportunity:
@@ -585,7 +585,7 @@ async def get_quotes(
         query = db.query(Quote)
         
         if tenant_context:
-            query = query.filter(Quote.tenantId == tenant_context["tenant_id"])
+            query = query.filter(Quote.tenant_id == tenant_context["tenant_id"])
         
         if status:
             query = query.filter(Quote.status == status)
@@ -620,7 +620,7 @@ async def create_quote(
             id=str(uuid.uuid4()),
             **quote_data.dict(),
             quoteNumber=generate_quote_number(),
-            tenantId=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             createdBy=str(current_user.id),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
@@ -646,7 +646,7 @@ async def update_quote(
     try:
         query = db.query(Quote).filter(Quote.id == quote_id)
         if tenant_context:
-            query = query.filter(Quote.tenantId == tenant_context["tenant_id"])
+            query = query.filter(Quote.tenant_id == tenant_context["tenant_id"])
         
         quote = query.first()
         if not quote:
@@ -676,7 +676,7 @@ async def delete_quote(
     try:
         query = db.query(Quote).filter(Quote.id == quote_id)
         if tenant_context:
-            query = query.filter(Quote.tenantId == tenant_context["tenant_id"])
+            query = query.filter(Quote.tenant_id == tenant_context["tenant_id"])
         
         quote = query.first()
         if not quote:
@@ -707,7 +707,7 @@ async def get_contracts(
         query = db.query(Contract)
         
         if tenant_context:
-            query = query.filter(Contract.tenantId == tenant_context["tenant_id"])
+            query = query.filter(Contract.tenant_id == tenant_context["tenant_id"])
         
         if status:
             query = query.filter(Contract.status == status)
@@ -742,7 +742,7 @@ async def create_contract(
             id=str(uuid.uuid4()),
             **contract_data.dict(),
             contractNumber=generate_contract_number(),
-            tenantId=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             createdBy=str(current_user.id),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
@@ -768,7 +768,7 @@ async def update_contract(
     try:
         query = db.query(Contract).filter(Contract.id == contract_id)
         if tenant_context:
-            query = query.filter(Contract.tenantId == tenant_context["tenant_id"])
+            query = query.filter(Contract.tenant_id == tenant_context["tenant_id"])
         
         contract = query.first()
         if not contract:
@@ -798,7 +798,7 @@ async def delete_contract(
     try:
         query = db.query(Contract).filter(Contract.id == contract_id)
         if tenant_context:
-            query = query.filter(Contract.tenantId == tenant_context["tenant_id"])
+            query = query.filter(Contract.tenant_id == tenant_context["tenant_id"])
         
         contract = query.first()
         if not contract:
@@ -832,7 +832,7 @@ async def get_sales_activities(
         query = db.query(SalesActivity)
         
         if tenant_context:
-            query = query.filter(SalesActivity.tenantId == tenant_context["tenant_id"])
+            query = query.filter(SalesActivity.tenant_id == tenant_context["tenant_id"])
         
         if lead_id:
             query = query.filter(SalesActivity.leadId == lead_id)
@@ -872,7 +872,7 @@ async def create_sales_activity(
         activity = SalesActivity(
             id=str(uuid.uuid4()),
             **activity_data.dict(),
-            tenantId=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             createdBy=str(current_user.id),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
@@ -900,8 +900,8 @@ async def get_sales_dashboard(
         base_opportunity_query = db.query(Opportunity)
         
         if tenant_context:
-            base_lead_query = base_lead_query.filter(Lead.tenantId == tenant_context["tenant_id"])
-            base_opportunity_query = base_opportunity_query.filter(Opportunity.tenantId == tenant_context["tenant_id"])
+            base_lead_query = base_lead_query.filter(Lead.tenant_id == tenant_context["tenant_id"])
+            base_opportunity_query = base_opportunity_query.filter(Opportunity.tenant_id == tenant_context["tenant_id"])
         
         # Calculate metrics
         total_leads = base_lead_query.count()
@@ -981,7 +981,7 @@ async def get_sales_dashboard(
         
         if tenant_context:
             recent_activities = db.query(SalesActivity).filter(
-                SalesActivity.tenantId == tenant_context["tenant_id"]
+                SalesActivity.tenant_id == tenant_context["tenant_id"]
             ).order_by(SalesActivity.createdAt.desc()).limit(10).all()
             
             top_opportunities = base_opportunity_query.filter(

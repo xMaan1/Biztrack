@@ -188,7 +188,7 @@ class Permission(BaseModel):
     label: str  # Human-readable label
 
 class CustomRoleBase(BaseModel):
-    tenantId: str
+    tenant_id: str
     name: str
     permissions: List[str]  # List of permission codes
 
@@ -427,7 +427,7 @@ class Tenant(TenantBase):
 
 # Subscription Models
 class SubscriptionBase(BaseModel):
-    tenantId: str
+    tenant_id: str
     planId: str
     status: SubscriptionStatus = SubscriptionStatus.TRIAL
     startDate: datetime
@@ -448,7 +448,7 @@ class Subscription(SubscriptionBase):
 
 # Tenant User Models
 class TenantUserBase(BaseModel):
-    tenantId: str
+    tenant_id: str
     userId: str
     role: TenantRole
     permissions: Optional[List[str]] = []
@@ -561,7 +561,7 @@ class Event(EventBase):
     id: str
     status: EventStatus = EventStatus.SCHEDULED
     createdBy: str
-    tenantId: str
+    tenant_id: str
     createdAt: datetime
     updatedAt: datetime
 
@@ -608,7 +608,7 @@ class LeadUpdate(BaseModel):
 
 class Lead(LeadBase):
     id: str
-    tenantId: str
+    tenant_id: str
     createdBy: str
     assignedToUser: Optional[Dict[str, str]] = None
     activities: List[Dict[str, Any]] = []
@@ -649,7 +649,7 @@ class ContactUpdate(BaseModel):
 class Contact(ContactBase):
     id: str
     companyId: str
-    tenantId: str
+    tenant_id: str
     createdBy: str
     activities: List[Dict[str, Any]] = []
     createdAt: datetime
@@ -694,7 +694,7 @@ class CompanyUpdate(BaseModel):
 
 class Company(CompanyBase):
     id: str
-    tenantId: str
+    tenant_id: str
     createdBy: str
     contacts: List[Contact] = []
     opportunities: List[Dict[str, Any]] = []
@@ -739,7 +739,7 @@ class Opportunity(OpportunityBase):
     leadId: Optional[str] = None
     companyId: Optional[str] = None
     contactId: Optional[str] = None
-    tenantId: str
+    tenant_id: str
     createdBy: str
     assignedToUser: Optional[Dict[str, str]] = None
     activities: List[Dict[str, Any]] = []
@@ -789,7 +789,7 @@ class Quote(QuoteBase):
     id: str
     quoteNumber: str
     status: QuoteStatus = QuoteStatus.DRAFT
-    tenantId: str
+    tenant_id: str
     createdBy: str
     sentAt: Optional[datetime] = None
     viewedAt: Optional[datetime] = None
@@ -831,7 +831,7 @@ class Contract(ContractBase):
     id: str
     contractNumber: str
     status: ContractStatus = ContractStatus.DRAFT
-    tenantId: str
+    tenant_id: str
     createdBy: str
     signedAt: Optional[datetime] = None
     activatedAt: Optional[datetime] = None
@@ -870,7 +870,7 @@ class SalesActivity(SalesActivityBase):
     opportunityId: Optional[str] = None
     contactId: Optional[str] = None
     companyId: Optional[str] = None
-    tenantId: str
+    tenant_id: str
     createdBy: str
     assignedTo: Optional[str] = None
     completedAt: Optional[datetime] = None
@@ -970,7 +970,7 @@ class LeadUpdate(BaseModel):
 
 class Lead(LeadBase):
     id: str
-    tenantId: str
+    tenant_id: str
     createdBy: str
     convertedToContact: Optional[str] = None
     convertedToOpportunity: Optional[str] = None
@@ -1015,7 +1015,7 @@ class ContactUpdate(BaseModel):
 
 class Contact(ContactBase):
     id: str
-    tenantId: str
+    tenant_id: str
     createdBy: str
     lastContactDate: Optional[datetime] = None
     nextFollowUpDate: Optional[datetime] = None
@@ -1062,7 +1062,7 @@ class CompanyUpdate(BaseModel):
 
 class Company(CompanyBase):
     id: str
-    tenantId: str
+    tenant_id: str
     createdBy: str
     annualRevenue: Optional[float] = None
     employeeCount: Optional[int] = None
@@ -1106,7 +1106,7 @@ class OpportunityUpdate(BaseModel):
 
 class Opportunity(OpportunityBase):
     id: str
-    tenantId: str
+    tenant_id: str
     createdBy: str
     closedDate: Optional[datetime] = None
     wonAmount: Optional[float] = None
@@ -1145,7 +1145,7 @@ class SalesActivity(SalesActivityBase):
     opportunityId: Optional[str] = None
     contactId: Optional[str] = None
     companyId: Optional[str] = None
-    tenantId: str
+    tenant_id: str
     createdBy: str
     assignedTo: Optional[str] = None
     completedAt: Optional[datetime] = None
@@ -1345,7 +1345,7 @@ class EmployeeUpdate(BaseModel):
 
 class Employee(EmployeeBase):
     id: str
-    tenantId: str
+    tenant_id: str
     createdBy: str
     createdAt: str
     updatedAt: str
@@ -1387,7 +1387,7 @@ class JobPostingUpdate(BaseModel):
 
 class JobPosting(JobPostingBase):
     id: str
-    tenantId: str
+    tenant_id: str
     createdBy: str
     createdAt: str
     updatedAt: str
@@ -1430,7 +1430,7 @@ class ApplicationUpdate(BaseModel):
 
 class Application(ApplicationBase):
     id: str
-    tenantId: str
+    tenant_id: str
     createdBy: str
     createdAt: str
     updatedAt: str
@@ -1475,7 +1475,7 @@ class PerformanceReviewUpdate(BaseModel):
 
 class PerformanceReview(PerformanceReviewBase):
     id: str
-    tenantId: str
+    tenant_id: str
     createdBy: str
     createdAt: str
     updatedAt: str
@@ -1507,7 +1507,7 @@ class TimeEntryUpdate(BaseModel):
 
 class TimeEntry(TimeEntryBase):
     id: str
-    tenantId: str
+    tenant_id: str
     createdBy: str
     createdAt: str
     updatedAt: str
@@ -1542,7 +1542,7 @@ class LeaveRequestUpdate(BaseModel):
 
 class LeaveRequest(LeaveRequestBase):
     id: str
-    tenantId: str
+    tenant_id: str
     createdBy: str
     createdAt: str
     updatedAt: str
@@ -1578,7 +1578,7 @@ class PayrollUpdate(BaseModel):
 
 class Payroll(PayrollBase):
     id: str
-    tenantId: str
+    tenant_id: str
     createdBy: str
     createdAt: str
     updatedAt: str
@@ -1613,7 +1613,7 @@ class BenefitsUpdate(BaseModel):
 
 class Benefits(BenefitsBase):
     id: str
-    tenantId: str
+    tenant_id: str
     createdBy: str
     createdAt: str
     updatedAt: str
@@ -1653,7 +1653,7 @@ class TrainingUpdate(BaseModel):
 
 class Training(TrainingBase):
     id: str
-    tenantId: str
+    tenant_id: str
     createdBy: str
     createdAt: str
     updatedAt: str
@@ -1680,7 +1680,7 @@ class TrainingEnrollmentUpdate(BaseModel):
 
 class TrainingEnrollment(TrainingEnrollmentBase):
     id: str
-    tenantId: str
+    tenant_id: str
     createdBy: str
     createdAt: str
     updatedAt: str
@@ -1975,7 +1975,7 @@ class InvoiceUpdate(BaseModel):
 
 class Invoice(InvoiceBase):
     id: UUID
-    tenantId: UUID
+    tenant_id: UUID
     createdBy: UUID
     opportunityId: Optional[str] = None
     quoteId: Optional[str] = None
@@ -2062,7 +2062,7 @@ class PaymentUpdate(BaseModel):
 
 class Payment(PaymentBase):
     id: UUID
-    tenantId: UUID
+    tenant_id: UUID
     createdBy: UUID
     processedAt: Optional[datetime] = None
     createdAt: datetime
@@ -2278,7 +2278,7 @@ class ProductUpdate(BaseModel):
 
 class Product(ProductBase):
     id: str
-    tenantId: str
+    tenant_id: str
     createdBy: str
     createdAt: datetime
     updatedAt: datetime
@@ -2328,7 +2328,7 @@ class WarehouseUpdate(BaseModel):
 
 class Warehouse(WarehouseBase):
     id: str
-    tenantId: str
+    tenant_id: str
     createdBy: str
     createdAt: datetime
     updatedAt: datetime
@@ -2364,7 +2364,7 @@ class StorageLocationUpdate(BaseModel):
 
 class StorageLocation(StorageLocationBase):
     id: str
-    tenantId: str
+    tenant_id: str
     createdBy: str
     createdAt: datetime
     updatedAt: datetime
@@ -2406,7 +2406,7 @@ class StockMovementUpdate(BaseModel):
 
 class StockMovement(StockMovementBase):
     id: str
-    tenantId: str
+    tenant_id: str
     createdBy: str
     status: StockMovementStatus
     createdAt: datetime
@@ -2477,7 +2477,7 @@ class PurchaseOrderUpdate(BaseModel):
 
 class PurchaseOrder(PurchaseOrderBase):
     id: str
-    tenantId: str
+    tenant_id: str
     createdBy: str
     createdAt: datetime
     updatedAt: datetime
@@ -2523,7 +2523,7 @@ class SupplierUpdate(BaseModel):
 
 class Supplier(SupplierBase):
     id: str
-    tenantId: str
+    tenant_id: str
     createdBy: str
     createdAt: datetime
     updatedAt: datetime
@@ -2599,7 +2599,7 @@ class ReceivingUpdate(BaseModel):
 
 class Receiving(ReceivingBase):
     id: str
-    tenantId: str
+    tenant_id: str
     createdBy: str
     createdAt: datetime
     updatedAt: datetime
@@ -2649,7 +2649,7 @@ class POSTransactionUpdate(BaseModel):
 
 class POSTransaction(POSTransactionBase):
     id: str
-    tenantId: str
+    tenant_id: str
     shiftId: str
     cashierId: str
     cashierName: str
@@ -2680,7 +2680,7 @@ class POSShiftUpdate(BaseModel):
 
 class POSShift(POSShiftBase):
     id: str
-    tenantId: str
+    tenant_id: str
     cashierId: str
     cashierName: str
     openedAt: datetime

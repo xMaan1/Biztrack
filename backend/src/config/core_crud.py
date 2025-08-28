@@ -124,7 +124,7 @@ def get_subscription_by_id(subscription_id: str, db: Session) -> Optional[Subscr
 
 def get_tenant_subscription(tenant_id: str, db: Session) -> Optional[Subscription]:
     return db.query(Subscription).filter(
-        Subscription.tenantId == tenant_id,
+        Subscription.tenant_id == tenant_id,
         Subscription.status.in_(["active", "trial"])
     ).first()
 
@@ -135,7 +135,7 @@ def get_subscription_by_tenant(tenant_id: str, db: Session) -> Optional[Subscrip
 def get_all_subscriptions(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Subscription]:
     query = db.query(Subscription)
     if tenant_id:
-        query = query.filter(Subscription.tenantId == tenant_id)
+        query = query.filter(Subscription.tenant_id == tenant_id)
     return query.offset(skip).limit(limit).all()
 
 def create_subscription(subscription_data: dict, db: Session) -> Subscription:
@@ -167,13 +167,13 @@ def delete_subscription(subscription_id: str, db: Session) -> bool:
 # TenantUser functions
 def get_tenant_user(tenant_id: str, user_id: str, db: Session) -> Optional[TenantUser]:
     return db.query(TenantUser).filter(
-        TenantUser.tenantId == tenant_id,
+        TenantUser.tenant_id == tenant_id,
         TenantUser.userId == user_id
     ).first()
 
 def get_tenant_users(tenant_id: str, db: Session, skip: int = 0, limit: int = 100) -> List[TenantUser]:
     return db.query(TenantUser).filter(
-        TenantUser.tenantId == tenant_id,
+        TenantUser.tenant_id == tenant_id,
         TenantUser.isActive == True
     ).offset(skip).limit(limit).all()
 

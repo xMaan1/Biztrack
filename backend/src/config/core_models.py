@@ -157,7 +157,7 @@ class Subscription(Base):
     __tablename__ = "subscriptions"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    tenantId = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
     planId = Column(UUID(as_uuid=True), ForeignKey("plans.id"), nullable=False)
     status = Column(String, nullable=False, default="trial")  # active, inactive, cancelled, expired, trial
     startDate = Column(DateTime, nullable=False)
@@ -174,7 +174,7 @@ class TenantUser(Base):
     __tablename__ = "tenant_users"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    tenantId = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
     userId = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     role = Column(String, nullable=False)  # owner, admin, manager, member, viewer
     permissions = Column(JSON, default=[])

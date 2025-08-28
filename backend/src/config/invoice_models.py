@@ -40,6 +40,13 @@ class Invoice(Base):
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow)
     
+    # Additional fields that the API expects
+    paidAt = Column(DateTime, nullable=True)
+    sentAt = Column(DateTime, nullable=True)
+    totalPaid = Column(Float, default=0.0)
+    balance = Column(Float, default=0.0)
+    items = Column(JSON, default=[])
+    
     # Relationships
     payments = relationship("Payment", back_populates="invoice")
     tenant = relationship("Tenant", back_populates="invoices")

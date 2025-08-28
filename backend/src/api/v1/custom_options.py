@@ -29,7 +29,7 @@ async def create_custom_event_type(
         id=str(uuid.uuid4()),
         name=name,
         description=description,
-        tenantId=current_user.tenant_id,
+        tenant_id=current_user.tenant_id,
         createdBy=current_user.id
     )
     
@@ -41,7 +41,7 @@ async def create_custom_event_type(
         "id": custom_type.id,
         "name": custom_type.name,
         "description": custom_type.description,
-        "tenantId": custom_type.tenantId,
+        "tenant_id": custom_type.tenant_id,
         "createdBy": custom_type.createdBy,
         "createdAt": custom_type.createdAt,
         "updatedAt": custom_type.updatedAt
@@ -56,7 +56,7 @@ async def get_custom_event_types(
         raise HTTPException(status_code=400, detail="User must belong to a tenant")
     
     custom_types = db.query(CustomEventType).filter(
-        CustomEventType.tenantId == current_user.tenant_id
+        CustomEventType.tenant_id == current_user.tenant_id
     ).all()
     
     return [
@@ -84,7 +84,7 @@ async def create_custom_department(
         id=str(uuid.uuid4()),
         name=name,
         description=description,
-        tenantId=current_user.tenant_id,
+        tenant_id=current_user.tenant_id,
         createdBy=current_user.id
     )
     
@@ -96,7 +96,7 @@ async def create_custom_department(
         "id": custom_dept.id,
         "name": custom_dept.name,
         "description": custom_dept.description,
-        "tenantId": custom_dept.tenantId,
+        "tenant_id": custom_dept.tenant_id,
         "createdBy": custom_dept.createdBy,
         "createdAt": custom_dept.createdAt,
         "updatedAt": custom_dept.updatedAt
@@ -111,7 +111,7 @@ async def get_custom_departments(
         raise HTTPException(status_code=400, detail="User must belong to a tenant")
     
     custom_depts = db.query(CustomDepartment).filter(
-        CustomDepartment.tenantId == current_user.tenant_id
+        CustomDepartment.tenant_id == current_user.tenant_id
     ).all()
     
     return [
@@ -139,7 +139,7 @@ async def create_custom_leave_type(
         id=str(uuid.uuid4()),
         name=name,
         description=description,
-        tenantId=current_user.tenant_id,
+        tenant_id=current_user.tenant_id,
         createdBy=current_user.id
     )
     
@@ -151,7 +151,7 @@ async def create_custom_leave_type(
         "id": custom_leave.id,
         "name": custom_leave.name,
         "description": custom_leave.description,
-        "tenantId": custom_leave.tenantId,
+        "tenant_id": custom_leave.tenant_id,
         "createdBy": custom_leave.createdBy,
         "createdAt": custom_leave.createdAt,
         "updatedAt": custom_leave.updatedAt
@@ -166,7 +166,7 @@ async def get_custom_leave_types(
         raise HTTPException(status_code=400, detail="User must belong to a tenant")
     
     custom_leaves = db.query(CustomLeaveType).filter(
-        CustomLeaveType.tenantId == current_user.tenant_id
+        CustomLeaveType.tenant_id == current_user.tenant_id
     ).all()
     
     return [
@@ -194,7 +194,7 @@ async def create_custom_lead_source(
         id=str(uuid.uuid4()),
         name=name,
         description=description,
-        tenantId=current_user.tenant_id,
+        tenant_id=current_user.tenant_id,
         createdBy=current_user.id
     )
     
@@ -206,7 +206,7 @@ async def create_custom_lead_source(
         "id": custom_source.id,
         "name": custom_source.name,
         "description": custom_source.description,
-        "tenantId": custom_source.tenantId,
+        "tenant_id": custom_source.tenant_id,
         "createdBy": custom_source.createdBy,
         "createdAt": custom_source.createdAt,
         "updatedAt": custom_source.updatedAt
@@ -221,7 +221,7 @@ async def get_custom_lead_sources(
         raise HTTPException(status_code=400, detail="User must belong to a tenant")
     
     custom_sources = db.query(CustomLeadSource).filter(
-        CustomLeadSource.tenantId == current_user.tenant_id
+        CustomLeadSource.tenant_id == current_user.tenant_id
     ).all()
     
     return [
@@ -249,7 +249,7 @@ async def create_custom_contact_source(
         id=str(uuid.uuid4()),
         name=name,
         description=description,
-        tenantId=current_user.tenant_id,
+        tenant_id=current_user.tenant_id,
         createdBy=current_user.id
     )
     
@@ -261,7 +261,7 @@ async def create_custom_contact_source(
         "id": custom_source.id,
         "name": custom_source.name,
         "description": custom_source.description,
-        "tenantId": custom_source.tenantId,
+        "tenant_id": custom_source.tenant_id,
         "createdBy": custom_source.createdBy,
         "createdAt": custom_source.createdAt,
         "updatedAt": custom_source.updatedAt
@@ -276,7 +276,7 @@ async def get_custom_contact_sources(
         raise HTTPException(status_code=400, detail="User must belong to a tenant")
     
     custom_sources = db.query(CustomContactSource).filter(
-        CustomContactSource.tenantId == current_user.tenant_id
+        CustomContactSource.tenant_id == current_user.tenant_id
     ).all()
     
     return [
@@ -304,7 +304,7 @@ async def create_custom_company_industry(
         id=str(uuid.uuid4()),
         name=name,
         description=description,
-        tenantId=current_user.tenant_id,
+        tenant_id=current_user.tenant_id,
         createdBy=current_user.id
     )
     
@@ -316,7 +316,7 @@ async def create_custom_company_industry(
         "id": custom_industry.id,
         "name": custom_industry.name,
         "description": custom_industry.description,
-        "tenantId": custom_industry.tenantId,
+        "tenant_id": custom_industry.tenant_id,
         "createdBy": custom_industry.createdBy,
         "createdAt": custom_industry.createdAt,
         "updatedAt": custom_industry.updatedAt
@@ -331,7 +331,7 @@ async def get_custom_company_industries(
         raise HTTPException(status_code=400, detail="User must belong to a tenant")
     
     custom_industries = db.query(CustomCompanyIndustry).filter(
-        CustomCompanyIndustry.tenantId == current_user.tenant_id
+        CustomCompanyIndustry.tenant_id == current_user.tenant_id
     ).all()
     
     return [
@@ -359,7 +359,7 @@ async def create_custom_contact_type(
         id=str(uuid.uuid4()),
         name=name,
         description=description,
-        tenantId=current_user.tenant_id,
+        tenant_id=current_user.tenant_id,
         createdBy=current_user.id
     )
     
@@ -371,7 +371,7 @@ async def create_custom_contact_type(
         "id": custom_type.id,
         "name": custom_type.name,
         "description": custom_type.description,
-        "tenantId": custom_type.tenantId,
+        "tenant_id": custom_type.tenant_id,
         "createdBy": custom_type.createdBy,
         "createdAt": custom_type.createdAt,
         "updatedAt": custom_type.updatedAt
@@ -386,7 +386,7 @@ async def get_custom_contact_types(
         raise HTTPException(status_code=400, detail="User must belong to a tenant")
     
     custom_types = db.query(CustomContactType).filter(
-        CustomContactType.tenantId == current_user.tenant_id
+        CustomContactType.tenant_id == current_user.tenant_id
     ).all()
     
     return [
@@ -414,7 +414,7 @@ async def create_custom_industry(
         id=str(uuid.uuid4()),
         name=name,
         description=description,
-        tenantId=current_user.tenant_id,
+        tenant_id=current_user.tenant_id,
         createdBy=current_user.id
     )
     
@@ -426,7 +426,7 @@ async def create_custom_industry(
         "id": custom_industry.id,
         "name": custom_industry.name,
         "description": custom_industry.description,
-        "tenantId": custom_industry.tenantId,
+        "tenant_id": custom_industry.tenant_id,
         "createdBy": custom_industry.createdBy,
         "createdAt": custom_industry.createdAt,
         "updatedAt": custom_industry.updatedAt
@@ -441,7 +441,7 @@ async def get_custom_industries(
         raise HTTPException(status_code=400, detail="User must belong to a tenant")
     
     custom_industries = db.query(CustomIndustry).filter(
-        CustomIndustry.tenantId == current_user.tenant_id
+        CustomIndustry.tenant_id == current_user.tenant_id
     ).all()
     
     return [

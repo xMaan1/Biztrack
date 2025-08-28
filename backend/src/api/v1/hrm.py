@@ -103,7 +103,7 @@ async def create_hrm_employee(
         employee = Employee(
             id=str(uuid.uuid4()),
             **employee_data.dict(),
-            tenantId=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             createdBy=str(current_user.id),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
@@ -232,7 +232,7 @@ async def create_hrm_job(
         job = JobPosting(
             id=str(uuid.uuid4()),
             **job_data.dict(),
-            tenantId=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             createdBy=str(current_user.id),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
@@ -362,7 +362,7 @@ async def create_hrm_application(
         application = Application(
             id=str(uuid.uuid4()),
             **application_data.dict(),
-            tenantId=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             createdBy=str(current_user.id),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
@@ -436,7 +436,7 @@ async def create_hrm_review(
         review = PerformanceReview(
             id=str(uuid.uuid4()),
             **review_data.dict(),
-            tenantId=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             createdBy=str(current_user.id),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
@@ -560,7 +560,7 @@ async def create_hrm_time_entry(
         time_entry = TimeEntry(
             id=str(uuid.uuid4()),
             **time_entry_data.dict(),
-            tenantId=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             createdBy=str(current_user.id),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
@@ -637,7 +637,7 @@ async def create_hrm_leave_request(
         leave_request = LeaveRequest(
             id=str(uuid.uuid4()),
             **leave_request_data.dict(),
-            tenantId=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             createdBy=str(current_user.id),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
@@ -768,7 +768,7 @@ async def create_hrm_payroll(
         payroll = Payroll(
             id=str(uuid.uuid4()),
             **payroll_data.dict(),
-            tenantId=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             createdBy=str(current_user.id),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
@@ -893,7 +893,7 @@ async def create_hrm_benefit(
         benefit = Benefits(
             id=str(uuid.uuid4()),
             **benefit_data.dict(),
-            tenantId=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             createdBy=str(current_user.id),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
@@ -973,7 +973,7 @@ async def create_hrm_training(
         training = Training(
             id=str(uuid.uuid4()),
             **training_data.dict(),
-            tenantId=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             createdBy=str(current_user.id),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
@@ -1098,7 +1098,7 @@ async def create_hrm_training_enrollment(
         enrollment = TrainingEnrollment(
             id=str(uuid.uuid4()),
             **enrollment_data.dict(),
-            tenantId=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             createdBy=str(current_user.id),
             createdAt=datetime.now(),
             updatedAt=datetime.now()

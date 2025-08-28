@@ -13,7 +13,7 @@ class AuditLog(Base):
     eventType = Column(String, nullable=False, index=True)
     severity = Column(String, nullable=False, default="medium")
     userId = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
-    tenantId = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=True)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=True)
     resourceType = Column(String, nullable=True)
     resourceId = Column(String, nullable=True)
     action = Column(String, nullable=True)
@@ -26,7 +26,7 @@ class AuditLog(Base):
     
     # Relationships
     user = relationship("User", foreign_keys=[userId])
-    tenant = relationship("Tenant", foreign_keys=[tenantId])
+    tenant = relationship("Tenant", foreign_keys=[tenant_id])
 
 class Permission(Base):
     __tablename__ = "permissions"
@@ -38,7 +38,7 @@ class Permission(Base):
 class CustomRole(Base):
     __tablename__ = "custom_roles"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    tenantId = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
     name = Column(String, nullable=False)
     permissions = Column(JSON, default=[])
     createdAt = Column(DateTime, default=datetime.utcnow)

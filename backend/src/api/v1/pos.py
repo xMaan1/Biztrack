@@ -131,7 +131,7 @@ async def create_pos_product(
         product = Product(
             id=str(uuid.uuid4()),
             **product_data.dict(),
-            tenantId=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             createdBy=str(current_user.id),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
@@ -278,7 +278,7 @@ async def create_pos_shift(
             totalTransactions=0,
             status="open",
             openedAt=datetime.now(),
-            tenantId=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
         )
@@ -437,7 +437,7 @@ async def create_pos_transaction(
             **transaction_data.dict(),
             **totals,
             status="completed",  # Auto-complete for now
-            tenantId=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             shiftId=str(open_shift.id),
             cashierId=str(current_user.id),
             cashierName=f"{current_user.firstName or ''} {current_user.lastName or ''}".strip() or current_user.userName,

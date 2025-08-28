@@ -93,7 +93,7 @@ async def create_crm_lead(
         lead = Lead(
             id=str(uuid.uuid4()),
             **lead_data.dict(),
-            tenantId=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             createdBy=str(current_user.id),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
@@ -223,7 +223,7 @@ async def create_crm_contact(
         contact = Contact(
             id=str(uuid.uuid4()),
             **contact_data.dict(),
-            tenantId=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             createdBy=str(current_user.id),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
@@ -352,7 +352,7 @@ async def create_crm_company(
         company = Company(
             id=str(uuid.uuid4()),
             **company_data.dict(),
-            tenantId=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             createdBy=str(current_user.id),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
@@ -480,7 +480,7 @@ async def create_crm_opportunity(
         opportunity = Opportunity(
             id=str(uuid.uuid4()),
             **opportunity_data.dict(),
-            tenantId=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             createdBy=str(current_user.id),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
@@ -608,7 +608,7 @@ async def create_crm_activity(
         activity = SalesActivity(
             id=str(uuid.uuid4()),
             **activity_data.dict(),
-            tenantId=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             createdBy=str(current_user.id),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
@@ -754,7 +754,7 @@ async def convert_lead_to_contact(
         contact = Contact(
             id=str(uuid.uuid4()),
             **contact_data.dict(),
-            tenantId=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             createdBy=str(current_user.id),
             createdAt=datetime.now(),
             updatedAt=datetime.now()

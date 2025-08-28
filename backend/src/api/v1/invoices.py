@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func, desc, text
 
 from ...config.database import get_db
-from ...api.dependencies import get_current_user
+from ...api.dependencies import get_current_user, get_tenant_context
 from ...models.unified_models import (
     InvoiceCreate, InvoiceUpdate, InvoiceStatus,
     PaymentCreate, PaymentUpdate, PaymentStatus,
@@ -25,7 +25,7 @@ def generate_invoice_number(tenant_id: str, db: Session) -> str:
     # Get count of invoices for this month
     count = db.query(Invoice).filter(
         and_(
-            Invoice.tenantId == tenant_id,
+            Invoice.tenant_id == tenant_id,
             func.extract('year', Invoice.createdAt) == year,
             func.extract('month', Invoice.createdAt) == month
         )
@@ -52,12 +52,18 @@ def calculate_invoice_totals(items: List, tax_rate: float, discount: float) -> d
 def create_invoice(
     invoice_data: InvoiceCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Create a new invoice"""
     try:
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+            
+        tenant_id = tenant_context["tenant_id"]
+        
         # Generate invoice number
-        invoice_number = generate_invoice_number(str(current_user.tenant_id), db)
+        invoice_number = generate_invoice_number(tenant_id, db)
         
         # Calculate totals
         totals = calculate_invoice_totals(invoice_data.items, invoice_data.taxRate, invoice_data.discount)
@@ -66,7 +72,7 @@ def create_invoice(
         db_invoice = Invoice(
             id=str(uuid.uuid4()),
             invoiceNumber=invoice_number,
-            tenantId=str(current_user.tenant_id),
+            tenant_id=tenant_id,
             createdBy=str(current_user.id),
             customerId=invoice_data.customerId,
             customerName=invoice_data.customerName,
@@ -148,11 +154,17 @@ def get_invoices(
     amount_to: Optional[float] = None,
     search: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get invoices with filtering and pagination"""
     try:
-        query = db.query(Invoice).filter(Invoice.tenantId == str(current_user.tenant_id))
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+            
+        tenant_id = tenant_context["tenant_id"]
+        
+        query = db.query(Invoice).filter(Invoice.tenant_id == tenant_id)
         
         # Apply filters
         if status:
@@ -201,14 +213,20 @@ def get_invoices(
 def get_invoice(
     invoice_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get a specific invoice by ID"""
     try:
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+            
+        tenant_id = tenant_context["tenant_id"]
+        
         invoice = db.query(Invoice).filter(
             and_(
                 Invoice.id == invoice_id,
-                Invoice.tenantId == str(current_user.tenant_id)
+                Invoice.tenant_id == tenant_id
             )
         ).first()
         
@@ -233,14 +251,20 @@ def update_invoice(
     invoice_id: str,
     invoice_data: InvoiceUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Update an existing invoice"""
     try:
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+            
+        tenant_id = tenant_context["tenant_id"]
+        
         invoice = db.query(Invoice).filter(
             and_(
                 Invoice.id == invoice_id,
-                Invoice.tenantId == str(current_user.tenant_id)
+                Invoice.tenant_id == tenant_id
             )
         ).first()
         
@@ -312,14 +336,20 @@ def update_invoice(
 def delete_invoice(
     invoice_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Delete an invoice"""
     try:
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+            
+        tenant_id = tenant_context["tenant_id"]
+        
         invoice = db.query(Invoice).filter(
             and_(
                 Invoice.id == invoice_id,
-                Invoice.tenantId == str(current_user.tenant_id)
+                Invoice.tenant_id == tenant_id
             )
         ).first()
         
@@ -368,14 +398,20 @@ def delete_invoice(
 def send_invoice(
     invoice_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Mark invoice as sent"""
     try:
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+            
+        tenant_id = tenant_context["tenant_id"]
+        
         invoice = db.query(Invoice).filter(
             and_(
                 Invoice.id == invoice_id,
-                Invoice.tenantId == str(current_user.tenant_id)
+                Invoice.tenant_id == tenant_id
             )
         ).first()
         
@@ -403,14 +439,20 @@ def send_invoice(
 def mark_invoice_as_paid(
     invoice_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Mark invoice as paid"""
     try:
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+            
+        tenant_id = tenant_context["tenant_id"]
+        
         invoice = db.query(Invoice).filter(
             and_(
                 Invoice.id == invoice_id,
-                Invoice.tenantId == str(current_user.tenant_id)
+                Invoice.tenant_id == tenant_id
             )
         ).first()
         
@@ -434,27 +476,33 @@ def mark_invoice_as_paid(
 @router.get("/dashboard/overview", response_model=InvoiceDashboard)
 def get_invoice_dashboard(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get invoice dashboard overview"""
     try:
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+            
+        tenant_id = tenant_context["tenant_id"]
+        
         # Get basic metrics
-        total_invoices = db.query(Invoice).filter(Invoice.tenantId == str(current_user.tenant_id)).count()
+        total_invoices = db.query(Invoice).filter(Invoice.tenant_id == tenant_id).count()
         paid_invoices = db.query(Invoice).filter(
             and_(
-                Invoice.tenantId == str(current_user.tenant_id),
+                Invoice.tenant_id == tenant_id,
                 Invoice.status == InvoiceStatus.PAID
             )
         ).count()
         overdue_invoices = db.query(Invoice).filter(
             and_(
-                Invoice.tenantId == str(current_user.tenant_id),
+                Invoice.tenant_id == tenant_id,
                 Invoice.status == InvoiceStatus.OVERDUE
             )
         ).count()
         draft_invoices = db.query(Invoice).filter(
             and_(
-                Invoice.tenantId == str(current_user.tenant_id),
+                Invoice.tenant_id == tenant_id,
                 Invoice.status == InvoiceStatus.DRAFT
             )
         ).count()
@@ -462,34 +510,34 @@ def get_invoice_dashboard(
         # Get financial metrics
         total_revenue = db.query(func.sum(Invoice.total)).filter(
             and_(
-                Invoice.tenantId == str(current_user.tenant_id),
+                Invoice.tenant_id == tenant_id,
                 Invoice.status == InvoiceStatus.PAID
             )
         ).scalar() or 0
         
         outstanding_amount = db.query(func.sum(Invoice.total)).filter(
             and_(
-                Invoice.tenantId == str(current_user.tenant_id),
+                Invoice.tenant_id == tenant_id,
                 Invoice.status.in_([InvoiceStatus.SENT, InvoiceStatus.VIEWED, InvoiceStatus.OVERDUE])
             )
         ).scalar() or 0
         
         overdue_amount = db.query(func.sum(Invoice.total)).filter(
             and_(
-                Invoice.tenantId == str(current_user.tenant_id),
+                Invoice.tenant_id == tenant_id,
                 Invoice.status == InvoiceStatus.OVERDUE
             )
         ).scalar() or 0
         
         # Get recent invoices
         recent_invoices = db.query(Invoice).filter(
-            Invoice.tenantId == str(current_user.tenant_id)
+            Invoice.tenant_id == tenant_id
         ).order_by(desc(Invoice.createdAt)).limit(5).all()
         
         # Get overdue invoices
         overdue_invoices_list = db.query(Invoice).filter(
             and_(
-                Invoice.tenantId == str(current_user.tenant_id),
+                Invoice.tenant_id == tenant_id,
                 Invoice.status == InvoiceStatus.OVERDUE
             )
         ).order_by(Invoice.dueDate).limit(5).all()
@@ -500,7 +548,7 @@ def get_invoice_dashboard(
             func.sum(Invoice.total).label('total_amount'),
             func.count(Invoice.id).label('invoice_count')
         ).filter(
-            Invoice.tenantId == str(current_user.tenant_id)
+            Invoice.tenant_id == tenant_id
         ).group_by(Invoice.customerName).order_by(desc(func.sum(Invoice.total))).limit(5).all()
         
         # Get monthly revenue (last 6 months)
@@ -512,7 +560,7 @@ def get_invoice_dashboard(
             
             revenue = db.query(func.sum(Invoice.total)).filter(
                 and_(
-                    Invoice.tenantId == str(current_user.tenant_id),
+                    Invoice.tenant_id == tenant_id,
                     Invoice.status == InvoiceStatus.PAID,
                     Invoice.paidAt >= month_start,
                     Invoice.paidAt <= month_end
@@ -552,15 +600,21 @@ def create_payment(
     invoice_id: str,
     payment_data: PaymentCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Create a payment for an invoice"""
     try:
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+            
+        tenant_id = tenant_context["tenant_id"]
+        
         # Verify invoice exists and belongs to tenant
         invoice = db.query(Invoice).filter(
             and_(
                 Invoice.id == invoice_id,
-                Invoice.tenantId == str(current_user.tenant_id)
+                Invoice.tenant_id == tenant_id
             )
         ).first()
         
@@ -570,7 +624,7 @@ def create_payment(
         # Create payment
         db_payment = Payment(
             id=str(uuid.uuid4()),
-            tenantId=str(current_user.tenant_id),
+            tenant_id=tenant_id,
             createdBy=str(current_user.id),
             invoiceId=invoice_id,
             amount=payment_data.amount,
@@ -615,15 +669,21 @@ def get_invoice_payments(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get payments for a specific invoice"""
     try:
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+            
+        tenant_id = tenant_context["tenant_id"]
+        
         # Verify invoice exists and belongs to tenant
         invoice = db.query(Invoice).filter(
             and_(
                 Invoice.id == invoice_id,
-                Invoice.tenantId == str(current_user.tenant_id)
+                Invoice.tenant_id == tenant_id
             )
         ).first()
         
@@ -634,7 +694,7 @@ def get_invoice_payments(
         query = db.query(Payment).filter(
             and_(
                 Payment.invoiceId == invoice_id,
-                Payment.tenantId == str(current_user.tenant_id)
+                Payment.tenant_id == tenant_id
             )
         )
         
@@ -669,11 +729,17 @@ def get_payments(
     date_to: Optional[str] = None,
     search: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get all payments with filtering and pagination"""
     try:
-        query = db.query(Payment).filter(Payment.tenantId == str(current_user.tenant_id))
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+            
+        tenant_id = tenant_context["tenant_id"]
+        
+        query = db.query(Payment).filter(Payment.tenant_id == tenant_id)
         
         # Apply filters
         if invoice_id:
@@ -715,15 +781,21 @@ def get_payments(
 def download_invoice_pdf(
     invoice_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Download invoice as PDF"""
     try:
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+            
+        tenant_id = tenant_context["tenant_id"]
+        
         # Get the invoice
         invoice = db.query(Invoice).filter(
             and_(
                 Invoice.id == invoice_id,
-                Invoice.tenantId == str(current_user.tenant_id)
+                Invoice.tenant_id == tenant_id
             )
         ).first()
         
