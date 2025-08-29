@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Table,
   TableBody,
@@ -33,6 +33,7 @@ import {
 import { Invoice } from "../../models/sales";
 import InvoiceService from "../../services/InvoiceService";
 import { SessionManager } from "../../services/SessionManager";
+import { toast } from "sonner";
 
 interface InvoiceListProps {
   invoices: Invoice[];
@@ -57,13 +58,16 @@ export function InvoiceList({
   totalPages,
   onPageChange,
 }: InvoiceListProps) {
+  const [downloading, setDownloading] = useState<string | null>(null);
+
   const handleDownload = async (invoiceId: string) => {
     try {
+      setDownloading(invoiceId);
       const sessionManager = new SessionManager();
       const token = sessionManager.getToken();
 
       if (!token) {
-        console.error("No authentication token found");
+        toast.error("Authentication required");
         return;
       }
 
@@ -82,16 +86,20 @@ export function InvoiceList({
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `invoice-${invoiceId}.txt`;
+        a.download = `invoice-${invoiceId}.pdf`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
+        toast.success("Invoice downloaded successfully!");
       } else {
-        console.error("Download failed");
+        toast.error("Failed to download invoice");
       }
     } catch (error) {
       console.error("Download error:", error);
+      toast.error("Error downloading invoice");
+    } finally {
+      setDownloading(null);
     }
   };
   if (loading) {
@@ -237,9 +245,19 @@ export function InvoiceList({
                       )}
                       <DropdownMenuItem
                         onClick={() => handleDownload(invoice.id)}
+                        disabled={downloading === invoice.id}
                       >
-                        <Download className="h-4 w-4 mr-2" />
-                        Download PDF
+                        {downloading === invoice.id ? (
+                          <>
+                            <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+                            Generating PDF...
+                          </>
+                        ) : (
+                          <>
+                            <Download className="mr-2 h-4 w-4 mr-2" />
+                            Download PDF
+                          </>
+                        )}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       {invoice.status === "draft" && (

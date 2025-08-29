@@ -28,6 +28,158 @@ import {
   CRMActivityFilters,
 } from "../models/crm";
 
+// Customer Types
+export interface Customer {
+  id: string;
+  customerId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  mobile?: string;
+  cnic?: string;
+  dateOfBirth?: string;
+  gender?: "male" | "female" | "other";
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postalCode?: string;
+  customerType: "individual" | "business";
+  customerStatus: "active" | "inactive" | "blocked";
+  creditLimit: number;
+  currentBalance: number;
+  paymentTerms: "immediate" | "net30" | "net60";
+  assignedToId?: string;
+  notes?: string;
+  tags: string[];
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CustomerCreate {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  mobile?: string;
+  cnic?: string;
+  dateOfBirth?: string;
+  gender?: "male" | "female" | "other";
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postalCode?: string;
+  customerType?: "individual" | "business";
+  customerStatus?: "active" | "inactive" | "blocked";
+  creditLimit?: number;
+  currentBalance?: number;
+  paymentTerms?: "immediate" | "net30" | "net60";
+  assignedToId?: string;
+  notes?: string;
+  tags?: string[];
+}
+
+export interface CustomerUpdate extends Partial<CustomerCreate> {}
+
+export interface CustomerStats {
+  total_customers: number;
+  active_customers: number;
+  inactive_customers: number;
+  blocked_customers: number;
+  individual_customers: number;
+  business_customers: number;
+  recent_customers: number;
+}
+
+export interface CustomersResponse {
+  customers: Customer[];
+  total: number;
+}
+
+// Customer Service
+export class CustomerService {
+  static async getCustomers(
+    skip: number = 0,
+    limit: number = 100,
+    search?: string,
+    status?: string,
+    customerType?: string,
+  ): Promise<CustomersResponse> {
+    const params = new URLSearchParams({
+      skip: skip.toString(),
+      limit: limit.toString(),
+    });
+
+    if (search) params.append("search", search);
+    if (status) params.append("status", status);
+    if (customerType) params.append("customer_type", customerType);
+
+    const response = await ApiService.get(
+      `/crm/customers?${params.toString()}`,
+    );
+    return response;
+  }
+
+  static async getCustomerById(id: string): Promise<Customer> {
+    const response = await ApiService.get(`/crm/customers/${id}`);
+    return response;
+  }
+
+  static async createCustomer(customerData: CustomerCreate): Promise<Customer> {
+    const response = await ApiService.post("/crm/customers", customerData);
+    return response;
+  }
+
+  static async updateCustomer(
+    id: string,
+    customerData: CustomerUpdate,
+  ): Promise<Customer> {
+    const response = await ApiService.put(`/crm/customers/${id}`, customerData);
+    return response;
+  }
+
+  static async deleteCustomer(id: string): Promise<{ message: string }> {
+    const response = await ApiService.delete(`/crm/customers/${id}`);
+    return response;
+  }
+
+  static async getCustomerStats(): Promise<CustomerStats> {
+    const response = await ApiService.get("/crm/customers/stats");
+    return response;
+  }
+
+  static async searchCustomers(
+    query: string,
+    limit: number = 20,
+  ): Promise<Customer[]> {
+    const response = await ApiService.get(
+      `/crm/customers/search?q=${encodeURIComponent(query)}&limit=${limit}`,
+    );
+    return response;
+  }
+}
+
+// Existing Lead Types
+export interface Lead {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  company?: string;
+  jobTitle?: string;
+  leadSource?: string;
+  status: "new" | "contacted" | "qualified" | "proposal" | "won" | "lost";
+  priority: "low" | "medium" | "high" | "urgent";
+  assignedToId?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export class CRMService {
   private apiService: ApiService;
 

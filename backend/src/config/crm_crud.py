@@ -1,9 +1,170 @@
-from datetime import datetime
+import uuid
+from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
-from .crm_models import Lead, Contact, Company, Opportunity, SalesActivity
+from sqlalchemy import and_, or_, func, desc
+from .crm_models import Lead, Contact, Company, Opportunity, SalesActivity, Customer
+from .core_models import User
+from .database_config import get_db
 
-# Lead functions
+# Customer CRUD Operations
+def create_customer(db: Session, customer_data: Dict[str, Any], tenant_id: str) -> Customer:
+    """Create a new customer"""
+    # Generate unique customer ID
+    customer_data["customerId"] = generate_customer_id(db, tenant_id)
+    customer_data["tenant_id"] = tenant_id
+    customer_data["createdAt"] = datetime.utcnow()
+    customer_data["updatedAt"] = datetime.utcnow()
+    
+    customer = Customer(**customer_data)
+    db.add(customer)
+    db.commit()
+    db.refresh(customer)
+    return customer
+
+def get_customer_by_id(db: Session, customer_id: str, tenant_id: str) -> Optional[Customer]:
+    """Get customer by ID"""
+    return db.query(Customer).filter(
+        and_(Customer.id == customer_id, Customer.tenant_id == tenant_id)
+    ).first()
+
+def get_customers(
+    db: Session, 
+    tenant_id: str, 
+    skip: int = 0, 
+    limit: int = 100,
+    search: Optional[str] = None,
+    status: Optional[str] = None,
+    customer_type: Optional[str] = None
+) -> List[Customer]:
+    """Get customers with optional filtering and search"""
+    query = db.query(Customer).filter(Customer.tenant_id == tenant_id)
+    
+    if search:
+        search_filter = or_(
+            Customer.firstName.ilike(f"%{search}%"),
+            Customer.lastName.ilike(f"%{search}%"),
+            Customer.customerId.ilike(f"%{search}%"),
+            Customer.phone.ilike(f"%{search}%"),
+            Customer.mobile.ilike(f"%{search}%"),
+            Customer.cnic.ilike(f"%{search}%"),
+            Customer.email.ilike(f"%{search}%")
+        )
+        query = query.filter(search_filter)
+    
+    if status:
+        query = query.filter(Customer.customerStatus == status)
+    
+    if customer_type:
+        query = query.filter(Customer.customerType == customer_type)
+    
+    return query.offset(skip).limit(limit).all()
+
+def update_customer(db: Session, customer_id: str, customer_data: Dict[str, Any], tenant_id: str) -> Optional[Customer]:
+    """Update customer"""
+    customer = get_customer_by_id(db, customer_id, tenant_id)
+    if not customer:
+        return None
+    
+    customer_data["updatedAt"] = datetime.utcnow()
+    
+    for field, value in customer_data.items():
+        if hasattr(customer, field):
+            setattr(customer, field, value)
+    
+    db.commit()
+    db.refresh(customer)
+    return customer
+
+def delete_customer(db: Session, customer_id: str, tenant_id: str) -> bool:
+    """Delete customer"""
+    customer = get_customer_by_id(db, customer_id, tenant_id)
+    if not customer:
+        return False
+    
+    db.delete(customer)
+    db.commit()
+    return True
+
+def get_customer_stats(db: Session, tenant_id: str) -> Dict[str, Any]:
+    """Get customer statistics"""
+    total_customers = db.query(Customer).filter(Customer.tenant_id == tenant_id).count()
+    active_customers = db.query(Customer).filter(
+        and_(Customer.tenant_id == tenant_id, Customer.customerStatus == "active")
+    ).count()
+    inactive_customers = db.query(Customer).filter(
+        and_(Customer.tenant_id == tenant_id, Customer.customerStatus == "inactive")
+    ).count()
+    blocked_customers = db.query(Customer).filter(
+        and_(Customer.tenant_id == tenant_id, Customer.customerStatus == "blocked")
+    ).count()
+    
+    # Customer type distribution
+    individual_customers = db.query(Customer).filter(
+        and_(Customer.tenant_id == tenant_id, Customer.customerType == "individual")
+    ).count()
+    business_customers = db.query(Customer).filter(
+        and_(Customer.tenant_id == tenant_id, Customer.customerType == "business")
+    ).count()
+    
+    # Recent customers (last 30 days)
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    recent_customers = db.query(Customer).filter(
+        and_(Customer.tenant_id == tenant_id, Customer.createdAt >= thirty_days_ago)
+    ).count()
+    
+    return {
+        "total_customers": total_customers,
+        "active_customers": active_customers,
+        "inactive_customers": inactive_customers,
+        "blocked_customers": blocked_customers,
+        "individual_customers": individual_customers,
+        "business_customers": business_customers,
+        "recent_customers": recent_customers
+    }
+
+def generate_customer_id(db: Session, tenant_id: str) -> str:
+    """Generate unique customer ID"""
+    # Get the last customer ID for this tenant
+    last_customer = db.query(Customer).filter(
+        Customer.tenant_id == tenant_id
+    ).order_by(desc(Customer.customerId)).first()
+    
+    if last_customer and last_customer.customerId:
+        try:
+            # Extract number from last ID (e.g., CUST001 -> 1)
+            last_number = int(last_customer.customerId.replace("CUST", ""))
+            new_number = last_number + 1
+        except ValueError:
+            new_number = 1
+    else:
+        new_number = 1
+    
+    # Format as CUST001, CUST002, etc.
+    return f"CUST{new_number:03d}"
+
+def search_customers(
+    db: Session, 
+    tenant_id: str, 
+    search_term: str, 
+    limit: int = 20
+) -> List[Customer]:
+    """Search customers by name, ID, CNIC, phone, or email"""
+    query = db.query(Customer).filter(Customer.tenant_id == tenant_id)
+    
+    search_filter = or_(
+        Customer.firstName.ilike(f"%{search_term}%"),
+        Customer.lastName.ilike(f"%{search_term}%"),
+        Customer.customerId.ilike(f"%{search_term}%"),
+        Customer.phone.ilike(f"%{search_term}%"),
+        Customer.mobile.ilike(f"%{search_term}%"),
+        Customer.cnic.ilike(f"%{search_term}%"),
+        Customer.email.ilike(f"%{search_term}%")
+    )
+    
+    return query.filter(search_filter).limit(limit).all()
+
+# Existing Lead CRUD Operations
 def get_lead_by_id(lead_id: str, db: Session, tenant_id: str = None) -> Optional[Lead]:
     query = db.query(Lead).filter(Lead.id == lead_id)
     if tenant_id:

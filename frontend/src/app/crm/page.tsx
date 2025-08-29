@@ -413,11 +413,17 @@ export default function CRMDashboardPage() {
             <CardDescription>Common CRM tasks and shortcuts</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <Button asChild variant="outline" className="h-20 flex-col">
                 <Link href="/crm/leads">
                   <Users className="w-6 h-6 mb-2" />
                   Manage Leads
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="h-20 flex-col">
+                <Link href="/crm/customers">
+                  <Users className="w-6 h-6 mb-2" />
+                  Manage Customers
                 </Link>
               </Button>
               <Button asChild variant="outline" className="h-20 flex-col">

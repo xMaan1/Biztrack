@@ -1,22 +1,15 @@
 #!/usr/bin/env python3
 """
-Database Plans Seeding Script
-Creates 3 different subscription plans for different business types:
-- Commerce (ERP/Retail)
-- Workshops (Manufacturing/Production)
-- Healthcare (Medical/Clinical)
+Subscription Plans Seeding Script
+Creates the 3 subscription tiers for the system
 """
 
-import sys
-import os
 import json
 import uuid
 from sqlalchemy import text, create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from dotenv import load_dotenv
-
-# Add the src directory to the Python path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
+import os
 
 # Load environment variables from .env file in backend folder
 env_path = os.path.join(os.path.dirname(__file__), '..', '.env')
@@ -205,19 +198,24 @@ def seed_plans(engine):
         print(f"\n❌ Unexpected error: {e}")
 
 def main():
-    """Main function"""
-    print("🌱 Database Plans Seeding Script")
+    """Main function to seed subscription plans"""
+    print("🌱 Subscription Plans Seeding Script")
     print("=" * 50)
+    print("This script will create the 3 subscription tiers")
+    print()
     
     try:
+        # Seed plans data
+        print("📋 Seeding Subscription Plans...")
         engine = get_engine()
         print("✅ Connected to database successfully")
-        
         seed_plans(engine)
         
+        print("\n🎉 Plans seeding completed successfully!")
+        
     except Exception as e:
-        print(f"❌ Failed to connect to database: {e}")
-        print("Please check your database configuration.")
+        print(f"\n❌ Seeding failed: {str(e)}")
+        import sys
         sys.exit(1)
 
 if __name__ == "__main__":

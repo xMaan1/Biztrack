@@ -4,6 +4,10 @@ from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime, timedelta
 import uuid
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/tenants", tags=["tenants"])
 
@@ -19,6 +23,8 @@ from ...models.unified_models import (
     SubscribeRequest, CustomRole, CustomRoleCreate, CustomRoleUpdate, Permission, UsersResponse
 )
 
+# Import the ledger seeding function from services
+from ...services.ledger_seeding import create_default_chart_of_accounts
 
 from ...api.dependencies import get_current_user, require_super_admin, require_tenant_admin_or_super_admin
 
@@ -84,6 +90,18 @@ async def subscribe_to_plan(
     }
     
     tenant_user = create_tenant_user(tenant_user_data, db)
+
+    # Automatically seed the ledger for the new tenant
+    try:
+        create_default_chart_of_accounts(
+            tenant_id=str(tenant.id), 
+            created_by=str(current_user.id),
+            db=db
+        )
+        logger.info(f"✅ Ledger seeded successfully for tenant: {tenant.name}")
+    except Exception as e:
+        logger.warning(f"⚠️ Warning: Ledger seeding failed for tenant {tenant.name}: {str(e)}")
+        # Don't fail the tenant creation, but log the warning
     
     return {
         "success": True,
@@ -165,6 +183,18 @@ async def create_tenant_from_landing(
     }
     
     tenant_user = create_tenant_user(tenant_user_data, db)
+
+    # Automatically seed the ledger for the new tenant
+    try:
+        create_default_chart_of_accounts(
+            tenant_id=str(tenant.id), 
+            created_by=str(current_user.id),
+            db=db
+        )
+        logger.info(f"✅ Ledger seeded successfully for tenant: {tenant.name}")
+    except Exception as e:
+        logger.warning(f"⚠️ Warning: Ledger seeding failed for tenant {tenant.name}: {str(e)}")
+        # Don't fail the tenant creation, but log the warning
     
     return {
         "success": True,
@@ -276,3 +306,73 @@ async def get_tenant_users_list(
         }
         user_dicts.append(user_dict)
     return {"users": user_dicts}
+
+@router.get("/current/subscription")
+async def get_current_tenant_subscription(
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get current tenant's subscription information"""
+    try:
+        # Get user's current tenant
+        tenant_users = get_user_tenants(current_user.id, db)
+        if not tenant_users:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not associated with any tenant"
+            )
+        
+        # Get the first active tenant (you might want to handle multiple tenants differently)
+        tenant_user = next((tu for tu in tenant_users if tu.isActive), None)
+        if not tenant_user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No active tenant found"
+            )
+        
+        tenant_id = str(tenant_user.tenant_id)
+        
+        # Get subscription for this tenant
+        subscription = get_subscription_by_tenant(tenant_id, db)
+        if not subscription:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No subscription found for tenant"
+            )
+        
+        # Get plan details
+        plan = subscription.plan
+        if not plan:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Plan information not found"
+            )
+        
+        return {
+            "success": True,
+            "subscription": {
+                "id": str(subscription.id),
+                "status": subscription.status,
+                "startDate": subscription.startDate,
+                "endDate": subscription.endDate,
+                "plan": {
+                    "id": str(plan.id),
+                    "name": plan.name,
+                    "planType": plan.planType,
+                    "price": plan.price,
+                    "billingCycle": plan.billingCycle,
+                    "maxProjects": plan.maxProjects,
+                    "maxUsers": plan.maxUsers,
+                    "features": plan.features
+                }
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting tenant subscription: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get subscription information"
+        )

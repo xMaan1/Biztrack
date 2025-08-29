@@ -29,6 +29,7 @@ const protectedRoutes = [
   "/workspace",
   "/reports",
   "/hrm",
+  "/production",
 ];
 
 export function middleware(request: NextRequest) {

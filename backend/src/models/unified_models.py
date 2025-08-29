@@ -405,6 +405,76 @@ class Plan(PlanBase):
     class Config:
         from_attributes = True
 
+# Work Order Models
+class WorkOrderBase(BaseModel):
+    title: str
+    description: Optional[str] = None
+    work_order_type: str
+    status: str
+    priority: str
+    planned_start_date: Optional[datetime] = None
+    planned_end_date: Optional[datetime] = None
+    estimated_hours: Optional[float] = 0.0
+    assigned_to_id: Optional[str] = None
+    project_id: Optional[str] = None
+    location: Optional[str] = None
+    instructions: Optional[str] = None
+    safety_notes: Optional[str] = None
+    quality_requirements: Optional[str] = None
+    materials_required: Optional[List[str]] = []
+    estimated_cost: Optional[float] = 0.0
+    tags: Optional[List[str]] = []
+
+class WorkOrderCreate(WorkOrderBase):
+    pass
+
+class WorkOrderUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    work_order_type: Optional[str] = None
+    status: Optional[str] = None
+    priority: Optional[str] = None
+    planned_start_date: Optional[datetime] = None
+    planned_end_date: Optional[datetime] = None
+    actual_start_date: Optional[datetime] = None
+    actual_end_date: Optional[datetime] = None
+    estimated_hours: Optional[float] = None
+    actual_hours: Optional[float] = None
+    assigned_to_id: Optional[str] = None
+    project_id: Optional[str] = None
+    location: Optional[str] = None
+    instructions: Optional[str] = None
+    safety_notes: Optional[str] = None
+    quality_requirements: Optional[str] = None
+    materials_required: Optional[List[str]] = None
+    estimated_cost: Optional[float] = None
+    actual_cost: Optional[float] = None
+    completion_percentage: Optional[float] = None
+    current_step: Optional[str] = None
+    notes: Optional[List[str]] = None
+    tags: Optional[List[str]] = None
+    attachments: Optional[List[str]] = None
+
+class WorkOrderResponse(WorkOrderBase):
+    id: str
+    work_order_number: str
+    tenant_id: str
+    created_by_id: str
+    approved_by_id: Optional[str] = None
+    actual_start_date: Optional[datetime] = None
+    actual_end_date: Optional[datetime] = None
+    actual_hours: float
+    completion_percentage: float
+    current_step: Optional[str] = None
+    notes: List[str]
+    attachments: List[str]
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
 # Tenant Models
 class TenantBase(BaseModel):
     name: str
@@ -2817,3 +2887,260 @@ class InventoryReport(BaseModel):
     dateRange: str
     data: List[Dict[str, Any]]
     summary: Dict[str, Any]
+
+# Ledger Models
+class ChartOfAccountsBase(BaseModel):
+    account_code: str
+    account_name: str
+    account_type: str
+    account_category: str
+    description: Optional[str] = None
+    parent_account_id: Optional[str] = None
+    is_active: bool = True
+    is_system_account: bool = False
+    opening_balance: float = 0.0
+    current_balance: float = 0.0
+    currency: str = "USD"
+
+class ChartOfAccountsCreate(ChartOfAccountsBase):
+    pass
+
+class ChartOfAccountsUpdate(BaseModel):
+    account_code: Optional[str] = None
+    account_name: Optional[str] = None
+    account_type: Optional[str] = None
+    account_category: Optional[str] = None
+    description: Optional[str] = None
+    parent_account_id: Optional[str] = None
+    is_active: Optional[bool] = None
+    opening_balance: Optional[float] = None
+    current_balance: Optional[float] = None
+    currency: Optional[str] = None
+
+class ChartOfAccountsResponse(ChartOfAccountsBase):
+    id: str
+    tenant_id: str
+    created_by_id: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class LedgerTransactionBase(BaseModel):
+    transaction_date: datetime
+    transaction_type: str
+    amount: float
+    description: str
+    reference_number: Optional[str] = None
+    account_id: str
+    contra_account_id: Optional[str] = None
+    status: str = "pending"
+    metadata: Optional[Dict[str, Any]] = None
+
+class LedgerTransactionCreate(LedgerTransactionBase):
+    pass
+
+class LedgerTransactionUpdate(BaseModel):
+    transaction_date: Optional[datetime] = None
+    transaction_type: Optional[str] = None
+    amount: Optional[float] = None
+    description: Optional[str] = None
+    reference_number: Optional[str] = None
+    account_id: Optional[str] = None
+    contra_account_id: Optional[str] = None
+    status: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
+
+class LedgerTransactionResponse(LedgerTransactionBase):
+    id: str
+    tenant_id: str
+    created_by_id: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class JournalEntryBase(BaseModel):
+    entry_date: datetime
+    reference_number: str
+    description: str
+    status: str = "draft"
+    is_posted: bool = False
+    posted_date: Optional[datetime] = None
+    metadata: Optional[Dict[str, Any]] = None
+
+class JournalEntryCreate(JournalEntryBase):
+    pass
+
+class JournalEntryUpdate(BaseModel):
+    entry_date: Optional[datetime] = None
+    reference_number: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[str] = None
+    is_posted: Optional[bool] = None
+    posted_date: Optional[datetime] = None
+    metadata: Optional[Dict[str, Any]] = None
+
+class JournalEntryResponse(JournalEntryBase):
+    id: str
+    tenant_id: str
+    created_by_id: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class FinancialPeriodBase(BaseModel):
+    period_name: str
+    start_date: datetime
+    end_date: datetime
+    is_closed: bool = False
+    closed_date: Optional[datetime] = None
+    notes: Optional[str] = None
+
+class FinancialPeriodCreate(FinancialPeriodBase):
+    pass
+
+class FinancialPeriodUpdate(BaseModel):
+    period_name: Optional[str] = None
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    is_closed: Optional[bool] = None
+    closed_date: Optional[datetime] = None
+    notes: Optional[str] = None
+
+class FinancialPeriodResponse(FinancialPeriodBase):
+    id: str
+    tenant_id: str
+    created_by_id: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class BudgetBase(BaseModel):
+    budget_name: str
+    description: Optional[str] = None
+    start_date: datetime
+    end_date: datetime
+    total_amount: float
+    currency: str = "USD"
+    is_active: bool = True
+    metadata: Optional[Dict[str, Any]] = None
+
+class BudgetCreate(BudgetBase):
+    pass
+
+class BudgetUpdate(BaseModel):
+    budget_name: Optional[str] = None
+    description: Optional[str] = None
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    total_amount: Optional[float] = None
+    currency: Optional[str] = None
+    is_active: Optional[bool] = None
+    metadata: Optional[Dict[str, Any]] = None
+
+class BudgetResponse(BudgetBase):
+    id: str
+    tenant_id: str
+    created_by_id: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class BudgetItemBase(BaseModel):
+    account_id: str
+    budgeted_amount: float
+    actual_amount: float = 0.0
+    variance: float = 0.0
+    notes: Optional[str] = None
+
+class BudgetItemCreate(BudgetItemBase):
+    pass
+
+class BudgetItemUpdate(BaseModel):
+    account_id: Optional[str] = None
+    budgeted_amount: Optional[float] = None
+    actual_amount: Optional[float] = None
+    variance: Optional[float] = None
+    notes: Optional[str] = None
+
+class BudgetItemResponse(BudgetItemBase):
+    id: str
+    budget_id: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class TrialBalanceAccount(BaseModel):
+    account_id: str
+    account_code: str
+    account_name: str
+    account_type: str
+    account_category: str
+    debit_balance: float
+    credit_balance: float
+
+class TrialBalanceResponse(BaseModel):
+    as_of_date: datetime
+    accounts: List[TrialBalanceAccount]
+
+class IncomeStatementPeriod(BaseModel):
+    start_date: datetime
+    end_date: datetime
+
+class IncomeStatementResponse(BaseModel):
+    period: IncomeStatementPeriod
+    revenue: float
+    expenses: float
+    net_income: float
+
+class BalanceSheetAccount(BaseModel):
+    account_id: str
+    account_name: str
+    balance: float
+
+class BalanceSheetSection(BaseModel):
+    total: float
+    accounts: List[BalanceSheetAccount]
+
+class BalanceSheetResponse(BaseModel):
+    as_of_date: datetime
+    assets: BalanceSheetSection
+    liabilities: BalanceSheetSection
+    equity: BalanceSheetSection
+    total_liabilities_and_equity: float
+
+# Ledger Response Models
+class ChartOfAccountsListResponse(BaseModel):
+    accounts: List[ChartOfAccountsResponse]
+    total: int
+
+class LedgerTransactionsListResponse(BaseModel):
+    transactions: List[LedgerTransactionResponse]
+    total: int
+
+class JournalEntriesListResponse(BaseModel):
+    entries: List[JournalEntryResponse]
+    total: int
+
+class FinancialPeriodsListResponse(BaseModel):
+    periods: List[FinancialPeriodResponse]
+    total: int
+
+class BudgetsListResponse(BaseModel):
+    budgets: List[BudgetResponse]
+    total: int
+
+class BudgetItemsListResponse(BaseModel):
+    items: List[BudgetItemResponse]
+    total: int

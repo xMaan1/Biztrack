@@ -78,3 +78,45 @@ export function formatCurrency(amount: number): string {
     currency: "USD",
   }).format(amount);
 }
+
+export function getStatusIcon(status: string) {
+  switch (status.toLowerCase()) {
+    case "completed":
+    case "success":
+      return "✓";
+    case "in_progress":
+    case "in-progress":
+    case "active":
+      return "▶";
+    case "on_hold":
+    case "on-hold":
+    case "pending":
+      return "⏸";
+    case "cancelled":
+    case "error":
+    case "failed":
+      return "✗";
+    case "planning":
+    case "draft":
+      return "📝";
+    default:
+      return "•";
+  }
+}
+
+export function getTypeIcon(type: string) {
+  switch (type.toLowerCase()) {
+    case "production":
+      return "🏭";
+    case "maintenance":
+      return "🔧";
+    case "repair":
+      return "🛠️";
+    case "installation":
+      return "📦";
+    case "inspection":
+      return "🔍";
+    default:
+      return "📋";
+  }
+}

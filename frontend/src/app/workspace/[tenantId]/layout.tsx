@@ -21,6 +21,7 @@ import {
 import { Separator } from "../../../components/ui/separator";
 import { useAuth } from "../../../contexts/AuthContext";
 import { SessionManager } from "../../../services/SessionManager";
+import { Toaster } from "sonner";
 import {
   Menu as MenuIcon,
   Building2,
@@ -131,6 +132,13 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
           <Users className="h-5 w-5" />
           <span className="text-sm font-medium">Team</span>
         </Link>
+        <Link
+          href={`/crm/customers`}
+          className="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+        >
+          <Users className="h-5 w-5" />
+          <span className="text-sm font-medium">Customers</span>
+        </Link>
 
         {/* Only show these for super_admin */}
         {user?.userRole === "super_admin" && (
@@ -240,6 +248,7 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
         {/* Page Content - Scrollable */}
         <main className="flex-1 overflow-auto p-6">{children}</main>
       </div>
+      <Toaster />
     </div>
   );
 };

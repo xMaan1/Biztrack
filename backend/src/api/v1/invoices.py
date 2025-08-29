@@ -4,6 +4,13 @@ from datetime import datetime, timedelta
 import uuid
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func, desc, text
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+from io import BytesIO
 
 from ...config.database import get_db
 from ...api.dependencies import get_current_user, get_tenant_context
@@ -47,6 +54,148 @@ def calculate_invoice_totals(items: List, tax_rate: float, discount: float) -> d
         "taxAmount": round(tax_amount, 2),
         "total": round(total, 2)
     }
+
+def generate_invoice_pdf(invoice) -> bytes:
+    """Generate a beautiful PDF invoice"""
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    story = []
+    
+    # Get styles
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        textColor=colors.darkblue,
+        alignment=TA_CENTER,
+        spaceAfter=20
+    )
+    
+    heading_style = ParagraphStyle(
+        'CustomHeading',
+        parent=styles['Heading2'],
+        fontSize=14,
+        textColor=colors.darkblue,
+        spaceAfter=10
+    )
+    
+    normal_style = styles['Normal']
+    
+    # Title
+    story.append(Paragraph("INVOICE", title_style))
+    story.append(Spacer(1, 20))
+    
+    # Invoice header table
+    header_data = [
+        ['Invoice Number:', invoice.invoiceNumber, 'Issue Date:', invoice.issueDate.strftime('%Y-%m-%d')],
+        ['Order Number:', invoice.orderNumber or 'N/A', 'Due Date:', invoice.dueDate.strftime('%Y-%m-%d')],
+        ['Status:', invoice.status, 'Currency:', invoice.currency or 'USD']
+    ]
+    
+    header_table = Table(header_data, colWidths=[1.5*inch, 2*inch, 1.5*inch, 2*inch])
+    header_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+        ('BACKGROUND', (2, 0), (2, -1), colors.lightgrey),
+    ]))
+    story.append(header_table)
+    story.append(Spacer(1, 20))
+    
+    # Customer information
+    story.append(Paragraph("Customer Information", heading_style))
+    customer_data = [
+        ['Name:', invoice.customerName],
+        ['Email:', invoice.customerEmail],
+        ['Phone:', invoice.customerPhone or 'N/A'],
+        ['Billing Address:', invoice.billingAddress or 'N/A']
+    ]
+    
+    customer_table = Table(customer_data, colWidths=[1.5*inch, 5*inch])
+    customer_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+        ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+    ]))
+    story.append(customer_table)
+    story.append(Spacer(1, 20))
+    
+    # Items table
+    if invoice.items:
+        story.append(Paragraph("Invoice Items", heading_style))
+        
+        # Table headers
+        items_data = [['Description', 'Quantity', 'Unit Price', 'Total']]
+        
+        # Add items
+        for item in invoice.items:
+            items_data.append([
+                item.get('description', 'N/A'),
+                str(item.get('quantity', 0)),
+                f"${item.get('unitPrice', 0):.2f}",
+                f"${item.get('total', 0):.2f}"
+            ])
+        
+        items_table = Table(items_data, colWidths=[3*inch, 1*inch, 1.5*inch, 1.5*inch])
+        items_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        story.append(items_table)
+        story.append(Spacer(1, 20))
+    
+    # Totals table
+    story.append(Paragraph("Invoice Summary", heading_style))
+    totals_data = [
+        ['Subtotal:', f"${invoice.subtotal:.2f}"],
+        ['Tax Rate:', f"{invoice.taxRate}%"],
+        ['Tax Amount:', f"${invoice.taxAmount:.2f}"],
+        ['Discount:', f"{invoice.discount}%"],
+        ['Total:', f"${invoice.total:.2f}"]
+    ]
+    
+    totals_table = Table(totals_data, colWidths=[2*inch, 1.5*inch])
+    totals_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('BACKGROUND', (-1, -1), (-1, -1), colors.lightgreen),
+        ('FONTNAME', (-1, -1), (-1, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (-1, -1), (-1, -1), 14),
+    ]))
+    story.append(totals_table)
+    story.append(Spacer(1, 20))
+    
+    # Notes and terms
+    if invoice.notes:
+        story.append(Paragraph("Notes", heading_style))
+        story.append(Paragraph(invoice.notes, normal_style))
+        story.append(Spacer(1, 15))
+    
+    if invoice.terms:
+        story.append(Paragraph("Terms & Conditions", heading_style))
+        story.append(Paragraph(invoice.terms, normal_style))
+    
+    # Build PDF
+    doc.build(story)
+    buffer.seek(0)
+    return buffer.getvalue()
 
 @router.post("/", response_model=InvoiceResponse)
 def create_invoice(
@@ -802,47 +951,14 @@ def download_invoice_pdf(
         if not invoice:
             raise HTTPException(status_code=404, detail="Invoice not found")
         
-        # For now, return a simple text response
-        # You can implement actual PDF generation later
-        pdf_content = f"""
-INVOICE
-
-Invoice Number: {invoice.invoiceNumber}
-Date: {invoice.issueDate.strftime('%Y-%m-%d')}
-Due Date: {invoice.dueDate.strftime('%Y-%m-%d')}
-
-Customer: {invoice.customerName}
-Email: {invoice.customerEmail}
-Address: {invoice.billingAddress}
-
-Items:
-"""
-        
-        if invoice.items:
-            for item in invoice.items:
-                pdf_content += f"""
-- {item.get('description', 'N/A')}
-  Quantity: {item.get('quantity', 0)}
-  Unit Price: ${item.get('unitPrice', 0):.2f}
-  Total: ${item.get('total', 0):.2f}
-"""
-        
-        pdf_content += f"""
-
-Subtotal: ${invoice.subtotal:.2f}
-Tax Rate: {invoice.taxRate}%
-Tax Amount: ${invoice.taxAmount:.2f}
-Discount: {invoice.discount}%
-Total: ${invoice.total:.2f}
-
-Status: {invoice.status}
-        """
+        # Generate beautiful PDF invoice
+        pdf_content = generate_invoice_pdf(invoice)
         
         return Response(
             content=pdf_content,
-            media_type="text/plain",
+            media_type="application/pdf",
             headers={
-                "Content-Disposition": f"attachment; filename=invoice-{invoice.invoiceNumber}.txt"
+                "Content-Disposition": f"attachment; filename=invoice-{invoice.invoiceNumber}.pdf"
             }
         )
         

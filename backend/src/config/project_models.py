@@ -30,6 +30,12 @@ class Project(Base):
     projectManager = relationship("User", foreign_keys=[projectManagerId], back_populates="managed_projects")
     teamMembers = relationship("User", secondary=project_team_members, back_populates="team_projects")
     tasks = relationship("Task", back_populates="project")
+    work_orders = relationship("WorkOrder", back_populates="project")
+    production_plans = relationship("ProductionPlan", back_populates="project")
+    
+    # Quality Control relationships
+    quality_checks = relationship("QualityCheck", back_populates="project")
+    quality_defects = relationship("QualityDefect", back_populates="project")
 
 class Task(Base):
     __tablename__ = "tasks"

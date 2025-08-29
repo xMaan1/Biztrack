@@ -968,6 +968,79 @@ export class ApiService {
       throw error;
     }
   }
+
+  // Work Order methods
+  async getWorkOrders(
+    params: {
+      skip?: number;
+      limit?: number;
+      status?: string;
+      work_order_type?: string;
+      project_id?: string;
+      assigned_to_id?: string;
+    } = {},
+  ): Promise<any> {
+    try {
+      const response = await this.client.get("/work-orders", { params });
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching work orders:", error);
+      throw error;
+    }
+  }
+
+  async getWorkOrderStats(): Promise<any> {
+    try {
+      const response = await this.client.get("/work-orders/stats");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching work order stats:", error);
+      throw error;
+    }
+  }
+
+  async getWorkOrderById(workOrderId: string): Promise<any> {
+    try {
+      const response = await this.client.get(`/work-orders/${workOrderId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching work order:", error);
+      throw error;
+    }
+  }
+
+  async createWorkOrder(workOrderData: any): Promise<any> {
+    try {
+      const response = await this.client.post("/work-orders", workOrderData);
+      return response.data;
+    } catch (error) {
+      console.error("Error creating work order:", error);
+      throw error;
+    }
+  }
+
+  async updateWorkOrder(workOrderId: string, workOrderData: any): Promise<any> {
+    try {
+      const response = await this.client.put(
+        `/work-orders/${workOrderId}`,
+        workOrderData,
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error updating work order:", error);
+      throw error;
+    }
+  }
+
+  async deleteWorkOrder(workOrderId: string): Promise<any> {
+    try {
+      const response = await this.client.delete(`/work-orders/${workOrderId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error deleting work order:", error);
+      throw error;
+    }
+  }
 }
 
 export const apiService = new ApiService();

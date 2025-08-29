@@ -65,6 +65,51 @@ class User(Base):
     
     # Invoice relationships
     created_invoices = relationship("Invoice", back_populates="creator", foreign_keys="Invoice.createdBy")
+    
+    # Work Order relationships
+    assigned_work_orders = relationship("WorkOrder", foreign_keys="WorkOrder.assigned_to_id", back_populates="assigned_to")
+    created_work_orders = relationship("WorkOrder", foreign_keys="WorkOrder.created_by_id", back_populates="created_by")
+    approved_work_orders = relationship("WorkOrder", foreign_keys="WorkOrder.approved_by_id", back_populates="approved_by")
+    
+    # Production relationships
+    assigned_production_plans = relationship("ProductionPlan", foreign_keys="ProductionPlan.assigned_to_id", back_populates="assigned_to")
+    created_production_plans = relationship("ProductionPlan", foreign_keys="ProductionPlan.created_by_id", back_populates="created_by")
+    approved_production_plans = relationship("ProductionPlan", foreign_keys="ProductionPlan.approved_by_id", back_populates="approved_by")
+    
+    # Ledger relationships
+    created_chart_of_accounts = relationship("ChartOfAccounts", foreign_keys="ChartOfAccounts.created_by", back_populates="created_by_user")
+    created_ledger_transactions = relationship("LedgerTransaction", foreign_keys="LedgerTransaction.created_by", back_populates="created_by_user")
+    approved_ledger_transactions = relationship("LedgerTransaction", foreign_keys="LedgerTransaction.approved_by", back_populates="approved_by_user")
+    created_journal_entries = relationship("JournalEntry", foreign_keys="JournalEntry.created_by", back_populates="created_by_user")
+    posted_journal_entries = relationship("JournalEntry", foreign_keys="JournalEntry.posted_by", back_populates="posted_by_user")
+    created_financial_periods = relationship("FinancialPeriod", foreign_keys="FinancialPeriod.created_by", back_populates="created_by_user")
+    closed_financial_periods = relationship("FinancialPeriod", foreign_keys="FinancialPeriod.closed_by", back_populates="closed_by_user")
+    created_budgets = relationship("Budget", foreign_keys="Budget.created_by", back_populates="created_by_user")
+    
+    # Quality Control relationships
+    assigned_quality_checks = relationship("QualityCheck", foreign_keys="QualityCheck.assigned_to_id", back_populates="assigned_to")
+    created_quality_checks = relationship("QualityCheck", foreign_keys="QualityCheck.created_by_id", back_populates="created_by")
+    conducted_inspections = relationship("QualityInspection", foreign_keys="QualityInspection.inspector_id", back_populates="inspector")
+    detected_defects = relationship("QualityDefect", foreign_keys="QualityDefect.detected_by_id", back_populates="detected_by")
+    assigned_defects = relationship("QualityDefect", foreign_keys="QualityDefect.assigned_to_id", back_populates="assigned_to")
+    generated_quality_reports = relationship("QualityReport", foreign_keys="QualityReport.generated_by_id", back_populates="generated_by")
+    
+    # Maintenance relationships
+    assigned_maintenance_schedules = relationship("MaintenanceSchedule", foreign_keys="MaintenanceSchedule.assigned_technician_id", back_populates="assigned_technician")
+    created_maintenance_schedules = relationship("MaintenanceSchedule", foreign_keys="MaintenanceSchedule.created_by_id", back_populates="created_by")
+    updated_maintenance_schedules = relationship("MaintenanceSchedule", foreign_keys="MaintenanceSchedule.updated_by_id", back_populates="updated_by")
+    maintenance_technician_work_orders = relationship("MaintenanceWorkOrder", foreign_keys="MaintenanceWorkOrder.technician_id", back_populates="technician")
+    approved_maintenance_work_orders = relationship("MaintenanceWorkOrder", foreign_keys="MaintenanceWorkOrder.approved_by_id", back_populates="approved_by")
+    created_maintenance_work_orders = relationship("MaintenanceWorkOrder", foreign_keys="MaintenanceWorkOrder.created_by_id", back_populates="created_by")
+    updated_maintenance_work_orders = relationship("MaintenanceWorkOrder", foreign_keys="MaintenanceWorkOrder.updated_by_id", back_populates="updated_by")
+    generated_maintenance_reports = relationship("MaintenanceReport", foreign_keys="MaintenanceReport.technician_id", back_populates="technician")
+    approved_maintenance_reports = relationship("MaintenanceReport", foreign_keys="MaintenanceReport.approved_by_id", back_populates="approved_by")
+    created_maintenance_reports = relationship("MaintenanceReport", foreign_keys="MaintenanceReport.created_by_id", back_populates="created_by")
+    updated_maintenance_reports = relationship("MaintenanceReport", foreign_keys="MaintenanceReport.updated_by_id", back_populates="updated_by")
+    
+    # Equipment relationships
+    created_equipment = relationship("Equipment", foreign_keys="Equipment.created_by_id", back_populates="created_by")
+    updated_equipment = relationship("Equipment", foreign_keys="Equipment.updated_by_id", back_populates="updated_by")
 
 class Tenant(Base):
     __tablename__ = "tenants"
@@ -94,6 +139,7 @@ class Tenant(Base):
     companies = relationship("Company", back_populates="tenant")
     opportunities = relationship("Opportunity", back_populates="tenant")
     sales_activities = relationship("SalesActivity", back_populates="tenant")
+    customers = relationship("Customer", back_populates="tenant")
     
     # Inventory relationships
     products = relationship("Product", back_populates="tenant")
@@ -126,6 +172,21 @@ class Tenant(Base):
     
     # Custom tenant-specific options relationships
     customEventTypes = relationship("CustomEventType", back_populates="tenant")
+    
+    # Work Order relationships
+    work_orders = relationship("WorkOrder", back_populates="tenant")
+    
+    # Production relationships
+    production_plans = relationship("ProductionPlan", back_populates="tenant")
+    production_schedules = relationship("ProductionSchedule", back_populates="tenant")
+    
+    # Ledger relationships
+    chart_of_accounts = relationship("ChartOfAccounts", back_populates="tenant")
+    ledger_transactions = relationship("LedgerTransaction", back_populates="tenant")
+    journal_entries = relationship("JournalEntry", back_populates="tenant")
+    financial_periods = relationship("FinancialPeriod", back_populates="tenant")
+    budgets = relationship("Budget", back_populates="tenant")
+    
     customDepartments = relationship("CustomDepartment", back_populates="tenant")
     customLeaveTypes = relationship("CustomLeaveType", back_populates="tenant")
     customLeadSources = relationship("CustomLeadSource", back_populates="tenant")
@@ -133,6 +194,20 @@ class Tenant(Base):
     customCompanyIndustries = relationship("CustomCompanyIndustry", back_populates="tenant")
     customContactTypes = relationship("CustomContactType", back_populates="tenant")
     customIndustries = relationship("CustomIndustry", back_populates="tenant")
+    
+    # Quality Control relationships
+    quality_checks = relationship("QualityCheck", back_populates="tenant")
+    quality_inspections = relationship("QualityInspection", back_populates="tenant")
+    quality_defects = relationship("QualityDefect", back_populates="tenant")
+    quality_reports = relationship("QualityReport", back_populates="tenant")
+    
+    # Maintenance relationships
+    maintenance_schedules = relationship("MaintenanceSchedule", back_populates="tenant")
+    maintenance_work_orders = relationship("MaintenanceWorkOrder", back_populates="tenant")
+    maintenance_reports = relationship("MaintenanceReport", back_populates="tenant")
+    
+    # Equipment relationships
+    equipment = relationship("Equipment", back_populates="tenant")
 
 class Plan(Base):
     __tablename__ = "plans"

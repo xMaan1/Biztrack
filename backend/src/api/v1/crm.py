@@ -5,27 +5,146 @@ import json
 import uuid
 from datetime import datetime, timedelta
 
+from ...models.crm import (
+    CustomerCreate, CustomerUpdate, CustomerResponse, CustomerStatsResponse
+)
 from ...models.unified_models import (
-    Lead, LeadCreate, LeadUpdate, CRMLeadsResponse,
-    Contact, ContactCreate, ContactUpdate, CRMContactsResponse,
-    Company, CompanyCreate, CompanyUpdate, CRMCompaniesResponse,
-    Opportunity, OpportunityCreate, OpportunityUpdate, CRMOpportunitiesResponse,
-    SalesActivity, SalesActivityCreate, SalesActivityUpdate, CRMActivitiesResponse,
-    CRMDashboard, CRMMetrics, CRMPipeline,
-    LeadStatus, LeadSource, OpportunityStage, ContactType, ActivityType
+    Lead, LeadCreate, LeadUpdate,
+    Contact, ContactCreate, ContactUpdate,
+    Company, CompanyCreate, CompanyUpdate,
+    Opportunity, OpportunityCreate, OpportunityUpdate,
+    SalesActivity, SalesActivityCreate, SalesActivityUpdate,
+    CRMLeadsResponse, CRMContactsResponse, CRMCompaniesResponse,
+    CRMOpportunitiesResponse, CRMActivitiesResponse,
+    CRMDashboard, CRMMetrics, CRMPipeline
 )
-from ...config.database import (
-    get_db, get_user_by_id,
-    get_leads, get_lead_by_id, create_lead, update_lead, delete_lead,
-    get_contacts, get_contact_by_id, create_contact, update_contact, delete_contact,
-    get_companies, get_company_by_id, create_company, update_company, delete_company,
-    get_opportunities, get_opportunity_by_id, create_opportunity, update_opportunity, delete_opportunity,
-    get_sales_activities, get_sales_activity_by_id, create_sales_activity, update_sales_activity, delete_sales_activity,
-    get_crm_dashboard_data
+from ...config.database import get_db
+from ...config.crm_crud import (
+    create_lead, get_lead_by_id, get_leads, update_lead, delete_lead,
+    create_contact, get_contact_by_id, get_contacts, update_contact, delete_contact,
+    create_company, get_company_by_id, get_companies, update_company, delete_company,
+    create_opportunity, get_opportunity_by_id, get_opportunities, update_opportunity, delete_opportunity,
+    create_customer, get_customer_by_id, get_customers, update_customer, delete_customer,
+    get_customer_stats, search_customers
 )
-from ...api.dependencies import get_current_user, get_tenant_context, require_tenant_admin_or_super_admin
+from ...api.dependencies import get_current_user, get_tenant_context
+
 
 router = APIRouter(prefix="/crm", tags=["crm"])
+
+# Customer endpoints
+@router.post("/customers", response_model=CustomerResponse)
+async def create_customer_endpoint(
+    customer_data: CustomerCreate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context)
+):
+    """Create a new customer"""
+    try:
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+        customer = create_customer(db, customer_data.dict(), tenant_context["tenant_id"])
+        return CustomerResponse.from_orm(customer)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.get("/customers/{customer_id}", response_model=CustomerResponse)
+async def get_customer_endpoint(
+    customer_id: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context)
+):
+    """Get customer by ID"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    customer = get_customer_by_id(db, customer_id, tenant_context["tenant_id"])
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    return CustomerResponse.from_orm(customer)
+
+@router.get("/customers", response_model=List[CustomerResponse])
+async def get_customers_endpoint(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    search: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    customer_type: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context)
+):
+    """Get customers with optional filtering and search"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    customers = get_customers(
+        db, 
+        tenant_context["tenant_id"], 
+        skip, 
+        limit, 
+        search, 
+        status, 
+        customer_type
+    )
+    return [CustomerResponse.from_orm(customer) for customer in customers]
+
+@router.put("/customers/{customer_id}", response_model=CustomerResponse)
+async def update_customer_endpoint(
+    customer_id: str,
+    customer_data: CustomerUpdate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context)
+):
+    """Update customer"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    customer = update_customer(db, customer_id, customer_data.dict(exclude_unset=True), tenant_context["tenant_id"])
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    return CustomerResponse.from_orm(customer)
+
+@router.delete("/customers/{customer_id}")
+async def delete_customer_endpoint(
+    customer_id: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context)
+):
+    """Delete customer"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    success = delete_customer(db, customer_id, tenant_context["tenant_id"])
+    if not success:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    return {"message": "Customer deleted successfully"}
+
+@router.get("/customers/stats", response_model=CustomerStatsResponse)
+async def get_customer_stats_endpoint(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context)
+):
+    """Get customer statistics"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    stats = get_customer_stats(db, tenant_context["tenant_id"])
+    return CustomerStatsResponse(**stats)
+
+@router.get("/customers/search", response_model=List[CustomerResponse])
+async def search_customers_endpoint(
+    q: str = Query(..., min_length=1, description="Search term"),
+    limit: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context)
+):
+    """Search customers by name, ID, CNIC, phone, or email"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    customers = search_customers(db, tenant_context["tenant_id"], q, limit)
+    return [CustomerResponse.from_orm(customer) for customer in customers]
 
 # Lead endpoints
 @router.get("/leads", response_model=CRMLeadsResponse)

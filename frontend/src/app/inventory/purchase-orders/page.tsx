@@ -532,28 +532,43 @@ export default function PurchaseOrdersPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="supplierId">Supplier *</Label>
-                <Select
-                  value={newOrder.supplierId}
-                  onValueChange={(value) => {
-                    const supplier = suppliers.find((s) => s.id === value);
-                    setNewOrder((prev) => ({
-                      ...prev,
-                      supplierId: value,
-                      supplierName: supplier?.name || "",
-                    }));
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select supplier" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {suppliers.map((supplier) => (
-                      <SelectItem key={supplier.id} value={supplier.id}>
-                        {supplier.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-2">
+                  <Select
+                    value={newOrder.supplierId}
+                    onValueChange={(value) => {
+                      const supplier = suppliers.find((s) => s.id === value);
+                      setNewOrder((prev) => ({
+                        ...prev,
+                        supplierId: value,
+                        supplierName: supplier?.name || "",
+                      }));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select supplier" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {suppliers.map((supplier) => (
+                        <SelectItem key={supplier.id} value={supplier.id}>
+                          {supplier.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setIsAddModalOpen(false);
+                      router.push("/inventory/suppliers/new");
+                    }}
+                    className="whitespace-nowrap"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Supplier
+                  </Button>
+                </div>
               </div>
 
               <div className="space-y-2">

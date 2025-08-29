@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "../../lib/utils";
+import { usePlanInfo } from "../../hooks/usePlanInfo";
 import {
   LayoutDashboard,
   FolderOpen,
@@ -38,6 +39,12 @@ import {
   ClipboardList,
   PackageCheck,
   AlertTriangle,
+  Factory,
+  Wrench,
+  Stethoscope,
+  Heart,
+  Pill,
+  Calculator,
 } from "lucide-react";
 
 interface SubMenuItem {
@@ -45,6 +52,7 @@ interface SubMenuItem {
   icon: React.ElementType;
   path: string;
   roles: string[];
+  planTypes: string[]; // Add plan type restrictions
 }
 
 interface MenuItem {
@@ -52,6 +60,7 @@ interface MenuItem {
   icon: React.ElementType;
   path?: string;
   roles: string[];
+  planTypes: string[]; // Add plan type restrictions
   subItems?: SubMenuItem[];
   gradient: string;
 }
@@ -62,12 +71,14 @@ const allMenuItems: MenuItem[] = [
     icon: LayoutDashboard,
     path: "/dashboard",
     roles: ["*"],
+    planTypes: ["*"], // Available for all plans
     gradient: "from-blue-500 to-cyan-500",
   },
   {
     text: "CRM",
     icon: Users,
     roles: ["*"],
+    planTypes: ["commerce", "healthcare"], // Commerce and Healthcare focused
     gradient: "from-blue-500 to-indigo-500",
     subItems: [
       {
@@ -75,37 +86,66 @@ const allMenuItems: MenuItem[] = [
         icon: LayoutDashboard,
         path: "/crm",
         roles: ["*"],
+        planTypes: ["commerce", "healthcare"],
+      },
+      {
+        text: "Customers",
+        icon: Users,
+        path: "/crm/customers",
+        roles: ["*"],
+        planTypes: ["commerce", "healthcare"],
       },
       {
         text: "Companies",
         icon: Building,
         path: "/crm/companies",
         roles: ["*"],
+        planTypes: ["commerce", "healthcare"],
       },
       {
         text: "Contacts",
         icon: Users,
         path: "/crm/contacts",
         roles: ["*"],
+        planTypes: ["commerce", "healthcare"],
       },
       {
         text: "Leads",
         icon: Target,
         path: "/crm/leads",
         roles: ["*"],
+        planTypes: ["commerce", "healthcare"],
       },
       {
         text: "Opportunities",
         icon: TrendingUp,
         path: "/crm/opportunities",
         roles: ["*"],
+        planTypes: ["commerce", "healthcare"],
       },
     ],
+  },
+  {
+    text: "Customers",
+    icon: Users,
+    path: "/crm/customers",
+    roles: ["*"],
+    planTypes: ["workshop"], // Workshop plan - only customers needed
+    gradient: "from-blue-500 to-indigo-500",
+  },
+  {
+    text: "Invoicing",
+    icon: Banknote,
+    path: "/sales/invoices",
+    roles: ["*"],
+    planTypes: ["workshop"], // Workshop plan - invoicing needed
+    gradient: "from-green-500 to-emerald-500",
   },
   {
     text: "Sales",
     icon: DollarSign,
     roles: ["*"],
+    planTypes: ["commerce"], // Commerce focused
     gradient: "from-green-500 to-emerald-500",
     subItems: [
       {
@@ -113,24 +153,28 @@ const allMenuItems: MenuItem[] = [
         icon: FileText,
         path: "/sales/quotes",
         roles: ["*"],
+        planTypes: ["commerce"],
       },
       {
         text: "Contracts",
         icon: FileCheck,
         path: "/sales/contracts",
         roles: ["*"],
+        planTypes: ["commerce"],
       },
       {
         text: "Analytics",
         icon: BarChart3,
         path: "/sales/analytics",
         roles: ["*"],
+        planTypes: ["commerce"],
       },
       {
         text: "Invoices",
         icon: Banknote,
         path: "/sales/invoices",
         roles: ["*"],
+        planTypes: ["commerce"],
       },
     ],
   },
@@ -138,6 +182,7 @@ const allMenuItems: MenuItem[] = [
     text: "POS",
     icon: Banknote,
     roles: ["*"],
+    planTypes: ["commerce"], // Commerce focused
     gradient: "from-yellow-500 to-orange-500",
     subItems: [
       {
@@ -145,36 +190,42 @@ const allMenuItems: MenuItem[] = [
         icon: LayoutDashboard,
         path: "/pos",
         roles: ["*"],
+        planTypes: ["commerce"],
       },
       {
         text: "New Sale",
         icon: Plus,
         path: "/pos/sale",
         roles: ["*"],
+        planTypes: ["commerce"],
       },
       {
         text: "Products",
         icon: Package,
         path: "/pos/products",
         roles: ["*"],
+        planTypes: ["commerce"],
       },
       {
         text: "Transactions",
         icon: Receipt,
         path: "/pos/transactions",
         roles: ["*"],
+        planTypes: ["commerce"],
       },
       {
         text: "Shifts",
         icon: Clock3,
         path: "/pos/shifts",
         roles: ["*"],
+        planTypes: ["commerce"],
       },
       {
         text: "Reports",
         icon: BarChart3,
         path: "/pos/reports",
         roles: ["*"],
+        planTypes: ["commerce"],
       },
     ],
   },
@@ -182,6 +233,7 @@ const allMenuItems: MenuItem[] = [
     text: "Inventory",
     icon: Warehouse,
     roles: ["*"],
+    planTypes: ["*"], // Available for all plans
     gradient: "from-teal-500 to-green-500",
     subItems: [
       {
@@ -189,48 +241,56 @@ const allMenuItems: MenuItem[] = [
         icon: LayoutDashboard,
         path: "/inventory",
         roles: ["*"],
+        planTypes: ["*"],
       },
       {
         text: "Warehouses",
         icon: Warehouse,
         path: "/inventory/warehouses",
         roles: ["*"],
+        planTypes: ["*"],
       },
       {
         text: "Storage Locations",
         icon: MapPin,
         path: "/inventory/storage-locations",
         roles: ["*"],
+        planTypes: ["*"],
       },
       {
         text: "Stock Movements",
         icon: Truck,
         path: "/inventory/stock-movements",
         roles: ["*"],
+        planTypes: ["*"],
       },
       {
         text: "Purchase Orders",
         icon: ClipboardList,
         path: "/inventory/purchase-orders",
         roles: ["*"],
+        planTypes: ["*"],
       },
       {
         text: "Receiving",
         icon: PackageCheck,
         path: "/inventory/receiving",
         roles: ["*"],
+        planTypes: ["*"],
       },
       {
         text: "Suppliers",
         icon: Building,
         path: "/inventory/suppliers",
         roles: ["*"],
+        planTypes: ["*"],
       },
       {
         text: "Stock Alerts",
         icon: AlertTriangle,
         path: "/inventory/alerts",
         roles: ["*"],
+        planTypes: ["*"],
       },
     ],
   },
@@ -238,6 +298,7 @@ const allMenuItems: MenuItem[] = [
     text: "HRM",
     icon: UserCheck,
     roles: ["*"],
+    planTypes: ["*"], // Available for all plans
     gradient: "from-purple-500 to-pink-500",
     subItems: [
       {
@@ -245,36 +306,42 @@ const allMenuItems: MenuItem[] = [
         icon: Users,
         path: "/hrm/employees",
         roles: ["*"],
+        planTypes: ["*"],
       },
       {
         text: "Job Postings",
         icon: Briefcase,
         path: "/hrm/job-postings",
         roles: ["*"],
+        planTypes: ["*"],
       },
       {
         text: "Performance Reviews",
         icon: Award,
         path: "/hrm/performance-reviews",
         roles: ["*"],
+        planTypes: ["*"],
       },
       {
         text: "Leave Management",
         icon: Calendar,
         path: "/hrm/leave-management",
         roles: ["*"],
+        planTypes: ["*"],
       },
       {
         text: "Training",
         icon: GraduationCap,
         path: "/hrm/training",
         roles: ["*"],
+        planTypes: ["*"],
       },
       {
         text: "Payroll",
         icon: Banknote,
         path: "/hrm/payroll",
         roles: ["*"],
+        planTypes: ["*"],
       },
     ],
   },
@@ -282,6 +349,7 @@ const allMenuItems: MenuItem[] = [
     text: "Project Management",
     icon: FolderOpen,
     roles: ["*"],
+    planTypes: ["*"], // Available for all plans
     gradient: "from-orange-500 to-red-500",
     subItems: [
       {
@@ -289,30 +357,35 @@ const allMenuItems: MenuItem[] = [
         icon: FolderOpen,
         path: "/projects",
         roles: ["*"],
+        planTypes: ["*"],
       },
       {
         text: "Tasks",
         icon: CheckSquare,
         path: "/tasks",
         roles: ["*"],
+        planTypes: ["*"],
       },
       {
         text: "Team Members",
         icon: Users,
         path: "/team",
         roles: ["*"],
+        planTypes: ["*"],
       },
       {
         text: "Time Tracking",
         icon: Clock,
         path: "/time-tracking",
         roles: ["*"],
+        planTypes: ["*"],
       },
       {
         text: "Reports",
         icon: PieChart,
         path: "/reports",
         roles: ["*"],
+        planTypes: ["*"],
       },
     ],
   },
@@ -321,7 +394,93 @@ const allMenuItems: MenuItem[] = [
     icon: Calendar,
     path: "/events",
     roles: ["*"],
+    planTypes: ["*"], // Available for all plans
     gradient: "from-indigo-500 to-blue-500",
+  },
+  // Workshop-specific modules
+  {
+    text: "Workshop Management",
+    icon: Factory,
+    roles: ["*"],
+    planTypes: ["workshop"], // Workshop focused
+    gradient: "from-orange-500 to-red-500",
+    subItems: [
+      {
+        text: "Work Orders",
+        icon: Wrench,
+        path: "/work-orders",
+        roles: ["*"],
+        planTypes: ["workshop"],
+      },
+      {
+        text: "Production Planning",
+        icon: Factory,
+        path: "/production",
+        roles: ["*"],
+        planTypes: ["workshop"],
+      },
+      {
+        text: "Quality Control",
+        icon: CheckSquare,
+        path: "/quality-control",
+        roles: ["*"],
+        planTypes: ["workshop"],
+      },
+      {
+        text: "Equipment Maintenance",
+        icon: Wrench,
+        path: "/maintenance",
+        roles: ["*"],
+        planTypes: ["workshop"],
+      },
+    ],
+  },
+  // Healthcare-specific modules
+  {
+    text: "Healthcare",
+    icon: Stethoscope,
+    roles: ["*"],
+    planTypes: ["healthcare"], // Healthcare focused
+    gradient: "from-blue-500 to-purple-500",
+    subItems: [
+      {
+        text: "Patients",
+        icon: Users,
+        path: "/patients",
+        roles: ["*"],
+        planTypes: ["healthcare"],
+      },
+      {
+        text: "Appointments",
+        icon: Calendar,
+        path: "/appointments",
+        roles: ["*"],
+        planTypes: ["healthcare"],
+      },
+      {
+        text: "Medical Records",
+        icon: FileText,
+        path: "/medical-records",
+        roles: ["*"],
+        planTypes: ["healthcare"],
+      },
+      {
+        text: "Medical Supplies",
+        icon: Pill,
+        path: "/medical-supplies",
+        roles: ["*"],
+        planTypes: ["healthcare"],
+      },
+    ],
+  },
+  // Ledger - Available for all plan types
+  {
+    text: "Financial Ledger",
+    icon: BookOpen,
+    path: "/ledger",
+    roles: ["*"],
+    planTypes: ["*"], // Available for all plans
+    gradient: "from-emerald-500 to-teal-500",
   },
 ];
 
@@ -329,6 +488,7 @@ export default function Sidebar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const pathname = usePathname();
+  const { planInfo } = usePlanInfo();
 
   const toggleExpanded = (itemText: string) => {
     const newExpanded = new Set(expandedItems);
@@ -340,28 +500,47 @@ export default function Sidebar() {
     setExpandedItems(newExpanded);
   };
 
+  // Filter menu items based on plan type
   const filteredItems = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return allMenuItems;
-    }
+    if (!planInfo) return allMenuItems;
 
-    const query = searchQuery.toLowerCase();
-    const filtered = allMenuItems.filter((item) => {
-      // Check if main item matches
-      if (item.text.toLowerCase().includes(query)) {
-        return true;
+    const currentPlanType = planInfo.planType;
+
+    return allMenuItems.filter((item) => {
+      // Check if item is available for current plan
+      const isAvailableForPlan =
+        item.planTypes.includes("*") ||
+        item.planTypes.includes(currentPlanType);
+
+      if (!isAvailableForPlan) return false;
+
+      // If searching, check if main item or sub-items match
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+
+        // Check if main item matches
+        if (item.text.toLowerCase().includes(query)) {
+          return true;
+        }
+
+        // Check if any sub-item matches
+        if (item.subItems) {
+          return item.subItems.some((subItem) => {
+            const subItemAvailable =
+              subItem.planTypes.includes("*") ||
+              subItem.planTypes.includes(currentPlanType);
+            return (
+              subItemAvailable && subItem.text.toLowerCase().includes(query)
+            );
+          });
+        }
+
+        return false;
       }
-      // Check if any sub-item matches
-      if (item.subItems) {
-        return item.subItems.some((subItem) =>
-          subItem.text.toLowerCase().includes(query),
-        );
-      }
-      return false;
+
+      return true;
     });
-
-    return filtered;
-  }, [searchQuery]);
+  }, [searchQuery, planInfo]);
 
   // Handle auto-expanding items when searching
   useEffect(() => {
@@ -372,25 +551,44 @@ export default function Sidebar() {
     const query = searchQuery.toLowerCase();
     const newExpanded = new Set(expandedItems);
 
-    allMenuItems.forEach((item) => {
+    filteredItems.forEach((item) => {
       if (
         item.subItems &&
-        item.subItems.some((subItem) =>
-          subItem.text.toLowerCase().includes(query),
-        )
+        item.subItems.some((subItem) => {
+          const subItemAvailable =
+            subItem.planTypes.includes("*") ||
+            (planInfo && subItem.planTypes.includes(planInfo.planType));
+          return subItemAvailable && subItem.text.toLowerCase().includes(query);
+        })
       ) {
         newExpanded.add(item.text);
       }
     });
 
     setExpandedItems(newExpanded);
-  }, [searchQuery]);
+  }, [searchQuery, filteredItems, planInfo]);
 
   const isActive = (path: string) => {
     if (path === "/") {
       return pathname === "/";
     }
     return pathname.startsWith(path);
+  };
+
+  // Show plan info in header
+  const getPlanDisplayName = () => {
+    if (!planInfo) return "Loading...";
+
+    switch (planInfo.planType) {
+      case "workshop":
+        return "Workshop Master";
+      case "commerce":
+        return "Commerce Pro";
+      case "healthcare":
+        return "Healthcare Suite";
+      default:
+        return planInfo.planName;
+    }
   };
 
   return (
@@ -401,6 +599,14 @@ export default function Sidebar() {
             BizTrack
           </h2>
         </div>
+        {planInfo && (
+          <div className="mt-2 text-center">
+            <div className="text-xs text-gray-500 mb-1">Current Plan</div>
+            <div className="text-sm font-semibold text-gray-700">
+              {getPlanDisplayName()}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="p-4 border-b border-gray-200">
@@ -541,6 +747,13 @@ export default function Sidebar() {
                 <div className="ml-4 space-y-1 border-l-2 border-gray-200 pl-4">
                   {item.subItems!.map((subItem) => {
                     const isSubItemActive = isActive(subItem.path);
+                    const subItemAvailable =
+                      subItem.planTypes.includes("*") ||
+                      (planInfo &&
+                        subItem.planTypes.includes(planInfo.planType));
+
+                    if (!subItemAvailable) return null;
+
                     return (
                       <Link
                         key={subItem.text}
