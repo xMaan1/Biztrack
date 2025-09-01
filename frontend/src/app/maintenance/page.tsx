@@ -57,6 +57,8 @@ import {
   formatMaintenanceDate,
   formatDuration,
 } from "@/src/models/maintenance";
+import { MaintenanceScheduleDialog } from "@/src/components/maintenance/MaintenanceScheduleDialog";
+import { EquipmentDialog } from "@/src/components/maintenance/EquipmentDialog";
 
 export default function MaintenancePage() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -76,6 +78,8 @@ export default function MaintenancePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEquipmentDialog, setShowEquipmentDialog] = useState(false);
 
   // Fetch data on component mount
   useEffect(() => {
@@ -136,8 +140,17 @@ export default function MaintenancePage() {
   }, [maintenanceSchedules, searchQuery, statusFilter, priorityFilter]);
 
   const handleCreateMaintenance = () => {
-    // TODO: Implement create maintenance modal/form
-    console.log("Create maintenance clicked");
+    setShowCreateDialog(true);
+  };
+
+  const handleScheduleCreated = () => {
+    // Refresh the data after creating a new schedule
+    fetchDashboardData();
+  };
+
+  const handleEquipmentCreated = () => {
+    // Refresh the data after creating new equipment
+    fetchDashboardData();
   };
 
   if (loading) {
@@ -479,16 +492,70 @@ export default function MaintenancePage() {
           <TabsContent value="equipment" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Equipment Inventory</CardTitle>
-                <CardDescription>
-                  Manage equipment assets and specifications
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Equipment Inventory</CardTitle>
+                    <CardDescription>
+                      Manage equipment assets and specifications
+                    </CardDescription>
+                  </div>
+                  <Button
+                    onClick={() => setShowEquipmentDialog(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Equipment
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  <HardDrive className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Equipment management coming soon...</p>
-                </div>
+                {equipment.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <HardDrive className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No equipment found. Add your first piece of equipment to get started.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {equipment.map((eq) => (
+                      <div
+                        key={eq.id}
+                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                      >
+                        <div className="flex items-center space-x-4">
+                          <span className="text-2xl">
+                            {getMaintenanceTypeIcon(eq.category as any)}
+                          </span>
+                          <div>
+                            <h3 className="font-medium">{eq.name}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              {eq.model || "No Model"} • {eq.manufacturer || "No Manufacturer"}
+                            </p>
+                            <div className="flex items-center space-x-2 mt-1">
+                              <span className="text-xs text-muted-foreground">
+                                {eq.location || "No Location"}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                •
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {eq.operating_hours.toFixed(1)}h operating
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Badge className={getEquipmentStatusColor(eq.status as any)}>
+                            {eq.status}
+                          </Badge>
+                          <Badge variant="outline">{eq.category}</Badge>
+                          <Button variant="outline" size="sm">
+                            View
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -512,6 +579,20 @@ export default function MaintenancePage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Maintenance Schedule Creation Dialog */}
+      <MaintenanceScheduleDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onScheduleCreated={handleScheduleCreated}
+      />
+
+      {/* Equipment Creation Dialog */}
+      <EquipmentDialog
+        open={showEquipmentDialog}
+        onOpenChange={setShowEquipmentDialog}
+        onEquipmentCreated={handleEquipmentCreated}
+      />
     </DashboardLayout>
   );
 }
