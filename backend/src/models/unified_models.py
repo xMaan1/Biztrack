@@ -2026,14 +2026,32 @@ class InvoiceCreate(BaseModel):
     opportunityId: Optional[str] = None
     quoteId: Optional[str] = None
     projectId: Optional[str] = None
+    
+    # Vehicle details for workshop invoices
+    vehicleMake: Optional[str] = None
+    vehicleModel: Optional[str] = None
+    vehicleYear: Optional[str] = None
+    vehicleColor: Optional[str] = None
+    vehicleVin: Optional[str] = None
+    vehicleReg: Optional[str] = None
+    vehicleMileage: Optional[str] = None
+    
+    # Workshop specific fields
+    jobDescription: Optional[str] = None
+    partsDescription: Optional[str] = None
+    labourTotal: Optional[float] = 0.0
+    partsTotal: Optional[float] = 0.0
 
 class InvoiceUpdate(BaseModel):
     customerName: Optional[str] = None
     customerEmail: Optional[str] = None
+    customerPhone: Optional[str] = None
     billingAddress: Optional[str] = None
     shippingAddress: Optional[str] = None
     issueDate: Optional[str] = None
     dueDate: Optional[str] = None
+    orderNumber: Optional[str] = None
+    orderTime: Optional[str] = None
     paymentTerms: Optional[str] = None
     currency: Optional[str] = None
     taxRate: Optional[float] = None
@@ -2042,6 +2060,21 @@ class InvoiceUpdate(BaseModel):
     terms: Optional[str] = None
     status: Optional[InvoiceStatus] = None
     items: Optional[List[InvoiceItemCreate]] = None
+    
+    # Vehicle details for workshop invoices
+    vehicleMake: Optional[str] = None
+    vehicleModel: Optional[str] = None
+    vehicleYear: Optional[str] = None
+    vehicleColor: Optional[str] = None
+    vehicleVin: Optional[str] = None
+    vehicleReg: Optional[str] = None
+    vehicleMileage: Optional[str] = None
+    
+    # Workshop specific fields
+    jobDescription: Optional[str] = None
+    partsDescription: Optional[str] = None
+    labourTotal: Optional[float] = None
+    partsTotal: Optional[float] = None
 
 class Invoice(InvoiceBase):
     id: UUID

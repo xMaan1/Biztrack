@@ -70,6 +70,19 @@ export function InvoiceDialog({
     opportunityId: "",
     quoteId: "",
     projectId: "",
+    // Vehicle details for workshop invoices
+    vehicleMake: "",
+    vehicleModel: "",
+    vehicleYear: "",
+    vehicleColor: "",
+    vehicleVin: "",
+    vehicleReg: "",
+    vehicleMileage: "",
+    // Workshop specific fields
+    jobDescription: "",
+    partsDescription: "",
+    labourTotal: 0,
+    partsTotal: 0,
   });
 
   const [items, setItems] = useState<InvoiceItemCreate[]>([]);
@@ -99,6 +112,19 @@ export function InvoiceDialog({
         opportunityId: invoice.opportunityId || "",
         quoteId: invoice.quoteId || "",
         projectId: invoice.projectId || "",
+        // Vehicle details for workshop invoices
+        vehicleMake: invoice.vehicleMake || "",
+        vehicleModel: invoice.vehicleModel || "",
+        vehicleYear: invoice.vehicleYear || "",
+        vehicleColor: invoice.vehicleColor || "",
+        vehicleVin: invoice.vehicleVin || "",
+        vehicleReg: invoice.vehicleReg || "",
+        vehicleMileage: invoice.vehicleMileage || "",
+        // Workshop specific fields
+        jobDescription: invoice.jobDescription || "",
+        partsDescription: invoice.partsDescription || "",
+        labourTotal: invoice.labourTotal || 0,
+        partsTotal: invoice.partsTotal || 0,
       });
       setItems(
         invoice.items.map((item) => ({
@@ -137,6 +163,19 @@ export function InvoiceDialog({
         opportunityId: "",
         quoteId: "",
         projectId: "",
+        // Vehicle details for workshop invoices
+        vehicleMake: "",
+        vehicleModel: "",
+        vehicleYear: "",
+        vehicleColor: "",
+        vehicleVin: "",
+        vehicleReg: "",
+        vehicleMileage: "",
+        // Workshop specific fields
+        jobDescription: "",
+        partsDescription: "",
+        labourTotal: 0,
+        partsTotal: 0,
       });
       setItems([]);
     }
@@ -505,6 +544,161 @@ export function InvoiceDialog({
                   onChange={(e) =>
                     handleInputChange(
                       "discount",
+                      parseFloat(e.target.value) || 0,
+                    )
+                  }
+                  placeholder="0.00"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Vehicle Details for Workshop */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building className="h-4 w-4" />
+                Vehicle Details (Workshop)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="vehicleMake">Vehicle Make</Label>
+                <Input
+                  id="vehicleMake"
+                  value={formData.vehicleMake}
+                  onChange={(e) =>
+                    handleInputChange("vehicleMake", e.target.value)
+                  }
+                  placeholder="e.g., VW, BMW, Ford"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="vehicleModel">Vehicle Model</Label>
+                <Input
+                  id="vehicleModel"
+                  value={formData.vehicleModel}
+                  onChange={(e) =>
+                    handleInputChange("vehicleModel", e.target.value)
+                  }
+                  placeholder="e.g., Golf, 3 Series, Focus"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="vehicleYear">Vehicle Year</Label>
+                <Input
+                  id="vehicleYear"
+                  value={formData.vehicleYear}
+                  onChange={(e) =>
+                    handleInputChange("vehicleYear", e.target.value)
+                  }
+                  placeholder="e.g., 2014, 2020"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="vehicleColor">Vehicle Color</Label>
+                <Input
+                  id="vehicleColor"
+                  value={formData.vehicleColor}
+                  onChange={(e) =>
+                    handleInputChange("vehicleColor", e.target.value)
+                  }
+                  placeholder="e.g., Blue, Red, Silver"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="vehicleVin">VIN Number</Label>
+                <Input
+                  id="vehicleVin"
+                  value={formData.vehicleVin}
+                  onChange={(e) =>
+                    handleInputChange("vehicleVin", e.target.value)
+                  }
+                  placeholder="Vehicle Identification Number"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="vehicleReg">Registration Number</Label>
+                <Input
+                  id="vehicleReg"
+                  value={formData.vehicleReg}
+                  onChange={(e) =>
+                    handleInputChange("vehicleReg", e.target.value)
+                  }
+                  placeholder="e.g., KU14 MGV"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="vehicleMileage">Mileage</Label>
+                <Input
+                  id="vehicleMileage"
+                  value={formData.vehicleMileage}
+                  onChange={(e) =>
+                    handleInputChange("vehicleMileage", e.target.value)
+                  }
+                  placeholder="e.g., 50,000 miles"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <Label htmlFor="jobDescription">Job Description</Label>
+                <Textarea
+                  id="jobDescription"
+                  value={formData.jobDescription}
+                  onChange={(e) =>
+                    handleInputChange("jobDescription", e.target.value)
+                  }
+                  placeholder="Describe the work performed"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <Label htmlFor="partsDescription">Parts Description</Label>
+                <Textarea
+                  id="partsDescription"
+                  value={formData.partsDescription}
+                  onChange={(e) =>
+                    handleInputChange("partsDescription", e.target.value)
+                  }
+                  placeholder="Describe the parts used"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="labourTotal">Labour Total (£)</Label>
+                <Input
+                  id="labourTotal"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.labourTotal}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "labourTotal",
+                      parseFloat(e.target.value) || 0,
+                    )
+                  }
+                  placeholder="0.00"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="partsTotal">Parts Total (£)</Label>
+                <Input
+                  id="partsTotal"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.partsTotal}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "partsTotal",
                       parseFloat(e.target.value) || 0,
                     )
                   }

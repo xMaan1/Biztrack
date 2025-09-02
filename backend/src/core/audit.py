@@ -158,6 +158,15 @@ class AuditLogger:
         try:
             db = next(get_db())
             
+            # Validate tenant_id exists before creating audit record
+            tenant_id = audit_record.get("tenant_id")
+            if tenant_id:
+                from ..config.core_crud import get_tenant_by_id
+                tenant = get_tenant_by_id(tenant_id, db)
+                if not tenant:
+                    logging.warning(f"Tenant {tenant_id} not found, skipping audit record")
+                    return
+            
             # Create audit record in database
             from ..config.database import AuditLog
             db_audit = AuditLog(

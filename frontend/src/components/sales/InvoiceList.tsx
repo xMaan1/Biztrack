@@ -33,6 +33,7 @@ import {
 import { Invoice } from "../../models/sales";
 import InvoiceService from "../../services/InvoiceService";
 import { SessionManager } from "../../services/SessionManager";
+import { ApiService } from "../../services/ApiService";
 import { toast } from "sonner";
 
 interface InvoiceListProps {
@@ -71,12 +72,22 @@ export function InvoiceList({
         return;
       }
 
+      // Get tenant ID from API service
+      const apiService = new ApiService();
+      const tenantId = apiService.getTenantId();
+      
+      if (!tenantId) {
+        toast.error("Tenant context required");
+        return;
+      }
+
       const response = await fetch(
         `http://localhost:8000/invoices/${invoiceId}/download`,
         {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
+            "X-Tenant-ID": tenantId,
           },
         },
       );

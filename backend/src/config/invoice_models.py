@@ -47,6 +47,21 @@ class Invoice(Base):
     balance = Column(Float, default=0.0)
     items = Column(JSON, default=[])
     
+    # Vehicle details for workshop invoices
+    vehicleMake = Column(String, nullable=True)
+    vehicleModel = Column(String, nullable=True)
+    vehicleYear = Column(String, nullable=True)
+    vehicleColor = Column(String, nullable=True)
+    vehicleVin = Column(String, nullable=True)
+    vehicleReg = Column(String, nullable=True)
+    vehicleMileage = Column(String, nullable=True)
+    
+    # Workshop specific fields
+    jobDescription = Column(Text, nullable=True)
+    partsDescription = Column(Text, nullable=True)
+    labourTotal = Column(Float, default=0.0)
+    partsTotal = Column(Float, default=0.0)
+    
     # Relationships
     payments = relationship("Payment", back_populates="invoice")
     tenant = relationship("Tenant", back_populates="invoices")

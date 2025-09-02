@@ -56,7 +56,7 @@ def calculate_invoice_totals(items: List, tax_rate: float, discount: float) -> d
     }
 
 def generate_invoice_pdf(invoice) -> bytes:
-    """Generate a beautiful PDF invoice"""
+    """Generate beautiful PDF invoice with vehicle details for workshop"""
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4)
     story = []
@@ -67,130 +67,206 @@ def generate_invoice_pdf(invoice) -> bytes:
         'CustomTitle',
         parent=styles['Heading1'],
         fontSize=24,
-        textColor=colors.darkblue,
-        alignment=TA_CENTER,
-        spaceAfter=20
+        spaceAfter=30,
+        alignment=TA_CENTER
     )
     
     heading_style = ParagraphStyle(
         'CustomHeading',
         parent=styles['Heading2'],
         fontSize=14,
-        textColor=colors.darkblue,
         spaceAfter=10
     )
     
-    normal_style = styles['Normal']
-    
-    # Title
-    story.append(Paragraph("INVOICE", title_style))
+    # Add company logo/header
+    story.append(Paragraph("SAKS AUTO WORLD", title_style))
     story.append(Spacer(1, 20))
     
-    # Invoice header table
-    header_data = [
-        ['Invoice Number:', invoice.invoiceNumber, 'Issue Date:', invoice.issueDate.strftime('%Y-%m-%d')],
-        ['Order Number:', invoice.orderNumber or 'N/A', 'Due Date:', invoice.dueDate.strftime('%Y-%m-%d')],
-        ['Status:', invoice.status, 'Currency:', invoice.currency or 'USD']
+    # Invoice details table
+    invoice_data = [
+        ["DATE:", invoice.issueDate.strftime("%d-%m-%Y")],
+        ["DUE:", invoice.dueDate.strftime("%d-%m-%Y")],
+        ["INVOICE #:", invoice.invoiceNumber]
     ]
     
-    header_table = Table(header_data, colWidths=[1.5*inch, 2*inch, 1.5*inch, 2*inch])
-    header_table.setStyle(TableStyle([
+    invoice_table = Table(invoice_data, colWidths=[100, 200])
+    invoice_table.setStyle(TableStyle([
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, -1), 10),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-        ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
-        ('BACKGROUND', (2, 0), (2, -1), colors.lightgrey),
     ]))
-    story.append(header_table)
+    story.append(invoice_table)
     story.append(Spacer(1, 20))
     
     # Customer information
-    story.append(Paragraph("Customer Information", heading_style))
     customer_data = [
-        ['Name:', invoice.customerName],
-        ['Email:', invoice.customerEmail],
-        ['Phone:', invoice.customerPhone or 'N/A'],
-        ['Billing Address:', invoice.billingAddress or 'N/A']
+        ["NAME:", invoice.customerName],
+        ["ADDRESS:", invoice.billingAddress or ""],
+        ["", ""],  # Additional address line
+        ["", ""]   # Additional address line
     ]
     
-    customer_table = Table(customer_data, colWidths=[1.5*inch, 5*inch])
+    customer_table = Table(customer_data, colWidths=[100, 200])
     customer_table.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (0, -1), 'LEFT'),
-        ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-        ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
         ('FONTSIZE', (0, 0), (-1, -1), 10),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-        ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
     ]))
     story.append(customer_table)
     story.append(Spacer(1, 20))
     
-    # Items table
-    if invoice.items:
-        story.append(Paragraph("Invoice Items", heading_style))
+    # Vehicle information (if available)
+    if invoice.vehicleMake or invoice.vehicleModel:
+        vehicle_data = [
+            ["MAKE:", invoice.vehicleMake or ""],
+            ["MODEL:", invoice.vehicleModel or ""],
+            ["YEAR:", invoice.vehicleYear or ""],
+            ["COLOR:", invoice.vehicleColor or ""],
+            ["VIN #:", invoice.vehicleVin or ""],
+            ["REG #:", invoice.vehicleReg or ""],
+            ["MILEAGE:", invoice.vehicleMileage or ""]
+        ]
         
-        # Table headers
-        items_data = [['Description', 'Quantity', 'Unit Price', 'Total']]
-        
-        # Add items
-        for item in invoice.items:
-            items_data.append([
-                item.get('description', 'N/A'),
-                str(item.get('quantity', 0)),
-                f"${item.get('unitPrice', 0):.2f}",
-                f"${item.get('total', 0):.2f}"
-            ])
-        
-        items_table = Table(items_data, colWidths=[3*inch, 1*inch, 1.5*inch, 1.5*inch])
-        items_table.setStyle(TableStyle([
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        vehicle_table = Table(vehicle_data, colWidths=[100, 200])
+        vehicle_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, -1), 10),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-            ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
         ]))
-        story.append(items_table)
+        story.append(vehicle_table)
         story.append(Spacer(1, 20))
     
-    # Totals table
-    story.append(Paragraph("Invoice Summary", heading_style))
-    totals_data = [
-        ['Subtotal:', f"${invoice.subtotal:.2f}"],
-        ['Tax Rate:', f"{invoice.taxRate}%"],
-        ['Tax Amount:', f"${invoice.taxAmount:.2f}"],
-        ['Discount:', f"{invoice.discount}%"],
-        ['Total:', f"${invoice.total:.2f}"]
-    ]
+    # Job performed section (if available)
+    if invoice.jobDescription or invoice.labourTotal:
+        story.append(Paragraph("Description of Jobs:", heading_style))
+        
+        if invoice.items:
+            # Use items for job details
+            job_data = [["Description of Jobs", "Amounts for Jobs"]]
+            for item in invoice.items:
+                if item.get("description"):
+                    job_data.append([
+                        item.get("description", ""),
+                        f"£ {item.get('total', 0):.2f}"
+                    ])
+            
+            job_table = Table(job_data, colWidths=[250, 100])
+            job_table.setStyle(TableStyle([
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            story.append(job_table)
+        
+        # Add subtotal for jobs
+        if invoice.labourTotal:
+            job_subtotal_data = [["SUBTOTAL (for jobs):", f"£ {invoice.labourTotal:.2f}"]]
+            job_subtotal_table = Table(job_subtotal_data, colWidths=[200, 150])
+            job_subtotal_table.setStyle(TableStyle([
+                ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ]))
+            story.append(job_subtotal_table)
+        
+        story.append(Spacer(1, 20))
     
-    totals_table = Table(totals_data, colWidths=[2*inch, 1.5*inch])
-    totals_table.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
-        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+    # Parts section (if available)
+    if invoice.partsDescription or invoice.partsTotal:
+        story.append(Paragraph("Parts:", heading_style))
+        
+        if invoice.items:
+            # Use items for parts details
+            parts_data = [["PART #", "PART NAME", "QTY", "UNIT PRICE", "AMOUNT for Parts"]]
+            for item in invoice.items:
+                if item.get("description"):
+                    parts_data.append([
+                        "",  # PART #
+                        item.get("description", ""),
+                        str(item.get("quantity", 0)),
+                        f"£ {item.get('unitPrice', 0):.2f}",
+                        f"£ {item.get('total', 0):.2f}"
+                    ])
+            
+            parts_table = Table(parts_data, colWidths=[50, 150, 50, 80, 120])
+            parts_table.setStyle(TableStyle([
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            story.append(parts_table)
+        
+        # Add subtotal for parts
+        if invoice.partsTotal:
+            parts_subtotal_data = [["SUBTOTAL (for parts):", f"£ {invoice.partsTotal:.2f}"]]
+            parts_subtotal_table = Table(parts_subtotal_data, colWidths=[200, 150])
+            parts_subtotal_table.setStyle(TableStyle([
+                ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ]))
+            story.append(parts_subtotal_table)
+        
+        story.append(Spacer(1, 20))
+    
+    # Summary of charges
+    story.append(Paragraph("Summary of Charges:", heading_style))
+    
+    summary_data = []
+    if invoice.labourTotal:
+        summary_data.append(["TOTAL LABOUR:", f"£ {invoice.labourTotal:.2f}"])
+    if invoice.partsTotal:
+        summary_data.append(["TOTAL PARTS:", f"£ {invoice.partsTotal:.2f}"])
+    if invoice.taxAmount:
+        summary_data.append(["VAT:", f"£ {invoice.taxAmount:.2f}"])
+    summary_data.append(["TOTAL:", f"£ {invoice.total:.2f}"])
+    
+    summary_table = Table(summary_data, colWidths=[200, 150])
+    summary_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
         ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-        ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
         ('FONTSIZE', (0, 0), (-1, -1), 12),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-        ('BACKGROUND', (-1, -1), (-1, -1), colors.lightgreen),
-        ('FONTNAME', (-1, -1), (-1, -1), 'Helvetica-Bold'),
-        ('FONTSIZE', (-1, -1), (-1, -1), 14),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
     ]))
-    story.append(totals_table)
+    story.append(summary_table)
     story.append(Spacer(1, 20))
     
-    # Notes and terms
+    # Comments section
     if invoice.notes:
-        story.append(Paragraph("Notes", heading_style))
-        story.append(Paragraph(invoice.notes, normal_style))
-        story.append(Spacer(1, 15))
+        story.append(Paragraph("Comments:", heading_style))
+        story.append(Paragraph(invoice.notes, styles['Normal']))
+        story.append(Spacer(1, 20))
     
-    if invoice.terms:
-        story.append(Paragraph("Terms & Conditions", heading_style))
-        story.append(Paragraph(invoice.terms, normal_style))
+    # Payment instructions
+    payment_data = [
+        ["Payment Instructions:", "Make all payments to Saks Auto World Ltd"],
+        ["", "S/C 23-18-84 A/C: 42798297"],
+        ["", ""],
+        ["", "Thank you for your business!"],
+        ["", ""],
+        ["Enquiries Contact:", "Should you have any enquiries concerning this invoice, please contact Syed on 01908 991 123"],
+        ["", ""],
+        ["Business Address:", "Unit 7 Pristine Business Park Newport Road, Milton Keynes, MK17 8UD"],
+        ["Contact Details:", "Tel: 01908 991 123 e-mail: contact@saksautoworld.co.uk Web: www.saksautoworld.co.uk"]
+    ]
+    
+    payment_table = Table(payment_data, colWidths=[150, 250])
+    payment_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    story.append(payment_table)
     
     # Build PDF
     doc.build(story)
@@ -242,6 +318,19 @@ def create_invoice(
             opportunityId=invoice_data.opportunityId,
             quoteId=invoice_data.quoteId,
             projectId=invoice_data.projectId,
+            # Vehicle details for workshop invoices
+            vehicleMake=invoice_data.vehicleMake,
+            vehicleModel=invoice_data.vehicleModel,
+            vehicleYear=invoice_data.vehicleYear,
+            vehicleColor=invoice_data.vehicleColor,
+            vehicleVin=invoice_data.vehicleVin,
+            vehicleReg=invoice_data.vehicleReg,
+            vehicleMileage=invoice_data.vehicleMileage,
+            # Workshop specific fields
+            jobDescription=invoice_data.jobDescription,
+            partsDescription=invoice_data.partsDescription,
+            labourTotal=invoice_data.labourTotal or 0.0,
+            partsTotal=invoice_data.partsTotal or 0.0,
             **totals,
             createdAt=datetime.utcnow(),
             updatedAt=datetime.utcnow()
@@ -460,6 +549,9 @@ def update_invoice(
             elif field == "orderTime" and value:
                 # Convert orderTime string to datetime
                 setattr(invoice, field, datetime.fromisoformat(value))
+            elif field in ["labourTotal", "partsTotal"] and value is not None:
+                # Handle workshop specific totals
+                setattr(invoice, field, float(value))
             else:
                 setattr(invoice, field, value)
         
@@ -936,7 +1028,10 @@ def download_invoice_pdf(
     """Download invoice as PDF"""
     try:
         if not tenant_context:
-            raise HTTPException(status_code=400, detail="Tenant context required")
+            raise HTTPException(
+                status_code=400, 
+                detail="Tenant context required. Please include X-Tenant-ID header."
+            )
             
         tenant_id = tenant_context["tenant_id"]
         
