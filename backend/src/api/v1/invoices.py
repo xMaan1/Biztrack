@@ -55,218 +55,286 @@ def calculate_invoice_totals(items: List, tax_rate: float, discount: float) -> d
         "total": round(total, 2)
     }
 
-def generate_invoice_pdf(invoice) -> bytes:
+def generate_invoice_pdf(invoice, db: Session) -> bytes:
     """Generate beautiful PDF invoice with vehicle details for workshop"""
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4)
     story = []
+    
+    # Get tenant information
+    from ...config.core_models import Tenant
+    tenant = db.query(Tenant).filter(Tenant.id == invoice.tenant_id).first()
+    tenant_name = tenant.name if tenant else "Company"
     
     # Get styles
     styles = getSampleStyleSheet()
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Heading1'],
-        fontSize=24,
+        fontSize=28,
         spaceAfter=30,
-        alignment=TA_CENTER
+        alignment=TA_CENTER,
+        textColor=colors.HexColor('#1e40af'),  # Blue color
+        fontName='Helvetica-Bold'
+    )
+    
+    subtitle_style = ParagraphStyle(
+        'CustomSubtitle',
+        parent=styles['Normal'],
+        fontSize=12,
+        spaceAfter=20,
+        alignment=TA_CENTER,
+        textColor=colors.HexColor('#6b7280'),  # Gray color
+        fontName='Helvetica'
     )
     
     heading_style = ParagraphStyle(
         'CustomHeading',
         parent=styles['Heading2'],
-        fontSize=14,
-        spaceAfter=10
+        fontSize=16,
+        spaceAfter=15,
+        textColor=colors.HexColor('#1f2937'),  # Dark gray
+        fontName='Helvetica-Bold'
     )
     
-    # Add company logo/header
-    story.append(Paragraph("SAKS AUTO WORLD", title_style))
-    story.append(Spacer(1, 20))
+    # Add company header with beautiful styling
+    story.append(Paragraph(tenant_name, title_style))
+    story.append(Paragraph("Professional Invoice", subtitle_style))
+    story.append(Spacer(1, 30))
     
-    # Invoice details table
-    invoice_data = [
-        ["DATE:", invoice.issueDate.strftime("%d-%m-%Y")],
-        ["DUE:", invoice.dueDate.strftime("%d-%m-%Y")],
-        ["INVOICE #:", invoice.invoiceNumber]
+    # Create a beautiful two-column layout for invoice details
+    from reportlab.platypus import Frame, PageTemplate
+    
+    # Invoice details with beautiful styling
+    invoice_details_style = ParagraphStyle(
+        'InvoiceDetails',
+        parent=styles['Normal'],
+        fontSize=11,
+        spaceAfter=8,
+        fontName='Helvetica'
+    )
+    
+    # Left column - Invoice details
+    left_column = [
+        Paragraph(f"<b>Invoice Number:</b> {invoice.invoiceNumber}", invoice_details_style),
+        Paragraph(f"<b>Issue Date:</b> {invoice.issueDate.strftime('%B %d, %Y')}", invoice_details_style),
+        Paragraph(f"<b>Due Date:</b> {invoice.dueDate.strftime('%B %d, %Y')}", invoice_details_style),
+        Paragraph(f"<b>Payment Terms:</b> {invoice.paymentTerms}", invoice_details_style),
     ]
     
-    invoice_table = Table(invoice_data, colWidths=[100, 200])
-    invoice_table.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-    ]))
-    story.append(invoice_table)
-    story.append(Spacer(1, 20))
-    
-    # Customer information
-    customer_data = [
-        ["NAME:", invoice.customerName],
-        ["ADDRESS:", invoice.billingAddress or ""],
-        ["", ""],  # Additional address line
-        ["", ""]   # Additional address line
+    # Right column - Customer details
+    right_column = [
+        Paragraph(f"<b>Customer:</b> {invoice.customerName}", invoice_details_style),
+        Paragraph(f"<b>Email:</b> {invoice.customerEmail}", invoice_details_style),
+        Paragraph(f"<b>Phone:</b> {invoice.customerPhone or 'N/A'}", invoice_details_style),
     ]
     
-    customer_table = Table(customer_data, colWidths=[100, 200])
-    customer_table.setStyle(TableStyle([
+    # Create a table for the two-column layout
+    details_data = [
+        ["Invoice Details", "Customer Information"],
+        [left_column, right_column]
+    ]
+    
+    details_table = Table(details_data, colWidths=[250, 250])
+    details_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f3f4f6')),  # Light gray header
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#1f2937')),  # Dark text
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+        ('TOPPADDING', (0, 0), (-1, -1), 10),
+        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#e5e7eb')),  # Light border
+        ('ROWBACKGROUNDS', (0, 1), (-1, 1), [colors.white]),
     ]))
-    story.append(customer_table)
-    story.append(Spacer(1, 20))
+    story.append(details_table)
+    story.append(Spacer(1, 25))
+    
+    # Customer billing address
+    if invoice.billingAddress:
+        story.append(Paragraph("Billing Address:", heading_style))
+        address_style = ParagraphStyle(
+            'Address',
+            parent=styles['Normal'],
+            fontSize=11,
+            spaceAfter=15,
+            fontName='Helvetica'
+        )
+        story.append(Paragraph(invoice.billingAddress, address_style))
+        story.append(Spacer(1, 15))
     
     # Vehicle information (if available)
     if invoice.vehicleMake or invoice.vehicleModel:
-        vehicle_data = [
-            ["MAKE:", invoice.vehicleMake or ""],
-            ["MODEL:", invoice.vehicleModel or ""],
-            ["YEAR:", invoice.vehicleYear or ""],
-            ["COLOR:", invoice.vehicleColor or ""],
-            ["VIN #:", invoice.vehicleVin or ""],
-            ["REG #:", invoice.vehicleReg or ""],
-            ["MILEAGE:", invoice.vehicleMileage or ""]
-        ]
+        story.append(Paragraph("Vehicle Information:", heading_style))
         
-        vehicle_table = Table(vehicle_data, colWidths=[100, 200])
-        vehicle_table.setStyle(TableStyle([
+        vehicle_data = []
+        if invoice.vehicleMake:
+            vehicle_data.append(["Make:", invoice.vehicleMake])
+        if invoice.vehicleModel:
+            vehicle_data.append(["Model:", invoice.vehicleModel])
+        if invoice.vehicleYear:
+            vehicle_data.append(["Year:", invoice.vehicleYear])
+        if invoice.vehicleColor:
+            vehicle_data.append(["Color:", invoice.vehicleColor])
+        if invoice.vehicleVin:
+            vehicle_data.append(["VIN:", invoice.vehicleVin])
+        if invoice.vehicleReg:
+            vehicle_data.append(["Registration:", invoice.vehicleReg])
+        if invoice.vehicleMileage:
+            vehicle_data.append(["Mileage:", invoice.vehicleMileage])
+        
+        if vehicle_data:
+            vehicle_table = Table(vehicle_data, colWidths=[120, 300])
+            vehicle_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f8fafc')),  # Very light blue
+                ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#1f2937')),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#e2e8f0')),
+            ]))
+            story.append(vehicle_table)
+            story.append(Spacer(1, 20))
+    
+    # Invoice items section (if available)
+    if invoice.items:
+        story.append(Paragraph("Invoice Items:", heading_style))
+        
+        # Create items table with beautiful styling
+        items_data = [["Description", "Qty", "Unit Price", "Total"]]
+        for item in invoice.items:
+            items_data.append([
+                item.get("description", ""),
+                str(item.get("quantity", 1)),
+                f"£ {item.get('unitPrice', 0):.2f}",
+                f"£ {(item.get('quantity', 1) * item.get('unitPrice', 0)):.2f}"
+            ])
+        
+        items_table = Table(items_data, colWidths=[250, 60, 80, 80])
+        items_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e40af')),  # Blue header
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),  # White text in header
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),  # Right align numbers
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#e5e7eb')),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f9fafb')]),  # Alternating rows
         ]))
-        story.append(vehicle_table)
+        story.append(items_table)
         story.append(Spacer(1, 20))
     
-    # Job performed section (if available)
-    if invoice.jobDescription or invoice.labourTotal:
-        story.append(Paragraph("Description of Jobs:", heading_style))
-        
-        if invoice.items:
-            # Use items for job details
-            job_data = [["Description of Jobs", "Amounts for Jobs"]]
-            for item in invoice.items:
-                if item.get("description"):
-                    job_data.append([
-                        item.get("description", ""),
-                        f"£ {item.get('total', 0):.2f}"
-                    ])
-            
-            job_table = Table(job_data, colWidths=[250, 100])
-            job_table.setStyle(TableStyle([
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('FONTNAME', (0, 0), (0, -1), 'Helvetica'),
-                ('FONTSIZE', (0, 0), (-1, -1), 10),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black)
-            ]))
-            story.append(job_table)
-        
-        # Add subtotal for jobs
-        if invoice.labourTotal:
-            job_subtotal_data = [["SUBTOTAL (for jobs):", f"£ {invoice.labourTotal:.2f}"]]
-            job_subtotal_table = Table(job_subtotal_data, colWidths=[200, 150])
-            job_subtotal_table.setStyle(TableStyle([
-                ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
-                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, -1), 10),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-            ]))
-            story.append(job_subtotal_table)
-        
-        story.append(Spacer(1, 20))
+    # Job description section (if available)
+    if invoice.jobDescription:
+        story.append(Paragraph("Job Description:", heading_style))
+        job_desc_style = ParagraphStyle(
+            'JobDescription',
+            parent=styles['Normal'],
+            fontSize=11,
+            spaceAfter=15,
+            fontName='Helvetica',
+            leftIndent=20
+        )
+        story.append(Paragraph(invoice.jobDescription, job_desc_style))
+        story.append(Spacer(1, 15))
     
-    # Parts section (if available)
-    if invoice.partsDescription or invoice.partsTotal:
-        story.append(Paragraph("Parts:", heading_style))
-        
-        if invoice.items:
-            # Use items for parts details
-            parts_data = [["PART #", "PART NAME", "QTY", "UNIT PRICE", "AMOUNT for Parts"]]
-            for item in invoice.items:
-                if item.get("description"):
-                    parts_data.append([
-                        "",  # PART #
-                        item.get("description", ""),
-                        str(item.get("quantity", 0)),
-                        f"£ {item.get('unitPrice', 0):.2f}",
-                        f"£ {item.get('total', 0):.2f}"
-                    ])
-            
-            parts_table = Table(parts_data, colWidths=[50, 150, 50, 80, 120])
-            parts_table.setStyle(TableStyle([
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('FONTNAME', (0, 0), (0, -1), 'Helvetica'),
-                ('FONTSIZE', (0, 0), (-1, -1), 10),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black)
-            ]))
-            story.append(parts_table)
-        
-        # Add subtotal for parts
-        if invoice.partsTotal:
-            parts_subtotal_data = [["SUBTOTAL (for parts):", f"£ {invoice.partsTotal:.2f}"]]
-            parts_subtotal_table = Table(parts_subtotal_data, colWidths=[200, 150])
-            parts_subtotal_table.setStyle(TableStyle([
-                ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
-                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, -1), 10),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-            ]))
-            story.append(parts_subtotal_table)
-        
-        story.append(Spacer(1, 20))
-    
-    # Summary of charges
+    # Summary of charges with beautiful styling
     story.append(Paragraph("Summary of Charges:", heading_style))
     
     summary_data = []
-    if invoice.labourTotal:
-        summary_data.append(["TOTAL LABOUR:", f"£ {invoice.labourTotal:.2f}"])
-    if invoice.partsTotal:
-        summary_data.append(["TOTAL PARTS:", f"£ {invoice.partsTotal:.2f}"])
+    if invoice.subtotal:
+        summary_data.append(["Subtotal:", f"£ {invoice.subtotal:.2f}"])
+    if invoice.discount > 0:
+        summary_data.append(["Discount:", f"-£ {invoice.discount:.2f}"])
     if invoice.taxAmount:
-        summary_data.append(["VAT:", f"£ {invoice.taxAmount:.2f}"])
+        summary_data.append(["Tax:", f"£ {invoice.taxAmount:.2f}"])
+    
+    # Add a separator line before total
+    summary_data.append(["", ""])
     summary_data.append(["TOTAL:", f"£ {invoice.total:.2f}"])
     
-    summary_table = Table(summary_data, colWidths=[200, 150])
+    summary_table = Table(summary_data, colWidths=[300, 150])
     summary_table.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+        ('ALIGN', (0, 0), (0, -1), 'LEFT'),  # Left align labels
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),  # Right align amounts
         ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, -1), 12),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('LINEBELOW', (0, -2), (-1, -2), 1, colors.HexColor('#e5e7eb')),  # Line above total
+        ('FONTSIZE', (0, -1), (-1, -1), 14),  # Larger font for total
+        ('TEXTCOLOR', (0, -1), (-1, -1), colors.HexColor('#1e40af')),  # Blue color for total
     ]))
     story.append(summary_table)
-    story.append(Spacer(1, 20))
+    story.append(Spacer(1, 25))
     
     # Comments section
     if invoice.notes:
-        story.append(Paragraph("Comments:", heading_style))
-        story.append(Paragraph(invoice.notes, styles['Normal']))
+        story.append(Paragraph("Additional Notes:", heading_style))
+        notes_style = ParagraphStyle(
+            'Notes',
+            parent=styles['Normal'],
+            fontSize=11,
+            spaceAfter=20,
+            fontName='Helvetica',
+            leftIndent=20
+        )
+        story.append(Paragraph(invoice.notes, notes_style))
         story.append(Spacer(1, 20))
     
-    # Payment instructions
+    # Payment instructions with beautiful styling
+    story.append(Paragraph("Payment Information:", heading_style))
+    
+    # Create a beautiful payment info box
+    payment_info_style = ParagraphStyle(
+        'PaymentInfo',
+        parent=styles['Normal'],
+        fontSize=11,
+        spaceAfter=8,
+        fontName='Helvetica'
+    )
+    
     payment_data = [
-        ["Payment Instructions:", "Make all payments to Saks Auto World Ltd"],
-        ["", "S/C 23-18-84 A/C: 42798297"],
+        ["Payment Method:", invoice.paymentTerms],
         ["", ""],
-        ["", "Thank you for your business!"],
+        ["Thank you for your business!", ""],
         ["", ""],
-        ["Enquiries Contact:", "Should you have any enquiries concerning this invoice, please contact Syed on 01908 991 123"],
-        ["", ""],
-        ["Business Address:", "Unit 7 Pristine Business Park Newport Road, Milton Keynes, MK17 8UD"],
-        ["Contact Details:", "Tel: 01908 991 123 e-mail: contact@saksautoworld.co.uk Web: www.saksautoworld.co.uk"]
+        ["For any questions about this invoice,", ""],
+        ["please contact us at your convenience.", ""]
     ]
     
-    payment_table = Table(payment_data, colWidths=[150, 250])
+    payment_table = Table(payment_data, colWidths=[300, 200])
     payment_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f8fafc')),  # Light background
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('FONTNAME', (0, 0), (0, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 11),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+        ('TOPPADDING', (0, 0), (-1, -1), 10),
+        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#e2e8f0')),  # Border
+        ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.HexColor('#f8fafc')]),
     ]))
     story.append(payment_table)
+    story.append(Spacer(1, 30))
+    
+    # Footer with company info
+    footer_style = ParagraphStyle(
+        'Footer',
+        parent=styles['Normal'],
+        fontSize=9,
+        spaceAfter=10,
+        alignment=TA_CENTER,
+        textColor=colors.HexColor('#6b7280'),  # Gray color
+        fontName='Helvetica'
+    )
+    
+    story.append(Paragraph(f"Generated by {tenant_name} | Professional Invoice System", footer_style))
     
     # Build PDF
     doc.build(story)
@@ -1047,7 +1115,7 @@ def download_invoice_pdf(
             raise HTTPException(status_code=404, detail="Invoice not found")
         
         # Generate beautiful PDF invoice
-        pdf_content = generate_invoice_pdf(invoice)
+        pdf_content = generate_invoice_pdf(invoice, db)
         
         return Response(
             content=pdf_content,

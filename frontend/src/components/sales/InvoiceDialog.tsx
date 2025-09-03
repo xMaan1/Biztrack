@@ -60,7 +60,7 @@ export function InvoiceDialog({
       .split("T")[0],
     orderNumber: "", // New field
     orderTime: new Date().toISOString().slice(0, 16), // New field - current date/time
-    paymentTerms: "Net 30",
+    paymentTerms: "Cash",
     currency: "USD",
     taxRate: 0,
     discount: 0,
@@ -153,7 +153,7 @@ export function InvoiceDialog({
           .split("T")[0],
         orderNumber: "",
         orderTime: new Date().toISOString().slice(0, 16),
-        paymentTerms: "Net 30",
+        paymentTerms: "Cash",
         currency: "USD",
         taxRate: 0,
         discount: 0,
@@ -482,13 +482,10 @@ export function InvoiceDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Net 15">Net 15</SelectItem>
-                    <SelectItem value="Net 30">Net 30</SelectItem>
-                    <SelectItem value="Net 45">Net 45</SelectItem>
-                    <SelectItem value="Net 60">Net 60</SelectItem>
-                    <SelectItem value="Due on Receipt">
-                      Due on Receipt
-                    </SelectItem>
+                    <SelectItem value="Credit">Credit</SelectItem>
+                    <SelectItem value="Card">Card</SelectItem>
+                    <SelectItem value="Cash">Cash</SelectItem>
+                    <SelectItem value="Due Payments">Due Payments</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
