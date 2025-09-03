@@ -69,6 +69,13 @@ class InvoiceService {
     await apiService.post(`${this.baseUrl}/${invoiceId}/mark-as-paid`);
   }
 
+  async downloadInvoice(invoiceId: string): Promise<Blob> {
+    const response = await apiService.client.get(`${this.baseUrl}/${invoiceId}/download`, {
+      responseType: 'blob'
+    });
+    return response.data;
+  }
+
   // Dashboard
   async getDashboard(): Promise<InvoiceDashboard> {
     const response = await apiService.get(`${this.baseUrl}/dashboard/overview`);

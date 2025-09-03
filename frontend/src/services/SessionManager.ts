@@ -202,8 +202,10 @@ class SessionManager {
       const refreshToken = this.getRefreshToken();
       if (!refreshToken) return false;
 
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const apiUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/auth/refresh`,
+        `${apiUrl}/api/v1/auth/refresh`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

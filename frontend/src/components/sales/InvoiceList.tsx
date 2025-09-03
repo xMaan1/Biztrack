@@ -64,48 +64,17 @@ export function InvoiceList({
   const handleDownload = async (invoiceId: string) => {
     try {
       setDownloading(invoiceId);
-      const sessionManager = new SessionManager();
-      const token = sessionManager.getToken();
-
-      if (!token) {
-        toast.error("Authentication required");
-        return;
-      }
-
-      // Get tenant ID from API service
-      const apiService = new ApiService();
-      const tenantId = apiService.getTenantId();
       
-      if (!tenantId) {
-        toast.error("Tenant context required");
-        return;
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/invoices/${invoiceId}/download`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "X-Tenant-ID": tenantId,
-          },
-        },
-      );
-
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `invoice-${invoiceId}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-        toast.success("Invoice downloaded successfully!");
-      } else {
-        toast.error("Failed to download invoice");
-      }
+      const blob = await InvoiceService.downloadInvoice(invoiceId);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `invoice-${invoiceId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success("Invoice downloaded successfully!");
     } catch (error) {
       console.error("Download error:", error);
       toast.error("Error downloading invoice");

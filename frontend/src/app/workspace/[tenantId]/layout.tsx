@@ -62,8 +62,10 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
         return;
       }
 
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const apiUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/tenants/${tenantId}`,
+        `${apiUrl}/api/tenants/${tenantId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
