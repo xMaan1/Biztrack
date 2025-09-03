@@ -82,7 +82,7 @@ export function InvoiceList({
       }
 
       const response = await fetch(
-        `http://localhost:8000/invoices/${invoiceId}/download`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/invoices/${invoiceId}/download`,
         {
           method: "GET",
           headers: {

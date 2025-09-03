@@ -203,7 +203,7 @@ class SessionManager {
       if (!refreshToken) return false;
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/refresh`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/auth/refresh`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
