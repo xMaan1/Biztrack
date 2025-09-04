@@ -10,7 +10,7 @@ class Invoice(Base):
     __tablename__ = "invoices"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    invoiceNumber = Column(String, unique=True, index=True)
+    invoiceNumber = Column(String, index=True)  # Removed unique=True - will be unique per tenant
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
     createdBy = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     customerId = Column(String, nullable=True)

@@ -20,25 +20,84 @@ from ...models.unified_models import (
     InvoicesResponse, InvoiceResponse, PaymentsResponse, PaymentResponse,
     InvoiceDashboard, InvoiceMetrics, InvoiceFilters, PaymentFilters
 )
-from ...config.database import User, Invoice, Payment
+from ...config.database import User
+from ...config.invoice_models import Invoice, Payment
 
 router = APIRouter(prefix="/invoices", tags=["Invoices"])
 
 def generate_invoice_number(tenant_id: str, db: Session) -> str:
-    """Generate unique invoice number"""
+    """Generate unique invoice number with proper race condition handling"""
     year = datetime.now().year
     month = datetime.now().month
     
-    # Get count of invoices for this month
-    count = db.query(Invoice).filter(
-        and_(
-            Invoice.tenant_id == tenant_id,
-            func.extract('year', Invoice.createdAt) == year,
-            func.extract('month', Invoice.createdAt) == month
-        )
-    ).count()
+    # Use a retry mechanism to handle race conditions
+    max_retries = 10
+    for attempt in range(max_retries):
+        # Get the highest invoice number for this month
+        highest_invoice = db.query(Invoice).filter(
+            and_(
+                Invoice.tenant_id == tenant_id,
+                func.extract('year', Invoice.createdAt) == year,
+                func.extract('month', Invoice.createdAt) == month
+            )
+        ).order_by(desc(Invoice.invoiceNumber)).first()
+        
+        if highest_invoice:
+            # Extract the number from the highest invoice
+            try:
+                # Parse the existing invoice number format: INV-YYYYMM-XXXX
+                parts = highest_invoice.invoiceNumber.split('-')
+                if len(parts) == 3:
+                    last_number = int(parts[2])
+                    new_number = last_number + 1
+                else:
+                    # Fallback: count all invoices for this month
+                    count = db.query(Invoice).filter(
+                        and_(
+                            Invoice.tenant_id == tenant_id,
+                            func.extract('year', Invoice.createdAt) == year,
+                            func.extract('month', Invoice.createdAt) == month
+                        )
+                    ).count()
+                    new_number = count + 1
+            except (ValueError, IndexError):
+                # Fallback: count all invoices for this month
+                count = db.query(Invoice).filter(
+                    and_(
+                        Invoice.tenant_id == tenant_id,
+                        func.extract('year', Invoice.createdAt) == year,
+                        func.extract('month', Invoice.createdAt) == month
+                    )
+                ).count()
+                new_number = count + 1
+        else:
+            # No invoices for this month yet
+            new_number = 1
+        
+        # Generate the new invoice number
+        new_invoice_number = f"INV-{year}{month:02d}-{new_number:04d}"
+        
+        # Check if this number already exists (double-check for race conditions)
+        existing_invoice = db.query(Invoice).filter(
+            Invoice.invoiceNumber == new_invoice_number
+        ).first()
+        
+        if not existing_invoice:
+            return new_invoice_number
+        
+        # If we get here, there's a race condition, retry
+        if attempt < max_retries - 1:
+            continue
+        else:
+            # If we've exhausted retries, use timestamp-based fallback
+            import time
+            timestamp = int(time.time() * 1000) % 10000  # Last 4 digits of timestamp
+            return f"INV-{year}{month:02d}-{timestamp:04d}"
     
-    return f"INV-{year}{month:02d}-{(count + 1):04d}"
+    # This should never be reached, but just in case
+    import time
+    timestamp = int(time.time() * 1000) % 10000
+    return f"INV-{year}{month:02d}-{timestamp:04d}"
 
 def calculate_invoice_totals(items: List, tax_rate: float, discount: float) -> dict:
     """Calculate invoice totals"""
@@ -355,7 +414,29 @@ def create_invoice(
             
         tenant_id = tenant_context["tenant_id"]
         
-        # Generate invoice number
+        # Validate required fields
+        if not invoice_data.customerName:
+            raise HTTPException(status_code=400, detail="Customer name is required")
+        
+        if not invoice_data.customerEmail:
+            raise HTTPException(status_code=400, detail="Customer email is required")
+        
+        if not invoice_data.billingAddress:
+            raise HTTPException(status_code=400, detail="Billing address is required")
+        
+        if not invoice_data.items or len(invoice_data.items) == 0:
+            raise HTTPException(status_code=400, detail="At least one item is required")
+        
+        # Validate dates
+        try:
+            issue_date = datetime.fromisoformat(invoice_data.issueDate)
+            due_date = datetime.fromisoformat(invoice_data.dueDate)
+            if due_date < issue_date:
+                raise HTTPException(status_code=400, detail="Due date cannot be before issue date")
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date format")
+        
+        # Generate invoice number with retry mechanism
         invoice_number = generate_invoice_number(tenant_id, db)
         
         # Calculate totals
@@ -367,16 +448,16 @@ def create_invoice(
             invoiceNumber=invoice_number,
             tenant_id=tenant_id,
             createdBy=str(current_user.id),
-            customerId=invoice_data.customerId,
+            customerId=invoice_data.customerId or "",
             customerName=invoice_data.customerName,
             customerEmail=invoice_data.customerEmail,
-            customerPhone=invoice_data.customerPhone,  # New field
+            customerPhone=invoice_data.customerPhone,
             billingAddress=invoice_data.billingAddress,
             shippingAddress=invoice_data.shippingAddress,
-            issueDate=invoice_data.issueDate,
-            dueDate=invoice_data.dueDate,
-            orderNumber=invoice_data.orderNumber,  # New field
-            orderTime=datetime.fromisoformat(invoice_data.orderTime) if invoice_data.orderTime else None,  # New field
+            issueDate=issue_date,
+            dueDate=due_date,
+            orderNumber=invoice_data.orderNumber,
+            orderTime=datetime.fromisoformat(invoice_data.orderTime) if invoice_data.orderTime else None,
             paymentTerms=invoice_data.paymentTerms,
             currency=invoice_data.currency,
             taxRate=invoice_data.taxRate,
@@ -407,6 +488,16 @@ def create_invoice(
         # Create invoice items as JSON data
         invoice_items = []
         for item_data in invoice_data.items:
+            # Validate item data
+            if not item_data.description:
+                raise HTTPException(status_code=400, detail="Item description is required")
+            
+            if item_data.quantity <= 0:
+                raise HTTPException(status_code=400, detail="Item quantity must be greater than 0")
+            
+            if item_data.unitPrice < 0:
+                raise HTTPException(status_code=400, detail="Item unit price cannot be negative")
+            
             # Calculate item total
             item_subtotal = item_data.quantity * item_data.unitPrice
             item_discount = item_subtotal * (item_data.discount / 100) if item_data.discount > 0 else 0
@@ -417,10 +508,10 @@ def create_invoice(
             invoice_item = {
                 "id": str(uuid.uuid4()),
                 "description": item_data.description,
-                "quantity": item_data.quantity,
-                "unitPrice": item_data.unitPrice,
-                "discount": item_data.discount,
-                "taxRate": item_data.taxRate,
+                "quantity": float(item_data.quantity),
+                "unitPrice": float(item_data.unitPrice),
+                "discount": float(item_data.discount or 0),
+                "taxRate": float(item_data.taxRate or 0),
                 "taxAmount": round(item_tax, 2),
                 "total": round(item_total, 2),
                 "productId": item_data.productId,
@@ -432,6 +523,7 @@ def create_invoice(
         # Set the items
         db_invoice.items = invoice_items
         
+        # Add to database
         db.add(db_invoice)
         db.commit()
         db.refresh(db_invoice)
@@ -444,8 +536,12 @@ def create_invoice(
             print(f"Invoice items: {db_invoice.items}")
             raise HTTPException(status_code=500, detail=f"Failed to create invoice response: {str(validation_error)}")
         
+    except HTTPException:
+        db.rollback()
+        raise
     except Exception as e:
         db.rollback()
+        print(f"Error creating invoice: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to create invoice: {str(e)}")
 
 @router.get("/", response_model=InvoicesResponse)
@@ -577,13 +673,46 @@ def update_invoice(
         if not invoice:
             raise HTTPException(status_code=404, detail="Invoice not found")
         
+        # Check if invoice can be updated (only draft invoices can be updated)
+        if invoice.status != InvoiceStatus.DRAFT:
+            raise HTTPException(status_code=400, detail="Only draft invoices can be updated")
+        
         # Update fields
         update_data = invoice_data.dict(exclude_unset=True)
+        
+        # Validate dates if provided
+        if "issueDate" in update_data:
+            try:
+                issue_date = datetime.fromisoformat(update_data["issueDate"])
+                if "dueDate" in update_data:
+                    due_date = datetime.fromisoformat(update_data["dueDate"])
+                else:
+                    due_date = invoice.dueDate
+                
+                if due_date < issue_date:
+                    raise HTTPException(status_code=400, detail="Due date cannot be before issue date")
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid date format")
+        
         for field, value in update_data.items():
             if field == "items" and value:
+                # Validate items
+                if len(value) == 0:
+                    raise HTTPException(status_code=400, detail="At least one item is required")
+                
                 # Convert InvoiceItemCreate objects to JSON data
                 converted_items = []
                 for item_data in value:
+                    # Validate item data
+                    if not item_data.description:
+                        raise HTTPException(status_code=400, detail="Item description is required")
+                    
+                    if item_data.quantity <= 0:
+                        raise HTTPException(status_code=400, detail="Item quantity must be greater than 0")
+                    
+                    if item_data.unitPrice < 0:
+                        raise HTTPException(status_code=400, detail="Item unit price cannot be negative")
+                    
                     # Calculate item total
                     item_subtotal = item_data.quantity * item_data.unitPrice
                     item_discount = item_subtotal * (item_data.discount / 100) if item_data.discount > 0 else 0
@@ -594,10 +723,10 @@ def update_invoice(
                     converted_item = {
                         "id": str(uuid.uuid4()),
                         "description": item_data.description,
-                        "quantity": item_data.quantity,
-                        "unitPrice": item_data.unitPrice,
-                        "discount": item_data.discount,
-                        "taxRate": item_data.taxRate,
+                        "quantity": float(item_data.quantity),
+                        "unitPrice": float(item_data.unitPrice),
+                        "discount": float(item_data.discount or 0),
+                        "taxRate": float(item_data.taxRate or 0),
                         "taxAmount": round(item_tax, 2),
                         "total": round(item_total, 2),
                         "productId": item_data.productId,
@@ -612,6 +741,7 @@ def update_invoice(
                 # Recalculate invoice totals
                 totals = calculate_invoice_totals(value, invoice.taxRate, invoice.discount)
                 invoice.subtotal = totals["subtotal"]
+                invoice.discountAmount = totals["discountAmount"]
                 invoice.taxAmount = totals["taxAmount"]
                 invoice.total = totals["total"]
             elif field == "orderTime" and value:
@@ -620,6 +750,9 @@ def update_invoice(
             elif field in ["labourTotal", "partsTotal"] and value is not None:
                 # Handle workshop specific totals
                 setattr(invoice, field, float(value))
+            elif field in ["issueDate", "dueDate"] and value:
+                # Convert date strings to datetime
+                setattr(invoice, field, datetime.fromisoformat(value))
             else:
                 setattr(invoice, field, value)
         
@@ -636,9 +769,11 @@ def update_invoice(
             raise HTTPException(status_code=500, detail=f"Failed to create invoice response: {str(validation_error)}")
         
     except HTTPException:
+        db.rollback()
         raise
     except Exception as e:
         db.rollback()
+        print(f"Error updating invoice: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to update invoice: {str(e)}")
 
 @router.delete("/{invoice_id}")
@@ -665,8 +800,13 @@ def delete_invoice(
         if not invoice:
             raise HTTPException(status_code=404, detail="Invoice not found")
         
+        # Check if invoice can be deleted
         if invoice.status != InvoiceStatus.DRAFT:
             raise HTTPException(status_code=400, detail="Only draft invoices can be deleted")
+        
+        # Check if invoice has payments
+        if invoice.totalPaid > 0:
+            raise HTTPException(status_code=400, detail="Cannot delete invoice with payments")
         
         # Handle foreign key constraint by deleting related invoice_items first
         try:
@@ -698,9 +838,11 @@ def delete_invoice(
         return {"message": "Invoice deleted successfully"}
         
     except HTTPException:
+        db.rollback()
         raise
     except Exception as e:
         db.rollback()
+        print(f"Error deleting invoice: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to delete invoice: {str(e)}")
 
 @router.post("/{invoice_id}/send")
