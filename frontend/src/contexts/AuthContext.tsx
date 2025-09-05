@@ -37,6 +37,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const sessionManager = new SessionManager();
 
+        // Immediately clear any corrupted session data
+        if (!sessionManager.isSessionValid()) {
+          sessionManager.clearSession();
+          setUser(null);
+          setTenants([]);
+          setCurrentTenant(null);
+          setLoading(false);
+          return;
+        }
+
         // Check if session exists and is valid
         if (sessionManager.isSessionValid()) {
           // If token is expired, try to refresh it

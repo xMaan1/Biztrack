@@ -170,8 +170,8 @@ export default function LandingPage() {
           localStorage.removeItem("selectedPlanForSignup");
         }
       } else {
-        // No stored plan, redirect to dashboard
-        router.push("/dashboard");
+        // No stored plan, check if user has tenants before redirecting
+        checkExistingTenantsAndRedirect();
       }
     }
   }, [isAuthenticated]);
@@ -195,6 +195,34 @@ export default function LandingPage() {
       console.error("Error checking existing tenants:", error);
       // Fallback: show workspace creation modal
       setSubscriptionModal({ isOpen: true, plan });
+    }
+  };
+
+  const checkExistingTenantsAndRedirect = async () => {
+    try {
+      // Get user's existing tenants
+      const existingTenants = apiService.getUserTenants();
+
+      if (existingTenants && existingTenants.length > 0) {
+        // User has tenants - redirect to dashboard
+        console.log("User has existing tenants, redirecting to dashboard");
+        router.push("/dashboard");
+        return;
+      }
+
+      // User has no tenants - show workspace creation modal with first available plan
+      if (plans.length > 0) {
+        const defaultPlan = plans.find(p => p.planType === "starter") || plans[0];
+        setSubscriptionModal({ isOpen: true, plan: defaultPlan });
+      } else {
+        // No plans available, redirect to dashboard anyway
+        console.warn("No plans available, redirecting to dashboard");
+        router.push("/dashboard");
+      }
+    } catch (error) {
+      console.error("Error checking existing tenants:", error);
+      // Fallback: redirect to dashboard
+      router.push("/dashboard");
     }
   };
 
@@ -240,29 +268,37 @@ export default function LandingPage() {
         domain: tenantName.toLowerCase().replace(/\s+/g, "-"),
       });
 
-      if (response.success) {
+      if (response.success && response.tenant) {
         // Close modal
         setSubscriptionModal({ isOpen: false, plan: null });
 
         // Refresh tenant data to get the newly created tenant
         try {
           await apiService.refreshTenants();
-          // Set the newly created tenant as current
+          
+          // Verify tenant was created and set as current
           const tenants = apiService.getUserTenants();
-          if (tenants.length > 0) {
-            const newTenant = tenants.find((t) => t.name === tenantName);
-            if (newTenant) {
-              apiService.setTenantId(newTenant.id);
-            }
+          const newTenant = tenants.find((t) => t.name === tenantName);
+          
+          if (newTenant) {
+            apiService.setTenantId(newTenant.id);
+            console.log("Tenant created successfully:", newTenant);
+            
+            // Small delay to ensure localStorage is updated
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            
+            // Only redirect if tenant was successfully created and set
+            router.push("/dashboard");
+          } else {
+            throw new Error("Tenant was not found after creation");
           }
-          // Small delay to ensure localStorage is updated
-          await new Promise((resolve) => setTimeout(resolve, 100));
         } catch (error) {
-          console.warn("Could not refresh tenant data:", error);
+          console.error("Could not refresh tenant data:", error);
+          alert("Workspace created but there was an issue setting it up. Please refresh the page and try again.");
+          return; // Don't redirect if tenant setup failed
         }
-
-        // Redirect to dashboard
-        router.push("/dashboard");
+      } else {
+        throw new Error("Tenant creation failed: " + (response.message || "Unknown error"));
       }
     } catch (error) {
       console.error("Error creating tenant:", error);

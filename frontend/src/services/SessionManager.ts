@@ -181,10 +181,14 @@ class SessionManager {
 
   // Session validation
   isSessionValid(): boolean {
+    if (typeof window === "undefined") return false;
+    
     const token = this.getToken();
     const user = this.getUser();
+    const refreshToken = this.getRefreshToken();
 
-    return !!(token && user);
+    // All three must exist for a valid session
+    return !!(token && user && refreshToken);
   }
 
   isTokenExpired(): boolean {
