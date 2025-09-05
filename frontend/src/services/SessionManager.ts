@@ -200,7 +200,10 @@ class SessionManager {
   async refreshAccessToken(): Promise<boolean> {
     try {
       const refreshToken = this.getRefreshToken();
-      if (!refreshToken) return false;
+      if (!refreshToken) {
+        console.warn("No refresh token available");
+        return false;
+      }
 
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const apiUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
@@ -216,9 +219,19 @@ class SessionManager {
       if (response.ok) {
         const data = await response.json();
         this.setToken(data.access_token, data.expires_in);
+        
+        // Update refresh token if provided (token rotation)
+        if (data.refresh_token) {
+          this.setRefreshToken(data.refresh_token);
+          console.log("Access token refreshed successfully with new refresh token");
+        } else {
+          console.log("Access token refreshed successfully");
+        }
         return true;
+      } else {
+        console.error("Token refresh failed with status:", response.status);
+        return false;
       }
-      return false;
     } catch (error) {
       console.error("Error refreshing access token:", error);
       return false;
@@ -250,6 +263,35 @@ class SessionManager {
 
     // Check every minute
     setInterval(checkExpiration, 60000);
+  }
+
+  // Proactive token refresh - refresh before expiration
+  startProactiveRefresh(): void {
+    if (typeof window === "undefined") return;
+
+    const refreshBeforeExpiration = async () => {
+      try {
+        const timeUntilExpiration = this.getTimeUntilExpiration();
+        
+        // If token expires in less than 5 minutes, refresh it proactively
+        if (timeUntilExpiration && timeUntilExpiration < 5 * 60 * 1000) {
+          console.log("Token expires soon, refreshing proactively...");
+          const refreshSuccess = await this.refreshAccessToken();
+          if (!refreshSuccess) {
+            console.warn("Proactive refresh failed, session may expire soon");
+            // Don't clear session immediately, let the reactive refresh handle it
+          }
+        }
+      } catch (error) {
+        console.error("Error in proactive refresh check:", error);
+      }
+    };
+
+    // Check every 2 minutes for proactive refresh
+    setInterval(refreshBeforeExpiration, 2 * 60 * 1000);
+    
+    // Also check immediately
+    refreshBeforeExpiration();
   }
 
   // Utility methods

@@ -23,7 +23,7 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
   const { planInfo, loading: planLoading } = usePlanInfo();
   const [projects, setProjects] = useState<Project[]>([]);
@@ -36,10 +36,19 @@ export default function DashboardPage() {
   });
   const [loading, setLoading] = useState(true);
 
+  // Redirect unauthenticated users to root route
   useEffect(() => {
-    // AuthGuard ensures user is authenticated, so we can directly fetch data
-    fetchDashboardData();
-  }, []);
+    if (!authLoading && !isAuthenticated) {
+      router.push("/");
+    }
+  }, [isAuthenticated, authLoading, router]);
+
+  useEffect(() => {
+    // Only fetch data if user is authenticated
+    if (isAuthenticated) {
+      fetchDashboardData();
+    }
+  }, [isAuthenticated]);
 
   const fetchDashboardData = async () => {
     try {
@@ -127,14 +136,26 @@ export default function DashboardPage() {
     router.push(path);
   };
 
-  // Show loading while plan info is being fetched
-  if (planLoading || loading) {
+  // Show loading while checking authentication or fetching data
+  if (authLoading || planLoading || loading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
       </DashboardLayout>
+    );
+  }
+
+  // Show loading screen for unauthenticated users (while redirecting)
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-muted-foreground">Redirecting to login...</p>
+        </div>
+      </div>
     );
   }
 

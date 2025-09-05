@@ -2096,6 +2096,66 @@ class Invoice(InvoiceBase):
 
     class Config:
         from_attributes = True
+
+# Invoice Customization Models
+class InvoiceCustomizationBase(BaseModel):
+    company_name: str
+    company_logo_url: Optional[str] = None
+    company_address: Optional[str] = None
+    company_phone: Optional[str] = None
+    company_email: Optional[str] = None
+    company_website: Optional[str] = None
+    bank_sort_code: Optional[str] = None
+    bank_account_number: Optional[str] = None
+    payment_instructions: Optional[str] = None
+    primary_color: str = "#1e40af"
+    secondary_color: str = "#6b7280"
+    accent_color: str = "#f3f4f6"
+    show_vehicle_info: bool = True
+    show_parts_section: bool = True
+    show_labour_section: bool = True
+    show_comments_section: bool = True
+    footer_text: Optional[str] = None
+    show_contact_info_in_footer: bool = True
+    custom_fields: Optional[Dict[str, Any]] = {}
+
+class InvoiceCustomizationCreate(InvoiceCustomizationBase):
+    pass
+
+class InvoiceCustomizationUpdate(BaseModel):
+    company_name: Optional[str] = None
+    company_logo_url: Optional[str] = None
+    company_address: Optional[str] = None
+    company_phone: Optional[str] = None
+    company_email: Optional[str] = None
+    company_website: Optional[str] = None
+    bank_sort_code: Optional[str] = None
+    bank_account_number: Optional[str] = None
+    payment_instructions: Optional[str] = None
+    primary_color: Optional[str] = None
+    secondary_color: Optional[str] = None
+    accent_color: Optional[str] = None
+    show_vehicle_info: Optional[bool] = None
+    show_parts_section: Optional[bool] = None
+    show_labour_section: Optional[bool] = None
+    show_comments_section: Optional[bool] = None
+    footer_text: Optional[str] = None
+    show_contact_info_in_footer: Optional[bool] = None
+    custom_fields: Optional[Dict[str, Any]] = None
+
+class InvoiceCustomization(InvoiceCustomizationBase):
+    id: UUID
+    tenant_id: UUID
+    created_by: UUID
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+class InvoiceCustomizationResponse(BaseModel):
+    customization: InvoiceCustomization
         
     @classmethod
     def from_orm(cls, obj):

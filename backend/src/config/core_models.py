@@ -208,6 +208,9 @@ class Tenant(Base):
     
     # Equipment relationships
     equipment = relationship("Equipment", back_populates="tenant")
+    
+    # Invoice customization relationships
+    invoice_customizations = relationship("InvoiceCustomization", back_populates="tenant")
 
 class Plan(Base):
     __tablename__ = "plans"

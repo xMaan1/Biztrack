@@ -55,6 +55,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (session && session.token && session.user) {
             setUser(session.user);
 
+            // Start proactive token refresh for authenticated users
+            sessionManager.startProactiveRefresh();
+
             // Load tenants from localStorage (no API call)
             const storedTenants = apiService.getUserTenants();
             if (storedTenants.length > 0) {
@@ -101,6 +104,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (response.success && response.user) {
         setUser(response.user);
+
+        // Start proactive token refresh for newly logged in users
+        const sessionManager = new SessionManager();
+        sessionManager.startProactiveRefresh();
 
         // Tenants are already fetched and stored during apiService.login()
         // Just load them from localStorage

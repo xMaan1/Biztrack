@@ -139,7 +139,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
 
 export default function LandingPage() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(false);
   const [subscriptionModal, setSubscriptionModal] = useState<{
@@ -153,11 +153,9 @@ export default function LandingPage() {
     fetchPlans();
   }, []);
 
-  // Refresh tenant data for existing users to ensure role information is up to date
+  // Redirect authenticated users to dashboard
   useEffect(() => {
     if (isAuthenticated) {
-      refreshTenantData();
-
       // Check localStorage for selected plan (for new signups)
       const storedPlan = localStorage.getItem("selectedPlanForSignup");
       if (storedPlan) {
@@ -171,6 +169,9 @@ export default function LandingPage() {
           console.error("Error parsing stored plan:", error);
           localStorage.removeItem("selectedPlanForSignup");
         }
+      } else {
+        // No stored plan, redirect to dashboard
+        router.push("/dashboard");
       }
     }
   }, [isAuthenticated]);
@@ -340,6 +341,30 @@ export default function LandingPage() {
       rating: 5,
     },
   ];
+
+  // Show loading screen while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render landing page for authenticated users (they'll be redirected)
+  if (isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-muted-foreground">Redirecting to dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">

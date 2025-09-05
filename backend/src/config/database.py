@@ -45,6 +45,10 @@ from .invoice_models import (
     Invoice, Payment
 )
 
+from .invoice_customization_models import (
+    InvoiceCustomization
+)
+
 from .ledger_models import (
     ChartOfAccounts, LedgerTransaction, JournalEntry, 
     FinancialPeriod, Budget, BudgetItem

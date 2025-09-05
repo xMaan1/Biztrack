@@ -50,6 +50,7 @@ import {
   FileText,
   Users,
   BarChart3,
+  Settings,
 } from "lucide-react";
 import { DashboardLayout } from "../../../components/layout";
 import InvoiceService from "../../../services/InvoiceService";
@@ -64,6 +65,7 @@ import {
 import { InvoiceDialog } from "../../../components/sales/InvoiceDialog";
 import { InvoiceList } from "../../../components/sales/InvoiceList";
 import { InvoiceDashboard as InvoiceDashboardComponent } from "../../../components/sales/InvoiceDashboard";
+import { InvoiceCustomizationDialog } from "../../../components/sales/InvoiceCustomizationDialog";
 
 export default function InvoicesPage() {
   const [dashboard, setDashboard] = useState<InvoiceDashboard | null>(null);
@@ -76,6 +78,7 @@ export default function InvoicesPage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showCustomizeDialog, setShowCustomizeDialog] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
   // Filter states
@@ -231,6 +234,14 @@ export default function InvoicesPage() {
             </p>
           </div>
           <div className="flex space-x-2">
+            <Button
+              onClick={() => setShowCustomizeDialog(true)}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Settings className="h-4 w-4" />
+              Customize Invoice
+            </Button>
             <Button
               onClick={() => setShowCreateDialog(true)}
               className="modern-button"
@@ -452,6 +463,12 @@ export default function InvoicesPage() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Invoice Customization Dialog */}
+        <InvoiceCustomizationDialog
+          open={showCustomizeDialog}
+          onOpenChange={setShowCustomizeDialog}
+        />
       </div>
     </DashboardLayout>
   );

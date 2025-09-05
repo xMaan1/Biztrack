@@ -154,14 +154,26 @@ export class ApiService {
       (response) => response,
       async (error) => {
         if (error.response?.status === 401) {
+          console.log("401 error detected, attempting token refresh...");
+          
+          // Prevent infinite retry loops
+          if (error.config._retry) {
+            console.error("Token refresh retry limit reached, clearing session");
+            this.sessionManager.clearSession();
+            return Promise.reject(error);
+          }
+
           // Try to refresh the token first
           const refreshSuccess = await this.sessionManager.refreshAccessToken();
           if (refreshSuccess) {
+            console.log("Token refreshed successfully, retrying original request");
             // Retry the original request with new token
             const originalRequest = error.config;
+            originalRequest._retry = true; // Mark as retried
             originalRequest.headers.Authorization = `Bearer ${this.sessionManager.getToken()}`;
             return this.client(originalRequest);
           } else {
+            console.error("Token refresh failed, clearing session");
             // Refresh failed, clear session
             this.sessionManager.clearSession();
             // Don't redirect immediately, let the component handle it
