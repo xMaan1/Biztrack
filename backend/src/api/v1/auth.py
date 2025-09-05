@@ -155,7 +155,7 @@ async def get_my_tenants(
 async def refresh_access_token(refresh_request: RefreshTokenRequest):
     """Refresh access token using refresh token"""
     try:
-        from ...core.auth import verify_token
+        from ...core.auth import verify_token, create_refresh_token
         
         # Verify refresh token
         payload = verify_token(refresh_request.refresh_token, "refresh")
@@ -165,8 +165,14 @@ async def refresh_access_token(refresh_request: RefreshTokenRequest):
             data={"sub": payload.get("sub")}
         )
         
+        # Create new refresh token (token rotation for security)
+        new_refresh_token = create_refresh_token(
+            data={"sub": payload.get("sub")}
+        )
+        
         return RefreshTokenResponse(
             access_token=new_access_token,
+            refresh_token=new_refresh_token,  # Include new refresh token
             token_type="bearer",
             expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60
         )

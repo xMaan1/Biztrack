@@ -4,13 +4,6 @@ from datetime import datetime, timedelta
 import uuid
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func, desc, text
-from reportlab.lib.pagesizes import letter, A4
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
-from reportlab.lib import colors
-from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
-from io import BytesIO
 
 from ...config.database import get_db
 from ...api.dependencies import get_current_user, get_tenant_context
@@ -115,10 +108,6 @@ def calculate_invoice_totals(items: List, tax_rate: float, discount: float) -> d
     }
 
 
-def generate_invoice_pdf(invoice, db: Session) -> bytes:
-    """Generate PDF invoice matching the exact design from the reference image"""
-    from .invoice_pdf_new import generate_invoice_pdf_matching_image
-    return generate_invoice_pdf_matching_image(invoice, db)
 
 @router.post("/", response_model=InvoiceResponse)
 def create_invoice(
@@ -977,7 +966,8 @@ def download_invoice_pdf(
             raise HTTPException(status_code=404, detail="Invoice not found")
         
         # Generate beautiful PDF invoice
-        pdf_content = generate_invoice_pdf(invoice, db)
+        from .pdf_generator import generate_invoice_pdf_matching_image
+        pdf_content = generate_invoice_pdf_matching_image(invoice, db)
         
         return Response(
             content=pdf_content,
@@ -989,5 +979,14 @@ def download_invoice_pdf(
         
     except HTTPException:
         raise
+    except ValueError as e:
+        # Handle customization validation errors
+        if "customization is required" in str(e):
+            raise HTTPException(
+                status_code=400, 
+                detail="Invoice customization is required. Please customize your invoice template first using the 'Customize Invoice' button."
+            )
+        else:
+            raise HTTPException(status_code=500, detail=f"Failed to generate invoice download: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate invoice download: {str(e)}")

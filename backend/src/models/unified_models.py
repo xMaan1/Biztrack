@@ -278,6 +278,7 @@ class RefreshTokenRequest(BaseModel):
 
 class RefreshTokenResponse(BaseModel):
     access_token: str
+    refresh_token: Optional[str] = None  # New refresh token for rotation
     token_type: str
     expires_in: int
 
@@ -2117,6 +2118,12 @@ class InvoiceCustomizationBase(BaseModel):
     show_comments_section: bool = True
     footer_text: Optional[str] = None
     show_contact_info_in_footer: bool = True
+    footer_background_color: str = "#1e3a8a"
+    grid_color: str = "#cccccc"
+    thank_you_message: str = "Thank you for your business!"
+    enquiry_message: str = "Should you have any enquiries concerning this invoice,"
+    contact_message: str = "please contact us at your convenience."
+    default_payment_instructions: str = "Make all payments to your company name"
     custom_fields: Optional[Dict[str, Any]] = {}
 
 class InvoiceCustomizationCreate(InvoiceCustomizationBase):
@@ -2141,6 +2148,12 @@ class InvoiceCustomizationUpdate(BaseModel):
     show_comments_section: Optional[bool] = None
     footer_text: Optional[str] = None
     show_contact_info_in_footer: Optional[bool] = None
+    footer_background_color: Optional[str] = None
+    grid_color: Optional[str] = None
+    thank_you_message: Optional[str] = None
+    enquiry_message: Optional[str] = None
+    contact_message: Optional[str] = None
+    default_payment_instructions: Optional[str] = None
     custom_fields: Optional[Dict[str, Any]] = None
 
 class InvoiceCustomization(InvoiceCustomizationBase):

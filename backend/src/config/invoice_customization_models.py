@@ -41,6 +41,18 @@ class InvoiceCustomization(Base):
     # Footer customization
     footer_text = Column(Text, nullable=True)
     show_contact_info_in_footer = Column(Boolean, default=True)
+    footer_background_color = Column(String, default="#1e3a8a")  # Dark blue footer
+    
+    # Grid and border styling
+    grid_color = Column(String, default="#cccccc")  # Light gray grid lines
+    
+    # Static text customization
+    thank_you_message = Column(Text, default="Thank you for your business!")
+    enquiry_message = Column(Text, default="Should you have any enquiries concerning this invoice,")
+    contact_message = Column(Text, default="please contact us at your convenience.")
+    
+    # Default payment instructions
+    default_payment_instructions = Column(Text, default="Make all payments to your company name")
     
     # Additional customization options
     custom_fields = Column(JSON, default={})  # For future extensibility
