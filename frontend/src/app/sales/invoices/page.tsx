@@ -252,6 +252,26 @@ export default function InvoicesPage() {
           </div>
         </div>
 
+        {/* Customization Notice */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <Settings className="h-5 w-5 text-blue-400" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-blue-800">
+                Customize Your Invoice Template
+              </h3>
+              <div className="mt-2 text-sm text-blue-700">
+                <p>
+                  Before downloading invoices, please customize your invoice template with your company details, 
+                  payment information, and styling preferences using the "Customize Invoice" button above.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-3">

@@ -75,9 +75,33 @@ export function InvoiceList({
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       toast.success("Invoice downloaded successfully!");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Download error:", error);
-      toast.error("Error downloading invoice");
+      
+      // Check if it's a customization error
+      if (error.response?.status === 400) {
+        let errorMessage = "Error downloading invoice";
+        
+        // Try to extract error message from different possible formats
+        if (error.response?.data?.detail) {
+          errorMessage = error.response.data.detail;
+        } else if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (typeof error.response?.data === 'string') {
+          errorMessage = error.response.data;
+        }
+        
+        // Check if it's specifically a customization error
+        if (errorMessage.includes("customization is required")) {
+          toast.error("Please customize your invoice template first using the 'Customize Invoice' button.", {
+            duration: 5000,
+          });
+        } else {
+          toast.error(errorMessage);
+        }
+      } else {
+        toast.error("Error downloading invoice");
+      }
     } finally {
       setDownloading(null);
     }
