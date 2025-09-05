@@ -153,7 +153,7 @@ export default function LandingPage() {
     fetchPlans();
   }, []);
 
-  // Redirect authenticated users to dashboard
+  // Handle stored plan for new signups
   useEffect(() => {
     if (isAuthenticated) {
       // Check localStorage for selected plan (for new signups)
@@ -169,9 +169,6 @@ export default function LandingPage() {
           console.error("Error parsing stored plan:", error);
           localStorage.removeItem("selectedPlanForSignup");
         }
-      } else {
-        // No stored plan, check if user has tenants before redirecting
-        checkExistingTenantsAndRedirect();
       }
     }
   }, [isAuthenticated]);
@@ -198,33 +195,6 @@ export default function LandingPage() {
     }
   };
 
-  const checkExistingTenantsAndRedirect = async () => {
-    try {
-      // Get user's existing tenants
-      const existingTenants = apiService.getUserTenants();
-
-      if (existingTenants && existingTenants.length > 0) {
-        // User has tenants - redirect to dashboard
-        console.log("User has existing tenants, redirecting to dashboard");
-        router.push("/dashboard");
-        return;
-      }
-
-      // User has no tenants - show workspace creation modal with first available plan
-      if (plans.length > 0) {
-        const defaultPlan = plans.find(p => p.planType === "starter") || plans[0];
-        setSubscriptionModal({ isOpen: true, plan: defaultPlan });
-      } else {
-        // No plans available, redirect to dashboard anyway
-        console.warn("No plans available, redirecting to dashboard");
-        router.push("/dashboard");
-      }
-    } catch (error) {
-      console.error("Error checking existing tenants:", error);
-      // Fallback: redirect to dashboard
-      router.push("/dashboard");
-    }
-  };
 
   const refreshTenantData = async () => {
     try {
@@ -385,18 +355,6 @@ export default function LandingPage() {
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
           <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render landing page for authenticated users (they'll be redirected)
-  if (isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-muted-foreground">Redirecting to dashboard...</p>
         </div>
       </div>
     );
