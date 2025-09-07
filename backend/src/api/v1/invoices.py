@@ -965,9 +965,9 @@ def download_invoice_pdf(
         if not invoice:
             raise HTTPException(status_code=404, detail="Invoice not found")
         
-        # Generate beautiful PDF invoice
-        from .pdf_generator import generate_invoice_pdf_matching_image
-        pdf_content = generate_invoice_pdf_matching_image(invoice, db)
+        # Generate beautiful modern PDF invoice
+        from .pdf_generator_modern import generate_modern_invoice_pdf
+        pdf_content = generate_modern_invoice_pdf(invoice, db)
         
         return Response(
             content=pdf_content,

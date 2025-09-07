@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException, status, Depends, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import text, func
+from sqlalchemy import text, func, and_
 from typing import Optional, List
 from datetime import datetime
+from pydantic import BaseModel
 
 from ...models.unified_models import Tenant, TenantCreate
 from ...config.database import get_db
@@ -10,6 +11,12 @@ from ...api.dependencies import get_current_user
 from ...config.core_models import Tenant as TenantModel, User, Subscription, Plan, TenantUser
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+class TenantStatusUpdate(BaseModel):
+    is_active: bool
+
+class TenantDeleteRequest(BaseModel):
+    deleteAllData: bool = False
 
 def is_super_admin(current_user) -> bool:
     """Check if current user is super admin"""
@@ -221,7 +228,7 @@ async def get_tenant_details(
 @router.put("/tenants/{tenant_id}/status")
 async def update_tenant_status(
     tenant_id: str,
-    is_active: bool,
+    status_data: TenantStatusUpdate,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
@@ -240,13 +247,13 @@ async def update_tenant_status(
                 detail="Tenant not found"
             )
         
-        tenant.isActive = is_active
+        tenant.isActive = status_data.is_active
         tenant.updatedAt = datetime.utcnow()
         db.commit()
         
         return {
             "success": True,
-            "message": f"Tenant {'activated' if is_active else 'deactivated'} successfully",
+            "message": f"Tenant {'activated' if status_data.is_active else 'deactivated'} successfully",
             "tenant": {
                 "id": str(tenant.id),
                 "name": tenant.name,
@@ -261,6 +268,120 @@ async def update_tenant_status(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error updating tenant status: {str(e)}"
+        )
+
+@router.delete("/tenants/{tenant_id}")
+async def delete_tenant(
+    tenant_id: str,
+    delete_request: TenantDeleteRequest,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Delete a tenant and optionally all its data - Super Admin only"""
+    if not is_super_admin(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Super admin access required"
+        )
+    
+    try:
+        # Verify tenant exists
+        tenant = db.query(TenantModel).filter(TenantModel.id == tenant_id).first()
+        if not tenant:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Tenant not found"
+            )
+        
+        tenant_name = tenant.name
+        
+        if delete_request.deleteAllData:
+            # SIMPLE BULLETPROOF APPROACH: Only delete tables that definitely exist
+            try:
+                # Get user IDs for this tenant
+                tenant_users = db.query(TenantUser).filter(TenantUser.tenant_id == tenant_id).all()
+                user_ids = [str(tu.userId) for tu in tenant_users]
+                
+                # Delete tenant-user relationships FIRST
+                db.execute(text("DELETE FROM tenant_users WHERE tenant_id = :tenant_id"), {"tenant_id": tenant_id})
+                db.commit()  # Commit after each major step
+                
+                # Delete only the core tables we know exist
+                core_tables = [
+                    "payments", "invoices", "projects", "customers", "leads", 
+                    "work_orders", "work_order_tasks", "maintenance_schedules", 
+                    "equipment", "production_plans", "chart_of_accounts", 
+                    "journal_entries", "ledger_transactions", "financial_periods", 
+                    "budgets", "quality_checks", "audit_logs"
+                ]
+                
+                for table in core_tables:
+                    try:
+                        db.execute(text(f"DELETE FROM {table} WHERE tenant_id = :tenant_id"), {"tenant_id": tenant_id})
+                        db.commit()  # Commit after each table
+                    except Exception as e:
+                        print(f"Warning: Could not delete from {table}: {e}")
+                        db.rollback()  # Rollback on error
+                        continue
+                
+                # Delete users that don't belong to other tenants
+                for user_id in user_ids:
+                    try:
+                        other_tenants_count = db.execute(
+                            text("SELECT COUNT(*) FROM tenant_users WHERE \"userId\" = :user_id"), 
+                            {"user_id": user_id}
+                        ).scalar()
+                        
+                        if other_tenants_count == 0:
+                            # Delete user-related data that references users
+                            user_ref_tables = [
+                                "chart_of_accounts", "journal_entries", "ledger_transactions",
+                                "work_order_tasks", "quality_checks", "financial_periods", "budgets"
+                            ]
+                            
+                            for table in user_ref_tables:
+                                try:
+                                    db.execute(text(f"DELETE FROM {table} WHERE created_by = :user_id"), {"user_id": user_id})
+                                except Exception as e:
+                                    print(f"Warning: Could not delete user references from {table}: {e}")
+                            
+                            # Finally delete the user
+                            db.execute(text("DELETE FROM users WHERE id = :user_id"), {"user_id": user_id})
+                            db.commit()
+                    except Exception as e:
+                        print(f"Warning: Could not delete user {user_id}: {e}")
+                        db.rollback()
+                        continue
+                
+                # Delete subscription
+                try:
+                    db.execute(text("DELETE FROM subscriptions WHERE tenant_id = :tenant_id"), {"tenant_id": tenant_id})
+                    db.commit()
+                except Exception as e:
+                    print(f"Warning: Could not delete subscription: {e}")
+                    db.rollback()
+                
+            except Exception as e:
+                print(f"Error during tenant data deletion: {e}")
+                db.rollback()
+                # Continue anyway - we'll still delete the tenant
+        
+        # Delete the tenant itself
+        db.query(TenantModel).filter(TenantModel.id == tenant_id).delete()
+        db.commit()
+        
+        return {
+            "success": True,
+            "message": f"Tenant '{tenant_name}' {'and all its data' if delete_request.deleteAllData else ''} deleted successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error deleting tenant: {str(e)}"
         )
 
 @router.get("/tenants/{tenant_id}/complete")
@@ -440,6 +561,64 @@ async def get_tenant_complete_details(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error fetching complete tenant details: {str(e)}"
+        )
+
+@router.get("/tenants/{tenant_id}/invoices/{invoice_id}")
+async def get_tenant_invoice_details(
+    tenant_id: str,
+    invoice_id: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Get detailed information about a specific invoice for a tenant - Super Admin only"""
+    if not is_super_admin(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Super admin access required"
+        )
+    
+    try:
+        # Verify tenant exists
+        tenant = db.query(TenantModel).filter(TenantModel.id == tenant_id).first()
+        if not tenant:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Tenant not found"
+            )
+        
+        # Get invoice details
+        from ...config.invoice_models import Invoice
+        invoice = db.query(Invoice).filter(
+            and_(
+                Invoice.id == invoice_id,
+                Invoice.tenant_id == tenant.id
+            )
+        ).first()
+        
+        if not invoice:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Invoice not found"
+            )
+        
+        # Convert invoice to response format
+        from ...models.unified_models import InvoiceResponse
+        try:
+            return InvoiceResponse(invoice=invoice)
+        except Exception as validation_error:
+            print(f"Validation error in InvoiceResponse: {validation_error}")
+            print(f"Invoice items: {invoice.items}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to create invoice response: {str(validation_error)}"
+            )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching invoice details: {str(e)}"
         )
 
 @router.delete("/tenants/{tenant_id}/users/{user_id}")

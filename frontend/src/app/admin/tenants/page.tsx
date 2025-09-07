@@ -10,6 +10,8 @@ import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Input } from "@/src/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/src/components/ui/dialog";
+import { Checkbox } from "@/src/components/ui/checkbox";
 import { 
   Building2, 
   Users, 
@@ -26,7 +28,8 @@ import {
   Package,
   FileText,
   CreditCard,
-  Settings
+  Settings,
+  Trash2
 } from "lucide-react";
 
 interface Tenant {
@@ -91,6 +94,12 @@ export default function AdminTenantsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  
+  // Delete tenant modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
+  const [deleteAllData, setDeleteAllData] = useState(false);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   // Check if user is super admin
   if (user?.userRole !== "super_admin") {
@@ -167,6 +176,49 @@ export default function AdminTenantsPage() {
     } catch (error) {
       console.error("Error updating tenant status:", error);
     }
+  };
+
+  const handleDeleteTenant = async () => {
+    if (!selectedTenant) return;
+    
+    setActionLoading("delete-tenant");
+    try {
+      await apiService.delete(`/admin/tenants/${selectedTenant.id}`, {
+        data: {
+          deleteAllData: deleteAllData
+        }
+      });
+      
+      // Remove tenant from local state
+      setTenants(prev => prev.filter(tenant => tenant.id !== selectedTenant.id));
+      
+      // Update admin stats
+      if (adminStats) {
+        setAdminStats(prev => prev ? {
+          ...prev,
+          tenants: {
+            ...prev.tenants,
+            total: prev.tenants.total - 1,
+            active: selectedTenant.isActive ? prev.tenants.active - 1 : prev.tenants.active,
+            inactive: selectedTenant.isActive ? prev.tenants.inactive : prev.tenants.inactive - 1
+          }
+        } : null);
+      }
+      
+      setShowDeleteModal(false);
+      setSelectedTenant(null);
+      setDeleteAllData(false);
+    } catch (error) {
+      console.error("Error deleting tenant:", error);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const openDeleteModal = (tenant: Tenant) => {
+    setSelectedTenant(tenant);
+    setShowDeleteModal(true);
+    setDeleteAllData(false);
   };
 
   const formatDate = (dateString: string) => {
@@ -342,6 +394,18 @@ export default function AdminTenantsPage() {
                     )}
                     {tenant.isActive ? "Deactivate" : "Activate"}
                   </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => openDeleteModal(tenant)}
+                    disabled={actionLoading === "delete-tenant"}
+                  >
+                    {actionLoading === "delete-tenant" && selectedTenant?.id === tenant.id ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -362,6 +426,81 @@ export default function AdminTenantsPage() {
           </div>
         )}
       </div>
+
+      {/* Delete Tenant Confirmation Modal */}
+      <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="text-red-600">Delete Tenant</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. Are you sure you want to delete this tenant?
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedTenant && (
+            <div className="space-y-4">
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="font-medium text-red-800">
+                  Do you confirm deleting this tenant: <span className="font-bold">{selectedTenant.name}</span>?
+                </p>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="deleteAllData" 
+                    checked={deleteAllData}
+                    onCheckedChange={(checked: boolean) => setDeleteAllData(checked)}
+                  />
+                  <label 
+                    htmlFor="deleteAllData" 
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Delete all users and complete data of this tenant
+                  </label>
+                </div>
+                
+                {deleteAllData && (
+                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-sm text-yellow-800">
+                      ⚠️ <strong>Warning:</strong> This will permanently delete all users, invoices, projects, 
+                      customers, and all other data associated with this tenant. This action cannot be undone.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter className="gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowDeleteModal(false);
+                setSelectedTenant(null);
+                setDeleteAllData(false);
+              }}
+              disabled={actionLoading === "delete-tenant"}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteTenant}
+              disabled={actionLoading === "delete-tenant"}
+            >
+              {actionLoading === "delete-tenant" ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Deleting...
+                </div>
+              ) : (
+                "Delete Tenant"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

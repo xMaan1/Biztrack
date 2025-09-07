@@ -10,6 +10,11 @@ import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
 import { Alert, AlertDescription } from "@/src/components/ui/alert";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/src/components/ui/dialog";
+import { Separator } from "@/src/components/ui/separator";
+import { Checkbox } from "@/src/components/ui/checkbox";
+import InvoiceService from "@/src/services/InvoiceService";
+import { Invoice } from "@/src/models/sales";
 import { 
   Building2, 
   Users, 
@@ -30,7 +35,9 @@ import {
   Eye,
   UserPlus,
   Plus,
-  AlertTriangle
+  AlertTriangle,
+  X,
+  Loader2
 } from "lucide-react";
 
 interface TenantDetails {
@@ -125,6 +132,15 @@ export default function TenantDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  
+  // Invoice details modal state
+  const [showInvoiceDetails, setShowInvoiceDetails] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [invoiceDetailsLoading, setInvoiceDetailsLoading] = useState(false);
+  
+  // Delete tenant modal state
+  const [showDeleteTenantModal, setShowDeleteTenantModal] = useState(false);
+  const [deleteAllData, setDeleteAllData] = useState(false);
 
   // Check if user is super admin
   if (user?.userRole !== "super_admin") {
@@ -206,6 +222,42 @@ export default function TenantDetailsPage() {
     } catch (err: any) {
       console.error("Error deleting invoice:", err);
       setError(err.response?.data?.detail || "Failed to delete invoice");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleViewInvoiceDetails = async (invoiceId: string) => {
+    setInvoiceDetailsLoading(true);
+    try {
+      const response = await apiService.get(`/admin/tenants/${tenantId}/invoices/${invoiceId}`);
+      setSelectedInvoice(response.invoice);
+      setShowInvoiceDetails(true);
+    } catch (error) {
+      console.error("Error fetching invoice details:", error);
+      setError("Failed to load invoice details");
+    } finally {
+      setInvoiceDetailsLoading(false);
+    }
+  };
+
+  const handleDeleteTenant = async () => {
+    if (!tenantDetails) return;
+    
+    setActionLoading("delete-tenant");
+    try {
+      await apiService.delete(`/admin/tenants/${tenantId}`, {
+        data: {
+          deleteAllData: deleteAllData
+        }
+      });
+      setShowDeleteTenantModal(false);
+      setDeleteAllData(false);
+      // Redirect to tenants list after successful deletion
+      router.push('/admin/tenants');
+    } catch (err: any) {
+      console.error("Error deleting tenant:", err);
+      setError(err.response?.data?.detail || "Failed to delete tenant");
     } finally {
       setActionLoading(null);
     }
@@ -344,6 +396,19 @@ export default function TenantDetailsPage() {
                 <ToggleRight className="h-4 w-4" />
               )}
               {tenantDetails.tenant.isActive ? "Deactivate" : "Activate"}
+            </Button>
+            <Button
+              onClick={() => setShowDeleteTenantModal(true)}
+              disabled={actionLoading === "delete-tenant"}
+              variant="destructive"
+              className="gap-2"
+            >
+              {actionLoading === "delete-tenant" ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              Delete Tenant
             </Button>
           </div>
         </div>
@@ -576,6 +641,18 @@ export default function TenantDetailsPage() {
                         <Button
                           variant="outline"
                           size="sm"
+                          onClick={() => handleViewInvoiceDetails(invoice.id)}
+                          disabled={invoiceDetailsLoading}
+                        >
+                          {invoiceDetailsLoading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => handleDeleteInvoice(invoice.id)}
                           disabled={actionLoading === `delete-invoice-${invoice.id}`}
                         >
@@ -702,6 +779,358 @@ export default function TenantDetailsPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Delete Tenant Confirmation Modal */}
+      <Dialog open={showDeleteTenantModal} onOpenChange={setShowDeleteTenantModal}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="text-red-600">Delete Tenant</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. Are you sure you want to delete this tenant?
+            </DialogDescription>
+          </DialogHeader>
+          
+          {tenantDetails && (
+            <div className="space-y-4">
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="font-medium text-red-800">
+                  Do you confirm deleting this tenant: <span className="font-bold">{tenantDetails.tenant.name}</span>?
+                </p>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="deleteAllData" 
+                    checked={deleteAllData}
+                    onCheckedChange={(checked: boolean) => setDeleteAllData(checked)}
+                  />
+                  <label 
+                    htmlFor="deleteAllData" 
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Delete all users and complete data of this tenant
+                  </label>
+                </div>
+                
+                {deleteAllData && (
+                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-sm text-yellow-800">
+                      ⚠️ <strong>Warning:</strong> This will permanently delete all users, invoices, projects, 
+                      customers, and all other data associated with this tenant. This action cannot be undone.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter className="gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowDeleteTenantModal(false);
+                setDeleteAllData(false);
+              }}
+              disabled={actionLoading === "delete-tenant"}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteTenant}
+              disabled={actionLoading === "delete-tenant"}
+            >
+              {actionLoading === "delete-tenant" ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Deleting...
+                </div>
+              ) : (
+                "Delete Tenant"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Invoice Details Modal */}
+      <Dialog open={showInvoiceDetails} onOpenChange={setShowInvoiceDetails}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Invoice Details - #{selectedInvoice?.invoiceNumber}</DialogTitle>
+            <DialogDescription>
+              Complete invoice information including items, parts, discounts, and taxes
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedInvoice && (
+            <div className="space-y-6">
+              {/* Invoice Header */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>Invoice Information</span>
+                    <Badge className={getStatusColor(selectedInvoice.status)}>
+                      {selectedInvoice.status}
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div>
+                      <span className="font-medium">Invoice Number:</span>
+                      <p className="text-sm text-gray-600">#{selectedInvoice.invoiceNumber}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Issue Date:</span>
+                      <p className="text-sm text-gray-600">{new Date(selectedInvoice.issueDate).toLocaleDateString()}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Due Date:</span>
+                      <p className="text-sm text-gray-600">{new Date(selectedInvoice.dueDate).toLocaleDateString()}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Payment Terms:</span>
+                      <p className="text-sm text-gray-600">{selectedInvoice.paymentTerms}</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div>
+                      <span className="font-medium">Order Number:</span>
+                      <p className="text-sm text-gray-600">{selectedInvoice.orderNumber || "N/A"}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Currency:</span>
+                      <p className="text-sm text-gray-600">{selectedInvoice.currency}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Created:</span>
+                      <p className="text-sm text-gray-600">{new Date(selectedInvoice.createdAt).toLocaleDateString()}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Last Updated:</span>
+                      <p className="text-sm text-gray-600">{new Date(selectedInvoice.updatedAt).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Customer Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Customer Information</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div>
+                      <span className="font-medium">Customer Name:</span>
+                      <p className="text-sm text-gray-600">{selectedInvoice.customerName}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Email:</span>
+                      <p className="text-sm text-gray-600">{selectedInvoice.customerEmail}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Phone:</span>
+                      <p className="text-sm text-gray-600">{selectedInvoice.customerPhone || "N/A"}</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div>
+                      <span className="font-medium">Billing Address:</span>
+                      <p className="text-sm text-gray-600 whitespace-pre-line">{selectedInvoice.billingAddress}</p>
+                    </div>
+                    {selectedInvoice.shippingAddress && (
+                      <div>
+                        <span className="font-medium">Shipping Address:</span>
+                        <p className="text-sm text-gray-600 whitespace-pre-line">{selectedInvoice.shippingAddress}</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Vehicle Information (if available) */}
+              {(selectedInvoice.vehicleMake || selectedInvoice.vehicleModel || selectedInvoice.vehicleYear) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Vehicle Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <span className="font-medium">Make:</span>
+                      <p className="text-sm text-gray-600">{selectedInvoice.vehicleMake || "N/A"}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Model:</span>
+                      <p className="text-sm text-gray-600">{selectedInvoice.vehicleModel || "N/A"}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Year:</span>
+                      <p className="text-sm text-gray-600">{selectedInvoice.vehicleYear || "N/A"}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Color:</span>
+                      <p className="text-sm text-gray-600">{selectedInvoice.vehicleColor || "N/A"}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">VIN:</span>
+                      <p className="text-sm text-gray-600">{selectedInvoice.vehicleVin || "N/A"}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Registration:</span>
+                      <p className="text-sm text-gray-600">{selectedInvoice.vehicleReg || "N/A"}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Invoice Items */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Invoice Items</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left p-2">Description</th>
+                          <th className="text-right p-2">Qty</th>
+                          <th className="text-right p-2">Unit Price</th>
+                          <th className="text-right p-2">Discount</th>
+                          <th className="text-right p-2">Tax Rate</th>
+                          <th className="text-right p-2">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedInvoice.items.map((item, index) => (
+                          <tr key={item.id || index} className="border-b">
+                            <td className="p-2">
+                              <div>
+                                <p className="font-medium">{item.description}</p>
+                                {item.productId && (
+                                  <p className="text-xs text-gray-500">Product ID: {item.productId}</p>
+                                )}
+                                {item.projectId && (
+                                  <p className="text-xs text-gray-500">Project ID: {item.projectId}</p>
+                                )}
+                                {item.taskId && (
+                                  <p className="text-xs text-gray-500">Task ID: {item.taskId}</p>
+                                )}
+                              </div>
+                            </td>
+                            <td className="text-right p-2">{item.quantity}</td>
+                            <td className="text-right p-2">{InvoiceService.formatCurrency(item.unitPrice, selectedInvoice.currency)}</td>
+                            <td className="text-right p-2">{item.discount}%</td>
+                            <td className="text-right p-2">{item.taxRate}%</td>
+                            <td className="text-right p-2 font-medium">{InvoiceService.formatCurrency(item.total, selectedInvoice.currency)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Workshop Information (if available) */}
+              {(selectedInvoice.jobDescription || selectedInvoice.partsDescription || selectedInvoice.labourTotal || selectedInvoice.partsTotal) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Workshop Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {selectedInvoice.jobDescription && (
+                      <div>
+                        <span className="font-medium">Job Description:</span>
+                        <p className="text-sm text-gray-600 whitespace-pre-line">{selectedInvoice.jobDescription}</p>
+                      </div>
+                    )}
+                    {selectedInvoice.partsDescription && (
+                      <div>
+                        <span className="font-medium">Parts Description:</span>
+                        <p className="text-sm text-gray-600 whitespace-pre-line">{selectedInvoice.partsDescription}</p>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <span className="font-medium">Labour Total:</span>
+                        <p className="text-sm text-gray-600">{InvoiceService.formatCurrency(selectedInvoice.labourTotal || 0, selectedInvoice.currency)}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium">Parts Total:</span>
+                        <p className="text-sm text-gray-600">{InvoiceService.formatCurrency(selectedInvoice.partsTotal || 0, selectedInvoice.currency)}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Invoice Totals */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Invoice Totals</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex justify-end">
+                    <div className="w-64 space-y-2">
+                      <div className="flex justify-between">
+                        <span>Subtotal:</span>
+                        <span>{InvoiceService.formatCurrency(selectedInvoice.subtotal, selectedInvoice.currency)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Discount ({selectedInvoice.discount}%):</span>
+                        <span>-{InvoiceService.formatCurrency(selectedInvoice.subtotal * selectedInvoice.discount / 100, selectedInvoice.currency)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Tax ({selectedInvoice.taxRate}%):</span>
+                        <span>{InvoiceService.formatCurrency(selectedInvoice.taxAmount, selectedInvoice.currency)}</span>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between font-bold text-lg">
+                        <span>Total:</span>
+                        <span>{InvoiceService.formatCurrency(selectedInvoice.total, selectedInvoice.currency)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Total Paid:</span>
+                        <span>{InvoiceService.formatCurrency(selectedInvoice.totalPaid || 0, selectedInvoice.currency)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Balance:</span>
+                        <span>{InvoiceService.formatCurrency(selectedInvoice.balance || selectedInvoice.total, selectedInvoice.currency)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Additional Information */}
+              {(selectedInvoice.notes || selectedInvoice.terms) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Additional Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {selectedInvoice.notes && (
+                      <div>
+                        <span className="font-medium">Notes:</span>
+                        <p className="text-sm text-gray-600 whitespace-pre-line">{selectedInvoice.notes}</p>
+                      </div>
+                    )}
+                    {selectedInvoice.terms && (
+                      <div>
+                        <span className="font-medium">Terms & Conditions:</span>
+                        <p className="text-sm text-gray-600 whitespace-pre-line">{selectedInvoice.terms}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
