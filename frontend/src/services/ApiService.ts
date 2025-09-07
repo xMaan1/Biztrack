@@ -1053,6 +1053,54 @@ export class ApiService {
       throw error;
     }
   }
+
+  // Admin API methods
+  async getAllTenants(params?: {
+    skip?: number;
+    limit?: number;
+    search?: string;
+    is_active?: boolean;
+  }): Promise<any[]> {
+    try {
+      const response = await this.client.get("/admin/tenants", { params });
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching all tenants:", error);
+      throw error;
+    }
+  }
+
+  async getTenantDetails(tenantId: string): Promise<any> {
+    try {
+      const response = await this.client.get(`/admin/tenants/${tenantId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching tenant details:", error);
+      throw error;
+    }
+  }
+
+  async updateTenantStatus(tenantId: string, isActive: boolean): Promise<any> {
+    try {
+      const response = await this.client.put(`/admin/tenants/${tenantId}/status`, {
+        is_active: isActive
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error updating tenant status:", error);
+      throw error;
+    }
+  }
+
+  async getAdminStats(): Promise<any> {
+    try {
+      const response = await this.client.get("/admin/stats");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching admin stats:", error);
+      throw error;
+    }
+  }
 }
 
 export const apiService = new ApiService();

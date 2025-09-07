@@ -26,6 +26,7 @@ class User(Base):
     userRole = Column(String, nullable=False, default="team_member")  # super_admin, project_manager, team_member, client
     avatar = Column(String)
     isActive = Column(Boolean, default=True)
+    lastLogin = Column(DateTime)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -224,6 +225,7 @@ class Plan(Base):
     maxProjects = Column(Integer)
     maxUsers = Column(Integer)
     features = Column(JSON)  # Store as JSON array
+    modules = Column(JSON, default=[])  # Store as JSON array
     isActive = Column(Boolean, default=True)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -238,6 +240,7 @@ class Subscription(Base):
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
     planId = Column(UUID(as_uuid=True), ForeignKey("plans.id"), nullable=False)
     status = Column(String, nullable=False, default="trial")  # active, inactive, cancelled, expired, trial
+    isActive = Column(Boolean, default=True)
     startDate = Column(DateTime, nullable=False)
     endDate = Column(DateTime)
     autoRenew = Column(Boolean, default=True)

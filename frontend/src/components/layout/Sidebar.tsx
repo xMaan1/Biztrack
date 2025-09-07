@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "../../lib/utils";
 import { usePlanInfo } from "../../hooks/usePlanInfo";
+import { useAuth } from "../../contexts/AuthContext";
 import {
   LayoutDashboard,
   FolderOpen,
@@ -45,6 +46,7 @@ import {
   Heart,
   Pill,
   Calculator,
+  Building2,
 } from "lucide-react";
 
 interface SubMenuItem {
@@ -484,11 +486,24 @@ const allMenuItems: MenuItem[] = [
   },
 ];
 
+// Super admin menu items - only show Tenants
+const superAdminMenuItems: MenuItem[] = [
+  {
+    text: "Tenants",
+    icon: Building2,
+    path: "/admin/tenants",
+    roles: ["super_admin"],
+    planTypes: ["*"],
+    gradient: "from-purple-500 to-indigo-500",
+  },
+];
+
 export default function Sidebar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const pathname = usePathname();
   const { planInfo } = usePlanInfo();
+  const { user } = useAuth();
 
   const toggleExpanded = (itemText: string) => {
     const newExpanded = new Set(expandedItems);
@@ -500,8 +515,21 @@ export default function Sidebar() {
     setExpandedItems(newExpanded);
   };
 
-  // Filter menu items based on plan type
+  // Filter menu items based on user role and plan type
   const filteredItems = useMemo(() => {
+    // If user is super admin, only show super admin menu items
+    if (user?.userRole === "super_admin") {
+      return superAdminMenuItems.filter((item) => {
+        // If searching, check if main item matches
+        if (searchQuery.trim()) {
+          const query = searchQuery.toLowerCase();
+          return item.text.toLowerCase().includes(query);
+        }
+        return true;
+      });
+    }
+
+    // For regular users, use the existing plan-based filtering
     if (!planInfo) return allMenuItems;
 
     const currentPlanType = planInfo.planType;
@@ -540,7 +568,7 @@ export default function Sidebar() {
 
       return true;
     });
-  }, [searchQuery, planInfo]);
+  }, [searchQuery, planInfo, user]);
 
   // Handle auto-expanding items when searching
   useEffect(() => {
@@ -555,6 +583,11 @@ export default function Sidebar() {
       if (
         item.subItems &&
         item.subItems.some((subItem) => {
+          // For super admin, all sub-items are available
+          if (user?.userRole === "super_admin") {
+            return subItem.text.toLowerCase().includes(query);
+          }
+          // For regular users, check plan availability
           const subItemAvailable =
             subItem.planTypes.includes("*") ||
             (planInfo && subItem.planTypes.includes(planInfo.planType));
@@ -566,7 +599,7 @@ export default function Sidebar() {
     });
 
     setExpandedItems(newExpanded);
-  }, [searchQuery, filteredItems, planInfo]);
+  }, [searchQuery, filteredItems, planInfo, user]);
 
   const isActive = (path: string) => {
     if (path === "/") {
@@ -577,6 +610,9 @@ export default function Sidebar() {
 
   // Show plan info in header
   const getPlanDisplayName = () => {
+    if (user?.userRole === "super_admin") {
+      return "Super Admin";
+    }
     if (!planInfo) return "Loading...";
 
     switch (planInfo.planType) {

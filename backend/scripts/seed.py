@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Subscription Plans Seeding Script
-Creates the 3 subscription tiers for the system
+Subscription Plans & Super Admin Seeding Script
+Creates the 3 subscription tiers and a super admin user for the system
 """
 
 import json
@@ -10,6 +10,12 @@ from sqlalchemy import text, create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from dotenv import load_dotenv
 import os
+import sys
+
+# Add the src directory to the path to import core modules
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+from core.auth import get_password_hash
 
 # Load environment variables from .env file in backend folder
 env_path = os.path.join(os.path.dirname(__file__), '..', '.env')
@@ -35,6 +41,99 @@ def check_plans_exist(engine):
         
         result = conn.execute(text("SELECT COUNT(*) FROM plans;"))
         return True, result.scalar()
+
+def check_super_admin_exists(engine):
+    """Check if super admin already exists"""
+    with engine.connect() as conn:
+        result = conn.execute(text("""
+            SELECT COUNT(*) 
+            FROM information_schema.tables 
+            WHERE table_name = 'users';
+        """))
+        if result.scalar() == 0:
+            return False, 0
+        
+        result = conn.execute(text("""
+            SELECT COUNT(*) FROM users 
+            WHERE "userRole" = 'super_admin' AND "tenant_id" IS NULL;
+        """))
+        return True, result.scalar()
+
+def seed_super_admin(engine):
+    """Create a super admin user without tenant"""
+    print("👑 Starting super admin seeding...")
+    
+    # Check if users table exists
+    table_exists, super_admin_count = check_super_admin_exists(engine)
+    if not table_exists:
+        print("❌ Users table does not exist. Please run table recreation script first.")
+        return
+    
+    if super_admin_count > 0:
+        print(f"⚠️  Found {super_admin_count} existing super admin(s) in database.")
+        confirm = input("Do you want to continue and potentially create duplicate super admin? (y/N): ").strip().lower()
+        if confirm not in ['y', 'yes']:
+            print("Super admin creation cancelled.")
+            return
+    
+    try:
+        with engine.connect() as conn:
+            # Create super admin user
+            print("📝 Creating super admin user...")
+            
+            # Generate UUID for the super admin
+            super_admin_id = str(uuid.uuid4())
+            
+            # Hash the password
+            password = "SuperAdmin@123"  # Default password
+            hashed_password = get_password_hash(password)
+            
+            # Insert super admin user
+            result = conn.execute(text("""
+                INSERT INTO users (
+                    id, "tenant_id", "userName", email, "firstName", "lastName", 
+                    "hashedPassword", "userRole", "isActive", 
+                    "createdAt", "updatedAt"
+                ) VALUES (
+                    :id, :tenant_id, :userName, :email, :firstName, :lastName,
+                    :hashedPassword, :userRole, :isActive,
+                    NOW(), NOW()
+                ) RETURNING id;
+            """), {
+                "id": super_admin_id,
+                "tenant_id": None,  # No tenant for super admin
+                "userName": "superadmin",
+                "email": "superadmin@system.com",
+                "firstName": "Super",
+                "lastName": "Admin",
+                "hashedPassword": hashed_password,
+                "userRole": "super_admin",
+                "isActive": True
+            })
+            
+            returned_id = result.scalar()
+            print(f"    ✓ Super admin created with ID: {returned_id}")
+            print(f"    ✓ Username: superadmin")
+            print(f"    ✓ Email: superadmin@system.com")
+            print(f"    ✓ Password: SuperAdmin@123")
+            print(f"    ✓ Role: super_admin")
+            print(f"    ✓ Tenant: None (System-wide access)")
+            
+            conn.commit()
+            
+        print(f"\n✅ Successfully created super admin!")
+        print("\n🔐 Super Admin Credentials:")
+        print("  • Username: superadmin")
+        print("  • Email: superadmin@system.com")
+        print("  • Password: SuperAdmin@123")
+        print("  • Role: super_admin")
+        print("  • Access: System-wide (no tenant restriction)")
+        
+    except SQLAlchemyError as e:
+        print(f"\n❌ Error during super admin creation: {e}")
+        print("Check your database configuration and table structure.")
+    except Exception as e:
+        print(f"\n❌ Unexpected error: {e}")
 
 def seed_plans(engine):
     """Seed the database with plans"""
@@ -198,20 +297,34 @@ def seed_plans(engine):
         print(f"\n❌ Unexpected error: {e}")
 
 def main():
-    """Main function to seed subscription plans"""
-    print("🌱 Subscription Plans Seeding Script")
-    print("=" * 50)
-    print("This script will create the 3 subscription tiers")
+    """Main function to seed subscription plans and super admin"""
+    print("🌱 Subscription Plans & Super Admin Seeding Script")
+    print("=" * 60)
+    print("This script will create:")
+    print("  1. The 3 subscription tiers")
+    print("  2. A super admin user (no tenant)")
     print()
     
     try:
-        # Seed plans data
-        print("📋 Seeding Subscription Plans...")
         engine = get_engine()
         print("✅ Connected to database successfully")
+        
+        # Seed plans data
+        print("\n📋 Seeding Subscription Plans...")
         seed_plans(engine)
         
-        print("\n🎉 Plans seeding completed successfully!")
+        # Seed super admin
+        print("\n👑 Seeding Super Admin...")
+        seed_super_admin(engine)
+        
+        print("\n🎉 Seeding completed successfully!")
+        print("\n📊 Summary:")
+        print("  • Subscription plans created")
+        print("  • Super admin user created")
+        print("\n🔐 Super Admin Login Credentials:")
+        print("  • Email: superadmin@system.com")
+        print("  • Password: SuperAdmin@123")
+        print("  • Role: super_admin (system-wide access)")
         
     except Exception as e:
         print(f"\n❌ Seeding failed: {str(e)}")
