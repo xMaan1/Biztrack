@@ -267,3 +267,16 @@ class TenantUser(Base):
     
     # Relationships
     tenant = relationship("Tenant", back_populates="tenant_users")
+
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_tokens"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    token = Column(String, nullable=False, unique=True, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    is_used = Column(Boolean, default=False)
+    createdAt = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = relationship("User")

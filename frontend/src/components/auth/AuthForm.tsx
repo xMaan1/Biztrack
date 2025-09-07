@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -173,6 +174,17 @@ export default function AuthForm({ mode, onSuccess }: AuthFormProps) {
                 className="w-full"
               />
             </div>
+
+            {mode === "login" && (
+              <div className="text-right">
+                <Link 
+                  href="/reset-password" 
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  Forgot your password?
+                </Link>
+              </div>
+            )}
 
             {error && (
               <Alert className="border-red-200 bg-red-50">

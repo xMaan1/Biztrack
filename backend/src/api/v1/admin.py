@@ -57,8 +57,7 @@ async def get_all_tenants(
         for tenant in tenants:
             # Get subscription info
             subscription = db.query(Subscription).filter(
-                Subscription.tenant_id == tenant.id,
-                Subscription.isActive == True
+                Subscription.tenant_id == tenant.id
             ).first()
             
             # Get user count from TenantUser table
@@ -93,6 +92,7 @@ async def get_all_tenants(
                 "subscription": {
                     "id": str(subscription.id) if subscription else None,
                     "isActive": subscription.isActive if subscription else False,
+                "status": subscription.status if subscription else None,
                     "startDate": subscription.startDate if subscription else None,
                     "endDate": subscription.endDate if subscription else None,
                     "plan": plan_info
@@ -201,6 +201,7 @@ async def get_tenant_details(
             "subscription": {
                 "id": str(subscription.id) if subscription else None,
                 "isActive": subscription.isActive if subscription else False,
+                "status": subscription.status if subscription else None,
                 "startDate": subscription.startDate if subscription else None,
                 "endDate": subscription.endDate if subscription else None,
                 "plan": plan_info
@@ -260,6 +261,364 @@ async def update_tenant_status(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error updating tenant status: {str(e)}"
+        )
+
+@router.get("/tenants/{tenant_id}/complete")
+async def get_tenant_complete_details(
+    tenant_id: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Get complete tenant details with all related data - Super Admin only"""
+    if not is_super_admin(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Super admin access required"
+        )
+    
+    try:
+        # Get tenant
+        tenant = db.query(TenantModel).filter(TenantModel.id == tenant_id).first()
+        if not tenant:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Tenant not found"
+            )
+        
+        # Get subscription info
+        subscription = db.query(Subscription).filter(
+            Subscription.tenant_id == tenant.id
+        ).first()
+        
+        # Get plan info
+        plan_info = None
+        if subscription:
+            plan = db.query(Plan).filter(Plan.id == subscription.planId).first()
+            if plan:
+                plan_info = {
+                    "id": str(plan.id),
+                    "name": plan.name,
+                    "description": plan.description,
+                    "planType": plan.planType,
+                    "price": plan.price,
+                    "billingCycle": plan.billingCycle,
+                    "maxProjects": plan.maxProjects,
+                    "maxUsers": plan.maxUsers,
+                    "features": plan.features,
+                    "modules": plan.modules if hasattr(plan, 'modules') else []
+                }
+        
+        # Get users from TenantUser table
+        tenant_users = db.query(TenantUser).filter(
+            TenantUser.tenant_id == tenant.id
+        ).all()
+        
+        user_data = []
+        for tenant_user in tenant_users:
+            user = db.query(User).filter(User.id == tenant_user.userId).first()
+            if user:
+                user_data.append({
+                    "id": str(user.id),
+                    "userName": user.userName,
+                    "email": user.email,
+                    "firstName": user.firstName,
+                    "lastName": user.lastName,
+                    "userRole": user.userRole,
+                    "isActive": user.isActive,
+                    "createdAt": user.createdAt,
+                    "lastLogin": user.lastLogin,
+                    "tenantUserActive": tenant_user.isActive
+                })
+        
+        # Get invoices count and details
+        from ...config.invoice_models import Invoice
+        invoices = db.query(Invoice).filter(Invoice.tenant_id == tenant.id).all()
+        invoice_data = []
+        for invoice in invoices:
+            invoice_data.append({
+                "id": str(invoice.id),
+                "invoiceNumber": invoice.invoiceNumber,
+                "customerName": invoice.customerName,
+                "customerEmail": invoice.customerEmail,
+                "total": invoice.total,
+                "status": invoice.status,
+                "issueDate": invoice.issueDate,
+                "dueDate": invoice.dueDate,
+                "createdAt": invoice.createdAt
+            })
+        
+        # Get projects count and details
+        from ...config.project_models import Project
+        projects = db.query(Project).filter(Project.tenant_id == tenant.id).all()
+        project_data = []
+        for project in projects:
+            project_data.append({
+                "id": str(project.id),
+                "name": project.name,
+                "description": project.description,
+                "status": project.status,
+                "startDate": project.startDate,
+                "endDate": project.endDate,
+                "createdAt": project.createdAt
+            })
+        
+        # Get customers count and details
+        from ...config.crm_models import Customer
+        customers = db.query(Customer).filter(Customer.tenant_id == tenant.id).all()
+        customer_data = []
+        for customer in customers:
+            customer_data.append({
+                "id": str(customer.id),
+                "name": customer.name,
+                "email": customer.email,
+                "phone": customer.phone,
+                "company": customer.company,
+                "status": customer.status,
+                "createdAt": customer.createdAt
+            })
+        
+        # Calculate statistics
+        total_users = len(user_data)
+        active_users = len([u for u in user_data if u["isActive"]])
+        total_projects = len(project_data)
+        total_customers = len(customer_data)
+        total_invoices = len(invoice_data)
+        
+        # Calculate total invoice value
+        total_invoice_value = sum(invoice["total"] for invoice in invoice_data)
+        
+        # Get last activity (most recent update across all entities)
+        last_activities = []
+        if user_data:
+            last_activities.extend([u["lastLogin"] for u in user_data if u["lastLogin"]])
+        if invoice_data:
+            last_activities.extend([i["createdAt"] for i in invoice_data])
+        if project_data:
+            last_activities.extend([p["createdAt"] for p in project_data])
+        if customer_data:
+            last_activities.extend([c["createdAt"] for c in customer_data])
+        
+        last_activity = max(last_activities) if last_activities else tenant.createdAt
+        
+        return {
+            "tenant": {
+                "id": str(tenant.id),
+                "name": tenant.name,
+                "domain": tenant.domain,
+                "description": tenant.description,
+                "isActive": tenant.isActive,
+                "createdAt": tenant.createdAt,
+                "updatedAt": tenant.updatedAt,
+                "settings": tenant.settings
+            },
+            "subscription": {
+                "id": str(subscription.id) if subscription else None,
+                "isActive": subscription.isActive if subscription else False,
+                "status": subscription.status if subscription else None,
+                "startDate": subscription.startDate if subscription else None,
+                "endDate": subscription.endDate if subscription else None,
+                "plan": plan_info
+            } if subscription else None,
+            "users": user_data,
+            "invoices": invoice_data,
+            "projects": project_data,
+            "customers": customer_data,
+            "statistics": {
+                "totalUsers": total_users,
+                "activeUsers": active_users,
+                "totalProjects": total_projects,
+                "totalCustomers": total_customers,
+                "totalInvoices": total_invoices,
+                "totalInvoiceValue": total_invoice_value,
+                "lastActivity": last_activity
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching complete tenant details: {str(e)}"
+        )
+
+@router.delete("/tenants/{tenant_id}/users/{user_id}")
+async def delete_tenant_user(
+    tenant_id: str,
+    user_id: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Delete a user from a tenant - Super Admin only"""
+    if not is_super_admin(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Super admin access required"
+        )
+    
+    try:
+        # Remove user from tenant
+        tenant_user = db.query(TenantUser).filter(
+            TenantUser.tenant_id == tenant_id,
+            TenantUser.userId == user_id
+        ).first()
+        
+        if not tenant_user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found in this tenant"
+            )
+        
+        db.delete(tenant_user)
+        db.commit()
+        
+        return {
+            "success": True,
+            "message": "User removed from tenant successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error removing user from tenant: {str(e)}"
+        )
+
+@router.delete("/tenants/{tenant_id}/invoices/{invoice_id}")
+async def delete_tenant_invoice(
+    tenant_id: str,
+    invoice_id: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Delete an invoice from a tenant - Super Admin only"""
+    if not is_super_admin(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Super admin access required"
+        )
+    
+    try:
+        from ...config.invoice_models import Invoice
+        
+        invoice = db.query(Invoice).filter(
+            Invoice.id == invoice_id,
+            Invoice.tenant_id == tenant_id
+        ).first()
+        
+        if not invoice:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Invoice not found"
+            )
+        
+        db.delete(invoice)
+        db.commit()
+        
+        return {
+            "success": True,
+            "message": "Invoice deleted successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error deleting invoice: {str(e)}"
+        )
+
+@router.delete("/tenants/{tenant_id}/projects/{project_id}")
+async def delete_tenant_project(
+    tenant_id: str,
+    project_id: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Delete a project from a tenant - Super Admin only"""
+    if not is_super_admin(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Super admin access required"
+        )
+    
+    try:
+        from ...config.project_models import Project
+        
+        project = db.query(Project).filter(
+            Project.id == project_id,
+            Project.tenant_id == tenant_id
+        ).first()
+        
+        if not project:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Project not found"
+            )
+        
+        db.delete(project)
+        db.commit()
+        
+        return {
+            "success": True,
+            "message": "Project deleted successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error deleting project: {str(e)}"
+        )
+
+@router.delete("/tenants/{tenant_id}/customers/{customer_id}")
+async def delete_tenant_customer(
+    tenant_id: str,
+    customer_id: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Delete a customer from a tenant - Super Admin only"""
+    if not is_super_admin(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Super admin access required"
+        )
+    
+    try:
+        from ...config.crm_models import Customer
+        
+        customer = db.query(Customer).filter(
+            Customer.id == customer_id,
+            Customer.tenant_id == tenant_id
+        ).first()
+        
+        if not customer:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Customer not found"
+            )
+        
+        db.delete(customer)
+        db.commit()
+        
+        return {
+            "success": True,
+            "message": "Customer deleted successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error deleting customer: {str(e)}"
         )
 
 @router.get("/stats")

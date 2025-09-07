@@ -28,6 +28,7 @@ import {
   Clock3,
   ChevronDown,
   PieChart,
+  CreditCard,
   FileCheck,
   Banknote,
   BookOpen,
@@ -486,7 +487,7 @@ const allMenuItems: MenuItem[] = [
   },
 ];
 
-// Super admin menu items - only show Tenants
+// Super admin menu items - only show Tenants and Plans
 const superAdminMenuItems: MenuItem[] = [
   {
     text: "Tenants",
@@ -495,6 +496,14 @@ const superAdminMenuItems: MenuItem[] = [
     roles: ["super_admin"],
     planTypes: ["*"],
     gradient: "from-purple-500 to-indigo-500",
+  },
+  {
+    text: "Plans",
+    icon: CreditCard,
+    path: "/admin/plans",
+    roles: ["super_admin"],
+    planTypes: ["*"],
+    gradient: "from-green-500 to-emerald-500",
   },
 ];
 

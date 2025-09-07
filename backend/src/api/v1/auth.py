@@ -1,12 +1,20 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from sqlalchemy.orm import Session
-from datetime import timedelta
+from datetime import timedelta, datetime
+import secrets
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from pydantic import BaseModel, EmailStr
+from typing import Optional
+import os
 
 from ...models.unified_models import (
     LoginCredentials, AuthResponse, User, UserCreate, RefreshTokenRequest, 
     RefreshTokenResponse, TenantSelectionRequest, TenantSelectionResponse, TenantInfo
 )
 from ...config.database import get_db, get_user_by_email, get_user_by_username, create_user, get_user_tenants
+from ...config.core_models import PasswordResetToken
 from ...core.auth import (
     verify_password, get_password_hash, create_access_token, create_refresh_token,
     ACCESS_TOKEN_EXPIRE_MINUTES
@@ -14,6 +22,19 @@ from ...core.auth import (
 from ...api.dependencies import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
+
+# Password Reset Models
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+class PasswordResetConfirm(BaseModel):
+    token: str
+    new_password: str
+
+class PasswordResetResponse(BaseModel):
+    message: str
+    success: bool
+    token: Optional[str] = None  # Include token for immediate use
 
 @router.post("/login", response_model=AuthResponse)
 async def login(credentials: LoginCredentials, db: Session = Depends(get_db)):
@@ -228,3 +249,109 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
 async def logout():
     """Logout user (client-side token removal)"""
     return {"message": "Logged out successfully"}
+
+@router.post("/reset-password", response_model=PasswordResetResponse)
+async def request_password_reset(
+    request: PasswordResetRequest, 
+    db: Session = Depends(get_db)
+):
+    """Request password reset - sends email with reset link"""
+    user = get_user_by_email(request.email, db)
+    
+    # Always return success message for security (don't reveal if email exists)
+    if not user:
+        return PasswordResetResponse(
+            message="If an account with that email exists, we've sent a password reset link.",
+            success=True,
+            token=None  # No token for non-existent users
+        )
+    
+    # Generate reset token
+    reset_token = secrets.token_urlsafe(32)
+    expires_at = datetime.utcnow() + timedelta(hours=1)  # Token expires in 1 hour
+    
+    # Store reset token in database
+    reset_token_record = PasswordResetToken(
+        token=reset_token,
+        user_id=user.id,
+        expires_at=expires_at,
+        is_used=False
+    )
+    db.add(reset_token_record)
+    db.commit()
+    
+    # Send email (in production, you'd use a proper email service)
+    try:
+        send_password_reset_email(user.email, reset_token)
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+        # Don't fail the request if email sending fails
+    
+    return PasswordResetResponse(
+        message="If an account with that email exists, we've sent a password reset link.",
+        success=True,
+        token=reset_token  # Return token for immediate use
+    )
+
+@router.post("/reset-password/confirm", response_model=PasswordResetResponse)
+async def confirm_password_reset(
+    request: PasswordResetConfirm,
+    db: Session = Depends(get_db)
+):
+    """Confirm password reset with token"""
+    # Find valid reset token
+    reset_token_record = db.query(PasswordResetToken).filter(
+        PasswordResetToken.token == request.token,
+        PasswordResetToken.is_used == False,
+        PasswordResetToken.expires_at > datetime.utcnow()
+    ).first()
+    
+    if not reset_token_record:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset token"
+        )
+    
+    # Get user and update password
+    from ...config.core_models import User as UserModel
+    user = db.query(UserModel).filter(UserModel.id == reset_token_record.user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Update password
+    user.hashedPassword = get_password_hash(request.new_password)
+    
+    # Mark token as used
+    reset_token_record.is_used = True
+    
+    db.commit()
+    
+    return PasswordResetResponse(
+        message="Password has been reset successfully. You can now log in with your new password.",
+        success=True
+    )
+
+def send_password_reset_email(email: str, token: str):
+    """Send password reset email (simplified version)"""
+    # In production, you'd use a proper email service like SendGrid, AWS SES, etc.
+    # For now, we'll just print the reset link to console for development
+    
+    reset_link = f"http://localhost:3000/reset-password/confirm?token={token}"
+    
+    print(f"\n{'='*60}")
+    print(f"PASSWORD RESET EMAIL")
+    print(f"{'='*60}")
+    print(f"To: {email}")
+    print(f"Subject: Reset Your Password")
+    print(f"{'='*60}")
+    print(f"Click the link below to reset your password:")
+    print(f"{reset_link}")
+    print(f"{'='*60}")
+    print(f"This link will expire in 1 hour.")
+    print(f"{'='*60}\n")
+    
+    # TODO: Implement actual email sending
+    # For now, the reset link is printed to console for development

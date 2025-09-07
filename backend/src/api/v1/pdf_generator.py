@@ -69,6 +69,20 @@ def generate_invoice_pdf_matching_image(invoice, db) -> bytes:
     # Create the header section matching the image layout
     # Company name at top center
     story.append(Paragraph(company_name, company_style))
+    
+    # Invoice number style (smaller, centered below company name)
+    invoice_number_style = ParagraphStyle(
+        'InvoiceNumber',
+        parent=styles['Normal'],
+        fontSize=14,
+        spaceAfter=10,
+        alignment=TA_CENTER,
+        textColor=colors.HexColor(primary_color),
+        fontName='Helvetica-Bold'
+    )
+    
+    # Add invoice number below company name
+    story.append(Paragraph(f"Invoice #: {invoice.invoiceNumber}", invoice_number_style))
     story.append(Spacer(1, 10))
     
     # Top section with date, customer info, and vehicle info

@@ -20,7 +20,7 @@ export interface PaginatedResponse<T> {
 export class ApiService {
   private client: AxiosInstance;
   private sessionManager: SessionManager;
-  private publicEndpoints = ["/auth/login", "/auth/register", "/public/plans"];
+  private publicEndpoints = ["/auth/login", "/auth/register", "/auth/reset-password", "/auth/reset-password/confirm", "/public/plans"];
   private currentTenantId: string | null = null;
 
   constructor() {
@@ -131,11 +131,14 @@ export class ApiService {
               return Promise.reject(new Error("Not authenticated"));
             }
           }
-        }
 
-        const token = this.sessionManager.getToken();
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+          // Only add Authorization header for non-public endpoints
+          if (!isPublicEndpoint) {
+            const token = this.sessionManager.getToken();
+            if (token) {
+              config.headers.Authorization = `Bearer ${token}`;
+            }
+          }
         }
 
         // Add tenant header if available

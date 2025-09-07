@@ -158,6 +158,9 @@ class PlanType(str, Enum):
     STARTER = "starter"
     PROFESSIONAL = "professional"
     ENTERPRISE = "enterprise"
+    COMMERCE = "commerce"
+    WORKSHOP = "workshop"
+    HEALTHCARE = "healthcare"
 
 class PlanFeature(str, Enum):
     UNLIMITED_PROJECTS = "unlimited_projects"
@@ -168,6 +171,43 @@ class PlanFeature(str, Enum):
     API_ACCESS = "api_access"
     ADVANCED_PERMISSIONS = "advanced_permissions"
     AUDIT_LOGS = "audit_logs"
+    # Commerce features
+    INVENTORY_MANAGEMENT = "Inventory Management"
+    POINT_OF_SALE = "Point of Sale (POS)"
+    CRM = "Customer Relationship Management (CRM)"
+    SALES_INVOICING = "Sales & Invoicing"
+    PURCHASE_ORDERS = "Purchase Orders"
+    WAREHOUSE_MANAGEMENT = "Warehouse Management"
+    FINANCIAL_REPORTS = "Financial Reports"
+    MULTI_LOCATION_SUPPORT = "Multi-location Support"
+    ECOMMERCE_INTEGRATION = "E-commerce Integration"
+    BARCODE_SCANNING = "Barcode Scanning"
+    CUSTOMER_PORTAL = "Customer Portal"
+    EMAIL_MARKETING = "Email Marketing"
+    # Workshop features
+    PROJECT_MANAGEMENT = "Project Management"
+    PRODUCTION_PLANNING = "Production Planning"
+    WORK_ORDER_MANAGEMENT = "Work Order Management"
+    QUALITY_CONTROL = "Quality Control"
+    EQUIPMENT_MAINTENANCE = "Equipment Maintenance"
+    TIME_TRACKING = "Time Tracking"
+    RESOURCE_ALLOCATION = "Resource Allocation"
+    COST_ANALYSIS = "Cost Analysis"
+    SUPPLIER_MANAGEMENT = "Supplier Management"
+    WORKFORCE_MANAGEMENT = "Workforce Management"
+    SAFETY_COMPLIANCE = "Safety Compliance"
+    # Healthcare features
+    PATIENT_MANAGEMENT = "Patient Management"
+    APPOINTMENT_SCHEDULING = "Appointment Scheduling"
+    ELECTRONIC_HEALTH_RECORDS = "Electronic Health Records (EHR)"
+    BILLING_INSURANCE = "Billing & Insurance"
+    STAFF_MANAGEMENT = "Staff Management"
+    COMPLIANCE_HIPAA = "Compliance & HIPAA"
+    REPORTING_ANALYTICS = "Reporting & Analytics"
+    TELEMEDICINE_SUPPORT = "Telemedicine Support"
+    LAB_MANAGEMENT = "Lab Management"
+    PHARMACY_INTEGRATION = "Pharmacy Integration"
+    MEDICAL_DEVICE_TRACKING = "Medical Device Tracking"
 
 class SubscriptionStatus(str, Enum):
     ACTIVE = "active"
@@ -390,18 +430,31 @@ class Task(TaskBase):
 class PlanBase(BaseModel):
     name: str
     description: str
-    planType: PlanType
+    planType: str  # Allow any string instead of strict enum
     price: float
     billingCycle: str  # monthly, yearly
     maxProjects: Optional[int] = None
     maxUsers: Optional[int] = None
-    features: List[PlanFeature]
+    features: List[str]  # Allow any strings instead of strict enum
     isActive: bool = True
 
 class Plan(PlanBase):
     id: str
     createdAt: datetime
     updatedAt: datetime
+
+    class Config:
+        from_attributes = True
+
+class PlanUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    price: Optional[float] = None
+    billingCycle: Optional[str] = None
+    maxProjects: Optional[int] = None
+    maxUsers: Optional[int] = None
+    features: Optional[List[str]] = None
+    isActive: Optional[bool] = None
 
     class Config:
         from_attributes = True
