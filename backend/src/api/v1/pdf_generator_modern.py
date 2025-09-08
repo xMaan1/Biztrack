@@ -4,7 +4,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch, mm
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT, TA_JUSTIFY
-from reportlab.graphics.shapes import Drawing, Rect, String
+from reportlab.graphics.shapes import Drawing, Rect, String, Circle
 from reportlab.graphics import renderPDF
 from reportlab.pdfgen import canvas
 from reportlab.platypus.flowables import Flowable
@@ -12,7 +12,7 @@ from io import BytesIO
 import math
 
 class ModernHeader(Flowable):
-    """Custom header with modern gradient and glass effect"""
+    """Custom header with website-matching gradient and glass effect"""
     def __init__(self, company_name, invoice_number, primary_color, secondary_color):
         self.company_name = company_name
         self.invoice_number = invoice_number
@@ -24,31 +24,43 @@ class ModernHeader(Flowable):
         canvas = self.canv
         width, height = self.width, self.height
         
-        # Create gradient background
+        # Create website-matching gradient background
         canvas.saveState()
         
-        # Modern gradient background
-        canvas.setFillColor(colors.HexColor(self.primary_color))
+        # Primary gradient background (blue to purple like website)
+        canvas.setFillColor(colors.HexColor("#3B82F6"))  # Blue start
         canvas.rect(0, 0, width, height, fill=1, stroke=0)
         
-        # Add subtle overlay for glass effect
-        canvas.setFillColor(colors.Color(1, 1, 1, 0.1))
+        # Add gradient overlay effect
+        canvas.setFillColor(colors.HexColor("#8B5CF6"))  # Purple end
+        canvas.setFillAlpha(0.7)
+        canvas.rect(0, 0, width, height, fill=1, stroke=0)
+        
+        # Glass effect overlay
+        canvas.setFillColor(colors.Color(1, 1, 1, 0.15))
         canvas.rect(0, 0, width, height, fill=1, stroke=0)
         
         canvas.restoreState()
         
-        # Company name with modern typography
-        canvas.setFont("Helvetica-Bold", 28)
+        # Company name with website typography
+        canvas.setFont("Helvetica-Bold", 32)
         canvas.setFillColor(colors.white)
-        canvas.drawCentredText(width/2, height - 40, self.company_name)
+        canvas.drawCentredString(width/2, height - 45, self.company_name)
         
         # Invoice number with modern styling
-        canvas.setFont("Helvetica", 14)
+        canvas.setFont("Helvetica", 16)
         canvas.setFillColor(colors.Color(1, 1, 1, 0.9))
-        canvas.drawCentredText(width/2, height - 70, f"Invoice #{self.invoice_number}")
+        canvas.drawCentredString(width/2, height - 75, f"Invoice #{self.invoice_number}")
+        
+        # Add subtle border radius effect
+        canvas.saveState()
+        canvas.setStrokeColor(colors.Color(1, 1, 1, 0.2))
+        canvas.setLineWidth(1)
+        canvas.roundRect(5, 5, width-10, height-10, 12, stroke=1, fill=0)
+        canvas.restoreState()
 
 class ModernCard(Flowable):
-    """Modern card component with rounded corners and shadow"""
+    """Modern card component matching website styling"""
     def __init__(self, content_table, bg_color="#FFFFFF", border_color="#E5E7EB"):
         self.content_table = content_table
         self.bg_color = bg_color
@@ -59,32 +71,38 @@ class ModernCard(Flowable):
         canvas = self.canv
         width, height = self.width, self.height
         
-        # Draw rounded rectangle background
+        # Draw website-matching card with glass effect
         canvas.saveState()
         
-        # Shadow effect
-        canvas.setFillColor(colors.Color(0, 0, 0, 0.1))
-        canvas.roundRect(2, -2, width, height, 12, fill=1, stroke=0)
+        # Shadow effect (subtle like website)
+        canvas.setFillColor(colors.Color(0, 0, 0, 0.05))
+        canvas.roundRect(3, -3, width, height, 16, fill=1, stroke=0)
         
-        # Main card background
+        # Main card background with glass effect
         canvas.setFillColor(colors.HexColor(self.bg_color))
+        canvas.setFillAlpha(0.95)  # Glass transparency
         canvas.setStrokeColor(colors.HexColor(self.border_color))
-        canvas.roundRect(0, 0, width, height, 12, fill=1, stroke=1)
+        canvas.setStrokeAlpha(0.3)
+        canvas.roundRect(0, 0, width, height, 16, fill=1, stroke=1)
+        
+        # Add subtle inner highlight
+        canvas.setFillColor(colors.Color(1, 1, 1, 0.1))
+        canvas.roundRect(2, 2, width-4, height-4, 14, fill=1, stroke=0)
         
         canvas.restoreState()
 
 def generate_modern_invoice_pdf(invoice, db) -> bytes:
-    """Generate modern PDF invoice with Gen Z styling"""
+    """Generate modern PDF invoice matching website styling"""
     buffer = BytesIO()
     
-    # Modern page setup with better margins
+    # Website-matching page setup with proper margins
     doc = SimpleDocTemplate(
         buffer, 
         pagesize=A4, 
-        topMargin=0.5*inch, 
-        bottomMargin=0.5*inch, 
-        leftMargin=0.4*inch, 
-        rightMargin=0.4*inch
+        topMargin=0.6*inch, 
+        bottomMargin=0.6*inch, 
+        leftMargin=0.5*inch, 
+        rightMargin=0.5*inch
     )
     story = []
     
@@ -103,7 +121,7 @@ def generate_modern_invoice_pdf(invoice, db) -> bytes:
     if not customization:
         raise ValueError("Invoice customization is required. Please customize your invoice template first.")
     
-    # Use customization data with modern defaults
+    # Use customization data with website-matching defaults
     company_name = customization.company_name
     company_address = customization.company_address or ""
     company_phone = customization.company_phone or ""
@@ -112,67 +130,78 @@ def generate_modern_invoice_pdf(invoice, db) -> bytes:
     bank_sort_code = customization.bank_sort_code or ""
     bank_account_number = customization.bank_account_number or ""
     payment_instructions = customization.payment_instructions or customization.default_payment_instructions
-    primary_color = customization.primary_color or "#3B82F6"  # Modern blue default
-    secondary_color = customization.secondary_color or "#8B5CF6"  # Modern purple default
-    accent_color = customization.accent_color or "#10B981"  # Modern green default
+    primary_color = customization.primary_color or "#3B82F6"  # Website blue
+    secondary_color = customization.secondary_color or "#8B5CF6"  # Website purple
+    accent_color = customization.accent_color or "#10B981"  # Website green
     show_vehicle_info = customization.show_vehicle_info
     show_parts_section = customization.show_parts_section
     show_labour_section = customization.show_labour_section
     show_comments_section = customization.show_comments_section
     footer_text = customization.footer_text
     show_contact_info_in_footer = customization.show_contact_info_in_footer
-    footer_background_color = customization.footer_background_color or "#1F2937"
-    grid_color = customization.grid_color or "#E5E7EB"
+    footer_background_color = customization.footer_background_color or "#1F2937"  # Website dark
+    grid_color = customization.grid_color or "#E5E7EB"  # Website light gray
     thank_you_message = customization.thank_you_message
     enquiry_message = customization.enquiry_message
     contact_message = customization.contact_message
     
-    # Create modern styles
+    # Create website-matching styles
     styles = getSampleStyleSheet()
     
-    # Modern typography styles
+    # Website typography styles (matching Inter font family)
     modern_title_style = ParagraphStyle(
-        'ModernTitle',
+        'WebsiteTitle',
         parent=styles['Normal'],
-        fontSize=20,
-        spaceAfter=12,
+        fontSize=22,
+        spaceAfter=16,
         alignment=TA_CENTER,
         textColor=colors.HexColor(primary_color),
         fontName='Helvetica-Bold',
-        leading=24
+        leading=28
     )
     
     modern_subtitle_style = ParagraphStyle(
-        'ModernSubtitle',
+        'WebsiteSubtitle',
         parent=styles['Normal'],
-        fontSize=14,
-        spaceAfter=8,
+        fontSize=16,
+        spaceAfter=12,
         alignment=TA_CENTER,
         textColor=colors.HexColor(secondary_color),
         fontName='Helvetica',
-        leading=18
+        leading=20
     )
     
     modern_text_style = ParagraphStyle(
-        'ModernText',
+        'WebsiteText',
+        parent=styles['Normal'],
+        fontSize=12,
+        spaceAfter=8,
+        alignment=TA_LEFT,
+        textColor=colors.HexColor("#374151"),  # Website text color
+        fontName='Helvetica',
+        leading=16
+    )
+    
+    modern_label_style = ParagraphStyle(
+        'WebsiteLabel',
         parent=styles['Normal'],
         fontSize=11,
         spaceAfter=6,
         alignment=TA_LEFT,
-        textColor=colors.HexColor("#374151"),
-        fontName='Helvetica',
+        textColor=colors.HexColor("#6B7280"),  # Website muted text
+        fontName='Helvetica-Bold',
         leading=14
     )
     
-    modern_label_style = ParagraphStyle(
-        'ModernLabel',
+    modern_card_text_style = ParagraphStyle(
+        'WebsiteCardText',
         parent=styles['Normal'],
-        fontSize=10,
+        fontSize=11,
         spaceAfter=4,
         alignment=TA_LEFT,
-        textColor=colors.HexColor("#6B7280"),
-        fontName='Helvetica-Bold',
-        leading=12
+        textColor=colors.HexColor("#1F2937"),  # Website dark text
+        fontName='Helvetica',
+        leading=14
     )
     
     # Add modern header
@@ -180,37 +209,37 @@ def generate_modern_invoice_pdf(invoice, db) -> bytes:
     story.append(header)
     story.append(Spacer(1, 20))
     
-    # Modern info cards section
+    # Website-matching info cards section
     info_cards_data = []
     
-    # Date card
+    # Date card with website styling
     date_card = [
-        [Paragraph("📅", modern_text_style), ""],
-        [Paragraph("Issue Date", modern_label_style), Paragraph(invoice.issueDate.strftime('%B %d, %Y'), modern_text_style)],
-        [Paragraph("Due Date", modern_label_style), Paragraph(invoice.dueDate.strftime('%B %d, %Y') if invoice.dueDate else "N/A", modern_text_style)]
+        [Paragraph("📅", modern_card_text_style), ""],
+        [Paragraph("Issue Date", modern_label_style), Paragraph(invoice.issueDate.strftime('%B %d, %Y'), modern_card_text_style)],
+        [Paragraph("Due Date", modern_label_style), Paragraph(invoice.dueDate.strftime('%B %d, %Y') if invoice.dueDate else "N/A", modern_card_text_style)]
     ]
     
-    # Customer card
+    # Customer card with website styling
     customer_card = [
-        [Paragraph("👤", modern_text_style), ""],
-        [Paragraph("Customer", modern_label_style), Paragraph(invoice.customerName, modern_text_style)],
-        [Paragraph("Email", modern_label_style), Paragraph(invoice.customerEmail or "N/A", modern_text_style)],
-        [Paragraph("Address", modern_label_style), Paragraph(invoice.billingAddress or "N/A", modern_text_style)]
+        [Paragraph("👤", modern_card_text_style), ""],
+        [Paragraph("Customer", modern_label_style), Paragraph(invoice.customerName, modern_card_text_style)],
+        [Paragraph("Email", modern_label_style), Paragraph(invoice.customerEmail or "N/A", modern_card_text_style)],
+        [Paragraph("Address", modern_label_style), Paragraph(invoice.billingAddress or "N/A", modern_card_text_style)]
     ]
     
-    # Vehicle card (if enabled)
+    # Vehicle card (if enabled) with website styling
     vehicle_card = []
     if show_vehicle_info and (invoice.vehicleMake or invoice.vehicleModel):
         vehicle_card = [
-            [Paragraph("🚗", modern_text_style), ""],
-            [Paragraph("Vehicle", modern_label_style), Paragraph(f"{invoice.vehicleMake or ''} {invoice.vehicleModel or ''}", modern_text_style)],
+            [Paragraph("🚗", modern_card_text_style), ""],
+            [Paragraph("Vehicle", modern_label_style), Paragraph(f"{invoice.vehicleMake or ''} {invoice.vehicleModel or ''}", modern_card_text_style)],
         ]
         if invoice.vehicleYear:
-            vehicle_card.append([Paragraph("Year", modern_label_style), Paragraph(str(invoice.vehicleYear), modern_text_style)])
+            vehicle_card.append([Paragraph("Year", modern_label_style), Paragraph(str(invoice.vehicleYear), modern_card_text_style)])
         if invoice.vehicleReg:
-            vehicle_card.append([Paragraph("Registration", modern_label_style), Paragraph(invoice.vehicleReg, modern_text_style)])
+            vehicle_card.append([Paragraph("Registration", modern_label_style), Paragraph(invoice.vehicleReg, modern_card_text_style)])
         if invoice.vehicleVin:
-            vehicle_card.append([Paragraph("VIN", modern_label_style), Paragraph(invoice.vehicleVin, modern_text_style)])
+            vehicle_card.append([Paragraph("VIN", modern_label_style), Paragraph(invoice.vehicleVin, modern_card_text_style)])
     
     # Create info cards layout
     cards_layout = []
@@ -220,66 +249,68 @@ def generate_modern_invoice_pdf(invoice, db) -> bytes:
         cards_layout = [date_card, customer_card]
     
     for i, card_data in enumerate(cards_layout):
-        card_table = Table(card_data, colWidths=[30, 120])
+        card_table = Table(card_data, colWidths=[35, 125])
         card_table.setStyle(TableStyle([
+            # Icon styling
             ('BACKGROUND', (0, 0), (0, 0), colors.HexColor(accent_color)),
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('FONTSIZE', (0, 0), (-1, -1), 11),
             ('ALIGN', (0, 0), (0, -1), 'CENTER'),
             ('ALIGN', (1, 0), (1, -1), 'LEFT'),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-            ('TOPPADDING', (0, 0), (-1, -1), 4),
-            ('LEFTPADDING', (0, 0), (-1, -1), 8),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor(grid_color)),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor("#F9FAFB")),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('LEFTPADDING', (0, 0), (-1, -1), 12),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+            # Website-matching background
+            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor("#F8FAFC")),  # Website card background
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#E2E8F0")),  # Website border
         ]))
         
-        # Wrap in modern card
-        modern_card = ModernCard(card_table)
+        # Wrap in website-matching modern card
+        modern_card = ModernCard(card_table, bg_color="#F8FAFC", border_color="#E2E8F0")
         story.append(modern_card)
-        story.append(Spacer(1, 8))
+        story.append(Spacer(1, 12))
     
     story.append(Spacer(1, 15))
     
-    # Modern services/items section
+    # Website-matching services/items section
     if invoice.items:
-        # Services header with modern styling
+        # Services header with website styling
         services_header_data = [
-            [Paragraph("🔧 Services & Items", modern_title_style), ""],
+            [Paragraph("🔧 Services & Items", modern_title_style), "", "", ""],
             [Paragraph("Description", modern_label_style), Paragraph("Quantity", modern_label_style), 
              Paragraph("Rate", modern_label_style), Paragraph("Amount", modern_label_style)]
         ]
         
         services_table = Table(services_header_data, colWidths=[250, 80, 80, 80])
         services_table.setStyle(TableStyle([
-            # Header row styling
+            # Main header row styling (website gradient)
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(primary_color)),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 16),
-            ('FONTSIZE', (0, 1), (-1, 1), 10),
+            ('FONTSIZE', (0, 0), (-1, 0), 18),
             ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
-            ('ALIGN', (0, 1), (-1, 1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('TOPPADDING', (0, 0), (-1, 0), 12),
-            ('BOTTOMPADDING', (0, 1), (-1, 1), 8),
-            ('TOPPADDING', (0, 1), (-1, 1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 16),
+            ('TOPPADDING', (0, 0), (-1, 0), 16),
             
-            # Subheader styling
+            # Subheader styling (website accent)
             ('BACKGROUND', (0, 1), (-1, 1), colors.HexColor(accent_color)),
             ('TEXTCOLOR', (0, 1), (-1, 1), colors.white),
             ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 1), (-1, 1), 11),
+            ('ALIGN', (0, 1), (-1, 1), 'CENTER'),
+            ('BOTTOMPADDING', (0, 1), (-1, 1), 10),
+            ('TOPPADDING', (0, 1), (-1, 1), 10),
             
-            # Grid lines
-            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor(grid_color)),
+            # Website-matching grid lines
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor("#E2E8F0")),
         ]))
         
         story.append(services_table)
         
-        # Services items
+        # Services items with website styling
         total_amount = 0
         for item in invoice.items:
             description = item.get("description", "")
@@ -289,25 +320,25 @@ def generate_modern_invoice_pdf(invoice, db) -> bytes:
             total_amount += amount
             
             item_data = [
-                [Paragraph(description, modern_text_style), 
-                 Paragraph(str(quantity), modern_text_style),
-                 Paragraph(f"£{unit_price:.2f}", modern_text_style),
-                 Paragraph(f"£{amount:.2f}", modern_text_style)]
+                [Paragraph(description, modern_card_text_style), 
+                 Paragraph(str(quantity), modern_card_text_style),
+                 Paragraph(f"£{unit_price:.2f}", modern_card_text_style),
+                 Paragraph(f"£{amount:.2f}", modern_card_text_style)]
             ]
             
             item_table = Table(item_data, colWidths=[250, 80, 80, 80])
             item_table.setStyle(TableStyle([
                 ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('FONTSIZE', (0, 0), (-1, -1), 11),
                 ('ALIGN', (0, 0), (0, 0), 'LEFT'),
                 ('ALIGN', (1, 0), (2, 0), 'CENTER'),
                 ('ALIGN', (3, 0), (3, 0), 'RIGHT'),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-                ('TOPPADDING', (0, 0), (-1, -1), 8),
-                ('LEFTPADDING', (0, 0), (-1, -1), 8),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor(grid_color)),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+                ('TOPPADDING', (0, 0), (-1, -1), 10),
+                ('LEFTPADDING', (0, 0), (-1, -1), 12),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#E2E8F0")),
                 ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#FFFFFF")),
             ]))
             
@@ -315,17 +346,17 @@ def generate_modern_invoice_pdf(invoice, db) -> bytes:
         
         story.append(Spacer(1, 10))
         
-        # Modern totals section
+        # Website-matching totals section
         subtotal = total_amount
         tax_amount = subtotal * (invoice.taxRate / 100) if invoice.taxRate else 0
         discount_amount = subtotal * (invoice.discount / 100) if invoice.discount else 0
         final_total = subtotal + tax_amount - discount_amount
         
         totals_data = [
-            [Paragraph("Subtotal", modern_text_style), Paragraph(f"£{subtotal:.2f}", modern_text_style)],
-            [Paragraph("Discount", modern_text_style), Paragraph(f"-£{discount_amount:.2f}", modern_text_style)],
-            [Paragraph("Tax", modern_text_style), Paragraph(f"£{tax_amount:.2f}", modern_text_style)],
-            [Paragraph("", modern_text_style), Paragraph("", modern_text_style)],  # Spacer
+            [Paragraph("Subtotal", modern_card_text_style), Paragraph(f"£{subtotal:.2f}", modern_card_text_style)],
+            [Paragraph("Discount", modern_card_text_style), Paragraph(f"-£{discount_amount:.2f}", modern_card_text_style)],
+            [Paragraph("Tax", modern_card_text_style), Paragraph(f"£{tax_amount:.2f}", modern_card_text_style)],
+            [Paragraph("", modern_card_text_style), Paragraph("", modern_card_text_style)],  # Spacer
             [Paragraph("Total", modern_title_style), Paragraph(f"£{final_total:.2f}", modern_title_style)]
         ]
         
@@ -333,25 +364,26 @@ def generate_modern_invoice_pdf(invoice, db) -> bytes:
         totals_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (-1, -2), 'Helvetica'),
             ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -2), 11),
-            ('FONTSIZE', (0, -1), (-1, -1), 16),
+            ('FONTSIZE', (0, 0), (-1, -2), 12),
+            ('FONTSIZE', (0, -1), (-1, -1), 18),
             ('ALIGN', (0, 0), (0, -1), 'LEFT'),
             ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-            ('TOPPADDING', (0, 0), (-1, -1), 6),
-            ('LEFTPADDING', (0, 0), (-1, -1), 12),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('LEFTPADDING', (0, 0), (-1, -1), 16),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 16),
+            # Website gradient background for total
             ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor(primary_color)),
             ('TEXTCOLOR', (0, -1), (-1, -1), colors.white),
-            ('GRID', (0, 0), (-1, -2), 0.5, colors.HexColor(grid_color)),
-            ('LINEABOVE', (0, -1), (-1, -1), 2, colors.HexColor(primary_color)),
+            ('GRID', (0, 0), (-1, -2), 0.5, colors.HexColor("#E2E8F0")),
+            ('LINEABOVE', (0, -1), (-1, -1), 3, colors.HexColor(primary_color)),
         ]))
         
         story.append(totals_table)
         story.append(Spacer(1, 20))
     
-    # Modern payment info section
+    # Website-matching payment info section
     if payment_instructions or bank_sort_code or bank_account_number:
         payment_header_data = [["💳 Payment Information", ""]]
         payment_header_table = Table(payment_header_data, colWidths=[400, 100])
@@ -359,13 +391,13 @@ def generate_modern_invoice_pdf(invoice, db) -> bytes:
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(secondary_color)),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 14),
+            ('FONTSIZE', (0, 0), (-1, 0), 16),
             ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
             ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
-            ('TOPPADDING', (0, 0), (-1, 0), 10),
-            ('LEFTPADDING', (0, 0), (-1, 0), 12),
-            ('RIGHTPADDING', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('TOPPADDING', (0, 0), (-1, 0), 12),
+            ('LEFTPADDING', (0, 0), (-1, 0), 16),
+            ('RIGHTPADDING', (0, 0), (-1, 0), 16),
         ]))
         story.append(payment_header_table)
         
@@ -376,41 +408,43 @@ def generate_modern_invoice_pdf(invoice, db) -> bytes:
             payment_content.append(payment_instructions)
         
         if payment_content:
-            payment_data = [[Paragraph("<br/>".join(payment_content), modern_text_style), ""]]
+            payment_data = [[Paragraph("<br/>".join(payment_content), modern_card_text_style), ""]]
             payment_table = Table(payment_data, colWidths=[400, 100])
             payment_table.setStyle(TableStyle([
                 ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('FONTSIZE', (0, 0), (-1, -1), 11),
                 ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                 ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
-                ('TOPPADDING', (0, 0), (-1, -1), 10),
-                ('LEFTPADDING', (0, 0), (-1, -1), 12),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 12),
-                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#F9FAFB")),
-                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor(grid_color)),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+                ('TOPPADDING', (0, 0), (-1, -1), 12),
+                ('LEFTPADDING', (0, 0), (-1, -1), 16),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 16),
+                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#F8FAFC")),  # Website card background
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#E2E8F0")),
             ]))
             story.append(payment_table)
-            story.append(Spacer(1, 15))
+            story.append(Spacer(1, 20))
     
-    # Modern thank you message
+    # Website-matching thank you message
     if thank_you_message:
-        thank_you_data = [[Paragraph(f"🙏 {thank_you_message}", modern_text_style), ""]]
+        thank_you_data = [[Paragraph(f"🙏 {thank_you_message}", modern_card_text_style), ""]]
         thank_you_table = Table(thank_you_data, colWidths=[400, 100])
         thank_you_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 12),
+            ('FONTSIZE', (0, 0), (-1, -1), 14),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+            ('TOPPADDING', (0, 0), (-1, -1), 12),
+            ('LEFTPADDING', (0, 0), (-1, -1), 16),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 16),
             ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor(accent_color)),
             ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
         ]))
         story.append(thank_you_table)
-        story.append(Spacer(1, 15))
+        story.append(Spacer(1, 20))
     
-    # Modern footer
+    # Website-matching footer
     footer_content = []
     if footer_text:
         footer_content.append(footer_text)
@@ -429,10 +463,10 @@ def generate_modern_invoice_pdf(invoice, db) -> bytes:
     
     if footer_content:
         footer_style = ParagraphStyle(
-            'ModernFooter',
+            'WebsiteFooter',
             parent=styles['Normal'],
-            fontSize=9,
-            spaceAfter=10,
+            fontSize=10,
+            spaceAfter=12,
             alignment=TA_CENTER,
             textColor=colors.white,
             fontName='Helvetica',
@@ -445,11 +479,13 @@ def generate_modern_invoice_pdf(invoice, db) -> bytes:
             ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor(footer_background_color)),
             ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+            ('TOPPADDING', (0, 0), (-1, -1), 12),
+            ('LEFTPADDING', (0, 0), (-1, -1), 16),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 16),
         ]))
         story.append(footer_table)
     
