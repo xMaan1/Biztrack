@@ -34,8 +34,8 @@ export default function ResetPasswordPage() {
       const response = await apiService.post("/auth/reset-password", { email });
       
       // Check if token was returned (user exists)
-      if (response.data.token) {
-        setResetToken(response.data.token);
+      if (response.token) {
+        setResetToken(response.token);
         setStep(2); // Move to password step
       } else {
         setError("No account found with this email address.");
