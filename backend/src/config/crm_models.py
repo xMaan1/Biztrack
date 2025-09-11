@@ -39,7 +39,7 @@ class Customer(Base):
     email = Column(String, nullable=False)
     phone = Column(String)
     mobile = Column(String)
-    cnic = Column(String, unique=True)  # CNIC for Pakistani customers
+    cnic = Column(String, unique=True, nullable=True)  # CNIC for Pakistani customers
     dateOfBirth = Column(DateTime)
     gender = Column(String)  # male, female, other
     address = Column(Text)
@@ -51,7 +51,7 @@ class Customer(Base):
     customerStatus = Column(String, default="active")  # active, inactive, blocked
     creditLimit = Column(Float, default=0.0)
     currentBalance = Column(Float, default=0.0)
-    paymentTerms = Column(String, default="immediate")  # immediate, net30, net60
+    paymentTerms = Column(String, default="Cash")  # Credit, Card, Cash, Due Payments
     assignedToId = Column(UUID(as_uuid=True), ForeignKey("users.id"))
     notes = Column(Text)
     tags = Column(JSON, default=[])  # Store tags as JSON array

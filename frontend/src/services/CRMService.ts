@@ -1,6 +1,6 @@
-import { ApiService } from "./ApiService";
+import { apiService } from "./ApiService";
 import {
-  Lead,
+  Lead as CRMLead,
   LeadCreate,
   LeadUpdate,
   CRMLeadsResponse,
@@ -49,7 +49,7 @@ export interface Customer {
   customerStatus: "active" | "inactive" | "blocked";
   creditLimit: number;
   currentBalance: number;
-  paymentTerms: "immediate" | "net30" | "net60";
+  paymentTerms: "Credit" | "Card" | "Cash" | "Due Payments";
   assignedToId?: string;
   notes?: string;
   tags: string[];
@@ -76,7 +76,7 @@ export interface CustomerCreate {
   customerStatus?: "active" | "inactive" | "blocked";
   creditLimit?: number;
   currentBalance?: number;
-  paymentTerms?: "immediate" | "net30" | "net60";
+  paymentTerms?: "Credit" | "Card" | "Cash" | "Due Payments";
   assignedToId?: string;
   notes?: string;
   tags?: string[];
@@ -117,19 +117,19 @@ export class CustomerService {
     if (status) params.append("status", status);
     if (customerType) params.append("customer_type", customerType);
 
-    const response = await ApiService.get(
+    const response = await apiService.get(
       `/crm/customers?${params.toString()}`,
     );
     return response;
   }
 
   static async getCustomerById(id: string): Promise<Customer> {
-    const response = await ApiService.get(`/crm/customers/${id}`);
+    const response = await apiService.get(`/crm/customers/${id}`);
     return response;
   }
 
   static async createCustomer(customerData: CustomerCreate): Promise<Customer> {
-    const response = await ApiService.post("/crm/customers", customerData);
+    const response = await apiService.post("/crm/customers", customerData);
     return response;
   }
 
@@ -137,17 +137,17 @@ export class CustomerService {
     id: string,
     customerData: CustomerUpdate,
   ): Promise<Customer> {
-    const response = await ApiService.put(`/crm/customers/${id}`, customerData);
+    const response = await apiService.put(`/crm/customers/${id}`, customerData);
     return response;
   }
 
   static async deleteCustomer(id: string): Promise<{ message: string }> {
-    const response = await ApiService.delete(`/crm/customers/${id}`);
+    const response = await apiService.delete(`/crm/customers/${id}`);
     return response;
   }
 
   static async getCustomerStats(): Promise<CustomerStats> {
-    const response = await ApiService.get("/crm/customers/stats");
+    const response = await apiService.get("/crm/customers/stats");
     return response;
   }
 
@@ -155,7 +155,7 @@ export class CustomerService {
     query: string,
     limit: number = 20,
   ): Promise<Customer[]> {
-    const response = await ApiService.get(
+    const response = await apiService.get(
       `/crm/customers/search?q=${encodeURIComponent(query)}&limit=${limit}`,
     );
     return response;
@@ -181,11 +181,7 @@ export interface Lead {
 }
 
 export class CRMService {
-  private apiService: ApiService;
-
-  constructor() {
-    this.apiService = new ApiService();
-  }
+  private apiService = apiService;
 
   // Lead Management
   async getLeads(

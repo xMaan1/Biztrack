@@ -95,7 +95,7 @@ export default function CustomersPage() {
     customerStatus: "active",
     creditLimit: 0,
     currentBalance: 0,
-    paymentTerms: "immediate",
+      paymentTerms: "Cash",
     tags: [],
   });
 
@@ -141,7 +141,15 @@ export default function CustomersPage() {
 
   const handleCreateCustomer = async () => {
     try {
-      await CustomerService.createCustomer(formData);
+      // Validate required fields
+      if (!formData.firstName || !formData.lastName || !formData.email) {
+        toast.error("Please fill in all required fields (First Name, Last Name, Email)");
+        return;
+      }
+
+      console.log("Creating customer with data:", formData);
+      const result = await CustomerService.createCustomer(formData);
+      console.log("Customer created successfully:", result);
       toast.success("Customer created successfully");
       setIsCreateDialogOpen(false);
       resetForm();
@@ -149,7 +157,7 @@ export default function CustomersPage() {
       loadStats();
     } catch (error) {
       console.error("Error creating customer:", error);
-      toast.error("Failed to create customer");
+      toast.error(`Failed to create customer: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -192,7 +200,7 @@ export default function CustomersPage() {
       customerStatus: "active",
       creditLimit: 0,
       currentBalance: 0,
-      paymentTerms: "immediate",
+      paymentTerms: "Cash",
       tags: [],
     });
     setSelectedCustomer(null);
@@ -413,7 +421,7 @@ export default function CustomersPage() {
                     onValueChange={(value) =>
                       setFormData({
                         ...formData,
-                        paymentTerms: value as "immediate" | "net30" | "net60",
+                        paymentTerms: value as "Credit" | "Card" | "Cash" | "Due Payments",
                       })
                     }
                   >
@@ -421,9 +429,10 @@ export default function CustomersPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="immediate">Immediate</SelectItem>
-                      <SelectItem value="net30">Net 30</SelectItem>
-                      <SelectItem value="net60">Net 60</SelectItem>
+                      <SelectItem value="Credit">Credit</SelectItem>
+                      <SelectItem value="Card">Card</SelectItem>
+                      <SelectItem value="Cash">Cash</SelectItem>
+                      <SelectItem value="Due Payments">Due Payments</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -911,7 +920,7 @@ export default function CustomersPage() {
                   onValueChange={(value) =>
                     setFormData({
                       ...formData,
-                      paymentTerms: value as "immediate" | "net30" | "net60",
+                      paymentTerms: value as "Credit" | "Card" | "Cash" | "Due Payments",
                     })
                   }
                 >
@@ -919,9 +928,10 @@ export default function CustomersPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="immediate">Immediate</SelectItem>
-                    <SelectItem value="net30">Net 30</SelectItem>
-                    <SelectItem value="net60">Net 60</SelectItem>
+                    <SelectItem value="Credit">Credit</SelectItem>
+                    <SelectItem value="Card">Card</SelectItem>
+                    <SelectItem value="Cash">Cash</SelectItem>
+                    <SelectItem value="Due Payments">Due Payments</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

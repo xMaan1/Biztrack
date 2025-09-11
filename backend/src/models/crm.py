@@ -22,7 +22,7 @@ class CustomerBase(BaseModel):
     customerStatus: Optional[str] = Field(default="active", pattern=r"^(active|inactive|blocked)$")
     creditLimit: Optional[float] = Field(default=0.0, ge=0)
     currentBalance: Optional[float] = Field(default=0.0)
-    paymentTerms: Optional[str] = Field(default="immediate", pattern=r"^(immediate|net30|net60)$")
+    paymentTerms: Optional[str] = Field(default="Cash", pattern=r"^(Credit|Card|Cash|Due Payments)$")
     assignedToId: Optional[UUID] = None
     notes: Optional[str] = None
     tags: Optional[List[str]] = Field(default_factory=list)

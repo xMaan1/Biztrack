@@ -16,6 +16,12 @@ def create_customer(db: Session, customer_data: Dict[str, Any], tenant_id: str) 
     customer_data["createdAt"] = datetime.utcnow()
     customer_data["updatedAt"] = datetime.utcnow()
     
+    # Convert empty strings to None for optional fields to avoid unique constraint violations
+    optional_fields = ['cnic', 'phone', 'mobile', 'address', 'city', 'state', 'postalCode', 'notes']
+    for field in optional_fields:
+        if field in customer_data and customer_data[field] == '':
+            customer_data[field] = None
+    
     customer = Customer(**customer_data)
     db.add(customer)
     db.commit()
@@ -67,6 +73,12 @@ def update_customer(db: Session, customer_id: str, customer_data: Dict[str, Any]
         return None
     
     customer_data["updatedAt"] = datetime.utcnow()
+    
+    # Convert empty strings to None for optional fields to avoid unique constraint violations
+    optional_fields = ['cnic', 'phone', 'mobile', 'address', 'city', 'state', 'postalCode', 'notes']
+    for field in optional_fields:
+        if field in customer_data and customer_data[field] == '':
+            customer_data[field] = None
     
     for field, value in customer_data.items():
         if hasattr(customer, field):
