@@ -157,12 +157,22 @@ def load_company_logo(logo_url: Optional[str]) -> Optional[Image]:
         return None
     
     try:
-        # Download image
-        response = requests.get(logo_url, timeout=10)
-        response.raise_for_status()
+        # Check if it's a relative path (starts with /static/)
+        if logo_url.startswith('/static/'):
+            # Convert relative path to actual file path
+            # /static/uploads/logos/{tenant_id}/{filename} -> uploads/logos/{tenant_id}/{filename}
+            file_path = logo_url.replace('/static/', '')
+            
+            # Read file directly from filesystem
+            with open(file_path, 'rb') as f:
+                img_data = io.BytesIO(f.read())
+        else:
+            # Download image from external URL
+            response = requests.get(logo_url, timeout=10)
+            response.raise_for_status()
+            img_data = io.BytesIO(response.content)
         
         # Open with PIL to resize
-        img_data = io.BytesIO(response.content)
         pil_img = PILImage.open(img_data)
         
         # Resize to max 200x100 while maintaining aspect ratio

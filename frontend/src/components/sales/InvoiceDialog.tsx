@@ -31,6 +31,8 @@ import {
   InvoiceStatus,
 } from "../../models/sales";
 import InvoiceService from "../../services/InvoiceService";
+import { CustomerSearch } from "../ui/customer-search";
+import { Customer } from "../../services/CustomerService";
 
 interface InvoiceDialogProps {
   open: boolean;
@@ -51,8 +53,6 @@ export function InvoiceDialog({
     customerId: "",
     customerName: "",
     customerEmail: "",
-    customerPhone: "", // New field
-    billingAddress: "",
     shippingAddress: "",
     issueDate: new Date().toISOString().split("T")[0],
     dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
@@ -85,6 +85,8 @@ export function InvoiceDialog({
     partsTotal: 0,
   });
 
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+
   const [items, setItems] = useState<InvoiceItemCreate[]>([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -95,8 +97,6 @@ export function InvoiceDialog({
         customerId: invoice.customerId,
         customerName: invoice.customerName,
         customerEmail: invoice.customerEmail,
-        customerPhone: invoice.customerPhone || "",
-        billingAddress: invoice.billingAddress,
         shippingAddress: invoice.shippingAddress || "",
         issueDate: invoice.issueDate,
         dueDate: invoice.dueDate,
@@ -138,14 +138,41 @@ export function InvoiceDialog({
           taskId: item.taskId,
         })),
       );
+
+      // Fetch customer data if customerId exists
+      if (invoice.customerId) {
+        InvoiceService.getCustomerById(invoice.customerId)
+          .then((customer) => {
+            setSelectedCustomer(customer);
+          })
+          .catch((error) => {
+            console.error("Error fetching customer:", error);
+            // If customer fetch fails, create a mock customer object
+            setSelectedCustomer({
+              id: invoice.customerId,
+              customerId: invoice.customerId,
+              firstName: invoice.customerName.split(' ')[0] || '',
+              lastName: invoice.customerName.split(' ').slice(1).join(' ') || '',
+              email: invoice.customerEmail,
+              phone: invoice.customerPhone || '',
+              customerType: 'individual' as const,
+              customerStatus: 'active' as const,
+              creditLimit: 0,
+              currentBalance: 0,
+              paymentTerms: 'Cash' as const,
+              tags: [],
+              isActive: true,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            });
+          });
+      }
     } else {
       // Reset form for create mode
       setFormData({
         customerId: "",
         customerName: "",
         customerEmail: "",
-        customerPhone: "",
-        billingAddress: "",
         shippingAddress: "",
         issueDate: new Date().toISOString().split("T")[0],
         dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
@@ -178,6 +205,7 @@ export function InvoiceDialog({
         partsTotal: 0,
       });
       setItems([]);
+      setSelectedCustomer(null);
     }
     setErrors({});
   }, [invoice, mode, open]);
@@ -189,6 +217,36 @@ export function InvoiceDialog({
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }));
+    }
+  };
+
+  const handleCustomerSelect = (customer: Customer | null) => {
+    setSelectedCustomer(customer);
+    
+    if (customer) {
+      // Update form data with customer information
+      setFormData((prev) => ({
+        ...prev,
+        customerId: customer.id,
+        customerName: `${customer.firstName} ${customer.lastName}`,
+        customerEmail: customer.email,
+      }));
+      
+      // Clear customer-related errors
+      setErrors((prev) => ({
+        ...prev,
+        customer: "",
+        customerName: "",
+        customerEmail: "",
+      }));
+    } else {
+      // Clear customer data when no customer is selected
+      setFormData((prev) => ({
+        ...prev,
+        customerId: "",
+        customerName: "",
+        customerEmail: "",
+      }));
     }
   };
 
@@ -238,14 +296,8 @@ export function InvoiceDialog({
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
 
-    if (!formData.customerName.trim()) {
-      newErrors.customerName = "Customer name is required";
-    }
-    if (!formData.customerEmail.trim()) {
-      newErrors.customerEmail = "Customer email is required";
-    }
-    if (!formData.billingAddress.trim()) {
-      newErrors.billingAddress = "Billing address is required";
+    if (!selectedCustomer) {
+      newErrors.customer = "Please select a customer";
     }
     if (!formData.issueDate) {
       newErrors.issueDate = "Issue date is required";
@@ -319,88 +371,15 @@ export function InvoiceDialog({
                 Customer Information
               </CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="customerName">Customer Name *</Label>
-                <Input
-                  id="customerName"
-                  value={formData.customerName}
-                  onChange={(e) =>
-                    handleInputChange("customerName", e.target.value)
-                  }
-                  placeholder="Enter customer name"
-                  className={errors.customerName ? "border-red-500" : ""}
-                />
-                {errors.customerName && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.customerName}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="customerEmail">Customer Email *</Label>
-                <Input
-                  id="customerEmail"
-                  type="email"
-                  value={formData.customerEmail}
-                  onChange={(e) =>
-                    handleInputChange("customerEmail", e.target.value)
-                  }
-                  placeholder="Enter customer email"
-                  className={errors.customerEmail ? "border-red-500" : ""}
-                />
-                {errors.customerEmail && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.customerEmail}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="customerPhone">Customer Phone (Optional)</Label>
-                <Input
-                  id="customerPhone"
-                  type="tel"
-                  value={formData.customerPhone}
-                  onChange={(e) =>
-                    handleInputChange("customerPhone", e.target.value)
-                  }
-                  placeholder="Enter customer phone number"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <Label htmlFor="billingAddress">Billing Address *</Label>
-                <Textarea
-                  id="billingAddress"
-                  value={formData.billingAddress}
-                  onChange={(e) =>
-                    handleInputChange("billingAddress", e.target.value)
-                  }
-                  placeholder="Enter billing address"
-                  className={errors.billingAddress ? "border-red-500" : ""}
-                />
-                {errors.billingAddress && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.billingAddress}
-                  </p>
-                )}
-              </div>
-
-              <div className="md:col-span-2">
-                <Label htmlFor="shippingAddress">
-                  Shipping Address (Optional)
-                </Label>
-                <Textarea
-                  id="shippingAddress"
-                  value={formData.shippingAddress}
-                  onChange={(e) =>
-                    handleInputChange("shippingAddress", e.target.value)
-                  }
-                  placeholder="Enter shipping address (leave blank if same as billing)"
-                />
-              </div>
+            <CardContent>
+              <CustomerSearch
+                value={selectedCustomer}
+                onSelect={handleCustomerSelect}
+                placeholder="Search for existing customers..."
+                label="Select Customer"
+                required={true}
+                error={errors.customer}
+              />
             </CardContent>
           </Card>
 

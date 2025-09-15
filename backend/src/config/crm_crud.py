@@ -34,6 +34,12 @@ def get_customer_by_id(db: Session, customer_id: str, tenant_id: str) -> Optiona
         and_(Customer.id == customer_id, Customer.tenant_id == tenant_id)
     ).first()
 
+def get_customer_by_email(email: str, db: Session, tenant_id: str) -> Optional[Customer]:
+    """Get customer by email"""
+    return db.query(Customer).filter(
+        and_(Customer.email == email.lower(), Customer.tenant_id == tenant_id)
+    ).first()
+
 def get_customers(
     db: Session, 
     tenant_id: str, 

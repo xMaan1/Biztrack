@@ -17,6 +17,7 @@ import {
   Eye,
   Save,
   X,
+  Upload,
 } from "lucide-react";
 import {
   InvoiceCustomization,
@@ -24,6 +25,8 @@ import {
   InvoiceCustomizationUpdate,
 } from "../../models/sales/InvoiceCustomization";
 import InvoiceCustomizationService from "../../services/InvoiceCustomizationService";
+import FileUploadService from "../../services/FileUploadService";
+import { FileUpload } from "../ui/file-upload";
 import { toast } from "sonner";
 
 interface InvoiceCustomizationDialogProps {
@@ -37,7 +40,10 @@ export function InvoiceCustomizationDialog({
 }: InvoiceCustomizationDialogProps) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [customization, setCustomization] = useState<InvoiceCustomization | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState<InvoiceCustomizationCreate>({
@@ -100,6 +106,11 @@ export function InvoiceCustomizationDialog({
         show_contact_info_in_footer: data.show_contact_info_in_footer,
         custom_fields: data.custom_fields || {},
       });
+
+      // Load logo info if exists
+      if (data.company_logo_url) {
+        setLogoPreviewUrl(data.company_logo_url);
+      }
     } catch (error) {
       console.error("Error loading customization:", error);
       toast.error("Failed to load invoice customization");
@@ -133,6 +144,51 @@ export function InvoiceCustomizationDialog({
       ...prev,
       [field]: value
     }));
+  };
+
+  const handleLogoUpload = async (file: File) => {
+    try {
+      setUploading(true);
+      const response = await FileUploadService.uploadLogo(file);
+      
+      // Update form data with the new logo URL
+      setFormData(prev => ({
+        ...prev,
+        company_logo_url: response.file_url
+      }));
+      
+      setLogoFile(file);
+      setLogoPreviewUrl(response.file_url);
+      
+      toast.success("Logo uploaded successfully!");
+    } catch (error) {
+      console.error("Error uploading logo:", error);
+      toast.error("Failed to upload logo");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleLogoRemove = async () => {
+    try {
+      setUploading(true);
+      
+      // Clear form data
+      setFormData(prev => ({
+        ...prev,
+        company_logo_url: ""
+      }));
+      
+      setLogoFile(null);
+      setLogoPreviewUrl(null);
+      
+      toast.success("Logo removed successfully!");
+    } catch (error) {
+      console.error("Error removing logo:", error);
+      toast.error("Failed to remove logo");
+    } finally {
+      setUploading(false);
+    }
   };
 
   if (loading) {
@@ -199,13 +255,29 @@ export function InvoiceCustomizationDialog({
                     />
                   </div>
                   <div>
-                    <Label htmlFor="company_logo_url">Logo URL</Label>
-                    <Input
-                      id="company_logo_url"
-                      value={formData.company_logo_url}
-                      onChange={(e) => handleInputChange("company_logo_url", e.target.value)}
-                      placeholder="https://example.com/logo.png"
-                    />
+                    <Label htmlFor="company_logo_url">Company Logo</Label>
+                    <div className="space-y-3">
+                      <FileUpload
+                        onFileSelect={handleLogoUpload}
+                        onFileRemove={handleLogoRemove}
+                        currentFile={logoFile}
+                        currentUrl={logoPreviewUrl}
+                        accept="image/*"
+                        maxSize={5}
+                        label=""
+                        disabled={uploading}
+                      />
+                      <div className="text-xs text-gray-500">
+                        Or enter a URL:
+                      </div>
+                      <Input
+                        id="company_logo_url"
+                        value={formData.company_logo_url}
+                        onChange={(e) => handleInputChange("company_logo_url", e.target.value)}
+                        placeholder="https://example.com/logo.png"
+                        disabled={uploading}
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -557,11 +629,11 @@ export function InvoiceCustomizationDialog({
           </Button>
           <Button
             onClick={handleSave}
-            disabled={saving || !formData.company_name}
+            disabled={saving || uploading || !formData.company_name}
             className="modern-button"
           >
             <Save className="h-4 w-4 mr-2" />
-            {saving ? "Saving..." : "Save Customization"}
+            {saving ? "Saving..." : uploading ? "Uploading..." : "Save Customization"}
           </Button>
         </div>
       </DialogContent>

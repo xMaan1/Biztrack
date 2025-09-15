@@ -63,17 +63,24 @@ def create_warehouse_endpoint(
     current_tenant: Tenant = Depends(get_current_tenant)
 ):
     """Create a new warehouse"""
-    warehouse_data = warehouse.dict()
-    warehouse_data.update({
-        "id": str(uuid.uuid4()),
-        "tenant_id": str(current_tenant.id),
-        "createdBy": str(current_user.id),
-        "createdAt": datetime.utcnow(),
-        "updatedAt": datetime.utcnow()
-    })
-    
-    db_warehouse = create_warehouse(db, warehouse_data)
-    return WarehouseResponse(warehouse=db_warehouse)
+    try:
+        warehouse_data = warehouse.dict()
+        warehouse_data.update({
+            "id": str(uuid.uuid4()),
+            "tenant_id": str(current_tenant.id),
+            "createdAt": datetime.utcnow(),
+            "updatedAt": datetime.utcnow()
+        })
+        
+        db_warehouse = create_warehouse(db, warehouse_data)
+        return WarehouseResponse(warehouse=db_warehouse)
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create warehouse: {str(e)}"
+        )
 
 @router.put("/warehouses/{warehouse_id}", response_model=WarehouseResponse)
 def update_warehouse_endpoint(

@@ -28,139 +28,16 @@ import {
   CRMActivityFilters,
 } from "../models/crm";
 
-// Customer Types
-export interface Customer {
-  id: string;
-  customerId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  mobile?: string;
-  cnic?: string;
-  dateOfBirth?: string;
-  gender?: "male" | "female" | "other";
-  address?: string;
-  city?: string;
-  state?: string;
-  country?: string;
-  postalCode?: string;
-  customerType: "individual" | "business";
-  customerStatus: "active" | "inactive" | "blocked";
-  creditLimit: number;
-  currentBalance: number;
-  paymentTerms: "Credit" | "Card" | "Cash" | "Due Payments";
-  assignedToId?: string;
-  notes?: string;
-  tags: string[];
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+// Re-export customer types and service from shared CustomerService
+export type {
+  Customer,
+  CustomerCreate,
+  CustomerUpdate,
+  CustomerStats,
+  CustomersResponse,
+} from "./CustomerService";
 
-export interface CustomerCreate {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  mobile?: string;
-  cnic?: string;
-  dateOfBirth?: string;
-  gender?: "male" | "female" | "other";
-  address?: string;
-  city?: string;
-  state?: string;
-  country?: string;
-  postalCode?: string;
-  customerType?: "individual" | "business";
-  customerStatus?: "active" | "inactive" | "blocked";
-  creditLimit?: number;
-  currentBalance?: number;
-  paymentTerms?: "Credit" | "Card" | "Cash" | "Due Payments";
-  assignedToId?: string;
-  notes?: string;
-  tags?: string[];
-}
-
-export interface CustomerUpdate extends Partial<CustomerCreate> {}
-
-export interface CustomerStats {
-  total_customers: number;
-  active_customers: number;
-  inactive_customers: number;
-  blocked_customers: number;
-  individual_customers: number;
-  business_customers: number;
-  recent_customers: number;
-}
-
-export interface CustomersResponse {
-  customers: Customer[];
-  total: number;
-}
-
-// Customer Service
-export class CustomerService {
-  static async getCustomers(
-    skip: number = 0,
-    limit: number = 100,
-    search?: string,
-    status?: string,
-    customerType?: string,
-  ): Promise<CustomersResponse> {
-    const params = new URLSearchParams({
-      skip: skip.toString(),
-      limit: limit.toString(),
-    });
-
-    if (search) params.append("search", search);
-    if (status) params.append("status", status);
-    if (customerType) params.append("customer_type", customerType);
-
-    const response = await apiService.get(
-      `/crm/customers?${params.toString()}`,
-    );
-    return response;
-  }
-
-  static async getCustomerById(id: string): Promise<Customer> {
-    const response = await apiService.get(`/crm/customers/${id}`);
-    return response;
-  }
-
-  static async createCustomer(customerData: CustomerCreate): Promise<Customer> {
-    const response = await apiService.post("/crm/customers", customerData);
-    return response;
-  }
-
-  static async updateCustomer(
-    id: string,
-    customerData: CustomerUpdate,
-  ): Promise<Customer> {
-    const response = await apiService.put(`/crm/customers/${id}`, customerData);
-    return response;
-  }
-
-  static async deleteCustomer(id: string): Promise<{ message: string }> {
-    const response = await apiService.delete(`/crm/customers/${id}`);
-    return response;
-  }
-
-  static async getCustomerStats(): Promise<CustomerStats> {
-    const response = await apiService.get("/crm/customers/stats");
-    return response;
-  }
-
-  static async searchCustomers(
-    query: string,
-    limit: number = 20,
-  ): Promise<Customer[]> {
-    const response = await apiService.get(
-      `/crm/customers/search?q=${encodeURIComponent(query)}&limit=${limit}`,
-    );
-    return response;
-  }
-}
+export { CustomerService } from "./CustomerService";
 
 // Existing Lead Types
 export interface Lead {

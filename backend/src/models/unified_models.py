@@ -2063,8 +2063,6 @@ class InvoiceCreate(BaseModel):
     customerId: str
     customerName: str
     customerEmail: str
-    customerPhone: Optional[str] = None  # New field for customer phone
-    billingAddress: str
     shippingAddress: Optional[str] = None
     issueDate: str
     dueDate: str
@@ -2099,8 +2097,6 @@ class InvoiceCreate(BaseModel):
 class InvoiceUpdate(BaseModel):
     customerName: Optional[str] = None
     customerEmail: Optional[str] = None
-    customerPhone: Optional[str] = None
-    billingAddress: Optional[str] = None
     shippingAddress: Optional[str] = None
     issueDate: Optional[str] = None
     dueDate: Optional[str] = None

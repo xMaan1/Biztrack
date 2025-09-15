@@ -10,6 +10,7 @@ import {
   PaymentFilters,
   InvoiceDashboard,
 } from "../models/sales";
+import { Customer, CustomerCreate, CustomerUpdate, CustomersResponse, CustomerService } from "./CustomerService";
 
 class InvoiceService {
   private baseUrl = "/invoices";
@@ -217,6 +218,44 @@ class InvoiceService {
     const diffTime = today.getTime() - due.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return Math.max(0, diffDays);
+  }
+
+  // Customer Management - Delegating to shared CustomerService
+  // This ensures consistency between CRM and Invoicing modules
+  async getCustomers(
+    skip: number = 0,
+    limit: number = 100,
+    search?: string,
+    status?: string,
+    customerType?: string,
+  ): Promise<CustomersResponse> {
+    return CustomerService.getCustomers(skip, limit, search, status, customerType);
+  }
+
+  async getCustomerById(id: string): Promise<Customer> {
+    return CustomerService.getCustomerById(id);
+  }
+
+  async createCustomer(customerData: CustomerCreate): Promise<Customer> {
+    return CustomerService.createCustomer(customerData);
+  }
+
+  async updateCustomer(
+    id: string,
+    customerData: CustomerUpdate,
+  ): Promise<Customer> {
+    return CustomerService.updateCustomer(id, customerData);
+  }
+
+  async deleteCustomer(id: string): Promise<{ message: string }> {
+    return CustomerService.deleteCustomer(id);
+  }
+
+  async searchCustomers(
+    query: string,
+    limit: number = 20,
+  ): Promise<Customer[]> {
+    return CustomerService.searchCustomers(query, limit);
   }
 }
 

@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request, Response, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 import time
 import logging
 
@@ -8,7 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 from .config.database import create_tables, get_plans
-from .api.v1 import auth, users, projects, tasks, tenants, plans, sales, crm, hrm, custom_options, invoices, invoice_customization, pos, inventory, subscriptions, work_orders, production, quality_control, maintenance, ledger, admin
+from .api.v1 import auth, users, projects, tasks, tenants, plans, sales, crm, hrm, custom_options, invoices, invoice_customization, pos, inventory, subscriptions, work_orders, production, quality_control, maintenance, ledger, admin, file_upload, deduct_stock, customer_import
 from .core.security import security_middleware
 from .core.tenant_middleware import tenant_middleware
 from .core.audit import audit_logger
@@ -163,12 +164,14 @@ app.include_router(plans.router)
 # app.include_router(events.router)  # Temporarily disabled - Event models not implemented
 app.include_router(sales.router)
 app.include_router(crm.router)
+app.include_router(customer_import.router)
 app.include_router(hrm.router)
 app.include_router(custom_options.router)
 app.include_router(invoices.router)
 app.include_router(invoice_customization.router)
 app.include_router(pos.router)
 app.include_router(inventory.router)
+app.include_router(deduct_stock.router)
 app.include_router(subscriptions.router)
 app.include_router(work_orders.router)
 app.include_router(production.router)
@@ -176,6 +179,7 @@ app.include_router(quality_control.router)
 app.include_router(maintenance.router)
 app.include_router(ledger.router)
 app.include_router(admin.router)
+app.include_router(file_upload.router)
 
 # Add CORS middleware for frontend integration
 app.add_middleware(
@@ -194,6 +198,12 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     return await error_handler.handle_http_exception(request, exc)
+
+# Mount static files for uploaded content
+import os
+if not os.path.exists("uploads"):
+    os.makedirs("uploads")
+app.mount("/static", StaticFiles(directory="uploads"), name="static")
 
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):

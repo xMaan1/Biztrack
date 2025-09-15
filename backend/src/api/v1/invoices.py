@@ -13,8 +13,16 @@ from ...models.unified_models import (
     InvoicesResponse, InvoiceResponse, PaymentsResponse, PaymentResponse,
     InvoiceDashboard, InvoiceMetrics, InvoiceFilters, PaymentFilters
 )
+from ...models.crm import (
+    CustomerCreate, CustomerUpdate, CustomerResponse, CustomerStatsResponse
+)
 from ...config.database import User
 from ...config.invoice_models import Invoice, Payment
+from ...config.crm_crud import (
+    create_customer, get_customer_by_id, get_customers, update_customer, delete_customer,
+    get_customer_stats, search_customers
+)
+from ...services.inventory_sync_service import InventorySyncService
 
 router = APIRouter(prefix="/invoices", tags=["Invoices"])
 
@@ -130,9 +138,6 @@ def create_invoice(
         if not invoice_data.customerEmail:
             raise HTTPException(status_code=400, detail="Customer email is required")
         
-        if not invoice_data.billingAddress:
-            raise HTTPException(status_code=400, detail="Billing address is required")
-        
         if not invoice_data.items or len(invoice_data.items) == 0:
             raise HTTPException(status_code=400, detail="At least one item is required")
         
@@ -160,8 +165,8 @@ def create_invoice(
             customerId=invoice_data.customerId or "",
             customerName=invoice_data.customerName,
             customerEmail=invoice_data.customerEmail,
-            customerPhone=invoice_data.customerPhone,
-            billingAddress=invoice_data.billingAddress,
+            customerPhone="",  # Will be populated from customer record
+            billingAddress="",  # Will be populated from customer record
             shippingAddress=invoice_data.shippingAddress,
             issueDate=issue_date,
             dueDate=due_date,
@@ -233,6 +238,18 @@ def create_invoice(
         db_invoice.items = invoice_items
         
         # Add to database
+        # Populate customer details from customer record if customerId exists
+        if invoice_data.customerId:
+            try:
+                from ...config.crm_crud import get_customer_by_id
+                customer = get_customer_by_id(db, invoice_data.customerId, tenant_id)
+                if customer:
+                    db_invoice.customerPhone = customer.phone or ""
+                    db_invoice.billingAddress = customer.address or ""
+            except Exception as e:
+                # If customer fetch fails, continue with empty values
+                print(f"Warning: Could not fetch customer details: {e}")
+        
         db.add(db_invoice)
         db.commit()
         db.refresh(db_invoice)
@@ -602,7 +619,7 @@ def mark_invoice_as_paid(
     current_user: User = Depends(get_current_user),
     tenant_context: dict = Depends(get_tenant_context)
 ):
-    """Mark invoice as paid"""
+    """Mark invoice as paid and sync with inventory"""
     try:
         if not tenant_context:
             raise HTTPException(status_code=400, detail="Tenant context required")
@@ -619,13 +636,53 @@ def mark_invoice_as_paid(
         if not invoice:
             raise HTTPException(status_code=404, detail="Invoice not found")
         
+        # Mark invoice as paid
         invoice.status = InvoiceStatus.PAID
         invoice.paidAt = datetime.utcnow()
         invoice.updatedAt = datetime.utcnow()
         
         db.commit()
         
-        return {"message": "Invoice marked as paid"}
+        # Sync with inventory management
+        try:
+            sync_service = InventorySyncService(db)
+            sync_result = sync_service.sync_invoice_with_inventory(
+                invoice_id=invoice_id,
+                tenant_id=tenant_id,
+                user_id=str(current_user.id)
+            )
+            
+            if sync_result["success"]:
+                return {
+                    "message": "Invoice marked as paid and inventory synced successfully",
+                    "inventory_sync": {
+                        "success": True,
+                        "total_items_deducted": sync_result["total_items_deducted"],
+                        "items_processed": sync_result["items_processed"]
+                    }
+                }
+            else:
+                # Log the error but don't fail the invoice payment
+                print(f"Warning: Inventory sync failed for invoice {invoice_id}: {sync_result.get('error', 'Unknown error')}")
+                return {
+                    "message": "Invoice marked as paid, but inventory sync failed",
+                    "inventory_sync": {
+                        "success": False,
+                        "error": sync_result.get("error", "Unknown error"),
+                        "errors": sync_result.get("errors", [])
+                    }
+                }
+                
+        except Exception as sync_error:
+            # Log the error but don't fail the invoice payment
+            print(f"Warning: Inventory sync error for invoice {invoice_id}: {str(sync_error)}")
+            return {
+                "message": "Invoice marked as paid, but inventory sync encountered an error",
+                "inventory_sync": {
+                    "success": False,
+                    "error": str(sync_error)
+                }
+            }
         
     except HTTPException:
         raise
@@ -804,9 +861,11 @@ def create_payment(
         invoice.totalPaid += payment_data.amount
         invoice.balance = invoice.total - invoice.totalPaid
         
+        invoice_was_paid = False
         if invoice.balance <= 0:
             invoice.status = InvoiceStatus.PAID
             invoice.paidAt = datetime.utcnow()
+            invoice_was_paid = True
         elif invoice.balance < invoice.total:
             invoice.status = InvoiceStatus.PARTIALLY_PAID
         
@@ -815,7 +874,30 @@ def create_payment(
         db.commit()
         db.refresh(db_payment)
         
-        return PaymentResponse(payment=db_payment)
+        # Sync with inventory if invoice is now fully paid
+        inventory_sync_result = None
+        if invoice_was_paid:
+            try:
+                sync_service = InventorySyncService(db)
+                sync_result = sync_service.sync_invoice_with_inventory(
+                    invoice_id=invoice_id,
+                    tenant_id=tenant_id,
+                    user_id=str(current_user.id)
+                )
+                inventory_sync_result = sync_result
+                
+                if not sync_result["success"]:
+                    print(f"Warning: Inventory sync failed for invoice {invoice_id}: {sync_result.get('error', 'Unknown error')}")
+                    
+            except Exception as sync_error:
+                print(f"Warning: Inventory sync error for invoice {invoice_id}: {str(sync_error)}")
+                inventory_sync_result = {"success": False, "error": str(sync_error)}
+        
+        response_data = {"payment": db_payment}
+        if inventory_sync_result:
+            response_data["inventory_sync"] = inventory_sync_result
+        
+        return PaymentResponse(**response_data)
         
     except HTTPException:
         raise
@@ -990,3 +1072,117 @@ def download_invoice_pdf(
             raise HTTPException(status_code=500, detail=f"Failed to generate invoice download: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate invoice download: {str(e)}")
+
+# Customer endpoints - Delegating to CRM module for consistency
+@router.post("/customers", response_model=CustomerResponse)
+async def create_customer_endpoint(
+    customer_data: CustomerCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
+):
+    """Create a new customer - delegates to CRM module"""
+    try:
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+        customer = create_customer(db, customer_data.dict(), tenant_context["tenant_id"])
+        return CustomerResponse.from_orm(customer)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.get("/customers", response_model=List[CustomerResponse])
+async def get_customers_endpoint(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    search: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    customer_type: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
+):
+    """Get customers with optional filtering and search - delegates to CRM module"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    customers = get_customers(
+        db, 
+        tenant_context["tenant_id"], 
+        skip, 
+        limit, 
+        search, 
+        status, 
+        customer_type
+    )
+    return [CustomerResponse.from_orm(customer) for customer in customers]
+
+@router.get("/customers/stats", response_model=CustomerStatsResponse)
+async def get_customer_stats_endpoint(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
+):
+    """Get customer statistics - delegates to CRM module"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    stats = get_customer_stats(db, tenant_context["tenant_id"])
+    return CustomerStatsResponse(**stats)
+
+@router.get("/customers/search", response_model=List[CustomerResponse])
+async def search_customers_endpoint(
+    q: str = Query(..., min_length=1, description="Search term"),
+    limit: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
+):
+    """Search customers by name, ID, CNIC, phone, or email - delegates to CRM module"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    customers = search_customers(db, tenant_context["tenant_id"], q, limit)
+    return [CustomerResponse.from_orm(customer) for customer in customers]
+
+@router.get("/customers/{customer_id}", response_model=CustomerResponse)
+async def get_customer_endpoint(
+    customer_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
+):
+    """Get customer by ID - delegates to CRM module"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    customer = get_customer_by_id(db, customer_id, tenant_context["tenant_id"])
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    return CustomerResponse.from_orm(customer)
+
+@router.put("/customers/{customer_id}", response_model=CustomerResponse)
+async def update_customer_endpoint(
+    customer_id: str,
+    customer_data: CustomerUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
+):
+    """Update customer - delegates to CRM module"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    customer = update_customer(db, customer_id, customer_data.dict(exclude_unset=True), tenant_context["tenant_id"])
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    return CustomerResponse.from_orm(customer)
+
+@router.delete("/customers/{customer_id}")
+async def delete_customer_endpoint(
+    customer_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
+):
+    """Delete customer - delegates to CRM module"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    success = delete_customer(db, customer_id, tenant_context["tenant_id"])
+    if not success:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    return {"message": "Customer deleted successfully"}

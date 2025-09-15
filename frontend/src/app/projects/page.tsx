@@ -73,7 +73,7 @@ import {
 } from "../../lib/utils";
 
 export default function ProjectsPage() {
-  const { user } = useAuth();
+  const { user, currentTenant } = useAuth();
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
@@ -253,6 +253,11 @@ export default function ProjectsPage() {
     );
   };
 
+  const canCreateProject = () => {
+    // Allow all authenticated users to create projects
+    return !!user;
+  };
+
   const canEditProject = (project: Project) => {
     return (
       user?.userRole === "super_admin" ||
@@ -286,8 +291,7 @@ export default function ProjectsPage() {
             >
               <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
             </Button>
-            {(user?.userRole === "super_admin" ||
-              user?.userRole === "project_manager") && (
+            {canCreateProject() && (
               <Button onClick={handleCreateProject} className="modern-button">
                 <Plus className="h-4 w-4 mr-2" />
                 Create Project

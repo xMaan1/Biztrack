@@ -59,6 +59,7 @@ import {
   AlertCircle,
   CheckCircle,
   XCircle,
+  Upload,
 } from "lucide-react";
 import {
   CustomerService,
@@ -69,6 +70,7 @@ import {
 } from "@/src/services/CRMService";
 import { DashboardLayout } from "../../../components/layout";
 import { toast } from "sonner";
+import CustomerImportDialog from "../../../components/crm/CustomerImportDialog";
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -81,6 +83,7 @@ export default function CustomersPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null,
   );
@@ -270,16 +273,24 @@ export default function CustomersPage() {
               Manage your customer relationships and information
             </p>
           </div>
-          <Dialog
-            open={isCreateDialogOpen}
-            onOpenChange={setIsCreateDialogOpen}
-          >
-            <DialogTrigger asChild>
-              <Button onClick={() => resetForm()}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Customer
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setIsImportDialogOpen(true)}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Import Customers
+            </Button>
+            <Dialog
+              open={isCreateDialogOpen}
+              onOpenChange={setIsCreateDialogOpen}
+            >
+              <DialogTrigger asChild>
+                <Button onClick={() => resetForm()}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Customer
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Create New Customer</DialogTitle>
@@ -465,6 +476,7 @@ export default function CustomersPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -964,6 +976,16 @@ export default function CustomersPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Import Dialog */}
+        <CustomerImportDialog
+          open={isImportDialogOpen}
+          onClose={() => setIsImportDialogOpen(false)}
+          onImportComplete={() => {
+            loadCustomers();
+            loadStats();
+          }}
+        />
       </div>
     </DashboardLayout>
   );

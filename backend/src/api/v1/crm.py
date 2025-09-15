@@ -49,21 +49,6 @@ async def create_customer_endpoint(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.get("/customers/{customer_id}", response_model=CustomerResponse)
-async def get_customer_endpoint(
-    customer_id: str,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
-):
-    """Get customer by ID"""
-    if not tenant_context:
-        raise HTTPException(status_code=400, detail="Tenant context required")
-    customer = get_customer_by_id(db, customer_id, tenant_context["tenant_id"])
-    if not customer:
-        raise HTTPException(status_code=404, detail="Customer not found")
-    return CustomerResponse.from_orm(customer)
-
 @router.get("/customers", response_model=List[CustomerResponse])
 async def get_customers_endpoint(
     skip: int = Query(0, ge=0),
@@ -88,6 +73,47 @@ async def get_customers_endpoint(
         customer_type
     )
     return [CustomerResponse.from_orm(customer) for customer in customers]
+
+@router.get("/customers/stats", response_model=CustomerStatsResponse)
+async def get_customer_stats_endpoint(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context)
+):
+    """Get customer statistics"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    stats = get_customer_stats(db, tenant_context["tenant_id"])
+    return CustomerStatsResponse(**stats)
+
+@router.get("/customers/search", response_model=List[CustomerResponse])
+async def search_customers_endpoint(
+    q: str = Query(..., min_length=1, description="Search term"),
+    limit: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context)
+):
+    """Search customers by name, ID, CNIC, phone, or email"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    customers = search_customers(db, tenant_context["tenant_id"], q, limit)
+    return [CustomerResponse.from_orm(customer) for customer in customers]
+
+@router.get("/customers/{customer_id}", response_model=CustomerResponse)
+async def get_customer_endpoint(
+    customer_id: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context)
+):
+    """Get customer by ID"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    customer = get_customer_by_id(db, customer_id, tenant_context["tenant_id"])
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    return CustomerResponse.from_orm(customer)
 
 @router.put("/customers/{customer_id}", response_model=CustomerResponse)
 async def update_customer_endpoint(
@@ -119,32 +145,6 @@ async def delete_customer_endpoint(
     if not success:
         raise HTTPException(status_code=404, detail="Customer not found")
     return {"message": "Customer deleted successfully"}
-
-@router.get("/customers/stats", response_model=CustomerStatsResponse)
-async def get_customer_stats_endpoint(
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
-):
-    """Get customer statistics"""
-    if not tenant_context:
-        raise HTTPException(status_code=400, detail="Tenant context required")
-    stats = get_customer_stats(db, tenant_context["tenant_id"])
-    return CustomerStatsResponse(**stats)
-
-@router.get("/customers/search", response_model=List[CustomerResponse])
-async def search_customers_endpoint(
-    q: str = Query(..., min_length=1, description="Search term"),
-    limit: int = Query(20, ge=1, le=100),
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
-):
-    """Search customers by name, ID, CNIC, phone, or email"""
-    if not tenant_context:
-        raise HTTPException(status_code=400, detail="Tenant context required")
-    customers = search_customers(db, tenant_context["tenant_id"], q, limit)
-    return [CustomerResponse.from_orm(customer) for customer in customers]
 
 # Lead endpoints
 @router.get("/leads", response_model=CRMLeadsResponse)

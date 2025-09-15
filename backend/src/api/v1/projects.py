@@ -104,7 +104,7 @@ async def get_project(
         raise HTTPException(status_code=404, detail="Project not found")
     return transform_project_to_response(project)
 
-@router.post("", response_model=Project, dependencies=[Depends(require_tenant_admin_or_super_admin)])
+@router.post("", response_model=Project)
 async def create_new_project(
     project_data: ProjectCreate, 
     current_user = Depends(get_current_user),
@@ -149,7 +149,7 @@ async def create_new_project(
     
     return transform_project_to_response(db_project)
 
-@router.put("/{project_id}", response_model=Project, dependencies=[Depends(require_tenant_admin_or_super_admin)])
+@router.put("/{project_id}", response_model=Project)
 async def update_existing_project(
     project_id: str, 
     project_data: ProjectUpdate, 
@@ -184,7 +184,7 @@ async def update_existing_project(
     
     return transform_project_to_response(updated_project)
 
-@router.delete("/{project_id}", dependencies=[Depends(require_tenant_admin_or_super_admin)])
+@router.delete("/{project_id}")
 async def delete_existing_project(
     project_id: str, 
     current_user = Depends(get_current_user),
