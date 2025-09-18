@@ -7,11 +7,12 @@ This endpoint handles bulk import of customers from CSV/Excel files.
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any
-import pandas as pd
+import csv
 import io
 import uuid
 from datetime import datetime
 import logging
+from openpyxl import load_workbook
 
 from ...config.database import get_db
 from ...api.dependencies import get_current_user, get_tenant_context
@@ -81,18 +82,40 @@ async def import_customers(
         # Parse file based on extension
         try:
             if file_extension == 'csv':
-                df = pd.read_csv(io.StringIO(file_content.decode('utf-8')))
+                csv_reader = csv.DictReader(io.StringIO(file_content.decode('utf-8')))
+                rows = list(csv_reader)
             else:  # Excel files
-                df = pd.read_excel(io.BytesIO(file_content))
+                workbook = load_workbook(io.BytesIO(file_content))
+                worksheet = workbook.active
+                
+                # Get headers from first row
+                headers = [cell.value for cell in worksheet[1]]
+                
+                # Convert to list of dictionaries
+                rows = []
+                for row in worksheet.iter_rows(min_row=2, values_only=True):
+                    if any(cell is not None for cell in row):  # Skip empty rows
+                        row_dict = {}
+                        for i, value in enumerate(row):
+                            if i < len(headers):
+                                row_dict[headers[i]] = value
+                        rows.append(row_dict)
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Error parsing file: {str(e)}"
             )
         
+        if not rows:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No data found in file"
+            )
+        
         # Validate required columns
         required_columns = ['firstName', 'lastName', 'email']
-        missing_columns = [col for col in required_columns if col not in df.columns]
+        available_columns = list(rows[0].keys()) if rows else []
+        missing_columns = [col for col in required_columns if col not in available_columns]
         if missing_columns:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -104,29 +127,44 @@ async def import_customers(
         failed_count = 0
         errors = []
         
-        for index, row in df.iterrows():
+        for index, row in enumerate(rows):
             try:
+                # Helper function to safely get string values
+                def safe_str(value, default=''):
+                    if value is None or value == '':
+                        return default
+                    return str(value).strip()
+                
+                # Helper function to safely get numeric values
+                def safe_float(value, default=0.0):
+                    if value is None or value == '':
+                        return default
+                    try:
+                        return float(value)
+                    except (ValueError, TypeError):
+                        return default
+                
                 # Prepare customer data
                 customer_data = {
-                    "firstName": str(row.get('firstName', '')).strip(),
-                    "lastName": str(row.get('lastName', '')).strip(),
-                    "email": str(row.get('email', '')).strip().lower(),
-                    "phone": str(row.get('phone', '')).strip() if pd.notna(row.get('phone')) else None,
-                    "mobile": str(row.get('mobile', '')).strip() if pd.notna(row.get('mobile')) else None,
-                    "cnic": str(row.get('cnic', '')).strip() if pd.notna(row.get('cnic')) else None,
-                    "dateOfBirth": row.get('dateOfBirth') if pd.notna(row.get('dateOfBirth')) else None,
-                    "gender": str(row.get('gender', '')).strip().lower() if pd.notna(row.get('gender')) else None,
-                    "address": str(row.get('address', '')).strip() if pd.notna(row.get('address')) else None,
-                    "city": str(row.get('city', '')).strip() if pd.notna(row.get('city')) else None,
-                    "state": str(row.get('state', '')).strip() if pd.notna(row.get('state')) else None,
-                    "country": str(row.get('country', 'Pakistan')).strip() if pd.notna(row.get('country')) else 'Pakistan',
-                    "postalCode": str(row.get('postalCode', '')).strip() if pd.notna(row.get('postalCode')) else None,
-                    "customerType": str(row.get('customerType', 'individual')).strip().lower() if pd.notna(row.get('customerType')) else 'individual',
-                    "customerStatus": str(row.get('customerStatus', 'active')).strip().lower() if pd.notna(row.get('customerStatus')) else 'active',
-                    "creditLimit": float(row.get('creditLimit', 0)) if pd.notna(row.get('creditLimit')) else 0.0,
-                    "currentBalance": float(row.get('currentBalance', 0)) if pd.notna(row.get('currentBalance')) else 0.0,
-                    "paymentTerms": str(row.get('paymentTerms', 'Cash')).strip() if pd.notna(row.get('paymentTerms')) else 'Cash',
-                    "notes": str(row.get('notes', '')).strip() if pd.notna(row.get('notes')) else None,
+                    "firstName": safe_str(row.get('firstName')),
+                    "lastName": safe_str(row.get('lastName')),
+                    "email": safe_str(row.get('email')).lower(),
+                    "phone": safe_str(row.get('phone')) if row.get('phone') else None,
+                    "mobile": safe_str(row.get('mobile')) if row.get('mobile') else None,
+                    "cnic": safe_str(row.get('cnic')) if row.get('cnic') else None,
+                    "dateOfBirth": row.get('dateOfBirth') if row.get('dateOfBirth') else None,
+                    "gender": safe_str(row.get('gender')).lower() if row.get('gender') else None,
+                    "address": safe_str(row.get('address')) if row.get('address') else None,
+                    "city": safe_str(row.get('city')) if row.get('city') else None,
+                    "state": safe_str(row.get('state')) if row.get('state') else None,
+                    "country": safe_str(row.get('country'), 'Pakistan'),
+                    "postalCode": safe_str(row.get('postalCode')) if row.get('postalCode') else None,
+                    "customerType": safe_str(row.get('customerType'), 'individual').lower(),
+                    "customerStatus": safe_str(row.get('customerStatus'), 'active').lower(),
+                    "creditLimit": safe_float(row.get('creditLimit')),
+                    "currentBalance": safe_float(row.get('currentBalance')),
+                    "paymentTerms": safe_str(row.get('paymentTerms'), 'Cash'),
+                    "notes": safe_str(row.get('notes')) if row.get('notes') else None,
                     "tags": []
                 }
                 
@@ -162,8 +200,8 @@ async def import_customers(
                     customer_data["gender"] = None
                 
                 # Process tags if provided
-                if pd.notna(row.get('tags')):
-                    tags_str = str(row.get('tags', '')).strip()
+                if row.get('tags'):
+                    tags_str = safe_str(row.get('tags'))
                     if tags_str:
                         customer_data["tags"] = [tag.strip() for tag in tags_str.split(',') if tag.strip()]
                 
@@ -216,35 +254,61 @@ async def download_import_template():
     """
     try:
         # Create template data
-        template_data = {
-            'firstName': ['John', 'Jane'],
-            'lastName': ['Doe', 'Smith'],
-            'email': ['john.doe@example.com', 'jane.smith@example.com'],
-            'phone': ['+92-300-1234567', '+92-300-7654321'],
-            'mobile': ['+92-300-1234567', '+92-300-7654321'],
-            'cnic': ['12345-1234567-1', '12345-7654321-2'],
-            'dateOfBirth': ['1990-01-01', '1985-05-15'],
-            'gender': ['male', 'female'],
-            'address': ['123 Main Street', '456 Oak Avenue'],
-            'city': ['Karachi', 'Lahore'],
-            'state': ['Sindh', 'Punjab'],
-            'country': ['Pakistan', 'Pakistan'],
-            'postalCode': ['75000', '54000'],
-            'customerType': ['individual', 'business'],
-            'customerStatus': ['active', 'active'],
-            'creditLimit': [10000, 25000],
-            'currentBalance': [0, 0],
-            'paymentTerms': ['Cash', 'Credit'],
-            'notes': ['VIP Customer', 'Regular Customer'],
-            'tags': ['premium,vip', 'regular,standard']
-        }
+        template_data = [
+            {
+                'firstName': 'John',
+                'lastName': 'Doe',
+                'email': 'john.doe@example.com',
+                'phone': '+92-300-1234567',
+                'mobile': '+92-300-1234567',
+                'cnic': '12345-1234567-1',
+                'dateOfBirth': '1990-01-01',
+                'gender': 'male',
+                'address': '123 Main Street',
+                'city': 'Karachi',
+                'state': 'Sindh',
+                'country': 'Pakistan',
+                'postalCode': '75000',
+                'customerType': 'individual',
+                'customerStatus': 'active',
+                'creditLimit': '10000',
+                'currentBalance': '0',
+                'paymentTerms': 'Cash',
+                'notes': 'VIP Customer',
+                'tags': 'premium,vip'
+            },
+            {
+                'firstName': 'Jane',
+                'lastName': 'Smith',
+                'email': 'jane.smith@example.com',
+                'phone': '+92-300-7654321',
+                'mobile': '+92-300-7654321',
+                'cnic': '12345-7654321-2',
+                'dateOfBirth': '1985-05-15',
+                'gender': 'female',
+                'address': '456 Oak Avenue',
+                'city': 'Lahore',
+                'state': 'Punjab',
+                'country': 'Pakistan',
+                'postalCode': '54000',
+                'customerType': 'business',
+                'customerStatus': 'active',
+                'creditLimit': '25000',
+                'currentBalance': '0',
+                'paymentTerms': 'Credit',
+                'notes': 'Regular Customer',
+                'tags': 'regular,standard'
+            }
+        ]
         
-        # Create DataFrame
-        df = pd.DataFrame(template_data)
-        
-        # Convert to CSV
+        # Convert to CSV using built-in csv module
         csv_buffer = io.StringIO()
-        df.to_csv(csv_buffer, index=False)
+        if template_data:
+            fieldnames = template_data[0].keys()
+            writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(template_data)
+        
         csv_content = csv_buffer.getvalue()
         
         return {
