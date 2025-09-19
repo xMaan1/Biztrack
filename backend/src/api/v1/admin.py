@@ -490,11 +490,13 @@ async def get_tenant_complete_details(
         for customer in customers:
             customer_data.append({
                 "id": str(customer.id),
-                "name": customer.name,
+                "customerId": customer.customerId,
+                "name": f"{customer.firstName} {customer.lastName}",
                 "email": customer.email,
                 "phone": customer.phone,
-                "company": customer.company,
-                "status": customer.status,
+                "mobile": customer.mobile,
+                "customerType": customer.customerType,
+                "customerStatus": customer.customerStatus,
                 "createdAt": customer.createdAt
             })
         

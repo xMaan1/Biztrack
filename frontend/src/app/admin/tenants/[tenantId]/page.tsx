@@ -294,6 +294,7 @@ export default function TenantDetailsPage() {
   };
 
   const getStatusColor = (status: string) => {
+    if (!status) return "bg-gray-100 text-gray-800";
     switch (status.toLowerCase()) {
       case "active":
       case "paid":
@@ -748,12 +749,12 @@ export default function TenantDetailsPage() {
                           <p className="font-medium">{customer.name}</p>
                           <p className="text-sm text-gray-500">{customer.email}</p>
                           <p className="text-sm text-gray-500">{customer.phone}</p>
-                          <p className="text-sm text-gray-500">{customer.company}</p>
+                          <p className="text-sm text-gray-500">{customer.customerType}</p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Badge className={getStatusColor(customer.status)}>
-                          {customer.status}
+                        <Badge className={getStatusColor(customer.customerStatus)}>
+                          {customer.customerStatus}
                         </Badge>
                         <Button
                           variant="outline"
