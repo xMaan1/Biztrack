@@ -33,7 +33,7 @@ class Customer(Base):
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
-    customerId = Column(String, nullable=False, unique=True)  # Custom customer ID like CUST001
+    customerId = Column(String, nullable=False)  # Custom customer ID like CUST001
     firstName = Column(String, nullable=False)
     lastName = Column(String, nullable=False)
     email = Column(String, nullable=False)
@@ -69,6 +69,7 @@ class Customer(Base):
         Index('idx_customer_phone_search', 'tenant_id', 'phone'),
         Index('idx_customer_cnic_search', 'tenant_id', 'cnic'),
         Index('idx_customer_email_search', 'tenant_id', 'email'),
+        Index('idx_customer_id_unique', 'tenant_id', 'customerId', unique=True),  # Unique customerId per tenant
     )
 
 class Contact(Base):
