@@ -80,9 +80,9 @@ def create_styles(colors: Dict[str, Any]) -> Dict[str, ParagraphStyle]:
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Heading1'],
-        fontSize=24,
+        fontSize=18,
         textColor=colors['primary'],
-        spaceAfter=12,
+        spaceAfter=8,
         alignment=TA_LEFT,
         fontName='Helvetica-Bold'
     )
@@ -91,9 +91,9 @@ def create_styles(colors: Dict[str, Any]) -> Dict[str, ParagraphStyle]:
     subtitle_style = ParagraphStyle(
         'CustomSubtitle',
         parent=styles['Heading2'],
-        fontSize=16,
+        fontSize=12,
         textColor=colors['secondary'],
-        spaceAfter=8,
+        spaceAfter=6,
         alignment=TA_LEFT,
         fontName='Helvetica'
     )
@@ -102,9 +102,9 @@ def create_styles(colors: Dict[str, Any]) -> Dict[str, ParagraphStyle]:
     header_style = ParagraphStyle(
         'CustomHeader',
         parent=styles['Heading3'],
-        fontSize=14,
+        fontSize=10,
         textColor=colors['primary'],
-        spaceAfter=6,
+        spaceAfter=4,
         alignment=TA_LEFT,
         fontName='Helvetica-Bold'
     )
@@ -113,9 +113,9 @@ def create_styles(colors: Dict[str, Any]) -> Dict[str, ParagraphStyle]:
     body_style = ParagraphStyle(
         'CustomBody',
         parent=styles['Normal'],
-        fontSize=10,
+        fontSize=8,
         textColor=hex_to_color(FRONTEND_COLORS['text_primary']),
-        spaceAfter=6,
+        spaceAfter=4,
         alignment=TA_LEFT,
         fontName='Helvetica'
     )
@@ -124,9 +124,9 @@ def create_styles(colors: Dict[str, Any]) -> Dict[str, ParagraphStyle]:
     small_style = ParagraphStyle(
         'CustomSmall',
         parent=styles['Normal'],
-        fontSize=8,
+        fontSize=7,
         textColor=hex_to_color(FRONTEND_COLORS['text_secondary']),
-        spaceAfter=4,
+        spaceAfter=3,
         alignment=TA_LEFT,
         fontName='Helvetica'
     )
@@ -135,9 +135,9 @@ def create_styles(colors: Dict[str, Any]) -> Dict[str, ParagraphStyle]:
     footer_style = ParagraphStyle(
         'CustomFooter',
         parent=styles['Normal'],
-        fontSize=8,
+        fontSize=7,
         textColor=colors['white'],
-        spaceAfter=4,
+        spaceAfter=3,
         alignment=TA_CENTER,
         fontName='Helvetica'
     )
@@ -211,7 +211,7 @@ def create_invoice_header(invoice, customization: Optional[Dict[str, Any]], styl
     company_info = []
     if logo:
         company_info.append(logo)
-        company_info.append(Spacer(1, 10))
+        company_info.append(Spacer(1, 5))
     
     company_info.append(Paragraph(company_name, styles['title']))
     
@@ -232,7 +232,7 @@ def create_invoice_header(invoice, customization: Optional[Dict[str, Any]], styl
     # Right side - Invoice details
     invoice_info = [
         Paragraph("INVOICE", styles['title']),
-        Spacer(1, 10),
+        Spacer(1, 5),
         Paragraph(f"<b>Invoice #:</b> {invoice.invoiceNumber}", styles['body']),
         Paragraph(f"<b>Issue Date:</b> {invoice.issueDate.strftime('%B %d, %Y')}", styles['body']),
         Paragraph(f"<b>Due Date:</b> {invoice.dueDate.strftime('%B %d, %Y')}", styles['body']),
@@ -253,11 +253,11 @@ def create_invoice_header(invoice, customization: Optional[Dict[str, Any]], styl
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('ALIGN', (0, 0), (0, 0), 'LEFT'),
         ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 20),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
     ]))
     
     elements.append(header_table)
-    elements.append(Spacer(1, 20))
+    elements.append(Spacer(1, 10))
     
     return elements
 
@@ -281,7 +281,7 @@ def create_customer_section(invoice, styles: Dict[str, ParagraphStyle]) -> List:
         customer_info.append(invoice.billingAddress.replace('\n', '<br/>'))
     
     elements.append(Paragraph('<br/>'.join(customer_info), styles['body']))
-    elements.append(Spacer(1, 15))
+    elements.append(Spacer(1, 8))
     
     return elements
 
@@ -346,7 +346,7 @@ def create_vehicle_section(invoice, customization: Optional[Dict[str, Any]], sty
         
         elements.append(vehicle_table)
     
-    elements.append(Spacer(1, 15))
+    elements.append(Spacer(1, 8))
     return elements
 
 def create_items_table(invoice, styles: Dict[str, ParagraphStyle], colors: Dict[str, tuple]) -> List:
@@ -404,13 +404,13 @@ def create_items_table(invoice, styles: Dict[str, ParagraphStyle], colors: Dict[
         ('BACKGROUND', (0, 0), (-1, 0), colors['primary']),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors['white']),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('FONTSIZE', (0, 0), (-1, 0), 8),
         ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
         ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
         
         # Data rows
         ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -1), 9),
+        ('FONTSIZE', (0, 1), (-1, -1), 7),
         ('ALIGN', (0, 1), (0, -1), 'LEFT'),  # Description
         ('ALIGN', (1, 1), (-1, -1), 'CENTER'),  # Numbers
         ('VALIGN', (0, 1), (-1, -1), 'MIDDLE'),
@@ -420,15 +420,15 @@ def create_items_table(invoice, styles: Dict[str, ParagraphStyle], colors: Dict[
         ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors['white'], colors['accent']]),
         
         # Padding
-        ('LEFTPADDING', (0, 0), (-1, -1), 8),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-        ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
     ]
     
     items_table.setStyle(TableStyle(table_style))
     elements.append(items_table)
-    elements.append(Spacer(1, 20))
+    elements.append(Spacer(1, 10))
     
     return elements
 
@@ -480,7 +480,7 @@ def create_totals_section(invoice, styles: Dict[str, ParagraphStyle], colors: Di
     ]))
     
     elements.append(totals_wrapper)
-    elements.append(Spacer(1, 20))
+    elements.append(Spacer(1, 10))
     
     return elements
 
@@ -528,7 +528,7 @@ def create_footer(customization: Optional[Dict[str, Any]], styles: Dict[str, Par
     elements = []
     
     # Add separator line
-    elements.append(Spacer(1, 20))
+    elements.append(Spacer(1, 10))
     
     # Create footer content
     footer_content = []
@@ -542,7 +542,7 @@ def create_footer(customization: Optional[Dict[str, Any]], styles: Dict[str, Par
     contact_msg = customization.get('contact_message', 'please contact us at your convenience.') if customization else 'please contact us at your convenience.'
     
     footer_content.append(Paragraph(f"{enquiry_msg} {contact_msg}", styles['footer']))
-    footer_content.append(Spacer(1, 8))
+    footer_content.append(Spacer(1, 4))
     
     # Payment instructions
     payment_instructions = customization.get('payment_instructions', 'Make all payments to your company name') if customization else 'Make all payments to your company name'
@@ -557,7 +557,7 @@ def create_footer(customization: Optional[Dict[str, Any]], styles: Dict[str, Par
     
     # Custom footer text if provided
     if customization and customization.get('footer_text'):
-        footer_content.append(Spacer(1, 8))
+        footer_content.append(Spacer(1, 4))
         footer_content.append(Paragraph(customization['footer_text'], styles['footer']))
     
     # Contact info in footer if enabled
@@ -571,7 +571,7 @@ def create_footer(customization: Optional[Dict[str, Any]], styles: Dict[str, Par
             contact_info.append(f"Website: {customization['company_website']}")
         
         if contact_info:
-            footer_content.append(Spacer(1, 8))
+            footer_content.append(Spacer(1, 4))
             footer_content.append(Paragraph(" | ".join(contact_info), styles['footer']))
     
     # Create footer table with background color
@@ -579,10 +579,10 @@ def create_footer(customization: Optional[Dict[str, Any]], styles: Dict[str, Par
     footer_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, -1), colors['footer_bg']),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('LEFTPADDING', (0, 0), (-1, -1), 20),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 20),
-        ('TOPPADDING', (0, 0), (-1, -1), 15),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
+        ('LEFTPADDING', (0, 0), (-1, -1), 15),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 15),
+        ('TOPPADDING', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
     ]))
     
     elements.append(footer_table)
@@ -642,10 +642,10 @@ def generate_modern_invoice_pdf(invoice, db: Session) -> bytes:
         doc = SimpleDocTemplate(
             buffer,
             pagesize=A4,
-            rightMargin=0.75*inch,
-            leftMargin=0.75*inch,
-            topMargin=0.75*inch,
-            bottomMargin=0.75*inch
+            rightMargin=0.5*inch,
+            leftMargin=0.5*inch,
+            topMargin=0.5*inch,
+            bottomMargin=0.5*inch
         )
         
         # Build content
@@ -677,7 +677,7 @@ def generate_modern_invoice_pdf(invoice, db: Session) -> bytes:
         
         # Add page break before footer if needed
         if len(story) > 0:
-            story.append(Spacer(1, 20))
+            story.append(Spacer(1, 10))
         
         # Build PDF
         doc.build(story)
