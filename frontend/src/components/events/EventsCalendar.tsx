@@ -32,8 +32,7 @@ export default function EventsCalendar() {
       const response = await apiService.getEvents();
       setEvents(response.events || []);
     } catch (error) {
-      console.error("Failed to load events:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };

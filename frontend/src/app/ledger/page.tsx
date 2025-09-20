@@ -229,7 +229,6 @@ export default function LedgerDashboard() {
       closeTransactionModal();
       handleRefresh();
     } catch (error) {
-      console.error("Error creating transaction:", error);
       alert("Failed to create transaction. Please try again.");
     }
   };
@@ -253,7 +252,6 @@ export default function LedgerDashboard() {
       closeJournalEntryModal();
       handleRefresh();
     } catch (error) {
-      console.error("Error creating journal entry:", error);
       alert("Failed to create journal entry. Please try again.");
     }
   };
@@ -279,7 +277,6 @@ export default function LedgerDashboard() {
       );
       closeAccountBalanceModal();
     } catch (error) {
-      console.error("Error getting account balance:", error);
       alert("Failed to get account balance. Please try again.");
     }
   };
@@ -326,7 +323,6 @@ export default function LedgerDashboard() {
 
       closeFinancialReportModal();
     } catch (error) {
-      console.error("Error generating financial report:", error);
       alert("Failed to generate financial report. Please try again.");
     }
   };
@@ -366,13 +362,6 @@ export default function LedgerDashboard() {
       // Calculate summary data
       calculateSummaryData(accountsData, incomeStatementData, balanceSheetData);
     } catch (err: any) {
-      console.error("Error fetching ledger data:", err);
-      console.error("Error details:", {
-        name: err?.name,
-        message: err?.message,
-        stack: err?.stack,
-        response: err?.response,
-      });
       setError(
         `Failed to fetch ledger data: ${err?.message || "Unknown error"}`,
       );
@@ -767,7 +756,6 @@ export default function LedgerDashboard() {
                                   );
                                 }
                               } catch (error) {
-                                console.error("Error seeding accounts:", error);
                                 alert(
                                   "Failed to create default accounts. Please try again.",
                                 );
@@ -1238,10 +1226,6 @@ export default function LedgerDashboard() {
                             handleRefresh();
                           }
                         } catch (error) {
-                          console.error(
-                            "Error seeding accounts from modal:",
-                            error,
-                          );
                           alert(
                             "Failed to create default accounts. Please try again.",
                           );

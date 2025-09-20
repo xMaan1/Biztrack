@@ -68,8 +68,7 @@ export function useCustomOptions() {
       setCustomContactTypes(contactTypes);
       setCustomIndustries(industries);
     } catch (error) {
-      console.error("Error loading custom options:", error);
-    } finally {
+      } finally {
       setLoading((prev) => ({ ...prev, all: false }));
     }
   }, [customOptionsService]);
@@ -86,7 +85,6 @@ export function useCustomOptions() {
         setCustomEventTypes((prev) => [...prev, newType]);
         return newType;
       } catch (error) {
-        console.error("Error creating custom event type:", error);
         throw error;
       } finally {
         setLoading((prev) => ({ ...prev, eventType: false }));
@@ -107,7 +105,6 @@ export function useCustomOptions() {
         setCustomDepartments((prev) => [...prev, newDept]);
         return newDept;
       } catch (error) {
-        console.error("Error creating custom department:", error);
         throw error;
       } finally {
         setLoading((prev) => ({ ...prev, department: false }));
@@ -128,7 +125,6 @@ export function useCustomOptions() {
         setCustomLeaveTypes((prev) => [...prev, newLeave]);
         return newLeave;
       } catch (error) {
-        console.error("Error creating custom leave type:", error);
         throw error;
       } finally {
         setLoading((prev) => ({ ...prev, leaveType: false }));
@@ -149,7 +145,6 @@ export function useCustomOptions() {
         setCustomLeadSources((prev) => [...prev, newSource]);
         return newSource;
       } catch (error) {
-        console.error("Error creating custom lead source:", error);
         throw error;
       } finally {
         setLoading((prev) => ({ ...prev, leadSource: false }));
@@ -170,7 +165,6 @@ export function useCustomOptions() {
         setCustomContactSources((prev) => [...prev, newSource]);
         return newSource;
       } catch (error) {
-        console.error("Error creating custom contact source:", error);
         throw error;
       } finally {
         setLoading((prev) => ({ ...prev, contactSource: false }));
@@ -192,7 +186,6 @@ export function useCustomOptions() {
         setCustomCompanyIndustries((prev) => [...prev, newIndustry]);
         return newIndustry;
       } catch (error) {
-        console.error("Error creating custom company industry:", error);
         throw error;
       } finally {
         setLoading((prev) => ({ ...prev, companyIndustry: false }));
@@ -213,7 +206,6 @@ export function useCustomOptions() {
         setCustomContactTypes((prev) => [...prev, newType]);
         return newType;
       } catch (error) {
-        console.error("Error creating custom contact type:", error);
         throw error;
       } finally {
         setLoading((prev) => ({ ...prev, contactType: false }));
@@ -234,7 +226,6 @@ export function useCustomOptions() {
         setCustomIndustries((prev) => [...prev, newIndustry]);
         return newIndustry;
       } catch (error) {
-        console.error("Error creating custom industry:", error);
         throw error;
       } finally {
         setLoading((prev) => ({ ...prev, industry: false }));

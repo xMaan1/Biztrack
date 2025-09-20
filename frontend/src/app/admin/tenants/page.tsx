@@ -130,8 +130,7 @@ export default function AdminTenantsPage() {
       const response = await apiService.get("/admin/tenants");
       setTenants(response);
     } catch (error) {
-      console.error("Error fetching tenants:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
@@ -141,8 +140,7 @@ export default function AdminTenantsPage() {
       const response = await apiService.get("/admin/stats");
       setAdminStats(response);
     } catch (error) {
-      console.error("Error fetching admin stats:", error);
-    }
+      }
   };
 
   const viewTenantDetails = (tenantId: string) => {
@@ -174,8 +172,7 @@ export default function AdminTenantsPage() {
         } : null);
       }
     } catch (error) {
-      console.error("Error updating tenant status:", error);
-    }
+      }
   };
 
   const handleDeleteTenant = async () => {
@@ -209,8 +206,7 @@ export default function AdminTenantsPage() {
       setSelectedTenant(null);
       setDeleteAllData(false);
     } catch (error) {
-      console.error("Error deleting tenant:", error);
-    } finally {
+      } finally {
       setActionLoading(null);
     }
   };

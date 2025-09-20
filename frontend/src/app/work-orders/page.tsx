@@ -147,10 +147,8 @@ export default function WorkOrdersPage() {
     try {
       setLoading(true);
       const response = await apiService.getWorkOrders();
-      console.log("API Response:", response);
       setWorkOrders(response);
     } catch (error) {
-      console.error("Error fetching work orders:", error);
       setWorkOrders([]);
     } finally {
       setLoading(false);
@@ -158,7 +156,6 @@ export default function WorkOrdersPage() {
   };
 
   const filterWorkOrders = () => {
-    console.log("Filtering work orders:", workOrders);
     let filtered = [...workOrders];
 
     // Search filter
@@ -249,8 +246,7 @@ export default function WorkOrdersPage() {
       setDeleteDialogOpen(false);
       setWorkOrderToDelete(null);
     } catch (error) {
-      console.error("Error deleting work order:", error);
-    }
+      }
   };
 
   if (!mounted) return null;

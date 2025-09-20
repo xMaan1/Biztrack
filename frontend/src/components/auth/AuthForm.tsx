@@ -72,7 +72,6 @@ export default function AuthForm({ mode, onSuccess }: AuthFormProps) {
         }
       }
     } catch (err: any) {
-      console.error("Auth error:", err);
       if (err.response) {
         setError(
           err.response.data?.detail ||

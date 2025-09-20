@@ -123,8 +123,7 @@ export default function HRMLeaveManagementPage() {
       setLeaveRequests(response.leaveRequests);
     } catch (err) {
       setError("Failed to load leave requests");
-      console.error("Leave requests load error:", err);
-    } finally {
+      } finally {
       setLoading(false);
     }
   }, [filters]);
@@ -134,8 +133,7 @@ export default function HRMLeaveManagementPage() {
       const response = await HRMService.getEmployees({}, 1, 100);
       setEmployees(response.employees);
     } catch (err) {
-      console.error("Employees load error:", err);
-    }
+      }
   };
 
   const handleSearch = () => {
@@ -154,8 +152,7 @@ export default function HRMLeaveManagementPage() {
     try {
       await createCustomLeaveType(name, description);
     } catch (error) {
-      console.error("Failed to create custom leave type:", error);
-    }
+      }
   };
 
   const resetForm = () => {
@@ -212,8 +209,7 @@ export default function HRMLeaveManagementPage() {
       loadLeaveRequests();
     } catch (err) {
       setError("Failed to save leave request. Please try again.");
-      console.error("Leave request save error:", err);
-    } finally {
+      } finally {
       setSubmitting(false);
     }
   };
@@ -252,8 +248,7 @@ export default function HRMLeaveManagementPage() {
       loadLeaveRequests();
     } catch (err) {
       setError("Failed to delete leave request. Please try again.");
-      console.error("Leave request delete error:", err);
-    } finally {
+      } finally {
       setDeleting(false);
     }
   };

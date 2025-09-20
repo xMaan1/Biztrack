@@ -28,8 +28,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
     try {
       await logout();
     } catch (error) {
-      console.error("Logout failed:", error);
-    }
+      }
   };
 
   return (

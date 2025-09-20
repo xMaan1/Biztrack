@@ -112,7 +112,6 @@ export function InvoiceCustomizationDialog({
         setLogoPreviewUrl(data.company_logo_url);
       }
     } catch (error) {
-      console.error("Error loading customization:", error);
       toast.error("Failed to load invoice customization");
     } finally {
       setLoading(false);
@@ -132,7 +131,6 @@ export function InvoiceCustomizationDialog({
       toast.success("Invoice customization saved successfully!");
       onOpenChange(false);
     } catch (error) {
-      console.error("Error saving customization:", error);
       toast.error("Failed to save invoice customization");
     } finally {
       setSaving(false);
@@ -162,7 +160,6 @@ export function InvoiceCustomizationDialog({
       
       toast.success("Logo uploaded successfully!");
     } catch (error) {
-      console.error("Error uploading logo:", error);
       toast.error("Failed to upload logo");
     } finally {
       setUploading(false);
@@ -184,7 +181,6 @@ export function InvoiceCustomizationDialog({
       
       toast.success("Logo removed successfully!");
     } catch (error) {
-      console.error("Error removing logo:", error);
       toast.error("Failed to remove logo");
     } finally {
       setUploading(false);

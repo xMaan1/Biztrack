@@ -57,8 +57,7 @@ export default function ProductionDashboardPage() {
       const data = await service.getProductionDashboard();
       setDashboard(data);
     } catch (error) {
-      console.error("Error fetching production dashboard:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };

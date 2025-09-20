@@ -69,7 +69,6 @@ export default function CustomRoleModal({
       const response = await apiService.getPermissions();
       setAvailablePermissions(response || []);
     } catch (err) {
-      console.error("Failed to fetch permissions:", err);
       setError("Failed to load permissions");
     }
   };
@@ -105,7 +104,6 @@ export default function CustomRoleModal({
       onSave(savedRole);
       onClose();
     } catch (err: any) {
-      console.error("Failed to save role:", err);
       setError(err.response?.data?.detail || "Failed to save role");
     } finally {
       setLoading(false);

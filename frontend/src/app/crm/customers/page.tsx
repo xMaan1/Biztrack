@@ -84,6 +84,8 @@ export default function CustomersPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null,
   );
@@ -126,7 +128,6 @@ export default function CustomersPage() {
         Math.ceil((response.total || customersData.length) / itemsPerPage),
       );
     } catch (error) {
-      console.error("Error loading customers:", error);
       toast.error("Failed to load customers");
     } finally {
       setLoading(false);
@@ -138,7 +139,7 @@ export default function CustomersPage() {
       const statsData = await CustomerService.getCustomerStats();
       setStats(statsData);
     } catch (error) {
-      console.error("Error loading stats:", error);
+      // Stats loading failure is not critical, silently fail
     }
   };
 
@@ -150,17 +151,25 @@ export default function CustomersPage() {
         return;
       }
 
-      console.log("Creating customer with data:", formData);
       const result = await CustomerService.createCustomer(formData);
-      console.log("Customer created successfully:", result);
       toast.success("Customer created successfully");
       setIsCreateDialogOpen(false);
       resetForm();
       loadCustomers();
       loadStats();
-    } catch (error) {
-      console.error("Error creating customer:", error);
-      toast.error(`Failed to create customer: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (error: any) {
+      // Extract error message from API response
+      let errorMessage = "Failed to create customer";
+      
+      if (error?.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
     }
   };
 
@@ -173,9 +182,19 @@ export default function CustomersPage() {
       resetForm();
       loadCustomers();
       loadStats();
-    } catch (error) {
-      console.error("Error updating customer:", error);
-      toast.error("Failed to update customer");
+    } catch (error: any) {
+      // Extract error message from API response
+      let errorMessage = "Failed to update customer";
+      
+      if (error?.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
     }
   };
 
@@ -183,12 +202,34 @@ export default function CustomersPage() {
     try {
       await CustomerService.deleteCustomer(customerId);
       toast.success("Customer deleted successfully");
+      setIsDeleteDialogOpen(false);
+      setCustomerToDelete(null);
       loadCustomers();
       loadStats();
-    } catch (error) {
-      console.error("Error deleting customer:", error);
-      toast.error("Failed to delete customer");
+    } catch (error: any) {
+      // Extract error message from API response
+      let errorMessage = "Failed to delete customer";
+      
+      if (error?.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
     }
+  };
+
+  const openDeleteDialog = (customer: Customer) => {
+    setCustomerToDelete(customer);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const closeDeleteDialog = () => {
+    setIsDeleteDialogOpen(false);
+    setCustomerToDelete(null);
   };
 
   const resetForm = () => {
@@ -713,41 +754,12 @@ export default function CustomersPage() {
                                 Edit
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <DropdownMenuItem
-                                    onSelect={(e) => e.preventDefault()}
-                                  >
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete
-                                  </DropdownMenuItem>
-                                </DialogTrigger>
-                                <DialogContent>
-                                  <DialogHeader>
-                                    <DialogTitle>Delete Customer</DialogTitle>
-                                    <DialogDescription>
-                                      Are you sure you want to delete this
-                                      customer? This action cannot be undone.
-                                    </DialogDescription>
-                                  </DialogHeader>
-                                  <div className="flex justify-end space-x-2 mt-4">
-                                    <Button
-                                      variant="outline"
-                                      onClick={() => {}}
-                                    >
-                                      Cancel
-                                    </Button>
-                                    <Button
-                                      onClick={() =>
-                                        handleDeleteCustomer(customer.id)
-                                      }
-                                      className="bg-red-600 hover:bg-red-700"
-                                    >
-                                      Delete
-                                    </Button>
-                                  </div>
-                                </DialogContent>
-                              </Dialog>
+                              <DropdownMenuItem
+                                onClick={() => openDeleteDialog(customer)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -974,6 +986,36 @@ export default function CustomersPage() {
               </Button>
               <Button onClick={handleUpdateCustomer}>Update Customer</Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Customer</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete{" "}
+                <strong>
+                  {customerToDelete?.firstName} {customerToDelete?.lastName}
+                </strong>
+                ? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end space-x-2 mt-4">
+              <Button
+                variant="outline"
+                onClick={closeDeleteDialog}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => customerToDelete && handleDeleteCustomer(customerToDelete.id)}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Delete
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
 

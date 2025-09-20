@@ -115,7 +115,6 @@ export default function CustomerImportDialog({
         toast.error(response.message || "Import failed");
       }
     } catch (error: any) {
-      console.error("Import error:", error);
       toast.error(error.response?.data?.detail || "Import failed");
       setImportResult({
         success: false,
@@ -150,7 +149,6 @@ export default function CustomerImportDialog({
         toast.error("Failed to download template");
       }
     } catch (error) {
-      console.error("Template download error:", error);
       toast.error("Failed to download template");
     }
   };

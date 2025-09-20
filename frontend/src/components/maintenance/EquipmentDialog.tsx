@@ -163,7 +163,6 @@ export function EquipmentDialog({
         tags: [],
       });
     } catch (error) {
-      console.error("Failed to create equipment:", error);
       alert("Failed to create equipment. Please try again.");
     } finally {
       setLoading(false);

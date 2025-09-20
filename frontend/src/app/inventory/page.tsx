@@ -48,8 +48,7 @@ export default function InventoryDashboardPage() {
       const dashboardData = await inventoryService.getInventoryDashboard();
       setStats(dashboardData);
     } catch (error) {
-      console.error("Error fetching inventory data:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };

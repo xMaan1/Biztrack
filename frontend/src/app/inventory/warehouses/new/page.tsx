@@ -69,7 +69,6 @@ export default function NewWarehousePage() {
       await inventoryService.createWarehouse(warehouseData);
       router.push("/inventory/warehouses");
     } catch (error) {
-      console.error("Error creating warehouse:", error);
       alert("Failed to create warehouse. Please try again.");
     } finally {
       setLoading(false);

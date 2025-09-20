@@ -196,8 +196,7 @@ export default function ProjectsPage() {
       const response = await apiService.getProjects();
       setProjects(response.projects);
     } catch (error) {
-      console.error("Failed to fetch projects:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
@@ -227,8 +226,7 @@ export default function ProjectsPage() {
         setDeleteDialogOpen(false);
         setProjectToDelete(null);
       } catch (error) {
-        console.error("Failed to delete project:", error);
-      }
+        }
     }
   };
 

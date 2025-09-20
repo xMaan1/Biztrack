@@ -95,8 +95,7 @@ export default function AdminPlansPage() {
       const response = await apiService.get("/plans");
       setPlans(response.plans || []);
     } catch (error) {
-      console.error("Error fetching plans:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
@@ -115,8 +114,7 @@ export default function AdminPlansPage() {
         totalSubscriptions: 0 // This would need a separate API call
       });
     } catch (error) {
-      console.error("Error calculating plan stats:", error);
-    }
+      }
   };
 
   const handleActivatePlan = async (planId: string) => {
@@ -124,8 +122,7 @@ export default function AdminPlansPage() {
       await apiService.put(`/plans/${planId}/activate`);
       await fetchPlans(); // This will trigger stats recalculation via useEffect
     } catch (error) {
-      console.error("Error activating plan:", error);
-    }
+      }
   };
 
   const handleDeactivatePlan = async (planId: string) => {
@@ -133,8 +130,7 @@ export default function AdminPlansPage() {
       await apiService.put(`/plans/${planId}/deactivate`);
       await fetchPlans(); // This will trigger stats recalculation via useEffect
     } catch (error) {
-      console.error("Error deactivating plan:", error);
-    }
+      }
   };
 
   const handleUpdatePlan = async (planData: Partial<Plan>) => {
@@ -147,8 +143,7 @@ export default function AdminPlansPage() {
       setIsEditDialogOpen(false);
       setSelectedPlan(null);
     } catch (error) {
-      console.error("Error updating plan:", error);
-    } finally {
+      } finally {
       setIsUpdating(false);
     }
   };

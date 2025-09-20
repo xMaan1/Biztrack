@@ -123,8 +123,7 @@ export default function ProjectDialog({
           ),
         );
       } catch (error) {
-        console.error("Error fetching users:", error);
-      } finally {
+        } finally {
         setLoadingUsers(false);
       }
     };
@@ -208,8 +207,7 @@ export default function ProjectDialog({
       onSave(savedProject);
       onClose();
     } catch (error) {
-      console.error("Error saving project:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };

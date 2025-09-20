@@ -80,7 +80,6 @@ export class ApiService {
         try {
           return JSON.parse(stored);
         } catch (error) {
-          console.error("Error parsing stored tenants:", error);
           localStorage.removeItem("userTenants");
         }
       }
@@ -107,7 +106,6 @@ export class ApiService {
       }
       return [];
     } catch (error) {
-      console.error("Failed to refresh tenants:", error);
       throw error;
     }
   }
@@ -157,11 +155,8 @@ export class ApiService {
       (response) => response,
       async (error) => {
         if (error.response?.status === 401) {
-          console.log("401 error detected, attempting token refresh...");
-          
           // Prevent infinite retry loops
           if (error.config._retry) {
-            console.error("Token refresh retry limit reached, clearing session");
             this.sessionManager.clearSession();
             return Promise.reject(error);
           }
@@ -169,14 +164,12 @@ export class ApiService {
           // Try to refresh the token first
           const refreshSuccess = await this.sessionManager.refreshAccessToken();
           if (refreshSuccess) {
-            console.log("Token refreshed successfully, retrying original request");
             // Retry the original request with new token
             const originalRequest = error.config;
             originalRequest._retry = true; // Mark as retried
             originalRequest.headers.Authorization = `Bearer ${this.sessionManager.getToken()}`;
             return this.client(originalRequest);
           } else {
-            console.error("Token refresh failed, clearing session");
             // Refresh failed, clear session
             this.sessionManager.clearSession();
             // Don't redirect immediately, let the component handle it
@@ -251,14 +244,12 @@ export class ApiService {
             this.setTenantId(tenantsResponse.tenants[0].id);
           }
         } catch (tenantError) {
-          console.warn("Could not fetch tenants:", tenantError);
           // Continue without tenant - some endpoints might still work
         }
       }
 
       return response;
     } catch (error) {
-      console.error("Login API error:", error);
       throw error;
     }
   }
@@ -598,7 +589,6 @@ export class ApiService {
       const response = await this.client.get("/sales/dashboard");
       return response.data;
     } catch (error) {
-      console.error("Error fetching sales dashboard:", error);
       throw error;
     }
   }
@@ -617,7 +607,6 @@ export class ApiService {
       const response = await this.client.get("/sales/leads", { params });
       return response.data;
     } catch (error) {
-      console.error("Error fetching leads:", error);
       throw error;
     }
   }
@@ -627,7 +616,6 @@ export class ApiService {
       const response = await this.client.post("/sales/leads", leadData);
       return response.data;
     } catch (error) {
-      console.error("Error creating lead:", error);
       throw error;
     }
   }
@@ -640,7 +628,6 @@ export class ApiService {
       );
       return response.data;
     } catch (error) {
-      console.error("Error updating lead:", error);
       throw error;
     }
   }
@@ -650,7 +637,6 @@ export class ApiService {
       const response = await this.client.delete(`/sales/leads/${leadId}`);
       return response.data;
     } catch (error) {
-      console.error("Error deleting lead:", error);
       throw error;
     }
   }
@@ -668,7 +654,6 @@ export class ApiService {
       const response = await this.client.get("/sales/contacts", { params });
       return response.data;
     } catch (error) {
-      console.error("Error fetching contacts:", error);
       throw error;
     }
   }
@@ -678,7 +663,6 @@ export class ApiService {
       const response = await this.client.post("/sales/contacts", contactData);
       return response.data;
     } catch (error) {
-      console.error("Error creating contact:", error);
       throw error;
     }
   }
@@ -691,7 +675,6 @@ export class ApiService {
       );
       return response.data;
     } catch (error) {
-      console.error("Error updating contact:", error);
       throw error;
     }
   }
@@ -701,7 +684,6 @@ export class ApiService {
       const response = await this.client.delete(`/sales/contacts/${contactId}`);
       return response.data;
     } catch (error) {
-      console.error("Error deleting contact:", error);
       throw error;
     }
   }
@@ -718,7 +700,6 @@ export class ApiService {
       const response = await this.client.get("/sales/companies", { params });
       return response.data;
     } catch (error) {
-      console.error("Error fetching companies:", error);
       throw error;
     }
   }
@@ -728,7 +709,6 @@ export class ApiService {
       const response = await this.client.post("/sales/companies", companyData);
       return response.data;
     } catch (error) {
-      console.error("Error creating company:", error);
       throw error;
     }
   }
@@ -741,7 +721,6 @@ export class ApiService {
       );
       return response.data;
     } catch (error) {
-      console.error("Error updating company:", error);
       throw error;
     }
   }
@@ -753,7 +732,6 @@ export class ApiService {
       );
       return response.data;
     } catch (error) {
-      console.error("Error deleting company:", error);
       throw error;
     }
   }
@@ -773,7 +751,6 @@ export class ApiService {
       });
       return response.data;
     } catch (error) {
-      console.error("Error fetching opportunities:", error);
       throw error;
     }
   }
@@ -786,7 +763,6 @@ export class ApiService {
       );
       return response.data;
     } catch (error) {
-      console.error("Error creating opportunity:", error);
       throw error;
     }
   }
@@ -802,7 +778,6 @@ export class ApiService {
       );
       return response.data;
     } catch (error) {
-      console.error("Error updating opportunity:", error);
       throw error;
     }
   }
@@ -814,7 +789,6 @@ export class ApiService {
       );
       return response.data;
     } catch (error) {
-      console.error("Error deleting opportunity:", error);
       throw error;
     }
   }
@@ -831,7 +805,6 @@ export class ApiService {
       const response = await this.client.get("/sales/quotes", { params });
       return response.data;
     } catch (error) {
-      console.error("Error fetching quotes:", error);
       throw error;
     }
   }
@@ -841,7 +814,6 @@ export class ApiService {
       const response = await this.client.post("/sales/quotes", quoteData);
       return response.data;
     } catch (error) {
-      console.error("Error creating quote:", error);
       throw error;
     }
   }
@@ -854,7 +826,6 @@ export class ApiService {
       );
       return response.data;
     } catch (error) {
-      console.error("Error updating quote:", error);
       throw error;
     }
   }
@@ -864,7 +835,6 @@ export class ApiService {
       const response = await this.client.delete(`/sales/quotes/${quoteId}`);
       return response.data;
     } catch (error) {
-      console.error("Error deleting quote:", error);
       throw error;
     }
   }
@@ -881,7 +851,6 @@ export class ApiService {
       const response = await this.client.get("/sales/contracts", { params });
       return response.data;
     } catch (error) {
-      console.error("Error fetching contracts:", error);
       throw error;
     }
   }
@@ -891,7 +860,6 @@ export class ApiService {
       const response = await this.client.post("/sales/contracts", contractData);
       return response.data;
     } catch (error) {
-      console.error("Error creating contract:", error);
       throw error;
     }
   }
@@ -904,7 +872,6 @@ export class ApiService {
       );
       return response.data;
     } catch (error) {
-      console.error("Error updating contract:", error);
       throw error;
     }
   }
@@ -916,7 +883,6 @@ export class ApiService {
       );
       return response.data;
     } catch (error) {
-      console.error("Error deleting contract:", error);
       throw error;
     }
   }
@@ -936,7 +902,6 @@ export class ApiService {
       const response = await this.client.get("/sales/activities", { params });
       return response.data;
     } catch (error) {
-      console.error("Error fetching sales activities:", error);
       throw error;
     }
   }
@@ -949,7 +914,6 @@ export class ApiService {
       );
       return response.data;
     } catch (error) {
-      console.error("Error creating sales activity:", error);
       throw error;
     }
   }
@@ -969,7 +933,6 @@ export class ApiService {
       });
       return response.data;
     } catch (error) {
-      console.error("Error fetching revenue analytics:", error);
       throw error;
     }
   }
@@ -979,7 +942,6 @@ export class ApiService {
       const response = await this.client.get("/sales/analytics/conversion");
       return response.data;
     } catch (error) {
-      console.error("Error fetching conversion analytics:", error);
       throw error;
     }
   }
@@ -999,7 +961,6 @@ export class ApiService {
       const response = await this.client.get("/work-orders", { params });
       return response.data;
     } catch (error) {
-      console.error("Error fetching work orders:", error);
       throw error;
     }
   }
@@ -1009,7 +970,6 @@ export class ApiService {
       const response = await this.client.get("/work-orders/stats");
       return response.data;
     } catch (error) {
-      console.error("Error fetching work order stats:", error);
       throw error;
     }
   }
@@ -1019,7 +979,6 @@ export class ApiService {
       const response = await this.client.get(`/work-orders/${workOrderId}`);
       return response.data;
     } catch (error) {
-      console.error("Error fetching work order:", error);
       throw error;
     }
   }
@@ -1029,7 +988,6 @@ export class ApiService {
       const response = await this.client.post("/work-orders", workOrderData);
       return response.data;
     } catch (error) {
-      console.error("Error creating work order:", error);
       throw error;
     }
   }
@@ -1042,7 +1000,6 @@ export class ApiService {
       );
       return response.data;
     } catch (error) {
-      console.error("Error updating work order:", error);
       throw error;
     }
   }
@@ -1052,7 +1009,6 @@ export class ApiService {
       const response = await this.client.delete(`/work-orders/${workOrderId}`);
       return response.data;
     } catch (error) {
-      console.error("Error deleting work order:", error);
       throw error;
     }
   }
@@ -1068,7 +1024,6 @@ export class ApiService {
       const response = await this.client.get("/admin/tenants", { params });
       return response.data;
     } catch (error) {
-      console.error("Error fetching all tenants:", error);
       throw error;
     }
   }
@@ -1078,7 +1033,6 @@ export class ApiService {
       const response = await this.client.get(`/admin/tenants/${tenantId}`);
       return response.data;
     } catch (error) {
-      console.error("Error fetching tenant details:", error);
       throw error;
     }
   }
@@ -1090,7 +1044,6 @@ export class ApiService {
       });
       return response.data;
     } catch (error) {
-      console.error("Error updating tenant status:", error);
       throw error;
     }
   }
@@ -1100,7 +1053,6 @@ export class ApiService {
       const response = await this.client.get("/admin/stats");
       return response.data;
     } catch (error) {
-      console.error("Error fetching admin stats:", error);
       throw error;
     }
   }

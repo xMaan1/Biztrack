@@ -108,8 +108,7 @@ export default function PurchaseOrdersPage() {
         }));
       }
     } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
@@ -131,8 +130,7 @@ export default function PurchaseOrdersPage() {
         await inventoryService.deletePurchaseOrder(id);
         fetchData();
       } catch (error) {
-        console.error("Error deleting purchase order:", error);
-      }
+        }
     }
   };
 
@@ -193,7 +191,6 @@ export default function PurchaseOrdersPage() {
       resetForm();
       fetchData();
     } catch (error) {
-      console.error("Error creating purchase order:", error);
       alert("Failed to create purchase order. Please try again.");
     } finally {
       setIsSubmitting(false);

@@ -108,8 +108,7 @@ export default function ReceivingPage() {
         }));
       }
     } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
@@ -135,8 +134,7 @@ export default function ReceivingPage() {
         await inventoryService.deleteReceiving(id);
         fetchData();
       } catch (error) {
-        console.error("Error deleting receiving:", error);
-      }
+        }
     }
   };
 
@@ -200,7 +198,6 @@ export default function ReceivingPage() {
       resetForm();
       fetchData();
     } catch (error) {
-      console.error("Error processing receiving:", error);
       alert("Failed to process receiving. Please try again.");
     } finally {
       setIsSubmitting(false);

@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func, desc
+from sqlalchemy.exc import IntegrityError
 from .crm_models import Lead, Contact, Company, Opportunity, SalesActivity, Customer
 from .core_models import User
 from .database_config import get_db
@@ -10,29 +11,55 @@ from .database_config import get_db
 # Customer CRUD Operations
 def create_customer(db: Session, customer_data: Dict[str, Any], tenant_id: str) -> Customer:
     """Create a new customer"""
-    # Generate unique customer ID
-    customer_data["customerId"] = generate_customer_id(db, tenant_id)
-    customer_data["tenant_id"] = tenant_id
-    customer_data["createdAt"] = datetime.utcnow()
-    customer_data["updatedAt"] = datetime.utcnow()
-    
-    # Convert empty strings to None for optional fields to avoid unique constraint violations
-    optional_fields = ['cnic', 'phone', 'mobile', 'address', 'city', 'state', 'postalCode', 'notes']
-    for field in optional_fields:
-        if field in customer_data and customer_data[field] == '':
-            customer_data[field] = None
-    
-    # Handle UUID fields properly - remove None values for UUID fields
-    uuid_fields = ['assignedToId']
-    for field in uuid_fields:
-        if field in customer_data and customer_data[field] is None:
-            del customer_data[field]
-    
-    customer = Customer(**customer_data)
-    db.add(customer)
-    db.commit()
-    db.refresh(customer)
-    return customer
+    try:
+        # Generate unique customer ID
+        customer_data["customerId"] = generate_customer_id(db, tenant_id)
+        customer_data["tenant_id"] = tenant_id
+        customer_data["createdAt"] = datetime.utcnow()
+        customer_data["updatedAt"] = datetime.utcnow()
+        
+        # Convert empty strings to None for optional fields to avoid unique constraint violations
+        optional_fields = ['cnic', 'phone', 'mobile', 'address', 'city', 'state', 'postalCode', 'notes']
+        for field in optional_fields:
+            if field in customer_data and customer_data[field] == '':
+                customer_data[field] = None
+        
+        # Handle UUID fields properly - remove None values for UUID fields
+        uuid_fields = ['assignedToId']
+        for field in uuid_fields:
+            if field in customer_data and customer_data[field] is None:
+                del customer_data[field]
+        
+        # Check for existing customer with same CNIC if CNIC is provided
+        if customer_data.get('cnic'):
+            existing_customer = get_customer_by_cnic(db, customer_data['cnic'], tenant_id)
+            if existing_customer:
+                raise ValueError(f"Customer with CNIC '{customer_data['cnic']}' already exists")
+        
+        # Check for existing customer with same email
+        if customer_data.get('email'):
+            existing_customer = get_customer_by_email(db, customer_data['email'], tenant_id)
+            if existing_customer:
+                raise ValueError(f"Customer with email '{customer_data['email']}' already exists")
+        
+        customer = Customer(**customer_data)
+        db.add(customer)
+        db.commit()
+        db.refresh(customer)
+        return customer
+        
+    except IntegrityError as e:
+        db.rollback()
+        error_msg = str(e.orig)
+        if "cnic" in error_msg.lower():
+            raise ValueError("Customer with this CNIC already exists")
+        elif "email" in error_msg.lower():
+            raise ValueError("Customer with this email already exists")
+        else:
+            raise ValueError(f"Database constraint violation: {error_msg}")
+    except Exception as e:
+        db.rollback()
+        raise
 
 def get_customer_by_id(db: Session, customer_id: str, tenant_id: str) -> Optional[Customer]:
     """Get customer by ID"""
@@ -40,7 +67,13 @@ def get_customer_by_id(db: Session, customer_id: str, tenant_id: str) -> Optiona
         and_(Customer.id == customer_id, Customer.tenant_id == tenant_id)
     ).first()
 
-def get_customer_by_email(email: str, db: Session, tenant_id: str) -> Optional[Customer]:
+def get_customer_by_cnic(db: Session, cnic: str, tenant_id: str) -> Optional[Customer]:
+    """Get customer by CNIC"""
+    return db.query(Customer).filter(
+        and_(Customer.cnic == cnic, Customer.tenant_id == tenant_id)
+    ).first()
+
+def get_customer_by_email(db: Session, email: str, tenant_id: str) -> Optional[Customer]:
     """Get customer by email"""
     return db.query(Customer).filter(
         and_(Customer.email == email.lower(), Customer.tenant_id == tenant_id)
@@ -80,31 +113,57 @@ def get_customers(
 
 def update_customer(db: Session, customer_id: str, customer_data: Dict[str, Any], tenant_id: str) -> Optional[Customer]:
     """Update customer"""
-    customer = get_customer_by_id(db, customer_id, tenant_id)
-    if not customer:
-        return None
-    
-    customer_data["updatedAt"] = datetime.utcnow()
-    
-    # Convert empty strings to None for optional fields to avoid unique constraint violations
-    optional_fields = ['cnic', 'phone', 'mobile', 'address', 'city', 'state', 'postalCode', 'notes']
-    for field in optional_fields:
-        if field in customer_data and customer_data[field] == '':
-            customer_data[field] = None
-    
-    # Handle UUID fields properly - remove None values for UUID fields
-    uuid_fields = ['assignedToId']
-    for field in uuid_fields:
-        if field in customer_data and customer_data[field] is None:
-            del customer_data[field]
-    
-    for field, value in customer_data.items():
-        if hasattr(customer, field):
-            setattr(customer, field, value)
-    
-    db.commit()
-    db.refresh(customer)
-    return customer
+    try:
+        customer = get_customer_by_id(db, customer_id, tenant_id)
+        if not customer:
+            return None
+        
+        customer_data["updatedAt"] = datetime.utcnow()
+        
+        # Convert empty strings to None for optional fields to avoid unique constraint violations
+        optional_fields = ['cnic', 'phone', 'mobile', 'address', 'city', 'state', 'postalCode', 'notes']
+        for field in optional_fields:
+            if field in customer_data and customer_data[field] == '':
+                customer_data[field] = None
+        
+        # Handle UUID fields properly - remove None values for UUID fields
+        uuid_fields = ['assignedToId']
+        for field in uuid_fields:
+            if field in customer_data and customer_data[field] is None:
+                del customer_data[field]
+        
+        # Check for existing customer with same CNIC if CNIC is being updated
+        if customer_data.get('cnic') and customer_data['cnic'] != customer.cnic:
+            existing_customer = get_customer_by_cnic(db, customer_data['cnic'], tenant_id)
+            if existing_customer and existing_customer.id != customer_id:
+                raise ValueError(f"Customer with CNIC '{customer_data['cnic']}' already exists")
+        
+        # Check for existing customer with same email if email is being updated
+        if customer_data.get('email') and customer_data['email'] != customer.email:
+            existing_customer = get_customer_by_email(db, customer_data['email'], tenant_id)
+            if existing_customer and existing_customer.id != customer_id:
+                raise ValueError(f"Customer with email '{customer_data['email']}' already exists")
+        
+        for field, value in customer_data.items():
+            if hasattr(customer, field):
+                setattr(customer, field, value)
+        
+        db.commit()
+        db.refresh(customer)
+        return customer
+        
+    except IntegrityError as e:
+        db.rollback()
+        error_msg = str(e.orig)
+        if "cnic" in error_msg.lower():
+            raise ValueError("Customer with this CNIC already exists")
+        elif "email" in error_msg.lower():
+            raise ValueError("Customer with this email already exists")
+        else:
+            raise ValueError(f"Database constraint violation: {error_msg}")
+    except Exception as e:
+        db.rollback()
+        raise
 
 def delete_customer(db: Session, customer_id: str, tenant_id: str) -> bool:
     """Delete customer"""

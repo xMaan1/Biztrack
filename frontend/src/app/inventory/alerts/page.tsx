@@ -102,8 +102,7 @@ export default function AlertsPage() {
         }));
       }
     } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
@@ -113,8 +112,7 @@ export default function AlertsPage() {
       const stats = await inventoryService.getInventoryDashboard();
       setDashboardStats(stats);
     } catch (error) {
-      console.error("Error fetching alerts:", error);
-    }
+      }
   };
 
   const filteredAlerts =
@@ -180,7 +178,6 @@ export default function AlertsPage() {
       resetForm();
       fetchData(); // Refresh alerts to see if any are resolved
     } catch (error) {
-      console.error("Error creating purchase order:", error);
       alert("Failed to create purchase order. Please try again.");
     } finally {
       setIsSubmitting(false);

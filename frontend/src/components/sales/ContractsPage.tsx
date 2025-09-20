@@ -101,8 +101,7 @@ export default function ContractsPage() {
       setCompanies(companiesData.companies || []);
     } catch (error) {
       toast.error("Failed to fetch data");
-      console.error(error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
@@ -134,8 +133,7 @@ export default function ContractsPage() {
       fetchData();
     } catch (error) {
       toast.error("Failed to create contract");
-      console.error(error);
-    }
+      }
   };
 
   const handleUpdateContract = async () => {
@@ -148,8 +146,7 @@ export default function ContractsPage() {
       fetchData();
     } catch (error) {
       toast.error("Failed to update contract");
-      console.error(error);
-    }
+      }
   };
 
   const handleDeleteContract = async (id: string) => {
@@ -160,8 +157,7 @@ export default function ContractsPage() {
       fetchData();
     } catch (error) {
       toast.error("Failed to delete contract");
-      console.error(error);
-    }
+      }
   };
 
   const getStatusColor = (status: string) => {

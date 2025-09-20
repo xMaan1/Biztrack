@@ -101,8 +101,7 @@ export default function CRMCompaniesPage() {
       const response = await CRMService.getCompanies(filters, 1, 100);
       setCompanies(response.companies);
     } catch (err) {
-      console.error("Companies load error:", err);
-    } finally {
+      } finally {
       setLoading(false);
     }
   }, [filters]);
@@ -127,8 +126,7 @@ export default function CRMCompaniesPage() {
     try {
       await createCustomIndustry(name, description);
     } catch (error) {
-      console.error("Failed to create custom industry:", error);
-    }
+      }
   };
 
   const resetForm = () => {
@@ -180,7 +178,6 @@ export default function CRMCompaniesPage() {
         setTimeout(() => setSuccessMessage(""), 3000);
       }
     } catch (error) {
-      console.error("Error saving company:", error);
       setErrorMessage("Error saving company. Please try again.");
       setTimeout(() => setErrorMessage(""), 5000);
     } finally {
@@ -229,7 +226,6 @@ export default function CRMCompaniesPage() {
       loadCompanies();
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
-      console.error("Error deleting company:", error);
       setErrorMessage("Error deleting company. Please try again.");
       setTimeout(() => setErrorMessage(""), 5000);
     } finally {

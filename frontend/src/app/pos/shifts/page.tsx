@@ -67,8 +67,7 @@ const POSShifts = () => {
       const response = await apiService.get("/pos/shifts");
       setShifts(response.shifts || []);
     } catch (error) {
-      console.error("Error fetching shifts:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
@@ -87,8 +86,7 @@ const POSShifts = () => {
       setIsNewShiftOpen(false);
       fetchShifts();
     } catch (error) {
-      console.error("Error opening shift:", error);
-    }
+      }
   };
 
   const handleCloseShift = async (shiftId: string) => {
@@ -102,8 +100,7 @@ const POSShifts = () => {
       });
       fetchShifts();
     } catch (error) {
-      console.error("Error closing shift:", error);
-    }
+      }
   };
 
   const handleViewDetails = (shift: POSShift) => {

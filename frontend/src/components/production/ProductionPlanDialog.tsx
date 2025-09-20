@@ -189,8 +189,7 @@ export default function ProductionPlanDialog({
       onSuccess();
       resetForm();
     } catch (error) {
-      console.error("Error saving production plan:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };

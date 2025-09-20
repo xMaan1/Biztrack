@@ -126,8 +126,7 @@ export default function WorkOrderDialog({
       onOpenChange(false);
       resetForm();
     } catch (error) {
-      console.error("Error saving work order:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };

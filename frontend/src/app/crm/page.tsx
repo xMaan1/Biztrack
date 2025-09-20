@@ -55,8 +55,7 @@ export default function CRMDashboardPage() {
       setDashboard(data);
     } catch (err) {
       setError("Failed to load dashboard data");
-      console.error("Dashboard load error:", err);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };

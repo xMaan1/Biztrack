@@ -56,8 +56,7 @@ export default function EventsList() {
       const response = await apiService.getEvents();
       setEvents(response.events || []);
     } catch (error) {
-      console.error("Failed to load events:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
@@ -68,8 +67,7 @@ export default function EventsList() {
         await apiService.deleteEvent(id);
         setEvents(events.filter((event) => event.id !== id));
       } catch (error) {
-        console.error("Failed to delete event:", error);
-      }
+        }
     }
   };
 
@@ -79,8 +77,7 @@ export default function EventsList() {
       // Refresh events to update status
       loadEvents();
     } catch (error) {
-      console.error("Failed to join event:", error);
-    }
+      }
   };
 
   const handleLeaveEvent = async (id: string) => {
@@ -89,8 +86,7 @@ export default function EventsList() {
       // Refresh events to update status
       loadEvents();
     } catch (error) {
-      console.error("Failed to leave event:", error);
-    }
+      }
   };
 
   const handleCreateEvent = async (eventData: any) => {
@@ -101,7 +97,6 @@ export default function EventsList() {
       // Refresh events to show the new event
       loadEvents();
     } catch (error) {
-      console.error("Failed to create event:", error);
       alert("Failed to create event. Please try again.");
     } finally {
       setCreateLoading(false);
@@ -274,7 +269,7 @@ export default function EventsList() {
             <EventCard
               key={event.id}
               event={event}
-              onEdit={(event) => console.log("Edit event:", event)}
+              onEdit={(event) => }
               onDelete={handleDeleteEvent}
               onJoin={handleJoinEvent}
               onLeave={handleLeaveEvent}

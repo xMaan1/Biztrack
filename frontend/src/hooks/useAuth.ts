@@ -54,7 +54,6 @@ export function useAuth() {
           setUser(null);
         }
       } catch (error) {
-        console.error("Auth initialization error:", error);
         setUser(null);
       } finally {
         setLoading(false);
@@ -89,7 +88,6 @@ export function useAuth() {
       }
       return false;
     } catch (error) {
-      console.error("Login failed:", error);
       return false;
     } finally {
       setLoading(false);
@@ -100,8 +98,7 @@ export function useAuth() {
     try {
       await apiService.logout();
     } catch (error) {
-      console.error("Logout error:", error);
-    } finally {
+      } finally {
       const sessionManager = new SessionManager();
       setUser(null);
       setTenants([]);
@@ -121,7 +118,6 @@ export function useAuth() {
       setCurrentTenant(tenant);
       return true;
     } catch (error) {
-      console.error("Failed to switch tenant:", error);
       return false;
     }
   };

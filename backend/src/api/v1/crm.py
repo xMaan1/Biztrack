@@ -38,16 +38,23 @@ async def create_customer_endpoint(
     customer_data: CustomerCreate,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Create a new customer"""
     try:
         if not tenant_context:
             raise HTTPException(status_code=400, detail="Tenant context required")
+        
         customer = create_customer(db, customer_data.dict(), tenant_context["tenant_id"])
         return CustomerResponse.from_orm(customer)
+        
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=f"Validation error: {str(e)}")
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to create customer: {str(e)}")
 
 @router.get("/customers", response_model=List[CustomerResponse])
 async def get_customers_endpoint(
@@ -335,14 +342,17 @@ async def create_crm_contact(
     contact_data: ContactCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Create a new contact"""
     try:
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+        
         contact = Contact(
             id=str(uuid.uuid4()),
             **contact_data.dict(),
-            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"],
             createdBy=str(current_user.id),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
@@ -353,6 +363,11 @@ async def create_crm_contact(
         db.refresh(contact)
         
         return contact
+        
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=f"Validation error: {str(e)}")
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error creating contact: {str(e)}")

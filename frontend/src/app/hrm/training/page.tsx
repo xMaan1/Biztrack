@@ -113,8 +113,7 @@ export default function HRMTrainingPage() {
       setTrainings(response.training);
     } catch (err) {
       setError("Failed to load training programs");
-      console.error("Training load error:", err);
-    } finally {
+      } finally {
       setLoading(false);
     }
   }, [filters]);
@@ -124,8 +123,7 @@ export default function HRMTrainingPage() {
       const response = await HRMService.getEmployees({}, 1, 100);
       setEmployees(response.employees);
     } catch (err) {
-      console.error("Employees load error:", err);
-    }
+      }
   };
 
   const handleSearch = () => {
@@ -189,8 +187,7 @@ export default function HRMTrainingPage() {
       loadTrainings();
     } catch (err) {
       setError("Failed to save training program. Please try again.");
-      console.error("Training save error:", err);
-    } finally {
+      } finally {
       setSubmitting(false);
     }
   };
@@ -234,8 +231,7 @@ export default function HRMTrainingPage() {
       loadTrainings();
     } catch (err) {
       setError("Failed to delete training program. Please try again.");
-      console.error("Training delete error:", err);
-    } finally {
+      } finally {
       setDeleting(false);
     }
   };

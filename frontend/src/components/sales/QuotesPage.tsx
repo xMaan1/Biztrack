@@ -93,8 +93,7 @@ export default function QuotesPage() {
       setContacts(contactsData.contacts || []);
     } catch (error) {
       toast.error("Failed to fetch data");
-      console.error(error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
@@ -123,8 +122,7 @@ export default function QuotesPage() {
       fetchData();
     } catch (error) {
       toast.error("Failed to create quote");
-      console.error(error);
-    }
+      }
   };
 
   const handleUpdateQuote = async () => {
@@ -137,8 +135,7 @@ export default function QuotesPage() {
       fetchData();
     } catch (error) {
       toast.error("Failed to update quote");
-      console.error(error);
-    }
+      }
   };
 
   const handleDeleteQuote = async (id: string) => {
@@ -149,8 +146,7 @@ export default function QuotesPage() {
       fetchData();
     } catch (error) {
       toast.error("Failed to delete quote");
-      console.error(error);
-    }
+      }
   };
 
   const getStatusColor = (status: string) => {

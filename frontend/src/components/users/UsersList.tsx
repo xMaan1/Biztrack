@@ -63,7 +63,6 @@ export default function UsersList() {
       const response = await apiService.getUsers();
       setUsers(response.users || []);
     } catch (err) {
-      console.error("Failed to fetch users:", err);
       setError("Failed to load users");
     } finally {
       setLoading(false);
@@ -77,7 +76,6 @@ export default function UsersList() {
       await apiService.deleteUser(userId);
       setUsers(users.filter((u) => u.userId !== userId));
     } catch (err) {
-      console.error("Failed to delete user:", err);
       setError("Failed to delete user");
     }
   };

@@ -59,10 +59,6 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     if (!loading) {
       // If user is not authenticated and trying to access protected route
       if (!isAuthenticated && isProtectedRoute) {
-        console.log(
-          "Unauthenticated user trying to access protected route:",
-          pathname,
-        );
         router.push("/login");
         return;
       }
@@ -72,9 +68,6 @@ export default function AuthGuard({ children }: AuthGuardProps) {
         isAuthenticated &&
         (pathname === "/login" || pathname === "/signup")
       ) {
-        console.log(
-          "Authenticated user trying to access auth pages, redirecting to dashboard",
-        );
         router.push("/dashboard");
         return;
       }

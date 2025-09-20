@@ -96,14 +96,17 @@ async def create_hrm_employee(
     employee_data: EmployeeCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Create a new employee"""
     try:
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+        
         employee = Employee(
             id=str(uuid.uuid4()),
             **employee_data.dict(),
-            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"],
             createdBy=str(current_user.id),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
@@ -114,6 +117,11 @@ async def create_hrm_employee(
         db.refresh(employee)
         
         return employee
+        
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=f"Validation error: {str(e)}")
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error creating employee: {str(e)}")

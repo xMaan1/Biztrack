@@ -98,8 +98,7 @@ export default function HRMPayrollPage() {
       setPayrolls(response.payroll);
     } catch (err) {
       setError("Failed to load payroll records");
-      console.error("Payroll load error:", err);
-    } finally {
+      } finally {
       setLoading(false);
     }
   }, [filters]);
@@ -109,8 +108,7 @@ export default function HRMPayrollPage() {
       const response = await HRMService.getEmployees({}, 1, 100);
       setEmployees(response.employees);
     } catch (err) {
-      console.error("Employees load error:", err);
-    }
+      }
   }, []);
 
   useEffect(() => {
@@ -188,8 +186,7 @@ export default function HRMPayrollPage() {
       loadPayrolls();
     } catch (err) {
       setError("Failed to save payroll record. Please try again.");
-      console.error("Payroll save error:", err);
-    } finally {
+      } finally {
       setSubmitting(false);
     }
   };
@@ -239,8 +236,7 @@ export default function HRMPayrollPage() {
       loadPayrolls();
     } catch (err) {
       setError("Failed to delete payroll record. Please try again.");
-      console.error("Payroll delete error:", err);
-    } finally {
+      } finally {
       setDeleting(false);
     }
   };

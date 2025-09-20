@@ -76,8 +76,6 @@ export function InvoiceList({
       document.body.removeChild(a);
       toast.success("Invoice downloaded successfully!");
     } catch (error: any) {
-      console.error("Download error:", error);
-      
       // Check if it's a customization error
       if (error.response?.status === 400) {
         let errorMessage = "Error downloading invoice";

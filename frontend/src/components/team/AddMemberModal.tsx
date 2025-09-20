@@ -87,7 +87,6 @@ export default function AddMemberModal({
       onSuccess();
       onClose();
     } catch (err: any) {
-      console.error("Failed to invite member:", err);
       setError(err.response?.data?.detail || "Failed to send invitation");
     } finally {
       setLoading(false);

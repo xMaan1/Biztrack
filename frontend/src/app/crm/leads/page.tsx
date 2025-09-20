@@ -101,8 +101,7 @@ export default function CRMLeadsPage() {
       setTotalPages(response.pagination.pages);
     } catch (err) {
       setError("Failed to load leads");
-      console.error("Leads load error:", err);
-    } finally {
+      } finally {
       setLoading(false);
     }
   }, [filters, page]);
@@ -118,8 +117,7 @@ export default function CRMLeadsPage() {
     try {
       await createCustomLeadSource(name, description);
     } catch (error) {
-      console.error("Failed to create custom lead source:", error);
-    }
+      }
   };
 
   const handleCreateLead = async () => {
@@ -143,8 +141,7 @@ export default function CRMLeadsPage() {
       });
       loadLeads();
     } catch (err) {
-      console.error("Create lead error:", err);
-    }
+      }
   };
 
   const handleUpdateLead = async () => {
@@ -154,8 +151,7 @@ export default function CRMLeadsPage() {
       setIsEditDialogOpen(false);
       loadLeads();
     } catch (err) {
-      console.error("Update lead error:", err);
-    }
+      }
   };
 
   const handleDeleteLead = async (id: string) => {
@@ -164,8 +160,7 @@ export default function CRMLeadsPage() {
         await CRMService.deleteLead(id);
         loadLeads();
       } catch (err) {
-        console.error("Delete lead error:", err);
-      }
+        }
     }
   };
 

@@ -72,7 +72,6 @@ export default function EventForm({
           setProjects(response.projects);
         }
       } catch (error) {
-        console.error("Failed to fetch projects:", error);
         // Set empty array to prevent errors
         setProjects([]);
       }
@@ -112,8 +111,7 @@ export default function EventForm({
     try {
       await createCustomEventType(name, description);
     } catch (error) {
-      console.error("Failed to create custom event type:", error);
-    }
+      }
   };
 
   const handleSubmit = (e: React.FormEvent) => {

@@ -414,7 +414,6 @@ export class LedgerService {
       const response = await apiService.post("/ledger/seed-accounts-simple");
       return response;
     } catch (error: any) {
-      console.error("❌ Error in testSeedEndpoint service:", error);
       throw error;
     }
   }
@@ -425,7 +424,6 @@ export class LedgerService {
       const response = await apiService.post("/ledger/seed-accounts");
       return response;
     } catch (error: any) {
-      console.error("❌ Error in seedDefaultAccounts service:", error);
       throw error;
     }
   }

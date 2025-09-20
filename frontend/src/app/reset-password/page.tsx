@@ -41,7 +41,6 @@ export default function ResetPasswordPage() {
         setError("No account found with this email address.");
       }
     } catch (err: any) {
-      console.error("Reset password error:", err);
       if (err.response) {
         setError(
           err.response.data?.detail ||
@@ -86,7 +85,6 @@ export default function ResetPasswordPage() {
       
       setSuccess(true);
     } catch (err: any) {
-      console.error("Password reset error:", err);
       if (err.response) {
         setError(
           err.response.data?.detail ||

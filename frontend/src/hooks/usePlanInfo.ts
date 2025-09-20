@@ -55,7 +55,6 @@ export function usePlanInfo() {
         });
       }
     } catch (err) {
-      console.error("Error fetching plan info:", err);
       setError("Failed to fetch plan information");
 
       // Fallback to workshop plan

@@ -64,7 +64,6 @@ export default function NewSupplierPage() {
       await inventoryService.createSupplier(supplierData);
       router.push("/inventory/suppliers");
     } catch (error) {
-      console.error("Error creating supplier:", error);
       alert("Failed to create supplier. Please try again.");
     } finally {
       setLoading(false);

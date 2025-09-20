@@ -166,7 +166,6 @@ export default function LandingPage() {
           // Clear the stored plan
           localStorage.removeItem("selectedPlanForSignup");
         } catch (error) {
-          console.error("Error parsing stored plan:", error);
           localStorage.removeItem("selectedPlanForSignup");
         }
       }
@@ -180,7 +179,6 @@ export default function LandingPage() {
 
       if (existingTenants && existingTenants.length > 0) {
         // User already has tenants - show message and redirect to dashboard
-        console.log("User has existing tenants, redirecting to dashboard");
         alert("You already have a workspace! Redirecting to your dashboard.");
         router.push("/dashboard");
         return;
@@ -189,7 +187,6 @@ export default function LandingPage() {
       // User has no tenants - show workspace creation modal
       setSubscriptionModal({ isOpen: true, plan });
     } catch (error) {
-      console.error("Error checking existing tenants:", error);
       // Fallback: show workspace creation modal
       setSubscriptionModal({ isOpen: true, plan });
     }
@@ -200,9 +197,8 @@ export default function LandingPage() {
     try {
       // Force refresh tenant data to get latest role information
       await apiService.refreshTenants();
-      console.log("Tenant data refreshed successfully");
     } catch (error) {
-      console.warn("Could not refresh tenant data:", error);
+      // Tenant refresh failed, continue silently
     }
   };
 
@@ -211,7 +207,7 @@ export default function LandingPage() {
       const response = await apiService.get("/public/plans");
       setPlans(response.plans || []);
     } catch (error) {
-      console.error("Error fetching plans:", error);
+      // Plans fetch failed, continue without plans
     }
   };
 
@@ -252,7 +248,6 @@ export default function LandingPage() {
           
           if (newTenant) {
             apiService.setTenantId(newTenant.id);
-            console.log("Tenant created successfully:", newTenant);
             
             // Small delay to ensure localStorage is updated
             await new Promise((resolve) => setTimeout(resolve, 100));
@@ -263,7 +258,6 @@ export default function LandingPage() {
             throw new Error("Tenant was not found after creation");
           }
         } catch (error) {
-          console.error("Could not refresh tenant data:", error);
           alert("Workspace created but there was an issue setting it up. Please refresh the page and try again.");
           return; // Don't redirect if tenant setup failed
         }
@@ -271,7 +265,6 @@ export default function LandingPage() {
         throw new Error("Tenant creation failed: " + (response.message || "Unknown error"));
       }
     } catch (error) {
-      console.error("Error creating tenant:", error);
       alert("Failed to create workspace. Please try again.");
     } finally {
       setLoading(false);

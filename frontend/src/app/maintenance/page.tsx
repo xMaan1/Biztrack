@@ -104,8 +104,7 @@ export default function MaintenancePage() {
       setEquipment(equipmentList);
       setMaintenanceReports(reports);
     } catch (error) {
-      console.error("Failed to fetch maintenance data:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };

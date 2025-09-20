@@ -64,7 +64,6 @@ export function CustomerSearch({
         const results = await InvoiceService.searchCustomers(searchQuery.trim(), 10);
         setCustomers(results);
       } catch (error) {
-        console.error("Error searching customers:", error);
         setCustomers([]);
       } finally {
         setLoading(false);

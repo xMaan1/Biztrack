@@ -93,8 +93,7 @@ export default function CRMOpportunitiesPage() {
       setOpportunities(response.opportunities);
     } catch (err) {
       setErrorMessage("Failed to load opportunities");
-      console.error("Opportunities load error:", err);
-    } finally {
+      } finally {
       setLoading(false);
     }
   }, [filters]);
@@ -145,8 +144,7 @@ export default function CRMOpportunitiesPage() {
       loadOpportunities();
     } catch (err) {
       setErrorMessage("Failed to save opportunity. Please try again.");
-      console.error("Opportunity save error:", err);
-    } finally {
+      } finally {
       setSubmitting(false);
     }
   };
@@ -189,8 +187,7 @@ export default function CRMOpportunitiesPage() {
       loadOpportunities();
     } catch (err) {
       setErrorMessage("Failed to delete opportunity. Please try again.");
-      console.error("Opportunity delete error:", err);
-    } finally {
+      } finally {
       setDeleting(false);
     }
   };

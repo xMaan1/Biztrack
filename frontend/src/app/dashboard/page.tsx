@@ -126,8 +126,7 @@ export default function DashboardPage() {
         productionEfficiency,
       });
     } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };

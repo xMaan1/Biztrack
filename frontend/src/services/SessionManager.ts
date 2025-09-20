@@ -123,7 +123,6 @@ class SessionManager {
     try {
       return JSON.parse(userData);
     } catch (error) {
-      console.error("Error parsing user data:", error);
       this.removeUser();
       return null;
     }
@@ -205,7 +204,6 @@ class SessionManager {
     try {
       const refreshToken = this.getRefreshToken();
       if (!refreshToken) {
-        console.warn("No refresh token available");
         return false;
       }
 
@@ -227,17 +225,13 @@ class SessionManager {
         // Update refresh token if provided (token rotation)
         if (data.refresh_token) {
           this.setRefreshToken(data.refresh_token);
-          console.log("Access token refreshed successfully with new refresh token");
-        } else {
-          console.log("Access token refreshed successfully");
-        }
+          } else {
+          }
         return true;
       } else {
-        console.error("Token refresh failed with status:", response.status);
         return false;
       }
     } catch (error) {
-      console.error("Error refreshing access token:", error);
       return false;
     }
   }
@@ -279,16 +273,13 @@ class SessionManager {
         
         // If token expires in less than 5 minutes, refresh it proactively
         if (timeUntilExpiration && timeUntilExpiration < 5 * 60 * 1000) {
-          console.log("Token expires soon, refreshing proactively...");
           const refreshSuccess = await this.refreshAccessToken();
           if (!refreshSuccess) {
-            console.warn("Proactive refresh failed, session may expire soon");
             // Don't clear session immediately, let the reactive refresh handle it
           }
         }
       } catch (error) {
-        console.error("Error in proactive refresh check:", error);
-      }
+        }
     };
 
     // Check every 2 minutes for proactive refresh

@@ -1087,8 +1087,13 @@ async def create_customer_endpoint(
             raise HTTPException(status_code=400, detail="Tenant context required")
         customer = create_customer(db, customer_data.dict(), tenant_context["tenant_id"])
         return CustomerResponse.from_orm(customer)
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=f"Validation error: {str(e)}")
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to create customer: {str(e)}")
 
 @router.get("/customers", response_model=List[CustomerResponse])
 async def get_customers_endpoint(

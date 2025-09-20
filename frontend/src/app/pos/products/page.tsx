@@ -98,8 +98,7 @@ const POSProducts = () => {
       const response = await apiService.get("/pos/products");
       setProducts(response.products || []);
     } catch (error) {
-      console.error("Error fetching products:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
@@ -134,8 +133,7 @@ const POSProducts = () => {
       });
       fetchProducts();
     } catch (error) {
-      console.error("Error saving product:", error);
-    }
+      }
   };
 
   const handleEdit = (product: Product) => {
@@ -164,8 +162,7 @@ const POSProducts = () => {
       await apiService.delete(`/pos/products/${productId}`);
       fetchProducts();
     } catch (error) {
-      console.error("Error deleting product:", error);
-    }
+      }
   };
 
   const resetForm = () => {

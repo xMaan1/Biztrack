@@ -93,7 +93,6 @@ export const TaskList: React.FC<TaskListProps> = ({
       setProjects(projectsRes.projects || []);
       setUsers(usersRes.users || []);
     } catch (err) {
-      console.error("Failed to load initial data:", err);
       setError("Failed to load projects and users");
     }
   };
@@ -127,7 +126,6 @@ export const TaskList: React.FC<TaskListProps> = ({
         // If response has data property
         filteredTasks = response.data;
       } else {
-        console.warn("Unexpected response structure:", response);
         filteredTasks = [];
       }
 
@@ -150,7 +148,6 @@ export const TaskList: React.FC<TaskListProps> = ({
       setTotalPages(response.pagination?.pages || 1);
       setTotalTasks(response.pagination?.total || filteredTasks.length);
     } catch (err) {
-      console.error("Failed to load tasks:", err);
       setError("Failed to load tasks");
     } finally {
       setLoading(false);
@@ -219,7 +216,6 @@ export const TaskList: React.FC<TaskListProps> = ({
       setParentTask(null);
       await loadTasks();
     } catch (err: any) {
-      console.error("Failed to save task:", err);
       setDialogError(err.response?.data?.detail || "Failed to save task");
     } finally {
       setDialogLoading(false);
@@ -233,7 +229,6 @@ export const TaskList: React.FC<TaskListProps> = ({
       await apiService.deleteTask(taskId);
       await loadTasks();
     } catch (err) {
-      console.error("Failed to delete task:", err);
       setError("Failed to delete task");
     }
   };
@@ -245,7 +240,6 @@ export const TaskList: React.FC<TaskListProps> = ({
       await apiService.deleteTask(subtaskId);
       await loadTasks();
     } catch (err) {
-      console.error("Failed to delete subtask:", err);
       setError("Failed to delete subtask");
     }
   };
@@ -255,7 +249,6 @@ export const TaskList: React.FC<TaskListProps> = ({
       await apiService.updateTask(taskId, { status });
       await loadTasks();
     } catch (err) {
-      console.error("Failed to update task status:", err);
       setError("Failed to update task status");
     }
   };

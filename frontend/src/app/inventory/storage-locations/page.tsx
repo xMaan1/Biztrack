@@ -104,8 +104,7 @@ export default function StorageLocationsPage() {
         }));
       }
     } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
@@ -135,8 +134,7 @@ export default function StorageLocationsPage() {
         await inventoryService.deleteStorageLocation(id);
         fetchData();
       } catch (error) {
-        console.error("Error deleting storage location:", error);
-      }
+        }
     }
   };
 
@@ -183,7 +181,6 @@ export default function StorageLocationsPage() {
       });
       fetchData();
     } catch (error) {
-      console.error("Error creating storage location:", error);
       alert("Failed to create storage location. Please try again.");
     } finally {
       setIsSubmitting(false);

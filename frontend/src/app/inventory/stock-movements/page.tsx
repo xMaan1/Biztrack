@@ -108,8 +108,7 @@ export default function StockMovementsPage() {
         }));
       }
     } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
@@ -138,8 +137,7 @@ export default function StockMovementsPage() {
         });
         fetchData();
       } catch (error) {
-        console.error("Error cancelling stock movement:", error);
-      }
+        }
     }
   };
 
@@ -152,8 +150,7 @@ export default function StockMovementsPage() {
         });
         fetchData();
       } catch (error) {
-        console.error("Error cancelling stock movement:", error);
-      }
+        }
     }
   };
 
@@ -174,7 +171,6 @@ export default function StockMovementsPage() {
       resetForm();
       fetchData();
     } catch (error) {
-      console.error("Error creating stock movement:", error);
       alert("Failed to create stock movement. Please try again.");
     } finally {
       setIsSubmitting(false);

@@ -146,7 +146,6 @@ export function InvoiceDialog({
             setSelectedCustomer(customer);
           })
           .catch((error) => {
-            console.error("Error fetching customer:", error);
             // If customer fetch fails, create a mock customer object
             setSelectedCustomer({
               id: invoice.customerId,
@@ -344,8 +343,7 @@ export function InvoiceDialog({
       await onSubmit(submitData);
       onOpenChange(false);
     } catch (error) {
-      console.error("Error submitting invoice:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };

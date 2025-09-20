@@ -134,24 +134,26 @@ class AuditLogger:
             # Fallback logging if audit system fails
             logging.error(f"Audit logging failed: {str(e)}")
     
-    def _sanitize_sensitive_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def _sanitize_sensitive_data(self, data: Any) -> Any:
         """Remove or mask sensitive data from audit logs"""
-        sanitized = {}
-        
-        for key, value in data.items():
-            if key.lower() in self.sensitive_fields:
-                sanitized[key] = "[REDACTED]"
-            elif isinstance(value, dict):
-                sanitized[key] = self._sanitize_sensitive_data(value)
-            elif isinstance(value, list):
-                sanitized[key] = [
-                    self._sanitize_sensitive_data(item) if isinstance(item, dict) else item
-                    for item in value
-                ]
-            else:
-                sanitized[key] = value
-        
-        return sanitized
+        if isinstance(data, dict):
+            sanitized = {}
+            for key, value in data.items():
+                if key.lower() in self.sensitive_fields:
+                    sanitized[key] = "[REDACTED]"
+                elif isinstance(value, dict):
+                    sanitized[key] = self._sanitize_sensitive_data(value)
+                elif isinstance(value, list):
+                    sanitized[key] = [
+                        self._sanitize_sensitive_data(item) for item in value
+                    ]
+                else:
+                    sanitized[key] = value
+            return sanitized
+        elif isinstance(data, list):
+            return [self._sanitize_sensitive_data(item) for item in data]
+        else:
+            return data
     
     def _store_audit_record(self, audit_record: Dict[str, Any]):
         """Store audit record in database"""

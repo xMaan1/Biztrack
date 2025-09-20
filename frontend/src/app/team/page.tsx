@@ -83,8 +83,7 @@ export default function TeamPage() {
           const parsed = JSON.parse(selectedTenant);
           tenantId = parsed.id || parsed.tenantId;
         } catch (e) {
-          console.error("Error parsing selectedTenant:", e);
-        }
+          }
       }
 
       // Method 2: From currentTenantId
@@ -108,7 +107,6 @@ export default function TeamPage() {
         setError("No tenant selected. Please select a workspace first.");
       }
     } catch (err) {
-      console.error("Failed to fetch team members:", err);
       setError("Failed to load team members");
     } finally {
       setLoading(false);

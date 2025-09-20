@@ -42,8 +42,7 @@ export default function TenantSelector({
       const response = await apiService.getMyTenants();
       setTenants(response || []);
     } catch (error) {
-      console.error("Failed to fetch tenants:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };

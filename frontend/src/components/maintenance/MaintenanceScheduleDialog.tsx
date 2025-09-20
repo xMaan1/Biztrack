@@ -78,8 +78,7 @@ export function MaintenanceScheduleDialog({
       const equipmentList = await maintenanceService.getEquipmentList(0, 100);
       setEquipment(equipmentList);
     } catch (error) {
-      console.error("Failed to fetch equipment:", error);
-    }
+      }
   };
 
   const handleInputChange = (
@@ -154,7 +153,6 @@ export function MaintenanceScheduleDialog({
         tags: [],
       });
     } catch (error) {
-      console.error("Failed to create maintenance schedule:", error);
       alert("Failed to create maintenance schedule. Please try again.");
     } finally {
       setLoading(false);

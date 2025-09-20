@@ -113,8 +113,7 @@ export default function SalesPage() {
       setLeads(leadsData.leads || []);
       setOpportunities(opportunitiesData.opportunities || []);
     } catch (error) {
-      console.error("Error loading sales data:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   }, []);
@@ -130,8 +129,7 @@ export default function SalesPage() {
     try {
       await createCustomLeadSource(name, description);
     } catch (error) {
-      console.error("Failed to create custom lead source:", error);
-    }
+      }
   };
 
   const handleCreateLead = async (e: React.FormEvent) => {
@@ -161,8 +159,7 @@ export default function SalesPage() {
       });
       loadSalesData();
     } catch (error) {
-      console.error("Error creating lead:", error);
-    }
+      }
   };
 
   const handleCreateOpportunity = async (e: React.FormEvent) => {
@@ -190,8 +187,7 @@ export default function SalesPage() {
       });
       loadSalesData();
     } catch (error) {
-      console.error("Error creating opportunity:", error);
-    }
+      }
   };
 
   const getStatusColor = (status: string) => {

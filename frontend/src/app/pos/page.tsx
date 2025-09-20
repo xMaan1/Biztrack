@@ -61,8 +61,7 @@ const POSDashboard = () => {
       setRecentTransactions(response.recentTransactions || []);
       setLowStockProducts(response.lowStockProducts || []);
     } catch (error) {
-      console.error("Error fetching POS dashboard data:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
@@ -74,8 +73,7 @@ const POSDashboard = () => {
         setOpenShift(response.shift);
       }
     } catch (error) {
-      console.error("Error checking open shift:", error);
-    }
+      }
   };
 
   const handleOpenShift = async () => {
@@ -87,8 +85,7 @@ const POSDashboard = () => {
       });
       setOpenShift(response.shift);
     } catch (error) {
-      console.error("Error opening shift:", error);
-    } finally {
+      } finally {
       setShiftLoading(false);
     }
   };
@@ -105,8 +102,7 @@ const POSDashboard = () => {
       setOpenShift(null);
       fetchDashboardData(); // Refresh dashboard data
     } catch (error) {
-      console.error("Error closing shift:", error);
-    } finally {
+      } finally {
       setShiftLoading(false);
     }
   };

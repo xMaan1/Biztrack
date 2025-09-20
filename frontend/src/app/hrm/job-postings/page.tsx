@@ -112,8 +112,7 @@ export default function HRMJobPostingsPage() {
       setJobPostings(response.jobPostings);
     } catch (err) {
       setError("Failed to load job postings");
-      console.error("Job postings load error:", err);
-    } finally {
+      } finally {
       setLoading(false);
     }
   }, [filters]);
@@ -134,8 +133,7 @@ export default function HRMJobPostingsPage() {
     try {
       await createCustomDepartment(name, description);
     } catch (error) {
-      console.error("Failed to create custom department:", error);
-    }
+      }
   };
 
   const resetForm = () => {
@@ -177,8 +175,7 @@ export default function HRMJobPostingsPage() {
       loadJobPostings();
     } catch (err) {
       setError("Failed to save job posting. Please try again.");
-      console.error("Job posting save error:", err);
-    } finally {
+      } finally {
       setSubmitting(false);
     }
   };
@@ -223,8 +220,7 @@ export default function HRMJobPostingsPage() {
       loadJobPostings();
     } catch (err) {
       setError("Failed to delete job posting. Please try again.");
-      console.error("Job posting delete error:", err);
-    } finally {
+      } finally {
       setDeleting(false);
     }
   };

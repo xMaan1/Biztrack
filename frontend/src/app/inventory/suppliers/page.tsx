@@ -53,8 +53,7 @@ export default function SuppliersPage() {
       const response = await inventoryService.getSuppliers();
       setSuppliers(response.suppliers);
     } catch (error) {
-      console.error("Error fetching suppliers:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
@@ -75,8 +74,7 @@ export default function SuppliersPage() {
         await inventoryService.deleteSupplier(id);
         fetchSuppliers();
       } catch (error) {
-        console.error("Error deleting supplier:", error);
-      }
+        }
     }
   };
 

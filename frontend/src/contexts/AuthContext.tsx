@@ -94,7 +94,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(null);
         }
       } catch (error) {
-        console.error("AuthContext - Auth initialization error:", error);
         // Clear session on error
         const sessionManager = new SessionManager();
         sessionManager.clearSession();
@@ -136,7 +135,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       return false;
     } catch (error) {
-      console.error("AuthContext - Login failed:", error);
       return false;
     } finally {
       setLoading(false);
@@ -147,8 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await apiService.logout();
     } catch (error) {
-      console.error("AuthContext - Logout error:", error);
-    } finally {
+      } finally {
       const sessionManager = new SessionManager();
       setUser(null);
       setTenants([]);
@@ -168,7 +165,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setCurrentTenant(tenant);
       return true;
     } catch (error) {
-      console.error("AuthContext - Failed to switch tenant:", error);
       return false;
     }
   };

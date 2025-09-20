@@ -69,8 +69,7 @@ const POSTransactions = () => {
       const response = await apiService.get("/pos/transactions");
       setTransactions(response.transactions || []);
     } catch (error) {
-      console.error("Error fetching transactions:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };

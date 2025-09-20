@@ -132,7 +132,6 @@ export default function ProductionPage() {
       const response = await service.getProductionPlans();
       setProductionPlans(response.production_plans);
     } catch (error) {
-      console.error("Error fetching production plans:", error);
       setProductionPlans([]);
     } finally {
       setLoading(false);
@@ -238,8 +237,7 @@ export default function ProductionPage() {
       setDeleteDialogOpen(false);
       setPlanToDelete(null);
     } catch (error) {
-      console.error("Error deleting production plan:", error);
-    }
+      }
   };
 
   const handleViewPlan = (plan: ProductionPlan) => {

@@ -49,7 +49,6 @@ export const useTasks = (options: UseTasksOptions = {}) => {
         const response = await apiService.getTasks(requestParams);
         setTasks(response.tasks || []);
       } catch (err: any) {
-        console.error("Failed to load tasks:", err);
         setError(err.response?.data?.detail || "Failed to load tasks");
       } finally {
         setLoading(false);
@@ -65,7 +64,6 @@ export const useTasks = (options: UseTasksOptions = {}) => {
         await apiService.createTask(data);
         await loadTasks();
       } catch (err: any) {
-        console.error("Failed to create task:", err);
         setError(err.response?.data?.detail || "Failed to create task");
         throw err;
       }
@@ -80,7 +78,6 @@ export const useTasks = (options: UseTasksOptions = {}) => {
         await apiService.updateTask(taskId, data);
         await loadTasks();
       } catch (err: any) {
-        console.error("Failed to update task:", err);
         setError(err.response?.data?.detail || "Failed to update task");
         throw err;
       }
@@ -95,7 +92,6 @@ export const useTasks = (options: UseTasksOptions = {}) => {
         await apiService.deleteTask(taskId);
         await loadTasks();
       } catch (err: any) {
-        console.error("Failed to delete task:", err);
         setError(err.response?.data?.detail || "Failed to delete task");
         throw err;
       }
@@ -110,7 +106,6 @@ export const useTasks = (options: UseTasksOptions = {}) => {
         await apiService.createSubtask(parentTaskId, data);
         await loadTasks();
       } catch (err: any) {
-        console.error("Failed to create subtask:", err);
         setError(err.response?.data?.detail || "Failed to create subtask");
         throw err;
       }
@@ -125,7 +120,6 @@ export const useTasks = (options: UseTasksOptions = {}) => {
         await apiService.updateTask(taskId, { status });
         await loadTasks();
       } catch (err: any) {
-        console.error("Failed to update task status:", err);
         setError(err.response?.data?.detail || "Failed to update task status");
         throw err;
       }

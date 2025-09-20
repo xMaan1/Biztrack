@@ -134,8 +134,7 @@ export default function QualityControlPage() {
       setUpcomingChecks(dashboard.upcoming_checks || []);
       setCriticalDefects(dashboard.critical_defects || []);
     } catch (error) {
-      console.error("Error loading dashboard data:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
@@ -146,8 +145,7 @@ export default function QualityControlPage() {
       const response = await service.getQualityChecks();
       setQualityChecks(response.quality_checks);
     } catch (error) {
-      console.error("Error loading quality checks:", error);
-    }
+      }
   };
 
   const getStatusIcon = (status: QualityStatus) => {

@@ -139,8 +139,7 @@ const POSReports = () => {
       );
       setSalesReport(response);
     } catch (error) {
-      console.error("Error fetching sales report:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
@@ -157,8 +156,7 @@ const POSReports = () => {
       );
       setInventoryReport(response);
     } catch (error) {
-      console.error("Error fetching inventory report:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
@@ -176,8 +174,7 @@ const POSReports = () => {
       );
       setShiftsReport(response);
     } catch (error) {
-      console.error("Error fetching shifts report:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };

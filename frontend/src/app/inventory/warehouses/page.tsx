@@ -53,8 +53,7 @@ export default function WarehousesPage() {
       const response = await inventoryService.getWarehouses();
       setWarehouses(response.warehouses);
     } catch (error) {
-      console.error("Error fetching warehouses:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
@@ -72,8 +71,7 @@ export default function WarehousesPage() {
         await inventoryService.deleteWarehouse(id);
         fetchWarehouses();
       } catch (error) {
-        console.error("Error deleting warehouse:", error);
-      }
+        }
     }
   };
 

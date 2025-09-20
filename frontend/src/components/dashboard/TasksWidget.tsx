@@ -45,7 +45,6 @@ export default function TasksWidget() {
       });
       setTasks(response.tasks || []);
     } catch (err) {
-      console.error("Failed to fetch tasks:", err);
       setError("Failed to load tasks");
     } finally {
       setLoading(false);

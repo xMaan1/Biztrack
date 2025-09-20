@@ -99,8 +99,7 @@ export default function CRMContactsPage() {
       const response = await CRMService.getContacts(filters, 1, 100);
       setContacts(response.contacts);
     } catch (err) {
-      console.error("Contacts load error:", err);
-    } finally {
+      } finally {
       setLoading(false);
     }
   }, [filters]);
@@ -110,8 +109,7 @@ export default function CRMContactsPage() {
       const response = await CRMService.getCompanies({}, 1, 100);
       setCompanies(response.companies || []);
     } catch (err) {
-      console.error("Companies load error:", err);
-    }
+      }
   }, []);
 
   const handleSearch = () => {
@@ -130,8 +128,7 @@ export default function CRMContactsPage() {
     try {
       await createCustomContactType(name, description);
     } catch (error) {
-      console.error("Failed to create custom contact type:", error);
-    }
+      }
   };
 
   const resetForm = () => {
@@ -167,8 +164,7 @@ export default function CRMContactsPage() {
     try {
       if (editingContact) {
         // TODO: Implement update functionality
-        console.log("Update contact:", editingContact.id, formData);
-      } else {
+        } else {
         await CRMService.createContact(formData);
         setSuccessMessage("Contact created successfully!");
         setShowCreateDialog(false);
@@ -177,7 +173,6 @@ export default function CRMContactsPage() {
         setTimeout(() => setSuccessMessage(""), 3000);
       }
     } catch (error) {
-      console.error("Error saving contact:", error);
       setErrorMessage("Error saving contact. Please try again.");
       setTimeout(() => setErrorMessage(""), 5000);
     } finally {
@@ -225,7 +220,6 @@ export default function CRMContactsPage() {
       loadContacts();
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
-      console.error("Error deleting contact:", error);
       setErrorMessage("Error deleting contact. Please try again.");
       setTimeout(() => setErrorMessage(""), 5000);
     } finally {

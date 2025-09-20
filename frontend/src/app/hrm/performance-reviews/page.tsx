@@ -109,8 +109,7 @@ export default function HRMPerformanceReviewsPage() {
       setPerformanceReviews(response.reviews);
     } catch (err) {
       setError("Failed to load performance reviews");
-      console.error("Performance reviews load error:", err);
-    } finally {
+      } finally {
       setLoading(false);
     }
   }, [filters]);
@@ -120,8 +119,7 @@ export default function HRMPerformanceReviewsPage() {
       const response = await HRMService.getEmployees({}, 1, 100);
       setEmployees(response.employees);
     } catch (err) {
-      console.error("Employees load error:", err);
-    }
+      }
   };
 
   const handleSearch = () => {
@@ -186,8 +184,7 @@ export default function HRMPerformanceReviewsPage() {
       loadPerformanceReviews();
     } catch (err) {
       setError("Failed to save performance review. Please try again.");
-      console.error("Performance review save error:", err);
-    } finally {
+      } finally {
       setSubmitting(false);
     }
   };
@@ -234,8 +231,7 @@ export default function HRMPerformanceReviewsPage() {
       loadPerformanceReviews();
     } catch (err) {
       setError("Failed to delete performance review. Please try again.");
-      console.error("Performance review delete error:", err);
-    } finally {
+      } finally {
       setDeleting(false);
     }
   };

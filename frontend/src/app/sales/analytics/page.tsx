@@ -62,8 +62,7 @@ export default function SalesAnalyticsPage() {
       setContacts(contactsResponse.contacts || []);
       setCompanies(companiesResponse.companies || []);
     } catch (error) {
-      console.error("Error loading analytics data:", error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };

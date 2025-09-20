@@ -73,8 +73,7 @@ const POSSale = () => {
       const response = await apiService.get("/pos/products");
       setProducts(response.products || []);
     } catch (error) {
-      console.error("Error fetching products:", error);
-    }
+      }
   };
 
   const searchProducts = async (query: string) => {
@@ -84,8 +83,7 @@ const POSSale = () => {
       const response = await apiService.get(`/pos/products/search?q=${query}`);
       setProducts(response.products || []);
     } catch (error) {
-      console.error("Error searching products:", error);
-    }
+      }
   };
 
   const addToCart = (product: Product) => {
@@ -184,7 +182,6 @@ const POSSale = () => {
       clearCart();
       alert("Transaction completed successfully!");
     } catch (error) {
-      console.error("Error creating transaction:", error);
       alert("Error creating transaction. Please try again.");
     } finally {
       setLoading(false);
