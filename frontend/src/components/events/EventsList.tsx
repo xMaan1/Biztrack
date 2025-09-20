@@ -269,7 +269,10 @@ export default function EventsList() {
             <EventCard
               key={event.id}
               event={event}
-              onEdit={(event) => }
+              onEdit={(event) => {
+                // TODO: Implement edit functionality
+                console.log('Edit event:', event);
+              }}
               onDelete={handleDeleteEvent}
               onJoin={handleJoinEvent}
               onLeave={handleLeaveEvent}
