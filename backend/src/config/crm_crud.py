@@ -155,7 +155,7 @@ def get_customer_stats(db: Session, tenant_id: str) -> Dict[str, Any]:
 
 def generate_customer_id(db: Session, tenant_id: str) -> str:
     """Generate unique customer ID"""
-    # Get the last customer ID for this tenant
+    # Get the highest customer ID number for this tenant
     last_customer = db.query(Customer).filter(
         Customer.tenant_id == tenant_id
     ).order_by(desc(Customer.customerId)).first()
@@ -170,8 +170,27 @@ def generate_customer_id(db: Session, tenant_id: str) -> str:
     else:
         new_number = 1
     
-    # Format as CUST001, CUST002, etc.
-    return f"CUST{new_number:03d}"
+    # Ensure the generated ID is unique by checking if it exists
+    max_attempts = 1000  # Prevent infinite loop
+    attempts = 0
+    
+    while attempts < max_attempts:
+        candidate_id = f"CUST{new_number:03d}"
+        
+        # Check if this ID already exists for this tenant
+        existing_customer = db.query(Customer).filter(
+            Customer.tenant_id == tenant_id,
+            Customer.customerId == candidate_id
+        ).first()
+        
+        if not existing_customer:
+            return candidate_id
+        
+        new_number += 1
+        attempts += 1
+    
+    # Fallback: use UUID-based ID if we can't find a unique sequential ID
+    return f"CUST{str(uuid.uuid4())[:8].upper()}"
 
 def search_customers(
     db: Session, 
