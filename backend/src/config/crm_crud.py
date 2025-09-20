@@ -22,6 +22,12 @@ def create_customer(db: Session, customer_data: Dict[str, Any], tenant_id: str) 
         if field in customer_data and customer_data[field] == '':
             customer_data[field] = None
     
+    # Handle UUID fields properly - remove None values for UUID fields
+    uuid_fields = ['assignedToId']
+    for field in uuid_fields:
+        if field in customer_data and customer_data[field] is None:
+            del customer_data[field]
+    
     customer = Customer(**customer_data)
     db.add(customer)
     db.commit()
@@ -85,6 +91,12 @@ def update_customer(db: Session, customer_id: str, customer_data: Dict[str, Any]
     for field in optional_fields:
         if field in customer_data and customer_data[field] == '':
             customer_data[field] = None
+    
+    # Handle UUID fields properly - remove None values for UUID fields
+    uuid_fields = ['assignedToId']
+    for field in uuid_fields:
+        if field in customer_data and customer_data[field] is None:
+            del customer_data[field]
     
     for field, value in customer_data.items():
         if hasattr(customer, field):
