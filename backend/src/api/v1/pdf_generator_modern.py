@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 import requests
 from PIL import Image as PILImage
 import base64
+from ...core.currency import format_currency
 
 FRONTEND_COLORS = {
     'primary': '#1e40af',
@@ -366,7 +367,7 @@ def create_vehicle_section(invoice, customization: Optional[Dict[str, Any]], sty
     elements.append(Spacer(1, 5))
     return elements
 
-def create_items_table(invoice, styles: Dict[str, ParagraphStyle], colors: Dict[str, tuple]) -> List:
+def create_items_table(invoice, styles: Dict[str, ParagraphStyle], colors: Dict[str, tuple], currency: str = "USD") -> List:
     elements = []
     
     elements.append(Paragraph("Items & Services", styles['header']))
@@ -380,9 +381,9 @@ def create_items_table(invoice, styles: Dict[str, ParagraphStyle], colors: Dict[
             row = [
                 item['description'],
                 f"{item['quantity']:.2f}",
-                f"${item['unitPrice']:.2f}",
+                format_currency(item['unitPrice'], currency),
                 f"{item.get('discount', 0):.1f}%",
-                f"${item_total:.2f}"
+                format_currency(item_total, currency)
             ]
             table_data.append(row)
     
@@ -390,18 +391,18 @@ def create_items_table(invoice, styles: Dict[str, ParagraphStyle], colors: Dict[
         table_data.append([
             "Labour & Services",
             "1",
-            f"${invoice.labourTotal:.2f}",
+            format_currency(invoice.labourTotal, currency),
             "0%",
-            f"${invoice.labourTotal:.2f}"
+            format_currency(invoice.labourTotal, currency)
         ])
     
     if hasattr(invoice, 'partsTotal') and invoice.partsTotal and invoice.partsTotal > 0:
         table_data.append([
             "Parts & Materials",
             "1",
-            f"${invoice.partsTotal:.2f}",
+            format_currency(invoice.partsTotal, currency),
             "0%",
-            f"${invoice.partsTotal:.2f}"
+            format_currency(invoice.partsTotal, currency)
         ])
     
     items_table = Table(table_data, colWidths=[3*inch, 0.8*inch, 1*inch, 0.8*inch, 1*inch])
@@ -431,7 +432,7 @@ def create_items_table(invoice, styles: Dict[str, ParagraphStyle], colors: Dict[
     
     return elements
 
-def create_totals_section(invoice, styles: Dict[str, ParagraphStyle], colors: Dict[str, tuple]) -> List:
+def create_totals_section(invoice, styles: Dict[str, ParagraphStyle], colors: Dict[str, tuple], currency: str = "USD") -> List:
     elements = []
     
     subtotal = getattr(invoice, 'subtotal', 0) or 0
@@ -442,16 +443,16 @@ def create_totals_section(invoice, styles: Dict[str, ParagraphStyle], colors: Di
     total = getattr(invoice, 'total', 0) or 0
     
     totals_data = [
-        ['Subtotal:', f"${subtotal:.2f}"],
+        ['Subtotal:', format_currency(subtotal, currency)],
     ]
     
     if discount_rate > 0:
-        totals_data.append([f'Discount ({discount_rate:.1f}%):', f"-${discount_amount:.2f}"])
+        totals_data.append([f'Discount ({discount_rate:.1f}%):', f"-{format_currency(discount_amount, currency)}"])
     
     if tax_rate > 0:
-        totals_data.append([f'Tax ({tax_rate:.1f}%):', f"${tax_amount:.2f}"])
+        totals_data.append([f'Tax ({tax_rate:.1f}%):', format_currency(tax_amount, currency)])
     
-    totals_data.append(['TOTAL:', f"${total:.2f}"])
+    totals_data.append(['TOTAL:', format_currency(total, currency)])
     
     totals_table = Table(totals_data, colWidths=[2*inch, 1.5*inch])
     
@@ -600,6 +601,7 @@ def generate_modern_invoice_pdf(invoice, db: Session) -> bytes:
                 'show_contact_info_in_footer': customization_obj.show_contact_info_in_footer,
                 'footer_background_color': customization_obj.footer_background_color,
                 'grid_color': customization_obj.grid_color,
+                'default_currency': getattr(customization_obj, 'default_currency', 'USD'),
                 'thank_you_message': customization_obj.thank_you_message,
                 'enquiry_message': customization_obj.enquiry_message,
                 'contact_message': customization_obj.contact_message,
@@ -610,6 +612,9 @@ def generate_modern_invoice_pdf(invoice, db: Session) -> bytes:
         colors = get_customization_colors(customization)
         
         styles = create_styles(colors)
+        
+        # Get currency from customization or default to USD
+        currency = customization.get('default_currency', 'USD') if customization else 'USD'
         
         buffer = io.BytesIO()
         
@@ -632,13 +637,13 @@ def generate_modern_invoice_pdf(invoice, db: Session) -> bytes:
         
         story.extend(create_vehicle_section(invoice, customization, styles))
         
-        story.extend(create_items_table(invoice, styles, colors))
+        story.extend(create_items_table(invoice, styles, colors, currency))
         
         story.extend(create_workshop_sections(invoice, customization, styles))
         
         story.extend(create_notes_section(invoice, customization, styles))
         
-        story.extend(create_totals_section(invoice, styles, colors))
+        story.extend(create_totals_section(invoice, styles, colors, currency))
         
         doc.build(story, onFirstPage=on_page, onLaterPages=on_page)
         

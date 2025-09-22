@@ -54,6 +54,9 @@ class InvoiceCustomization(Base):
     # Default payment instructions
     default_payment_instructions = Column(Text, default="Make all payments to your company name")
     
+    # Currency settings
+    default_currency = Column(String, default="USD")
+    
     # Additional customization options
     custom_fields = Column(JSON, default={})  # For future extensibility
     

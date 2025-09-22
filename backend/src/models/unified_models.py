@@ -2173,6 +2173,7 @@ class InvoiceCustomizationBase(BaseModel):
     enquiry_message: str = "Should you have any enquiries concerning this invoice,"
     contact_message: str = "please contact us at your convenience."
     default_payment_instructions: str = "Make all payments to your company name"
+    default_currency: str = "USD"
     custom_fields: Optional[Dict[str, Any]] = {}
 
 class InvoiceCustomizationCreate(InvoiceCustomizationBase):

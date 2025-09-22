@@ -48,6 +48,7 @@ def get_invoice_customization(
                 bank_sort_code="",
                 bank_account_number="",
                 payment_instructions="Make all payments to your company name",
+                default_currency="USD",
                 is_active=True,
                 created_at=datetime.utcnow(),
                 updated_at=datetime.utcnow()
