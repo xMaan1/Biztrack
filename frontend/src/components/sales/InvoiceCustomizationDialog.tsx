@@ -147,6 +147,24 @@ export function InvoiceCustomizationDialog({
   const handleLogoUpload = async (file: File) => {
     try {
       setUploading(true);
+      
+      // Delete old logo if exists
+      const currentLogoUrl = formData.company_logo_url;
+      if (currentLogoUrl) {
+        const urlParts = currentLogoUrl.split('/');
+        const filename = urlParts[urlParts.length - 1];
+        
+        if (filename && filename.startsWith('logo_')) {
+          try {
+            await FileUploadService.deleteLogo(filename);
+            console.log('Old logo deleted from S3:', filename);
+          } catch (deleteError) {
+            console.warn('Failed to delete old logo from S3:', deleteError);
+            // Continue with upload even if old logo deletion fails
+          }
+        }
+      }
+      
       const response = await FileUploadService.uploadLogo(file);
       
       // Update form data with the new logo URL
@@ -169,6 +187,25 @@ export function InvoiceCustomizationDialog({
   const handleLogoRemove = async () => {
     try {
       setUploading(true);
+      
+      // Extract filename from S3 URL for deletion
+      const currentLogoUrl = formData.company_logo_url;
+      if (currentLogoUrl) {
+        // Extract filename from S3 URL
+        // URL format: https://bucket.s3.region.amazonaws.com/logos/tenant-id/filename
+        const urlParts = currentLogoUrl.split('/');
+        const filename = urlParts[urlParts.length - 1];
+        
+        if (filename && filename.startsWith('logo_')) {
+          try {
+            await FileUploadService.deleteLogo(filename);
+            console.log('Logo deleted from S3:', filename);
+          } catch (deleteError) {
+            console.warn('Failed to delete logo from S3:', deleteError);
+            // Continue with clearing form data even if S3 deletion fails
+          }
+        }
+      }
       
       // Clear form data
       setFormData(prev => ({
