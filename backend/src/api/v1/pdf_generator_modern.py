@@ -1,8 +1,3 @@
-"""
-Modern PDF Invoice Generator
-Creates beautiful, professional invoices with customizable styling
-"""
-
 import io
 from datetime import datetime
 from typing import Optional, Dict, Any, List
@@ -12,7 +7,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch, mm
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, 
-    Image, PageBreak, KeepTogether, Frame, PageTemplate
+    Image, PageBreak, KeepTogether, Frame, PageTemplate, BaseDocTemplate
 )
 from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER, TA_JUSTIFY
 from reportlab.pdfgen import canvas
@@ -22,37 +17,82 @@ import requests
 from PIL import Image as PILImage
 import base64
 
-# Color scheme matching frontend
 FRONTEND_COLORS = {
-    'primary': '#1e40af',      # Blue-600
-    'primary_light': '#3b82f6', # Blue-500
-    'secondary': '#6b7280',    # Gray-500
-    'accent': '#f3f4f6',       # Gray-100
-    'success': '#10b981',      # Emerald-500
-    'warning': '#f59e0b',      # Amber-500
-    'danger': '#ef4444',       # Red-500
-    'dark': '#1f2937',         # Gray-800
-    'light': '#f9fafb',        # Gray-50
-    'border': '#e5e7eb',       # Gray-200
-    'text_primary': '#111827', # Gray-900
-    'text_secondary': '#6b7280', # Gray-500
+    'primary': '#1e40af',
+    'primary_light': '#3b82f6',
+    'secondary': '#6b7280',
+    'accent': '#f3f4f6',
+    'success': '#10b981',
+    'warning': '#f59e0b',
+    'danger': '#ef4444',
+    'dark': '#1f2937',
+    'light': '#f9fafb',
+    'border': '#e5e7eb',
+    'text_primary': '#111827',
+    'text_secondary': '#6b7280',
     'white': '#ffffff',
     'black': '#000000'
 }
 
 def hex_to_rgb(hex_color: str) -> tuple:
-    """Convert hex color to RGB tuple for ReportLab"""
     hex_color = hex_color.lstrip('#')
     return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
 
 def hex_to_color(hex_color: str):
-    """Convert hex color to ReportLab Color object"""
     hex_color = hex_color.lstrip('#')
     r, g, b = int(hex_color[0:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16)
     return colors.Color(r/255.0, g/255.0, b/255.0)
 
+def draw_footer(canvas, doc, footer_content):
+    page_width, page_height = A4
+    
+    footer_content = footer_content or {}
+    
+    footer_bg_color = footer_content.get('footer_background_color', '#1e3a8a')
+    if not footer_bg_color.startswith('#'):
+        footer_bg_color = '#' + footer_bg_color
+    canvas.setFillColor(hex_to_color(footer_bg_color))
+    canvas.rect(
+        0.5*inch,
+        0.5*inch,
+        page_width - 1*inch,
+        2*inch,
+        fill=1,
+        stroke=0
+    )
+    
+    canvas.setFillColor(colors.white)
+    canvas.setFont('Helvetica', 7)
+    
+    thank_you = footer_content.get('thank_you_message', 'Thank you for your business!')
+    enquiry_msg = footer_content.get('enquiry_message', 'Should you have any enquiries concerning this invoice,')
+    contact_msg = footer_content.get('contact_message', 'please contact us at your convenience.')
+    
+    y1 = 0.5*inch + 1.2*inch
+    text_width1 = canvas.stringWidth(thank_you, 'Helvetica', 7)
+    x1 = (page_width - text_width1) / 2
+    canvas.drawString(x1, y1, thank_you)
+    
+    y2 = 0.5*inch + 0.9*inch
+    text_width2 = canvas.stringWidth(enquiry_msg, 'Helvetica', 7)
+    x2 = (page_width - text_width2) / 2
+    canvas.drawString(x2, y2, enquiry_msg)
+    
+    y3 = 0.5*inch + 0.6*inch
+    text_width3 = canvas.stringWidth(contact_msg, 'Helvetica', 7)
+    x3 = (page_width - text_width3) / 2
+    canvas.drawString(x3, y3, contact_msg)
+    
+    payment_instructions = footer_content.get('payment_instructions')
+    if payment_instructions:
+        canvas.setFont('Helvetica', 6)
+        payment_text = f"Payment Instructions: {payment_instructions}"
+        payment_width = canvas.stringWidth(payment_text, 'Helvetica', 6)
+        x_payment = (page_width - payment_width) / 2
+        y_payment = 0.5*inch + 0.3*inch
+        canvas.drawString(x_payment, y_payment, payment_text)
+
 def get_customization_colors(customization: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-    """Get colors from customization or use defaults"""
     if not customization:
         return {
             'primary': hex_to_color(FRONTEND_COLORS['primary']),
@@ -73,10 +113,8 @@ def get_customization_colors(customization: Optional[Dict[str, Any]]) -> Dict[st
     }
 
 def create_styles(colors: Dict[str, Any]) -> Dict[str, ParagraphStyle]:
-    """Create paragraph styles matching frontend design"""
     styles = getSampleStyleSheet()
     
-    # Title style - large, bold, primary color
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Heading1'],
@@ -87,7 +125,6 @@ def create_styles(colors: Dict[str, Any]) -> Dict[str, ParagraphStyle]:
         fontName='Helvetica-Bold'
     )
     
-    # Subtitle style
     subtitle_style = ParagraphStyle(
         'CustomSubtitle',
         parent=styles['Heading2'],
@@ -98,7 +135,6 @@ def create_styles(colors: Dict[str, Any]) -> Dict[str, ParagraphStyle]:
         fontName='Helvetica'
     )
     
-    # Header style
     header_style = ParagraphStyle(
         'CustomHeader',
         parent=styles['Heading3'],
@@ -109,7 +145,6 @@ def create_styles(colors: Dict[str, Any]) -> Dict[str, ParagraphStyle]:
         fontName='Helvetica-Bold'
     )
     
-    # Body text style
     body_style = ParagraphStyle(
         'CustomBody',
         parent=styles['Normal'],
@@ -120,7 +155,6 @@ def create_styles(colors: Dict[str, Any]) -> Dict[str, ParagraphStyle]:
         fontName='Helvetica'
     )
     
-    # Small text style
     small_style = ParagraphStyle(
         'CustomSmall',
         parent=styles['Normal'],
@@ -131,7 +165,6 @@ def create_styles(colors: Dict[str, Any]) -> Dict[str, ParagraphStyle]:
         fontName='Helvetica'
     )
     
-    # Footer style
     footer_style = ParagraphStyle(
         'CustomFooter',
         parent=styles['Normal'],
@@ -152,55 +185,39 @@ def create_styles(colors: Dict[str, Any]) -> Dict[str, ParagraphStyle]:
     }
 
 def load_company_logo(logo_url: Optional[str]) -> Optional[Image]:
-    """Load and resize company logo"""
     if not logo_url:
         return None
     
     try:
-        # Check if it's a relative path (starts with /static/)
         if logo_url.startswith('/static/'):
-            # Convert relative path to actual file path
-            # /static/uploads/logos/{tenant_id}/{filename} -> uploads/logos/{tenant_id}/{filename}
             file_path = logo_url.replace('/static/', '')
-            
-            # Read file directly from filesystem
             with open(file_path, 'rb') as f:
                 img_data = io.BytesIO(f.read())
         else:
-            # Download image from external URL
             response = requests.get(logo_url, timeout=10)
             response.raise_for_status()
             img_data = io.BytesIO(response.content)
         
-        # Open with PIL to resize
         pil_img = PILImage.open(img_data)
-        
-        # Resize to max 200x100 while maintaining aspect ratio
         max_width, max_height = 200, 100
         pil_img.thumbnail((max_width, max_height), PILImage.Resampling.LANCZOS)
-        
-        # Convert back to bytes
         img_buffer = io.BytesIO()
         pil_img.save(img_buffer, format='PNG')
         img_buffer.seek(0)
         
         return Image(ImageReader(img_buffer), width=min(pil_img.width, max_width), height=min(pil_img.height, max_height))
     except Exception as e:
-        print(f"Error loading logo: {e}")
         return None
 
 def create_invoice_header(invoice, customization: Optional[Dict[str, Any]], styles: Dict[str, ParagraphStyle], colors: Dict[str, tuple]) -> List:
-    """Create invoice header section"""
     elements = []
     
-    # Company info and logo
     company_name = customization.get('company_name', 'Your Company') if customization else 'Your Company'
     company_address = customization.get('company_address', '') if customization else ''
     company_phone = customization.get('company_phone', '') if customization else ''
     company_email = customization.get('company_email', '') if customization else ''
     company_website = customization.get('company_website', '') if customization else ''
     
-    # Load logo
     logo_url = customization.get('company_logo_url') if customization else None
     logo = load_company_logo(logo_url)
     
@@ -257,12 +274,11 @@ def create_invoice_header(invoice, customization: Optional[Dict[str, Any]], styl
     ]))
     
     elements.append(header_table)
-    elements.append(Spacer(1, 10))
+    elements.append(Spacer(1, 5))
     
     return elements
 
 def create_customer_section(invoice, styles: Dict[str, ParagraphStyle]) -> List:
-    """Create customer information section"""
     elements = []
     
     elements.append(Paragraph("Bill To:", styles['header']))
@@ -281,19 +297,15 @@ def create_customer_section(invoice, styles: Dict[str, ParagraphStyle]) -> List:
         customer_info.append(invoice.billingAddress.replace('\n', '<br/>'))
     
     elements.append(Paragraph('<br/>'.join(customer_info), styles['body']))
-    elements.append(Spacer(1, 8))
+    elements.append(Spacer(1, 5))
     
     return elements
 
 def create_vehicle_section(invoice, customization: Optional[Dict[str, Any]], styles: Dict[str, ParagraphStyle]) -> List:
-    """Create vehicle information section for workshop invoices"""
     elements = []
     
-    # Check if vehicle info should be shown
     if customization and not customization.get('show_vehicle_info', True):
         return elements
-    
-    # Check if we have vehicle data
     has_vehicle_data = any([
         hasattr(invoice, 'vehicleMake') and invoice.vehicleMake,
         hasattr(invoice, 'vehicleModel') and invoice.vehicleModel,
@@ -326,7 +338,6 @@ def create_vehicle_section(invoice, customization: Optional[Dict[str, Any]], sty
         vehicle_data.append(f"Mileage: {invoice.vehicleMileage}")
     
     if vehicle_data:
-        # Create vehicle info table
         vehicle_table_data = []
         for i in range(0, len(vehicle_data), 2):
             row = [vehicle_data[i]]
@@ -346,25 +357,18 @@ def create_vehicle_section(invoice, customization: Optional[Dict[str, Any]], sty
         
         elements.append(vehicle_table)
     
-    elements.append(Spacer(1, 8))
+    elements.append(Spacer(1, 5))
     return elements
 
 def create_items_table(invoice, styles: Dict[str, ParagraphStyle], colors: Dict[str, tuple]) -> List:
-    """Create invoice items table"""
     elements = []
     
     elements.append(Paragraph("Items & Services", styles['header']))
     
-    # Table headers
     headers = ['Description', 'Qty', 'Unit Price', 'Discount', 'Total']
-    
-    # Prepare table data
     table_data = [headers]
-    
-    # Add items
     if hasattr(invoice, 'items') and invoice.items:
         for item in invoice.items:
-            # Calculate item total
             item_total = item['quantity'] * item['unitPrice'] * (1 - item.get('discount', 0) / 100)
             
             row = [
@@ -376,7 +380,6 @@ def create_items_table(invoice, styles: Dict[str, ParagraphStyle], colors: Dict[
             ]
             table_data.append(row)
     
-    # Add workshop sections if applicable
     if hasattr(invoice, 'labourTotal') and invoice.labourTotal and invoice.labourTotal > 0:
         table_data.append([
             "Labour & Services",
@@ -395,31 +398,21 @@ def create_items_table(invoice, styles: Dict[str, ParagraphStyle], colors: Dict[
             f"${invoice.partsTotal:.2f}"
         ])
     
-    # Create table
     items_table = Table(table_data, colWidths=[3*inch, 0.8*inch, 1*inch, 0.8*inch, 1*inch])
-    
-    # Style the table
     table_style = [
-        # Header row
         ('BACKGROUND', (0, 0), (-1, 0), colors['primary']),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors['white']),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, 0), 8),
         ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
         ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
-        
-        # Data rows
         ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
         ('FONTSIZE', (0, 1), (-1, -1), 7),
-        ('ALIGN', (0, 1), (0, -1), 'LEFT'),  # Description
-        ('ALIGN', (1, 1), (-1, -1), 'CENTER'),  # Numbers
+        ('ALIGN', (0, 1), (0, -1), 'LEFT'),
+        ('ALIGN', (1, 1), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 1), (-1, -1), 'MIDDLE'),
-        
-        # Grid lines
         ('GRID', (0, 0), (-1, -1), 0.5, colors['grid']),
         ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors['white'], colors['accent']]),
-        
-        # Padding
         ('LEFTPADDING', (0, 0), (-1, -1), 6),
         ('RIGHTPADDING', (0, 0), (-1, -1), 6),
         ('TOPPADDING', (0, 0), (-1, -1), 4),
@@ -428,15 +421,13 @@ def create_items_table(invoice, styles: Dict[str, ParagraphStyle], colors: Dict[
     
     items_table.setStyle(TableStyle(table_style))
     elements.append(items_table)
-    elements.append(Spacer(1, 10))
+    elements.append(Spacer(1, 5))
     
     return elements
 
 def create_totals_section(invoice, styles: Dict[str, ParagraphStyle], colors: Dict[str, tuple]) -> List:
-    """Create totals section"""
     elements = []
     
-    # Calculate totals
     subtotal = getattr(invoice, 'subtotal', 0) or 0
     discount_rate = getattr(invoice, 'discount', 0) or 0
     discount_amount = getattr(invoice, 'discountAmount', 0) or 0
@@ -444,7 +435,6 @@ def create_totals_section(invoice, styles: Dict[str, ParagraphStyle], colors: Di
     tax_amount = getattr(invoice, 'taxAmount', 0) or 0
     total = getattr(invoice, 'total', 0) or 0
     
-    # Create totals table
     totals_data = [
         ['Subtotal:', f"${subtotal:.2f}"],
     ]
@@ -473,94 +463,78 @@ def create_totals_section(invoice, styles: Dict[str, ParagraphStyle], colors: Di
     
     totals_table.setStyle(TableStyle(totals_style))
     
-    # Align to right
     totals_wrapper = Table([[totals_table]], colWidths=[7*inch])
     totals_wrapper.setStyle(TableStyle([
         ('ALIGN', (0, 0), (0, 0), 'RIGHT'),
     ]))
     
     elements.append(totals_wrapper)
-    elements.append(Spacer(1, 10))
+    elements.append(Spacer(1, 5))
     
     return elements
 
 def create_workshop_sections(invoice, customization: Optional[Dict[str, Any]], styles: Dict[str, ParagraphStyle]) -> List:
-    """Create workshop-specific sections"""
     elements = []
     
-    # Job Description
     if hasattr(invoice, 'jobDescription') and invoice.jobDescription and customization.get('show_labour_section', True):
         elements.append(Paragraph("Job Description", styles['header']))
         elements.append(Paragraph(invoice.jobDescription, styles['body']))
-        elements.append(Spacer(1, 10))
+        elements.append(Spacer(1, 5))
     
-    # Parts Description
     if hasattr(invoice, 'partsDescription') and invoice.partsDescription and customization.get('show_parts_section', True):
         elements.append(Paragraph("Parts & Materials", styles['header']))
         elements.append(Paragraph(invoice.partsDescription, styles['body']))
-        elements.append(Spacer(1, 10))
+        elements.append(Spacer(1, 5))
     
     return elements
 
 def create_notes_section(invoice, customization: Optional[Dict[str, Any]], styles: Dict[str, ParagraphStyle]) -> List:
-    """Create notes and terms section"""
     elements = []
     
     if not customization.get('show_comments_section', True):
         return elements
     
-    # Notes
     if hasattr(invoice, 'notes') and invoice.notes:
         elements.append(Paragraph("Notes", styles['header']))
         elements.append(Paragraph(invoice.notes, styles['body']))
-        elements.append(Spacer(1, 10))
+        elements.append(Spacer(1, 5))
     
-    # Terms
     if hasattr(invoice, 'terms') and invoice.terms:
         elements.append(Paragraph("Terms & Conditions", styles['header']))
         elements.append(Paragraph(invoice.terms, styles['body']))
-        elements.append(Spacer(1, 10))
+        elements.append(Spacer(1, 5))
     
     return elements
 
 def create_footer(customization: Optional[Dict[str, Any]], styles: Dict[str, ParagraphStyle], colors: Dict[str, Any]) -> List:
-    """Create invoice footer with background color"""
     elements = []
     
-    # Add separator line
-    elements.append(Spacer(1, 10))
+    elements.append(Spacer(1, 5))
     
-    # Create footer content
     footer_content = []
     
-    # Thank you message
     thank_you = customization.get('thank_you_message', 'Thank you for your business!') if customization else 'Thank you for your business!'
     footer_content.append(Paragraph(thank_you, styles['footer']))
     
-    # Enquiry message
     enquiry_msg = customization.get('enquiry_message', 'Should you have any enquiries concerning this invoice,') if customization else 'Should you have any enquiries concerning this invoice,'
     contact_msg = customization.get('contact_message', 'please contact us at your convenience.') if customization else 'please contact us at your convenience.'
     
     footer_content.append(Paragraph(f"{enquiry_msg} {contact_msg}", styles['footer']))
     footer_content.append(Spacer(1, 4))
     
-    # Payment instructions
     payment_instructions = customization.get('payment_instructions', 'Make all payments to your company name') if customization else 'Make all payments to your company name'
     footer_content.append(Paragraph(f"<b>Payment Instructions:</b> {payment_instructions}", styles['footer']))
     
-    # Bank details if available
     if customization:
         bank_sort_code = customization.get('bank_sort_code')
         bank_account = customization.get('bank_account_number')
         if bank_sort_code and bank_account:
             footer_content.append(Paragraph(f"<b>Bank Details:</b> Sort Code: {bank_sort_code}, Account: {bank_account}", styles['footer']))
     
-    # Custom footer text if provided
     if customization and customization.get('footer_text'):
         footer_content.append(Spacer(1, 4))
         footer_content.append(Paragraph(customization['footer_text'], styles['footer']))
     
-    # Contact info in footer if enabled
     if customization and customization.get('show_contact_info_in_footer', True):
         contact_info = []
         if customization.get('company_phone'):
@@ -574,7 +548,6 @@ def create_footer(customization: Optional[Dict[str, Any]], styles: Dict[str, Par
             footer_content.append(Spacer(1, 4))
             footer_content.append(Paragraph(" | ".join(contact_info), styles['footer']))
     
-    # Create footer table with background color
     footer_table = Table([[footer_content]], colWidths=[7*inch])
     footer_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, -1), colors['footer_bg']),
@@ -590,11 +563,7 @@ def create_footer(customization: Optional[Dict[str, Any]], styles: Dict[str, Par
     return elements
 
 def generate_modern_invoice_pdf(invoice, db: Session) -> bytes:
-    """
-    Generate a modern, beautiful PDF invoice
-    """
     try:
-        # Get invoice customization
         from ...config.invoice_customization_models import InvoiceCustomization
         
         customization_obj = db.query(InvoiceCustomization).filter(
@@ -631,63 +600,46 @@ def generate_modern_invoice_pdf(invoice, db: Session) -> bytes:
                 'default_payment_instructions': customization_obj.default_payment_instructions,
             }
         
-        # Get colors
+        
         colors = get_customization_colors(customization)
         
-        # Create styles
         styles = create_styles(colors)
         
-        # Create PDF buffer
         buffer = io.BytesIO()
+        
+        def on_page(canvas, doc):
+            draw_footer(canvas, doc, customization)
         doc = SimpleDocTemplate(
             buffer,
             pagesize=A4,
             rightMargin=0.5*inch,
             leftMargin=0.5*inch,
             topMargin=0.5*inch,
-            bottomMargin=0.5*inch
+            bottomMargin=2.5*inch
         )
         
-        # Build content
         story = []
         
-        # Header
         story.extend(create_invoice_header(invoice, customization, styles, colors))
         
-        # Customer section
         story.extend(create_customer_section(invoice, styles))
         
-        # Vehicle section
         story.extend(create_vehicle_section(invoice, customization, styles))
         
-        # Items table
         story.extend(create_items_table(invoice, styles, colors))
         
-        # Workshop sections
         story.extend(create_workshop_sections(invoice, customization, styles))
         
-        # Notes section
         story.extend(create_notes_section(invoice, customization, styles))
         
-        # Totals
         story.extend(create_totals_section(invoice, styles, colors))
         
-        # Footer
-        story.extend(create_footer(customization, styles, colors))
+        doc.build(story, onFirstPage=on_page, onLaterPages=on_page)
         
-        # Add page break before footer if needed
-        if len(story) > 0:
-            story.append(Spacer(1, 10))
-        
-        # Build PDF
-        doc.build(story)
-        
-        # Get PDF bytes
         pdf_bytes = buffer.getvalue()
         buffer.close()
         
         return pdf_bytes
         
     except Exception as e:
-        print(f"Error generating PDF: {e}")
         raise ValueError(f"Failed to generate invoice PDF: {str(e)}")
