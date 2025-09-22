@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from ...config.database import get_db
 from ...api.dependencies import get_current_user, get_tenant_context
 from ...config.database import User
+from ...services.s3_service import s3_service
 
 router = APIRouter(prefix="/file-upload", tags=["File Upload"])
 
@@ -76,40 +77,24 @@ async def upload_logo(
         # Validate file
         validate_image_file(file)
         
-        # Ensure upload directory exists
-        ensure_upload_directory()
+        # Read file content
+        file_content = await file.read()
         
-        # Create tenant-specific directory
-        tenant_upload_dir = Path(UPLOAD_DIR) / "logos" / tenant_id
-        tenant_upload_dir.mkdir(parents=True, exist_ok=True)
+        # Upload to S3
+        result = s3_service.upload_logo(
+            file_content=file_content,
+            tenant_id=tenant_id,
+            original_filename=file.filename
+        )
         
-        # Generate unique filename
-        file_extension = Path(file.filename).suffix.lower() if file.filename else ".png"
-        unique_filename = f"logo_{uuid.uuid4().hex}{file_extension}"
-        file_path = tenant_upload_dir / unique_filename
-        
-        # Save file
-        logger.info(f"Saving file to: {file_path}")
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-        
-        # Verify file was saved
-        if file_path.exists():
-            logger.info(f"File saved successfully: {file_path}")
-        else:
-            logger.error(f"File was not saved: {file_path}")
-        
-        # Generate URL path (relative to static files)
-        file_url = f"/static/uploads/logos/{tenant_id}/{unique_filename}"
-        
-        logger.info(f"Logo uploaded successfully for tenant {tenant_id}: {file_url}")
+        logger.info(f"Logo uploaded successfully for tenant {tenant_id}: {result['file_url']}")
         
         return JSONResponse({
             "success": True,
             "message": "Logo uploaded successfully",
-            "file_url": file_url,
-            "filename": unique_filename,
-            "original_filename": file.filename,
+            "file_url": result["file_url"],
+            "filename": result["filename"],
+            "original_filename": result["original_filename"],
             "file_size": file.size,
             "content_type": file.content_type
         })
@@ -134,15 +119,14 @@ async def delete_logo(
         
         tenant_id = tenant_context["tenant_id"]
         
-        # Construct file path
-        file_path = Path(UPLOAD_DIR) / "logos" / tenant_id / filename
+        # Construct S3 key
+        s3_key = f"logos/{tenant_id}/{filename}"
         
-        # Check if file exists
-        if not file_path.exists():
-            raise HTTPException(status_code=404, detail="Logo file not found")
+        # Delete from S3
+        success = s3_service.delete_logo(s3_key)
         
-        # Delete file
-        file_path.unlink()
+        if not success:
+            raise HTTPException(status_code=404, detail="Logo file not found or could not be deleted")
         
         logger.info(f"Logo deleted successfully for tenant {tenant_id}: {filename}")
         
@@ -170,20 +154,10 @@ async def get_logo_info(
         
         tenant_id = tenant_context["tenant_id"]
         
-        # Check if logo directory exists
-        logo_dir = Path(UPLOAD_DIR) / "logos" / tenant_id
+        # Get logos from S3
+        logos = s3_service.list_tenant_logos(tenant_id)
         
-        if not logo_dir.exists():
-            return JSONResponse({
-                "success": True,
-                "has_logo": False,
-                "message": "No logo uploaded"
-            })
-        
-        # Find logo files
-        logo_files = list(logo_dir.glob("logo_*"))
-        
-        if not logo_files:
+        if not logos:
             return JSONResponse({
                 "success": True,
                 "has_logo": False,
@@ -191,16 +165,15 @@ async def get_logo_info(
             })
         
         # Get the most recent logo file
-        latest_logo = max(logo_files, key=lambda f: f.stat().st_mtime)
-        file_url = f"/static/uploads/logos/{tenant_id}/{latest_logo.name}"
+        latest_logo = max(logos, key=lambda f: f['last_modified'])
         
         return JSONResponse({
             "success": True,
             "has_logo": True,
-            "file_url": file_url,
-            "filename": latest_logo.name,
-            "file_size": latest_logo.stat().st_size,
-            "upload_date": datetime.fromtimestamp(latest_logo.stat().st_mtime).isoformat()
+            "file_url": latest_logo['url'],
+            "filename": latest_logo['filename'],
+            "file_size": latest_logo['size'],
+            "upload_date": latest_logo['last_modified'].isoformat()
         })
         
     except Exception as e:

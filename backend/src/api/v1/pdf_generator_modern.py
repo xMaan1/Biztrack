@@ -190,10 +190,13 @@ def load_company_logo(logo_url: Optional[str]) -> Optional[Image]:
     
     try:
         if logo_url.startswith('/static/'):
+            # Handle local static files (backward compatibility)
             file_path = logo_url.replace('/static/', '')
             with open(file_path, 'rb') as f:
                 img_data = io.BytesIO(f.read())
         else:
+            # Handle S3 URLs and other external URLs
+            print(f"Loading logo from URL: {logo_url}")  # Debug log
             response = requests.get(logo_url, timeout=10)
             response.raise_for_status()
             img_data = io.BytesIO(response.content)
@@ -201,12 +204,15 @@ def load_company_logo(logo_url: Optional[str]) -> Optional[Image]:
         pil_img = PILImage.open(img_data)
         max_width, max_height = 200, 100
         pil_img.thumbnail((max_width, max_height), PILImage.Resampling.LANCZOS)
-        img_buffer = io.BytesIO()
-        pil_img.save(img_buffer, format='PNG')
-        img_buffer.seek(0)
         
-        return Image(ImageReader(img_buffer), width=min(pil_img.width, max_width), height=min(pil_img.height, max_height))
+        # Save to a temporary file and use that
+        import tempfile
+        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp_file:
+            pil_img.save(tmp_file.name, format='PNG')
+            return Image(tmp_file.name, width=min(pil_img.width, max_width), height=min(pil_img.height, max_height))
+            
     except Exception as e:
+        print(f"Error loading logo from {logo_url}: {str(e)}")  # Debug log
         return None
 
 def create_invoice_header(invoice, customization: Optional[Dict[str, Any]], styles: Dict[str, ParagraphStyle], colors: Dict[str, tuple]) -> List:

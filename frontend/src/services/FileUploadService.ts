@@ -99,7 +99,11 @@ class FileUploadService {
   }
 
   getLogoUrl(fileUrl: string): string {
-    // Convert relative URL to full URL
+    // If it's already a full URL (S3), return as is
+    if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {
+      return fileUrl;
+    }
+    // Convert relative URL to full URL (for backward compatibility)
     if (fileUrl.startsWith('/static/')) {
       return `${API_BASE_URL}${fileUrl}`;
     }
