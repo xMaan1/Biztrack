@@ -33,6 +33,7 @@ import {
 import InvoiceService from "../../services/InvoiceService";
 import { CustomerSearch } from "../ui/customer-search";
 import { Customer } from "../../services/CustomerService";
+import { useCurrency } from "../../contexts/CurrencyContext";
 
 interface InvoiceDialogProps {
   open: boolean;
@@ -49,6 +50,7 @@ export function InvoiceDialog({
   mode,
   invoice,
 }: InvoiceDialogProps) {
+  const { currency } = useCurrency();
   const [formData, setFormData] = useState<InvoiceCreate>({
     customerId: "",
     customerName: "",
@@ -61,7 +63,7 @@ export function InvoiceDialog({
     orderNumber: "", // New field
     orderTime: new Date().toISOString().slice(0, 16), // New field - current date/time
     paymentTerms: "Cash",
-    currency: "USD",
+    currency: currency,
     taxRate: 0,
     discount: 0,
     notes: "",
@@ -90,6 +92,16 @@ export function InvoiceDialog({
   const [items, setItems] = useState<InvoiceItemCreate[]>([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  // Update currency when global currency changes
+  useEffect(() => {
+    if (mode === "create") {
+      setFormData(prev => ({
+        ...prev,
+        currency: currency
+      }));
+    }
+  }, [currency, mode]);
 
   useEffect(() => {
     if (invoice && mode === "edit") {

@@ -48,6 +48,7 @@ import {
   Pill,
   Calculator,
   Building2,
+  Settings,
 } from "lucide-react";
 
 interface SubMenuItem {
@@ -484,6 +485,15 @@ const allMenuItems: MenuItem[] = [
     roles: ["*"],
     planTypes: ["*"], // Available for all plans
     gradient: "from-emerald-500 to-teal-500",
+  },
+  // Settings - Available for all plan types
+  {
+    text: "Settings",
+    icon: Settings,
+    path: "/settings",
+    roles: ["*"],
+    planTypes: ["*"], // Available for all plans
+    gradient: "from-gray-500 to-slate-500",
   },
 ];
 

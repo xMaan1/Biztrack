@@ -26,6 +26,7 @@ export interface InvoiceCustomization {
   enquiry_message: string;
   contact_message: string;
   default_payment_instructions: string;
+  default_currency: string;
   custom_fields?: Record<string, any>;
   is_active: boolean;
   created_at: string;
@@ -57,6 +58,7 @@ export interface InvoiceCustomizationCreate {
   enquiry_message?: string;
   contact_message?: string;
   default_payment_instructions?: string;
+  default_currency?: string;
   custom_fields?: Record<string, any>;
 }
 
@@ -85,6 +87,7 @@ export interface InvoiceCustomizationUpdate {
   enquiry_message?: string;
   contact_message?: string;
   default_payment_instructions?: string;
+  default_currency?: string;
   custom_fields?: Record<string, any>;
 }
 

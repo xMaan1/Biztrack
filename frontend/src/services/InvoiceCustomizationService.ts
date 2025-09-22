@@ -37,10 +37,10 @@ class InvoiceCustomizationService {
   }
 
   // Format currency for display
-  static formatCurrency(amount: number): string {
-    return new Intl.NumberFormat("en-GB", {
+  static formatCurrency(amount: number, currency: string = "USD"): string {
+    return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "GBP",
+      currency: currency,
     }).format(amount);
   }
 

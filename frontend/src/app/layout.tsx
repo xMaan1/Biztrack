@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthGuard } from "@/src/components/auth";
 import { AuthProvider } from "@/src/contexts/AuthContext";
+import { CurrencyProvider } from "@/src/contexts/CurrencyContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -31,7 +32,9 @@ export default function RootLayout({
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
         <AuthProvider>
-          <AuthGuard>{children}</AuthGuard>
+          <CurrencyProvider>
+            <AuthGuard>{children}</AuthGuard>
+          </CurrencyProvider>
         </AuthProvider>
       </body>
     </html>

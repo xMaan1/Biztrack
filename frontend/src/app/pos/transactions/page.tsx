@@ -28,6 +28,7 @@ import {
   DialogTrigger,
 } from "@/src/components/ui/dialog";
 import { useAuth } from "@/src/hooks/useAuth";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
 import { apiService } from "@/src/services/ApiService";
 import {
   POSTransaction,
@@ -47,6 +48,7 @@ import { DashboardLayout } from "../../../components/layout";
 
 const POSTransactions = () => {
   const { user } = useAuth();
+  const { formatCurrency } = useCurrency();
   const [transactions, setTransactions] = useState<POSTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -99,12 +101,6 @@ const POSTransactions = () => {
     return matchesSearch && matchesStatus && matchesPaymentMethod;
   });
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {

@@ -28,6 +28,7 @@ import {
   DialogTrigger,
 } from "@/src/components/ui/dialog";
 import { useAuth } from "@/src/hooks/useAuth";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
 import { apiService } from "@/src/services/ApiService";
 import {
   Product,
@@ -54,6 +55,7 @@ interface CartItem {
 
 const POSSale = () => {
   const { user } = useAuth();
+  const { formatCurrency } = useCurrency();
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -188,12 +190,6 @@ const POSSale = () => {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
-  };
 
   return (
     <DashboardLayout>

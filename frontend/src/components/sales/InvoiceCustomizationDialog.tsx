@@ -9,6 +9,7 @@ import { Textarea } from "../ui/textarea";
 import { Switch } from "../ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import {
   Building2,
   Palette,
@@ -71,6 +72,7 @@ export function InvoiceCustomizationDialog({
     enquiry_message: "Should you have any enquiries concerning this invoice,",
     contact_message: "please contact us at your convenience.",
     default_payment_instructions: "Make all payments to your company name",
+    default_currency: "USD",
     custom_fields: {},
   });
 
@@ -104,6 +106,7 @@ export function InvoiceCustomizationDialog({
         show_comments_section: data.show_comments_section,
         footer_text: data.footer_text || "",
         show_contact_info_in_footer: data.show_contact_info_in_footer,
+        default_currency: data.default_currency || "USD",
         custom_fields: data.custom_fields || {},
       });
 
@@ -374,6 +377,26 @@ export function InvoiceCustomizationDialog({
                     placeholder="Make all payments to your company name"
                     rows={3}
                   />
+                </div>
+
+                <div>
+                  <Label htmlFor="default_currency">Default Currency</Label>
+                  <Select
+                    value={formData.default_currency}
+                    onValueChange={(value) => handleInputChange("default_currency", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select currency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="USD">USD ($)</SelectItem>
+                      <SelectItem value="EUR">EUR (€)</SelectItem>
+                      <SelectItem value="GBP">GBP (£)</SelectItem>
+                      <SelectItem value="CAD">CAD (C$)</SelectItem>
+                      <SelectItem value="AUD">AUD (A$)</SelectItem>
+                      <SelectItem value="JPY">JPY (¥)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
