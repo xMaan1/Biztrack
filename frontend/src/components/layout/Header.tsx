@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Badge } from "../ui/badge";
@@ -22,6 +23,7 @@ interface HeaderProps {
 
 export default function Header({ onMenuClick }: HeaderProps) {
   const { user, currentTenant, logout } = useAuth();
+  const router = useRouter();
   const [notifications] = useState(3); // Mock notification count
 
   const handleLogout = async () => {
@@ -29,6 +31,10 @@ export default function Header({ onMenuClick }: HeaderProps) {
       await logout();
     } catch (error) {
       }
+  };
+
+  const handleSettingsClick = () => {
+    router.push("/settings");
   };
 
   return (
@@ -104,7 +110,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 <span>Profile</span>
               </DropdownMenuItem>
 
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSettingsClick}>
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Settings</span>
               </DropdownMenuItem>
