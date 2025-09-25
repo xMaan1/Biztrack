@@ -1,7 +1,9 @@
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
+from sqlalchemy import func, case
 from .workshop_models import WorkOrder, WorkOrderTask, WorkOrderStatus, WorkOrderPriority, WorkOrderType
+from ..core.cache import cached_sync
 
 # Work Order functions
 def get_work_order_by_id(work_order_id: str, db: Session, tenant_id: str = None) -> Optional[WorkOrder]:
@@ -67,56 +69,30 @@ def delete_work_order(work_order_id: str, db: Session, tenant_id: str = None) ->
         return True
     return False
 
+@cached_sync(ttl=60, key_prefix="work_order_stats_")
 def get_work_order_stats(db: Session, tenant_id: str) -> Dict[str, Any]:
-    total_work_orders = db.query(WorkOrder).filter(
+    # Single optimized query using CASE statements
+    result = db.query(
+        func.count(WorkOrder.id).label('total'),
+        func.sum(case([(WorkOrder.status == WorkOrderStatus.DRAFT, 1)], else_=0)).label('draft'),
+        func.sum(case([(WorkOrder.status == WorkOrderStatus.PLANNED, 1)], else_=0)).label('planned'),
+        func.sum(case([(WorkOrder.status == WorkOrderStatus.IN_PROGRESS, 1)], else_=0)).label('in_progress'),
+        func.sum(case([(WorkOrder.status == WorkOrderStatus.COMPLETED, 1)], else_=0)).label('completed'),
+        func.sum(case([(WorkOrder.status == WorkOrderStatus.ON_HOLD, 1)], else_=0)).label('on_hold'),
+        func.sum(case([(WorkOrder.priority == WorkOrderPriority.URGENT, 1)], else_=0)).label('urgent')
+    ).filter(
         WorkOrder.tenant_id == tenant_id,
         WorkOrder.is_active == True
-    ).count()
-    
-    draft_work_orders = db.query(WorkOrder).filter(
-        WorkOrder.tenant_id == tenant_id,
-        WorkOrder.status == WorkOrderStatus.DRAFT,
-        WorkOrder.is_active == True
-    ).count()
-    
-    planned_work_orders = db.query(WorkOrder).filter(
-        WorkOrder.tenant_id == tenant_id,
-        WorkOrder.status == WorkOrderStatus.PLANNED,
-        WorkOrder.is_active == True
-    ).count()
-    
-    in_progress_work_orders = db.query(WorkOrder).filter(
-        WorkOrder.tenant_id == tenant_id,
-        WorkOrder.status == WorkOrderStatus.IN_PROGRESS,
-        WorkOrder.is_active == True
-    ).count()
-    
-    completed_work_orders = db.query(WorkOrder).filter(
-        WorkOrder.tenant_id == tenant_id,
-        WorkOrder.status == WorkOrderStatus.COMPLETED,
-        WorkOrder.is_active == True
-    ).count()
-    
-    on_hold_work_orders = db.query(WorkOrder).filter(
-        WorkOrder.tenant_id == tenant_id,
-        WorkOrder.status == WorkOrderStatus.ON_HOLD,
-        WorkOrder.is_active == True
-    ).count()
-    
-    urgent_work_orders = db.query(WorkOrder).filter(
-        WorkOrder.tenant_id == tenant_id,
-        WorkOrder.priority == WorkOrderPriority.URGENT,
-        WorkOrder.is_active == True
-    ).count()
+    ).first()
     
     return {
-        "total": total_work_orders,
-        "draft": draft_work_orders,
-        "planned": planned_work_orders,
-        "in_progress": in_progress_work_orders,
-        "completed": completed_work_orders,
-        "on_hold": on_hold_work_orders,
-        "urgent": urgent_work_orders
+        "total": result.total or 0,
+        "draft": result.draft or 0,
+        "planned": result.planned or 0,
+        "in_progress": result.in_progress or 0,
+        "completed": result.completed or 0,
+        "on_hold": result.on_hold or 0,
+        "urgent": result.urgent or 0
     }
 
 # Work Order Task functions

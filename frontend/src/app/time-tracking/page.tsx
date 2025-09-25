@@ -1,20 +1,20 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import { Clock, Play, Square, Timer, Calendar, BarChart3 } from "lucide-react";
-import { DashboardLayout } from "../../components/layout";
+} from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Badge } from '../../components/ui/badge';
+import { Clock, Play, Square, Timer, Calendar, BarChart3 } from 'lucide-react';
+import { DashboardLayout } from '../../components/layout';
 
 export default function TimeTrackingPage() {
   const [isTracking, setIsTracking] = useState(false);
-  const [currentTime, setCurrentTime] = useState("00:00:00");
+  const [currentTime] = useState('00:00:00');
 
   const toggleTracking = () => {
     setIsTracking(!isTracking);
@@ -50,7 +50,7 @@ export default function TimeTrackingPage() {
                 <Button
                   onClick={toggleTracking}
                   className={
-                    isTracking ? "bg-red-600 hover:bg-red-700" : "modern-button"
+                    isTracking ? 'bg-red-600 hover:bg-red-700' : 'modern-button'
                   }
                 >
                   {isTracking ? (

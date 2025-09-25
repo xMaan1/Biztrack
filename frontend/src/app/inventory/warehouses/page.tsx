@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
-import { Badge } from "../../../components/ui/badge";
-import { Input } from "../../../components/ui/input";
+} from '../../../components/ui/card';
+import { Button } from '../../../components/ui/button';
+import { Badge } from '../../../components/ui/badge';
+import { Input } from '../../../components/ui/input';
 import {
   Table,
   TableBody,
@@ -18,7 +18,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../../../components/ui/table";
+} from '../../../components/ui/table';
 import {
   Warehouse,
   Plus,
@@ -29,19 +29,19 @@ import {
   Building2,
   Phone,
   Mail,
-} from "lucide-react";
-import { useAuth } from "../../../contexts/AuthContext";
-import { inventoryService } from "../../../services/InventoryService";
-import { Warehouse as WarehouseType } from "../../../models/inventory";
-import { DashboardLayout } from "../../../components/layout";
-import { formatDate } from "../../../lib/utils";
+} from 'lucide-react';
+import { useAuth } from '../../../contexts/AuthContext';
+import { inventoryService } from '../../../services/InventoryService';
+import { Warehouse as WarehouseType } from '../../../models/inventory';
+import { DashboardLayout } from '../../../components/layout';
+import { formatDate } from '../../../lib/utils';
 
 export default function WarehousesPage() {
-  const { user } = useAuth();
+  const { } = useAuth();
   const router = useRouter();
   const [warehouses, setWarehouses] = useState<WarehouseType[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchWarehouses();
@@ -66,7 +66,7 @@ export default function WarehousesPage() {
   );
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this warehouse?")) {
+    if (confirm('Are you sure you want to delete this warehouse?')) {
       try {
         await inventoryService.deleteWarehouse(id);
         fetchWarehouses();
@@ -96,7 +96,7 @@ export default function WarehousesPage() {
               Manage your warehouse locations and storage facilities
             </p>
           </div>
-          <Button onClick={() => router.push("/inventory/warehouses/new")}>
+          <Button onClick={() => router.push('/inventory/warehouses/new')}>
             <Plus className="mr-2 h-4 w-4" />
             Add Warehouse
           </Button>
@@ -191,9 +191,9 @@ export default function WarehousesPage() {
                       </TableCell>
                       <TableCell>
                         <Badge
-                          variant={warehouse.isActive ? "default" : "secondary"}
+                          variant={warehouse.isActive ? 'default' : 'secondary'}
                         >
-                          {warehouse.isActive ? "Active" : "Inactive"}
+                          {warehouse.isActive ? 'Active' : 'Inactive'}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -235,12 +235,12 @@ export default function WarehousesPage() {
                 </h3>
                 <p className="text-muted-foreground mb-4">
                   {searchTerm
-                    ? "Try adjusting your search terms"
-                    : "Get started by creating your first warehouse"}
+                    ? 'Try adjusting your search terms'
+                    : 'Get started by creating your first warehouse'}
                 </p>
                 {!searchTerm && (
                   <Button
-                    onClick={() => router.push("/inventory/warehouses/new")}
+                    onClick={() => router.push('/inventory/warehouses/new')}
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     Add Warehouse

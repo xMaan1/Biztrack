@@ -1,28 +1,28 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Badge } from "../../components/ui/badge";
+} from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Badge } from '../../components/ui/badge';
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from "../../components/ui/avatar";
+} from '../../components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "../../components/ui/dropdown-menu";
-import { Alert, AlertDescription } from "../../components/ui/alert";
+} from '../../components/ui/dropdown-menu';
+import { Alert, AlertDescription } from '../../components/ui/alert';
 import {
   Search,
   MoreVertical,
@@ -35,17 +35,17 @@ import {
   Loader2,
   Users,
   Crown,
-} from "lucide-react";
-import { apiService } from "../../services/ApiService";
-import { User } from "../../models/auth";
-import { DashboardLayout } from "../../components/layout";
-import { cn, getInitials } from "../../lib/utils";
+} from 'lucide-react';
+import { apiService } from '../../services/ApiService';
+import { User } from '../../models/auth';
+import { DashboardLayout } from '../../components/layout';
+import { cn, getInitials } from '../../lib/utils';
 
 export default function TeamPage() {
   const [teamMembers, setTeamMembers] = useState<User[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -77,7 +77,7 @@ export default function TeamPage() {
       let tenantId = null;
 
       // Method 1: From selectedTenant
-      const selectedTenant = localStorage.getItem("selectedTenant");
+      const selectedTenant = localStorage.getItem('selectedTenant');
       if (selectedTenant) {
         try {
           const parsed = JSON.parse(selectedTenant);
@@ -88,13 +88,13 @@ export default function TeamPage() {
 
       // Method 2: From currentTenantId
       if (!tenantId) {
-        tenantId = localStorage.getItem("currentTenantId");
+        tenantId = localStorage.getItem('currentTenantId');
       }
 
       // Method 3: From URL path if we're in workspace
-      if (!tenantId && typeof window !== "undefined") {
-        const pathParts = window.location.pathname.split("/");
-        const workspaceIndex = pathParts.indexOf("workspace");
+      if (!tenantId && typeof window !== 'undefined') {
+        const pathParts = window.location.pathname.split('/');
+        const workspaceIndex = pathParts.indexOf('workspace');
         if (workspaceIndex !== -1 && pathParts[workspaceIndex + 1]) {
           tenantId = pathParts[workspaceIndex + 1];
         }
@@ -104,10 +104,10 @@ export default function TeamPage() {
         const response = await apiService.getTenantUsers(tenantId);
         setTeamMembers(response.users || []);
       } else {
-        setError("No tenant selected. Please select a workspace first.");
+        setError('No tenant selected. Please select a workspace first.');
       }
     } catch (err) {
-      setError("Failed to load team members");
+      setError('Failed to load team members');
     } finally {
       setLoading(false);
     }
@@ -115,27 +115,27 @@ export default function TeamPage() {
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case "super_admin":
-        return "bg-red-100 text-red-800 border-red-200";
-      case "admin":
-        return "bg-purple-100 text-purple-800 border-purple-200";
-      case "project_manager":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case "team_member":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "client":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case 'super_admin':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'admin':
+        return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'project_manager':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'team_member':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'client':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case "super_admin":
-      case "admin":
+      case 'super_admin':
+      case 'admin':
         return <Crown className="h-3 w-3" />;
-      case "project_manager":
+      case 'project_manager':
         return <Shield className="h-3 w-3" />;
       default:
         return <Users className="h-3 w-3" />;
@@ -143,17 +143,17 @@ export default function TeamPage() {
   };
 
   const formatRole = (role: string) => {
-    return role.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase());
+    return role.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
   const getTeamStats = () => {
     const totalMembers = teamMembers.length;
     const activeMembers = teamMembers.filter((m) => m.isActive).length;
     const admins = teamMembers.filter((m) =>
-      ["super_admin", "admin"].includes(m.userRole),
+      ['super_admin', 'admin'].includes(m.userRole),
     ).length;
     const projectManagers = teamMembers.filter(
-      (m) => m.userRole === "project_manager",
+      (m) => m.userRole === 'project_manager',
     ).length;
 
     return { totalMembers, activeMembers, admins, projectManagers };
@@ -181,7 +181,7 @@ export default function TeamPage() {
               onClick={fetchTeamMembers}
               disabled={loading}
             >
-              <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+              <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
             </Button>
             <Button className="modern-button">
               <UserPlus className="h-4 w-4 mr-2" />
@@ -358,7 +358,7 @@ export default function TeamPage() {
                       {getRoleIcon(member.userRole)}
                       <Badge
                         variant="outline"
-                        className={cn("text-xs", getRoleColor(member.userRole))}
+                        className={cn('text-xs', getRoleColor(member.userRole))}
                       >
                         {formatRole(member.userRole)}
                       </Badge>
@@ -368,12 +368,12 @@ export default function TeamPage() {
                       <div className="flex items-center gap-2">
                         <div
                           className={cn(
-                            "w-2 h-2 rounded-full",
-                            member.isActive ? "bg-green-500" : "bg-gray-400",
+                            'w-2 h-2 rounded-full',
+                            member.isActive ? 'bg-green-500' : 'bg-gray-400',
                           )}
                         />
                         <span className="text-xs text-gray-500">
-                          {member.isActive ? "Active" : "Inactive"}
+                          {member.isActive ? 'Active' : 'Inactive'}
                         </span>
                       </div>
                     </div>
@@ -394,8 +394,8 @@ export default function TeamPage() {
               </h3>
               <p className="text-gray-600 mb-4">
                 {searchTerm
-                  ? "Try adjusting your search terms"
-                  : "Get started by inviting your first team member"}
+                  ? 'Try adjusting your search terms'
+                  : 'Get started by inviting your first team member'}
               </p>
               <Button className="modern-button">
                 <UserPlus className="h-4 w-4 mr-2" />

@@ -1,83 +1,68 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useMemo } from "react";
-import DashboardLayout from "@/src/components/layout/DashboardLayout";
+import React, { useState, useEffect, useMemo } from 'react';
+import DashboardLayout from '@/src/components/layout/DashboardLayout';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
+} from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Badge } from '@/src/components/ui/badge';
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/src/components/ui/tabs";
-import { Input } from "@/src/components/ui/input";
+} from '@/src/components/ui/tabs';
+import { Input } from '@/src/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select";
-import { Progress } from "@/src/components/ui/progress";
-import { Separator } from "@/src/components/ui/separator";
+} from '@/src/components/ui/select';
+import { Progress } from '@/src/components/ui/progress';
 import {
-  Wrench,
   Clock,
-  AlertTriangle,
   CheckCircle,
   Plus,
   Search,
   Settings,
   FileText,
   HardDrive,
-} from "lucide-react";
-import { maintenanceService } from "@/src/services/MaintenanceService";
+} from 'lucide-react';
+import { maintenanceService } from '@/src/services/MaintenanceService';
 import {
   MaintenanceScheduleResponse,
-  MaintenanceWorkOrderResponse,
   EquipmentResponse,
-  MaintenanceReportResponse,
   MaintenanceDashboardStats,
-  MaintenanceStatus,
   MaintenancePriority,
   MaintenanceType,
-  EquipmentStatus,
-  MaintenanceCategory,
-  getMaintenanceStatusColor,
   getMaintenancePriorityColor,
   getEquipmentStatusColor,
   getMaintenanceTypeIcon,
   formatMaintenanceDate,
   formatDuration,
-} from "@/src/models/maintenance";
-import { MaintenanceScheduleDialog } from "@/src/components/maintenance/MaintenanceScheduleDialog";
-import { EquipmentDialog } from "@/src/components/maintenance/EquipmentDialog";
+} from '@/src/models/maintenance';
+import { MaintenanceScheduleDialog } from '@/src/components/maintenance/MaintenanceScheduleDialog';
+import { EquipmentDialog } from '@/src/components/maintenance/EquipmentDialog';
 
 export default function MaintenancePage() {
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [dashboardStats, setDashboardStats] =
     useState<MaintenanceDashboardStats | null>(null);
   const [maintenanceSchedules, setMaintenanceSchedules] = useState<
     MaintenanceScheduleResponse[]
   >([]);
-  const [maintenanceWorkOrders, setMaintenanceWorkOrders] = useState<
-    MaintenanceWorkOrderResponse[]
-  >([]);
   const [equipment, setEquipment] = useState<EquipmentResponse[]>([]);
-  const [maintenanceReports, setMaintenanceReports] = useState<
-    MaintenanceReportResponse[]
-  >([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEquipmentDialog, setShowEquipmentDialog] = useState(false);
 
@@ -89,20 +74,16 @@ export default function MaintenancePage() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [stats, schedules, workOrders, equipmentList, reports] =
+      const [stats, schedules, equipmentList] =
         await Promise.all([
           maintenanceService.getMaintenanceDashboard(),
           maintenanceService.getMaintenanceSchedules(0, 10),
-          maintenanceService.getMaintenanceWorkOrders(0, 10),
           maintenanceService.getEquipmentList(0, 10),
-          maintenanceService.getMaintenanceReports(0, 10),
         ]);
 
       setDashboardStats(stats);
       setMaintenanceSchedules(schedules);
-      setMaintenanceWorkOrders(workOrders);
       setEquipment(equipmentList);
-      setMaintenanceReports(reports);
     } catch (error) {
       } finally {
       setLoading(false);
@@ -123,13 +104,13 @@ export default function MaintenancePage() {
       );
     }
 
-    if (statusFilter !== "all") {
+    if (statusFilter !== 'all') {
       filtered = filtered.filter(
         (schedule) => schedule.maintenance_type === statusFilter,
       );
     }
 
-    if (priorityFilter !== "all") {
+    if (priorityFilter !== 'all') {
       filtered = filtered.filter(
         (schedule) => schedule.priority === priorityFilter,
       );
@@ -267,7 +248,7 @@ export default function MaintenancePage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    ${dashboardStats?.total_cost?.toFixed(2) || "0.00"}
+                    ${dashboardStats?.total_cost?.toFixed(2) || '0.00'}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {dashboardStats?.uptime_percentage || 0}% uptime
@@ -432,7 +413,7 @@ export default function MaintenancePage() {
                         <div>
                           <h3 className="font-medium">{schedule.title}</h3>
                           <p className="text-sm text-muted-foreground">
-                            {schedule.description || "No description"}
+                            {schedule.description || 'No description'}
                           </p>
                           <div className="flex items-center space-x-2 mt-1">
                             <span className="text-xs text-muted-foreground">
@@ -527,11 +508,11 @@ export default function MaintenancePage() {
                           <div>
                             <h3 className="font-medium">{eq.name}</h3>
                             <p className="text-sm text-muted-foreground">
-                              {eq.model || "No Model"} • {eq.manufacturer || "No Manufacturer"}
+                              {eq.model || 'No Model'} • {eq.manufacturer || 'No Manufacturer'}
                             </p>
                             <div className="flex items-center space-x-2 mt-1">
                               <span className="text-xs text-muted-foreground">
-                                {eq.location || "No Location"}
+                                {eq.location || 'No Location'}
                               </span>
                               <span className="text-xs text-muted-foreground">
                                 •

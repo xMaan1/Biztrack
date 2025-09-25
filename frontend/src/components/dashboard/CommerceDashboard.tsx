@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import { Progress } from "../ui/progress";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
+import { Progress } from '../ui/progress';
 import {
   ShoppingCart,
   DollarSign,
@@ -17,9 +17,8 @@ import {
   Plus,
   ArrowRight,
   ShoppingBag,
-  Receipt,
   Target,
-} from "lucide-react";
+} from 'lucide-react';
 
 interface CommerceStats {
   totalProjects: number;
@@ -42,10 +41,10 @@ export default function CommerceDashboard({
   stats,
   onNavigate,
 }: CommerceDashboardProps) {
-  const handleCreateProject = () => onNavigate("/projects/new");
-  const handleNewSale = () => onNavigate("/pos/sale");
-  const handleViewSales = () => onNavigate("/sales");
-  const handleViewInventory = () => onNavigate("/inventory");
+  const handleCreateProject = () => onNavigate('/projects/new');
+  const handleNewSale = () => onNavigate('/pos/sale');
+  const handleViewSales = () => onNavigate('/sales');
+  const handleViewInventory = () => onNavigate('/inventory');
 
   return (
     <div className="space-y-8">
@@ -227,7 +226,7 @@ export default function CommerceDashboard({
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Button
-              onClick={() => onNavigate("/pos")}
+              onClick={() => onNavigate('/pos')}
               variant="outline"
               className="h-20 flex-col gap-2"
             >
@@ -236,7 +235,7 @@ export default function CommerceDashboard({
             </Button>
 
             <Button
-              onClick={() => onNavigate("/crm")}
+              onClick={() => onNavigate('/crm')}
               variant="outline"
               className="h-20 flex-col gap-2"
             >
@@ -245,7 +244,7 @@ export default function CommerceDashboard({
             </Button>
 
             <Button
-              onClick={() => onNavigate("/inventory")}
+              onClick={() => onNavigate('/inventory')}
               variant="outline"
               className="h-20 flex-col gap-2"
             >
@@ -254,7 +253,7 @@ export default function CommerceDashboard({
             </Button>
 
             <Button
-              onClick={() => onNavigate("/reports")}
+              onClick={() => onNavigate('/reports')}
               variant="outline"
               className="h-20 flex-col gap-2"
             >

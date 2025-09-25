@@ -1,78 +1,62 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
-import { Badge } from "../../../components/ui/badge";
-import { Input } from "../../../components/ui/input";
-import { Label } from "../../../components/ui/label";
+} from '../../../components/ui/card';
+import { Button } from '../../../components/ui/button';
+import { Input } from '../../../components/ui/input';
+import { Label } from '../../../components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../../components/ui/select";
+} from '../../../components/ui/select';
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "../../../components/ui/tabs";
+} from '../../../components/ui/tabs';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "../../../components/ui/dialog";
-import { Textarea } from "../../../components/ui/textarea";
+} from '../../../components/ui/dialog';
 import {
   Plus,
-  Search,
   Filter,
-  Download,
-  Mail,
-  Eye,
-  Edit,
-  Trash2,
-  DollarSign,
-  Calendar,
-  Clock,
-  TrendingUp,
+  Settings,
   AlertTriangle,
   CheckCircle,
-  FileText,
-  Users,
-  BarChart3,
-  Settings,
-} from "lucide-react";
-import { DashboardLayout } from "../../../components/layout";
-import InvoiceService from "../../../services/InvoiceService";
+  Edit,
+} from 'lucide-react';
+import { DashboardLayout } from '../../../components/layout';
+import InvoiceService from '../../../services/InvoiceService';
 import {
   Invoice,
   InvoiceCreate,
-  InvoiceStatus,
   InvoiceFilters,
   InvoiceDashboard,
-  InvoiceItemCreate,
-} from "../../../models/sales";
-import { InvoiceDialog } from "../../../components/sales/InvoiceDialog";
-import { InvoiceList } from "../../../components/sales/InvoiceList";
-import { InvoiceDashboard as InvoiceDashboardComponent } from "../../../components/sales/InvoiceDashboard";
-import { InvoiceCustomizationDialog } from "../../../components/sales/InvoiceCustomizationDialog";
+} from '../../../models/sales';
+import { InvoiceDialog } from '../../../components/sales/InvoiceDialog';
+import { InvoiceList } from '../../../components/sales/InvoiceList';
+import { InvoiceDashboard as InvoiceDashboardComponent } from '../../../components/sales/InvoiceDashboard';
+import { InvoiceCustomizationDialog } from '../../../components/sales/InvoiceCustomizationDialog';
 
 export default function InvoicesPage() {
   const [dashboard, setDashboard] = useState<InvoiceDashboard | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   // Dialog states
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -83,8 +67,8 @@ export default function InvoicesPage() {
 
   // Filter states
   const [filters, setFilters] = useState<InvoiceFilters>({});
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -99,7 +83,7 @@ export default function InvoicesPage() {
       setLoading(true);
       setError(null);
 
-      if (activeTab === "dashboard") {
+      if (activeTab === 'dashboard') {
         const dashboardData = await InvoiceService.getDashboard();
         setDashboard(dashboardData);
       } else {
@@ -107,7 +91,7 @@ export default function InvoicesPage() {
           {
             ...filters,
             search: searchTerm,
-            status: statusFilter !== "all" ? statusFilter : undefined,
+            status: statusFilter !== 'all' ? statusFilter : undefined,
           },
           currentPage,
           10,
@@ -116,7 +100,7 @@ export default function InvoicesPage() {
         setTotalPages(response.pagination.pages);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load data");
+      setError(err instanceof Error ? err.message : 'Failed to load data');
     } finally {
       setLoading(false);
     }
@@ -128,7 +112,7 @@ export default function InvoicesPage() {
       setShowCreateDialog(false);
       loadData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create invoice");
+      setError(err instanceof Error ? err.message : 'Failed to create invoice');
     }
   };
 
@@ -142,7 +126,7 @@ export default function InvoicesPage() {
       setSelectedInvoice(null);
       loadData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update invoice");
+      setError(err instanceof Error ? err.message : 'Failed to update invoice');
     }
   };
 
@@ -153,7 +137,7 @@ export default function InvoicesPage() {
       setSelectedInvoice(null);
       loadData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete invoice");
+      setError(err instanceof Error ? err.message : 'Failed to delete invoice');
     }
   };
 
@@ -162,7 +146,7 @@ export default function InvoicesPage() {
       await InvoiceService.sendInvoice(invoiceId);
       loadData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send invoice");
+      setError(err instanceof Error ? err.message : 'Failed to send invoice');
     }
   };
 
@@ -172,7 +156,7 @@ export default function InvoicesPage() {
       loadData();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to mark invoice as paid",
+        err instanceof Error ? err.message : 'Failed to mark invoice as paid',
       );
     }
   };
@@ -197,7 +181,7 @@ export default function InvoicesPage() {
     loadData();
   };
 
-  if (loading && activeTab === "dashboard") {
+  if (loading && activeTab === 'dashboard') {
     return (
       <DashboardLayout>
         <div className="container mx-auto p-6">
@@ -209,7 +193,7 @@ export default function InvoicesPage() {
     );
   }
 
-  if (error && activeTab === "dashboard") {
+  if (error && activeTab === 'dashboard') {
     return (
       <DashboardLayout>
         <div className="container mx-auto p-6">
@@ -264,7 +248,7 @@ export default function InvoicesPage() {
               </h3>
               <div className="mt-2 text-sm text-blue-700">
                 <p>
-                  Before downloading invoices, please customize your invoice template with your company details, 
+                  Before downloading invoices, please customize your invoice template with your company details,
                   payment information, and styling preferences using the "Customize Invoice" button above.
                 </p>
               </div>
@@ -304,7 +288,7 @@ export default function InvoicesPage() {
                       placeholder="Search invoices..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                      onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                     />
                   </div>
                   <div>
@@ -331,7 +315,7 @@ export default function InvoicesPage() {
                     <Input
                       id="dateFrom"
                       type="date"
-                      value={filters.dateFrom || ""}
+                      value={filters.dateFrom || ''}
                       onChange={(e) =>
                         handleFilterChange({ dateFrom: e.target.value })
                       }
@@ -342,7 +326,7 @@ export default function InvoicesPage() {
                     <Input
                       id="dateTo"
                       type="date"
-                      value={filters.dateTo || ""}
+                      value={filters.dateTo || ''}
                       onChange={(e) =>
                         handleFilterChange({ dateTo: e.target.value })
                       }
@@ -397,7 +381,7 @@ export default function InvoicesPage() {
                           </h4>
                           <p className="text-sm text-gray-600">
                             Due: {InvoiceService.formatDate(invoice.dueDate)} •
-                            Amount:{" "}
+                            Amount:{' '}
                             {InvoiceService.formatCurrency(invoice.total)}
                           </p>
                         </div>
@@ -460,7 +444,7 @@ export default function InvoicesPage() {
             </DialogHeader>
             <div className="py-4">
               <p>
-                Are you sure you want to delete invoice{" "}
+                Are you sure you want to delete invoice{' '}
                 <strong>{selectedInvoice?.invoiceNumber}</strong>? This action
                 cannot be undone.
               </p>

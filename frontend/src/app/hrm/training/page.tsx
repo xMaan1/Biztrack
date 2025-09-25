@@ -1,24 +1,24 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Input } from "@/src/components/ui/input";
-import { Label } from "@/src/components/ui/label";
-import { Textarea } from "@/src/components/ui/textarea";
+} from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Input } from '@/src/components/ui/input';
+import { Label } from '@/src/components/ui/label';
+import { Textarea } from '@/src/components/ui/textarea';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select";
+} from '@/src/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -26,9 +26,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/src/components/ui/dialog";
-import { Badge } from "@/src/components/ui/badge";
-import { Alert, AlertDescription } from "@/src/components/ui/alert";
+} from '@/src/components/ui/dialog';
+import { Badge } from '@/src/components/ui/badge';
+import { Alert, AlertDescription } from '@/src/components/ui/alert';
 import {
   Calendar,
   Plus,
@@ -40,8 +40,6 @@ import {
   Clock,
   Users,
   CheckCircle,
-  AlertCircle,
-  XCircle,
   Clock3,
   FileText,
   GraduationCap,
@@ -50,22 +48,18 @@ import {
   DollarSign,
   MapPin,
   UserCheck,
-} from "lucide-react";
-import HRMService from "@/src/services/HRMService";
+} from 'lucide-react';
+import HRMService from '@/src/services/HRMService';
 import {
   Training,
   TrainingCreate,
-  TrainingUpdate,
   TrainingType,
   TrainingStatus,
-  HRMTrainingResponse,
-  Employee,
-} from "@/src/models/hrm";
-import { DashboardLayout } from "@/src/components/layout";
+} from '@/src/models/hrm';
+import { DashboardLayout } from '@/src/components/layout';
 
 export default function HRMTrainingPage() {
   const [trainings, setTrainings] = useState<Training[]>([]);
-  const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<{
@@ -75,7 +69,7 @@ export default function HRMTrainingPage() {
     startDate?: string;
     endDate?: string;
   }>({});
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingTraining, setEditingTraining] = useState<Training | null>(null);
   const [viewingTraining, setViewingTraining] = useState<Training | null>(null);
@@ -86,14 +80,14 @@ export default function HRMTrainingPage() {
   const [deleting, setDeleting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [formData, setFormData] = useState<TrainingCreate>({
-    title: "",
-    description: "",
+    title: '',
+    description: '',
     trainingType: TrainingType.SKILL_DEVELOPMENT,
-    duration: "",
+    duration: '',
     cost: 0,
-    provider: "",
-    startDate: new Date().toISOString().split("T")[0],
-    endDate: new Date().toISOString().split("T")[0],
+    provider: '',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date().toISOString().split('T')[0],
     maxParticipants: 20,
     status: TrainingStatus.NOT_STARTED,
     materials: [],
@@ -104,6 +98,7 @@ export default function HRMTrainingPage() {
   useEffect(() => {
     loadTrainings();
     loadEmployees();
+    return;
   }, [filters]);
 
   const loadTrainings = useCallback(async () => {
@@ -112,7 +107,7 @@ export default function HRMTrainingPage() {
       const response = await HRMService.getTraining(filters, 1, 100);
       setTrainings(response.training);
     } catch (err) {
-      setError("Failed to load training programs");
+      setError('Failed to load training programs');
       } finally {
       setLoading(false);
     }
@@ -120,8 +115,7 @@ export default function HRMTrainingPage() {
 
   const loadEmployees = async () => {
     try {
-      const response = await HRMService.getEmployees({}, 1, 100);
-      setEmployees(response.employees);
+      await HRMService.getEmployees({}, 1, 100);
     } catch (err) {
       }
   };
@@ -132,19 +126,19 @@ export default function HRMTrainingPage() {
 
   const resetFilters = () => {
     setFilters({});
-    setSearch("");
+    setSearch('');
   };
 
   const resetForm = () => {
     setFormData({
-      title: "",
-      description: "",
+      title: '',
+      description: '',
       trainingType: TrainingType.SKILL_DEVELOPMENT,
-      duration: "",
+      duration: '',
       cost: 0,
-      provider: "",
-      startDate: new Date().toISOString().split("T")[0],
-      endDate: new Date().toISOString().split("T")[0],
+      provider: '',
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date().toISOString().split('T')[0],
       maxParticipants: 20,
       status: TrainingStatus.NOT_STARTED,
       materials: [],
@@ -169,24 +163,24 @@ export default function HRMTrainingPage() {
         !formData.endDate
       ) {
         setError(
-          "Please fill in all required fields (Title, Description, Provider, Start Date, and End Date)",
+          'Please fill in all required fields (Title, Description, Provider, Start Date, and End Date)',
         );
         return;
       }
 
       if (editingTraining) {
         await HRMService.updateTraining(editingTraining.id, formData);
-        setSuccessMessage("Training program updated successfully!");
+        setSuccessMessage('Training program updated successfully!');
       } else {
         await HRMService.createTraining(formData);
-        setSuccessMessage("Training program created successfully!");
+        setSuccessMessage('Training program created successfully!');
       }
 
       setShowCreateDialog(false);
       resetForm();
       loadTrainings();
     } catch (err) {
-      setError("Failed to save training program. Please try again.");
+      setError('Failed to save training program. Please try again.');
       } finally {
       setSubmitting(false);
     }
@@ -201,8 +195,8 @@ export default function HRMTrainingPage() {
       duration: training.duration,
       cost: training.cost,
       provider: training.provider,
-      startDate: training.startDate.split("T")[0],
-      endDate: training.endDate.split("T")[0],
+      startDate: training.startDate.split('T')[0],
+      endDate: training.endDate.split('T')[0],
       maxParticipants: training.maxParticipants || 20,
       status: training.status,
       materials: training.materials || [],
@@ -226,11 +220,11 @@ export default function HRMTrainingPage() {
     try {
       setDeleting(true);
       await HRMService.deleteTraining(deletingTraining.id);
-      setSuccessMessage("Training program deleted successfully!");
+      setSuccessMessage('Training program deleted successfully!');
       setDeletingTraining(null);
       loadTrainings();
     } catch (err) {
-      setError("Failed to delete training program. Please try again.");
+      setError('Failed to delete training program. Please try again.');
       } finally {
       setDeleting(false);
     }
@@ -238,25 +232,25 @@ export default function HRMTrainingPage() {
 
   const getStatusColor = (status: TrainingStatus) => {
     const statusColors: { [key: string]: string } = {
-      not_started: "bg-blue-100 text-blue-800",
-      in_progress: "bg-yellow-100 text-yellow-800",
-      completed: "bg-green-100 text-green-800",
-      expired: "bg-red-100 text-red-800",
+      not_started: 'bg-blue-100 text-blue-800',
+      in_progress: 'bg-yellow-100 text-yellow-800',
+      completed: 'bg-green-100 text-green-800',
+      expired: 'bg-red-100 text-red-800',
     };
-    return statusColors[status] || "bg-gray-100 text-gray-800";
+    return statusColors[status] || 'bg-gray-100 text-gray-800';
   };
 
   const getTrainingTypeColor = (type: TrainingType) => {
     const typeColors: { [key: string]: string } = {
-      technical: "bg-purple-100 text-purple-800",
-      soft_skills: "bg-pink-100 text-pink-800",
-      leadership: "bg-indigo-100 text-indigo-800",
-      compliance: "bg-orange-100 text-orange-800",
-      onboarding: "bg-teal-100 text-teal-800",
-      skill_development: "bg-blue-100 text-blue-800",
-      certification: "bg-green-100 text-green-800",
+      technical: 'bg-purple-100 text-purple-800',
+      soft_skills: 'bg-pink-100 text-pink-800',
+      leadership: 'bg-indigo-100 text-indigo-800',
+      compliance: 'bg-orange-100 text-orange-800',
+      onboarding: 'bg-teal-100 text-teal-800',
+      skill_development: 'bg-blue-100 text-blue-800',
+      certification: 'bg-green-100 text-green-800',
     };
-    return typeColors[type] || "bg-gray-100 text-gray-800";
+    return typeColors[type] || 'bg-gray-100 text-gray-800';
   };
 
   const getTrainingTypeIcon = (type: TrainingType) => {
@@ -278,6 +272,7 @@ export default function HRMTrainingPage() {
       const timer = setTimeout(() => setSuccessMessage(null), 5000);
       return () => clearTimeout(timer);
     }
+    return;
   }, [successMessage]);
 
   useEffect(() => {
@@ -285,6 +280,7 @@ export default function HRMTrainingPage() {
       const timer = setTimeout(() => setError(null), 5000);
       return () => clearTimeout(timer);
     }
+    return;
   }, [error]);
 
   if (loading) {
@@ -356,7 +352,7 @@ export default function HRMTrainingPage() {
                     placeholder="Search programs..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                   />
                   <Button onClick={handleSearch}>
                     <Search className="w-4 h-4" />
@@ -366,11 +362,11 @@ export default function HRMTrainingPage() {
               <div>
                 <label className="text-sm font-medium">Training Type</label>
                 <Select
-                  value={filters.trainingType || "all"}
+                  value={filters.trainingType || 'all'}
                   onValueChange={(value) =>
                     setFilters((prev) => ({
                       ...prev,
-                      trainingType: value === "all" ? undefined : value,
+                      trainingType: value === 'all' ? undefined : value,
                     }))
                   }
                 >
@@ -382,7 +378,7 @@ export default function HRMTrainingPage() {
                     {Object.values(TrainingType).map((type) => (
                       <SelectItem key={type} value={type}>
                         {type.charAt(0).toUpperCase() +
-                          type.slice(1).replace("_", " ")}
+                          type.slice(1).replace('_', ' ')}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -391,11 +387,11 @@ export default function HRMTrainingPage() {
               <div>
                 <label className="text-sm font-medium">Status</label>
                 <Select
-                  value={filters.status || "all"}
+                  value={filters.status || 'all'}
                   onValueChange={(value) =>
                     setFilters((prev) => ({
                       ...prev,
-                      status: value === "all" ? undefined : value,
+                      status: value === 'all' ? undefined : value,
                     }))
                   }
                 >
@@ -416,7 +412,7 @@ export default function HRMTrainingPage() {
                 <label className="text-sm font-medium">Provider</label>
                 <Input
                   placeholder="Provider name"
-                  value={filters.provider || ""}
+                  value={filters.provider || ''}
                   onChange={(e) =>
                     setFilters((prev) => ({
                       ...prev,
@@ -429,7 +425,7 @@ export default function HRMTrainingPage() {
                 <label className="text-sm font-medium">Start Date</label>
                 <Input
                   type="date"
-                  value={filters.startDate || ""}
+                  value={filters.startDate || ''}
                   onChange={(e) =>
                     setFilters((prev) => ({
                       ...prev,
@@ -549,7 +545,7 @@ export default function HRMTrainingPage() {
                           )}
                         >
                           {training.trainingType.charAt(0).toUpperCase() +
-                            training.trainingType.slice(1).replace("_", " ")}
+                            training.trainingType.slice(1).replace('_', ' ')}
                         </Badge>
                         <Badge className={getStatusColor(training.status)}>
                           {training.status.charAt(0).toUpperCase() +
@@ -572,14 +568,14 @@ export default function HRMTrainingPage() {
                         <div className="flex items-center space-x-1">
                           <Calendar className="w-3 h-3" />
                           <span>
-                            Start:{" "}
+                            Start:{' '}
                             {new Date(training.startDate).toLocaleDateString()}
                           </span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <Calendar className="w-3 h-3" />
                           <span>
-                            End:{" "}
+                            End:{' '}
                             {new Date(training.endDate).toLocaleDateString()}
                           </span>
                         </div>
@@ -590,7 +586,7 @@ export default function HRMTrainingPage() {
                         <div className="flex items-center space-x-1">
                           <Clock className="w-3 h-3" />
                           <span>
-                            Created:{" "}
+                            Created:{' '}
                             {new Date(training.createdAt).toLocaleDateString()}
                           </span>
                         </div>
@@ -598,8 +594,8 @@ export default function HRMTrainingPage() {
                       {training.objectives &&
                         training.objectives.length > 0 && (
                           <div className="mt-2 text-sm text-gray-600">
-                            <strong>Objectives:</strong>{" "}
-                            {training.objectives.join(", ")}
+                            <strong>Objectives:</strong>{' '}
+                            {training.objectives.join(', ')}
                           </div>
                         )}
                     </div>
@@ -645,13 +641,13 @@ export default function HRMTrainingPage() {
             <DialogHeader>
               <DialogTitle>
                 {editingTraining
-                  ? "Edit Training Program"
-                  : "New Training Program"}
+                  ? 'Edit Training Program'
+                  : 'New Training Program'}
               </DialogTitle>
               <DialogDescription>
                 {editingTraining
-                  ? "Update training program information"
-                  : "Create a new training program for employees"}
+                  ? 'Update training program information'
+                  : 'Create a new training program for employees'}
               </DialogDescription>
             </DialogHeader>
 
@@ -706,7 +702,7 @@ export default function HRMTrainingPage() {
                     {Object.values(TrainingType).map((type) => (
                       <SelectItem key={type} value={type}>
                         {type.charAt(0).toUpperCase() +
-                          type.slice(1).replace("_", " ")}
+                          type.slice(1).replace('_', ' ')}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -826,12 +822,12 @@ export default function HRMTrainingPage() {
                 <Label htmlFor="objectives">Learning Objectives</Label>
                 <Textarea
                   id="objectives"
-                  value={formData.objectives?.join("\n") || ""}
+                  value={formData.objectives?.join('\n') || ''}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
                       objectives: e.target.value
-                        .split("\n")
+                        .split('\n')
                         .filter((obj) => obj.trim()),
                     }))
                   }
@@ -843,12 +839,12 @@ export default function HRMTrainingPage() {
                 <Label htmlFor="prerequisites">Prerequisites</Label>
                 <Textarea
                   id="prerequisites"
-                  value={formData.prerequisites?.join("\n") || ""}
+                  value={formData.prerequisites?.join('\n') || ''}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
                       prerequisites: e.target.value
-                        .split("\n")
+                        .split('\n')
                         .filter((prereq) => prereq.trim()),
                     }))
                   }
@@ -867,10 +863,10 @@ export default function HRMTrainingPage() {
               </Button>
               <Button onClick={handleSubmit} disabled={submitting}>
                 {submitting
-                  ? "Saving..."
+                  ? 'Saving...'
                   : editingTraining
-                    ? "Update Program"
-                    : "Create Program"}
+                    ? 'Update Program'
+                    : 'Create Program'}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -908,7 +904,7 @@ export default function HRMTrainingPage() {
                       )}
                     >
                       {viewingTraining.trainingType.charAt(0).toUpperCase() +
-                        viewingTraining.trainingType.slice(1).replace("_", " ")}
+                        viewingTraining.trainingType.slice(1).replace('_', ' ')}
                     </Badge>
                   </div>
                   <div>
@@ -1057,7 +1053,7 @@ export default function HRMTrainingPage() {
                 onClick={confirmDelete}
                 disabled={deleting}
               >
-                {deleting ? "Deleting..." : "Delete Program"}
+                {deleting ? 'Deleting...' : 'Delete Program'}
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { User, LoginCredentials } from "@/src/models/auth";
-import { apiService } from "@/src/services/ApiService";
-import { SessionManager } from "@/src/services/SessionManager";
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { User, LoginCredentials } from '@/src/models/auth';
+import { apiService } from '@/src/services/ApiService';
+import { SessionManager } from '@/src/services/SessionManager';
 
 interface Tenant {
   id: string;
@@ -152,8 +152,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setCurrentTenant(null);
       sessionManager.clearSession();
       apiService.setTenantId(null);
-      if (typeof window !== "undefined") {
-        window.location.href = "/login";
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
       }
     }
   };
@@ -186,7 +186,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 }

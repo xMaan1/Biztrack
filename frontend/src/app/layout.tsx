@@ -1,24 +1,24 @@
-import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
-import "./globals.css";
-import { AuthGuard } from "@/src/components/auth";
-import { AuthProvider } from "@/src/contexts/AuthContext";
-import { CurrencyProvider } from "@/src/contexts/CurrencyContext";
+import type { Metadata } from 'next';
+import { Inter, JetBrains_Mono } from 'next/font/google';
+import './globals.css';
+import { AuthGuard } from '@/src/components/auth';
+import { AuthProvider } from '@/src/contexts/AuthContext';
+import { CurrencyProvider } from '@/src/contexts/CurrencyContext';
 
 const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
+  variable: '--font-inter',
+  subsets: ['latin'],
 });
 
 const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains-mono",
-  subsets: ["latin"],
+  variable: '--font-jetbrains-mono',
+  subsets: ['latin'],
 });
 
 export const metadata: Metadata = {
-  title: "BizTrack - Project Management System",
+  title: 'BizTrack - Project Management System',
   description:
-    "Professional project management and team collaboration platform",
+    'Professional project management and team collaboration platform',
 };
 
 export default function RootLayout({

@@ -1,37 +1,36 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { useAuth } from "@/src/hooks/useAuth";
-import { useCurrency } from "@/src/contexts/CurrencyContext";
-import { DashboardLayout } from "@/src/components/layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Label } from "@/src/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select";
-import { Separator } from "@/src/components/ui/separator";
-import { Badge } from "@/src/components/ui/badge";
-import { 
-  Settings, 
-  DollarSign, 
-  Save, 
-  Check,
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/src/hooks/useAuth';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
+import { DashboardLayout } from '@/src/components/layout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Label } from '@/src/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/src/components/ui/select';
+import { Separator } from '@/src/components/ui/separator';
+import { Badge } from '@/src/components/ui/badge';
+import {
+  Settings,
+  DollarSign,
+  Save,
   AlertCircle,
-  Loader2
-} from "lucide-react";
-import { toast } from "sonner";
-import InvoiceCustomizationService from "@/src/services/InvoiceCustomizationService";
+  Loader2,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import InvoiceCustomizationService from '@/src/services/InvoiceCustomizationService';
 
 const CURRENCIES = [
-  { code: "USD", name: "US Dollar", symbol: "$" },
-  { code: "EUR", name: "Euro", symbol: "€" },
-  { code: "GBP", name: "British Pound", symbol: "£" },
-  { code: "CAD", name: "Canadian Dollar", symbol: "C$" },
-  { code: "AUD", name: "Australian Dollar", symbol: "A$" },
-  { code: "JPY", name: "Japanese Yen", symbol: "¥" },
+  { code: 'USD', name: 'US Dollar', symbol: '$' },
+  { code: 'EUR', name: 'Euro', symbol: '€' },
+  { code: 'GBP', name: 'British Pound', symbol: '£' },
+  { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
+  { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
+  { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
 ];
 
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const { } = useAuth();
   const { currency, setCurrency, formatCurrency, loading: currencyLoading } = useCurrency();
   const [selectedCurrency, setSelectedCurrency] = useState(currency);
   const [saving, setSaving] = useState(false);
@@ -50,20 +49,20 @@ export default function SettingsPage() {
   const handleSave = async () => {
     try {
       setSaving(true);
-      
+
       // Update the currency in the invoice customization
       await InvoiceCustomizationService.updateCustomization({
-        default_currency: selectedCurrency
+        default_currency: selectedCurrency,
       });
-      
+
       // Update the global currency context
       setCurrency(selectedCurrency);
       setHasChanges(false);
-      
-      toast.success("Currency settings updated successfully!");
+
+      toast.success('Currency settings updated successfully!');
     } catch (error) {
-      console.error("Failed to update currency settings:", error);
-      toast.error("Failed to update currency settings. Please try again.");
+      console.error('Failed to update currency settings:', error);
+      toast.error('Failed to update currency settings. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -145,9 +144,9 @@ export default function SettingsPage() {
                       {selectedCurrencyInfo.symbol}
                     </Badge>
                   </div>
-                  
+
                   <Separator className="my-3" />
-                  
+
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Preview:</p>
                     <div className="flex gap-4 text-sm">
@@ -179,7 +178,7 @@ export default function SettingsPage() {
                   ) : (
                     <Save className="h-4 w-4" />
                   )}
-                  {saving ? "Saving..." : "Save Changes"}
+                  {saving ? 'Saving...' : 'Save Changes'}
                 </Button>
               </div>
             </CardContent>

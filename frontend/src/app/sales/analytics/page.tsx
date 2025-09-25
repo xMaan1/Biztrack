@@ -1,48 +1,46 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
+} from '../../../components/ui/card';
+import { Button } from '../../../components/ui/button';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../../components/ui/select";
-import { Label } from "../../../components/ui/label";
-import { Badge } from "../../../components/ui/badge";
-import CRMService from "../../../services/CRMService";
-import { Opportunity, OpportunityStage } from "../../../models/crm";
-import { Contact, ContactType } from "../../../models/crm";
-import { Company, Industry } from "../../../models/crm";
-import { DashboardLayout } from "../../../components/layout";
+} from '../../../components/ui/select';
+import { Label } from '../../../components/ui/label';
+import { Badge } from '../../../components/ui/badge';
+import CRMService from '../../../services/CRMService';
+import { Opportunity, OpportunityStage } from '../../../models/crm';
+import { Contact, ContactType } from '../../../models/crm';
+import { Company, Industry } from '../../../models/crm';
+import { DashboardLayout } from '../../../components/layout';
 import {
   DollarSign,
   TrendingUp,
-  TrendingDown,
   Users,
   Building,
   Target,
-  Calendar,
   BarChart3,
   PieChart,
   Activity,
   Plus,
-} from "lucide-react";
+} from 'lucide-react';
 
 export default function SalesAnalyticsPage() {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
-  const [timeRange, setTimeRange] = useState("30");
-  const [selectedStage, setSelectedStage] = useState<string>("all");
+  const [timeRange, setTimeRange] = useState('30');
+  const [selectedStage, setSelectedStage] = useState<string>('all');
 
   useEffect(() => {
     loadData();
@@ -219,7 +217,7 @@ export default function SalesAnalyticsPage() {
                   <SelectItem value="all">All stages</SelectItem>
                   {Object.values(OpportunityStage).map((stage) => (
                     <SelectItem key={stage as string} value={stage as string}>
-                      {(stage as string).replace("_", " ")}
+                      {(stage as string).replace('_', ' ')}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -311,7 +309,7 @@ export default function SalesAnalyticsPage() {
                   >
                     <div className="flex items-center gap-2">
                       <Badge variant="outline">
-                        {(stage as string).replace("_", " ")}
+                        {(stage as string).replace('_', ' ')}
                       </Badge>
                       <span className="text-sm text-gray-600">({count})</span>
                     </div>
@@ -491,7 +489,7 @@ export default function SalesAnalyticsPage() {
                       <div>
                         <div className="font-medium">{opp.title}</div>
                         <div className="text-sm text-gray-500">
-                          {opp.stage.replace("_", " ")} • {opp.probability || 0}
+                          {opp.stage.replace('_', ' ')} • {opp.probability || 0}
                           % probability
                         </div>
                       </div>
@@ -503,7 +501,7 @@ export default function SalesAnalyticsPage() {
                       <div className="text-sm text-gray-500">
                         {opp.closedDate
                           ? new Date(opp.closedDate).toLocaleDateString()
-                          : "No close date"}
+                          : 'No close date'}
                       </div>
                     </div>
                   </div>
@@ -522,28 +520,28 @@ export default function SalesAnalyticsPage() {
             <div className="flex gap-4">
               <Button
                 variant="outline"
-                onClick={() => (window.location.href = "/crm/opportunities")}
+                onClick={() => (window.location.href = '/crm/opportunities')}
               >
                 <Plus className="w-4 h-4 mr-2" />
                 New Opportunity
               </Button>
               <Button
                 variant="outline"
-                onClick={() => (window.location.href = "/crm/contacts")}
+                onClick={() => (window.location.href = '/crm/contacts')}
               >
                 <Users className="w-4 h-4 mr-2" />
                 Add Contact
               </Button>
               <Button
                 variant="outline"
-                onClick={() => (window.location.href = "/crm/companies")}
+                onClick={() => (window.location.href = '/crm/companies')}
               >
                 <Building className="w-4 h-4 mr-2" />
                 Add Company
               </Button>
               <Button
                 variant="outline"
-                onClick={() => (window.location.href = "/crm/leads")}
+                onClick={() => (window.location.href = '/crm/leads')}
               >
                 <Target className="w-4 h-4 mr-2" />
                 Manage Leads

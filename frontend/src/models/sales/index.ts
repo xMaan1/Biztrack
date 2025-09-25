@@ -1,114 +1,114 @@
 // Sales Module Types and Interfaces
 
 export enum LeadStatus {
-  NEW = "new",
-  CONTACTED = "contacted",
-  QUALIFIED = "qualified",
-  PROPOSAL = "proposal",
-  NEGOTIATION = "negotiation",
-  WON = "won",
-  LOST = "lost",
+  NEW = 'new',
+  CONTACTED = 'contacted',
+  QUALIFIED = 'qualified',
+  PROPOSAL = 'proposal',
+  NEGOTIATION = 'negotiation',
+  WON = 'won',
+  LOST = 'lost',
 }
 
 export enum LeadSource {
-  WEBSITE = "website",
-  REFERRAL = "referral",
-  SOCIAL_MEDIA = "social_media",
-  EMAIL_CAMPAIGN = "email_campaign",
-  COLD_OUTREACH = "cold_outreach",
-  TRADE_SHOW = "trade_show",
-  OTHER = "other",
+  WEBSITE = 'website',
+  REFERRAL = 'referral',
+  SOCIAL_MEDIA = 'social_media',
+  EMAIL_CAMPAIGN = 'email_campaign',
+  COLD_OUTREACH = 'cold_outreach',
+  TRADE_SHOW = 'trade_show',
+  OTHER = 'other',
 }
 
 export enum OpportunityStage {
-  PROSPECTING = "prospecting",
-  QUALIFICATION = "qualification",
-  QUALIFIED = "qualified",
-  PROPOSAL = "proposal",
-  NEGOTIATION = "negotiation",
-  CLOSED_WON = "closed_won",
-  CLOSED_LOST = "closed_lost",
+  PROSPECTING = 'prospecting',
+  QUALIFICATION = 'qualification',
+  QUALIFIED = 'qualified',
+  PROPOSAL = 'proposal',
+  NEGOTIATION = 'negotiation',
+  CLOSED_WON = 'closed_won',
+  CLOSED_LOST = 'closed_lost',
 }
 
 export enum QuoteStatus {
-  DRAFT = "draft",
-  SENT = "sent",
-  VIEWED = "viewed",
-  ACCEPTED = "accepted",
-  REJECTED = "rejected",
-  EXPIRED = "expired",
+  DRAFT = 'draft',
+  SENT = 'sent',
+  VIEWED = 'viewed',
+  ACCEPTED = 'accepted',
+  REJECTED = 'rejected',
+  EXPIRED = 'expired',
 }
 
 export enum ContractStatus {
-  DRAFT = "draft",
-  PENDING_SIGNATURE = "pending_signature",
-  ACTIVE = "active",
-  EXPIRED = "expired",
-  TERMINATED = "terminated",
+  DRAFT = 'draft',
+  PENDING_SIGNATURE = 'pending_signature',
+  ACTIVE = 'active',
+  EXPIRED = 'expired',
+  TERMINATED = 'terminated',
 }
 
 export enum ContactType {
-  LEAD = "lead",
-  CUSTOMER = "customer",
-  PARTNER = "partner",
-  VENDOR = "vendor",
+  LEAD = 'lead',
+  CUSTOMER = 'customer',
+  PARTNER = 'partner',
+  VENDOR = 'vendor',
 }
 
 export enum ContactStatus {
-  ACTIVE = "active",
-  INACTIVE = "inactive",
-  LEAD = "lead",
-  PROSPECT = "prospect",
-  CUSTOMER = "customer",
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+  LEAD = 'lead',
+  PROSPECT = 'prospect',
+  CUSTOMER = 'customer',
 }
 
 export enum ContactSource {
-  WEBSITE = "website",
-  REFERRAL = "referral",
-  SOCIAL_MEDIA = "social_media",
-  EMAIL_CAMPAIGN = "email_campaign",
-  COLD_OUTREACH = "cold_outreach",
-  TRADE_SHOW = "trade_show",
-  EVENT = "event",
-  OTHER = "other",
+  WEBSITE = 'website',
+  REFERRAL = 'referral',
+  SOCIAL_MEDIA = 'social_media',
+  EMAIL_CAMPAIGN = 'email_campaign',
+  COLD_OUTREACH = 'cold_outreach',
+  TRADE_SHOW = 'trade_show',
+  EVENT = 'event',
+  OTHER = 'other',
 }
 
 export enum CompanyType {
-  CUSTOMER = "customer",
-  PROSPECT = "prospect",
-  PARTNER = "partner",
-  VENDOR = "vendor",
-  COMPETITOR = "competitor",
+  CUSTOMER = 'customer',
+  PROSPECT = 'prospect',
+  PARTNER = 'partner',
+  VENDOR = 'vendor',
+  COMPETITOR = 'competitor',
 }
 
 export enum CompanyIndustry {
-  TECHNOLOGY = "technology",
-  HEALTHCARE = "healthcare",
-  FINANCE = "finance",
-  RETAIL = "retail",
-  MANUFACTURING = "manufacturing",
-  EDUCATION = "education",
-  REAL_ESTATE = "real_estate",
-  CONSULTING = "consulting",
-  OTHER = "other",
+  TECHNOLOGY = 'technology',
+  HEALTHCARE = 'healthcare',
+  FINANCE = 'finance',
+  RETAIL = 'retail',
+  MANUFACTURING = 'manufacturing',
+  EDUCATION = 'education',
+  REAL_ESTATE = 'real_estate',
+  CONSULTING = 'consulting',
+  OTHER = 'other',
 }
 
 export enum OpportunityPriority {
-  LOW = "low",
-  MEDIUM = "medium",
-  HIGH = "high",
-  CRITICAL = "critical",
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+  CRITICAL = 'critical',
 }
 
 export enum ActivityType {
-  CALL = "call",
-  EMAIL = "email",
-  MEETING = "meeting",
-  NOTE = "note",
-  TASK = "task",
-  PROPOSAL_SENT = "proposal_sent",
-  QUOTE_SENT = "quote_sent",
-  CONTRACT_SIGNED = "contract_signed",
+  CALL = 'call',
+  EMAIL = 'email',
+  MEETING = 'meeting',
+  NOTE = 'note',
+  TASK = 'task',
+  PROPOSAL_SENT = 'proposal_sent',
+  QUOTE_SENT = 'quote_sent',
+  CONTRACT_SIGNED = 'contract_signed',
 }
 
 // Lead Types
@@ -523,6 +523,6 @@ export interface SalesActivitiesResponse {
   };
 }
 
-export * from "./Invoice";
-export * from "./Payment";
-export * from "./InvoiceDashboard";
+export * from './Invoice';
+export * from './Payment';
+export * from './InvoiceDashboard';

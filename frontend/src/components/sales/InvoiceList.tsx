@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -8,16 +8,16 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../ui/table";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
+} from '../ui/table';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "../ui/dropdown-menu";
+} from '../ui/dropdown-menu';
 import {
   Eye,
   Edit,
@@ -29,12 +29,10 @@ import {
   Calendar,
   DollarSign,
   FileText,
-} from "lucide-react";
-import { Invoice } from "../../models/sales";
-import InvoiceService from "../../services/InvoiceService";
-import { SessionManager } from "../../services/SessionManager";
-import { ApiService } from "../../services/ApiService";
-import { toast } from "sonner";
+} from 'lucide-react';
+import { Invoice } from '../../models/sales';
+import InvoiceService from '../../services/InvoiceService';
+import { toast } from 'sonner';
 
 interface InvoiceListProps {
   invoices: Invoice[];
@@ -64,22 +62,22 @@ export function InvoiceList({
   const handleDownload = async (invoiceId: string) => {
     try {
       setDownloading(invoiceId);
-      
+
       const blob = await InvoiceService.downloadInvoice(invoiceId);
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
+      const a = document.createElement('a');
       a.href = url;
       a.download = `invoice-${invoiceId}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      toast.success("Invoice downloaded successfully!");
+      toast.success('Invoice downloaded successfully!');
     } catch (error: any) {
       // Check if it's a customization error
       if (error.response?.status === 400) {
-        let errorMessage = "Error downloading invoice";
-        
+        let errorMessage = 'Error downloading invoice';
+
         // Try to extract error message from different possible formats
         if (error.response?.data?.detail) {
           errorMessage = error.response.data.detail;
@@ -88,17 +86,17 @@ export function InvoiceList({
         } else if (typeof error.response?.data === 'string') {
           errorMessage = error.response.data;
         }
-        
+
         // Check if it's specifically a customization error
-        if (errorMessage.includes("customization is required")) {
-          toast.error("Please customize your invoice template first using the 'Customize Invoice' button.", {
+        if (errorMessage.includes('customization is required')) {
+          toast.error('Please customize your invoice template first using the \'Customize Invoice\' button.', {
             duration: 5000,
           });
         } else {
           toast.error(errorMessage);
         }
       } else {
-        toast.error("Error downloading invoice");
+        toast.error('Error downloading invoice');
       }
     } finally {
       setDownloading(null);
@@ -145,7 +143,7 @@ export function InvoiceList({
                 <TableCell className="font-medium">
                   {invoice.invoiceNumber}
                 </TableCell>
-                <TableCell>{invoice.orderNumber || "-"}</TableCell>
+                <TableCell>{invoice.orderNumber || '-'}</TableCell>
                 <TableCell>
                   <div>
                     <div className="font-medium">{invoice.customerName}</div>
@@ -171,8 +169,8 @@ export function InvoiceList({
                     <span
                       className={
                         InvoiceService.isOverdue(invoice.dueDate)
-                          ? "text-red-600 font-medium"
-                          : ""
+                          ? 'text-red-600 font-medium'
+                          : ''
                       }
                     >
                       {InvoiceService.formatDate(invoice.dueDate)}
@@ -203,8 +201,8 @@ export function InvoiceList({
                     <span
                       className={
                         invoice.balance > 0
-                          ? "text-red-600 font-medium"
-                          : "text-green-600 font-medium"
+                          ? 'text-red-600 font-medium'
+                          : 'text-green-600 font-medium'
                       }
                     >
                       {InvoiceService.formatCurrency(
@@ -231,13 +229,13 @@ export function InvoiceList({
                         Edit Invoice
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      {invoice.status === "draft" && (
+                      {invoice.status === 'draft' && (
                         <DropdownMenuItem onClick={() => onSend(invoice.id)}>
                           <Mail className="h-4 w-4 mr-2" />
                           Send Invoice
                         </DropdownMenuItem>
                       )}
-                      {invoice.status === "sent" && (
+                      {invoice.status === 'sent' && (
                         <DropdownMenuItem
                           onClick={() => onMarkAsPaid(invoice.id)}
                         >
@@ -262,7 +260,7 @@ export function InvoiceList({
                         )}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      {invoice.status === "draft" && (
+                      {invoice.status === 'draft' && (
                         <DropdownMenuItem
                           onClick={() => onDelete(invoice)}
                           className="text-red-600"

@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { User, LoginCredentials } from "@/src/models/auth";
-import { apiService } from "@/src/services/ApiService";
-import { SessionManager } from "@/src/services/SessionManager";
+import { useState, useEffect } from 'react';
+import { User, LoginCredentials } from '@/src/models/auth';
+import { apiService } from '@/src/services/ApiService';
+import { SessionManager } from '@/src/services/SessionManager';
 
 interface Tenant {
   id: string;
@@ -105,8 +105,8 @@ export function useAuth() {
       setCurrentTenant(null);
       sessionManager.clearSession();
       apiService.setTenantId(null);
-      if (typeof window !== "undefined") {
-        window.location.href = "/login";
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
       }
     }
   };

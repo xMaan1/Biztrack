@@ -1,26 +1,22 @@
-"use client";
+'use client';
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import { Progress } from "../ui/progress";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
+import { Progress } from '../ui/progress';
 import {
   Stethoscope,
   Users,
   Calendar,
   DollarSign,
-  TrendingUp,
-  AlertTriangle,
-  CheckCircle2,
   Package,
   BarChart3,
   Plus,
   ArrowRight,
   Heart,
   Pill,
-  Activity,
-} from "lucide-react";
+} from 'lucide-react';
 
 interface HealthcareStats {
   totalProjects: number;
@@ -43,10 +39,10 @@ export default function HealthcareDashboard({
   stats,
   onNavigate,
 }: HealthcareDashboardProps) {
-  const handleCreateProject = () => onNavigate("/projects/new");
-  const handleNewAppointment = () => onNavigate("/appointments/new");
-  const handleViewPatients = () => onNavigate("/patients");
-  const handleViewSchedule = () => onNavigate("/schedule");
+  const handleCreateProject = () => onNavigate('/projects/new');
+  const handleNewAppointment = () => onNavigate('/appointments/new');
+  const handleViewPatients = () => onNavigate('/patients');
+  const handleViewSchedule = () => onNavigate('/schedule');
 
   return (
     <div className="space-y-8">
@@ -234,7 +230,7 @@ export default function HealthcareDashboard({
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Button
-              onClick={() => onNavigate("/patients")}
+              onClick={() => onNavigate('/patients')}
               variant="outline"
               className="h-20 flex-col gap-2"
             >
@@ -243,7 +239,7 @@ export default function HealthcareDashboard({
             </Button>
 
             <Button
-              onClick={() => onNavigate("/appointments")}
+              onClick={() => onNavigate('/appointments')}
               variant="outline"
               className="h-20 flex-col gap-2"
             >
@@ -252,7 +248,7 @@ export default function HealthcareDashboard({
             </Button>
 
             <Button
-              onClick={() => onNavigate("/inventory")}
+              onClick={() => onNavigate('/inventory')}
               variant="outline"
               className="h-20 flex-col gap-2"
             >
@@ -261,7 +257,7 @@ export default function HealthcareDashboard({
             </Button>
 
             <Button
-              onClick={() => onNavigate("/reports")}
+              onClick={() => onNavigate('/reports')}
               variant="outline"
               className="h-20 flex-col gap-2"
             >

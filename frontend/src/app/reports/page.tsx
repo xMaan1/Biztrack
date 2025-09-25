@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import React from "react";
+import React from 'react';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
+} from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
 import {
   BarChart3,
   PieChart,
@@ -15,8 +15,8 @@ import {
   Download,
   Calendar,
   Users,
-} from "lucide-react";
-import { DashboardLayout } from "../../components/layout";
+} from 'lucide-react';
+import { DashboardLayout } from '../../components/layout';
 
 export default function ReportsPage() {
   return (

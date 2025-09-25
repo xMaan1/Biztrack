@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -6,28 +6,28 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/src/components/ui/dialog";
-import { Button } from "@/src/components/ui/button";
-import { Input } from "@/src/components/ui/input";
-import { Label } from "@/src/components/ui/label";
-import { Textarea } from "@/src/components/ui/textarea";
+} from '@/src/components/ui/dialog';
+import { Button } from '@/src/components/ui/button';
+import { Input } from '@/src/components/ui/input';
+import { Label } from '@/src/components/ui/label';
+import { Textarea } from '@/src/components/ui/textarea';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select";
-import { Badge } from "@/src/components/ui/badge";
-import { X } from "lucide-react";
+} from '@/src/components/ui/select';
+import { Badge } from '@/src/components/ui/badge';
+import { X } from 'lucide-react';
 import {
   MaintenanceScheduleCreate,
   MaintenanceType,
   MaintenancePriority,
   MaintenanceCategory,
   EquipmentResponse,
-} from "@/src/models/maintenance";
-import { maintenanceService } from "@/src/services/MaintenanceService";
+} from '@/src/models/maintenance';
+import { maintenanceService } from '@/src/services/MaintenanceService';
 
 interface MaintenanceScheduleDialogProps {
   open: boolean;
@@ -43,14 +43,14 @@ export function MaintenanceScheduleDialog({
   const [loading, setLoading] = useState(false);
   const [equipment, setEquipment] = useState<EquipmentResponse[]>([]);
   const [formData, setFormData] = useState<Partial<MaintenanceScheduleCreate>>({
-    title: "",
-    description: "",
+    title: '',
+    description: '',
     maintenance_type: MaintenanceType.PREVENTIVE,
     priority: MaintenancePriority.MEDIUM,
     category: MaintenanceCategory.GENERAL,
-    equipment_id: "",
-    location: "",
-    scheduled_date: "",
+    equipment_id: '',
+    location: '',
+    scheduled_date: '',
     estimated_duration_hours: 1,
     estimated_cost: 0,
     required_parts: [],
@@ -60,11 +60,11 @@ export function MaintenanceScheduleDialog({
     tags: [],
   });
 
-  const [newPart, setNewPart] = useState("");
-  const [newTool, setNewTool] = useState("");
-  const [newSafetyReq, setNewSafetyReq] = useState("");
-  const [newProcedure, setNewProcedure] = useState("");
-  const [newTag, setNewTag] = useState("");
+  const [newPart, setNewPart] = useState('');
+  const [newTool, setNewTool] = useState('');
+  const [newSafetyReq, setNewSafetyReq] = useState('');
+  const [newProcedure, setNewProcedure] = useState('');
+  const [newTag, setNewTag] = useState('');
 
   // Fetch equipment list when dialog opens
   useEffect(() => {
@@ -83,7 +83,7 @@ export function MaintenanceScheduleDialog({
 
   const handleInputChange = (
     field: keyof MaintenanceScheduleCreate,
-    value: any
+    value: any,
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -94,18 +94,18 @@ export function MaintenanceScheduleDialog({
   const addArrayItem = (
     field: keyof MaintenanceScheduleCreate,
     value: string,
-    setter: (value: string) => void
+    setter: (value: string) => void,
   ) => {
     if (value.trim()) {
       const currentArray = (formData[field] as string[]) || [];
       handleInputChange(field, [...currentArray, value.trim()]);
-      setter("");
+      setter('');
     }
   };
 
   const removeArrayItem = (
     field: keyof MaintenanceScheduleCreate,
-    index: number
+    index: number,
   ) => {
     const currentArray = (formData[field] as string[]) || [];
     const newArray = currentArray.filter((_, i) => i !== index);
@@ -114,15 +114,15 @@ export function MaintenanceScheduleDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.title || !formData.equipment_id || !formData.scheduled_date) {
-      alert("Please fill in all required fields");
+      alert('Please fill in all required fields');
       return;
     }
 
     try {
       setLoading(true);
-      
+
       // Prepare data for submission - convert empty strings to null for optional fields
       const submitData = {
         ...formData,
@@ -136,14 +136,14 @@ export function MaintenanceScheduleDialog({
       onOpenChange(false);
       // Reset form
       setFormData({
-        title: "",
-        description: "",
+        title: '',
+        description: '',
         maintenance_type: MaintenanceType.PREVENTIVE,
         priority: MaintenancePriority.MEDIUM,
         category: MaintenanceCategory.GENERAL,
-        equipment_id: "",
-        location: "",
-        scheduled_date: "",
+        equipment_id: '',
+        location: '',
+        scheduled_date: '',
         estimated_duration_hours: 1,
         estimated_cost: 0,
         required_parts: [],
@@ -153,16 +153,10 @@ export function MaintenanceScheduleDialog({
         tags: [],
       });
     } catch (error) {
-      alert("Failed to create maintenance schedule. Please try again.");
+      alert('Failed to create maintenance schedule. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatDateForInput = (dateString: string) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toISOString().slice(0, 16);
   };
 
   return (
@@ -174,7 +168,7 @@ export function MaintenanceScheduleDialog({
             Schedule a new maintenance task for your equipment
           </DialogDescription>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
           <div className="grid gap-4">
@@ -183,18 +177,18 @@ export function MaintenanceScheduleDialog({
               <Input
                 id="title"
                 value={formData.title}
-                onChange={(e) => handleInputChange("title", e.target.value)}
+                onChange={(e) => handleInputChange('title', e.target.value)}
                 placeholder="Enter maintenance schedule title"
                 required
               />
             </div>
-            
+
             <div className="grid gap-2">
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) => handleInputChange("description", e.target.value)}
+                onChange={(e) => handleInputChange('description', e.target.value)}
                 placeholder="Describe the maintenance task"
                 rows={3}
               />
@@ -207,7 +201,7 @@ export function MaintenanceScheduleDialog({
               <Label htmlFor="maintenance_type">Maintenance Type *</Label>
               <Select
                 value={formData.maintenance_type}
-                onValueChange={(value) => handleInputChange("maintenance_type", value)}
+                onValueChange={(value) => handleInputChange('maintenance_type', value)}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -226,7 +220,7 @@ export function MaintenanceScheduleDialog({
               <Label htmlFor="priority">Priority *</Label>
               <Select
                 value={formData.priority}
-                onValueChange={(value) => handleInputChange("priority", value)}
+                onValueChange={(value) => handleInputChange('priority', value)}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -247,7 +241,7 @@ export function MaintenanceScheduleDialog({
               <Label htmlFor="category">Category *</Label>
               <Select
                 value={formData.category}
-                onValueChange={(value) => handleInputChange("category", value)}
+                onValueChange={(value) => handleInputChange('category', value)}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -266,7 +260,7 @@ export function MaintenanceScheduleDialog({
               <Label htmlFor="equipment_id">Equipment *</Label>
               <Select
                 value={formData.equipment_id}
-                onValueChange={(value) => handleInputChange("equipment_id", value)}
+                onValueChange={(value) => handleInputChange('equipment_id', value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select equipment" />
@@ -274,7 +268,7 @@ export function MaintenanceScheduleDialog({
                 <SelectContent>
                   {equipment.map((eq) => (
                     <SelectItem key={eq.id} value={eq.id}>
-                      {eq.name} - {eq.model || "No Model"}
+                      {eq.name} - {eq.model || 'No Model'}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -290,7 +284,7 @@ export function MaintenanceScheduleDialog({
                 id="scheduled_date"
                 type="datetime-local"
                 value={formData.scheduled_date}
-                onChange={(e) => handleInputChange("scheduled_date", e.target.value)}
+                onChange={(e) => handleInputChange('scheduled_date', e.target.value)}
                 required
               />
             </div>
@@ -303,7 +297,7 @@ export function MaintenanceScheduleDialog({
                 min="0.5"
                 step="0.5"
                 value={formData.estimated_duration_hours}
-                onChange={(e) => handleInputChange("estimated_duration_hours", parseFloat(e.target.value))}
+                onChange={(e) => handleInputChange('estimated_duration_hours', parseFloat(e.target.value))}
               />
             </div>
           </div>
@@ -315,7 +309,7 @@ export function MaintenanceScheduleDialog({
               <Input
                 id="location"
                 value={formData.location}
-                onChange={(e) => handleInputChange("location", e.target.value)}
+                onChange={(e) => handleInputChange('location', e.target.value)}
                 placeholder="Maintenance location"
               />
             </div>
@@ -328,7 +322,7 @@ export function MaintenanceScheduleDialog({
                 min="0"
                 step="0.01"
                 value={formData.estimated_cost}
-                onChange={(e) => handleInputChange("estimated_cost", parseFloat(e.target.value))}
+                onChange={(e) => handleInputChange('estimated_cost', parseFloat(e.target.value))}
               />
             </div>
           </div>
@@ -341,12 +335,12 @@ export function MaintenanceScheduleDialog({
                 value={newPart}
                 onChange={(e) => setNewPart(e.target.value)}
                 placeholder="Add required part"
-                onKeyPress={(e) => e.key === "Enter" && addArrayItem("required_parts", newPart, setNewPart)}
+                onKeyPress={(e) => e.key === 'Enter' && addArrayItem('required_parts', newPart, setNewPart)}
               />
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => addArrayItem("required_parts", newPart, setNewPart)}
+                onClick={() => addArrayItem('required_parts', newPart, setNewPart)}
               >
                 Add
               </Button>
@@ -357,7 +351,7 @@ export function MaintenanceScheduleDialog({
                   {part}
                   <button
                     type="button"
-                    onClick={() => removeArrayItem("required_parts", index)}
+                    onClick={() => removeArrayItem('required_parts', index)}
                     className="ml-1 hover:text-red-500"
                   >
                     <X className="h-3 w-3" />
@@ -375,12 +369,12 @@ export function MaintenanceScheduleDialog({
                 value={newTool}
                 onChange={(e) => setNewTool(e.target.value)}
                 placeholder="Add required tool"
-                onKeyPress={(e) => e.key === "Enter" && addArrayItem("required_tools", newTool, setNewTool)}
+                onKeyPress={(e) => e.key === 'Enter' && addArrayItem('required_tools', newTool, setNewTool)}
               />
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => addArrayItem("required_tools", newTool, setNewTool)}
+                onClick={() => addArrayItem('required_tools', newTool, setNewTool)}
               >
                 Add
               </Button>
@@ -391,7 +385,7 @@ export function MaintenanceScheduleDialog({
                   {tool}
                   <button
                     type="button"
-                    onClick={() => removeArrayItem("required_tools", index)}
+                    onClick={() => removeArrayItem('required_tools', index)}
                     className="ml-1 hover:text-red-500"
                   >
                     <X className="h-3 w-3" />
@@ -409,12 +403,12 @@ export function MaintenanceScheduleDialog({
                 value={newSafetyReq}
                 onChange={(e) => setNewSafetyReq(e.target.value)}
                 placeholder="Add safety requirement"
-                onKeyPress={(e) => e.key === "Enter" && addArrayItem("safety_requirements", newSafetyReq, setNewSafetyReq)}
+                onKeyPress={(e) => e.key === 'Enter' && addArrayItem('safety_requirements', newSafetyReq, setNewSafetyReq)}
               />
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => addArrayItem("safety_requirements", newSafetyReq, setNewSafetyReq)}
+                onClick={() => addArrayItem('safety_requirements', newSafetyReq, setNewSafetyReq)}
               >
                 Add
               </Button>
@@ -425,7 +419,7 @@ export function MaintenanceScheduleDialog({
                   {req}
                   <button
                     type="button"
-                    onClick={() => removeArrayItem("safety_requirements", index)}
+                    onClick={() => removeArrayItem('safety_requirements', index)}
                     className="ml-1 hover:text-red-500"
                   >
                     <X className="h-3 w-3" />
@@ -443,12 +437,12 @@ export function MaintenanceScheduleDialog({
                 value={newProcedure}
                 onChange={(e) => setNewProcedure(e.target.value)}
                 placeholder="Add maintenance procedure"
-                onKeyPress={(e) => e.key === "Enter" && addArrayItem("maintenance_procedures", newProcedure, setNewProcedure)}
+                onKeyPress={(e) => e.key === 'Enter' && addArrayItem('maintenance_procedures', newProcedure, setNewProcedure)}
               />
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => addArrayItem("maintenance_procedures", newProcedure, setNewProcedure)}
+                onClick={() => addArrayItem('maintenance_procedures', newProcedure, setNewProcedure)}
               >
                 Add
               </Button>
@@ -459,7 +453,7 @@ export function MaintenanceScheduleDialog({
                   {procedure}
                   <button
                     type="button"
-                    onClick={() => removeArrayItem("maintenance_procedures", index)}
+                    onClick={() => removeArrayItem('maintenance_procedures', index)}
                     className="ml-1 hover:text-red-500"
                   >
                     <X className="h-3 w-3" />
@@ -477,12 +471,12 @@ export function MaintenanceScheduleDialog({
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
                 placeholder="Add tag"
-                onKeyPress={(e) => e.key === "Enter" && addArrayItem("tags", newTag, setNewTag)}
+                onKeyPress={(e) => e.key === 'Enter' && addArrayItem('tags', newTag, setNewTag)}
               />
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => addArrayItem("tags", newTag, setNewTag)}
+                onClick={() => addArrayItem('tags', newTag, setNewTag)}
               >
                 Add
               </Button>
@@ -493,7 +487,7 @@ export function MaintenanceScheduleDialog({
                   {tag}
                   <button
                     type="button"
-                    onClick={() => removeArrayItem("tags", index)}
+                    onClick={() => removeArrayItem('tags', index)}
                     className="ml-1 hover:text-red-500"
                   >
                     <X className="h-3 w-3" />
@@ -513,7 +507,7 @@ export function MaintenanceScheduleDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Creating..." : "Create Schedule"}
+              {loading ? 'Creating...' : 'Create Schedule'}
             </Button>
           </DialogFooter>
         </form>

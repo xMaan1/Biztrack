@@ -1,4 +1,4 @@
-import { apiService } from "./ApiService";
+import { apiService } from './ApiService';
 import {
   MaintenanceScheduleCreate,
   MaintenanceScheduleUpdate,
@@ -14,10 +14,10 @@ import {
   MaintenanceReportResponse,
   MaintenanceDashboardStats,
   MaintenanceFilter,
-} from "../models/maintenance";
+} from '../models/maintenance';
 
 export class MaintenanceService {
-  private baseUrl = "/maintenance";
+  private baseUrl = '/maintenance';
 
   // Maintenance Schedule Methods
   async createMaintenanceSchedule(

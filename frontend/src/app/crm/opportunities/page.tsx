@@ -1,23 +1,23 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
-import { Input } from "@/src/components/ui/input";
+} from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Badge } from '@/src/components/ui/badge';
+import { Input } from '@/src/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select";
+} from '@/src/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -25,10 +25,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/src/components/ui/dialog";
-import { Label } from "@/src/components/ui/label";
-import { Textarea } from "@/src/components/ui/textarea";
-import { Alert, AlertDescription } from "@/src/components/ui/alert";
+} from '@/src/components/ui/dialog';
+import { Label } from '@/src/components/ui/label';
+import { Textarea } from '@/src/components/ui/textarea';
+import { Alert, AlertDescription } from '@/src/components/ui/alert';
 import {
   Target,
   Plus,
@@ -39,23 +39,21 @@ import {
   Eye,
   DollarSign,
   Calendar,
-  TrendingUp,
-} from "lucide-react";
-import CRMService from "@/src/services/CRMService";
+} from 'lucide-react';
+import CRMService from '@/src/services/CRMService';
 import {
   Opportunity,
   OpportunityStage,
   CRMOpportunityFilters,
   OpportunityCreate,
-  OpportunityUpdate,
-} from "@/src/models/crm";
-import { DashboardLayout } from "../../../components/layout";
+} from '@/src/models/crm';
+import { DashboardLayout } from '../../../components/layout';
 
 export default function CRMOpportunitiesPage() {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<CRMOpportunityFilters>({});
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingOpportunity, setEditingOpportunity] =
     useState<Opportunity | null>(null);
@@ -68,17 +66,17 @@ export default function CRMOpportunitiesPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [formData, setFormData] = useState<OpportunityCreate>({
-    title: "",
-    description: "",
+    title: '',
+    description: '',
     stage: OpportunityStage.PROSPECTING,
     amount: undefined,
     probability: 50,
-    expectedCloseDate: "",
-    leadId: "",
-    contactId: "",
-    companyId: "",
-    assignedTo: "",
-    notes: "",
+    expectedCloseDate: '',
+    leadId: '',
+    contactId: '',
+    companyId: '',
+    assignedTo: '',
+    notes: '',
     tags: [],
   });
 
@@ -92,7 +90,7 @@ export default function CRMOpportunitiesPage() {
       const response = await CRMService.getOpportunities(filters, 1, 100);
       setOpportunities(response.opportunities);
     } catch (err) {
-      setErrorMessage("Failed to load opportunities");
+      setErrorMessage('Failed to load opportunities');
       } finally {
       setLoading(false);
     }
@@ -104,22 +102,22 @@ export default function CRMOpportunitiesPage() {
 
   const resetFilters = () => {
     setFilters({});
-    setSearch("");
+    setSearch('');
   };
 
   const resetForm = () => {
     setFormData({
-      title: "",
-      description: "",
+      title: '',
+      description: '',
       stage: OpportunityStage.PROSPECTING,
       amount: undefined,
       probability: 50,
-      expectedCloseDate: "",
-      leadId: "",
-      contactId: "",
-      companyId: "",
-      assignedTo: "",
-      notes: "",
+      expectedCloseDate: '',
+      leadId: '',
+      contactId: '',
+      companyId: '',
+      assignedTo: '',
+      notes: '',
       tags: [],
     });
     setEditingOpportunity(null);
@@ -133,17 +131,17 @@ export default function CRMOpportunitiesPage() {
 
       if (editingOpportunity) {
         await CRMService.updateOpportunity(editingOpportunity.id, formData);
-        setSuccessMessage("Opportunity updated successfully!");
+        setSuccessMessage('Opportunity updated successfully!');
       } else {
         await CRMService.createOpportunity(formData);
-        setSuccessMessage("Opportunity created successfully!");
+        setSuccessMessage('Opportunity created successfully!');
       }
 
       setShowCreateDialog(false);
       resetForm();
       loadOpportunities();
     } catch (err) {
-      setErrorMessage("Failed to save opportunity. Please try again.");
+      setErrorMessage('Failed to save opportunity. Please try again.');
       } finally {
       setSubmitting(false);
     }
@@ -153,16 +151,16 @@ export default function CRMOpportunitiesPage() {
     setEditingOpportunity(opportunity);
     setFormData({
       title: opportunity.title,
-      description: opportunity.description || "",
+      description: opportunity.description || '',
       stage: opportunity.stage,
       amount: opportunity.amount,
       probability: opportunity.probability,
-      expectedCloseDate: opportunity.expectedCloseDate || "",
-      leadId: opportunity.leadId || "",
-      contactId: opportunity.contactId || "",
-      companyId: opportunity.companyId || "",
-      assignedTo: opportunity.assignedTo || "",
-      notes: opportunity.notes || "",
+      expectedCloseDate: opportunity.expectedCloseDate || '',
+      leadId: opportunity.leadId || '',
+      contactId: opportunity.contactId || '',
+      companyId: opportunity.companyId || '',
+      assignedTo: opportunity.assignedTo || '',
+      notes: opportunity.notes || '',
       tags: opportunity.tags || [],
     });
     setShowCreateDialog(true);
@@ -182,11 +180,11 @@ export default function CRMOpportunitiesPage() {
     try {
       setDeleting(true);
       await CRMService.deleteOpportunity(deletingOpportunity.id);
-      setSuccessMessage("Opportunity deleted successfully!");
+      setSuccessMessage('Opportunity deleted successfully!');
       setDeletingOpportunity(null);
       loadOpportunities();
     } catch (err) {
-      setErrorMessage("Failed to delete opportunity. Please try again.");
+      setErrorMessage('Failed to delete opportunity. Please try again.');
       } finally {
       setDeleting(false);
     }
@@ -198,6 +196,7 @@ export default function CRMOpportunitiesPage() {
       const timer = setTimeout(() => setSuccessMessage(null), 5000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [successMessage]);
 
   useEffect(() => {
@@ -205,6 +204,7 @@ export default function CRMOpportunitiesPage() {
       const timer = setTimeout(() => setErrorMessage(null), 5000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [errorMessage]);
 
   if (loading) {
@@ -270,7 +270,7 @@ export default function CRMOpportunitiesPage() {
                     placeholder="Search opportunities..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                   />
                   <Button onClick={handleSearch}>
                     <Search className="w-4 h-4" />
@@ -280,12 +280,12 @@ export default function CRMOpportunitiesPage() {
               <div>
                 <label className="text-sm font-medium">Stage</label>
                 <Select
-                  value={filters.stage || "all"}
+                  value={filters.stage || 'all'}
                   onValueChange={(value) =>
                     setFilters((prev: CRMOpportunityFilters) => ({
                       ...prev,
                       stage:
-                        value === "all"
+                        value === 'all'
                           ? undefined
                           : (value as OpportunityStage),
                     }))
@@ -298,8 +298,8 @@ export default function CRMOpportunitiesPage() {
                     <SelectItem value="all">All Stages</SelectItem>
                     {Object.values(OpportunityStage).map((stage) => (
                       <SelectItem key={stage} value={stage}>
-                        {stage.replace("_", " ").charAt(0).toUpperCase() +
-                          stage.replace("_", " ").slice(1)}
+                        {stage.replace('_', ' ').charAt(0).toUpperCase() +
+                          stage.replace('_', ' ').slice(1)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -360,10 +360,10 @@ export default function CRMOpportunitiesPage() {
                         )}
                       >
                         {opportunity.stage
-                          .replace("_", " ")
+                          .replace('_', ' ')
                           .charAt(0)
                           .toUpperCase() +
-                          opportunity.stage.replace("_", " ").slice(1)}
+                          opportunity.stage.replace('_', ' ').slice(1)}
                       </Badge>
                       <Badge variant="outline">
                         {opportunity.probability}% probability
@@ -372,7 +372,7 @@ export default function CRMOpportunitiesPage() {
                         <div className="flex items-center space-x-1 text-sm text-gray-500">
                           <Calendar className="w-4 h-4" />
                           <span>
-                            Closes:{" "}
+                            Closes:{' '}
                             {CRMService.formatDate(
                               opportunity.expectedCloseDate,
                             )}
@@ -449,7 +449,7 @@ export default function CRMOpportunitiesPage() {
                     className="text-center p-3 border rounded-lg"
                   >
                     <div className="text-sm font-medium text-gray-600 capitalize">
-                      {stage.replace("_", " ")}
+                      {stage.replace('_', ' ')}
                     </div>
                     <div className="text-2xl font-bold text-gray-900">
                       {stageOpportunities.length}
@@ -469,12 +469,12 @@ export default function CRMOpportunitiesPage() {
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>
-                {editingOpportunity ? "Edit Opportunity" : "New Opportunity"}
+                {editingOpportunity ? 'Edit Opportunity' : 'New Opportunity'}
               </DialogTitle>
               <DialogDescription>
                 {editingOpportunity
-                  ? "Update opportunity information"
-                  : "Create a new sales opportunity"}
+                  ? 'Update opportunity information'
+                  : 'Create a new sales opportunity'}
               </DialogDescription>
             </DialogHeader>
 
@@ -527,8 +527,8 @@ export default function CRMOpportunitiesPage() {
                   <SelectContent>
                     {Object.values(OpportunityStage).map((stage) => (
                       <SelectItem key={stage} value={stage}>
-                        {stage.replace("_", " ").charAt(0).toUpperCase() +
-                          stage.replace("_", " ").slice(1)}
+                        {stage.replace('_', ' ').charAt(0).toUpperCase() +
+                          stage.replace('_', ' ').slice(1)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -539,7 +539,7 @@ export default function CRMOpportunitiesPage() {
                 <Input
                   id="amount"
                   type="number"
-                  value={formData.amount || ""}
+                  value={formData.amount || ''}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
@@ -656,10 +656,10 @@ export default function CRMOpportunitiesPage() {
               </Button>
               <Button onClick={handleSubmit} disabled={submitting}>
                 {submitting
-                  ? "Saving..."
+                  ? 'Saving...'
                   : editingOpportunity
-                    ? "Update Opportunity"
-                    : "Create Opportunity"}
+                    ? 'Update Opportunity'
+                    : 'Create Opportunity'}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -707,10 +707,10 @@ export default function CRMOpportunitiesPage() {
                       )}
                     >
                       {viewingOpportunity.stage
-                        .replace("_", " ")
+                        .replace('_', ' ')
                         .charAt(0)
                         .toUpperCase() +
-                        viewingOpportunity.stage.replace("_", " ").slice(1)}
+                        viewingOpportunity.stage.replace('_', ' ').slice(1)}
                     </Badge>
                   </div>
                   <div>
@@ -817,7 +817,7 @@ export default function CRMOpportunitiesPage() {
                 onClick={confirmDelete}
                 disabled={deleting}
               >
-                {deleting ? "Deleting..." : "Delete Opportunity"}
+                {deleting ? 'Deleting...' : 'Delete Opportunity'}
               </Button>
             </DialogFooter>
           </DialogContent>

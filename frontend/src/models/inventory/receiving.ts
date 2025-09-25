@@ -1,9 +1,9 @@
 export enum ReceivingStatus {
-  PENDING = "pending",
-  IN_PROGRESS = "in_progress",
-  COMPLETED = "completed",
-  PARTIAL = "partial",
-  CANCELLED = "cancelled",
+  PENDING = 'pending',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  PARTIAL = 'partial',
+  CANCELLED = 'cancelled',
 }
 
 export interface ReceivingItem {

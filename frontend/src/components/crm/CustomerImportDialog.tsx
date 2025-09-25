@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,23 +8,23 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../ui/dialog";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { Alert, AlertDescription } from "../ui/alert";
-import { Progress } from "../ui/progress";
-import { 
-  Upload, 
-  Download, 
-  FileText, 
-  CheckCircle, 
-  XCircle, 
+} from '../ui/dialog';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Alert, AlertDescription } from '../ui/alert';
+import { Progress } from '../ui/progress';
+import {
+  Upload,
+  Download,
+  FileText,
+  CheckCircle,
+  XCircle,
   AlertCircle,
-  Loader2 
-} from "lucide-react";
-import { apiService } from "../../services/ApiService";
-import { toast } from "sonner";
+  Loader2,
+} from 'lucide-react';
+import { apiService } from '../../services/ApiService';
+import { toast } from 'sonner';
 
 interface ImportResult {
   success: boolean;
@@ -55,7 +55,7 @@ export default function CustomerImportDialog({
     if (selectedFile) {
       const fileExtension = selectedFile.name.toLowerCase().split('.').pop();
       if (!['csv', 'xlsx', 'xls'].includes(fileExtension || '')) {
-        toast.error("Please select a CSV or Excel file");
+        toast.error('Please select a CSV or Excel file');
         return;
       }
       setFile(selectedFile);
@@ -65,7 +65,7 @@ export default function CustomerImportDialog({
 
   const handleImport = async () => {
     if (!file) {
-      toast.error("Please select a file to import");
+      toast.error('Please select a file to import');
       return;
     }
 
@@ -102,26 +102,26 @@ export default function CustomerImportDialog({
           message: response.message,
           imported_count: response.imported_count || 0,
           failed_count: response.failed_count || 0,
-          errors: response.errors || []
+          errors: response.errors || [],
         });
 
         if (response.imported_count > 0) {
           toast.success(`Successfully imported ${response.imported_count} customers`);
           onImportComplete();
         } else {
-          toast.error("No customers were imported");
+          toast.error('No customers were imported');
         }
       } else {
-        toast.error(response.message || "Import failed");
+        toast.error(response.message || 'Import failed');
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || "Import failed");
+      toast.error(error.response?.data?.detail || 'Import failed');
       setImportResult({
         success: false,
-        message: error.response?.data?.detail || "Import failed",
+        message: error.response?.data?.detail || 'Import failed',
         imported_count: 0,
         failed_count: 0,
-        errors: []
+        errors: [],
       });
     } finally {
       setUploading(false);
@@ -131,7 +131,7 @@ export default function CustomerImportDialog({
   const handleDownloadTemplate = async () => {
     try {
       const response = await apiService.get('/crm/customers/import/template');
-      
+
       if (response.success) {
         // Create blob and download
         const blob = new Blob([response.template], { type: 'text/csv' });
@@ -143,13 +143,13 @@ export default function CustomerImportDialog({
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
-        
-        toast.success("Template downloaded successfully");
+
+        toast.success('Template downloaded successfully');
       } else {
-        toast.error("Failed to download template");
+        toast.error('Failed to download template');
       }
     } catch (error) {
-      toast.error("Failed to download template");
+      toast.error('Failed to download template');
     }
   };
 
@@ -236,7 +236,7 @@ export default function CustomerImportDialog({
 
           {/* Import Result */}
           {importResult && (
-            <Alert className={importResult.success ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}>
+            <Alert className={importResult.success ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
                 <div className="space-y-2">
@@ -289,11 +289,11 @@ export default function CustomerImportDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={handleClose} disabled={uploading}>
-            {importResult ? "Close" : "Cancel"}
+            {importResult ? 'Close' : 'Cancel'}
           </Button>
           {!importResult && (
-            <Button 
-              onClick={handleImport} 
+            <Button
+              onClick={handleImport}
               disabled={!file || uploading}
               className="bg-blue-600 hover:bg-blue-700"
             >

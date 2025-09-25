@@ -1,11 +1,11 @@
 export enum PurchaseOrderStatus {
-  DRAFT = "draft",
-  SUBMITTED = "submitted",
-  APPROVED = "approved",
-  ORDERED = "ordered",
-  PARTIALLY_RECEIVED = "partially_received",
-  RECEIVED = "received",
-  CANCELLED = "cancelled",
+  DRAFT = 'draft',
+  SUBMITTED = 'submitted',
+  APPROVED = 'approved',
+  ORDERED = 'ordered',
+  PARTIALLY_RECEIVED = 'partially_received',
+  RECEIVED = 'received',
+  CANCELLED = 'cancelled',
 }
 
 export interface PurchaseOrderItem {

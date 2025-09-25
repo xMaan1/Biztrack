@@ -1,44 +1,43 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Badge } from "../../components/ui/badge";
+} from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Badge } from '../../components/ui/badge';
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from "../../components/ui/avatar";
-import { Progress } from "../../components/ui/progress";
+} from '../../components/ui/avatar';
+import { Progress } from '../../components/ui/progress';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../components/ui/select";
+} from '../../components/ui/select';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "../../components/ui/dropdown-menu";
+} from '../../components/ui/dropdown-menu';
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "../../components/ui/tabs";
-import { Alert, AlertDescription } from "../../components/ui/alert";
-import { Separator } from "../../components/ui/separator";
+} from '../../components/ui/tabs';
+import { Separator } from '../../components/ui/separator';
 import {
   Plus,
   Search,
@@ -48,47 +47,43 @@ import {
   Eye,
   Filter,
   Star,
-  Clock,
-  Flag,
-  CheckCircle2,
-  Users,
   FolderOpen,
   Calendar,
   DollarSign,
   Loader2,
   RefreshCw,
   CheckSquare,
-} from "lucide-react";
-import { Project } from "../../models/project/Project";
-import { apiService } from "../../services/ApiService";
-import { useAuth } from "../../hooks/useAuth";
-import { DashboardLayout } from "../../components/layout";
-import { ProjectDialog } from "../../components/projects";
+} from 'lucide-react';
+import { Project } from '../../models/project/Project';
+import { apiService } from '../../services/ApiService';
+import { useAuth } from '../../hooks/useAuth';
+import { DashboardLayout } from '../../components/layout';
+import { ProjectDialog } from '../../components/projects';
 import {
   cn,
   getStatusColor,
   getPriorityColor,
   getInitials,
   formatDate,
-} from "../../lib/utils";
+} from '../../lib/utils';
 
 export default function ProjectsPage() {
-  const { user, currentTenant } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
+  const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const [starredProjects, setStarredProjects] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<string>("newest");
-  const [activeTab, setActiveTab] = useState("all");
+  const [sortBy] = useState<string>('newest');
+  const [activeTab, setActiveTab] = useState('all');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -119,23 +114,23 @@ export default function ProjectsPage() {
     }
 
     // Apply status filter
-    if (statusFilter !== "all") {
+    if (statusFilter !== 'all') {
       filtered = filtered.filter((project) => project.status === statusFilter);
     }
 
     // Apply priority filter
-    if (priorityFilter !== "all") {
+    if (priorityFilter !== 'all') {
       filtered = filtered.filter(
         (project) => project.priority === priorityFilter,
       );
     }
 
     // Filter by tab
-    if (activeTab === "my") {
+    if (activeTab === 'my') {
       filtered = filtered.filter(
         (project) => project.projectManager.id === user?.userId,
       );
-    } else if (activeTab === "starred") {
+    } else if (activeTab === 'starred') {
       filtered = filtered.filter((project) =>
         starredProjects.includes(project.id),
       );
@@ -143,33 +138,33 @@ export default function ProjectsPage() {
 
     // Sort projects
     switch (sortBy) {
-      case "newest":
+      case 'newest':
         filtered = [...filtered].sort(
           (a, b) =>
             new Date(b.createdAt || b.endDate).getTime() -
             new Date(a.createdAt || a.endDate).getTime(),
         );
         break;
-      case "oldest":
+      case 'oldest':
         filtered = [...filtered].sort(
           (a, b) =>
             new Date(a.createdAt || a.endDate).getTime() -
             new Date(b.createdAt || b.endDate).getTime(),
         );
         break;
-      case "name_asc":
+      case 'name_asc':
         filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
         break;
-      case "name_desc":
+      case 'name_desc':
         filtered = [...filtered].sort((a, b) => b.name.localeCompare(a.name));
         break;
-      case "due_soon":
+      case 'due_soon':
         filtered = [...filtered].sort(
           (a, b) =>
             new Date(a.endDate).getTime() - new Date(b.endDate).getTime(),
         );
         break;
-      case "completion":
+      case 'completion':
         filtered = [...filtered].sort(
           (a, b) => b.completionPercent - a.completionPercent,
         );
@@ -203,13 +198,13 @@ export default function ProjectsPage() {
 
   const handleCreateProject = () => {
     setSelectedProject(null);
-    setDialogMode("create");
+    setDialogMode('create');
     setDialogOpen(true);
   };
 
   const handleEditProject = (project: Project) => {
     setSelectedProject(project);
-    setDialogMode("edit");
+    setDialogMode('edit');
     setDialogOpen(true);
   };
 
@@ -231,7 +226,7 @@ export default function ProjectsPage() {
   };
 
   const handleProjectSave = (savedProject: Project) => {
-    if (dialogMode === "create") {
+    if (dialogMode === 'create') {
       setProjects([...projects, savedProject]);
     } else {
       setProjects(
@@ -258,8 +253,8 @@ export default function ProjectsPage() {
 
   const canEditProject = (project: Project) => {
     return (
-      user?.userRole === "super_admin" ||
-      (user?.userRole === "project_manager" &&
+      user?.userRole === 'super_admin' ||
+      (user?.userRole === 'project_manager' &&
         project.projectManager.id === user.userId)
     );
   };
@@ -287,7 +282,7 @@ export default function ProjectsPage() {
               onClick={fetchProjects}
               disabled={loading}
             >
-              <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+              <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
             </Button>
             {canCreateProject() && (
               <Button onClick={handleCreateProject} className="modern-button">
@@ -360,9 +355,9 @@ export default function ProjectsPage() {
                   <Button
                     variant="outline"
                     onClick={() => {
-                      setSearchTerm("");
-                      setStatusFilter("all");
-                      setPriorityFilter("all");
+                      setSearchTerm('');
+                      setStatusFilter('all');
+                      setPriorityFilter('all');
                     }}
                     className="w-full"
                   >
@@ -404,10 +399,10 @@ export default function ProjectsPage() {
                           >
                             <Star
                               className={cn(
-                                "h-4 w-4",
+                                'h-4 w-4',
                                 starredProjects.includes(project.id)
-                                  ? "fill-yellow-400 text-yellow-400"
-                                  : "text-gray-400",
+                                  ? 'fill-yellow-400 text-yellow-400'
+                                  : 'text-gray-400',
                               )}
                             />
                           </Button>
@@ -472,16 +467,16 @@ export default function ProjectsPage() {
                         <Badge
                           variant="outline"
                           className={cn(
-                            "text-xs font-medium",
+                            'text-xs font-medium',
                             getStatusColor(project.status),
                           )}
                         >
-                          {project.status.replace("_", " ").toUpperCase()}
+                          {project.status.replace('_', ' ').toUpperCase()}
                         </Badge>
                         <Badge
                           variant="outline"
                           className={cn(
-                            "text-xs font-medium",
+                            'text-xs font-medium',
                             getPriorityColor(project.priority),
                           )}
                         >
@@ -600,13 +595,13 @@ export default function ProjectsPage() {
                   </h3>
                   <p className="text-gray-600 mb-4">
                     {searchTerm ||
-                    statusFilter !== "all" ||
-                    priorityFilter !== "all"
-                      ? "Try adjusting your filters"
-                      : "Create your first project to get started"}
+                    statusFilter !== 'all' ||
+                    priorityFilter !== 'all'
+                      ? 'Try adjusting your filters'
+                      : 'Create your first project to get started'}
                   </p>
-                  {(user?.userRole === "super_admin" ||
-                    user?.userRole === "project_manager") && (
+                  {(user?.userRole === 'super_admin' ||
+                    user?.userRole === 'project_manager') && (
                     <Button
                       onClick={handleCreateProject}
                       className="modern-button"

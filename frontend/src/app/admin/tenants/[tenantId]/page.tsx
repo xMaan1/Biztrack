@@ -1,44 +1,36 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { useAuth } from "@/src/contexts/AuthContext";
-import { apiService } from "@/src/services/ApiService";
-import { DashboardLayout } from "../../../../components/layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
-import { Alert, AlertDescription } from "@/src/components/ui/alert";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/src/components/ui/dialog";
-import { Separator } from "@/src/components/ui/separator";
-import { Checkbox } from "@/src/components/ui/checkbox";
-import InvoiceService from "@/src/services/InvoiceService";
-import { Invoice } from "@/src/models/sales";
-import { 
-  Building2, 
-  Users, 
-  Calendar, 
-  DollarSign, 
-  Activity, 
+import React, { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { useAuth } from '@/src/contexts/AuthContext';
+import { apiService } from '@/src/services/ApiService';
+import { DashboardLayout } from '../../../../components/layout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Badge } from '@/src/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/src/components/ui/tabs';
+import { Alert, AlertDescription } from '@/src/components/ui/alert';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/src/components/ui/dialog';
+import { Separator } from '@/src/components/ui/separator';
+import { Checkbox } from '@/src/components/ui/checkbox';
+import InvoiceService from '@/src/services/InvoiceService';
+import { Invoice } from '@/src/models/sales';
+import {
+  Building2,
+  Users,
   ArrowLeft,
   ToggleLeft,
   ToggleRight,
-  BarChart3,
-  TrendingUp,
   Package,
   FileText,
   CreditCard,
-  Settings,
   Trash2,
-  Edit,
   Eye,
   UserPlus,
   Plus,
   AlertTriangle,
-  X,
-  Loader2
-} from "lucide-react";
+  Loader2,
+} from 'lucide-react';
 
 interface TenantDetails {
   tenant: {
@@ -127,23 +119,23 @@ export default function TenantDetailsPage() {
   const router = useRouter();
   const { user } = useAuth();
   const tenantId = params.tenantId as string;
-  
+
   const [tenantDetails, setTenantDetails] = useState<TenantDetails | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  
+
   // Invoice details modal state
   const [showInvoiceDetails, setShowInvoiceDetails] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [invoiceDetailsLoading, setInvoiceDetailsLoading] = useState(false);
-  
+
   // Delete tenant modal state
   const [showDeleteTenantModal, setShowDeleteTenantModal] = useState(false);
   const [deleteAllData, setDeleteAllData] = useState(false);
 
   // Check if user is super admin
-  if (user?.userRole !== "super_admin") {
+  if (user?.userRole !== 'super_admin') {
     return (
       <DashboardLayout>
         <div className="container mx-auto px-6 py-8">
@@ -169,12 +161,12 @@ export default function TenantDetailsPage() {
   const fetchTenantDetails = async () => {
     try {
       setLoading(true);
-      setError("");
+      setError('');
       const response = await apiService.get(`/admin/tenants/${tenantId}/complete`);
       setTenantDetails(response);
     } catch (err: any) {
-      console.error("Error fetching tenant details:", err);
-      setError(err.response?.data?.detail || "Failed to load tenant details");
+      console.error('Error fetching tenant details:', err);
+      setError(err.response?.data?.detail || 'Failed to load tenant details');
     } finally {
       setLoading(false);
     }
@@ -182,46 +174,46 @@ export default function TenantDetailsPage() {
 
   const handleToggleTenantStatus = async () => {
     if (!tenantDetails) return;
-    
+
     try {
-      setActionLoading("toggle-status");
+      setActionLoading('toggle-status');
       await apiService.put(`/admin/tenants/${tenantId}/status`, {
-        is_active: !tenantDetails.tenant.isActive
+        is_active: !tenantDetails.tenant.isActive,
       });
       await fetchTenantDetails(); // Refresh data
     } catch (err: any) {
-      console.error("Error updating tenant status:", err);
-      setError(err.response?.data?.detail || "Failed to update tenant status");
+      console.error('Error updating tenant status:', err);
+      setError(err.response?.data?.detail || 'Failed to update tenant status');
     } finally {
       setActionLoading(null);
     }
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm("Are you sure you want to remove this user from the tenant?")) return;
-    
+    if (!confirm('Are you sure you want to remove this user from the tenant?')) return;
+
     try {
       setActionLoading(`delete-user-${userId}`);
       await apiService.delete(`/admin/tenants/${tenantId}/users/${userId}`);
       await fetchTenantDetails(); // Refresh data
     } catch (err: any) {
-      console.error("Error deleting user:", err);
-      setError(err.response?.data?.detail || "Failed to remove user");
+      console.error('Error deleting user:', err);
+      setError(err.response?.data?.detail || 'Failed to remove user');
     } finally {
       setActionLoading(null);
     }
   };
 
   const handleDeleteInvoice = async (invoiceId: string) => {
-    if (!confirm("Are you sure you want to delete this invoice?")) return;
-    
+    if (!confirm('Are you sure you want to delete this invoice?')) return;
+
     try {
       setActionLoading(`delete-invoice-${invoiceId}`);
       await apiService.delete(`/admin/tenants/${tenantId}/invoices/${invoiceId}`);
       await fetchTenantDetails(); // Refresh data
     } catch (err: any) {
-      console.error("Error deleting invoice:", err);
-      setError(err.response?.data?.detail || "Failed to delete invoice");
+      console.error('Error deleting invoice:', err);
+      setError(err.response?.data?.detail || 'Failed to delete invoice');
     } finally {
       setActionLoading(null);
     }
@@ -234,8 +226,8 @@ export default function TenantDetailsPage() {
       setSelectedInvoice(response.invoice);
       setShowInvoiceDetails(true);
     } catch (error) {
-      console.error("Error fetching invoice details:", error);
-      setError("Failed to load invoice details");
+      console.error('Error fetching invoice details:', error);
+      setError('Failed to load invoice details');
     } finally {
       setInvoiceDetailsLoading(false);
     }
@@ -243,72 +235,72 @@ export default function TenantDetailsPage() {
 
   const handleDeleteTenant = async () => {
     if (!tenantDetails) return;
-    
-    setActionLoading("delete-tenant");
+
+    setActionLoading('delete-tenant');
     try {
       await apiService.delete(`/admin/tenants/${tenantId}`, {
         data: {
-          deleteAllData: deleteAllData
-        }
+          deleteAllData: deleteAllData,
+        },
       });
       setShowDeleteTenantModal(false);
       setDeleteAllData(false);
       // Redirect to tenants list after successful deletion
       router.push('/admin/tenants');
     } catch (err: any) {
-      console.error("Error deleting tenant:", err);
-      setError(err.response?.data?.detail || "Failed to delete tenant");
+      console.error('Error deleting tenant:', err);
+      setError(err.response?.data?.detail || 'Failed to delete tenant');
     } finally {
       setActionLoading(null);
     }
   };
 
   const handleDeleteProject = async (projectId: string) => {
-    if (!confirm("Are you sure you want to delete this project?")) return;
-    
+    if (!confirm('Are you sure you want to delete this project?')) return;
+
     try {
       setActionLoading(`delete-project-${projectId}`);
       await apiService.delete(`/admin/tenants/${tenantId}/projects/${projectId}`);
       await fetchTenantDetails(); // Refresh data
     } catch (err: any) {
-      console.error("Error deleting project:", err);
-      setError(err.response?.data?.detail || "Failed to delete project");
+      console.error('Error deleting project:', err);
+      setError(err.response?.data?.detail || 'Failed to delete project');
     } finally {
       setActionLoading(null);
     }
   };
 
   const handleDeleteCustomer = async (customerId: string) => {
-    if (!confirm("Are you sure you want to delete this customer?")) return;
-    
+    if (!confirm('Are you sure you want to delete this customer?')) return;
+
     try {
       setActionLoading(`delete-customer-${customerId}`);
       await apiService.delete(`/admin/tenants/${tenantId}/customers/${customerId}`);
       await fetchTenantDetails(); // Refresh data
     } catch (err: any) {
-      console.error("Error deleting customer:", err);
-      setError(err.response?.data?.detail || "Failed to delete customer");
+      console.error('Error deleting customer:', err);
+      setError(err.response?.data?.detail || 'Failed to delete customer');
     } finally {
       setActionLoading(null);
     }
   };
 
   const getStatusColor = (status: string) => {
-    if (!status) return "bg-gray-100 text-gray-800";
+    if (!status) return 'bg-gray-100 text-gray-800';
     switch (status.toLowerCase()) {
-      case "active":
-      case "paid":
-      case "completed":
-        return "bg-green-100 text-green-800";
-      case "inactive":
-      case "draft":
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "cancelled":
-      case "overdue":
-        return "bg-red-100 text-red-800";
+      case 'active':
+      case 'paid':
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'inactive':
+      case 'draft':
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'cancelled':
+      case 'overdue':
+        return 'bg-red-100 text-red-800';
       default:
-        return "bg-gray-100 text-gray-800";
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -335,12 +327,12 @@ export default function TenantDetailsPage() {
             <CardHeader>
               <CardTitle className="text-center text-red-600">Error</CardTitle>
               <CardDescription className="text-center">
-                {error || "Failed to load tenant details"}
+                {error || 'Failed to load tenant details'}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button 
-                onClick={() => router.push("/admin/tenants")}
+              <Button
+                onClick={() => router.push('/admin/tenants')}
                 className="w-full"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
@@ -361,7 +353,7 @@ export default function TenantDetailsPage() {
           <div className="flex items-center space-x-4">
             <Button
               variant="outline"
-              onClick={() => router.push("/admin/tenants")}
+              onClick={() => router.push('/admin/tenants')}
               className="gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -375,36 +367,36 @@ export default function TenantDetailsPage() {
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <Badge 
-              className={tenantDetails.tenant.isActive 
-                ? "bg-green-100 text-green-800" 
-                : "bg-red-100 text-red-800"
+            <Badge
+              className={tenantDetails.tenant.isActive
+                ? 'bg-green-100 text-green-800'
+                : 'bg-red-100 text-red-800'
               }
             >
-              {tenantDetails.tenant.isActive ? "Active" : "Inactive"}
+              {tenantDetails.tenant.isActive ? 'Active' : 'Inactive'}
             </Badge>
             <Button
               onClick={handleToggleTenantStatus}
-              disabled={actionLoading === "toggle-status"}
+              disabled={actionLoading === 'toggle-status'}
               variant="outline"
               className="gap-2"
             >
-              {actionLoading === "toggle-status" ? (
+              {actionLoading === 'toggle-status' ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
               ) : tenantDetails.tenant.isActive ? (
                 <ToggleLeft className="h-4 w-4" />
               ) : (
                 <ToggleRight className="h-4 w-4" />
               )}
-              {tenantDetails.tenant.isActive ? "Deactivate" : "Activate"}
+              {tenantDetails.tenant.isActive ? 'Deactivate' : 'Activate'}
             </Button>
             <Button
               onClick={() => setShowDeleteTenantModal(true)}
-              disabled={actionLoading === "delete-tenant"}
+              disabled={actionLoading === 'delete-tenant'}
               variant="destructive"
               className="gap-2"
             >
-              {actionLoading === "delete-tenant" ? (
+              {actionLoading === 'delete-tenant' ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               ) : (
                 <Trash2 className="h-4 w-4" />
@@ -509,7 +501,7 @@ export default function TenantDetailsPage() {
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500">Description</label>
-                    <p className="text-lg">{tenantDetails.tenant.description || "No description"}</p>
+                    <p className="text-lg">{tenantDetails.tenant.description || 'No description'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500">Created</label>
@@ -543,8 +535,8 @@ export default function TenantDetailsPage() {
                       </div>
                       <div>
                         <label className="text-sm font-medium text-gray-500">Status</label>
-                        <Badge className={tenantDetails.subscription.status === "active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
-                          {tenantDetails.subscription.status === "active" ? "Active" : tenantDetails.subscription.status || "Inactive"}
+                        <Badge className={tenantDetails.subscription.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                          {tenantDetails.subscription.status === 'active' ? 'Active' : tenantDetails.subscription.status || 'Inactive'}
                         </Badge>
                       </div>
                     </>
@@ -582,8 +574,8 @@ export default function TenantDetailsPage() {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Badge className={getStatusColor(user.isActive ? "active" : "inactive")}>
-                          {user.isActive ? "Active" : "Inactive"}
+                        <Badge className={getStatusColor(user.isActive ? 'active' : 'inactive')}>
+                          {user.isActive ? 'Active' : 'Inactive'}
                         </Badge>
                         <Button
                           variant="outline"
@@ -749,12 +741,12 @@ export default function TenantDetailsPage() {
                           <p className="font-medium">{customer.name}</p>
                           <p className="text-sm text-gray-500">{customer.email}</p>
                           <p className="text-sm text-gray-500">{customer.phone}</p>
-                          <p className="text-sm text-gray-500">{customer.customerType}</p>
+                          <p className="text-sm text-gray-500">{customer.status}</p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Badge className={getStatusColor(customer.customerStatus)}>
-                          {customer.customerStatus}
+                        <Badge className={getStatusColor(customer.status)}>
+                          {customer.status}
                         </Badge>
                         <Button
                           variant="outline"
@@ -790,7 +782,7 @@ export default function TenantDetailsPage() {
               This action cannot be undone. Are you sure you want to delete this tenant?
             </DialogDescription>
           </DialogHeader>
-          
+
           {tenantDetails && (
             <div className="space-y-4">
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -798,26 +790,26 @@ export default function TenantDetailsPage() {
                   Do you confirm deleting this tenant: <span className="font-bold">{tenantDetails.tenant.name}</span>?
                 </p>
               </div>
-              
+
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="deleteAllData" 
+                  <Checkbox
+                    id="deleteAllData"
                     checked={deleteAllData}
                     onCheckedChange={(checked: boolean) => setDeleteAllData(checked)}
                   />
-                  <label 
-                    htmlFor="deleteAllData" 
+                  <label
+                    htmlFor="deleteAllData"
                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                   >
                     Delete all users and complete data of this tenant
                   </label>
                 </div>
-                
+
                 {deleteAllData && (
                   <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <p className="text-sm text-yellow-800">
-                      ⚠️ <strong>Warning:</strong> This will permanently delete all users, invoices, projects, 
+                      ⚠️ <strong>Warning:</strong> This will permanently delete all users, invoices, projects,
                       customers, and all other data associated with this tenant. This action cannot be undone.
                     </p>
                   </div>
@@ -825,30 +817,30 @@ export default function TenantDetailsPage() {
               </div>
             </div>
           )}
-          
+
           <DialogFooter className="gap-2">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 setShowDeleteTenantModal(false);
                 setDeleteAllData(false);
               }}
-              disabled={actionLoading === "delete-tenant"}
+              disabled={actionLoading === 'delete-tenant'}
             >
               Cancel
             </Button>
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={handleDeleteTenant}
-              disabled={actionLoading === "delete-tenant"}
+              disabled={actionLoading === 'delete-tenant'}
             >
-              {actionLoading === "delete-tenant" ? (
+              {actionLoading === 'delete-tenant' ? (
                 <div className="flex items-center gap-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                   Deleting...
                 </div>
               ) : (
-                "Delete Tenant"
+                'Delete Tenant'
               )}
             </Button>
           </DialogFooter>
@@ -864,7 +856,7 @@ export default function TenantDetailsPage() {
               Complete invoice information including items, parts, discounts, and taxes
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedInvoice && (
             <div className="space-y-6">
               {/* Invoice Header */}
@@ -899,7 +891,7 @@ export default function TenantDetailsPage() {
                   <div className="space-y-2">
                     <div>
                       <span className="font-medium">Order Number:</span>
-                      <p className="text-sm text-gray-600">{selectedInvoice.orderNumber || "N/A"}</p>
+                      <p className="text-sm text-gray-600">{selectedInvoice.orderNumber || 'N/A'}</p>
                     </div>
                     <div>
                       <span className="font-medium">Currency:</span>
@@ -934,7 +926,7 @@ export default function TenantDetailsPage() {
                     </div>
                     <div>
                       <span className="font-medium">Phone:</span>
-                      <p className="text-sm text-gray-600">{selectedInvoice.customerPhone || "N/A"}</p>
+                      <p className="text-sm text-gray-600">{selectedInvoice.customerPhone || 'N/A'}</p>
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -961,27 +953,27 @@ export default function TenantDetailsPage() {
                   <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <span className="font-medium">Make:</span>
-                      <p className="text-sm text-gray-600">{selectedInvoice.vehicleMake || "N/A"}</p>
+                      <p className="text-sm text-gray-600">{selectedInvoice.vehicleMake || 'N/A'}</p>
                     </div>
                     <div>
                       <span className="font-medium">Model:</span>
-                      <p className="text-sm text-gray-600">{selectedInvoice.vehicleModel || "N/A"}</p>
+                      <p className="text-sm text-gray-600">{selectedInvoice.vehicleModel || 'N/A'}</p>
                     </div>
                     <div>
                       <span className="font-medium">Year:</span>
-                      <p className="text-sm text-gray-600">{selectedInvoice.vehicleYear || "N/A"}</p>
+                      <p className="text-sm text-gray-600">{selectedInvoice.vehicleYear || 'N/A'}</p>
                     </div>
                     <div>
                       <span className="font-medium">Color:</span>
-                      <p className="text-sm text-gray-600">{selectedInvoice.vehicleColor || "N/A"}</p>
+                      <p className="text-sm text-gray-600">{selectedInvoice.vehicleColor || 'N/A'}</p>
                     </div>
                     <div>
                       <span className="font-medium">VIN:</span>
-                      <p className="text-sm text-gray-600">{selectedInvoice.vehicleVin || "N/A"}</p>
+                      <p className="text-sm text-gray-600">{selectedInvoice.vehicleVin || 'N/A'}</p>
                     </div>
                     <div>
                       <span className="font-medium">Registration:</span>
-                      <p className="text-sm text-gray-600">{selectedInvoice.vehicleReg || "N/A"}</p>
+                      <p className="text-sm text-gray-600">{selectedInvoice.vehicleReg || 'N/A'}</p>
                     </div>
                   </CardContent>
                 </Card>

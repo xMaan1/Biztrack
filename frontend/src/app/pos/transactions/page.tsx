@@ -1,40 +1,38 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Input } from "@/src/components/ui/input";
-import { Label } from "@/src/components/ui/label";
+} from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Input } from '@/src/components/ui/input';
+import { Label } from '@/src/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select";
-import { Badge } from "@/src/components/ui/badge";
+} from '@/src/components/ui/select';
+import { Badge } from '@/src/components/ui/badge';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from "@/src/components/ui/dialog";
-import { useAuth } from "@/src/hooks/useAuth";
-import { useCurrency } from "@/src/contexts/CurrencyContext";
-import { apiService } from "@/src/services/ApiService";
+} from '@/src/components/ui/dialog';
+import { useAuth } from '@/src/hooks/useAuth';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
+import { apiService } from '@/src/services/ApiService';
 import {
   POSTransaction,
   POSTransactionStatus,
   POSPaymentMethod,
-} from "@/src/models/pos";
+} from '@/src/models/pos';
 import {
   Receipt,
   Search,
@@ -43,21 +41,21 @@ import {
   Calendar,
   DollarSign,
   Package,
-} from "lucide-react";
-import { DashboardLayout } from "../../../components/layout";
+} from 'lucide-react';
+import { DashboardLayout } from '../../../components/layout';
 
 const POSTransactions = () => {
-  const { user } = useAuth();
+  const { } = useAuth();
   const { formatCurrency } = useCurrency();
   const [transactions, setTransactions] = useState<POSTransaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<
-    POSTransactionStatus | "all"
-  >("all");
+    POSTransactionStatus | 'all'
+  >('all');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<
-    POSPaymentMethod | "all"
-  >("all");
+    POSPaymentMethod | 'all'
+  >('all');
   const [selectedTransaction, setSelectedTransaction] =
     useState<POSTransaction | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
@@ -68,7 +66,7 @@ const POSTransactions = () => {
 
   const fetchTransactions = async () => {
     try {
-      const response = await apiService.get("/pos/transactions");
+      const response = await apiService.get('/pos/transactions');
       setTransactions(response.transactions || []);
     } catch (error) {
       } finally {
@@ -92,38 +90,37 @@ const POSTransactions = () => {
       transaction.cashierName.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
-      selectedStatus === "all" || transaction.status === selectedStatus;
+      selectedStatus === 'all' || transaction.status === selectedStatus;
 
     const matchesPaymentMethod =
-      selectedPaymentMethod === "all" ||
+      selectedPaymentMethod === 'all' ||
       transaction.paymentMethod === selectedPaymentMethod;
 
     return matchesSearch && matchesStatus && matchesPaymentMethod;
   });
 
-
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
   };
 
   const getStatusColor = (status: POSTransactionStatus) => {
     switch (status) {
       case POSTransactionStatus.COMPLETED:
-        return "bg-green-100 text-green-800";
+        return 'bg-green-100 text-green-800';
       case POSTransactionStatus.PENDING:
-        return "bg-yellow-100 text-yellow-800";
+        return 'bg-yellow-100 text-yellow-800';
       case POSTransactionStatus.CANCELLED:
-        return "bg-red-100 text-red-800";
+        return 'bg-red-100 text-red-800';
       case POSTransactionStatus.REFUNDED:
-        return "bg-blue-100 text-blue-800";
+        return 'bg-blue-100 text-blue-800';
       default:
-        return "bg-gray-100 text-gray-800";
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -193,7 +190,7 @@ const POSTransactions = () => {
                 <Select
                   value={selectedStatus}
                   onValueChange={(value: string) =>
-                    setSelectedStatus(value as POSTransactionStatus | "all")
+                    setSelectedStatus(value as POSTransactionStatus | 'all')
                   }
                 >
                   <SelectTrigger>
@@ -215,7 +212,7 @@ const POSTransactions = () => {
                 <Select
                   value={selectedPaymentMethod}
                   onValueChange={(value: string) =>
-                    setSelectedPaymentMethod(value as POSPaymentMethod | "all")
+                    setSelectedPaymentMethod(value as POSPaymentMethod | 'all')
                   }
                 >
                   <SelectTrigger>
@@ -226,7 +223,7 @@ const POSTransactions = () => {
                     {Object.values(POSPaymentMethod).map((method) => (
                       <SelectItem key={method} value={method}>
                         {method.charAt(0).toUpperCase() +
-                          method.slice(1).replace("_", " ")}
+                          method.slice(1).replace('_', ' ')}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -237,9 +234,9 @@ const POSTransactions = () => {
                 <Button
                   variant="outline"
                   onClick={() => {
-                    setSearchTerm("");
-                    setSelectedStatus("all");
-                    setSelectedPaymentMethod("all");
+                    setSearchTerm('');
+                    setSelectedStatus('all');
+                    setSelectedPaymentMethod('all');
                   }}
                 >
                   Clear Filters
@@ -305,7 +302,7 @@ const POSTransactions = () => {
 
                     <div className="flex items-center justify-center space-x-1 text-sm text-muted-foreground">
                       {getPaymentMethodIcon(transaction.paymentMethod)}
-                      <span>{transaction.paymentMethod.replace("_", " ")}</span>
+                      <span>{transaction.paymentMethod.replace('_', ' ')}</span>
                     </div>
 
                     <div className="text-sm text-muted-foreground">
@@ -337,10 +334,10 @@ const POSTransactions = () => {
             </h3>
             <p className="mt-2 text-muted-foreground">
               {searchTerm ||
-              selectedStatus !== "all" ||
-              selectedPaymentMethod !== "all"
-                ? "Try adjusting your filters or search terms."
-                : "No transactions have been made yet."}
+              selectedStatus !== 'all' ||
+              selectedPaymentMethod !== 'all'
+                ? 'Try adjusting your filters or search terms.'
+                : 'No transactions have been made yet.'}
             </p>
           </div>
         )}
@@ -411,7 +408,7 @@ const POSTransactions = () => {
                     <div className="flex items-center space-x-2">
                       {getPaymentMethodIcon(selectedTransaction.paymentMethod)}
                       <span>
-                        {selectedTransaction.paymentMethod.replace("_", " ")}
+                        {selectedTransaction.paymentMethod.replace('_', ' ')}
                       </span>
                     </div>
                   </div>

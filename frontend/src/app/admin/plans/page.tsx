@@ -1,33 +1,30 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { useAuth } from "@/src/contexts/AuthContext";
-import { apiService } from "@/src/services/ApiService";
-import { DashboardLayout } from "../../../components/layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
-import { Input } from "@/src/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/src/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
-import { 
-  CreditCard, 
-  DollarSign, 
-  Users, 
-  FolderOpen, 
-  CheckCircle, 
-  XCircle, 
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/src/contexts/AuthContext';
+import { apiService } from '@/src/services/ApiService';
+import { DashboardLayout } from '../../../components/layout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Badge } from '@/src/components/ui/badge';
+import { Input } from '@/src/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/src/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/src/components/ui/dialog';
+import {
+  CreditCard,
+  DollarSign,
+  Users,
+  FolderOpen,
+  CheckCircle,
+  XCircle,
   Edit,
   Search,
-  Filter,
   Settings,
   Activity,
-  TrendingUp,
   Package,
   Star,
-  Zap
-} from "lucide-react";
+  Zap,
+} from 'lucide-react';
 
 interface Plan {
   id: string;
@@ -56,14 +53,14 @@ export default function AdminPlansPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [planStats, setPlanStats] = useState<PlanStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
   // Check if user is super admin
-  if (user?.userRole !== "super_admin") {
+  if (user?.userRole !== 'super_admin') {
     return (
       <DashboardLayout>
         <div className="container mx-auto px-6 py-8">
@@ -92,7 +89,7 @@ export default function AdminPlansPage() {
   const fetchPlans = async () => {
     try {
       setLoading(true);
-      const response = await apiService.get("/plans");
+      const response = await apiService.get('/plans');
       setPlans(response.plans || []);
     } catch (error) {
       } finally {
@@ -106,12 +103,12 @@ export default function AdminPlansPage() {
       const totalPlans = plans.length;
       const activePlans = plans.filter(plan => plan.isActive).length;
       const inactivePlans = totalPlans - activePlans;
-      
+
       setPlanStats({
         totalPlans,
         activePlans,
         inactivePlans,
-        totalSubscriptions: 0 // This would need a separate API call
+        totalSubscriptions: 0, // This would need a separate API call
       });
     } catch (error) {
       }
@@ -135,7 +132,7 @@ export default function AdminPlansPage() {
 
   const handleUpdatePlan = async (planData: Partial<Plan>) => {
     if (!selectedPlan) return;
-    
+
     try {
       setIsUpdating(true);
       await apiService.put(`/plans/${selectedPlan.id}`, planData);
@@ -151,26 +148,26 @@ export default function AdminPlansPage() {
   const filteredPlans = plans.filter(plan => {
     const matchesSearch = plan.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          plan.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all" || 
-                          (statusFilter === "active" && plan.isActive) ||
-                          (statusFilter === "inactive" && !plan.isActive);
-    
+    const matchesStatus = statusFilter === 'all' ||
+                          (statusFilter === 'active' && plan.isActive) ||
+                          (statusFilter === 'inactive' && !plan.isActive);
+
     return matchesSearch && matchesStatus;
   });
 
   const getPlanTypeIcon = (planType: string) => {
     switch (planType.toLowerCase()) {
-      case "starter":
+      case 'starter':
         return <Star className="h-5 w-5 text-green-500" />;
-      case "professional":
+      case 'professional':
         return <Zap className="h-5 w-5 text-blue-500" />;
-      case "enterprise":
+      case 'enterprise':
         return <Package className="h-5 w-5 text-purple-500" />;
-      case "commerce":
+      case 'commerce':
         return <DollarSign className="h-5 w-5 text-green-600" />;
-      case "workshop":
+      case 'workshop':
         return <Settings className="h-5 w-5 text-orange-500" />;
-      case "healthcare":
+      case 'healthcare':
         return <Activity className="h-5 w-5 text-blue-600" />;
       default:
         return <CreditCard className="h-5 w-5 text-gray-500" />;
@@ -179,20 +176,20 @@ export default function AdminPlansPage() {
 
   const getPlanTypeColor = (planType: string) => {
     switch (planType.toLowerCase()) {
-      case "starter":
-        return "bg-green-100 text-green-800";
-      case "professional":
-        return "bg-blue-100 text-blue-800";
-      case "enterprise":
-        return "bg-purple-100 text-purple-800";
-      case "commerce":
-        return "bg-emerald-100 text-emerald-800";
-      case "workshop":
-        return "bg-orange-100 text-orange-800";
-      case "healthcare":
-        return "bg-cyan-100 text-cyan-800";
+      case 'starter':
+        return 'bg-green-100 text-green-800';
+      case 'professional':
+        return 'bg-blue-100 text-blue-800';
+      case 'enterprise':
+        return 'bg-purple-100 text-purple-800';
+      case 'commerce':
+        return 'bg-emerald-100 text-emerald-800';
+      case 'workshop':
+        return 'bg-orange-100 text-orange-800';
+      case 'healthcare':
+        return 'bg-cyan-100 text-cyan-800';
       default:
-        return "bg-gray-100 text-gray-800";
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -443,9 +440,9 @@ export default function AdminPlansPage() {
               <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No plans found</h3>
               <p className="text-gray-600">
-                {searchQuery || statusFilter !== "all" 
-                  ? "Try adjusting your search or filter criteria."
-                  : "No plans have been created yet."
+                {searchQuery || statusFilter !== 'all'
+                  ? 'Try adjusting your search or filter criteria.'
+                  : 'No plans have been created yet.'
                 }
               </p>
             </CardContent>
@@ -461,7 +458,7 @@ export default function AdminPlansPage() {
                 Update the plan details and settings.
               </DialogDescription>
             </DialogHeader>
-            
+
             {selectedPlan && (
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
@@ -511,7 +508,7 @@ export default function AdminPlansPage() {
                     <label className="text-sm font-medium text-gray-700">Max Users</label>
                     <Input
                       type="number"
-                      defaultValue={selectedPlan.maxUsers || ""}
+                      defaultValue={selectedPlan.maxUsers || ''}
                       onChange={(e) => setSelectedPlan({...selectedPlan, maxUsers: parseInt(e.target.value) || undefined})}
                     />
                   </div>
@@ -541,7 +538,7 @@ export default function AdminPlansPage() {
                     onClick={() => handleUpdatePlan(selectedPlan)}
                     disabled={isUpdating}
                   >
-                    {isUpdating ? "Updating..." : "Update Plan"}
+                    {isUpdating ? 'Updating...' : 'Update Plan'}
                   </Button>
                 </div>
               </div>

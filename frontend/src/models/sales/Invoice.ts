@@ -1,22 +1,22 @@
 export enum InvoiceStatus {
-  DRAFT = "draft",
-  SENT = "sent",
-  VIEWED = "viewed",
-  PAID = "paid",
-  PARTIALLY_PAID = "partially_paid",
-  OVERDUE = "overdue",
-  CANCELLED = "cancelled",
-  VOID = "void",
+  DRAFT = 'draft',
+  SENT = 'sent',
+  VIEWED = 'viewed',
+  PAID = 'paid',
+  PARTIALLY_PAID = 'partially_paid',
+  OVERDUE = 'overdue',
+  CANCELLED = 'cancelled',
+  VOID = 'void',
 }
 
 export enum PaymentMethod {
-  CREDIT_CARD = "credit_card",
-  BANK_TRANSFER = "bank_transfer",
-  CASH = "cash",
-  CHECK = "check",
-  PAYPAL = "paypal",
-  STRIPE = "stripe",
-  OTHER = "other",
+  CREDIT_CARD = 'credit_card',
+  BANK_TRANSFER = 'bank_transfer',
+  CASH = 'cash',
+  CHECK = 'check',
+  PAYPAL = 'paypal',
+  STRIPE = 'stripe',
+  OTHER = 'other',
 }
 
 export interface InvoiceItem {
@@ -81,7 +81,7 @@ export interface Invoice {
   totalPaid: number;
   balance: number;
   daysOverdue: number;
-  
+
   // Vehicle details for workshop invoices
   vehicleMake?: string;
   vehicleModel?: string;
@@ -90,7 +90,7 @@ export interface Invoice {
   vehicleVin?: string;
   vehicleReg?: string;
   vehicleMileage?: string;
-  
+
   // Workshop specific fields
   jobDescription?: string;
   partsDescription?: string;
@@ -117,7 +117,7 @@ export interface InvoiceCreate {
   opportunityId?: string;
   quoteId?: string;
   projectId?: string;
-  
+
   // Vehicle details for workshop invoices
   vehicleMake?: string;
   vehicleModel?: string;
@@ -126,7 +126,7 @@ export interface InvoiceCreate {
   vehicleVin?: string;
   vehicleReg?: string;
   vehicleMileage?: string;
-  
+
   // Workshop specific fields
   jobDescription?: string;
   partsDescription?: string;
@@ -150,7 +150,7 @@ export interface InvoiceUpdate {
   terms?: string;
   status?: InvoiceStatus;
   items?: InvoiceItemCreate[];
-  
+
   // Vehicle details for workshop invoices
   vehicleMake?: string;
   vehicleModel?: string;
@@ -159,7 +159,7 @@ export interface InvoiceUpdate {
   vehicleVin?: string;
   vehicleReg?: string;
   vehicleMileage?: string;
-  
+
   // Workshop specific fields
   jobDescription?: string;
   partsDescription?: string;

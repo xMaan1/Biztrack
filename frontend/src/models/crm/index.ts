@@ -1,70 +1,70 @@
 // CRM Enums
 export enum LeadStatus {
-  NEW = "new",
-  CONTACTED = "contacted",
-  QUALIFIED = "qualified",
-  PROPOSAL_SENT = "proposal_sent",
-  NEGOTIATION = "negotiation",
-  WON = "won",
-  LOST = "lost",
+  NEW = 'new',
+  CONTACTED = 'contacted',
+  QUALIFIED = 'qualified',
+  PROPOSAL_SENT = 'proposal_sent',
+  NEGOTIATION = 'negotiation',
+  WON = 'won',
+  LOST = 'lost',
 }
 
 export enum LeadSource {
-  WEBSITE = "website",
-  REFERRAL = "referral",
-  SOCIAL_MEDIA = "social_media",
-  EMAIL_CAMPAIGN = "email_campaign",
-  COLD_CALL = "cold_call",
-  TRADE_SHOW = "trade_show",
-  PARTNER = "partner",
-  OTHER = "other",
+  WEBSITE = 'website',
+  REFERRAL = 'referral',
+  SOCIAL_MEDIA = 'social_media',
+  EMAIL_CAMPAIGN = 'email_campaign',
+  COLD_CALL = 'cold_call',
+  TRADE_SHOW = 'trade_show',
+  PARTNER = 'partner',
+  OTHER = 'other',
 }
 
 export enum OpportunityStage {
-  PROSPECTING = "prospecting",
-  QUALIFICATION = "qualification",
-  PROPOSAL = "proposal",
-  NEGOTIATION = "negotiation",
-  CLOSED_WON = "closed_won",
-  CLOSED_LOST = "closed_lost",
+  PROSPECTING = 'prospecting',
+  QUALIFICATION = 'qualification',
+  PROPOSAL = 'proposal',
+  NEGOTIATION = 'negotiation',
+  CLOSED_WON = 'closed_won',
+  CLOSED_LOST = 'closed_lost',
 }
 
 export enum ContactType {
-  LEAD = "lead",
-  CUSTOMER = "customer",
-  PARTNER = "partner",
-  VENDOR = "vendor",
-  OTHER = "other",
+  LEAD = 'lead',
+  CUSTOMER = 'customer',
+  PARTNER = 'partner',
+  VENDOR = 'vendor',
+  OTHER = 'other',
 }
 
 export enum ActivityType {
-  CALL = "call",
-  EMAIL = "email",
-  MEETING = "meeting",
-  TASK = "task",
-  NOTE = "note",
-  PROPOSAL = "proposal",
-  CONTRACT = "contract",
+  CALL = 'call',
+  EMAIL = 'email',
+  MEETING = 'meeting',
+  TASK = 'task',
+  NOTE = 'note',
+  PROPOSAL = 'proposal',
+  CONTRACT = 'contract',
 }
 
 export enum CompanySize {
-  STARTUP = "startup",
-  SMALL = "small",
-  MEDIUM = "medium",
-  LARGE = "large",
-  ENTERPRISE = "enterprise",
+  STARTUP = 'startup',
+  SMALL = 'small',
+  MEDIUM = 'medium',
+  LARGE = 'large',
+  ENTERPRISE = 'enterprise',
 }
 
 export enum Industry {
-  TECHNOLOGY = "technology",
-  HEALTHCARE = "healthcare",
-  FINANCE = "finance",
-  MANUFACTURING = "manufacturing",
-  RETAIL = "retail",
-  EDUCATION = "education",
-  REAL_ESTATE = "real_estate",
-  CONSULTING = "consulting",
-  OTHER = "other",
+  TECHNOLOGY = 'technology',
+  HEALTHCARE = 'healthcare',
+  FINANCE = 'finance',
+  MANUFACTURING = 'manufacturing',
+  RETAIL = 'retail',
+  EDUCATION = 'education',
+  REAL_ESTATE = 'real_estate',
+  CONSULTING = 'consulting',
+  OTHER = 'other',
 }
 
 // CRM Models

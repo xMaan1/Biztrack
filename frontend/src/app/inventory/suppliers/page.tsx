@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
-import { Badge } from "../../../components/ui/badge";
-import { Input } from "../../../components/ui/input";
+} from '../../../components/ui/card';
+import { Button } from '../../../components/ui/button';
+import { Badge } from '../../../components/ui/badge';
+import { Input } from '../../../components/ui/input';
 import {
   Table,
   TableBody,
@@ -18,7 +18,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../../../components/ui/table";
+} from '../../../components/ui/table';
 import {
   Users,
   Plus,
@@ -29,19 +29,19 @@ import {
   Mail,
   Globe,
   Building2,
-} from "lucide-react";
-import { useAuth } from "../../../contexts/AuthContext";
-import { inventoryService } from "../../../services/InventoryService";
-import { Supplier } from "../../../models/inventory";
-import { DashboardLayout } from "../../../components/layout";
-import { formatDate } from "../../../lib/utils";
+} from 'lucide-react';
+import { useAuth } from '../../../contexts/AuthContext';
+import { inventoryService } from '../../../services/InventoryService';
+import { Supplier } from '../../../models/inventory';
+import { DashboardLayout } from '../../../components/layout';
+import { formatDate } from '../../../lib/utils';
 
 export default function SuppliersPage() {
-  const { user } = useAuth();
+  const { } = useAuth();
   const router = useRouter();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchSuppliers();
@@ -69,7 +69,7 @@ export default function SuppliersPage() {
   );
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this supplier?")) {
+    if (confirm('Are you sure you want to delete this supplier?')) {
       try {
         await inventoryService.deleteSupplier(id);
         fetchSuppliers();
@@ -99,7 +99,7 @@ export default function SuppliersPage() {
               Manage your supplier relationships and vendor information
             </p>
           </div>
-          <Button onClick={() => router.push("/inventory/suppliers/new")}>
+          <Button onClick={() => router.push('/inventory/suppliers/new')}>
             <Plus className="mr-2 h-4 w-4" />
             Add Supplier
           </Button>
@@ -201,9 +201,9 @@ export default function SuppliersPage() {
                       </TableCell>
                       <TableCell>
                         <Badge
-                          variant={supplier.isActive ? "default" : "secondary"}
+                          variant={supplier.isActive ? 'default' : 'secondary'}
                         >
-                          {supplier.isActive ? "Active" : "Inactive"}
+                          {supplier.isActive ? 'Active' : 'Inactive'}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -243,12 +243,12 @@ export default function SuppliersPage() {
                 <h3 className="text-lg font-medium mb-2">No suppliers found</h3>
                 <p className="text-muted-foreground mb-4">
                   {searchTerm
-                    ? "Try adjusting your search terms"
-                    : "Get started by adding your first supplier"}
+                    ? 'Try adjusting your search terms'
+                    : 'Get started by adding your first supplier'}
                 </p>
                 {!searchTerm && (
                   <Button
-                    onClick={() => router.push("/inventory/suppliers/new")}
+                    onClick={() => router.push('/inventory/suppliers/new')}
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     Add Supplier
@@ -300,7 +300,7 @@ export default function SuppliersPage() {
               <div className="text-2xl font-bold">
                 {
                   suppliers.filter(
-                    (s) => s.country && s.country !== "United States",
+                    (s) => s.country && s.country !== 'United States',
                   ).length
                 }
               </div>

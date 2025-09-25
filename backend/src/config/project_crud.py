@@ -1,7 +1,9 @@
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
+from sqlalchemy import func, case
 from .project_models import Project, Task
+from ..core.cache import cached_sync
 
 # Project functions
 def get_project_by_id(project_id: str, db: Session, tenant_id: str = None) -> Optional[Project]:
@@ -48,26 +50,21 @@ def delete_project(project_id: str, db: Session, tenant_id: str = None) -> bool:
         return True
     return False
 
+@cached_sync(ttl=60, key_prefix="project_stats_")
 def get_project_stats(db: Session, tenant_id: str) -> Dict[str, Any]:
-    total_projects = db.query(Project).filter(Project.tenant_id == tenant_id).count()
-    active_projects = db.query(Project).filter(
-        Project.tenant_id == tenant_id,
-        Project.status.in_(["planning", "in_progress"])
-    ).count()
-    completed_projects = db.query(Project).filter(
-        Project.tenant_id == tenant_id,
-        Project.status == "completed"
-    ).count()
-    on_hold_projects = db.query(Project).filter(
-        Project.tenant_id == tenant_id,
-        Project.status == "on_hold"
-    ).count()
+    # Single optimized query using CASE statements
+    result = db.query(
+        func.count(Project.id).label('total'),
+        func.sum(case([(Project.status.in_(["planning", "in_progress"]), 1)], else_=0)).label('active'),
+        func.sum(case([(Project.status == "completed", 1)], else_=0)).label('completed'),
+        func.sum(case([(Project.status == "on_hold", 1)], else_=0)).label('on_hold')
+    ).filter(Project.tenant_id == tenant_id).first()
     
     return {
-        "total": total_projects,
-        "active": active_projects,
-        "completed": completed_projects,
-        "on_hold": on_hold_projects
+        "total": result.total or 0,
+        "active": result.active or 0,
+        "completed": result.completed or 0,
+        "on_hold": result.on_hold or 0
     }
 
 # Task functions

@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
-import { useAuth } from "../../contexts/AuthContext";
-import { apiService } from "../../services/ApiService";
-import { Project } from "../../models/project/Project";
-import { DashboardLayout } from "../../components/layout";
-import PlanAwareDashboard from "../../components/dashboard/PlanAwareDashboard";
-import { usePlanInfo } from "../../hooks/usePlanInfo";
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import { apiService } from '../../services/ApiService';
+import { Project } from '../../models/project/Project';
+import { DashboardLayout } from '../../components/layout';
+import PlanAwareDashboard from '../../components/dashboard/PlanAwareDashboard';
+import { usePlanInfo } from '../../hooks/usePlanInfo';
 
 interface DashboardStats {
   totalProjects: number;
@@ -23,10 +23,9 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
   const { planInfo, loading: planLoading } = usePlanInfo();
-  const [projects, setProjects] = useState<Project[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
     totalProjects: 0,
     activeProjects: 0,
@@ -39,7 +38,7 @@ export default function DashboardPage() {
   // Redirect unauthenticated users to root route
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      router.push("/");
+      router.push('/');
     }
   }, [isAuthenticated, authLoading, router]);
 
@@ -84,15 +83,15 @@ export default function DashboardPage() {
         urgent: 0,
       };
 
-      setProjects(projectsData);
+      // setProjects(projectsData);
 
       // Calculate stats
       const totalProjects = projectsData.length;
       const activeProjects = projectsData.filter(
-        (p: Project) => p.status === "in_progress",
+        (p: Project) => p.status === 'in_progress',
       ).length;
       const completedProjects = projectsData.filter(
-        (p: Project) => p.status === "completed",
+        (p: Project) => p.status === 'completed',
       ).length;
       const totalTeamMembers = usersData.length;
       const averageProgress =

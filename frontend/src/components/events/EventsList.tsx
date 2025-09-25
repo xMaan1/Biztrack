@@ -1,22 +1,20 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
+import React, { useState, useEffect } from 'react';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
-import { Card, CardContent } from "../ui/card";
-import { Calendar, Plus, Search, Grid, List } from "lucide-react";
-import EventCard from "./EventCard";
-import EventForm from "./EventForm";
-import { useApiService } from "../../hooks/useApiService";
-import { useCustomOptions } from "../../hooks/useCustomOptions";
-import { useAuth } from "../../hooks/useAuth";
+} from '../ui/select';
+import { Card, CardContent } from '../ui/card';
+import { Calendar, Plus, Search, Grid, List } from 'lucide-react';
+import EventCard from './EventCard';
+import EventForm from './EventForm';
+import { useApiService } from '../../hooks/useApiService';
 
 interface Event {
   id: string;
@@ -36,15 +34,14 @@ interface Event {
 export default function EventsList() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
 
   const apiService = useApiService();
-  const { user } = useAuth();
 
   useEffect(() => {
     loadEvents();
@@ -62,7 +59,7 @@ export default function EventsList() {
   };
 
   const handleDeleteEvent = async (id: string) => {
-    if (confirm("Are you sure you want to delete this event?")) {
+    if (confirm('Are you sure you want to delete this event?')) {
       try {
         await apiService.deleteEvent(id);
         setEvents(events.filter((event) => event.id !== id));
@@ -97,7 +94,7 @@ export default function EventsList() {
       // Refresh events to show the new event
       loadEvents();
     } catch (error) {
-      alert("Failed to create event. Please try again.");
+      alert('Failed to create event. Please try again.');
     } finally {
       setCreateLoading(false);
     }
@@ -109,26 +106,26 @@ export default function EventsList() {
       (event.description &&
         event.description.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesStatus =
-      statusFilter === "all" || event.status === statusFilter;
-    const matchesType = typeFilter === "all" || event.eventType === typeFilter;
+      statusFilter === 'all' || event.status === statusFilter;
+    const matchesType = typeFilter === 'all' || event.eventType === typeFilter;
 
     return matchesSearch && matchesStatus && matchesType;
   });
 
   const getStatusOptions = () => [
-    { value: "all", label: "All Statuses" },
-    { value: "scheduled", label: "Scheduled" },
-    { value: "in_progress", label: "In Progress" },
-    { value: "completed", label: "Completed" },
-    { value: "cancelled", label: "Cancelled" },
+    { value: 'all', label: 'All Statuses' },
+    { value: 'scheduled', label: 'Scheduled' },
+    { value: 'in_progress', label: 'In Progress' },
+    { value: 'completed', label: 'Completed' },
+    { value: 'cancelled', label: 'Cancelled' },
   ];
 
   const getTypeOptions = () => [
-    { value: "all", label: "All Types" },
-    { value: "meeting", label: "Meeting" },
-    { value: "workshop", label: "Workshop" },
-    { value: "deadline", label: "Deadline" },
-    { value: "other", label: "Other" },
+    { value: 'all', label: 'All Types' },
+    { value: 'meeting', label: 'Meeting' },
+    { value: 'workshop', label: 'Workshop' },
+    { value: 'deadline', label: 'Deadline' },
+    { value: 'other', label: 'Other' },
   ];
 
   if (loading) {
@@ -207,17 +204,17 @@ export default function EventsList() {
             {/* View Mode Toggle */}
             <div className="flex border rounded-lg">
               <Button
-                variant={viewMode === "grid" ? "default" : "ghost"}
+                variant={viewMode === 'grid' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => setViewMode("grid")}
+                onClick={() => setViewMode('grid')}
                 className="rounded-r-none"
               >
                 <Grid className="h-4 w-4" />
               </Button>
               <Button
-                variant={viewMode === "list" ? "default" : "ghost"}
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => setViewMode("list")}
+                onClick={() => setViewMode('list')}
                 className="rounded-l-none"
               >
                 <List className="h-4 w-4" />
@@ -231,7 +228,7 @@ export default function EventsList() {
       <div className="flex items-center gap-2 text-sm text-gray-600">
         <Calendar className="h-4 w-4" />
         <span>
-          {filteredEvents.length} event{filteredEvents.length !== 1 ? "s" : ""}{" "}
+          {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''}{' '}
           found
         </span>
       </div>
@@ -245,11 +242,11 @@ export default function EventsList() {
               No events found
             </h3>
             <p className="text-gray-600 mb-4">
-              {searchQuery || statusFilter !== "all" || typeFilter !== "all"
-                ? "Try adjusting your filters or search terms"
-                : "Get started by creating your first event"}
+              {searchQuery || statusFilter !== 'all' || typeFilter !== 'all'
+                ? 'Try adjusting your filters or search terms'
+                : 'Get started by creating your first event'}
             </p>
-            {!searchQuery && statusFilter === "all" && typeFilter === "all" && (
+            {!searchQuery && statusFilter === 'all' && typeFilter === 'all' && (
               <Button onClick={() => setShowCreateForm(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Create Event
@@ -260,9 +257,9 @@ export default function EventsList() {
       ) : (
         <div
           className={
-            viewMode === "grid"
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-              : "space-y-4"
+            viewMode === 'grid'
+              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+              : 'space-y-4'
           }
         >
           {filteredEvents.map((event) => (

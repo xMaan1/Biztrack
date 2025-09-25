@@ -1,26 +1,25 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "../ui/dialog";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { Textarea } from "../ui/textarea";
+} from '../ui/dialog';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Textarea } from '../ui/textarea';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
-import { Badge } from "../ui/badge";
-import { Separator } from "../ui/separator";
+} from '../ui/select';
+import { Badge } from '../ui/badge';
 import {
   Plus,
   X,
@@ -32,29 +31,23 @@ import {
   Clock,
   Flag,
   AlertTriangle,
-  CheckCircle2,
-  Pause,
-  Square,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   ProductionPlanResponse as ProductionPlan,
   ProductionPlanCreate,
   ProductionPlanUpdate,
-  ProductionStatus,
   ProductionPriority,
   ProductionType,
   MaterialRequirement,
   LaborRequirement,
-  InspectionPoint,
-  ToleranceSpec,
-} from "../../models/production";
-import ProductionService from "../../services/ProductionService";
-import { useAuth } from "../../hooks/useAuth";
+} from '../../models/production';
+import ProductionService from '../../services/ProductionService';
+import { useAuth } from '../../hooks/useAuth';
 
 interface ProductionPlanDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  mode: "create" | "edit";
+  mode: 'create' | 'edit';
   plan: ProductionPlan | null;
   onSuccess: () => void;
 }
@@ -66,64 +59,44 @@ export default function ProductionPlanDialog({
   plan,
   onSuccess,
 }: ProductionPlanDialogProps) {
-  const { user } = useAuth();
+  const { } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<ProductionPlanCreate>>({
-    title: "",
-    description: "",
+    title: '',
+    description: '',
     production_type: ProductionType.BATCH,
     priority: ProductionPriority.MEDIUM,
     target_quantity: 0,
-    unit_of_measure: "pieces",
-    production_line: "",
+    unit_of_measure: 'pieces',
+    production_line: '',
     equipment_required: [],
     materials_required: [],
     labor_requirements: [],
     estimated_material_cost: 0,
     estimated_labor_cost: 0,
-    quality_standards: "",
+    quality_standards: '',
     inspection_points: [],
     tolerance_specs: [],
     tags: [],
   });
 
   const [newMaterial, setNewMaterial] = useState<Partial<MaterialRequirement>>({
-    material_name: "",
+    material_name: '',
     quantity: 0,
-    unit: "pieces",
+    unit: 'pieces',
     cost_per_unit: 0,
   });
 
   const [newLabor, setNewLabor] = useState<Partial<LaborRequirement>>({
-    role: "",
+    role: '',
     hours_required: 0,
     hourly_rate: 0,
   });
 
-  const [newInspectionPoint, setNewInspectionPoint] = useState<
-    Partial<InspectionPoint>
-  >({
-    point_name: "",
-    description: "",
-    location: "",
-    frequency: "once",
-    inspector_role: "",
-  });
-
-  const [newToleranceSpec, setNewToleranceSpec] = useState<
-    Partial<ToleranceSpec>
-  >({
-    parameter: "",
-    nominal_value: 0,
-    upper_tolerance: 0,
-    lower_tolerance: 0,
-    unit: "",
-  });
-
-  const [newTag, setNewTag] = useState("");
+  const [newTag, setNewTag] = useState('');
 
   useEffect(() => {
-    if (plan && mode === "edit") {
+    if (plan && mode === 'edit') {
       setFormData({
         title: plan.title,
         description: plan.description,
@@ -151,19 +124,19 @@ export default function ProductionPlanDialog({
 
   const resetForm = () => {
     setFormData({
-      title: "",
-      description: "",
+      title: '',
+      description: '',
       production_type: ProductionType.BATCH,
       priority: ProductionPriority.MEDIUM,
       target_quantity: 0,
-      unit_of_measure: "pieces",
-      production_line: "",
+      unit_of_measure: 'pieces',
+      production_line: '',
       equipment_required: [],
       materials_required: [],
       labor_requirements: [],
       estimated_material_cost: 0,
       estimated_labor_cost: 0,
-      quality_standards: "",
+      quality_standards: '',
       inspection_points: [],
       tolerance_specs: [],
       tags: [],
@@ -176,7 +149,7 @@ export default function ProductionPlanDialog({
 
     try {
       setLoading(true);
-      if (mode === "create") {
+      if (mode === 'create') {
         const service = new ProductionService();
         await service.createProductionPlan(formData as ProductionPlanCreate);
       } else if (plan) {
@@ -204,7 +177,7 @@ export default function ProductionPlanDialog({
         material_id: Date.now().toString(),
         material_name: newMaterial.material_name,
         quantity: newMaterial.quantity,
-        unit: newMaterial.unit || "pieces",
+        unit: newMaterial.unit || 'pieces',
         cost_per_unit: newMaterial.cost_per_unit,
         total_cost: newMaterial.quantity * newMaterial.cost_per_unit,
       };
@@ -215,9 +188,9 @@ export default function ProductionPlanDialog({
           (formData.estimated_material_cost || 0) + material.total_cost,
       });
       setNewMaterial({
-        material_name: "",
+        material_name: '',
         quantity: 0,
-        unit: "pieces",
+        unit: 'pieces',
         cost_per_unit: 0,
       });
     }
@@ -248,7 +221,7 @@ export default function ProductionPlanDialog({
         estimated_labor_cost:
           (formData.estimated_labor_cost || 0) + labor.total_cost,
       });
-      setNewLabor({ role: "", hours_required: 0, hourly_rate: 0 });
+      setNewLabor({ role: '', hours_required: 0, hourly_rate: 0 });
     }
   };
 
@@ -263,80 +236,13 @@ export default function ProductionPlanDialog({
     });
   };
 
-  const addInspectionPoint = () => {
-    if (newInspectionPoint.point_name && newInspectionPoint.description) {
-      const point: InspectionPoint = {
-        point_name: newInspectionPoint.point_name,
-        description: newInspectionPoint.description,
-        location: newInspectionPoint.location || "",
-        frequency: newInspectionPoint.frequency || "once",
-        inspector_role: newInspectionPoint.inspector_role || "",
-      };
-      setFormData({
-        ...formData,
-        inspection_points: [...(formData.inspection_points || []), point],
-      });
-      setNewInspectionPoint({
-        point_name: "",
-        description: "",
-        location: "",
-        frequency: "once",
-        inspector_role: "",
-      });
-    }
-  };
-
-  const removeInspectionPoint = (index: number) => {
-    const points = [...(formData.inspection_points || [])];
-    points.splice(index, 1);
-    setFormData({
-      ...formData,
-      inspection_points: points,
-    });
-  };
-
-  const addToleranceSpec = () => {
-    if (
-      newToleranceSpec.parameter &&
-      newToleranceSpec.nominal_value !== undefined
-    ) {
-      const spec: ToleranceSpec = {
-        parameter: newToleranceSpec.parameter,
-        nominal_value: newToleranceSpec.nominal_value,
-        upper_tolerance: newToleranceSpec.upper_tolerance || 0,
-        lower_tolerance: newToleranceSpec.lower_tolerance || 0,
-        unit: newToleranceSpec.unit || "",
-      };
-      setFormData({
-        ...formData,
-        tolerance_specs: [...(formData.tolerance_specs || []), spec],
-      });
-      setNewToleranceSpec({
-        parameter: "",
-        nominal_value: 0,
-        upper_tolerance: 0,
-        lower_tolerance: 0,
-        unit: "",
-      });
-    }
-  };
-
-  const removeToleranceSpec = (index: number) => {
-    const specs = [...(formData.tolerance_specs || [])];
-    specs.splice(index, 1);
-    setFormData({
-      ...formData,
-      tolerance_specs: specs,
-    });
-  };
-
   const addTag = () => {
     if (newTag && !formData.tags?.includes(newTag)) {
       setFormData({
         ...formData,
         tags: [...(formData.tags || []), newTag],
       });
-      setNewTag("");
+      setNewTag('');
     }
   };
 
@@ -385,9 +291,9 @@ export default function ProductionPlanDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Factory className="h-5 w-5" />
-            {mode === "create"
-              ? "Create Production Plan"
-              : "Edit Production Plan"}
+            {mode === 'create'
+              ? 'Create Production Plan'
+              : 'Edit Production Plan'}
           </DialogTitle>
         </DialogHeader>
 
@@ -398,7 +304,7 @@ export default function ProductionPlanDialog({
               <Label htmlFor="title">Title *</Label>
               <Input
                 id="title"
-                value={formData.title || ""}
+                value={formData.title || ''}
                 onChange={(e) =>
                   setFormData({ ...formData, title: e.target.value })
                 }
@@ -501,7 +407,7 @@ export default function ProductionPlanDialog({
               <Input
                 id="target_quantity"
                 type="number"
-                value={formData.target_quantity || ""}
+                value={formData.target_quantity || ''}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
@@ -516,7 +422,7 @@ export default function ProductionPlanDialog({
               <Label htmlFor="unit_of_measure">Unit of Measure</Label>
               <Input
                 id="unit_of_measure"
-                value={formData.unit_of_measure || ""}
+                value={formData.unit_of_measure || ''}
                 onChange={(e) =>
                   setFormData({ ...formData, unit_of_measure: e.target.value })
                 }
@@ -527,7 +433,7 @@ export default function ProductionPlanDialog({
               <Label htmlFor="production_line">Production Line</Label>
               <Input
                 id="production_line"
-                value={formData.production_line || ""}
+                value={formData.production_line || ''}
                 onChange={(e) =>
                   setFormData({ ...formData, production_line: e.target.value })
                 }
@@ -540,7 +446,7 @@ export default function ProductionPlanDialog({
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
-              value={formData.description || ""}
+              value={formData.description || ''}
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
@@ -556,7 +462,7 @@ export default function ProductionPlanDialog({
               <Input
                 id="planned_start_date"
                 type="datetime-local"
-                value={formData.planned_start_date || ""}
+                value={formData.planned_start_date || ''}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
@@ -570,7 +476,7 @@ export default function ProductionPlanDialog({
               <Input
                 id="planned_end_date"
                 type="datetime-local"
-                value={formData.planned_end_date || ""}
+                value={formData.planned_end_date || ''}
                 onChange={(e) =>
                   setFormData({ ...formData, planned_end_date: e.target.value })
                 }
@@ -596,7 +502,7 @@ export default function ProductionPlanDialog({
             <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
               <Input
                 placeholder="Material name"
-                value={newMaterial.material_name || ""}
+                value={newMaterial.material_name || ''}
                 onChange={(e) =>
                   setNewMaterial({
                     ...newMaterial,
@@ -607,7 +513,7 @@ export default function ProductionPlanDialog({
               <Input
                 type="number"
                 placeholder="Quantity"
-                value={newMaterial.quantity || ""}
+                value={newMaterial.quantity || ''}
                 onChange={(e) =>
                   setNewMaterial({
                     ...newMaterial,
@@ -617,7 +523,7 @@ export default function ProductionPlanDialog({
               />
               <Input
                 placeholder="Unit"
-                value={newMaterial.unit || ""}
+                value={newMaterial.unit || ''}
                 onChange={(e) =>
                   setNewMaterial({ ...newMaterial, unit: e.target.value })
                 }
@@ -626,7 +532,7 @@ export default function ProductionPlanDialog({
                 type="number"
                 step="0.01"
                 placeholder="Cost per unit"
-                value={newMaterial.cost_per_unit || ""}
+                value={newMaterial.cost_per_unit || ''}
                 onChange={(e) =>
                   setNewMaterial({
                     ...newMaterial,
@@ -687,7 +593,7 @@ export default function ProductionPlanDialog({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
               <Input
                 placeholder="Role"
-                value={newLabor.role || ""}
+                value={newLabor.role || ''}
                 onChange={(e) =>
                   setNewLabor({ ...newLabor, role: e.target.value })
                 }
@@ -695,7 +601,7 @@ export default function ProductionPlanDialog({
               <Input
                 type="number"
                 placeholder="Hours required"
-                value={newLabor.hours_required || ""}
+                value={newLabor.hours_required || ''}
                 onChange={(e) =>
                   setNewLabor({
                     ...newLabor,
@@ -707,7 +613,7 @@ export default function ProductionPlanDialog({
                 type="number"
                 step="0.01"
                 placeholder="Hourly rate"
-                value={newLabor.hourly_rate || ""}
+                value={newLabor.hourly_rate || ''}
                 onChange={(e) =>
                   setNewLabor({
                     ...newLabor,
@@ -754,7 +660,7 @@ export default function ProductionPlanDialog({
             <Label htmlFor="quality_standards">Quality Standards</Label>
             <Textarea
               id="quality_standards"
-              value={formData.quality_standards || ""}
+              value={formData.quality_standards || ''}
               onChange={(e) =>
                 setFormData({ ...formData, quality_standards: e.target.value })
               }
@@ -819,10 +725,10 @@ export default function ProductionPlanDialog({
             </Button>
             <Button type="submit" disabled={loading}>
               {loading
-                ? "Saving..."
-                : mode === "create"
-                  ? "Create Plan"
-                  : "Update Plan"}
+                ? 'Saving...'
+                : mode === 'create'
+                  ? 'Create Plan'
+                  : 'Update Plan'}
             </Button>
           </DialogFooter>
         </form>

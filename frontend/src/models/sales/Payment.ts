@@ -1,12 +1,12 @@
-import { PaymentMethod } from "./Invoice";
+import { PaymentMethod } from './Invoice';
 
 export enum PaymentStatus {
-  PENDING = "pending",
-  PROCESSING = "processing",
-  COMPLETED = "completed",
-  FAILED = "failed",
-  REFUNDED = "refunded",
-  CANCELLED = "cancelled",
+  PENDING = 'pending',
+  PROCESSING = 'processing',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+  REFUNDED = 'refunded',
+  CANCELLED = 'cancelled',
 }
 
 export interface Payment {

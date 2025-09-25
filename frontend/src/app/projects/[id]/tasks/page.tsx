@@ -1,17 +1,17 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
-import { TaskList } from "../../../../components/tasks";
-import { Project } from "../../../../models/project/Project";
-import { Task, TaskStatus } from "../../../../models/task";
-import { apiService } from "../../../../services/ApiService";
-import { DashboardLayout } from "../../../../components/layout";
-import { Button } from "../../../../components/ui/button";
-import { Card, CardContent } from "../../../../components/ui/card";
-import { Alert, AlertDescription } from "../../../../components/ui/alert";
-import { Progress } from "../../../../components/ui/progress";
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { TaskList } from '../../../../components/tasks';
+import { Project } from '../../../../models/project/Project';
+import { Task, TaskStatus } from '../../../../models/task';
+import { apiService } from '../../../../services/ApiService';
+import { DashboardLayout } from '../../../../components/layout';
+import { Button } from '../../../../components/ui/button';
+import { Card, CardContent } from '../../../../components/ui/card';
+import { Alert, AlertDescription } from '../../../../components/ui/alert';
+import { Progress } from '../../../../components/ui/progress';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -19,8 +19,8 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "../../../../components/ui/breadcrumb";
-import { ErrorBoundary } from "../../../../components/ErrorBoundary";
+} from '../../../../components/ui/breadcrumb';
+import { ErrorBoundary } from '../../../../components/ErrorBoundary';
 import {
   ArrowLeft,
   CheckSquare,
@@ -28,7 +28,7 @@ import {
   Clock,
   Play,
   Loader2,
-} from "lucide-react";
+} from 'lucide-react';
 
 export default function ProjectTasksPage() {
   const params = useParams();
@@ -37,7 +37,6 @@ export default function ProjectTasksPage() {
   const [project, setProject] = useState<Project | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tasksLoading, setTasksLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadProject = useCallback(async () => {
@@ -46,8 +45,8 @@ export default function ProjectTasksPage() {
       const response = await apiService.getProject(projectId);
       setProject(response);
     } catch (err) {
-      console.error("Failed to load project:", err);
-      setError("Failed to load project details");
+      console.error('Failed to load project:', err);
+      setError('Failed to load project details');
     } finally {
       setLoading(false);
     }
@@ -55,7 +54,6 @@ export default function ProjectTasksPage() {
 
   const loadTasks = useCallback(async () => {
     try {
-      setTasksLoading(true);
       const response = await apiService.getTasks({
         project: projectId,
         includeSubtasks: true,
@@ -71,15 +69,13 @@ export default function ProjectTasksPage() {
       } else if (response.data && Array.isArray(response.data)) {
         taskList = response.data;
       } else {
-        console.warn("Unexpected tasks response structure:", response);
+        console.warn('Unexpected tasks response structure:', response);
         taskList = [];
       }
 
       setTasks(taskList);
     } catch (err) {
-      console.error("Failed to load tasks:", err);
-    } finally {
-      setTasksLoading(false);
+      console.error('Failed to load tasks:', err);
     }
   }, [projectId]);
 
@@ -139,11 +135,11 @@ export default function ProjectTasksPage() {
         <div className="container mx-auto px-6 py-8">
           <Alert className="mb-4 border-red-200 bg-red-50">
             <AlertDescription className="text-red-800">
-              {error || "Project not found"}
+              {error || 'Project not found'}
             </AlertDescription>
           </Alert>
           <Button
-            onClick={() => router.push("/projects")}
+            onClick={() => router.push('/projects')}
             className="flex items-center space-x-2"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -283,7 +279,7 @@ export default function ProjectTasksPage() {
                     completed
                   </span>
                   <span>
-                    {taskStats.inProgressTasks} in progress,{" "}
+                    {taskStats.inProgressTasks} in progress,{' '}
                     {taskStats.todoTasks} pending
                   </span>
                 </div>

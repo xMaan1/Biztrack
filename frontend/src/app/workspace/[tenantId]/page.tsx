@@ -1,18 +1,18 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useCallback } from "react";
-import { useParams } from "next/navigation";
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams } from 'next/navigation';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
-import { Progress } from "../../../components/ui/progress";
-import { Alert, AlertDescription } from "../../../components/ui/alert";
-import { FolderOpen, Users, TrendingUp, Loader2, Building } from "lucide-react";
-import { apiService } from "../../../services/ApiService";
+} from '../../../components/ui/card';
+import { Button } from '../../../components/ui/button';
+import { Progress } from '../../../components/ui/progress';
+import { Alert, AlertDescription } from '../../../components/ui/alert';
+import { FolderOpen, Users, TrendingUp, Loader2, Building } from 'lucide-react';
+import { apiService } from '../../../services/ApiService';
 
 interface WorkspaceStats {
   totalProjects: number;
@@ -51,7 +51,7 @@ export default function WorkspacePage() {
 
       const totalProjects = projects.length;
       const activeProjects = projects.filter(
-        (p: any) => p.status === "in_progress",
+        (p: any) => p.status === 'in_progress',
       ).length;
       const totalMembers = users.length;
       const completionRate =
@@ -71,8 +71,8 @@ export default function WorkspacePage() {
         completionRate,
       });
     } catch (err) {
-      console.error("Failed to fetch workspace data:", err);
-      setError("Failed to load workspace data");
+      console.error('Failed to fetch workspace data:', err);
+      setError('Failed to load workspace data');
     } finally {
       setLoading(false);
     }
@@ -240,7 +240,7 @@ export default function WorkspacePage() {
               <Button
                 variant="outline"
                 className="h-20 flex-col gap-2"
-                onClick={() => (window.location.href = "/projects")}
+                onClick={() => (window.location.href = '/projects')}
               >
                 <FolderOpen className="h-6 w-6" />
                 <span>View Projects</span>
@@ -248,7 +248,7 @@ export default function WorkspacePage() {
               <Button
                 variant="outline"
                 className="h-20 flex-col gap-2"
-                onClick={() => (window.location.href = "/team")}
+                onClick={() => (window.location.href = '/team')}
               >
                 <Users className="h-6 w-6" />
                 <span>Manage Team</span>
@@ -256,7 +256,7 @@ export default function WorkspacePage() {
               <Button
                 variant="outline"
                 className="h-20 flex-col gap-2"
-                onClick={() => (window.location.href = "/reports")}
+                onClick={() => (window.location.href = '/reports')}
               >
                 <TrendingUp className="h-6 w-6" />
                 <span>View Reports</span>

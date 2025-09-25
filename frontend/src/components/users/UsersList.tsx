@@ -1,19 +1,19 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Badge } from "../ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Badge } from '../ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "../ui/dropdown-menu";
-import { Alert, AlertDescription } from "../ui/alert";
+} from '../ui/dropdown-menu';
+import { Alert, AlertDescription } from '../ui/alert';
 import {
   Search,
   MoreVertical,
@@ -24,16 +24,16 @@ import {
   Mail,
   Shield,
   Loader2,
-} from "lucide-react";
-import { User } from "../../models/auth";
-import { apiService } from "../../services/ApiService";
-import { cn, getInitials } from "../../lib/utils";
+} from 'lucide-react';
+import { User } from '../../models/auth';
+import { apiService } from '../../services/ApiService';
+import { cn, getInitials } from '../../lib/utils';
 
 export default function UsersList() {
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -63,42 +63,42 @@ export default function UsersList() {
       const response = await apiService.getUsers();
       setUsers(response.users || []);
     } catch (err) {
-      setError("Failed to load users");
+      setError('Failed to load users');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm("Are you sure you want to delete this user?")) return;
+    if (!confirm('Are you sure you want to delete this user?')) return;
 
     try {
       await apiService.deleteUser(userId);
       setUsers(users.filter((u) => u.userId !== userId));
     } catch (err) {
-      setError("Failed to delete user");
+      setError('Failed to delete user');
     }
   };
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case "super_admin":
-        return "bg-red-100 text-red-800 border-red-200";
-      case "admin":
-        return "bg-purple-100 text-purple-800 border-purple-200";
-      case "project_manager":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case "team_member":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "client":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case 'super_admin':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'admin':
+        return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'project_manager':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'team_member':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'client':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
   const formatRole = (role: string) => {
-    return role.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase());
+    return role.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
   return (
@@ -120,7 +120,7 @@ export default function UsersList() {
             onClick={fetchUsers}
             disabled={loading}
           >
-            <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+            <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
           </Button>
           <Button className="modern-button">
             <UserPlus className="h-4 w-4 mr-2" />
@@ -225,7 +225,7 @@ export default function UsersList() {
                     <Shield className="h-4 w-4 text-gray-400" />
                     <Badge
                       variant="outline"
-                      className={cn("text-xs", getRoleColor(user.userRole))}
+                      className={cn('text-xs', getRoleColor(user.userRole))}
                     >
                       {formatRole(user.userRole)}
                     </Badge>
@@ -235,12 +235,12 @@ export default function UsersList() {
                     <div className="flex items-center gap-2">
                       <div
                         className={cn(
-                          "w-2 h-2 rounded-full",
-                          user.isActive ? "bg-green-500" : "bg-gray-400",
+                          'w-2 h-2 rounded-full',
+                          user.isActive ? 'bg-green-500' : 'bg-gray-400',
                         )}
                       />
                       <span className="text-xs text-gray-500">
-                        {user.isActive ? "Active" : "Inactive"}
+                        {user.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </div>
                   </div>
@@ -261,8 +261,8 @@ export default function UsersList() {
             </h3>
             <p className="text-gray-600 mb-4">
               {searchTerm
-                ? "Try adjusting your search terms"
-                : "Get started by adding your first user"}
+                ? 'Try adjusting your search terms'
+                : 'Get started by adding your first user'}
             </p>
             <Button className="modern-button">
               <UserPlus className="h-4 w-4 mr-2" />

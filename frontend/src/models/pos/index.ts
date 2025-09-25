@@ -1,38 +1,38 @@
 // POS Module Types and Interfaces
 
 export enum POSPaymentMethod {
-  CASH = "cash",
-  CREDIT_CARD = "credit_card",
-  DEBIT_CARD = "debit_card",
-  BANK_TRANSFER = "bank_transfer",
-  CHECK = "check",
-  OTHER = "other",
+  CASH = 'cash',
+  CREDIT_CARD = 'credit_card',
+  DEBIT_CARD = 'debit_card',
+  BANK_TRANSFER = 'bank_transfer',
+  CHECK = 'check',
+  OTHER = 'other',
 }
 
 export enum POSTransactionStatus {
-  PENDING = "pending",
-  COMPLETED = "completed",
-  CANCELLED = "cancelled",
-  REFUNDED = "refunded",
+  PENDING = 'pending',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
+  REFUNDED = 'refunded',
 }
 
 export enum POSShiftStatus {
-  OPEN = "open",
-  CLOSED = "closed",
+  OPEN = 'open',
+  CLOSED = 'closed',
 }
 
 export enum ProductCategory {
-  ELECTRONICS = "electronics",
-  CLOTHING = "clothing",
-  FOOD = "food",
-  BEVERAGES = "beverages",
-  HEALTHCARE = "healthcare",
-  BEAUTY = "beauty",
-  HOME = "home",
-  AUTOMOTIVE = "automotive",
-  SPORTS = "sports",
-  BOOKS = "books",
-  OTHER = "other",
+  ELECTRONICS = 'electronics',
+  CLOTHING = 'clothing',
+  FOOD = 'food',
+  BEVERAGES = 'beverages',
+  HEALTHCARE = 'healthcare',
+  BEAUTY = 'beauty',
+  HOME = 'home',
+  AUTOMOTIVE = 'automotive',
+  SPORTS = 'sports',
+  BOOKS = 'books',
+  OTHER = 'other',
 }
 
 // Product Types
@@ -124,7 +124,7 @@ export interface POSTransaction {
 export interface POSTransactionCreate {
   customerId?: string;
   customerName?: string;
-  items: Omit<POSTransactionItem, "id" | "total">[];
+  items: Omit<POSTransactionItem, 'id' | 'total'>[];
   taxRate: number;
   discount: number;
   paymentMethod: POSPaymentMethod;

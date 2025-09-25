@@ -1,1 +1,1 @@
-export { default as WorkOrderDialog } from "./WorkOrderDialog";
+export { default as WorkOrderDialog } from './WorkOrderDialog';

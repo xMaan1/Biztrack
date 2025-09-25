@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,14 +8,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../ui/dialog";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { Badge } from "../ui/badge";
-import { Alert, AlertDescription } from "../ui/alert";
-import { Loader2, Shield, Check } from "lucide-react";
-import apiService from "../../services/ApiService";
+} from '../ui/dialog';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Badge } from '../ui/badge';
+import { Alert, AlertDescription } from '../ui/alert';
+import { Loader2, Shield, Check } from 'lucide-react';
+import apiService from '../../services/ApiService';
 
 interface Permission {
   code: string;
@@ -44,7 +44,7 @@ export default function CustomRoleModal({
   tenantId,
 }: CustomRoleModalProps) {
   const [formData, setFormData] = useState<CustomRole>({
-    name: "",
+    name: '',
     permissions: [],
   });
   const [availablePermissions, setAvailablePermissions] = useState<
@@ -59,7 +59,7 @@ export default function CustomRoleModal({
       if (role) {
         setFormData(role);
       } else {
-        setFormData({ name: "", permissions: [] });
+        setFormData({ name: '', permissions: [] });
       }
     }
   }, [open, role]);
@@ -69,7 +69,7 @@ export default function CustomRoleModal({
       const response = await apiService.getPermissions();
       setAvailablePermissions(response || []);
     } catch (err) {
-      setError("Failed to load permissions");
+      setError('Failed to load permissions');
     }
   };
 
@@ -104,7 +104,7 @@ export default function CustomRoleModal({
       onSave(savedRole);
       onClose();
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Failed to save role");
+      setError(err.response?.data?.detail || 'Failed to save role');
     } finally {
       setLoading(false);
     }
@@ -116,7 +116,7 @@ export default function CustomRoleModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            {role ? "Edit Custom Role" : "Create Custom Role"}
+            {role ? 'Edit Custom Role' : 'Create Custom Role'}
           </DialogTitle>
           <DialogDescription>
             Define a custom role with specific permissions for your team
@@ -204,9 +204,9 @@ export default function CustomRoleModal({
                   Saving...
                 </>
               ) : role ? (
-                "Update Role"
+                'Update Role'
               ) : (
-                "Create Role"
+                'Create Role'
               )}
             </Button>
           </DialogFooter>

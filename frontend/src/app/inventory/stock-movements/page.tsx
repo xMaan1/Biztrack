@@ -1,23 +1,23 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
-import { Badge } from "../../../components/ui/badge";
-import { Input } from "../../../components/ui/input";
+} from '../../../components/ui/card';
+import { Button } from '../../../components/ui/button';
+import { Badge } from '../../../components/ui/badge';
+import { Input } from '../../../components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../../components/ui/select";
+} from '../../../components/ui/select';
 import {
   Table,
   TableBody,
@@ -25,7 +25,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../../../components/ui/table";
+} from '../../../components/ui/table';
 import {
   Truck,
   Plus,
@@ -33,54 +33,53 @@ import {
   Edit,
   Trash2,
   Eye,
-  Calendar,
   Building2,
   Package,
   MapPin,
-} from "lucide-react";
-import { useAuth } from "../../../contexts/AuthContext";
-import { inventoryService } from "../../../services/InventoryService";
+} from 'lucide-react';
+import { useAuth } from '../../../contexts/AuthContext';
+import { inventoryService } from '../../../services/InventoryService';
 import {
   StockMovement,
   StockMovementCreate,
   StockMovementType,
   Warehouse,
-} from "../../../models/inventory";
-import { DashboardLayout } from "../../../components/layout";
-import { formatDate } from "../../../lib/utils";
+} from '../../../models/inventory';
+import { DashboardLayout } from '../../../components/layout';
+import { formatDate } from '../../../lib/utils';
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../../components/ui/dialog";
-import { Label } from "../../../components/ui/label";
-import { Textarea } from "../../../components/ui/textarea";
+} from '../../../components/ui/dialog';
+import { Label } from '../../../components/ui/label';
+import { Textarea } from '../../../components/ui/textarea';
 
 export default function StockMovementsPage() {
-  const { user } = useAuth();
+  const { } = useAuth();
   const router = useRouter();
   const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newMovement, setNewMovement] = useState<StockMovementCreate>({
-    productId: "",
-    warehouseId: "",
-    locationId: "",
+    productId: '',
+    warehouseId: '',
+    locationId: '',
     movementType: StockMovementType.INBOUND,
     quantity: 0,
     unitCost: 0,
-    referenceNumber: "",
-    referenceType: "",
-    notes: "",
-    batchNumber: "",
-    serialNumber: "",
-    expiryDate: "",
+    referenceNumber: '',
+    referenceType: '',
+    notes: '',
+    batchNumber: '',
+    serialNumber: '',
+    expiryDate: '',
   });
 
   useEffect(() => {
@@ -121,7 +120,7 @@ export default function StockMovementsPage() {
       movement.notes?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesType =
-      typeFilter === "all" ||
+      typeFilter === 'all' ||
       !typeFilter ||
       movement.movementType === typeFilter;
 
@@ -129,11 +128,11 @@ export default function StockMovementsPage() {
   });
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to cancel this stock movement?")) {
+    if (confirm('Are you sure you want to cancel this stock movement?')) {
       try {
         await inventoryService.updateStockMovement(id, {
           movementType: StockMovementType.ADJUSTMENT,
-          notes: "Cancelled by user",
+          notes: 'Cancelled by user',
         });
         fetchData();
       } catch (error) {
@@ -142,11 +141,11 @@ export default function StockMovementsPage() {
   };
 
   const handleCancel = async (id: string) => {
-    if (confirm("Are you sure you want to cancel this stock movement?")) {
+    if (confirm('Are you sure you want to cancel this stock movement?')) {
       try {
         await inventoryService.updateStockMovement(id, {
           movementType: StockMovementType.ADJUSTMENT,
-          notes: "Cancelled by user",
+          notes: 'Cancelled by user',
         });
         fetchData();
       } catch (error) {
@@ -160,7 +159,7 @@ export default function StockMovementsPage() {
       !newMovement.warehouseId ||
       newMovement.quantity <= 0
     ) {
-      alert("Please fill in all required fields");
+      alert('Please fill in all required fields');
       return;
     }
 
@@ -171,7 +170,7 @@ export default function StockMovementsPage() {
       resetForm();
       fetchData();
     } catch (error) {
-      alert("Failed to create stock movement. Please try again.");
+      alert('Failed to create stock movement. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -179,39 +178,39 @@ export default function StockMovementsPage() {
 
   const resetForm = () => {
     setNewMovement({
-      productId: "",
-      warehouseId: warehouses.length > 0 ? warehouses[0].id : "",
-      locationId: "",
+      productId: '',
+      warehouseId: warehouses.length > 0 ? warehouses[0].id : '',
+      locationId: '',
       movementType: StockMovementType.INBOUND,
       quantity: 0,
       unitCost: 0,
-      referenceNumber: "",
-      referenceType: "",
-      notes: "",
-      batchNumber: "",
-      serialNumber: "",
-      expiryDate: "",
+      referenceNumber: '',
+      referenceType: '',
+      notes: '',
+      batchNumber: '',
+      serialNumber: '',
+      expiryDate: '',
     });
   };
 
   const getTypeBadge = (type: StockMovementType) => {
     const typeConfig = {
-      [StockMovementType.INBOUND]: { variant: "default", label: "Inbound" },
+      [StockMovementType.INBOUND]: { variant: 'default', label: 'Inbound' },
       [StockMovementType.OUTBOUND]: {
-        variant: "destructive",
-        label: "Outbound",
+        variant: 'destructive',
+        label: 'Outbound',
       },
-      [StockMovementType.TRANSFER]: { variant: "secondary", label: "Transfer" },
+      [StockMovementType.TRANSFER]: { variant: 'secondary', label: 'Transfer' },
       [StockMovementType.ADJUSTMENT]: {
-        variant: "outline",
-        label: "Adjustment",
+        variant: 'outline',
+        label: 'Adjustment',
       },
-      [StockMovementType.RETURN]: { variant: "default", label: "Return" },
-      [StockMovementType.DAMAGE]: { variant: "destructive", label: "Damage" },
-      [StockMovementType.EXPIRY]: { variant: "destructive", label: "Expiry" },
+      [StockMovementType.RETURN]: { variant: 'default', label: 'Return' },
+      [StockMovementType.DAMAGE]: { variant: 'destructive', label: 'Damage' },
+      [StockMovementType.EXPIRY]: { variant: 'destructive', label: 'Expiry' },
       [StockMovementType.CYCLE_COUNT]: {
-        variant: "secondary",
-        label: "Cycle Count",
+        variant: 'secondary',
+        label: 'Cycle Count',
       },
     };
 
@@ -221,11 +220,11 @@ export default function StockMovementsPage() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      pending: { variant: "secondary", label: "Pending" },
-      in_progress: { variant: "default", label: "In Progress" },
-      completed: { variant: "default", label: "Completed" },
-      cancelled: { variant: "destructive", label: "Cancelled" },
-      failed: { variant: "destructive", label: "Failed" },
+      pending: { variant: 'secondary', label: 'Pending' },
+      in_progress: { variant: 'default', label: 'In Progress' },
+      completed: { variant: 'default', label: 'Completed' },
+      cancelled: { variant: 'destructive', label: 'Cancelled' },
+      failed: { variant: 'destructive', label: 'Failed' },
     };
 
     const config =
@@ -354,7 +353,7 @@ export default function StockMovementsPage() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <MapPin className="h-4 w-4 text-muted-foreground" />
-                          <span>{movement.locationId || "N/A"}</span>
+                          <span>{movement.locationId || 'N/A'}</span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -367,7 +366,7 @@ export default function StockMovementsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="max-w-32 truncate">
-                          {movement.referenceNumber || "N/A"}
+                          {movement.referenceNumber || 'N/A'}
                         </div>
                       </TableCell>
                       <TableCell>{getStatusBadge(movement.status)}</TableCell>
@@ -427,11 +426,11 @@ export default function StockMovementsPage() {
                   No stock movements found
                 </h3>
                 <p className="text-muted-foreground mb-4">
-                  {searchTerm || typeFilter !== "all"
-                    ? "Try adjusting your search terms or filters"
-                    : "Get started by recording your first stock movement"}
+                  {searchTerm || typeFilter !== 'all'
+                    ? 'Try adjusting your search terms or filters'
+                    : 'Get started by recording your first stock movement'}
                 </p>
-                {!searchTerm && typeFilter === "all" && (
+                {!searchTerm && typeFilter === 'all' && (
                   <Button onClick={() => setIsAddModalOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Record Movement
@@ -763,7 +762,7 @@ export default function StockMovementsPage() {
                   newMovement.quantity <= 0
                 }
               >
-                {isSubmitting ? "Recording..." : "Record Movement"}
+                {isSubmitting ? 'Recording...' : 'Record Movement'}
               </Button>
             </DialogFooter>
           </DialogContent>

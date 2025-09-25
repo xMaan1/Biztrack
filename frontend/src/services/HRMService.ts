@@ -1,4 +1,4 @@
-import { ApiService } from "./ApiService";
+import { ApiService } from './ApiService';
 import {
   Employee,
   EmployeeCreate,
@@ -49,7 +49,7 @@ import {
   HRMLeaveFilters,
   HRMPayrollFilters,
   HRMTrainingFilters,
-} from "../models/hrm";
+} from '../models/hrm';
 
 export class HRMService {
   private apiService: ApiService;
@@ -65,13 +65,13 @@ export class HRMService {
     limit: number = 10,
   ): Promise<HRMEmployeesResponse> {
     const params = new URLSearchParams();
-    if (filters?.department) params.append("department", filters.department);
-    if (filters?.status) params.append("status", filters.status);
+    if (filters?.department) params.append('department', filters.department);
+    if (filters?.status) params.append('status', filters.status);
     if (filters?.employeeType)
-      params.append("employee_type", filters.employeeType);
-    if (filters?.search) params.append("search", filters.search);
-    params.append("page", page.toString());
-    params.append("limit", limit.toString());
+      params.append('employee_type', filters.employeeType);
+    if (filters?.search) params.append('search', filters.search);
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
 
     return this.apiService.get(`/hrm/employees?${params.toString()}`);
   }
@@ -81,7 +81,7 @@ export class HRMService {
   }
 
   async createEmployee(employee: EmployeeCreate): Promise<Employee> {
-    return this.apiService.post("/hrm/employees", employee);
+    return this.apiService.post('/hrm/employees', employee);
   }
 
   async updateEmployee(
@@ -102,12 +102,12 @@ export class HRMService {
     limit: number = 10,
   ): Promise<HRMJobPostingsResponse> {
     const params = new URLSearchParams();
-    if (filters?.department) params.append("department", filters.department);
-    if (filters?.status) params.append("status", filters.status);
-    if (filters?.type) params.append("type", filters.type);
-    if (filters?.search) params.append("search", filters.search);
-    params.append("page", page.toString());
-    params.append("limit", limit.toString());
+    if (filters?.department) params.append('department', filters.department);
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.type) params.append('type', filters.type);
+    if (filters?.search) params.append('search', filters.search);
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
 
     return this.apiService.get(`/hrm/jobs?${params.toString()}`);
   }
@@ -117,7 +117,7 @@ export class HRMService {
   }
 
   async createJobPosting(job: JobPostingCreate): Promise<JobPosting> {
-    return this.apiService.post("/hrm/jobs", job);
+    return this.apiService.post('/hrm/jobs', job);
   }
 
   async updateJobPosting(
@@ -138,13 +138,13 @@ export class HRMService {
     limit: number = 10,
   ): Promise<HRMApplicationsResponse> {
     const params = new URLSearchParams();
-    if (filters?.status) params.append("status", filters.status);
+    if (filters?.status) params.append('status', filters.status);
     if (filters?.jobPostingId)
-      params.append("job_posting_id", filters.jobPostingId);
-    if (filters?.assignedTo) params.append("assigned_to", filters.assignedTo);
-    if (filters?.search) params.append("search", filters.search);
-    params.append("page", page.toString());
-    params.append("limit", limit.toString());
+      params.append('job_posting_id', filters.jobPostingId);
+    if (filters?.assignedTo) params.append('assigned_to', filters.assignedTo);
+    if (filters?.search) params.append('search', filters.search);
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
 
     return this.apiService.get(`/hrm/applications?${params.toString()}`);
   }
@@ -156,7 +156,7 @@ export class HRMService {
   async createApplication(
     application: ApplicationCreate,
   ): Promise<Application> {
-    return this.apiService.post("/hrm/applications", application);
+    return this.apiService.post('/hrm/applications', application);
   }
 
   async updateApplication(
@@ -177,13 +177,13 @@ export class HRMService {
     limit: number = 10,
   ): Promise<HRMReviewsResponse> {
     const params = new URLSearchParams();
-    if (filters?.employeeId) params.append("employee_id", filters.employeeId);
-    if (filters?.reviewType) params.append("review_type", filters.reviewType);
-    if (filters?.status) params.append("status", filters.status);
+    if (filters?.employeeId) params.append('employee_id', filters.employeeId);
+    if (filters?.reviewType) params.append('review_type', filters.reviewType);
+    if (filters?.status) params.append('status', filters.status);
     if (filters?.reviewPeriod)
-      params.append("review_period", filters.reviewPeriod);
-    params.append("page", page.toString());
-    params.append("limit", limit.toString());
+      params.append('review_period', filters.reviewPeriod);
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
 
     return this.apiService.get(`/hrm/reviews?${params.toString()}`);
   }
@@ -195,7 +195,7 @@ export class HRMService {
   async createPerformanceReview(
     review: PerformanceReviewCreate,
   ): Promise<PerformanceReview> {
-    return this.apiService.post("/hrm/reviews", review);
+    return this.apiService.post('/hrm/reviews', review);
   }
 
   async updatePerformanceReview(
@@ -216,12 +216,12 @@ export class HRMService {
     limit: number = 10,
   ): Promise<HRMTimeEntriesResponse> {
     const params = new URLSearchParams();
-    if (filters?.employeeId) params.append("employee_id", filters.employeeId);
-    if (filters?.startDate) params.append("start_date", filters.startDate);
-    if (filters?.endDate) params.append("end_date", filters.endDate);
-    if (filters?.projectId) params.append("project_id", filters.projectId);
-    params.append("page", page.toString());
-    params.append("limit", limit.toString());
+    if (filters?.employeeId) params.append('employee_id', filters.employeeId);
+    if (filters?.startDate) params.append('start_date', filters.startDate);
+    if (filters?.endDate) params.append('end_date', filters.endDate);
+    if (filters?.projectId) params.append('project_id', filters.projectId);
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
 
     return this.apiService.get(`/hrm/time-entries?${params.toString()}`);
   }
@@ -231,7 +231,7 @@ export class HRMService {
   }
 
   async createTimeEntry(timeEntry: TimeEntryCreate): Promise<TimeEntry> {
-    return this.apiService.post("/hrm/time-entries", timeEntry);
+    return this.apiService.post('/hrm/time-entries', timeEntry);
   }
 
   async updateTimeEntry(
@@ -252,13 +252,13 @@ export class HRMService {
     limit: number = 10,
   ): Promise<HRMLeaveRequestsResponse> {
     const params = new URLSearchParams();
-    if (filters?.employeeId) params.append("employee_id", filters.employeeId);
-    if (filters?.leaveType) params.append("leave_type", filters.leaveType);
-    if (filters?.status) params.append("status", filters.status);
-    if (filters?.startDate) params.append("start_date", filters.startDate);
-    if (filters?.endDate) params.append("end_date", filters.endDate);
-    params.append("page", page.toString());
-    params.append("limit", limit.toString());
+    if (filters?.employeeId) params.append('employee_id', filters.employeeId);
+    if (filters?.leaveType) params.append('leave_type', filters.leaveType);
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.startDate) params.append('start_date', filters.startDate);
+    if (filters?.endDate) params.append('end_date', filters.endDate);
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
 
     return this.apiService.get(`/hrm/leave-requests?${params.toString()}`);
   }
@@ -270,7 +270,7 @@ export class HRMService {
   async createLeaveRequest(
     leaveRequest: LeaveRequestCreate,
   ): Promise<LeaveRequest> {
-    return this.apiService.post("/hrm/leave-requests", leaveRequest);
+    return this.apiService.post('/hrm/leave-requests', leaveRequest);
   }
 
   async updateLeaveRequest(
@@ -291,13 +291,13 @@ export class HRMService {
     limit: number = 10,
   ): Promise<HRMPayrollResponse> {
     const params = new URLSearchParams();
-    if (filters?.employeeId) params.append("employee_id", filters.employeeId);
-    if (filters?.payPeriod) params.append("pay_period", filters.payPeriod);
-    if (filters?.status) params.append("status", filters.status);
-    if (filters?.startDate) params.append("start_date", filters.startDate);
-    if (filters?.endDate) params.append("end_date", filters.endDate);
-    params.append("page", page.toString());
-    params.append("limit", limit.toString());
+    if (filters?.employeeId) params.append('employee_id', filters.employeeId);
+    if (filters?.payPeriod) params.append('pay_period', filters.payPeriod);
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.startDate) params.append('start_date', filters.startDate);
+    if (filters?.endDate) params.append('end_date', filters.endDate);
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
 
     return this.apiService.get(`/hrm/payroll?${params.toString()}`);
   }
@@ -307,7 +307,7 @@ export class HRMService {
   }
 
   async createPayroll(payroll: PayrollCreate): Promise<Payroll> {
-    return this.apiService.post("/hrm/payroll", payroll);
+    return this.apiService.post('/hrm/payroll', payroll);
   }
 
   async updatePayroll(id: string, payroll: PayrollUpdate): Promise<Payroll> {
@@ -325,12 +325,12 @@ export class HRMService {
     limit: number = 10,
   ): Promise<HRMBenefitsResponse> {
     const params = new URLSearchParams();
-    if (filters?.employeeId) params.append("employee_id", filters.employeeId);
+    if (filters?.employeeId) params.append('employee_id', filters.employeeId);
     if (filters?.benefitType)
-      params.append("benefit_type", filters.benefitType);
-    if (filters?.status) params.append("status", filters.status);
-    params.append("page", page.toString());
-    params.append("limit", limit.toString());
+      params.append('benefit_type', filters.benefitType);
+    if (filters?.status) params.append('status', filters.status);
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
 
     return this.apiService.get(`/hrm/benefits?${params.toString()}`);
   }
@@ -340,7 +340,7 @@ export class HRMService {
   }
 
   async createBenefit(benefit: BenefitsCreate): Promise<Benefits> {
-    return this.apiService.post("/hrm/benefits", benefit);
+    return this.apiService.post('/hrm/benefits', benefit);
   }
 
   async updateBenefit(id: string, benefit: BenefitsUpdate): Promise<Benefits> {
@@ -359,12 +359,12 @@ export class HRMService {
   ): Promise<HRMTrainingResponse> {
     const params = new URLSearchParams();
     if (filters?.trainingType)
-      params.append("training_type", filters.trainingType);
-    if (filters?.status) params.append("status", filters.status);
-    if (filters?.provider) params.append("provider", filters.provider);
-    if (filters?.search) params.append("search", filters.search);
-    params.append("page", page.toString());
-    params.append("limit", limit.toString());
+      params.append('training_type', filters.trainingType);
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.provider) params.append('provider', filters.provider);
+    if (filters?.search) params.append('search', filters.search);
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
 
     return this.apiService.get(`/hrm/training?${params.toString()}`);
   }
@@ -374,7 +374,7 @@ export class HRMService {
   }
 
   async createTraining(training: TrainingCreate): Promise<Training> {
-    return this.apiService.post("/hrm/training", training);
+    return this.apiService.post('/hrm/training', training);
   }
 
   async updateTraining(
@@ -395,11 +395,11 @@ export class HRMService {
     limit: number = 10,
   ): Promise<HRMEnrollmentsResponse> {
     const params = new URLSearchParams();
-    if (filters?.trainingId) params.append("training_id", filters.trainingId);
-    if (filters?.employeeId) params.append("employee_id", filters.employeeId);
-    if (filters?.status) params.append("status", filters.status);
-    params.append("page", page.toString());
-    params.append("limit", limit.toString());
+    if (filters?.trainingId) params.append('training_id', filters.trainingId);
+    if (filters?.employeeId) params.append('employee_id', filters.employeeId);
+    if (filters?.status) params.append('status', filters.status);
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
 
     return this.apiService.get(
       `/hrm/training-enrollments?${params.toString()}`,
@@ -413,7 +413,7 @@ export class HRMService {
   async createTrainingEnrollment(
     enrollment: TrainingEnrollmentCreate,
   ): Promise<TrainingEnrollment> {
-    return this.apiService.post("/hrm/training-enrollments", enrollment);
+    return this.apiService.post('/hrm/training-enrollments', enrollment);
   }
 
   async updateTrainingEnrollment(
@@ -429,178 +429,178 @@ export class HRMService {
 
   // Dashboard method
   async getDashboard(): Promise<HRMDashboard> {
-    return this.apiService.get("/hrm/dashboard");
+    return this.apiService.get('/hrm/dashboard');
   }
 
   // Utility Methods
   getEmploymentStatusColor(status: string): string {
     switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800";
-      case "inactive":
-        return "bg-gray-100 text-gray-800";
-      case "terminated":
-        return "bg-red-100 text-red-800";
-      case "resigned":
-        return "bg-orange-100 text-orange-800";
-      case "retired":
-        return "bg-blue-100 text-blue-800";
-      case "probation":
-        return "bg-yellow-100 text-yellow-800";
+      case 'active':
+        return 'bg-green-100 text-green-800';
+      case 'inactive':
+        return 'bg-gray-100 text-gray-800';
+      case 'terminated':
+        return 'bg-red-100 text-red-800';
+      case 'resigned':
+        return 'bg-orange-100 text-orange-800';
+      case 'retired':
+        return 'bg-blue-100 text-blue-800';
+      case 'probation':
+        return 'bg-yellow-100 text-yellow-800';
       default:
-        return "bg-gray-100 text-gray-800";
+        return 'bg-gray-100 text-gray-800';
     }
   }
 
   getEmployeeTypeColor(type: string): string {
     switch (type) {
-      case "full_time":
-        return "bg-blue-100 text-blue-800";
-      case "part_time":
-        return "bg-purple-100 text-purple-800";
-      case "contractor":
-        return "bg-orange-100 text-orange-800";
-      case "intern":
-        return "bg-green-100 text-green-800";
-      case "freelancer":
-        return "bg-pink-100 text-pink-800";
+      case 'full_time':
+        return 'bg-blue-100 text-blue-800';
+      case 'part_time':
+        return 'bg-purple-100 text-purple-800';
+      case 'contractor':
+        return 'bg-orange-100 text-orange-800';
+      case 'intern':
+        return 'bg-green-100 text-green-800';
+      case 'freelancer':
+        return 'bg-pink-100 text-pink-800';
       default:
-        return "bg-gray-100 text-gray-800";
+        return 'bg-gray-100 text-gray-800';
     }
   }
 
   getJobStatusColor(status: string): string {
     switch (status) {
-      case "draft":
-        return "bg-gray-100 text-gray-800";
-      case "published":
-        return "bg-green-100 text-green-800";
-      case "closed":
-        return "bg-red-100 text-red-800";
-      case "on_hold":
-        return "bg-yellow-100 text-yellow-800";
+      case 'draft':
+        return 'bg-gray-100 text-gray-800';
+      case 'published':
+        return 'bg-green-100 text-green-800';
+      case 'closed':
+        return 'bg-red-100 text-red-800';
+      case 'on_hold':
+        return 'bg-yellow-100 text-yellow-800';
       default:
-        return "bg-gray-100 text-gray-800";
+        return 'bg-gray-100 text-gray-800';
     }
   }
 
   getApplicationStatusColor(status: string): string {
     switch (status) {
-      case "applied":
-        return "bg-blue-100 text-blue-800";
-      case "screening":
-        return "bg-yellow-100 text-yellow-800";
-      case "interview":
-        return "bg-purple-100 text-purple-800";
-      case "technical_test":
-        return "bg-indigo-100 text-indigo-800";
-      case "reference_check":
-        return "bg-pink-100 text-pink-800";
-      case "offer":
-        return "bg-green-100 text-green-800";
-      case "hired":
-        return "bg-emerald-100 text-emerald-800";
-      case "rejected":
-        return "bg-red-100 text-red-800";
-      case "withdrawn":
-        return "bg-gray-100 text-gray-800";
+      case 'applied':
+        return 'bg-blue-100 text-blue-800';
+      case 'screening':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'interview':
+        return 'bg-purple-100 text-purple-800';
+      case 'technical_test':
+        return 'bg-indigo-100 text-indigo-800';
+      case 'reference_check':
+        return 'bg-pink-100 text-pink-800';
+      case 'offer':
+        return 'bg-green-100 text-green-800';
+      case 'hired':
+        return 'bg-emerald-100 text-emerald-800';
+      case 'rejected':
+        return 'bg-red-100 text-red-800';
+      case 'withdrawn':
+        return 'bg-gray-100 text-gray-800';
       default:
-        return "bg-gray-100 text-gray-800";
+        return 'bg-gray-100 text-gray-800';
     }
   }
 
   getLeaveStatusColor(status: string): string {
     switch (status) {
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "approved":
-        return "bg-green-100 text-green-800";
-      case "rejected":
-        return "bg-red-100 text-red-800";
-      case "cancelled":
-        return "bg-gray-100 text-gray-800";
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'approved':
+        return 'bg-green-100 text-green-800';
+      case 'rejected':
+        return 'bg-red-100 text-red-800';
+      case 'cancelled':
+        return 'bg-gray-100 text-gray-800';
       default:
-        return "bg-gray-100 text-gray-800";
+        return 'bg-gray-100 text-gray-800';
     }
   }
 
   getPayrollStatusColor(status: string): string {
     switch (status) {
-      case "draft":
-        return "bg-gray-100 text-gray-800";
-      case "processed":
-        return "bg-blue-100 text-blue-800";
-      case "paid":
-        return "bg-green-100 text-green-800";
-      case "cancelled":
-        return "bg-red-100 text-red-800";
+      case 'draft':
+        return 'bg-gray-100 text-gray-800';
+      case 'processed':
+        return 'bg-blue-100 text-blue-800';
+      case 'paid':
+        return 'bg-green-100 text-green-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
       default:
-        return "bg-gray-100 text-gray-800";
+        return 'bg-gray-100 text-gray-800';
     }
   }
 
   getTrainingStatusColor(status: string): string {
     switch (status) {
-      case "not_started":
-        return "bg-gray-100 text-gray-800";
-      case "in_progress":
-        return "bg-blue-100 text-blue-800";
-      case "completed":
-        return "bg-green-100 text-green-800";
-      case "expired":
-        return "bg-red-100 text-red-800";
+      case 'not_started':
+        return 'bg-gray-100 text-gray-800';
+      case 'in_progress':
+        return 'bg-blue-100 text-blue-800';
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'expired':
+        return 'bg-red-100 text-red-800';
       default:
-        return "bg-gray-100 text-gray-800";
+        return 'bg-gray-100 text-gray-800';
     }
   }
 
   formatCurrency(amount: number): string {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
     }).format(amount);
   }
 
   formatDate(date: string): string {
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
     });
   }
 
   formatDateTime(date: string): string {
-    return new Date(date).toLocaleString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+    return new Date(date).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
   }
 
   getDepartmentIcon(department: string): string {
     switch (department) {
-      case "engineering":
-        return "🔧";
-      case "sales":
-        return "💰";
-      case "marketing":
-        return "📢";
-      case "hr":
-        return "👥";
-      case "finance":
-        return "💳";
-      case "operations":
-        return "⚙️";
-      case "customer_support":
-        return "🎧";
-      case "legal":
-        return "⚖️";
-      case "it":
-        return "💻";
+      case 'engineering':
+        return '🔧';
+      case 'sales':
+        return '💰';
+      case 'marketing':
+        return '📢';
+      case 'hr':
+        return '👥';
+      case 'finance':
+        return '💳';
+      case 'operations':
+        return '⚙️';
+      case 'customer_support':
+        return '🎧';
+      case 'legal':
+        return '⚖️';
+      case 'it':
+        return '💻';
       default:
-        return "🏢";
+        return '🏢';
     }
   }
 }

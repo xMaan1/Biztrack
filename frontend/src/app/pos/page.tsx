@@ -1,44 +1,43 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
+} from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Badge } from '@/src/components/ui/badge';
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/src/components/ui/tabs";
+} from '@/src/components/ui/tabs';
 import {
   DollarSign,
   ShoppingCart,
   TrendingUp,
   Package,
-  Clock,
   AlertTriangle,
   Plus,
   Receipt,
-} from "lucide-react";
-import { useAuth } from "@/src/hooks/useAuth";
-import { apiService } from "@/src/services/ApiService";
+} from 'lucide-react';
+import { useAuth } from '@/src/hooks/useAuth';
+import { apiService } from '@/src/services/ApiService';
 import {
   POSMetrics,
   POSShift,
   POSTransaction,
   Product,
-} from "@/src/models/pos";
-import { DashboardLayout } from "../../components/layout";
-import { useRouter } from "next/navigation";
+} from '@/src/models/pos';
+import { DashboardLayout } from '../../components/layout';
+import { useRouter } from 'next/navigation';
 
 const POSDashboard = () => {
-  const { user } = useAuth();
+  const { } = useAuth();
   const router = useRouter();
   const [metrics, setMetrics] = useState<POSMetrics | null>(null);
   const [openShift, setOpenShift] = useState<POSShift | null>(null);
@@ -56,7 +55,7 @@ const POSDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const response = await apiService.get("/pos/dashboard");
+      const response = await apiService.get('/pos/dashboard');
       setMetrics(response.metrics);
       setRecentTransactions(response.recentTransactions || []);
       setLowStockProducts(response.lowStockProducts || []);
@@ -68,7 +67,7 @@ const POSDashboard = () => {
 
   const checkOpenShift = async () => {
     try {
-      const response = await apiService.get("/pos/shifts/current/open");
+      const response = await apiService.get('/pos/shifts/current/open');
       if (response.shift) {
         setOpenShift(response.shift);
       }
@@ -79,9 +78,9 @@ const POSDashboard = () => {
   const handleOpenShift = async () => {
     setShiftLoading(true);
     try {
-      const response = await apiService.post("/pos/shifts", {
+      const response = await apiService.post('/pos/shifts', {
         openingBalance: 0,
-        notes: "Shift opened",
+        notes: 'Shift opened',
       });
       setOpenShift(response.shift);
     } catch (error) {
@@ -95,8 +94,8 @@ const POSDashboard = () => {
 
     setShiftLoading(true);
     try {
-      const response = await apiService.put(`/pos/shifts/${openShift.id}`, {
-        status: "closed",
+      await apiService.put(`/pos/shifts/${openShift.id}`, {
+        status: 'closed',
         closingBalance: openShift.openingBalance + openShift.totalSales,
       });
       setOpenShift(null);
@@ -108,30 +107,30 @@ const POSDashboard = () => {
   };
 
   const navigateToNewSale = () => {
-    router.push("/pos/sale");
+    router.push('/pos/sale');
   };
 
   const navigateToProducts = () => {
-    router.push("/pos/products");
+    router.push('/pos/products');
   };
 
   const navigateToReports = () => {
-    router.push("/pos/reports");
+    router.push('/pos/reports');
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
     }).format(amount);
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
   };
 
@@ -175,7 +174,7 @@ const POSDashboard = () => {
                   onClick={closeShift}
                   disabled={shiftLoading}
                 >
-                  {shiftLoading ? "Closing..." : "Close Shift"}
+                  {shiftLoading ? 'Closing...' : 'Close Shift'}
                 </Button>
               </div>
             ) : (
@@ -184,7 +183,7 @@ const POSDashboard = () => {
                 disabled={shiftLoading}
                 className="bg-green-600 hover:bg-green-700"
               >
-                {shiftLoading ? "Opening..." : "Open Shift"}
+                {shiftLoading ? 'Opening...' : 'Open Shift'}
               </Button>
             )}
           </div>
@@ -357,7 +356,7 @@ const POSDashboard = () => {
                               {transaction.transactionNumber}
                             </p>
                             <p className="text-sm text-muted-foreground">
-                              {transaction.customerName || "Walk-in Customer"}
+                              {transaction.customerName || 'Walk-in Customer'}
                             </p>
                           </div>
                         </div>
@@ -371,9 +370,9 @@ const POSDashboard = () => {
                             </Badge>
                             <Badge
                               variant={
-                                transaction.status === "completed"
-                                  ? "default"
-                                  : "secondary"
+                                transaction.status === 'completed'
+                                  ? 'default'
+                                  : 'secondary'
                               }
                             >
                               {transaction.status}

@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useRef } from "react";
-import { Input } from "./input";
-import { Label } from "./label";
-import { Button } from "./button";
-import { Badge } from "./badge";
-import { Card, CardContent } from "./card";
-import { Search, User, Building, X, Check } from "lucide-react";
-import { Customer } from "../../services/CustomerService";
-import InvoiceService from "../../services/InvoiceService";
+import React, { useState, useEffect, useRef } from 'react';
+import { Input } from './input';
+import { Label } from './label';
+import { Button } from './button';
+import { Badge } from './badge';
+import { Card, CardContent } from './card';
+import { Search, User, Building, X, Check } from 'lucide-react';
+import { Customer } from '../../services/CustomerService';
+import InvoiceService from '../../services/InvoiceService';
 
 interface CustomerSearchProps {
   value?: Customer | null;
@@ -23,13 +23,13 @@ interface CustomerSearchProps {
 export function CustomerSearch({
   value,
   onSelect,
-  placeholder = "Search customers...",
-  label = "Customer",
+  placeholder = 'Search customers...',
+  label = 'Customer',
   required = false,
   error,
-  className = "",
+  className = '',
 }: CustomerSearchProps) {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -45,9 +45,9 @@ export function CustomerSearch({
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
@@ -81,14 +81,14 @@ export function CustomerSearch({
 
   const handleCustomerSelect = (customer: Customer) => {
     setSelectedCustomer(customer);
-    setSearchQuery("");
+    setSearchQuery('');
     setIsOpen(false);
     onSelect(customer);
   };
 
   const handleClearSelection = () => {
     setSelectedCustomer(null);
-    setSearchQuery("");
+    setSearchQuery('');
     onSelect(null);
   };
 
@@ -106,7 +106,7 @@ export function CustomerSearch({
   };
 
   const getCustomerTypeIcon = (customer: Customer) => {
-    return customer.customerType === "business" ? (
+    return customer.customerType === 'business' ? (
       <Building className="h-4 w-4" />
     ) : (
       <User className="h-4 w-4" />
@@ -115,23 +115,23 @@ export function CustomerSearch({
 
   const getCustomerStatusColor = (status: string) => {
     switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800";
-      case "inactive":
-        return "bg-gray-100 text-gray-800";
-      case "blocked":
-        return "bg-red-100 text-red-800";
+      case 'active':
+        return 'bg-green-100 text-green-800';
+      case 'inactive':
+        return 'bg-gray-100 text-gray-800';
+      case 'blocked':
+        return 'bg-red-100 text-red-800';
       default:
-        return "bg-gray-100 text-gray-800";
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   return (
     <div className={`relative ${className}`} ref={searchRef}>
-      <Label htmlFor="customer-search" className={required ? "after:content-['*'] after:text-red-500 after:ml-1" : ""}>
+      <Label htmlFor="customer-search" className={required ? 'after:content-[\'*\'] after:text-red-500 after:ml-1' : ''}>
         {label}
       </Label>
-      
+
       <div className="relative">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -142,8 +142,8 @@ export function CustomerSearch({
             value={selectedCustomer ? getCustomerDisplayName(selectedCustomer) : searchQuery}
             onChange={handleInputChange}
             onFocus={handleInputFocus}
-            placeholder={selectedCustomer ? "" : placeholder}
-            className={`pl-10 pr-10 ${error ? "border-red-500" : ""}`}
+            placeholder={selectedCustomer ? '' : placeholder}
+            className={`pl-10 pr-10 ${error ? 'border-red-500' : ''}`}
             disabled={!!selectedCustomer}
           />
           {selectedCustomer && (

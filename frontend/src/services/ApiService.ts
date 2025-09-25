@@ -1,5 +1,5 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
-import { SessionManager } from "./SessionManager";
+import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import { SessionManager } from './SessionManager';
 
 export interface ApiResponse<T = any> {
   data: T;
@@ -20,23 +20,23 @@ export interface PaginatedResponse<T> {
 export class ApiService {
   private client: AxiosInstance;
   private sessionManager: SessionManager;
-  private publicEndpoints = ["/auth/login", "/auth/register", "/auth/reset-password", "/auth/reset-password/confirm", "/public/plans"];
+  private publicEndpoints = ['/auth/login', '/auth/register', '/auth/reset-password', '/auth/reset-password/confirm', '/public/plans'];
   private currentTenantId: string | null = null;
 
   constructor() {
     this.sessionManager = new SessionManager();
 
     this.client = axios.create({
-      baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
+      baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       timeout: 10000,
     });
 
     // Initialize tenant ID from localStorage if available
-    if (typeof window !== "undefined") {
-      this.currentTenantId = localStorage.getItem("currentTenantId");
+    if (typeof window !== 'undefined') {
+      this.currentTenantId = localStorage.getItem('currentTenantId');
     }
 
     this.setupInterceptors();
@@ -45,12 +45,12 @@ export class ApiService {
   // Tenant management
   setTenantId(tenantId: string | null) {
     this.currentTenantId = tenantId;
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       if (tenantId) {
-        localStorage.setItem("currentTenantId", tenantId);
+        localStorage.setItem('currentTenantId', tenantId);
       } else {
-        localStorage.removeItem("currentTenantId");
-        localStorage.removeItem("userTenants");
+        localStorage.removeItem('currentTenantId');
+        localStorage.removeItem('userTenants');
       }
     }
   }
@@ -59,28 +59,28 @@ export class ApiService {
     if (this.currentTenantId) {
       return this.currentTenantId;
     }
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("currentTenantId");
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('currentTenantId');
     }
     return null;
   }
 
   // Store user tenants in localStorage
   setUserTenants(tenants: any[]) {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("userTenants", JSON.stringify(tenants));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('userTenants', JSON.stringify(tenants));
     }
   }
 
   // Get user tenants from localStorage
   getUserTenants(): any[] {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("userTenants");
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('userTenants');
       if (stored) {
         try {
           return JSON.parse(stored);
         } catch (error) {
-          localStorage.removeItem("userTenants");
+          localStorage.removeItem('userTenants');
         }
       }
     }
@@ -115,7 +115,7 @@ export class ApiService {
     this.client.interceptors.request.use(
       (config) => {
         // Only check auth on client side
-        if (typeof window !== "undefined") {
+        if (typeof window !== 'undefined') {
           // Check if this is a public endpoint
           const isPublicEndpoint = this.publicEndpoints.some((endpoint) => {
             const matches = config.url?.includes(endpoint);
@@ -126,7 +126,7 @@ export class ApiService {
             // Check if user is authenticated for protected endpoints
             if (!this.sessionManager.isSessionValid()) {
               // Don't redirect immediately, let the component handle it
-              return Promise.reject(new Error("Not authenticated"));
+              return Promise.reject(new Error('Not authenticated'));
             }
           }
 
@@ -142,7 +142,7 @@ export class ApiService {
         // Add tenant header if available
         const tenantId = this.getTenantId();
         if (tenantId) {
-          config.headers["X-Tenant-ID"] = tenantId;
+          config.headers['X-Tenant-ID'] = tenantId;
         }
 
         return config;
@@ -222,7 +222,7 @@ export class ApiService {
   // Auth endpoints
   async login(credentials: { email: string; password: string }) {
     try {
-      const response = await this.post("/auth/login", credentials);
+      const response = await this.post('/auth/login', credentials);
 
       // Store session after successful login
       if (response.success && response.token && response.user) {
@@ -261,16 +261,16 @@ export class ApiService {
     firstName?: string;
     lastName?: string;
   }) {
-    return this.post("/auth/register", userData);
+    return this.post('/auth/register', userData);
   }
 
   async getCurrentUser() {
-    return this.get("/auth/me");
+    return this.get('/auth/me');
   }
 
   async logout() {
     try {
-      const response = await this.post("/auth/logout");
+      const response = await this.post('/auth/logout');
       // Clear all tenant information on logout
       this.setTenantId(null);
       return response;
@@ -288,7 +288,7 @@ export class ApiService {
     if (tenantId) {
       return this.getTenantUsers(tenantId);
     }
-    return this.get("/users");
+    return this.get('/users');
   }
 
   async getTenantUsers(tenantId: string) {
@@ -299,7 +299,7 @@ export class ApiService {
   async getCurrentTenantUsers() {
     const tenantId = this.getTenantId();
     if (!tenantId) {
-      throw new Error("No tenant selected");
+      throw new Error('No tenant selected');
     }
     return this.getTenantUsers(tenantId);
   }
@@ -317,7 +317,7 @@ export class ApiService {
   }
   // SaaS Plans and Subscription
   async getPlans() {
-    return this.get("/plans");
+    return this.get('/plans');
   }
 
   async subscribeToPlan(data: {
@@ -325,7 +325,7 @@ export class ApiService {
     tenantName: string;
     domain?: string;
   }) {
-    return this.post("/tenants/subscribe", data);
+    return this.post('/tenants/subscribe', data);
   }
 
   async createTenantFromLanding(data: {
@@ -333,12 +333,12 @@ export class ApiService {
     tenantName: string;
     domain?: string;
   }) {
-    return this.post("/tenants/create-tenant", data);
+    return this.post('/tenants/create-tenant', data);
   }
 
   // Tenant endpoints
   async getMyTenants() {
-    return this.get("/tenants/my-tenants");
+    return this.get('/tenants/my-tenants');
   }
 
   async getTenant(tenantId: string) {
@@ -351,7 +351,7 @@ export class ApiService {
     const tenant = storedTenants.find((t: any) => t.id === tenantId);
 
     if (!tenant) {
-      throw new Error("Access denied to this tenant");
+      throw new Error('Access denied to this tenant');
     }
 
     this.setTenantId(tenantId);
@@ -360,7 +360,7 @@ export class ApiService {
 
   // Project endpoints
   async getProjects() {
-    return this.get("/projects");
+    return this.get('/projects');
   }
 
   async getProject(id: string) {
@@ -368,7 +368,7 @@ export class ApiService {
   }
 
   async createProject(data: any) {
-    return this.post("/projects", data);
+    return this.post('/projects', data);
   }
 
   async updateProject(id: string, data: any) {
@@ -380,7 +380,7 @@ export class ApiService {
   }
 
   async getProjectTeamMembers() {
-    return this.get("/projects/team-members");
+    return this.get('/projects/team-members');
   }
 
   // Task endpoints
@@ -394,29 +394,29 @@ export class ApiService {
     limit?: number;
   }) {
     const queryParams = new URLSearchParams();
-    if (params?.project) queryParams.append("project", params.project);
-    if (params?.status) queryParams.append("status", params.status);
-    if (params?.assignedTo) queryParams.append("assignedTo", params.assignedTo);
+    if (params?.project) queryParams.append('project', params.project);
+    if (params?.status) queryParams.append('status', params.status);
+    if (params?.assignedTo) queryParams.append('assignedTo', params.assignedTo);
     if (params?.includeSubtasks !== undefined)
-      queryParams.append("include_subtasks", params.includeSubtasks.toString());
+      queryParams.append('include_subtasks', params.includeSubtasks.toString());
     if (params?.mainTasksOnly !== undefined)
-      queryParams.append("main_tasks_only", params.mainTasksOnly.toString());
-    if (params?.page) queryParams.append("page", params.page.toString());
-    if (params?.limit) queryParams.append("limit", params.limit.toString());
+      queryParams.append('main_tasks_only', params.mainTasksOnly.toString());
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
 
-    const url = `/tasks${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+    const url = `/tasks${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     return this.get(url);
   }
 
   async getTask(id: string, includeSubtasks: boolean = true) {
     const params = includeSubtasks
-      ? "?include_subtasks=true"
-      : "?include_subtasks=false";
+      ? '?include_subtasks=true'
+      : '?include_subtasks=false';
     return this.get(`/tasks/${id}${params}`);
   }
 
   async createTask(data: any) {
-    return this.post("/tasks", data);
+    return this.post('/tasks', data);
   }
 
   async updateTask(id: string, data: any) {
@@ -428,7 +428,7 @@ export class ApiService {
   }
 
   async getTasksByProject(projectId: string, mainTasksOnly: boolean = false) {
-    const params = mainTasksOnly ? "?main_tasks_only=true" : "";
+    const params = mainTasksOnly ? '?main_tasks_only=true' : '';
     return this.get(`/tasks?project=${projectId}${params}`);
   }
 
@@ -443,7 +443,7 @@ export class ApiService {
 
   // Health check
   async healthCheck() {
-    return this.get("/health");
+    return this.get('/health');
   }
 
   // Custom Roles & Permissions
@@ -471,12 +471,12 @@ export class ApiService {
   }
 
   async getPermissions() {
-    return this.get("/tenants/permissions");
+    return this.get('/tenants/permissions');
   }
   // Test connection
   async testConnection() {
     try {
-      const response = await this.get("/health");
+      const response = await this.get('/health');
       return response;
     } catch (error) {
       throw error;
@@ -493,15 +493,15 @@ export class ApiService {
   }) {
     try {
       const queryParams = new URLSearchParams();
-      if (params?.project) queryParams.append("project_id", params.project);
-      if (params?.user) queryParams.append("user_id", params.user);
-      if (params?.status) queryParams.append("status_filter", params.status);
+      if (params?.project) queryParams.append('project_id', params.project);
+      if (params?.user) queryParams.append('user_id', params.user);
+      if (params?.status) queryParams.append('status_filter', params.status);
       if (params?.page)
         queryParams.append(
-          "skip",
+          'skip',
           ((params.page - 1) * (params.limit || 100)).toString(),
         );
-      if (params?.limit) queryParams.append("limit", params.limit.toString());
+      if (params?.limit) queryParams.append('limit', params.limit.toString());
 
       const url = `/events?${queryParams.toString()}`;
       const response = await this.get(url);
@@ -522,7 +522,7 @@ export class ApiService {
 
   async createEvent(data: any) {
     try {
-      const response = await this.post("/events", data);
+      const response = await this.post('/events', data);
       return response;
     } catch (error) {
       throw error;
@@ -586,7 +586,7 @@ export class ApiService {
   // Sales methods
   async getSalesDashboard(): Promise<any> {
     try {
-      const response = await this.client.get("/sales/dashboard");
+      const response = await this.client.get('/sales/dashboard');
       return response.data;
     } catch (error) {
       throw error;
@@ -604,7 +604,7 @@ export class ApiService {
     } = {},
   ): Promise<any> {
     try {
-      const response = await this.client.get("/sales/leads", { params });
+      const response = await this.client.get('/sales/leads', { params });
       return response.data;
     } catch (error) {
       throw error;
@@ -613,7 +613,7 @@ export class ApiService {
 
   async createLead(leadData: any): Promise<any> {
     try {
-      const response = await this.client.post("/sales/leads", leadData);
+      const response = await this.client.post('/sales/leads', leadData);
       return response.data;
     } catch (error) {
       throw error;
@@ -651,7 +651,7 @@ export class ApiService {
     } = {},
   ): Promise<any> {
     try {
-      const response = await this.client.get("/sales/contacts", { params });
+      const response = await this.client.get('/sales/contacts', { params });
       return response.data;
     } catch (error) {
       throw error;
@@ -660,7 +660,7 @@ export class ApiService {
 
   async createContact(contactData: any): Promise<any> {
     try {
-      const response = await this.client.post("/sales/contacts", contactData);
+      const response = await this.client.post('/sales/contacts', contactData);
       return response.data;
     } catch (error) {
       throw error;
@@ -697,7 +697,7 @@ export class ApiService {
     } = {},
   ): Promise<any> {
     try {
-      const response = await this.client.get("/sales/companies", { params });
+      const response = await this.client.get('/sales/companies', { params });
       return response.data;
     } catch (error) {
       throw error;
@@ -706,7 +706,7 @@ export class ApiService {
 
   async createCompany(companyData: any): Promise<any> {
     try {
-      const response = await this.client.post("/sales/companies", companyData);
+      const response = await this.client.post('/sales/companies', companyData);
       return response.data;
     } catch (error) {
       throw error;
@@ -746,7 +746,7 @@ export class ApiService {
     } = {},
   ): Promise<any> {
     try {
-      const response = await this.client.get("/sales/opportunities", {
+      const response = await this.client.get('/sales/opportunities', {
         params,
       });
       return response.data;
@@ -758,7 +758,7 @@ export class ApiService {
   async createOpportunity(opportunityData: any): Promise<any> {
     try {
       const response = await this.client.post(
-        "/sales/opportunities",
+        '/sales/opportunities',
         opportunityData,
       );
       return response.data;
@@ -802,7 +802,7 @@ export class ApiService {
     } = {},
   ): Promise<any> {
     try {
-      const response = await this.client.get("/sales/quotes", { params });
+      const response = await this.client.get('/sales/quotes', { params });
       return response.data;
     } catch (error) {
       throw error;
@@ -811,7 +811,7 @@ export class ApiService {
 
   async createQuote(quoteData: any): Promise<any> {
     try {
-      const response = await this.client.post("/sales/quotes", quoteData);
+      const response = await this.client.post('/sales/quotes', quoteData);
       return response.data;
     } catch (error) {
       throw error;
@@ -848,7 +848,7 @@ export class ApiService {
     } = {},
   ): Promise<any> {
     try {
-      const response = await this.client.get("/sales/contracts", { params });
+      const response = await this.client.get('/sales/contracts', { params });
       return response.data;
     } catch (error) {
       throw error;
@@ -857,7 +857,7 @@ export class ApiService {
 
   async createContract(contractData: any): Promise<any> {
     try {
-      const response = await this.client.post("/sales/contracts", contractData);
+      const response = await this.client.post('/sales/contracts', contractData);
       return response.data;
     } catch (error) {
       throw error;
@@ -899,7 +899,7 @@ export class ApiService {
     } = {},
   ): Promise<any> {
     try {
-      const response = await this.client.get("/sales/activities", { params });
+      const response = await this.client.get('/sales/activities', { params });
       return response.data;
     } catch (error) {
       throw error;
@@ -909,7 +909,7 @@ export class ApiService {
   async createSalesActivity(activityData: any): Promise<any> {
     try {
       const response = await this.client.post(
-        "/sales/activities",
+        '/sales/activities',
         activityData,
       );
       return response.data;
@@ -919,7 +919,7 @@ export class ApiService {
   }
 
   async getRevenueAnalytics(
-    period: string = "monthly",
+    period: string = 'monthly',
     startDate?: string,
     endDate?: string,
   ): Promise<any> {
@@ -928,7 +928,7 @@ export class ApiService {
       if (startDate) params.start_date = startDate;
       if (endDate) params.end_date = endDate;
 
-      const response = await this.client.get("/sales/analytics/revenue", {
+      const response = await this.client.get('/sales/analytics/revenue', {
         params,
       });
       return response.data;
@@ -939,7 +939,7 @@ export class ApiService {
 
   async getConversionAnalytics(): Promise<any> {
     try {
-      const response = await this.client.get("/sales/analytics/conversion");
+      const response = await this.client.get('/sales/analytics/conversion');
       return response.data;
     } catch (error) {
       throw error;
@@ -958,7 +958,7 @@ export class ApiService {
     } = {},
   ): Promise<any> {
     try {
-      const response = await this.client.get("/work-orders", { params });
+      const response = await this.client.get('/work-orders', { params });
       return response.data;
     } catch (error) {
       throw error;
@@ -967,7 +967,7 @@ export class ApiService {
 
   async getWorkOrderStats(): Promise<any> {
     try {
-      const response = await this.client.get("/work-orders/stats");
+      const response = await this.client.get('/work-orders/stats');
       return response.data;
     } catch (error) {
       throw error;
@@ -985,7 +985,7 @@ export class ApiService {
 
   async createWorkOrder(workOrderData: any): Promise<any> {
     try {
-      const response = await this.client.post("/work-orders", workOrderData);
+      const response = await this.client.post('/work-orders', workOrderData);
       return response.data;
     } catch (error) {
       throw error;
@@ -1021,7 +1021,7 @@ export class ApiService {
     is_active?: boolean;
   }): Promise<any[]> {
     try {
-      const response = await this.client.get("/admin/tenants", { params });
+      const response = await this.client.get('/admin/tenants', { params });
       return response.data;
     } catch (error) {
       throw error;
@@ -1040,7 +1040,7 @@ export class ApiService {
   async updateTenantStatus(tenantId: string, isActive: boolean): Promise<any> {
     try {
       const response = await this.client.put(`/admin/tenants/${tenantId}/status`, {
-        is_active: isActive
+        is_active: isActive,
       });
       return response.data;
     } catch (error) {
@@ -1050,7 +1050,7 @@ export class ApiService {
 
   async getAdminStats(): Promise<any> {
     try {
-      const response = await this.client.get("/admin/stats");
+      const response = await this.client.get('/admin/stats');
       return response.data;
     } catch (error) {
       throw error;

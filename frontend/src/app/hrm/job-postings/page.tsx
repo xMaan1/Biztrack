@@ -1,24 +1,24 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Input } from "@/src/components/ui/input";
-import { Label } from "@/src/components/ui/label";
-import { Textarea } from "@/src/components/ui/textarea";
+} from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Input } from '@/src/components/ui/input';
+import { Label } from '@/src/components/ui/label';
+import { Textarea } from '@/src/components/ui/textarea';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select";
+} from '@/src/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -26,9 +26,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/src/components/ui/dialog";
-import { Badge } from "@/src/components/ui/badge";
-import { Alert, AlertDescription } from "@/src/components/ui/alert";
+} from '@/src/components/ui/dialog';
+import { Badge } from '@/src/components/ui/badge';
+import { Alert, AlertDescription } from '@/src/components/ui/alert';
 import {
   Briefcase,
   Plus,
@@ -42,27 +42,26 @@ import {
   DollarSign,
   Users,
   Building,
-} from "lucide-react";
-import HRMService from "@/src/services/HRMService";
+} from 'lucide-react';
+import HRMService from '@/src/services/HRMService';
 import {
   JobPosting,
   JobPostingCreate,
-  JobPostingUpdate,
   JobStatus,
   Department,
   EmployeeType,
   HRMJobFilters,
-} from "@/src/models/hrm";
-import { DashboardLayout } from "@/src/components/layout";
-import { useCustomOptions } from "@/src/hooks/useCustomOptions";
-import { CustomOptionDialog } from "@/src/components/common/CustomOptionDialog";
+} from '@/src/models/hrm';
+import { DashboardLayout } from '@/src/components/layout';
+import { useCustomOptions } from '@/src/hooks/useCustomOptions';
+import { CustomOptionDialog } from '@/src/components/common/CustomOptionDialog';
 
 export default function HRMJobPostingsPage() {
   const [jobPostings, setJobPostings] = useState<JobPosting[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<HRMJobFilters>({});
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingJobPosting, setEditingJobPosting] = useState<JobPosting | null>(
     null,
@@ -85,24 +84,25 @@ export default function HRMJobPostingsPage() {
     loading: customOptionsLoading,
   } = useCustomOptions();
   const [formData, setFormData] = useState<JobPostingCreate>({
-    title: "",
+    title: '',
     department: Department.ENGINEERING,
-    description: "",
+    description: '',
     requirements: [] as string[],
     responsibilities: [] as string[],
-    location: "",
+    location: '',
     type: EmployeeType.FULL_TIME,
-    salaryRange: "",
+    salaryRange: '',
     benefits: [] as string[],
     status: JobStatus.DRAFT,
-    openDate: new Date().toISOString().split("T")[0],
-    closeDate: "",
-    hiringManagerId: "",
+    openDate: new Date().toISOString().split('T')[0],
+    closeDate: '',
+    hiringManagerId: '',
     tags: [] as string[],
   });
 
   useEffect(() => {
     loadJobPostings();
+    return;
   }, [filters]);
 
   const loadJobPostings = useCallback(async () => {
@@ -111,7 +111,7 @@ export default function HRMJobPostingsPage() {
       const response = await HRMService.getJobPostings(filters, 1, 100);
       setJobPostings(response.jobPostings);
     } catch (err) {
-      setError("Failed to load job postings");
+      setError('Failed to load job postings');
       } finally {
       setLoading(false);
     }
@@ -123,7 +123,7 @@ export default function HRMJobPostingsPage() {
 
   const resetFilters = () => {
     setFilters({});
-    setSearch("");
+    setSearch('');
   };
 
   const handleCreateCustomDepartment = async (
@@ -138,19 +138,19 @@ export default function HRMJobPostingsPage() {
 
   const resetForm = () => {
     setFormData({
-      title: "",
+      title: '',
       department: Department.ENGINEERING,
-      description: "",
+      description: '',
       requirements: [] as string[],
       responsibilities: [] as string[],
-      location: "",
+      location: '',
       type: EmployeeType.FULL_TIME,
-      salaryRange: "",
+      salaryRange: '',
       benefits: [] as string[],
       status: JobStatus.DRAFT,
-      openDate: new Date().toISOString().split("T")[0],
-      closeDate: "",
-      hiringManagerId: "",
+      openDate: new Date().toISOString().split('T')[0],
+      closeDate: '',
+      hiringManagerId: '',
       tags: [] as string[],
     });
     setEditingJobPosting(null);
@@ -164,17 +164,17 @@ export default function HRMJobPostingsPage() {
 
       if (editingJobPosting) {
         await HRMService.updateJobPosting(editingJobPosting.id, formData);
-        setSuccessMessage("Job posting updated successfully!");
+        setSuccessMessage('Job posting updated successfully!');
       } else {
         await HRMService.createJobPosting(formData);
-        setSuccessMessage("Job posting created successfully!");
+        setSuccessMessage('Job posting created successfully!');
       }
 
       setShowCreateDialog(false);
       resetForm();
       loadJobPostings();
     } catch (err) {
-      setError("Failed to save job posting. Please try again.");
+      setError('Failed to save job posting. Please try again.');
       } finally {
       setSubmitting(false);
     }
@@ -190,12 +190,12 @@ export default function HRMJobPostingsPage() {
       responsibilities: jobPosting.responsibilities,
       location: jobPosting.location,
       type: jobPosting.type,
-      salaryRange: jobPosting.salaryRange || "",
+      salaryRange: jobPosting.salaryRange || '',
       benefits: jobPosting.benefits,
       status: jobPosting.status,
-      openDate: jobPosting.openDate.split("T")[0],
-      closeDate: jobPosting.closeDate?.split("T")[0] || "",
-      hiringManagerId: jobPosting.hiringManagerId || "",
+      openDate: jobPosting.openDate.split('T')[0],
+      closeDate: jobPosting.closeDate?.split('T')[0] || '',
+      hiringManagerId: jobPosting.hiringManagerId || '',
       tags: jobPosting.tags,
     });
     setShowCreateDialog(true);
@@ -215,11 +215,11 @@ export default function HRMJobPostingsPage() {
     try {
       setDeleting(true);
       await HRMService.deleteJobPosting(deletingJobPosting.id);
-      setSuccessMessage("Job posting deleted successfully!");
+      setSuccessMessage('Job posting deleted successfully!');
       setDeletingJobPosting(null);
       loadJobPostings();
     } catch (err) {
-      setError("Failed to delete job posting. Please try again.");
+      setError('Failed to delete job posting. Please try again.');
       } finally {
       setDeleting(false);
     }
@@ -227,28 +227,28 @@ export default function HRMJobPostingsPage() {
 
   const getStatusColor = (status: JobStatus) => {
     const statusColors: { [key: string]: string } = {
-      draft: "bg-gray-100 text-gray-800",
-      published: "bg-green-100 text-green-800",
-      closed: "bg-red-100 text-red-800",
-      on_hold: "bg-yellow-100 text-yellow-800",
+      draft: 'bg-gray-100 text-gray-800',
+      published: 'bg-green-100 text-green-800',
+      closed: 'bg-red-100 text-red-800',
+      on_hold: 'bg-yellow-100 text-yellow-800',
     };
-    return statusColors[status] || "bg-gray-100 text-gray-800";
+    return statusColors[status] || 'bg-gray-100 text-gray-800';
   };
 
   const getDepartmentColor = (department: Department) => {
     const deptColors: { [key: string]: string } = {
-      engineering: "bg-blue-100 text-blue-800",
-      sales: "bg-green-100 text-green-800",
-      marketing: "bg-purple-100 text-purple-800",
-      hr: "bg-pink-100 text-pink-800",
-      finance: "bg-yellow-100 text-yellow-800",
-      operations: "bg-indigo-100 text-indigo-800",
-      customer_support: "bg-orange-100 text-orange-800",
-      legal: "bg-red-100 text-red-800",
-      it: "bg-cyan-100 text-cyan-800",
-      other: "bg-gray-100 text-gray-800",
+      engineering: 'bg-blue-100 text-blue-800',
+      sales: 'bg-green-100 text-green-800',
+      marketing: 'bg-purple-100 text-purple-800',
+      hr: 'bg-pink-100 text-pink-800',
+      finance: 'bg-yellow-100 text-yellow-800',
+      operations: 'bg-indigo-100 text-indigo-800',
+      customer_support: 'bg-orange-100 text-orange-800',
+      legal: 'bg-red-100 text-red-800',
+      it: 'bg-cyan-100 text-cyan-800',
+      other: 'bg-gray-100 text-gray-800',
     };
-    return deptColors[department] || "bg-gray-100 text-gray-800";
+    return deptColors[department] || 'bg-gray-100 text-gray-800';
   };
 
   // Clear success/error messages after 5 seconds
@@ -257,6 +257,7 @@ export default function HRMJobPostingsPage() {
       const timer = setTimeout(() => setSuccessMessage(null), 5000);
       return () => clearTimeout(timer);
     }
+    return;
   }, [successMessage]);
 
   useEffect(() => {
@@ -264,6 +265,7 @@ export default function HRMJobPostingsPage() {
       const timer = setTimeout(() => setError(null), 5000);
       return () => clearTimeout(timer);
     }
+    return;
   }, [error]);
 
   if (loading) {
@@ -333,7 +335,7 @@ export default function HRMJobPostingsPage() {
                     placeholder="Search job postings..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                   />
                   <Button onClick={handleSearch}>
                     <Search className="w-4 h-4" />
@@ -343,12 +345,12 @@ export default function HRMJobPostingsPage() {
               <div>
                 <label className="text-sm font-medium">Department</label>
                 <Select
-                  value={filters.department || "all"}
+                  value={filters.department || 'all'}
                   onValueChange={(value) =>
                     setFilters((prev: HRMJobFilters) => ({
                       ...prev,
                       department:
-                        value === "all" ? undefined : (value as Department),
+                        value === 'all' ? undefined : (value as Department),
                     }))
                   }
                 >
@@ -359,7 +361,7 @@ export default function HRMJobPostingsPage() {
                     <SelectItem value="all">All departments</SelectItem>
                     {Object.values(Department).map((dept) => (
                       <SelectItem key={dept} value={dept}>
-                        {dept.replace("_", " ").toUpperCase()}
+                        {dept.replace('_', ' ').toUpperCase()}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -368,12 +370,12 @@ export default function HRMJobPostingsPage() {
               <div>
                 <label className="text-sm font-medium">Status</label>
                 <Select
-                  value={filters.status || "all"}
+                  value={filters.status || 'all'}
                   onValueChange={(value) =>
                     setFilters((prev: HRMJobFilters) => ({
                       ...prev,
                       status:
-                        value === "all" ? undefined : (value as JobStatus),
+                        value === 'all' ? undefined : (value as JobStatus),
                     }))
                   }
                 >
@@ -384,7 +386,7 @@ export default function HRMJobPostingsPage() {
                     <SelectItem value="all">All statuses</SelectItem>
                     {Object.values(JobStatus).map((status) => (
                       <SelectItem key={status} value={status}>
-                        {status.replace("_", " ").toUpperCase()}
+                        {status.replace('_', ' ').toUpperCase()}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -393,12 +395,12 @@ export default function HRMJobPostingsPage() {
               <div>
                 <label className="text-sm font-medium">Type</label>
                 <Select
-                  value={filters.type || "all"}
+                  value={filters.type || 'all'}
                   onValueChange={(value) =>
                     setFilters((prev: HRMJobFilters) => ({
                       ...prev,
                       type:
-                        value === "all" ? undefined : (value as EmployeeType),
+                        value === 'all' ? undefined : (value as EmployeeType),
                     }))
                   }
                 >
@@ -409,7 +411,7 @@ export default function HRMJobPostingsPage() {
                     <SelectItem value="all">All types</SelectItem>
                     {Object.values(EmployeeType).map((type) => (
                       <SelectItem key={type} value={type}>
-                        {type.replace("_", " ").toUpperCase()}
+                        {type.replace('_', ' ').toUpperCase()}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -516,13 +518,13 @@ export default function HRMJobPostingsPage() {
                       <Badge
                         className={getDepartmentColor(jobPosting.department)}
                       >
-                        {jobPosting.department.replace("_", " ").toUpperCase()}
+                        {jobPosting.department.replace('_', ' ').toUpperCase()}
                       </Badge>
                       <Badge className={getStatusColor(jobPosting.status)}>
-                        {jobPosting.status.replace("_", " ").toUpperCase()}
+                        {jobPosting.status.replace('_', ' ').toUpperCase()}
                       </Badge>
                       <Badge variant="outline">
-                        {jobPosting.type.replace("_", " ").toUpperCase()}
+                        {jobPosting.type.replace('_', ' ').toUpperCase()}
                       </Badge>
                       {jobPosting.salaryRange && (
                         <Badge variant="outline">
@@ -539,7 +541,7 @@ export default function HRMJobPostingsPage() {
                       <div className="flex items-center space-x-1">
                         <Calendar className="w-3 h-3" />
                         <span>
-                          Opens:{" "}
+                          Opens:{' '}
                           {new Date(jobPosting.openDate).toLocaleDateString()}
                         </span>
                       </div>
@@ -547,7 +549,7 @@ export default function HRMJobPostingsPage() {
                         <div className="flex items-center space-x-1">
                           <Calendar className="w-3 h-3" />
                           <span>
-                            Closes:{" "}
+                            Closes:{' '}
                             {new Date(
                               jobPosting.closeDate,
                             ).toLocaleDateString()}
@@ -557,7 +559,7 @@ export default function HRMJobPostingsPage() {
                       <div className="flex items-center space-x-1">
                         <Building className="w-3 h-3" />
                         <span>
-                          Created:{" "}
+                          Created:{' '}
                           {new Date(jobPosting.createdAt).toLocaleDateString()}
                         </span>
                       </div>
@@ -603,12 +605,12 @@ export default function HRMJobPostingsPage() {
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {editingJobPosting ? "Edit Job Posting" : "New Job Posting"}
+                {editingJobPosting ? 'Edit Job Posting' : 'New Job Posting'}
               </DialogTitle>
               <DialogDescription>
                 {editingJobPosting
-                  ? "Update job posting information"
-                  : "Create a new job posting for recruitment"}
+                  ? 'Update job posting information'
+                  : 'Create a new job posting for recruitment'}
               </DialogDescription>
             </DialogHeader>
 
@@ -635,7 +637,7 @@ export default function HRMJobPostingsPage() {
                 <Select
                   value={formData.department}
                   onValueChange={(value) => {
-                    if (value === "create_new") {
+                    if (value === 'create_new') {
                       setShowCustomDepartmentDialog(true);
                     } else {
                       setFormData((prev) => ({
@@ -651,7 +653,7 @@ export default function HRMJobPostingsPage() {
                   <SelectContent>
                     {Object.values(Department).map((dept) => (
                       <SelectItem key={dept} value={dept}>
-                        {dept.replace("_", " ").toUpperCase()}
+                        {dept.replace('_', ' ').toUpperCase()}
                       </SelectItem>
                     ))}
 
@@ -690,7 +692,7 @@ export default function HRMJobPostingsPage() {
                   <SelectContent>
                     {Object.values(EmployeeType).map((type) => (
                       <SelectItem key={type} value={type}>
-                        {type.replace("_", " ").toUpperCase()}
+                        {type.replace('_', ' ').toUpperCase()}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -741,7 +743,7 @@ export default function HRMJobPostingsPage() {
                   <SelectContent>
                     {Object.values(JobStatus).map((status) => (
                       <SelectItem key={status} value={status}>
-                        {status.replace("_", " ").toUpperCase()}
+                        {status.replace('_', ' ').toUpperCase()}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -796,12 +798,12 @@ export default function HRMJobPostingsPage() {
                 </Label>
                 <Textarea
                   id="requirements"
-                  value={(formData.requirements || []).join("\n")}
+                  value={(formData.requirements || []).join('\n')}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
                       requirements: e.target.value
-                        .split("\n")
+                        .split('\n')
                         .filter((line) => line.trim()),
                     }))
                   }
@@ -815,12 +817,12 @@ export default function HRMJobPostingsPage() {
                 </Label>
                 <Textarea
                   id="responsibilities"
-                  value={(formData.responsibilities || []).join("\n")}
+                  value={(formData.responsibilities || []).join('\n')}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
                       responsibilities: e.target.value
-                        .split("\n")
+                        .split('\n')
                         .filter((line) => line.trim()),
                     }))
                   }
@@ -832,12 +834,12 @@ export default function HRMJobPostingsPage() {
                 <Label htmlFor="benefits">Benefits (one per line)</Label>
                 <Textarea
                   id="benefits"
-                  value={(formData.benefits || []).join("\n")}
+                  value={(formData.benefits || []).join('\n')}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
                       benefits: e.target.value
-                        .split("\n")
+                        .split('\n')
                         .filter((line) => line.trim()),
                     }))
                   }
@@ -856,10 +858,10 @@ export default function HRMJobPostingsPage() {
               </Button>
               <Button onClick={handleSubmit} disabled={submitting}>
                 {submitting
-                  ? "Saving..."
+                  ? 'Saving...'
                   : editingJobPosting
-                    ? "Update Job Posting"
-                    : "Create Job Posting"}
+                    ? 'Update Job Posting'
+                    : 'Create Job Posting'}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -897,7 +899,7 @@ export default function HRMJobPostingsPage() {
                       )}
                     >
                       {viewingJobPosting.department
-                        .replace("_", " ")
+                        .replace('_', ' ')
                         .toUpperCase()}
                     </Badge>
                   </div>
@@ -906,7 +908,7 @@ export default function HRMJobPostingsPage() {
                       Employment Type
                     </Label>
                     <Badge variant="outline">
-                      {viewingJobPosting.type.replace("_", " ").toUpperCase()}
+                      {viewingJobPosting.type.replace('_', ' ').toUpperCase()}
                     </Badge>
                   </div>
                   <div>
@@ -914,7 +916,7 @@ export default function HRMJobPostingsPage() {
                       Status
                     </Label>
                     <Badge className={getStatusColor(viewingJobPosting.status)}>
-                      {viewingJobPosting.status.replace("_", " ").toUpperCase()}
+                      {viewingJobPosting.status.replace('_', ' ').toUpperCase()}
                     </Badge>
                   </div>
                   <div>
@@ -1080,7 +1082,7 @@ export default function HRMJobPostingsPage() {
                 onClick={confirmDelete}
                 disabled={deleting}
               >
-                {deleting ? "Deleting..." : "Delete Job Posting"}
+                {deleting ? 'Deleting...' : 'Delete Job Posting'}
               </Button>
             </DialogFooter>
           </DialogContent>

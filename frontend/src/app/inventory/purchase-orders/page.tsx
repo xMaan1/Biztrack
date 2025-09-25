@@ -1,23 +1,23 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
-import { Badge } from "../../../components/ui/badge";
-import { Input } from "../../../components/ui/input";
+} from '../../../components/ui/card';
+import { Button } from '../../../components/ui/button';
+import { Badge } from '../../../components/ui/badge';
+import { Input } from '../../../components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../../components/ui/select";
+} from '../../../components/ui/select';
 import {
   Table,
   TableBody,
@@ -25,7 +25,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../../../components/ui/table";
+} from '../../../components/ui/table';
 import {
   ClipboardList,
   Plus,
@@ -36,53 +36,53 @@ import {
   Calendar,
   DollarSign,
   Building2,
-} from "lucide-react";
-import { useAuth } from "../../../contexts/AuthContext";
-import { inventoryService } from "../../../services/InventoryService";
+} from 'lucide-react';
+import { useAuth } from '../../../contexts/AuthContext';
+import { inventoryService } from '../../../services/InventoryService';
 import {
   PurchaseOrder,
   PurchaseOrderCreate,
   PurchaseOrderItemCreate,
   Supplier,
-} from "../../../models/inventory";
-import { DashboardLayout } from "../../../components/layout";
-import { formatDate, formatCurrency } from "../../../lib/utils";
+} from '../../../models/inventory';
+import { DashboardLayout } from '../../../components/layout';
+import { formatDate, formatCurrency } from '../../../lib/utils';
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../../components/ui/dialog";
-import { Label } from "../../../components/ui/label";
-import { Textarea } from "../../../components/ui/textarea";
+} from '../../../components/ui/dialog';
+import { Label } from '../../../components/ui/label';
+import { Textarea } from '../../../components/ui/textarea';
 
 export default function PurchaseOrdersPage() {
-  const { user } = useAuth();
+  const { } = useAuth();
   const router = useRouter();
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newOrder, setNewOrder] = useState<PurchaseOrderCreate>({
-    orderNumber: "",
-    supplierId: "",
-    supplierName: "",
-    expectedDeliveryDate: "",
-    notes: "",
+    orderNumber: '',
+    supplierId: '',
+    supplierName: '',
+    expectedDeliveryDate: '',
+    notes: '',
     items: [],
   });
   const [newItem, setNewItem] = useState<PurchaseOrderItemCreate>({
-    productId: "",
-    productName: "",
-    sku: "",
+    productId: '',
+    productName: '',
+    sku: '',
     quantity: 0,
     unitCost: 0,
     totalCost: 0,
-    notes: "",
+    notes: '',
   });
 
   useEffect(() => {
@@ -119,13 +119,13 @@ export default function PurchaseOrdersPage() {
       order.supplierName.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
-      statusFilter === "all" || !statusFilter || order.status === statusFilter;
+      statusFilter === 'all' || !statusFilter || order.status === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this purchase order?")) {
+    if (confirm('Are you sure you want to delete this purchase order?')) {
       try {
         await inventoryService.deletePurchaseOrder(id);
         fetchData();
@@ -141,7 +141,7 @@ export default function PurchaseOrdersPage() {
       newItem.quantity <= 0 ||
       newItem.unitCost <= 0
     ) {
-      alert("Please fill in all required fields for the item");
+      alert('Please fill in all required fields for the item');
       return;
     }
 
@@ -157,13 +157,13 @@ export default function PurchaseOrdersPage() {
 
     // Reset item form
     setNewItem({
-      productId: "",
-      productName: "",
-      sku: "",
+      productId: '',
+      productName: '',
+      sku: '',
       quantity: 0,
       unitCost: 0,
       totalCost: 0,
-      notes: "",
+      notes: '',
     });
   };
 
@@ -180,7 +180,7 @@ export default function PurchaseOrdersPage() {
       !newOrder.supplierId ||
       newOrder.items.length === 0
     ) {
-      alert("Please fill in all required fields and add at least one item");
+      alert('Please fill in all required fields and add at least one item');
       return;
     }
 
@@ -191,7 +191,7 @@ export default function PurchaseOrdersPage() {
       resetForm();
       fetchData();
     } catch (error) {
-      alert("Failed to create purchase order. Please try again.");
+      alert('Failed to create purchase order. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -199,32 +199,32 @@ export default function PurchaseOrdersPage() {
 
   const resetForm = () => {
     setNewOrder({
-      orderNumber: "",
-      supplierId: suppliers.length > 0 ? suppliers[0].id : "",
-      supplierName: suppliers.length > 0 ? suppliers[0].name : "",
-      expectedDeliveryDate: "",
-      notes: "",
+      orderNumber: '',
+      supplierId: suppliers.length > 0 ? suppliers[0].id : '',
+      supplierName: suppliers.length > 0 ? suppliers[0].name : '',
+      expectedDeliveryDate: '',
+      notes: '',
       items: [],
     });
     setNewItem({
-      productId: "",
-      productName: "",
-      sku: "",
+      productId: '',
+      productName: '',
+      sku: '',
       quantity: 0,
       unitCost: 0,
       totalCost: 0,
-      notes: "",
+      notes: '',
     });
   };
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      draft: { variant: "secondary", label: "Draft" },
-      submitted: { variant: "default", label: "Submitted" },
-      approved: { variant: "default", label: "Approved" },
-      ordered: { variant: "default", label: "Ordered" },
-      received: { variant: "default", label: "Received" },
-      cancelled: { variant: "destructive", label: "Cancelled" },
+      draft: { variant: 'secondary', label: 'Draft' },
+      submitted: { variant: 'default', label: 'Submitted' },
+      approved: { variant: 'default', label: 'Approved' },
+      ordered: { variant: 'default', label: 'Ordered' },
+      received: { variant: 'default', label: 'Received' },
+      cancelled: { variant: 'destructive', label: 'Cancelled' },
     };
 
     const config =
@@ -397,11 +397,11 @@ export default function PurchaseOrdersPage() {
                   No purchase orders found
                 </h3>
                 <p className="text-muted-foreground mb-4">
-                  {searchTerm || statusFilter !== "all"
-                    ? "Try adjusting your search terms or filters"
-                    : "Get started by creating your first purchase order"}
+                  {searchTerm || statusFilter !== 'all'
+                    ? 'Try adjusting your search terms or filters'
+                    : 'Get started by creating your first purchase order'}
                 </p>
-                {!searchTerm && statusFilter === "all" && (
+                {!searchTerm && statusFilter === 'all' && (
                   <Button onClick={() => setIsAddModalOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Create Purchase Order
@@ -437,7 +437,7 @@ export default function PurchaseOrdersPage() {
             <CardContent>
               <div className="text-2xl font-bold">
                 {
-                  purchaseOrders.filter((po) => po.status === "submitted")
+                  purchaseOrders.filter((po) => po.status === 'submitted')
                     .length
                 }
               </div>
@@ -537,7 +537,7 @@ export default function PurchaseOrdersPage() {
                       setNewOrder((prev) => ({
                         ...prev,
                         supplierId: value,
-                        supplierName: supplier?.name || "",
+                        supplierName: supplier?.name || '',
                       }));
                     }}
                   >
@@ -558,7 +558,7 @@ export default function PurchaseOrdersPage() {
                     size="sm"
                     onClick={() => {
                       setIsAddModalOpen(false);
-                      router.push("/inventory/suppliers/new");
+                      router.push('/inventory/suppliers/new');
                     }}
                     className="whitespace-nowrap"
                   >
@@ -671,7 +671,7 @@ export default function PurchaseOrdersPage() {
                               {item.productName}
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              {item.quantity} × {formatCurrency(item.unitCost)}{" "}
+                              {item.quantity} × {formatCurrency(item.unitCost)}{' '}
                               = {formatCurrency(item.totalCost)}
                             </div>
                           </div>
@@ -686,7 +686,7 @@ export default function PurchaseOrdersPage() {
                       ))}
                     </div>
                     <div className="text-right font-medium">
-                      Total:{" "}
+                      Total:{' '}
                       {formatCurrency(
                         newOrder.items.reduce(
                           (sum, item) => sum + item.totalCost,
@@ -712,7 +712,7 @@ export default function PurchaseOrdersPage() {
                 onClick={handleCreateOrder}
                 disabled={isSubmitting || newOrder.items.length === 0}
               >
-                {isSubmitting ? "Creating..." : "Create Purchase Order"}
+                {isSubmitting ? 'Creating...' : 'Create Purchase Order'}
               </Button>
             </DialogFooter>
           </DialogContent>

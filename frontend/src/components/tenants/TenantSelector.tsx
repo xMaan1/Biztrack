@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
-import { Label } from "../ui/label";
-import { Loader2, Building } from "lucide-react";
-import { apiService } from "../../services/ApiService";
+} from '../ui/select';
+import { Label } from '../ui/label';
+import { Loader2, Building } from 'lucide-react';
+import { apiService } from '../../services/ApiService';
 
 interface Tenant {
   id: string;

@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import React from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "../ui/button";
-import { Building2 } from "lucide-react";
-import { useAuth } from "../../contexts/AuthContext";
+import React from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '../ui/button';
+import { Building2 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 export function LandingNav() {
   const router = useRouter();
@@ -42,15 +42,15 @@ export function LandingNav() {
 
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
-              <Button onClick={() => router.push("/dashboard")}>
+              <Button onClick={() => router.push('/dashboard')}>
                 Go to Dashboard
               </Button>
             ) : (
               <>
-                <Button variant="outline" onClick={() => router.push("/login")}>
+                <Button variant="outline" onClick={() => router.push('/login')}>
                   Sign In
                 </Button>
-                <Button onClick={() => router.push("/signup")}>
+                <Button onClick={() => router.push('/signup')}>
                   Get Started
                 </Button>
               </>

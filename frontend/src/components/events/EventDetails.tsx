@@ -1,19 +1,18 @@
-"use client";
+'use client';
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Badge } from '../ui/badge';
+import { Button } from '../ui/button';
 import {
   Calendar,
-  Clock,
   MapPin,
   Users,
   Video,
   ExternalLink,
   Edit,
   Trash2,
-} from "lucide-react";
+} from 'lucide-react';
 
 interface EventDetailsProps {
   event: {
@@ -46,7 +45,6 @@ export default function EventDetails({
   onEdit,
   onDelete,
   onJoin,
-  onLeave,
 }: EventDetailsProps) {
   const startDate = new Date(event.startDate);
   const endDate = new Date(event.endDate);
@@ -55,48 +53,48 @@ export default function EventDetails({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "scheduled":
-        return "bg-blue-100 text-blue-800";
-      case "in_progress":
-        return "bg-yellow-100 text-yellow-800";
-      case "completed":
-        return "bg-green-100 text-green-800";
-      case "cancelled":
-        return "bg-red-100 text-red-800";
+      case 'scheduled':
+        return 'bg-blue-100 text-blue-800';
+      case 'in_progress':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
       default:
-        return "bg-gray-100 text-gray-800";
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getEventTypeColor = (type: string) => {
     switch (type) {
-      case "meeting":
-        return "bg-purple-100 text-purple-800";
-      case "workshop":
-        return "bg-orange-100 text-orange-800";
-      case "deadline":
-        return "bg-red-100 text-red-800";
+      case 'meeting':
+        return 'bg-purple-100 text-purple-800';
+      case 'workshop':
+        return 'bg-orange-100 text-orange-800';
+      case 'deadline':
+        return 'bg-red-100 text-red-800';
       default:
-        return "bg-gray-100 text-gray-800";
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   const formatDateTime = (date: Date) => {
-    return date.toLocaleString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
+    return date.toLocaleString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
       hour12: true,
     });
   };
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
       hour12: true,
     });
   };
@@ -109,10 +107,10 @@ export default function EventDetails({
           <h1 className="text-3xl font-bold text-gray-900">{event.title}</h1>
           <div className="flex items-center gap-2 mt-2">
             <Badge className={getEventTypeColor(event.eventType)}>
-              {event.eventType.replace("_", " ")}
+              {event.eventType.replace('_', ' ')}
             </Badge>
             <Badge className={getStatusColor(event.status)}>
-              {event.status.replace("_", " ")}
+              {event.status.replace('_', ' ')}
             </Badge>
           </div>
         </div>
@@ -122,14 +120,14 @@ export default function EventDetails({
             <Button
               variant="outline"
               className="flex items-center gap-2"
-              onClick={() => window.open(event.googleMeetLink, "_blank")}
+              onClick={() => window.open(event.googleMeetLink, '_blank')}
             >
               <Video className="h-4 w-4" />
               Join Meeting
             </Button>
           )}
 
-          {isUpcoming && event.status === "scheduled" && (
+          {isUpcoming && event.status === 'scheduled' && (
             <>
               {onJoin && (
                 <Button variant="default" onClick={() => onJoin(event.id)}>
@@ -207,7 +205,7 @@ export default function EventDetails({
                 <p className="font-medium">Participants</p>
                 <p className="text-sm text-gray-600">
                   {event.participants.length} participant
-                  {event.participants.length !== 1 ? "s" : ""}
+                  {event.participants.length !== 1 ? 's' : ''}
                 </p>
               </div>
             </div>
@@ -220,7 +218,7 @@ export default function EventDetails({
                   <Button
                     variant="link"
                     className="p-0 h-auto text-blue-600"
-                    onClick={() => window.open(event.googleMeetLink, "_blank")}
+                    onClick={() => window.open(event.googleMeetLink, '_blank')}
                   >
                     Join Google Meet
                     <ExternalLink className="h-3 w-3 ml-1" />

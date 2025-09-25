@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,20 +8,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../ui/dialog";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
+} from '../ui/dialog';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
-import { Alert, AlertDescription } from "../ui/alert";
-import { Loader2, UserPlus, Mail } from "lucide-react";
-import apiService from "../../services/ApiService";
+} from '../ui/select';
+import { Alert, AlertDescription } from '../ui/alert';
+import { Loader2, UserPlus, Mail } from 'lucide-react';
 
 interface AddMemberModalProps {
   open: boolean;
@@ -38,24 +37,23 @@ interface MemberData {
 }
 
 const roles = [
-  { value: "admin", label: "Administrator" },
-  { value: "project_manager", label: "Project Manager" },
-  { value: "team_member", label: "Team Member" },
-  { value: "client", label: "Client" },
-  { value: "viewer", label: "Viewer" },
+  { value: 'admin', label: 'Administrator' },
+  { value: 'project_manager', label: 'Project Manager' },
+  { value: 'team_member', label: 'Team Member' },
+  { value: 'client', label: 'Client' },
+  { value: 'viewer', label: 'Viewer' },
 ];
 
 export default function AddMemberModal({
   open,
   onClose,
   onSuccess,
-  tenantId,
 }: AddMemberModalProps) {
   const [formData, setFormData] = useState<MemberData>({
-    email: "",
-    role: "team_member",
-    firstName: "",
-    lastName: "",
+    email: '',
+    role: 'team_member',
+    firstName: '',
+    lastName: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,10 +61,10 @@ export default function AddMemberModal({
   useEffect(() => {
     if (open) {
       setFormData({
-        email: "",
-        role: "team_member",
-        firstName: "",
-        lastName: "",
+        email: '',
+        role: 'team_member',
+        firstName: '',
+        lastName: '',
       });
       setError(null);
     }
@@ -87,7 +85,7 @@ export default function AddMemberModal({
       onSuccess();
       onClose();
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Failed to send invitation");
+      setError(err.response?.data?.detail || 'Failed to send invitation');
     } finally {
       setLoading(false);
     }
@@ -119,7 +117,7 @@ export default function AddMemberModal({
                 id="email"
                 type="email"
                 value={formData.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
+                onChange={(e) => handleInputChange('email', e.target.value)}
                 placeholder="member@example.com"
                 className="pl-10"
                 required
@@ -133,7 +131,7 @@ export default function AddMemberModal({
               <Input
                 id="firstName"
                 value={formData.firstName}
-                onChange={(e) => handleInputChange("firstName", e.target.value)}
+                onChange={(e) => handleInputChange('firstName', e.target.value)}
                 placeholder="John"
               />
             </div>
@@ -142,7 +140,7 @@ export default function AddMemberModal({
               <Input
                 id="lastName"
                 value={formData.lastName}
-                onChange={(e) => handleInputChange("lastName", e.target.value)}
+                onChange={(e) => handleInputChange('lastName', e.target.value)}
                 placeholder="Doe"
               />
             </div>
@@ -152,7 +150,7 @@ export default function AddMemberModal({
             <Label>Role</Label>
             <Select
               value={formData.role}
-              onValueChange={(value) => handleInputChange("role", value)}
+              onValueChange={(value) => handleInputChange('role', value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select a role" />

@@ -1,4 +1,4 @@
-import { ApiService } from "./ApiService";
+import { ApiService } from './ApiService';
 
 export interface CustomOption {
   id: string;
@@ -19,7 +19,7 @@ export class CustomOptionsService {
     name: string,
     description?: string,
   ): Promise<CustomOption> {
-    const response = await this.apiService.post("/custom-options/event-types", {
+    const response = await this.apiService.post('/custom-options/event-types', {
       name,
       description,
     });
@@ -27,7 +27,7 @@ export class CustomOptionsService {
   }
 
   async getCustomEventTypes(): Promise<CustomOption[]> {
-    const response = await this.apiService.get("/custom-options/event-types");
+    const response = await this.apiService.get('/custom-options/event-types');
     return response.data;
   }
 
@@ -36,7 +36,7 @@ export class CustomOptionsService {
     name: string,
     description?: string,
   ): Promise<CustomOption> {
-    const response = await this.apiService.post("/custom-options/departments", {
+    const response = await this.apiService.post('/custom-options/departments', {
       name,
       description,
     });
@@ -44,7 +44,7 @@ export class CustomOptionsService {
   }
 
   async getCustomDepartments(): Promise<CustomOption[]> {
-    const response = await this.apiService.get("/custom-options/departments");
+    const response = await this.apiService.get('/custom-options/departments');
     return response.data;
   }
 
@@ -53,7 +53,7 @@ export class CustomOptionsService {
     name: string,
     description?: string,
   ): Promise<CustomOption> {
-    const response = await this.apiService.post("/custom-options/leave-types", {
+    const response = await this.apiService.post('/custom-options/leave-types', {
       name,
       description,
     });
@@ -61,7 +61,7 @@ export class CustomOptionsService {
   }
 
   async getCustomLeaveTypes(): Promise<CustomOption[]> {
-    const response = await this.apiService.get("/custom-options/leave-types");
+    const response = await this.apiService.get('/custom-options/leave-types');
     return response.data;
   }
 
@@ -71,7 +71,7 @@ export class CustomOptionsService {
     description?: string,
   ): Promise<CustomOption> {
     const response = await this.apiService.post(
-      "/custom-options/lead-sources",
+      '/custom-options/lead-sources',
       {
         name,
         description,
@@ -81,7 +81,7 @@ export class CustomOptionsService {
   }
 
   async getCustomLeadSources(): Promise<CustomOption[]> {
-    const response = await this.apiService.get("/custom-options/lead-sources");
+    const response = await this.apiService.get('/custom-options/lead-sources');
     return response.data;
   }
 
@@ -91,7 +91,7 @@ export class CustomOptionsService {
     description?: string,
   ): Promise<CustomOption> {
     const response = await this.apiService.post(
-      "/custom-options/contact-sources",
+      '/custom-options/contact-sources',
       {
         name,
         description,
@@ -102,7 +102,7 @@ export class CustomOptionsService {
 
   async getCustomContactSources(): Promise<CustomOption[]> {
     const response = await this.apiService.get(
-      "/custom-options/contact-sources",
+      '/custom-options/contact-sources',
     );
     return response.data;
   }
@@ -113,7 +113,7 @@ export class CustomOptionsService {
     description?: string,
   ): Promise<CustomOption> {
     const response = await this.apiService.post(
-      "/custom-options/company-industries",
+      '/custom-options/company-industries',
       {
         name,
         description,
@@ -124,7 +124,7 @@ export class CustomOptionsService {
 
   async getCustomCompanyIndustries(): Promise<CustomOption[]> {
     const response = await this.apiService.get(
-      "/custom-options/company-industries",
+      '/custom-options/company-industries',
     );
     return response.data;
   }
@@ -135,7 +135,7 @@ export class CustomOptionsService {
     description?: string,
   ): Promise<CustomOption> {
     const response = await this.apiService.post(
-      "/custom-options/contact-types",
+      '/custom-options/contact-types',
       {
         name,
         description,
@@ -145,7 +145,7 @@ export class CustomOptionsService {
   }
 
   async getCustomContactTypes(): Promise<CustomOption[]> {
-    const response = await this.apiService.get("/custom-options/contact-types");
+    const response = await this.apiService.get('/custom-options/contact-types');
     return response.data;
   }
 
@@ -154,7 +154,7 @@ export class CustomOptionsService {
     name: string,
     description?: string,
   ): Promise<CustomOption> {
-    const response = await this.apiService.post("/custom-options/industries", {
+    const response = await this.apiService.post('/custom-options/industries', {
       name,
       description,
     });
@@ -162,7 +162,7 @@ export class CustomOptionsService {
   }
 
   async getCustomIndustries(): Promise<CustomOption[]> {
-    const response = await this.apiService.get("/custom-options/industries");
+    const response = await this.apiService.get('/custom-options/industries');
     return response.data;
   }
 }

@@ -1,24 +1,24 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Input } from "@/src/components/ui/input";
-import { Label } from "@/src/components/ui/label";
-import { Textarea } from "@/src/components/ui/textarea";
+} from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Input } from '@/src/components/ui/input';
+import { Label } from '@/src/components/ui/label';
+import { Textarea } from '@/src/components/ui/textarea';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select";
+} from '@/src/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -26,9 +26,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/src/components/ui/dialog";
-import { Badge } from "@/src/components/ui/badge";
-import { Alert, AlertDescription } from "@/src/components/ui/alert";
+} from '@/src/components/ui/dialog';
+import { Badge } from '@/src/components/ui/badge';
+import { Alert, AlertDescription } from '@/src/components/ui/alert';
 import {
   Calendar,
   Plus,
@@ -44,17 +44,15 @@ import {
   DollarSign,
   Calculator,
   CreditCard,
-} from "lucide-react";
-import HRMService from "@/src/services/HRMService";
+} from 'lucide-react';
+import HRMService from '@/src/services/HRMService';
 import {
   Payroll,
   PayrollCreate,
-  PayrollUpdate,
   PayrollStatus,
-  HRMPayrollResponse,
   Employee,
-} from "@/src/models/hrm";
-import { DashboardLayout } from "@/src/components/layout";
+} from '@/src/models/hrm';
+import { DashboardLayout } from '@/src/components/layout';
 
 export default function HRMPayrollPage() {
   const [payrolls, setPayrolls] = useState<Payroll[]>([]);
@@ -67,7 +65,7 @@ export default function HRMPayrollPage() {
     payPeriod?: string;
     paymentDate?: string;
   }>({});
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingPayroll, setEditingPayroll] = useState<Payroll | null>(null);
   const [viewingPayroll, setViewingPayroll] = useState<Payroll | null>(null);
@@ -76,10 +74,10 @@ export default function HRMPayrollPage() {
   const [deleting, setDeleting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [formData, setFormData] = useState<PayrollCreate>({
-    employeeId: "",
-    payPeriod: "",
-    startDate: new Date().toISOString().split("T")[0],
-    endDate: new Date().toISOString().split("T")[0],
+    employeeId: '',
+    payPeriod: '',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date().toISOString().split('T')[0],
     basicSalary: 0,
     allowances: 0,
     deductions: 0,
@@ -87,8 +85,8 @@ export default function HRMPayrollPage() {
     bonus: 0,
     netPay: 0,
     status: PayrollStatus.DRAFT,
-    paymentDate: new Date().toISOString().split("T")[0],
-    notes: "",
+    paymentDate: new Date().toISOString().split('T')[0],
+    notes: '',
   });
 
   const loadPayrolls = useCallback(async () => {
@@ -97,7 +95,7 @@ export default function HRMPayrollPage() {
       const response = await HRMService.getPayroll(filters, 1, 100);
       setPayrolls(response.payroll);
     } catch (err) {
-      setError("Failed to load payroll records");
+      setError('Failed to load payroll records');
       } finally {
       setLoading(false);
     }
@@ -114,6 +112,7 @@ export default function HRMPayrollPage() {
   useEffect(() => {
     loadPayrolls();
     loadEmployees();
+    return;
   }, [loadPayrolls, loadEmployees]);
 
   const handleSearch = () => {
@@ -122,15 +121,15 @@ export default function HRMPayrollPage() {
 
   const resetFilters = () => {
     setFilters({});
-    setSearch("");
+    setSearch('');
   };
 
   const resetForm = () => {
     setFormData({
-      employeeId: "",
-      payPeriod: "",
-      startDate: new Date().toISOString().split("T")[0],
-      endDate: new Date().toISOString().split("T")[0],
+      employeeId: '',
+      payPeriod: '',
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date().toISOString().split('T')[0],
       basicSalary: 0,
       allowances: 0,
       deductions: 0,
@@ -138,8 +137,8 @@ export default function HRMPayrollPage() {
       bonus: 0,
       netPay: 0,
       status: PayrollStatus.DRAFT,
-      paymentDate: new Date().toISOString().split("T")[0],
-      notes: "",
+      paymentDate: new Date().toISOString().split('T')[0],
+      notes: '',
     });
     setEditingPayroll(null);
     setError(null);
@@ -166,7 +165,7 @@ export default function HRMPayrollPage() {
         formData.basicSalary <= 0
       ) {
         setError(
-          "Please fill in all required fields (Employee, Pay Period, and Basic Salary)",
+          'Please fill in all required fields (Employee, Pay Period, and Basic Salary)',
         );
         return;
       }
@@ -175,17 +174,17 @@ export default function HRMPayrollPage() {
 
       if (editingPayroll) {
         await HRMService.updatePayroll(editingPayroll.id, formData);
-        setSuccessMessage("Payroll record updated successfully!");
+        setSuccessMessage('Payroll record updated successfully!');
       } else {
         await HRMService.createPayroll(formData);
-        setSuccessMessage("Payroll record created successfully!");
+        setSuccessMessage('Payroll record created successfully!');
       }
 
       setShowCreateDialog(false);
       resetForm();
       loadPayrolls();
     } catch (err) {
-      setError("Failed to save payroll record. Please try again.");
+      setError('Failed to save payroll record. Please try again.');
       } finally {
       setSubmitting(false);
     }
@@ -197,11 +196,11 @@ export default function HRMPayrollPage() {
       employeeId: payroll.employeeId,
       payPeriod: payroll.payPeriod,
       startDate:
-        payroll.startDate?.split("T")[0] ||
-        new Date().toISOString().split("T")[0],
+        payroll.startDate?.split('T')[0] ||
+        new Date().toISOString().split('T')[0],
       endDate:
-        payroll.endDate?.split("T")[0] ||
-        new Date().toISOString().split("T")[0],
+        payroll.endDate?.split('T')[0] ||
+        new Date().toISOString().split('T')[0],
       basicSalary: payroll.basicSalary,
       allowances: payroll.allowances || 0,
       deductions: payroll.deductions || 0,
@@ -210,9 +209,9 @@ export default function HRMPayrollPage() {
       netPay: payroll.netPay,
       status: payroll.status,
       paymentDate:
-        payroll.paymentDate?.split("T")[0] ||
-        new Date().toISOString().split("T")[0],
-      notes: payroll.notes || "",
+        payroll.paymentDate?.split('T')[0] ||
+        new Date().toISOString().split('T')[0],
+      notes: payroll.notes || '',
     });
     setShowCreateDialog(true);
   };
@@ -231,11 +230,11 @@ export default function HRMPayrollPage() {
     try {
       setDeleting(true);
       await HRMService.deletePayroll(deletingPayroll.id);
-      setSuccessMessage("Payroll record deleted successfully!");
+      setSuccessMessage('Payroll record deleted successfully!');
       setDeletingPayroll(null);
       loadPayrolls();
     } catch (err) {
-      setError("Failed to delete payroll record. Please try again.");
+      setError('Failed to delete payroll record. Please try again.');
       } finally {
       setDeleting(false);
     }
@@ -243,19 +242,19 @@ export default function HRMPayrollPage() {
 
   const getStatusColor = (status: PayrollStatus) => {
     const statusColors: { [key: string]: string } = {
-      draft: "bg-blue-100 text-blue-800",
-      processed: "bg-green-100 text-green-800",
-      paid: "bg-blue-100 text-blue-800",
-      cancelled: "bg-gray-100 text-gray-800",
+      draft: 'bg-blue-100 text-blue-800',
+      processed: 'bg-green-100 text-green-800',
+      paid: 'bg-blue-100 text-blue-800',
+      cancelled: 'bg-gray-100 text-gray-800',
     };
-    return statusColors[status] || "bg-gray-100 text-gray-800";
+    return statusColors[status] || 'bg-gray-100 text-gray-800';
   };
 
   const getEmployeeName = (employeeId: string) => {
     const employee = employees.find((emp) => emp.id === employeeId);
     return employee
       ? `${employee.firstName} ${employee.lastName}`
-      : "Unknown Employee";
+      : 'Unknown Employee';
   };
 
   useEffect(() => {
@@ -263,6 +262,7 @@ export default function HRMPayrollPage() {
       const timer = setTimeout(() => setSuccessMessage(null), 5000);
       return () => clearTimeout(timer);
     }
+    return;
   }, [successMessage]);
 
   useEffect(() => {
@@ -270,6 +270,7 @@ export default function HRMPayrollPage() {
       const timer = setTimeout(() => setError(null), 5000);
       return () => clearTimeout(timer);
     }
+    return;
   }, [error]);
 
   if (loading) {
@@ -337,7 +338,7 @@ export default function HRMPayrollPage() {
                     placeholder="Search records..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                   />
                   <Button onClick={handleSearch}>
                     <Search className="w-4 h-4" />
@@ -347,11 +348,11 @@ export default function HRMPayrollPage() {
               <div>
                 <label className="text-sm font-medium">Employee</label>
                 <Select
-                  value={filters.employeeId || "all"}
+                  value={filters.employeeId || 'all'}
                   onValueChange={(value) =>
                     setFilters((prev) => ({
                       ...prev,
-                      employeeId: value === "all" ? undefined : value,
+                      employeeId: value === 'all' ? undefined : value,
                     }))
                   }
                 >
@@ -371,11 +372,11 @@ export default function HRMPayrollPage() {
               <div>
                 <label className="text-sm font-medium">Status</label>
                 <Select
-                  value={filters.status || "all"}
+                  value={filters.status || 'all'}
                   onValueChange={(value) =>
                     setFilters((prev) => ({
                       ...prev,
-                      status: value === "all" ? undefined : value,
+                      status: value === 'all' ? undefined : value,
                     }))
                   }
                 >
@@ -396,7 +397,7 @@ export default function HRMPayrollPage() {
                 <label className="text-sm font-medium">Pay Period</label>
                 <Input
                   placeholder="e.g., January 2024"
-                  value={filters.payPeriod || ""}
+                  value={filters.payPeriod || ''}
                   onChange={(e) =>
                     setFilters((prev) => ({
                       ...prev,
@@ -409,7 +410,7 @@ export default function HRMPayrollPage() {
                 <label className="text-sm font-medium">Payment Date</label>
                 <Input
                   type="date"
-                  value={filters.paymentDate || ""}
+                  value={filters.paymentDate || ''}
                   onChange={(e) =>
                     setFilters((prev) => ({
                       ...prev,
@@ -507,16 +508,16 @@ export default function HRMPayrollPage() {
                         <CreditCard className="w-5 h-5 text-gray-500" />
                         <div>
                           <div className="font-medium text-lg">
-                            {getEmployeeName(payroll.employeeId)} -{" "}
+                            {getEmployeeName(payroll.employeeId)} -{' '}
                             {payroll.payPeriod}
                           </div>
                           <div className="text-sm text-gray-500">
-                            Payment Date:{" "}
+                            Payment Date:{' '}
                             {payroll.paymentDate
                               ? new Date(
                                   payroll.paymentDate,
                                 ).toLocaleDateString()
-                              : "Not set"}
+                              : 'Not set'}
                           </div>
                         </div>
                       </div>
@@ -549,16 +550,16 @@ export default function HRMPayrollPage() {
                       <div className="flex items-center space-x-1">
                         <Calendar className="w-3 h-3" />
                         <span>
-                          Payment Date:{" "}
+                          Payment Date:{' '}
                           {payroll.paymentDate
                             ? new Date(payroll.paymentDate).toLocaleDateString()
-                            : "Not set"}
+                            : 'Not set'}
                         </span>
                       </div>
                       <div className="flex items-center space-x-1">
                         <Clock className="w-3 h-3" />
                         <span>
-                          Created:{" "}
+                          Created:{' '}
                           {new Date(payroll.createdAt).toLocaleDateString()}
                         </span>
                       </div>
@@ -583,7 +584,7 @@ export default function HRMPayrollPage() {
                     </div>
                     {payroll.notes && (
                       <div className="mt-2 text-sm text-gray-600">
-                        <strong>Notes:</strong>{" "}
+                        <strong>Notes:</strong>{' '}
                         {payroll.notes.length > 100
                           ? `${payroll.notes.substring(0, 100)}...`
                           : payroll.notes}
@@ -629,12 +630,12 @@ export default function HRMPayrollPage() {
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {editingPayroll ? "Edit Payroll Record" : "New Payroll Record"}
+                {editingPayroll ? 'Edit Payroll Record' : 'New Payroll Record'}
               </DialogTitle>
               <DialogDescription>
                 {editingPayroll
-                  ? "Update payroll record information"
-                  : "Create a new payroll record for an employee"}
+                  ? 'Update payroll record information'
+                  : 'Create a new payroll record for an employee'}
               </DialogDescription>
             </DialogHeader>
 
@@ -832,7 +833,7 @@ export default function HRMPayrollPage() {
                 <Input
                   id="paymentDate"
                   type="date"
-                  value={formData.paymentDate || ""}
+                  value={formData.paymentDate || ''}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
@@ -864,10 +865,10 @@ export default function HRMPayrollPage() {
               </Button>
               <Button onClick={handleSubmit} disabled={submitting}>
                 {submitting
-                  ? "Saving..."
+                  ? 'Saving...'
                   : editingPayroll
-                    ? "Update Record"
-                    : "Create Record"}
+                    ? 'Update Record'
+                    : 'Create Record'}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -918,7 +919,7 @@ export default function HRMPayrollPage() {
                         ? new Date(
                             viewingPayroll.paymentDate,
                           ).toLocaleDateString()
-                        : "Not set"}
+                        : 'Not set'}
                     </p>
                   </div>
                 </div>
@@ -1030,7 +1031,7 @@ export default function HRMPayrollPage() {
                 Are you sure you want to delete the payroll record for &quot;
                 {deletingPayroll
                   ? getEmployeeName(deletingPayroll.employeeId)
-                  : ""}
+                  : ''}
                 &quot; ({deletingPayroll?.payPeriod})? This action cannot be
                 undone.
               </DialogDescription>
@@ -1048,7 +1049,7 @@ export default function HRMPayrollPage() {
                 onClick={confirmDelete}
                 disabled={deleting}
               >
-                {deleting ? "Deleting..." : "Delete Record"}
+                {deleting ? 'Deleting...' : 'Delete Record'}
               </Button>
             </DialogFooter>
           </DialogContent>

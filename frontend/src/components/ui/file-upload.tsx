@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import React, { useRef, useState } from "react";
-import { Button } from "./button";
-import { Label } from "./label";
-import { Upload, X, Image as ImageIcon, AlertCircle } from "lucide-react";
-import { toast } from "sonner";
+import React, { useRef, useState } from 'react';
+import { Button } from './button';
+import { Label } from './label';
+import { Upload, X, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface FileUploadProps {
   onFileSelect: (file: File) => void;
@@ -23,10 +23,10 @@ export function FileUpload({
   onFileRemove,
   currentFile,
   currentUrl,
-  accept = "image/*",
+  accept = 'image/*',
   maxSize = 5,
-  className = "",
-  label = "Upload File",
+  className = '',
+  label = 'Upload File',
   disabled = false,
 }: FileUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -41,8 +41,8 @@ export function FileUpload({
     }
 
     // Check file type for images
-    if (accept.includes("image") && !file.type.startsWith("image/")) {
-      toast.error("Please select an image file");
+    if (accept.includes('image') && !file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
       return false;
     }
 
@@ -53,7 +53,7 @@ export function FileUpload({
     if (!validateFile(file)) return;
 
     // Create preview URL for images
-    if (file.type.startsWith("image/")) {
+    if (file.type.startsWith('image/')) {
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
     }
@@ -94,7 +94,7 @@ export function FileUpload({
       setPreviewUrl(null);
     }
     if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+      fileInputRef.current.value = '';
     }
     onFileRemove?.();
   };
@@ -106,12 +106,12 @@ export function FileUpload({
   return (
     <div className={`space-y-2 ${className}`}>
       {label && <Label>{label}</Label>}
-      
+
       <div
         className={`
           border-2 border-dashed rounded-lg p-6 text-center transition-colors
-          ${dragOver ? "border-primary bg-primary/5" : "border-gray-300"}
-          ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:border-primary/50"}
+          ${dragOver ? 'border-primary bg-primary/5' : 'border-gray-300'}
+          ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-primary/50'}
         `}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
@@ -133,7 +133,7 @@ export function FileUpload({
             <div className="flex justify-center">
               <div className="relative">
                 <img
-                  src={previewUrl || currentUrl || ""}
+                  src={previewUrl || currentUrl || ''}
                   alt="Preview"
                   className="max-h-32 max-w-32 object-contain rounded border"
                 />
@@ -156,7 +156,7 @@ export function FileUpload({
 
             {/* File info */}
             <div className="text-sm text-gray-600">
-              {currentFile?.name || "Current file"}
+              {currentFile?.name || 'Current file'}
               {currentFile && (
                 <span className="block text-xs text-gray-500">
                   {(currentFile.size / 1024 / 1024).toFixed(2)} MB
@@ -186,10 +186,10 @@ export function FileUpload({
             </div>
             <div>
               <p className="text-sm font-medium text-gray-900">
-                {dragOver ? "Drop file here" : "Click to upload or drag and drop"}
+                {dragOver ? 'Drop file here' : 'Click to upload or drag and drop'}
               </p>
               <p className="text-xs text-gray-500 mt-1">
-                {accept.includes("image") ? "PNG, JPG, GIF up to" : "Files up to"} {maxSize}MB
+                {accept.includes('image') ? 'PNG, JPG, GIF up to' : 'Files up to'} {maxSize}MB
               </p>
             </div>
             <Button
@@ -215,7 +215,7 @@ export function FileUpload({
           <AlertCircle className="h-3 w-3" />
           <span>Maximum file size: {maxSize}MB</span>
         </div>
-        {accept.includes("image") && (
+        {accept.includes('image') && (
           <div className="flex items-center gap-1">
             <AlertCircle className="h-3 w-3" />
             <span>Supported formats: PNG, JPG, GIF, WebP</span>

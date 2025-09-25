@@ -1,0 +1,80 @@
+---
+description: BizTrack - Multi-tenant SaaS Project Management System
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# BizTrack Project Rules
+
+## What This Project Is
+BizTrack is a multi-tenant SaaS project management system with:
+- **Backend**: FastAPI + PostgreSQL + AWS RDS
+- **Frontend**: Next.js 14 + TypeScript + Tailwind CSS
+- **Infrastructure**: AWS EC2 + PM2 + S3
+- **Authentication**: JWT with tenant isolation
+
+## Project Structure
+```
+Biztrack/
+├── backend/                 # FastAPI backend
+│   ├── src/api/v1/         # API routes
+│   ├── src/core/           # Auth, security, tenant middleware
+│   ├── src/models/         # Database models
+│   └── src/services/       # Business logic
+├── frontend/               # Next.js frontend
+│   ├── src/app/           # Pages
+│   ├── src/components/    # React components
+│   ├── src/contexts/      # React contexts
+│   └── src/services/      # API services
+```
+
+## Key Modules
+- **Authentication**: JWT with tenant isolation
+- **Project Management**: Projects, tasks, work orders
+- **CRM**: Customer management and sales
+- **Inventory**: Stock management and POS
+- **Production**: Manufacturing workflows
+- **Quality Control**: QA processes
+- **Maintenance**: Equipment maintenance
+- **Ledger**: Financial accounting
+
+## Development Rules
+
+### Backend (FastAPI)
+- Follow existing patterns in `src/api/v1/`
+- Use SQLAlchemy ORM in `src/models/`
+- Always maintain tenant isolation
+- Use JWT authentication patterns
+- Follow error handling in `src/core/error_handling.py`
+
+### Frontend (Next.js)
+- Use TypeScript for all components
+- Follow Next.js app router patterns
+- Use React Context for state management
+- Use Tailwind CSS + Radix UI components
+- Follow existing API service patterns
+
+### Database
+- Always include `tenant_id` in queries
+- Use SQLAlchemy ORM patterns
+- Maintain proper relationships
+- Use existing migration scripts in `backend/scripts/`
+
+## Security Requirements
+- **Never expose sensitive data** in frontend
+- **Always validate tenant access** for API calls
+- **Use proper JWT validation**
+- **Maintain tenant isolation** in all operations
+- **Environment files are properly ignored** (good!)
+secret.env.here.txt is not environment file its just file with some commands i need to use frequently
+.env is in .cursorignore so i cannot see
+
+
+## Important Notes
+- Using production RDS for both dev and prod
+- Environment files are in `.gitignore` (excellent practice)
+- Manual deployment process (targeting automation)
+- Multi-tenant architecture with subscription plans
+- MAKE SURE TO USE BEST PRACTICES USE BEST RECOMMENDED PATTERNS AND STRUCTURES AND TRY TO REUSE THINGS IF POSSIBLE AND NEEDED AVOID DEFINING THINGS AGAIN AND AGAIN AND USE BEST PROJECT STRUCTURES
+- dont add comments unless i ask you in prompt to add comments
+- dont run commands to run servers for me to test or u test unless i ask you to thanks

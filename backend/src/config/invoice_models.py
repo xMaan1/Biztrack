@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, DateTime, Float, Text, Boolean, ForeignKey, Integer, JSON
+from sqlalchemy import Column, String, DateTime, Float, Text, Boolean, ForeignKey, Integer, JSON, Index
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -66,6 +66,17 @@ class Invoice(Base):
     payments = relationship("Payment", back_populates="invoice")
     tenant = relationship("Tenant", back_populates="invoices")
     creator = relationship("User", back_populates="created_invoices")
+    
+    # Indexes for performance optimization
+    __table_args__ = (
+        Index("idx_invoices_tenant_id", "tenant_id"),
+        Index("idx_invoices_status", "status"),
+        Index("idx_invoices_created_at", "createdAt"),
+        Index("idx_invoices_due_date", "dueDate"),
+        Index("idx_invoices_customer_id", "customerId"),
+        Index("idx_invoices_tenant_status", "tenant_id", "status"),
+        Index("idx_invoices_tenant_due_date", "tenant_id", "dueDate"),
+    )
 
 class Payment(Base):
     __tablename__ = "payments"

@@ -1,43 +1,43 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
-import { Input } from "@/src/components/ui/input";
+} from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Badge } from '@/src/components/ui/badge';
+import { Input } from '@/src/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select";
-import { UserPlus, Search, Filter } from "lucide-react";
-import HRMService from "@/src/services/HRMService";
+} from '@/src/components/ui/select';
+import { UserPlus, Filter } from 'lucide-react';
+import HRMService from '@/src/services/HRMService';
 import {
   Employee,
   Department,
   EmploymentStatus,
   EmployeeType,
-} from "@/src/models/hrm";
-import Link from "next/link";
-import { DashboardLayout } from "@/src/components/layout";
+} from '@/src/models/hrm';
+import Link from 'next/link';
+import { DashboardLayout } from '@/src/components/layout';
 
 export default function HRMEmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState({
-    department: "",
-    status: "",
-    employeeType: "",
-    search: "",
+    department: '',
+    status: '',
+    employeeType: '',
+    search: '',
   });
 
   useEffect(() => {
@@ -50,7 +50,7 @@ export default function HRMEmployeesPage() {
       const response = await HRMService.getEmployees(filters);
       setEmployees(response.employees);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load employees");
+      setError(err instanceof Error ? err.message : 'Failed to load employees');
     } finally {
       setLoading(false);
     }
@@ -59,7 +59,7 @@ export default function HRMEmployeesPage() {
   const handleFilterChange = (key: string, value: string) => {
     setFilters((prev: any) => ({
       ...prev,
-      [key]: value === "all" ? undefined : value,
+      [key]: value === 'all' ? undefined : value,
     }));
   };
 
@@ -120,7 +120,7 @@ export default function HRMEmployeesPage() {
                 <Input
                   placeholder="Search employees..."
                   value={filters.search}
-                  onChange={(e) => handleFilterChange("search", e.target.value)}
+                  onChange={(e) => handleFilterChange('search', e.target.value)}
                 />
               </div>
               <div>
@@ -128,9 +128,9 @@ export default function HRMEmployeesPage() {
                   Department
                 </label>
                 <Select
-                  value={filters.department || "all"}
+                  value={filters.department || 'all'}
                   onValueChange={(value) =>
-                    handleFilterChange("department", value)
+                    handleFilterChange('department', value)
                   }
                 >
                   <SelectTrigger>
@@ -140,7 +140,7 @@ export default function HRMEmployeesPage() {
                     <SelectItem value="all">All departments</SelectItem>
                     {Object.values(Department).map((dept) => (
                       <SelectItem key={dept} value={dept}>
-                        {dept.replace("_", " ").toUpperCase()}
+                        {dept.replace('_', ' ').toUpperCase()}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -149,8 +149,8 @@ export default function HRMEmployeesPage() {
               <div>
                 <label className="text-sm font-medium mb-2 block">Status</label>
                 <Select
-                  value={filters.status || "all"}
-                  onValueChange={(value) => handleFilterChange("status", value)}
+                  value={filters.status || 'all'}
+                  onValueChange={(value) => handleFilterChange('status', value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All statuses" />
@@ -168,9 +168,9 @@ export default function HRMEmployeesPage() {
               <div>
                 <label className="text-sm font-medium mb-2 block">Type</label>
                 <Select
-                  value={filters.employeeType || "all"}
+                  value={filters.employeeType || 'all'}
                   onValueChange={(value) =>
-                    handleFilterChange("employeeType", value)
+                    handleFilterChange('employeeType', value)
                   }
                 >
                   <SelectTrigger>
@@ -180,7 +180,7 @@ export default function HRMEmployeesPage() {
                     <SelectItem value="all">All types</SelectItem>
                     {Object.values(EmployeeType).map((type) => (
                       <SelectItem key={type} value={type}>
-                        {type.replace("_", " ").toUpperCase()}
+                        {type.replace('_', ' ').toUpperCase()}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -195,7 +195,7 @@ export default function HRMEmployeesPage() {
           <CardHeader>
             <CardTitle>Employee List</CardTitle>
             <CardDescription>
-              {employees.length} employee{employees.length !== 1 ? "s" : ""}{" "}
+              {employees.length} employee{employees.length !== 1 ? 's' : ''}{' '}
               found
             </CardDescription>
           </CardHeader>
@@ -241,7 +241,7 @@ export default function HRMEmployeesPage() {
                           employee.employeeType,
                         )}
                       >
-                        {employee.employeeType.replace("_", " ")}
+                        {employee.employeeType.replace('_', ' ')}
                       </Badge>
                     </div>
                     <div className="flex gap-2">

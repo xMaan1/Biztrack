@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import React from "react";
+import React from 'react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../ui/card";
-import { Badge } from "../ui/badge";
+} from '../ui/card';
+import { Badge } from '../ui/badge';
 import {
   TrendingUp,
   DollarSign,
@@ -18,9 +18,9 @@ import {
   Clock,
   Users,
   BarChart3,
-} from "lucide-react";
-import { InvoiceDashboard as InvoiceDashboardType } from "../../models/sales";
-import InvoiceService from "../../services/InvoiceService";
+} from 'lucide-react';
+import { InvoiceDashboard as InvoiceDashboardType } from '../../models/sales';
+import InvoiceService from '../../services/InvoiceService';
 
 interface InvoiceDashboardProps {
   dashboard: InvoiceDashboardType;
@@ -259,7 +259,7 @@ export function InvoiceDashboard({ dashboard }: InvoiceDashboardProps) {
         </CardHeader>
         <CardContent>
           <div className="h-64 flex items-end justify-between gap-2">
-            {monthlyRevenue.map((month, index) => (
+            {monthlyRevenue.map((month) => (
               <div
                 key={month.month}
                 className="flex-1 flex flex-col items-center"
