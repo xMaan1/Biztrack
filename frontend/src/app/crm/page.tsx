@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   Card,
   CardContent,
@@ -35,27 +35,14 @@ import {
 } from '@/src/models/crm';
 import Link from 'next/link';
 import { DashboardLayout } from '../../components/layout';
+import { useCachedApi } from '../../hooks/useCachedApi';
 
 export default function CRMDashboardPage() {
-  const [dashboard, setDashboard] = useState<CRMDashboard | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    loadDashboard();
-  }, []);
-
-  const loadDashboard = async () => {
-    try {
-      setLoading(true);
-      const data = await CRMService.getDashboard();
-      setDashboard(data);
-    } catch (err) {
-      setError('Failed to load dashboard data');
-      } finally {
-      setLoading(false);
-    }
-  };
+  const { data: dashboard, loading, error, refetch } = useCachedApi<CRMDashboard>(
+    'crm_dashboard',
+    () => CRMService.getDashboard(),
+    { ttl: 30000 }
+  );
 
   if (loading) {
     return (
@@ -75,7 +62,7 @@ export default function CRMDashboardPage() {
           <p className="text-red-500 text-lg mb-4">
             {error || 'Dashboard not available'}
           </p>
-          <Button onClick={loadDashboard}>Retry</Button>
+          <Button onClick={refetch}>Retry</Button>
         </div>
       </div>
     );

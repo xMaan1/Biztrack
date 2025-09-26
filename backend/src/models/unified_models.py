@@ -2063,6 +2063,7 @@ class InvoiceCreate(BaseModel):
     customerId: str
     customerName: str
     customerEmail: str
+    billingAddress: Optional[str] = None
     shippingAddress: Optional[str] = None
     issueDate: str
     dueDate: str
@@ -2748,9 +2749,9 @@ class SupplierUpdate(BaseModel):
     isActive: Optional[bool] = None
 
 class Supplier(SupplierBase):
-    id: str
-    tenant_id: str
-    createdBy: str
+    id: UUID
+    tenantId: UUID
+    createdBy: UUID
     createdAt: datetime
     updatedAt: datetime
 

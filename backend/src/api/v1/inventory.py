@@ -20,7 +20,7 @@ from ...config.database import (
     get_warehouses, get_warehouse_by_id, create_warehouse, update_warehouse, delete_warehouse,
     get_storage_locations, get_storage_location_by_id, create_storage_location, update_storage_location, delete_storage_location,
     get_stock_movements, get_stock_movement_by_id, create_stock_movement, update_stock_movement,
-    get_suppliers, get_supplier_by_id, create_supplier, update_supplier, delete_supplier,
+    get_suppliers, get_supplier_by_id, get_supplier_by_code, create_supplier, update_supplier, delete_supplier,
     get_purchase_orders, get_purchase_order_by_id, create_purchase_order, update_purchase_order, delete_purchase_order,
     get_receivings, get_receiving_by_id, create_receiving, update_receiving, delete_receiving,
     get_inventory_dashboard_stats
@@ -35,10 +35,10 @@ def read_warehouses(
     limit: int = Query(100, ge=1, le=1000),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Get all warehouses for the current tenant"""
-    warehouses = get_warehouses(db, str(current_tenant.id), skip, limit)
+    warehouses = get_warehouses(db, str(current_tenant["id"]), skip, limit)
     total = len(warehouses)  # Simplified - you can add proper count query
     return WarehousesResponse(warehouses=warehouses, total=total)
 
@@ -47,10 +47,10 @@ def read_warehouse(
     warehouse_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Get a specific warehouse by ID"""
-    warehouse = get_warehouse_by_id(db, warehouse_id, str(current_tenant.id))
+    warehouse = get_warehouse_by_id(db, warehouse_id, str(current_tenant["id"]))
     if not warehouse:
         raise HTTPException(status_code=404, detail="Warehouse not found")
     return WarehouseResponse(warehouse=warehouse)
@@ -60,19 +60,19 @@ def create_warehouse_endpoint(
     warehouse: WarehouseCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Create a new warehouse"""
     try:
         warehouse_data = warehouse.dict()
         warehouse_data.update({
             "id": str(uuid.uuid4()),
-            "tenant_id": str(current_tenant.id),
+            "tenantId": str(current_tenant["id"]),
             "createdAt": datetime.utcnow(),
             "updatedAt": datetime.utcnow()
         })
         
-        db_warehouse = create_warehouse(db, warehouse_data)
+        db_warehouse = create_warehouse(warehouse_data, db)
         return WarehouseResponse(warehouse=db_warehouse)
         
     except Exception as e:
@@ -88,13 +88,13 @@ def update_warehouse_endpoint(
     warehouse: WarehouseUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Update an existing warehouse"""
     warehouse_update = warehouse.dict(exclude_unset=True)
     warehouse_update["updatedAt"] = datetime.utcnow()
     
-    db_warehouse = update_warehouse(db, warehouse_id, warehouse_update, str(current_tenant.id))
+    db_warehouse = update_warehouse(db, warehouse_id, warehouse_update, str(current_tenant["id"]))
     if not db_warehouse:
         raise HTTPException(status_code=404, detail="Warehouse not found")
     
@@ -105,10 +105,10 @@ def delete_warehouse_endpoint(
     warehouse_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Delete a warehouse"""
-    success = delete_warehouse(db, warehouse_id, str(current_tenant.id))
+    success = delete_warehouse(db, warehouse_id, str(current_tenant["id"]))
     if not success:
         raise HTTPException(status_code=404, detail="Warehouse not found")
     return {"message": "Warehouse deleted successfully"}
@@ -121,10 +121,10 @@ def read_storage_locations(
     limit: int = Query(100, ge=1, le=1000),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Get all storage locations for the current tenant"""
-    locations = get_storage_locations(db, str(current_tenant.id), warehouse_id, skip, limit)
+    locations = get_storage_locations(db, str(current_tenant["id"]), warehouse_id, skip, limit)
     total = len(locations)
     return StorageLocationsResponse(storageLocations=locations, total=total)
 
@@ -133,10 +133,10 @@ def read_storage_location(
     location_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Get a specific storage location by ID"""
-    location = get_storage_location_by_id(db, location_id, str(current_tenant.id))
+    location = get_storage_location_by_id(db, location_id, str(current_tenant["id"]))
     if not location:
         raise HTTPException(status_code=404, detail="Storage location not found")
     return StorageLocationResponse(storageLocation=location)
@@ -146,19 +146,19 @@ def create_storage_location_endpoint(
     location: StorageLocationCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Create a new storage location"""
     location_data = location.dict()
     location_data.update({
         "id": str(uuid.uuid4()),
-        "tenant_id": str(current_tenant.id),
+        "tenantId": str(current_tenant["id"]),
         "createdBy": str(current_user.id),
         "createdAt": datetime.utcnow(),
         "updatedAt": datetime.utcnow()
     })
     
-    db_location = create_storage_location(db, location_data)
+    db_location = create_storage_location(location_data, db)
     return StorageLocationResponse(storageLocation=db_location)
 
 @router.put("/storage-locations/{location_id}", response_model=StorageLocationResponse)
@@ -167,13 +167,13 @@ def update_storage_location_endpoint(
     location: StorageLocationUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Update an existing storage location"""
     location_update = location.dict(exclude_unset=True)
     location_update["updatedAt"] = datetime.utcnow()
     
-    db_location = update_storage_location(db, location_id, location_update, str(current_tenant.id))
+    db_location = update_storage_location(db, location_id, location_update, str(current_tenant["id"]))
     if not db_location:
         raise HTTPException(status_code=404, detail="Storage location not found")
     
@@ -184,10 +184,10 @@ def delete_storage_location_endpoint(
     location_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Delete a storage location"""
-    success = delete_storage_location(db, location_id, str(current_tenant.id))
+    success = delete_storage_location(db, location_id, str(current_tenant["id"]))
     if not success:
         raise HTTPException(status_code=404, detail="Storage location not found")
     return {"message": "Storage location deleted successfully"}
@@ -201,10 +201,10 @@ def read_stock_movements(
     limit: int = Query(100, ge=1, le=1000),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Get all stock movements for the current tenant"""
-    movements = get_stock_movements(db, str(current_tenant.id), product_id, warehouse_id, skip, limit)
+    movements = get_stock_movements(db, str(current_tenant["id"]), product_id, warehouse_id, skip, limit)
     total = len(movements)
     return StockMovementsResponse(stockMovements=movements, total=total)
 
@@ -213,10 +213,10 @@ def read_stock_movement(
     movement_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Get a specific stock movement by ID"""
-    movement = get_stock_movement_by_id(db, movement_id, str(current_tenant.id))
+    movement = get_stock_movement_by_id(db, movement_id, str(current_tenant["id"]))
     if not movement:
         raise HTTPException(status_code=404, detail="Stock movement not found")
     return StockMovementResponse(stockMovement=movement)
@@ -226,20 +226,20 @@ def create_stock_movement_endpoint(
     movement: StockMovementCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Create a new stock movement"""
     movement_data = movement.dict()
     movement_data.update({
         "id": str(uuid.uuid4()),
-        "tenant_id": str(current_tenant.id),
+        "tenantId": str(current_tenant["id"]),
         "createdBy": str(current_user.id),
         "status": "pending",
         "createdAt": datetime.utcnow(),
         "updatedAt": datetime.utcnow()
     })
     
-    db_movement = create_stock_movement(db, movement_data)
+    db_movement = create_stock_movement(movement_data, db)
     return StockMovementResponse(stockMovement=db_movement)
 
 @router.put("/stock-movements/{movement_id}", response_model=StockMovementResponse)
@@ -248,13 +248,13 @@ def update_stock_movement_endpoint(
     movement: StockMovementUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Update an existing stock movement"""
     movement_update = movement.dict(exclude_unset=True)
     movement_update["updatedAt"] = datetime.utcnow()
     
-    db_movement = update_stock_movement(db, movement_id, movement_update, str(current_tenant.id))
+    db_movement = update_stock_movement(db, movement_id, movement_update, str(current_tenant["id"]))
     if not db_movement:
         raise HTTPException(status_code=404, detail="Stock movement not found")
     
@@ -267,10 +267,10 @@ def read_suppliers(
     limit: int = Query(100, ge=1, le=1000),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Get all suppliers for the current tenant"""
-    suppliers = get_suppliers(db, str(current_tenant.id), skip, limit)
+    suppliers = get_suppliers(db, str(current_tenant["id"]), skip, limit)
     total = len(suppliers)
     return SuppliersResponse(suppliers=suppliers, total=total)
 
@@ -279,10 +279,10 @@ def read_supplier(
     supplier_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Get a specific supplier by ID"""
-    supplier = get_supplier_by_id(db, supplier_id, str(current_tenant.id))
+    supplier = get_supplier_by_id(db, supplier_id, str(current_tenant["id"]))
     if not supplier:
         raise HTTPException(status_code=404, detail="Supplier not found")
     return SupplierResponse(supplier=supplier)
@@ -292,19 +292,27 @@ def create_supplier_endpoint(
     supplier: SupplierCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Create a new supplier"""
+    # Check if supplier code already exists for this tenant
+    existing_supplier = get_supplier_by_code(supplier.code, db, str(current_tenant["id"]))
+    if existing_supplier:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Supplier with code '{supplier.code}' already exists"
+        )
+    
     supplier_data = supplier.dict()
     supplier_data.update({
         "id": str(uuid.uuid4()),
-        "tenant_id": str(current_tenant.id),
+        "tenantId": str(current_tenant["id"]),
         "createdBy": str(current_user.id),
         "createdAt": datetime.utcnow(),
         "updatedAt": datetime.utcnow()
     })
     
-    db_supplier = create_supplier(db, supplier_data)
+    db_supplier = create_supplier(supplier_data, db)
     return SupplierResponse(supplier=db_supplier)
 
 @router.put("/suppliers/{supplier_id}", response_model=SupplierResponse)
@@ -313,13 +321,13 @@ def update_supplier_endpoint(
     supplier: SupplierUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Update an existing supplier"""
     supplier_update = supplier.dict(exclude_unset=True)
     supplier_update["updatedAt"] = datetime.utcnow()
     
-    db_supplier = update_supplier(db, supplier_id, supplier_update, str(current_tenant.id))
+    db_supplier = update_supplier(db, supplier_id, supplier_update, str(current_tenant["id"]))
     if not db_supplier:
         raise HTTPException(status_code=404, detail="Supplier not found")
     
@@ -330,10 +338,10 @@ def delete_supplier_endpoint(
     supplier_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Delete a supplier"""
-    success = delete_supplier(db, supplier_id, str(current_tenant.id))
+    success = delete_supplier(db, supplier_id, str(current_tenant["id"]))
     if not success:
         raise HTTPException(status_code=404, detail="Supplier not found")
     return {"message": "Supplier deleted successfully"}
@@ -346,10 +354,10 @@ def read_purchase_orders(
     limit: int = Query(100, ge=1, le=1000),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Get all purchase orders for the current tenant"""
-    orders = get_purchase_orders(db, str(current_tenant.id), status, skip, limit)
+    orders = get_purchase_orders(db, str(current_tenant["id"]), status, skip, limit)
     total = len(orders)
     return PurchaseOrdersResponse(purchaseOrders=orders, total=total)
 
@@ -358,10 +366,10 @@ def read_purchase_order(
     order_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Get a specific purchase order by ID"""
-    order = get_purchase_order_by_id(db, order_id, str(current_tenant.id))
+    order = get_purchase_order_by_id(db, order_id, str(current_tenant["id"]))
     if not order:
         raise HTTPException(status_code=404, detail="Purchase order not found")
     return PurchaseOrderResponse(purchaseOrder=order)
@@ -371,7 +379,7 @@ def create_purchase_order_endpoint(
     order: PurchaseOrderCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Create a new purchase order"""
     # Calculate total amount from items
@@ -380,7 +388,7 @@ def create_purchase_order_endpoint(
     order_data = order.dict()
     order_data.update({
         "id": str(uuid.uuid4()),
-        "tenant_id": str(current_tenant.id),
+        "tenantId": str(current_tenant["id"]),
         "createdBy": str(current_user.id),
         "status": "draft",
         "totalAmount": total_amount,
@@ -388,7 +396,7 @@ def create_purchase_order_endpoint(
         "updatedAt": datetime.utcnow()
     })
     
-    db_order = create_purchase_order(db, order_data)
+    db_order = create_purchase_order(order_data, db)
     return PurchaseOrderResponse(purchaseOrder=db_order)
 
 @router.put("/purchase-orders/{order_id}", response_model=PurchaseOrderResponse)
@@ -397,13 +405,13 @@ def update_purchase_order_endpoint(
     order: PurchaseOrderUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Update an existing purchase order"""
     order_update = order.dict(exclude_unset=True)
     order_update["updatedAt"] = datetime.utcnow()
     
-    db_order = update_purchase_order(db, order_id, order_update, str(current_tenant.id))
+    db_order = update_purchase_order(db, order_id, order_update, str(current_tenant["id"]))
     if not db_order:
         raise HTTPException(status_code=404, detail="Purchase order not found")
     
@@ -414,10 +422,10 @@ def delete_purchase_order_endpoint(
     order_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Delete a purchase order"""
-    success = delete_purchase_order(db, order_id, str(current_tenant.id))
+    success = delete_purchase_order(db, order_id, str(current_tenant["id"]))
     if not success:
         raise HTTPException(status_code=404, detail="Purchase order not found")
     return {"message": "Purchase order deleted successfully"}
@@ -430,10 +438,10 @@ def read_receivings(
     limit: int = Query(100, ge=1, le=1000),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Get all receivings for the current tenant"""
-    receivings = get_receivings(db, str(current_tenant.id), status, skip, limit)
+    receivings = get_receivings(db, str(current_tenant["id"]), status, skip, limit)
     total = len(receivings)
     return ReceivingsResponse(receivings=receivings, total=total)
 
@@ -442,10 +450,10 @@ def read_receiving(
     receiving_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Get a specific receiving by ID"""
-    receiving = get_receiving_by_id(db, receiving_id, str(current_tenant.id))
+    receiving = get_receiving_by_id(db, receiving_id, str(current_tenant["id"]))
     if not receiving:
         raise HTTPException(status_code=404, detail="Receiving not found")
     return ReceivingResponse(receiving=receiving)
@@ -455,20 +463,20 @@ def create_receiving_endpoint(
     receiving: ReceivingCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Create a new receiving"""
     receiving_data = receiving.dict()
     receiving_data.update({
         "id": str(uuid.uuid4()),
-        "tenant_id": str(current_tenant.id),
+        "tenantId": str(current_tenant["id"]),
         "createdBy": str(current_user.id),
         "status": "pending",
         "createdAt": datetime.utcnow(),
         "updatedAt": datetime.utcnow()
     })
     
-    db_receiving = create_receiving(db, receiving_data)
+    db_receiving = create_receiving(receiving_data, db)
     return ReceivingResponse(receiving=db_receiving)
 
 @router.put("/receivings/{receiving_id}", response_model=ReceivingResponse)
@@ -477,13 +485,13 @@ def update_receiving_endpoint(
     receiving: ReceivingUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Update an existing receiving"""
     receiving_update = receiving.dict(exclude_unset=True)
     receiving_update["updatedAt"] = datetime.utcnow()
     
-    db_receiving = update_receiving(db, receiving_id, receiving_update, str(current_tenant.id))
+    db_receiving = update_receiving(db, receiving_id, receiving_update, str(current_tenant["id"]))
     if not db_receiving:
         raise HTTPException(status_code=404, detail="Receiving not found")
     
@@ -494,10 +502,10 @@ def delete_receiving_endpoint(
     receiving_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Delete a receiving"""
-    success = delete_receiving(db, receiving_id, str(current_tenant.id))
+    success = delete_receiving(db, receiving_id, str(current_tenant["id"]))
     if not success:
         raise HTTPException(status_code=404, detail="Receiving not found")
     return {"message": "Receiving deleted successfully"}
@@ -507,7 +515,7 @@ def delete_receiving_endpoint(
 def get_inventory_dashboard(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_tenant: dict = Depends(get_current_tenant)
 ):
     """Get inventory dashboard statistics"""
-    return get_inventory_dashboard_stats(db, str(current_tenant.id))
+    return get_inventory_dashboard_stats(db, str(current_tenant["id"]))

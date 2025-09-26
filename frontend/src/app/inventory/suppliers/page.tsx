@@ -53,7 +53,8 @@ export default function SuppliersPage() {
       const response = await inventoryService.getSuppliers();
       setSuppliers(response.suppliers);
     } catch (error) {
-      } finally {
+      console.error('Error fetching suppliers:', error);
+    } finally {
       setLoading(false);
     }
   };

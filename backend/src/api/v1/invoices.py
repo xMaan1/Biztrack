@@ -166,7 +166,7 @@ def create_invoice(
             customerName=invoice_data.customerName,
             customerEmail=invoice_data.customerEmail,
             customerPhone="",  # Will be populated from customer record
-            billingAddress="",  # Will be populated from customer record
+            billingAddress=invoice_data.billingAddress or "",  # Use provided billing address or populate from customer record
             shippingAddress=invoice_data.shippingAddress,
             issueDate=issue_date,
             dueDate=due_date,
@@ -245,7 +245,8 @@ def create_invoice(
                 customer = get_customer_by_id(db, invoice_data.customerId, tenant_id)
                 if customer:
                     db_invoice.customerPhone = customer.phone or ""
-                    db_invoice.billingAddress = customer.address or ""
+                    if not db_invoice.billingAddress:
+                        db_invoice.billingAddress = customer.address or ""
             except Exception as e:
                 # If customer fetch fails, continue with empty values
                 print(f"Warning: Could not fetch customer details: {e}")

@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useParallelApi, createApiCall } from '../../hooks/useParallelApi';
+import { apiClient } from '../../services/apiClient';
 import {
   Card,
   CardContent,
@@ -47,25 +49,40 @@ import {
   getTransactionTypeLabel,
   getAccountTypeColor,
 } from '@/src/models/ledger';
+import { useCachedApi } from '../../hooks/useCachedApi';
 
 export default function LedgerDashboard() {
   const { planInfo } = usePlanInfo();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Data states
-  const [chartOfAccounts, setChartOfAccounts] = useState<
-    ChartOfAccountsResponse[]
-  >([]);
-  const [recentTransactions, setRecentTransactions] = useState<
-    LedgerTransactionResponse[]
-  >([]);
-  const [activeBudgets, setActiveBudgets] = useState<BudgetResponse[]>([]);
-  const [trialBalance, setTrialBalance] = useState<TrialBalanceResponse | null>(
-    null,
+  
+  const { data: chartOfAccounts, loading: accountsLoading, refetch: refetchAccounts } = useCachedApi<ChartOfAccountsResponse[]>(
+    'ledger_chart_of_accounts',
+    () => LedgerService.getChartOfAccounts(),
+    { ttl: 300000 }
   );
-  const [incomeStatement, setIncomeStatement] =
-    useState<IncomeStatementResponse | null>(null);
+  
+  const { data: recentTransactions, loading: transactionsLoading, refetch: refetchTransactions } = useCachedApi<LedgerTransactionResponse[]>(
+    'ledger_recent_transactions',
+    () => LedgerService.getRecentTransactions(10),
+    { ttl: 60000 }
+  );
+  
+  const { data: activeBudgets, loading: budgetsLoading, refetch: refetchBudgets } = useCachedApi<BudgetResponse[]>(
+    'ledger_active_budgets',
+    () => LedgerService.getActiveBudgets(),
+    { ttl: 300000 }
+  );
+  
+  const { data: trialBalance, loading: trialBalanceLoading, refetch: refetchTrialBalance } = useCachedApi<TrialBalanceResponse>(
+    'ledger_trial_balance',
+    () => LedgerService.getTrialBalance(),
+    { ttl: 300000 }
+  );
+  
+  const { data: incomeStatement, loading: incomeStatementLoading, refetch: refetchIncomeStatement } = useCachedApi<IncomeStatementResponse>(
+    'ledger_income_statement',
+    () => LedgerService.getIncomeStatement(),
+    { ttl: 300000 }
+  );
 
   // Summary states
   const [totalAssets, setTotalAssets] = useState(0);
@@ -108,24 +125,32 @@ export default function LedgerDashboard() {
     endDate: new Date().toISOString().split('T')[0],
   });
 
-  useEffect(() => {
-    if (planInfo) {
-      setError(null); // Clear any previous errors
-      fetchLedgerData();
+  // Calculate summary data when cached data is loaded
+  React.useEffect(() => {
+    if (trialBalance) {
+      setTotalAssets(trialBalance.assets || 0);
+      setTotalLiabilities(trialBalance.liabilities || 0);
+      setTotalEquity(trialBalance.equity || 0);
     }
-  }, [planInfo]);
+  }, [trialBalance]);
+
+  React.useEffect(() => {
+    if (incomeStatement) {
+      setTotalRevenue(incomeStatement.totalRevenue || 0);
+      setTotalExpenses(incomeStatement.totalExpenses || 0);
+      setNetIncome(incomeStatement.netIncome || 0);
+    }
+  }, [incomeStatement]);
 
   // Clear error when component mounts or planInfo changes
   useEffect(() => {
     setError(null);
-    setLoading(true);
   }, []);
 
   // Add a manual refresh function
   const handleRefresh = () => {
-    setError(null);
-    setLoading(true);
-    fetchLedgerData();
+    // The parallel API hook will handle refreshing automatically
+    window.location.reload();
   };
 
   // Reset component state
@@ -320,45 +345,7 @@ export default function LedgerDashboard() {
     }
   };
 
-  const fetchLedgerData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Fetch all data in parallel
-      const [
-        accountsData,
-        transactionsData,
-        budgetsData,
-        trialBalanceData,
-        incomeStatementData,
-        balanceSheetData,
-      ] = await Promise.all([
-        LedgerService.getChartOfAccounts(),
-        LedgerService.getLedgerTransactions(0, 10),
-        LedgerService.getActiveBudgets(),
-        LedgerService.getTrialBalance(),
-        LedgerService.getIncomeStatement(),
-        LedgerService.getBalanceSheet(),
-      ]);
-
-      setChartOfAccounts(accountsData || []);
-      setRecentTransactions(transactionsData || []);
-      setActiveBudgets(budgetsData || []);
-      setTrialBalance(trialBalanceData || null);
-      setIncomeStatement(incomeStatementData || null);
-      // setBalanceSheet(balanceSheetData || null);
-
-      // Calculate summary data
-      calculateSummaryData(accountsData, incomeStatementData, balanceSheetData);
-    } catch (err: any) {
-      setError(
-        `Failed to fetch ledger data: ${err?.message || 'Unknown error'}`,
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Remove the old fetchLedgerData function since we're using parallel API calls now
 
   const calculateSummaryData = (
     accounts: ChartOfAccountsResponse[],
@@ -415,7 +402,7 @@ export default function LedgerDashboard() {
     return chartOfAccounts.filter((acc) => acc.account_type === type).length;
   };
 
-  if (loading) {
+  if (accountsLoading || transactionsLoading || budgetsLoading || trialBalanceLoading || incomeStatementLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">

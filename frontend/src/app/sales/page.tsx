@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -55,18 +55,27 @@ import {
 } from '../../models/sales';
 import { useCustomOptions } from '../../hooks/useCustomOptions';
 import { CustomOptionDialog } from '../../components/common/CustomOptionDialog';
+import { useCachedApi } from '../../hooks/useCachedApi';
 
 export default function SalesPage() {
   const apiService = useApiService();
-  const [dashboard, setDashboard] = useState<SalesDashboard | null>(null);
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showCreateLeadDialog, setShowCreateLeadDialog] = useState(false);
-  const [showCreateOpportunityDialog, setShowCreateOpportunityDialog] =
-    useState(false);
-  const [showCustomLeadSourceDialog, setShowCustomLeadSourceDialog] =
-    useState(false);
+  const { data: dashboard, loading: dashboardLoading, error: dashboardError, refetch: refetchDashboard } = useCachedApi<SalesDashboard>(
+    'sales_dashboard',
+    () => apiService.get('/sales/dashboard'),
+    { ttl: 30000 }
+  );
+  
+  const { data: leads, loading: leadsLoading, refetch: refetchLeads } = useCachedApi<Lead[]>(
+    'sales_leads',
+    () => apiService.get('/sales/leads'),
+    { ttl: 60000 }
+  );
+  
+  const { data: opportunities, loading: opportunitiesLoading, refetch: refetchOpportunities } = useCachedApi<Opportunity[]>(
+    'sales_opportunities',
+    () => apiService.get('/sales/opportunities'),
+    { ttl: 60000 }
+  );
 
   // Custom options hook
   const {
@@ -97,27 +106,9 @@ export default function SalesPage() {
     notes: '',
   });
 
-  const loadSalesData = useCallback(async () => {
-    try {
-      setLoading(true);
-      const [dashboardData, leadsData, opportunitiesData] = await Promise.all([
-        apiService.getSalesDashboard(),
-        apiService.getLeads({ limit: 10 }),
-        apiService.getOpportunities({ limit: 10 }),
-      ]);
-
-      setDashboard(dashboardData);
-      setLeads(leadsData.leads || []);
-      setOpportunities(opportunitiesData.opportunities || []);
-    } catch (error) {
-      } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadSalesData();
-  }, [loadSalesData]);
+  const [showCreateLeadDialog, setShowCreateLeadDialog] = useState(false);
+  const [showCreateOpportunityDialog, setShowCreateOpportunityDialog] = useState(false);
+  const [showCustomLeadSourceDialog, setShowCustomLeadSourceDialog] = useState(false);
 
   const handleCreateCustomLeadSource = async (
     name: string,
@@ -154,7 +145,8 @@ export default function SalesPage() {
         estimatedValue: '',
         expectedCloseDate: '',
       });
-      loadSalesData();
+      refetchLeads();
+      refetchDashboard();
     } catch (error) {
       }
   };
@@ -182,7 +174,8 @@ export default function SalesPage() {
         expectedCloseDate: '',
         notes: '',
       });
-      loadSalesData();
+      refetchOpportunities();
+      refetchDashboard();
     } catch (error) {
       }
   };
@@ -219,11 +212,28 @@ export default function SalesPage() {
     }).format(amount);
   };
 
-  if (loading) {
+  if (dashboardLoading || leadsLoading || opportunitiesLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (dashboardError || !dashboard) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <p className="text-red-500 text-lg mb-4">
+              {dashboardError || 'Failed to load sales data'}
+            </p>
+            <Button onClick={() => { refetchDashboard(); refetchLeads(); refetchOpportunities(); }}>
+              Retry
+            </Button>
+          </div>
         </div>
       </DashboardLayout>
     );

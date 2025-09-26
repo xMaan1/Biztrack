@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   Card,
   CardContent,
@@ -31,27 +31,14 @@ import {
 } from '@/src/models/hrm';
 import Link from 'next/link';
 import { DashboardLayout } from '../../components/layout';
+import { useCachedApi } from '../../hooks/useCachedApi';
 
 export default function HRMDashboardPage() {
-  const [dashboard, setDashboard] = useState<HRMDashboard | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    loadDashboard();
-  }, []);
-
-  const loadDashboard = async () => {
-    try {
-      setLoading(true);
-      const data = await HRMService.getDashboard();
-      setDashboard(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load dashboard');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: dashboard, loading, error, refetch } = useCachedApi<HRMDashboard>(
+    'hrm_dashboard',
+    () => HRMService.getDashboard(),
+    { ttl: 30000 }
+  );
 
   if (loading) {
     return (
@@ -68,7 +55,7 @@ export default function HRMDashboardPage() {
       <div className="container mx-auto p-6">
         <div className="text-center">
           <div className="text-red-600 mb-4">Error: {error}</div>
-          <Button onClick={loadDashboard}>Retry</Button>
+          <Button onClick={refetch}>Retry</Button>
         </div>
       </div>
     );

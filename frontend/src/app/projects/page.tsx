@@ -66,13 +66,18 @@ import {
   getInitials,
   formatDate,
 } from '../../lib/utils';
+import { useCachedApi } from '../../hooks/useCachedApi';
 
 export default function ProjectsPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [projects, setProjects] = useState<Project[]>([]);
+  const { data: projects, loading, error, refetch } = useCachedApi<Project[]>(
+    'projects_list',
+    () => apiService.get('/projects'),
+    { ttl: 60000 }
+  );
+
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
@@ -90,13 +95,6 @@ export default function ProjectsPage() {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (mounted) {
-      fetchProjects();
-    }
-  }, [mounted]);
-
-  // Filter projects based on search term, status, priority, and other filters
   useEffect(() => {
     if (!projects) return;
 
@@ -185,17 +183,6 @@ export default function ProjectsPage() {
     user,
   ]);
 
-  const fetchProjects = async () => {
-    try {
-      setLoading(true);
-      const response = await apiService.getProjects();
-      setProjects(response.projects);
-    } catch (error) {
-      } finally {
-      setLoading(false);
-    }
-  };
-
   const handleCreateProject = () => {
     setSelectedProject(null);
     setDialogMode('create');
@@ -217,7 +204,7 @@ export default function ProjectsPage() {
     if (projectToDelete) {
       try {
         await apiService.deleteProject(projectToDelete.id);
-        setProjects(projects.filter((p) => p.id !== projectToDelete.id));
+        refetch();
         setDeleteDialogOpen(false);
         setProjectToDelete(null);
       } catch (error) {
@@ -226,13 +213,7 @@ export default function ProjectsPage() {
   };
 
   const handleProjectSave = (savedProject: Project) => {
-    if (dialogMode === 'create') {
-      setProjects([...projects, savedProject]);
-    } else {
-      setProjects(
-        projects.map((p) => (p.id === savedProject.id ? savedProject : p)),
-      );
-    }
+    refetch();
   };
 
   const toggleStarred = (projectId: string, event?: React.MouseEvent) => {
@@ -279,7 +260,7 @@ export default function ProjectsPage() {
             <Button
               variant="outline"
               size="icon"
-              onClick={fetchProjects}
+              onClick={refetch}
               disabled={loading}
             >
               <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
@@ -374,6 +355,17 @@ export default function ProjectsPage() {
             {loading && (
               <div className="flex justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              </div>
+            )}
+
+            {/* Error */}
+            {error && (
+              <div className="flex flex-col items-center justify-center py-8">
+                <p className="text-red-500 text-lg mb-4">{error}</p>
+                <Button onClick={refetch} variant="outline">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Retry
+                </Button>
               </div>
             )}
 

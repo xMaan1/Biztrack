@@ -166,7 +166,7 @@ class InventoryService {
     const response = await apiService.get(
       `/inventory/suppliers?skip=${skip}&limit=${limit}`,
     );
-    return response.data;
+    return response;
   }
 
   async getSupplier(id: string): Promise<SupplierResponse> {
