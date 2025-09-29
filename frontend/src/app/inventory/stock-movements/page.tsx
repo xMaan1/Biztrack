@@ -106,8 +106,10 @@ export default function StockMovementsPage() {
           warehouseId: warehousesResponse.warehouses[0].id,
         }));
       }
-    } catch (error) {
-      } finally {
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to load stock movements';
+      alert(`Load Error: ${errorMessage}`);
+    } finally {
       setLoading(false);
     }
   };
@@ -135,8 +137,10 @@ export default function StockMovementsPage() {
           notes: 'Cancelled by user',
         });
         fetchData();
-      } catch (error) {
-        }
+      } catch (error: any) {
+        const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to delete stock movement';
+        alert(`Delete Error: ${errorMessage}`);
+      }
     }
   };
 
@@ -148,8 +152,10 @@ export default function StockMovementsPage() {
           notes: 'Cancelled by user',
         });
         fetchData();
-      } catch (error) {
-        }
+      } catch (error: any) {
+        const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to cancel stock movement';
+        alert(`Cancel Error: ${errorMessage}`);
+      }
     }
   };
 
@@ -169,8 +175,9 @@ export default function StockMovementsPage() {
       setIsAddModalOpen(false);
       resetForm();
       fetchData();
-    } catch (error) {
-      alert('Failed to create stock movement. Please try again.');
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to create stock movement';
+      alert(`Create Error: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }
