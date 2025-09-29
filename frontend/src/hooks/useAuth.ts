@@ -97,7 +97,9 @@ export function useAuth() {
   const logout = async () => {
     try {
       await apiService.logout();
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to logout';
+      alert(`Logout Error: ${errorMessage}`);
       } finally {
       const sessionManager = new SessionManager();
       setUser(null);

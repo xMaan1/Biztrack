@@ -19,6 +19,10 @@ class Invoice(Base):
     customerPhone = Column(String, nullable=True)  # New field for customer phone
     billingAddress = Column(Text, nullable=True)
     shippingAddress = Column(Text, nullable=True)
+    customerCity = Column(String, nullable=True)
+    customerState = Column(String, nullable=True)
+    customerPostalCode = Column(String, nullable=True)
+    customerCountry = Column(String, nullable=True)
     issueDate = Column(DateTime, nullable=False)
     dueDate = Column(DateTime, nullable=False)
     orderNumber = Column(String, nullable=True)  # New field for order number

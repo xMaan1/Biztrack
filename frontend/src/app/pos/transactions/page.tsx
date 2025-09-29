@@ -68,7 +68,9 @@ const POSTransactions = () => {
     try {
       const response = await apiService.get('/pos/transactions');
       setTransactions(response.transactions || []);
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to load transactions';
+      alert(`Load Error: ${errorMessage}`);
       } finally {
       setLoading(false);
     }

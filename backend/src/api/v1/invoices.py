@@ -247,6 +247,11 @@ def create_invoice(
                     db_invoice.customerPhone = customer.phone or ""
                     if not db_invoice.billingAddress:
                         db_invoice.billingAddress = customer.address or ""
+                    # Add customer address fields for PDF generation
+                    db_invoice.customerCity = customer.city or ""
+                    db_invoice.customerState = customer.state or ""
+                    db_invoice.customerPostalCode = customer.postalCode or ""
+                    db_invoice.customerCountry = customer.country or ""
             except Exception as e:
                 # If customer fetch fails, continue with empty values
                 print(f"Warning: Could not fetch customer details: {e}")

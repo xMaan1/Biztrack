@@ -207,7 +207,9 @@ export default function ProjectsPage() {
         refetch();
         setDeleteDialogOpen(false);
         setProjectToDelete(null);
-      } catch (error) {
+      } catch (error: any) {
+        const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to delete project';
+        alert(`Delete Error: ${errorMessage}`);
         }
     }
   };

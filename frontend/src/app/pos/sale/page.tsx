@@ -64,7 +64,9 @@ const POSSale = () => {
     try {
       const response = await apiService.get('/pos/products');
       setProducts(response.products || []);
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to load products';
+      alert(`Load Error: ${errorMessage}`);
       }
   };
 
@@ -74,7 +76,9 @@ const POSSale = () => {
     try {
       const response = await apiService.get(`/pos/products/search?q=${query}`);
       setProducts(response.products || []);
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to search products';
+      alert(`Search Error: ${errorMessage}`);
       }
   };
 
@@ -172,8 +176,9 @@ const POSSale = () => {
       // Clear cart and show success
       clearCart();
       alert('Transaction completed successfully!');
-    } catch (error) {
-      alert('Error creating transaction. Please try again.');
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to create transaction';
+      alert(`Transaction Error: ${errorMessage}`);
     } finally {
       setLoading(false);
     }

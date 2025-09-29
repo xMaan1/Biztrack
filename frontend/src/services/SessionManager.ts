@@ -274,7 +274,9 @@ class SessionManager {
             // Don't clear session immediately, let the reactive refresh handle it
           }
         }
-      } catch (error) {
+      } catch (error: any) {
+        const errorMessage = error?.response?.data?.detail || error?.message || 'Session refresh failed';
+        console.warn('Session refresh error:', errorMessage);
         }
     };
 

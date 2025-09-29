@@ -140,8 +140,9 @@ export default function CustomersPage() {
     try {
       const statsData = await CustomerService.getCustomerStats();
       setStats(statsData);
-    } catch (error) {
-      // Stats loading failure is not critical, silently fail
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to load customer statistics';
+      console.warn('Customer stats load error:', errorMessage);
     }
   };
 

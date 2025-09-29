@@ -52,8 +52,9 @@ export default function SuppliersPage() {
       setLoading(true);
       const response = await inventoryService.getSuppliers();
       setSuppliers(response.suppliers);
-    } catch (error) {
-      console.error('Error fetching suppliers:', error);
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to load suppliers';
+      alert(`Load Error: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -74,7 +75,9 @@ export default function SuppliersPage() {
       try {
         await inventoryService.deleteSupplier(id);
         fetchSuppliers();
-      } catch (error) {
+      } catch (error: any) {
+        const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to delete supplier';
+        alert(`Delete Error: ${errorMessage}`);
         }
     }
   };

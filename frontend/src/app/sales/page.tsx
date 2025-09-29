@@ -116,7 +116,9 @@ export default function SalesPage() {
   ) => {
     try {
       await createCustomLeadSource(name, description);
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to create custom lead source';
+      alert(`Create Error: ${errorMessage}`);
       }
   };
 
@@ -147,7 +149,9 @@ export default function SalesPage() {
       });
       refetchLeads();
       refetchDashboard();
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to create lead';
+      alert(`Create Error: ${errorMessage}`);
       }
   };
 
@@ -176,7 +180,9 @@ export default function SalesPage() {
       });
       refetchOpportunities();
       refetchDashboard();
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to create opportunity';
+      alert(`Create Error: ${errorMessage}`);
       }
   };
 

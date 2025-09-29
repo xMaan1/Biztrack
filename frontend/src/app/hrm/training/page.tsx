@@ -106,8 +106,9 @@ export default function HRMTrainingPage() {
       setLoading(true);
       const response = await HRMService.getTraining(filters, 1, 100);
       setTrainings(response.training);
-    } catch (err) {
-      setError('Failed to load training programs');
+    } catch (err: any) {
+      const errorMessage = err?.response?.data?.detail || err?.message || 'Failed to load training programs';
+      setError(errorMessage);
       } finally {
       setLoading(false);
     }
@@ -116,7 +117,9 @@ export default function HRMTrainingPage() {
   const loadEmployees = async () => {
     try {
       await HRMService.getEmployees({}, 1, 100);
-    } catch (err) {
+    } catch (err: any) {
+      const errorMessage = err?.response?.data?.detail || err?.message || 'Failed to load employees';
+      alert(`Load Error: ${errorMessage}`);
       }
   };
 
@@ -179,8 +182,9 @@ export default function HRMTrainingPage() {
       setShowCreateDialog(false);
       resetForm();
       loadTrainings();
-    } catch (err) {
-      setError('Failed to save training program. Please try again.');
+    } catch (err: any) {
+      const errorMessage = err?.response?.data?.detail || err?.message || 'Failed to save training program';
+      setError(errorMessage);
       } finally {
       setSubmitting(false);
     }
@@ -223,8 +227,9 @@ export default function HRMTrainingPage() {
       setSuccessMessage('Training program deleted successfully!');
       setDeletingTraining(null);
       loadTrainings();
-    } catch (err) {
-      setError('Failed to delete training program. Please try again.');
+    } catch (err: any) {
+      const errorMessage = err?.response?.data?.detail || err?.message || 'Failed to delete training program';
+      setError(errorMessage);
       } finally {
       setDeleting(false);
     }

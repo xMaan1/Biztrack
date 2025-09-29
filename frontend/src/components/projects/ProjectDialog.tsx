@@ -119,7 +119,9 @@ export default function ProjectDialog({
               u.userRole === 'admin',
           ),
         );
-      } catch (error) {
+      } catch (error: any) {
+        const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to load users';
+        alert(`Load Error: ${errorMessage}`);
         } finally {
         setLoadingUsers(false);
       }
@@ -203,7 +205,9 @@ export default function ProjectDialog({
 
       onSave(savedProject);
       onClose();
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to save project';
+      alert(`Save Error: ${errorMessage}`);
       } finally {
       setLoading(false);
     }

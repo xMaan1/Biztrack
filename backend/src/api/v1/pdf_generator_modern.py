@@ -63,32 +63,32 @@ def draw_footer(canvas, doc, footer_content):
     )
     
     canvas.setFillColor(colors.white)
-    canvas.setFont('Helvetica', 7)
+    canvas.setFont('Helvetica', 9)
     
     thank_you = footer_content.get('thank_you_message', 'Thank you for your business!')
     enquiry_msg = footer_content.get('enquiry_message', 'Should you have any enquiries concerning this invoice,')
     contact_msg = footer_content.get('contact_message', 'please contact us at your convenience.')
     
     y1 = 0.5*inch + 1.2*inch
-    text_width1 = canvas.stringWidth(thank_you, 'Helvetica', 7)
+    text_width1 = canvas.stringWidth(thank_you, 'Helvetica', 9)
     x1 = (page_width - text_width1) / 2
     canvas.drawString(x1, y1, thank_you)
     
     y2 = 0.5*inch + 0.9*inch
-    text_width2 = canvas.stringWidth(enquiry_msg, 'Helvetica', 7)
+    text_width2 = canvas.stringWidth(enquiry_msg, 'Helvetica', 9)
     x2 = (page_width - text_width2) / 2
     canvas.drawString(x2, y2, enquiry_msg)
     
     y3 = 0.5*inch + 0.6*inch
-    text_width3 = canvas.stringWidth(contact_msg, 'Helvetica', 7)
+    text_width3 = canvas.stringWidth(contact_msg, 'Helvetica', 9)
     x3 = (page_width - text_width3) / 2
     canvas.drawString(x3, y3, contact_msg)
     
     payment_instructions = footer_content.get('payment_instructions')
     if payment_instructions:
-        canvas.setFont('Helvetica', 6)
+        canvas.setFont('Helvetica', 8)
         payment_text = f"Payment Instructions: {payment_instructions}"
-        payment_width = canvas.stringWidth(payment_text, 'Helvetica', 6)
+        payment_width = canvas.stringWidth(payment_text, 'Helvetica', 8)
         x_payment = (page_width - payment_width) / 2
         y_payment = 0.5*inch + 0.3*inch
         canvas.drawString(x_payment, y_payment, payment_text)
@@ -169,7 +169,7 @@ def create_styles(colors: Dict[str, Any]) -> Dict[str, ParagraphStyle]:
     footer_style = ParagraphStyle(
         'CustomFooter',
         parent=styles['Normal'],
-        fontSize=7,
+        fontSize=9,
         textColor=colors['white'],
         spaceAfter=3,
         alignment=TA_CENTER,
@@ -300,8 +300,23 @@ def create_customer_section(invoice, styles: Dict[str, ParagraphStyle]) -> List:
     if hasattr(invoice, 'customerPhone') and invoice.customerPhone:
         customer_info.append(f"Phone: {invoice.customerPhone}")
     
+    # Build complete billing address from customer data
+    address_parts = []
     if hasattr(invoice, 'billingAddress') and invoice.billingAddress:
-        customer_info.append(invoice.billingAddress.replace('\n', '<br/>'))
+        address_parts.append(invoice.billingAddress)
+    
+    # Add city, state, postal code, country if available
+    if hasattr(invoice, 'customerCity') and invoice.customerCity:
+        address_parts.append(invoice.customerCity)
+    if hasattr(invoice, 'customerState') and invoice.customerState:
+        address_parts.append(invoice.customerState)
+    if hasattr(invoice, 'customerPostalCode') and invoice.customerPostalCode:
+        address_parts.append(invoice.customerPostalCode)
+    if hasattr(invoice, 'customerCountry') and invoice.customerCountry:
+        address_parts.append(invoice.customerCountry)
+    
+    if address_parts:
+        customer_info.append(', '.join(address_parts))
     
     elements.append(Paragraph('<br/>'.join(customer_info), styles['body']))
     elements.append(Spacer(1, 5))

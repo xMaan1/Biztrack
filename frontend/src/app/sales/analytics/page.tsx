@@ -59,7 +59,9 @@ export default function SalesAnalyticsPage() {
       setOpportunities(oppsResponse.opportunities || []);
       setContacts(contactsResponse.contacts || []);
       setCompanies(companiesResponse.companies || []);
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to load analytics data';
+      alert(`Load Error: ${errorMessage}`);
       } finally {
       setLoading(false);
     }

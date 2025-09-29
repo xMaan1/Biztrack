@@ -44,9 +44,9 @@ export default function ProjectTasksPage() {
       setLoading(true);
       const response = await apiService.getProject(projectId);
       setProject(response);
-    } catch (err) {
-      console.error('Failed to load project:', err);
-      setError('Failed to load project details');
+    } catch (err: any) {
+      const errorMessage = err?.response?.data?.detail || err?.message || 'Failed to load project details';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -74,8 +74,9 @@ export default function ProjectTasksPage() {
       }
 
       setTasks(taskList);
-    } catch (err) {
-      console.error('Failed to load tasks:', err);
+    } catch (err: any) {
+      const errorMessage = err?.response?.data?.detail || err?.message || 'Failed to load tasks';
+      console.warn('Tasks load error:', errorMessage);
     }
   }, [projectId]);
 
