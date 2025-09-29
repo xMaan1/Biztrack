@@ -37,7 +37,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const sessionManager = new SessionManager();
 
-        // Immediately clear any corrupted session data
         if (!sessionManager.isSessionValid()) {
           sessionManager.clearSession();
           setUser(null);
@@ -47,9 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        // Check if session exists and is valid
         if (sessionManager.isSessionValid()) {
-          // If token is expired, try to refresh it
           if (sessionManager.isTokenExpired()) {
             const refreshSuccess = await sessionManager.refreshAccessToken();
             if (!refreshSuccess) {
@@ -65,36 +62,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (session && session.token && session.user) {
             setUser(session.user);
 
-            // Start proactive token refresh for authenticated users
             sessionManager.startProactiveRefresh();
 
-            // Load tenants from localStorage (no API call)
             const storedTenants = apiService.getUserTenants();
             if (storedTenants.length > 0) {
               setTenants(storedTenants);
 
-              // Get current tenant from localStorage
               const currentTenant = apiService.getCurrentTenant();
               if (currentTenant) {
                 setCurrentTenant(currentTenant);
               } else {
-                // Fallback to first tenant if no current tenant is set
                 setCurrentTenant(storedTenants[0]);
                 apiService.setTenantId(storedTenants[0].id);
               }
             }
           } else {
-            // Session exists but data is corrupted, clear it
             sessionManager.clearSession();
             setUser(null);
           }
         } else {
-          // No valid session, clear any corrupted data
           sessionManager.clearSession();
           setUser(null);
         }
       } catch (error) {
-        // Clear session on error
         const sessionManager = new SessionManager();
         sessionManager.clearSession();
         setUser(null);
@@ -114,17 +104,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (response.success && response.user) {
         setUser(response.user);
 
-        // Start proactive token refresh for newly logged in users
         const sessionManager = new SessionManager();
         sessionManager.startProactiveRefresh();
 
-        // Tenants are already fetched and stored during apiService.login()
-        // Just load them from localStorage
         const storedTenants = apiService.getUserTenants();
         if (storedTenants.length > 0) {
           setTenants(storedTenants);
 
-          // Current tenant is already set during login, just get it
           const currentTenant = apiService.getCurrentTenant();
           if (currentTenant) {
             setCurrentTenant(currentTenant);
@@ -135,7 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       return false;
     } catch (error) {
-      return false;
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -160,7 +146,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const switchTenant = async (tenantId: string): Promise<boolean> => {
     try {
-      // This now uses localStorage, no API call
       const tenant = await apiService.switchTenant(tenantId);
       setCurrentTenant(tenant);
       return true;

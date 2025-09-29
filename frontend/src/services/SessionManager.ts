@@ -169,16 +169,13 @@ class SessionManager {
     this.removeToken();
     this.removeUser();
     this.removeRefreshToken();
-    // Also clear tenant-related data
     if (typeof window !== 'undefined') {
       localStorage.removeItem('currentTenantId');
       localStorage.removeItem('userTenants');
-      // Clear all auth-related cookies
       this.removeCookie(this.COOKIE_TOKEN_KEY);
     }
   }
 
-  // Session validation
   isSessionValid(): boolean {
     if (typeof window === 'undefined') return false;
 
@@ -186,7 +183,6 @@ class SessionManager {
     const user = this.getUser();
     const refreshToken = this.getRefreshToken();
 
-    // All three must exist for a valid session
     return !!(token && user && refreshToken);
   }
 

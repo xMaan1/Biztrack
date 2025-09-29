@@ -88,7 +88,7 @@ export function useAuth() {
       }
       return false;
     } catch (error) {
-      return false;
+      throw error;
     } finally {
       setLoading(false);
     }

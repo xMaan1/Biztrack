@@ -93,6 +93,11 @@ export default function CustomersPage() {
     phone: '',
     mobile: '',
     cnic: '',
+    address: '',
+    city: '',
+    state: '',
+    country: 'Pakistan',
+    postalCode: '',
     customerType: 'individual',
     customerStatus: 'active',
     creditLimit: 0,
@@ -237,6 +242,11 @@ export default function CustomersPage() {
       phone: '',
       mobile: '',
       cnic: '',
+      address: '',
+      city: '',
+      state: '',
+      country: 'Pakistan',
+      postalCode: '',
       customerType: 'individual',
       customerStatus: 'active',
       creditLimit: 0,
@@ -256,6 +266,11 @@ export default function CustomersPage() {
       phone: customer.phone || '',
       mobile: customer.mobile || '',
       cnic: customer.cnic || '',
+      address: customer.address || '',
+      city: customer.city || '',
+      state: customer.state || '',
+      country: customer.country || 'Pakistan',
+      postalCode: customer.postalCode || '',
       customerType: customer.customerType,
       customerStatus: customer.customerStatus,
       creditLimit: customer.creditLimit,
@@ -486,6 +501,61 @@ export default function CustomersPage() {
                   </Select>
                 </div>
                 <div className="col-span-2">
+                  <Label htmlFor="address">Billing Address</Label>
+                  <Input
+                    id="address"
+                    value={formData.address}
+                    onChange={(e) =>
+                      setFormData({ ...formData, address: e.target.value })
+                    }
+                    placeholder="Street address, building number"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="city">City</Label>
+                  <Input
+                    id="city"
+                    value={formData.city}
+                    onChange={(e) =>
+                      setFormData({ ...formData, city: e.target.value })
+                    }
+                    placeholder="Karachi"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="state">State/Province</Label>
+                  <Input
+                    id="state"
+                    value={formData.state}
+                    onChange={(e) =>
+                      setFormData({ ...formData, state: e.target.value })
+                    }
+                    placeholder="Sindh"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="country">Country</Label>
+                  <Input
+                    id="country"
+                    value={formData.country}
+                    onChange={(e) =>
+                      setFormData({ ...formData, country: e.target.value })
+                    }
+                    placeholder="Pakistan"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="postalCode">Postal Code</Label>
+                  <Input
+                    id="postalCode"
+                    value={formData.postalCode}
+                    onChange={(e) =>
+                      setFormData({ ...formData, postalCode: e.target.value })
+                    }
+                    placeholder="75000"
+                  />
+                </div>
+                <div className="col-span-2">
                   <Label htmlFor="tags">Tags (comma separated)</Label>
                   <Input
                     id="tags"
@@ -714,6 +784,15 @@ export default function CustomersPage() {
                             {customer.cnic && (
                               <div className="text-sm text-muted-foreground">
                                 CNIC: {customer.cnic}
+                              </div>
+                            )}
+                            {(customer.address || customer.city) && (
+                              <div className="text-sm text-muted-foreground">
+                                {customer.address && customer.address}
+                                {customer.address && customer.city && ', '}
+                                {customer.city}
+                                {customer.state && `, ${customer.state}`}
+                                {customer.postalCode && ` ${customer.postalCode}`}
                               </div>
                             )}
                           </div>
@@ -955,6 +1034,61 @@ export default function CustomersPage() {
                     <SelectItem value="Due Payments">Due Payments</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="col-span-2">
+                <Label htmlFor="editAddress">Billing Address</Label>
+                <Input
+                  id="editAddress"
+                  value={formData.address}
+                  onChange={(e) =>
+                    setFormData({ ...formData, address: e.target.value })
+                  }
+                  placeholder="Street address, building number"
+                />
+              </div>
+              <div>
+                <Label htmlFor="editCity">City</Label>
+                <Input
+                  id="editCity"
+                  value={formData.city}
+                  onChange={(e) =>
+                    setFormData({ ...formData, city: e.target.value })
+                  }
+                  placeholder="Karachi"
+                />
+              </div>
+              <div>
+                <Label htmlFor="editState">State/Province</Label>
+                <Input
+                  id="editState"
+                  value={formData.state}
+                  onChange={(e) =>
+                    setFormData({ ...formData, state: e.target.value })
+                  }
+                  placeholder="Sindh"
+                />
+              </div>
+              <div>
+                <Label htmlFor="editCountry">Country</Label>
+                <Input
+                  id="editCountry"
+                  value={formData.country}
+                  onChange={(e) =>
+                    setFormData({ ...formData, country: e.target.value })
+                  }
+                  placeholder="Pakistan"
+                />
+              </div>
+              <div>
+                <Label htmlFor="editPostalCode">Postal Code</Label>
+                <Input
+                  id="editPostalCode"
+                  value={formData.postalCode}
+                  onChange={(e) =>
+                    setFormData({ ...formData, postalCode: e.target.value })
+                  }
+                  placeholder="75000"
+                />
               </div>
               <div className="col-span-2">
                 <Label htmlFor="editTags">Tags (comma separated)</Label>

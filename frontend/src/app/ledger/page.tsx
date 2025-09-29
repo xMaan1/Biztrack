@@ -1,8 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useParallelApi, createApiCall } from '../../hooks/useParallelApi';
-import { apiClient } from '../../services/apiClient';
 import {
   Card,
   CardContent,
@@ -32,7 +30,6 @@ import {
   Download,
   X,
 } from 'lucide-react';
-import { usePlanInfo } from '@/src/hooks/usePlanInfo';
 import LedgerService from '@/src/services/ledgerService';
 import DashboardLayout from '@/src/components/layout/DashboardLayout';
 import {
@@ -41,7 +38,6 @@ import {
   BudgetResponse,
   TrialBalanceResponse,
   IncomeStatementResponse,
-  BalanceSheetResponse,
   AccountType,
   TransactionType,
   formatCurrency,
@@ -52,7 +48,6 @@ import {
 import { useCachedApi } from '../../hooks/useCachedApi';
 
 export default function LedgerDashboard() {
-  const { planInfo } = usePlanInfo();
   
   const { data: chartOfAccounts, loading: accountsLoading, refetch: refetchAccounts } = useCachedApi<ChartOfAccountsResponse[]>(
     'ledger_chart_of_accounts',
@@ -62,7 +57,7 @@ export default function LedgerDashboard() {
   
   const { data: recentTransactions, loading: transactionsLoading, refetch: refetchTransactions } = useCachedApi<LedgerTransactionResponse[]>(
     'ledger_recent_transactions',
-    () => LedgerService.getRecentTransactions(10),
+    () => LedgerService.getLedgerTransactions(10),
     { ttl: 60000 }
   );
   
@@ -84,22 +79,20 @@ export default function LedgerDashboard() {
     { ttl: 300000 }
   );
 
-  // Summary states
   const [totalAssets, setTotalAssets] = useState(0);
   const [totalLiabilities, setTotalLiabilities] = useState(0);
   const [totalEquity, setTotalEquity] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalExpenses, setTotalExpenses] = useState(0);
   const [netIncome, setNetIncome] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
-  // Modal states
   const [showNewTransactionModal, setShowNewTransactionModal] = useState(false);
   const [showJournalEntryModal, setShowJournalEntryModal] = useState(false);
   const [showAccountBalanceModal, setShowAccountBalanceModal] = useState(false);
   const [showFinancialReportModal, setShowFinancialReportModal] =
     useState(false);
 
-  // Form states
   const [transactionForm, setTransactionForm] = useState({
     description: '',
     amount: '',
@@ -125,49 +118,49 @@ export default function LedgerDashboard() {
     endDate: new Date().toISOString().split('T')[0],
   });
 
-  // Calculate summary data when cached data is loaded
   React.useEffect(() => {
-    if (trialBalance) {
-      setTotalAssets(trialBalance.assets || 0);
-      setTotalLiabilities(trialBalance.liabilities || 0);
-      setTotalEquity(trialBalance.equity || 0);
+    if (trialBalance && Array.isArray(trialBalance.accounts)) {
+      const assets = trialBalance.accounts
+        .filter(acc => acc.account_type === 'asset')
+        .reduce((sum, acc) => sum + (acc.debit_balance - acc.credit_balance), 0);
+      const liabilities = trialBalance.accounts
+        .filter(acc => acc.account_type === 'liability')
+        .reduce((sum, acc) => sum + (acc.credit_balance - acc.debit_balance), 0);
+      const equity = trialBalance.accounts
+        .filter(acc => acc.account_type === 'equity')
+        .reduce((sum, acc) => sum + (acc.credit_balance - acc.debit_balance), 0);
+      
+      setTotalAssets(assets);
+      setTotalLiabilities(liabilities);
+      setTotalEquity(equity);
     }
   }, [trialBalance]);
 
   React.useEffect(() => {
     if (incomeStatement) {
-      setTotalRevenue(incomeStatement.totalRevenue || 0);
-      setTotalExpenses(incomeStatement.totalExpenses || 0);
-      setNetIncome(incomeStatement.netIncome || 0);
+      setTotalRevenue(incomeStatement.revenue || 0);
+      setTotalExpenses(incomeStatement.expenses || 0);
+      setNetIncome(incomeStatement.net_income || 0);
     }
   }, [incomeStatement]);
 
-  // Clear error when component mounts or planInfo changes
-  useEffect(() => {
+  React.useEffect(() => {
     setError(null);
   }, []);
 
-  // Add a manual refresh function
   const handleRefresh = () => {
-    // The parallel API hook will handle refreshing automatically
     window.location.reload();
   };
 
-  // Reset component state
   const handleReset = () => {
     setError(null);
-    setLoading(true);
-    setChartOfAccounts([]);
-    setRecentTransactions([]);
-    // setRecentJournalEntries([]);
-    setActiveBudgets([]);
-    setTrialBalance(null);
-    setIncomeStatement(null);
-    // setBalanceSheet(null);
-    fetchLedgerData();
+    refetchAccounts();
+    refetchTransactions();
+    refetchBudgets();
+    refetchTrialBalance();
+    refetchIncomeStatement();
   };
 
-  // Modal handlers
   const handleNewTransaction = () => {
     setShowNewTransactionModal(true);
   };
@@ -181,7 +174,6 @@ export default function LedgerDashboard() {
     setShowFinancialReportModal(true);
   };
 
-  // Modal close handlers with form reset
   const closeTransactionModal = () => {
     setShowNewTransactionModal(false);
     setTransactionForm({
@@ -219,7 +211,6 @@ export default function LedgerDashboard() {
     });
   };
 
-  // Form submission handlers
   const handleTransactionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -287,7 +278,7 @@ export default function LedgerDashboard() {
         accountBalanceForm.asOfDate,
       );
 
-      const account = chartOfAccounts.find(
+      const account = chartOfAccounts?.find(
         (acc) => acc.id === accountBalanceForm.accountId,
       );
       alert(
@@ -345,57 +336,7 @@ export default function LedgerDashboard() {
     }
   };
 
-  // Remove the old fetchLedgerData function since we're using parallel API calls now
 
-  const calculateSummaryData = (
-    accounts: ChartOfAccountsResponse[],
-    income: IncomeStatementResponse | null,
-    balance: BalanceSheetResponse | null,
-  ) => {
-    // Ensure accounts is an array
-    if (!Array.isArray(accounts)) {
-      accounts = [];
-    }
-
-    // Calculate totals from chart of accounts
-    const assets = accounts.filter((acc) => acc.account_type === 'asset');
-    const liabilities = accounts.filter(
-      (acc) => acc.account_type === 'liability',
-    );
-    const equity = accounts.filter((acc) => acc.account_type === 'equity');
-    const revenue = accounts.filter((acc) => acc.account_type === 'revenue');
-    const expenses = accounts.filter((acc) => acc.account_type === 'expense');
-
-    setTotalAssets(
-      assets.reduce((sum, acc) => sum + (acc.current_balance || 0), 0),
-    );
-    setTotalLiabilities(
-      liabilities.reduce((sum, acc) => sum + (acc.current_balance || 0), 0),
-    );
-    setTotalEquity(
-      equity.reduce((sum, acc) => sum + (acc.current_balance || 0), 0),
-    );
-    setTotalRevenue(
-      revenue.reduce((sum, acc) => sum + (acc.current_balance || 0), 0),
-    );
-    setTotalExpenses(
-      expenses.reduce((sum, acc) => sum + (acc.current_balance || 0), 0),
-    );
-
-    // Use income statement data if available
-    if (income) {
-      setTotalRevenue(income.revenue);
-      setTotalExpenses(income.expenses);
-      setNetIncome(income.net_income);
-    }
-
-    // Use balance sheet data if available
-    if (balance) {
-      setTotalAssets(balance.assets.total);
-      setTotalLiabilities(balance.liabilities.total);
-      setTotalEquity(balance.equity.total);
-    }
-  };
 
   const getAccountTypeCount = (type: AccountType) => {
     if (!Array.isArray(chartOfAccounts)) return 0;
@@ -611,7 +552,7 @@ export default function LedgerDashboard() {
                   <div className="space-y-3">
                     {Object.values(AccountType).map((type) => {
                       const count = getAccountTypeCount(type);
-                      const total = chartOfAccounts.length;
+                      const total = chartOfAccounts?.length || 0;
                       const percentage =
                         total > 0 ? ((count / total) * 100).toFixed(1) : '0';
 
@@ -685,7 +626,7 @@ export default function LedgerDashboard() {
                 </div>
 
                 {/* Show message when no accounts exist */}
-                {chartOfAccounts.length === 0 && (
+                {(!chartOfAccounts || chartOfAccounts.length === 0) && (
                   <div className="mt-6 p-6 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <div className="flex items-center justify-between">
                       <div>
@@ -1112,7 +1053,7 @@ export default function LedgerDashboard() {
                       required
                     >
                       <option value="">Select account</option>
-                      {chartOfAccounts.length > 0 ? (
+                      {chartOfAccounts && chartOfAccounts.length > 0 ? (
                         chartOfAccounts.map((account) => (
                           <option key={account.id} value={account.id}>
                             {account.account_name}
@@ -1124,7 +1065,7 @@ export default function LedgerDashboard() {
                         </option>
                       )}
                     </select>
-                    {chartOfAccounts.length === 0 && (
+                    {(!chartOfAccounts || chartOfAccounts.length === 0) && (
                       <p className="text-xs text-red-500 mt-1">
                         No accounts found. Please create accounts first.
                       </p>
@@ -1146,7 +1087,7 @@ export default function LedgerDashboard() {
                       required
                     >
                       <option value="">Select account</option>
-                      {chartOfAccounts.length > 0 ? (
+                      {chartOfAccounts && chartOfAccounts.length > 0 ? (
                         chartOfAccounts.map((account) => (
                           <option key={account.id} value={account.id}>
                             {account.account_name}
@@ -1158,7 +1099,7 @@ export default function LedgerDashboard() {
                         </option>
                       )}
                     </select>
-                    {chartOfAccounts.length === 0 && (
+                    {(!chartOfAccounts || chartOfAccounts.length === 0) && (
                       <p className="text-xs text-red-500 mt-1">
                         No accounts found. Please create accounts first.
                       </p>
@@ -1167,7 +1108,7 @@ export default function LedgerDashboard() {
                 </div>
 
                 {/* Show create account button when no accounts exist */}
-                {chartOfAccounts.length === 0 && (
+                {(!chartOfAccounts || chartOfAccounts.length === 0) && (
                   <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <p className="text-sm text-blue-800 mb-3">
                       You need to create chart of accounts first before creating
@@ -1339,7 +1280,7 @@ export default function LedgerDashboard() {
                     required
                   >
                     <option value="">Select account</option>
-                    {chartOfAccounts.length > 0 ? (
+                    {chartOfAccounts && chartOfAccounts.length > 0 ? (
                       chartOfAccounts.map((account) => (
                         <option key={account.id} value={account.id}>
                           {account.account_name}
@@ -1351,7 +1292,7 @@ export default function LedgerDashboard() {
                       </option>
                     )}
                   </select>
-                  {chartOfAccounts.length === 0 && (
+                  {(!chartOfAccounts || chartOfAccounts.length === 0) && (
                     <p className="text-xs text-red-500 mt-1">
                       No accounts found. Please create accounts first.
                     </p>
