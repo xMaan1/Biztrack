@@ -855,25 +855,25 @@ export function InvoiceDialog({
                   <div className="flex justify-between">
                     <span>Subtotal:</span>
                     <span>
-                      {InvoiceService.formatCurrency(totals.subtotal)}
+                      {InvoiceService.formatCurrency(totals.subtotal, formData.currency)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Discount ({formData.discount}%):</span>
                     <span>
-                      -{InvoiceService.formatCurrency(totals.discount)}
+                      -{InvoiceService.formatCurrency(totals.discount, formData.currency)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Tax ({formData.taxRate}%):</span>
                     <span>
-                      {InvoiceService.formatCurrency(totals.taxAmount)}
+                      {InvoiceService.formatCurrency(totals.taxAmount, formData.currency)}
                     </span>
                   </div>
                   <div className="border-t pt-2 font-bold text-lg">
                     <div className="flex justify-between">
                       <span>Total:</span>
-                      <span>{InvoiceService.formatCurrency(totals.total)}</span>
+                      <span>{InvoiceService.formatCurrency(totals.total, formData.currency)}</span>
                     </div>
                   </div>
                 </div>
