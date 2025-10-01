@@ -92,14 +92,18 @@ def get_customers(
     query = db.query(Customer).filter(Customer.tenant_id == tenant_id)
     
     if search:
+        # Normalize search term by replacing multiple spaces with single space
+        normalized_search = ' '.join(search.split())
+        
         search_filter = or_(
-            Customer.firstName.ilike(f"%{search}%"),
-            Customer.lastName.ilike(f"%{search}%"),
-            Customer.customerId.ilike(f"%{search}%"),
-            Customer.phone.ilike(f"%{search}%"),
-            Customer.mobile.ilike(f"%{search}%"),
-            Customer.cnic.ilike(f"%{search}%"),
-            Customer.email.ilike(f"%{search}%")
+            func.regexp_replace(Customer.firstName, r'\s+', ' ', 'g').ilike(f"%{normalized_search}%"),
+            func.regexp_replace(Customer.lastName, r'\s+', ' ', 'g').ilike(f"%{normalized_search}%"),
+            func.regexp_replace(func.concat(Customer.firstName, ' ', Customer.lastName), r'\s+', ' ', 'g').ilike(f"%{normalized_search}%"),
+            Customer.customerId.ilike(f"%{normalized_search}%"),
+            Customer.phone.ilike(f"%{normalized_search}%"),
+            Customer.mobile.ilike(f"%{normalized_search}%"),
+            Customer.cnic.ilike(f"%{normalized_search}%"),
+            Customer.email.ilike(f"%{normalized_search}%")
         )
         query = query.filter(search_filter)
     
@@ -260,14 +264,18 @@ def search_customers(
     """Search customers by name, ID, CNIC, phone, or email"""
     query = db.query(Customer).filter(Customer.tenant_id == tenant_id)
     
+    # Normalize search term by replacing multiple spaces with single space
+    normalized_search = ' '.join(search_term.split())
+    
     search_filter = or_(
-        Customer.firstName.ilike(f"%{search_term}%"),
-        Customer.lastName.ilike(f"%{search_term}%"),
-        Customer.customerId.ilike(f"%{search_term}%"),
-        Customer.phone.ilike(f"%{search_term}%"),
-        Customer.mobile.ilike(f"%{search_term}%"),
-        Customer.cnic.ilike(f"%{search_term}%"),
-        Customer.email.ilike(f"%{search_term}%")
+        func.regexp_replace(Customer.firstName, r'\s+', ' ', 'g').ilike(f"%{normalized_search}%"),
+        func.regexp_replace(Customer.lastName, r'\s+', ' ', 'g').ilike(f"%{normalized_search}%"),
+        func.regexp_replace(func.concat(Customer.firstName, ' ', Customer.lastName), r'\s+', ' ', 'g').ilike(f"%{normalized_search}%"),
+        Customer.customerId.ilike(f"%{normalized_search}%"),
+        Customer.phone.ilike(f"%{normalized_search}%"),
+        Customer.mobile.ilike(f"%{normalized_search}%"),
+        Customer.cnic.ilike(f"%{normalized_search}%"),
+        Customer.email.ilike(f"%{normalized_search}%")
     )
     
     return query.filter(search_filter).limit(limit).all()
