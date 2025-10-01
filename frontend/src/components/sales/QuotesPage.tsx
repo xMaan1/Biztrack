@@ -56,7 +56,7 @@ import { Opportunity, Contact } from '../../models/crm';
 import { DashboardLayout } from '../layout';
 
 export default function QuotesPage() {
-  const { getCurrencySymbol } = useCurrency();
+  const { getCurrencySymbol, formatCurrency } = useCurrency();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -381,10 +381,9 @@ export default function QuotesPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                $
-                {quotes
-                  .reduce((sum, quote) => sum + (quote.amount || 0), 0)
-                  .toLocaleString()}
+                {formatCurrency(
+                  quotes.reduce((sum, quote) => sum + (quote.amount || 0), 0)
+                )}
               </div>
             </CardContent>
           </Card>

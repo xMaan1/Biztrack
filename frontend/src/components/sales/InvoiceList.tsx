@@ -27,7 +27,6 @@ import {
   MoreVertical,
   Download,
   Calendar,
-  DollarSign,
   FileText,
 } from 'lucide-react';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
@@ -181,7 +180,6 @@ export function InvoiceList({
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-gray-500" />
                     <span className="font-medium">
                       {formatCurrency(invoice.total)}
                     </span>
@@ -196,7 +194,6 @@ export function InvoiceList({
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-gray-500" />
                     <span
                       className={
                         invoice.balance > 0

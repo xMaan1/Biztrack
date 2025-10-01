@@ -66,7 +66,7 @@ export default function ProductionPlanDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { } = useAuth();
-  const { getCurrencySymbol } = useCurrency();
+  const { getCurrencySymbol, formatCurrency } = useCurrency();
   const [productionPlan, setProductionPlan] = useState<ProductionPlan | null>(
     null,
   );
@@ -379,9 +379,10 @@ export default function ProductionPlanDetailPage() {
                   <div className="text-center p-4 bg-purple-50 rounded-lg">
                     <DollarSign className="h-8 w-8 text-purple-600 mx-auto mb-2" />
                     <div className="text-2xl font-bold text-purple-600">
-                      $
-                      {productionPlan.estimated_material_cost +
-                        productionPlan.estimated_labor_cost}
+                      {formatCurrency(
+                        productionPlan.estimated_material_cost +
+                        productionPlan.estimated_labor_cost
+                      )}
                     </div>
                     <div className="text-sm text-gray-600">Total Cost</div>
                   </div>

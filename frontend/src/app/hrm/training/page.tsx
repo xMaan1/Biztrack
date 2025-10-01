@@ -753,7 +753,7 @@ export default function HRMTrainingPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="cost">Cost ($)</Label>
+                <Label htmlFor="cost">Cost ({getCurrencySymbol()})</Label>
                 <Input
                   id="cost"
                   type="number"

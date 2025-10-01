@@ -2205,6 +2205,7 @@ class InvoiceCustomizationUpdate(BaseModel):
     enquiry_message: Optional[str] = None
     contact_message: Optional[str] = None
     default_payment_instructions: Optional[str] = None
+    default_currency: Optional[str] = None
     custom_fields: Optional[Dict[str, Any]] = None
 
 class InvoiceCustomization(InvoiceCustomizationBase):

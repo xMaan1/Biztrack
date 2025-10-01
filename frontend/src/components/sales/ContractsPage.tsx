@@ -56,7 +56,7 @@ import { Opportunity, Contact, Company } from '../../models/crm';
 import { DashboardLayout } from '../layout';
 
 export default function ContractsPage() {
-  const { getCurrencySymbol } = useCurrency();
+  const { getCurrencySymbol, formatCurrency } = useCurrency();
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -441,10 +441,9 @@ export default function ContractsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                $
-                {contracts
-                  .reduce((sum, contract) => sum + (contract.value || 0), 0)
-                  .toLocaleString()}
+                {formatCurrency(
+                  contracts.reduce((sum, contract) => sum + (contract.value || 0), 0)
+                )}
               </div>
             </CardContent>
           </Card>

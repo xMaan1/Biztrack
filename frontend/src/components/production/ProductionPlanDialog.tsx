@@ -61,7 +61,7 @@ export default function ProductionPlanDialog({
   onSuccess,
 }: ProductionPlanDialogProps) {
   const { } = useAuth();
-  const { getCurrencySymbol } = useCurrency();
+  const { getCurrencySymbol, formatCurrency } = useCurrency();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<ProductionPlanCreate>>({
     title: '',
@@ -570,8 +570,7 @@ export default function ProductionPlanDialog({
                     </div>
                   ))}
                   <div className="text-sm text-gray-500">
-                    Total Material Cost: $
-                    {formData.estimated_material_cost || 0}
+                    Total Material Cost: {formatCurrency(formData.estimated_material_cost || 0)}
                   </div>
                 </div>
               )}
