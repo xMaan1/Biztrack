@@ -31,7 +31,7 @@ export class ApiService {
       headers: {
         'Content-Type': 'application/json',
       },
-      timeout: 10000,
+      timeout: 30000,
     });
 
     // Initialize tenant ID from localStorage if available
@@ -154,6 +154,12 @@ export class ApiService {
     this.client.interceptors.response.use(
       (response) => response,
       async (error) => {
+        // Handle timeout errors gracefully
+        if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {
+          console.warn('Request timeout - server may be slow');
+          return Promise.reject(new Error('Request timeout. Please try again.'));
+        }
+
         if (error.response?.status === 401) {
           // Prevent infinite retry loops
           if (error.config._retry) {

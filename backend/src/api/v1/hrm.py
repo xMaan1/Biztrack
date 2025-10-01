@@ -17,8 +17,10 @@ from ...models.unified_models import (
     Training, TrainingCreate, TrainingUpdate, HRMTrainingResponse,
     TrainingEnrollment, TrainingEnrollmentCreate, TrainingEnrollmentUpdate, HRMEnrollmentsResponse,
     HRMDashboard, HRMEmployeeFilters, HRMJobFilters, HRMApplicationFilters, HRMReviewFilters,
-    HRMTimeFilters, HRMLeaveFilters, HRMPayrollFilters, HRMTrainingFilters
+    HRMTimeFilters, HRMLeaveFilters, HRMPayrollFilters, HRMTrainingFilters,
+    Department, EmploymentStatus, EmployeeType
 )
+from ...config.hrm_models import Employee as DBEmployee
 from ...config.database import (
     get_db, get_user_by_id,
     get_employees, get_employee_by_id, create_employee, update_employee, delete_employee,
@@ -79,8 +81,41 @@ async def get_hrm_employees(
         # Get total count for pagination
         total = len(employees)
         
+        # Convert database employees to Pydantic models
+        employee_models = []
+        for db_employee in employees:
+            # Get user data for this employee
+            user = get_user_by_id(str(db_employee.userId), db) if db_employee.userId else None
+            
+            employee_models.append(Employee(
+                id=str(db_employee.id),
+                firstName=user.firstName if user else "",
+                lastName=user.lastName if user else "",
+                email=user.email if user else "",
+                phone=None,  # Not stored in User model
+                dateOfBirth=None,  # Not stored in current DB model
+                hireDate=db_employee.hireDate.isoformat() if db_employee.hireDate else "",
+                employeeId=db_employee.employeeId,
+                department=Department(db_employee.department) if db_employee.department else Department.OTHER,
+                position=db_employee.position,
+                employeeType=EmployeeType.FULL_TIME,  # Default since not in DB model
+                employmentStatus=EmploymentStatus.ACTIVE,  # Default since not in DB model
+                managerId=str(db_employee.managerId) if db_employee.managerId else None,
+                salary=db_employee.salary,
+                address=None,  # Not stored in current DB model
+                emergencyContact=None,  # Not stored in current DB model
+                emergencyPhone=None,  # Not stored in current DB model
+                skills=[],  # Not stored in current DB model
+                certifications=[],  # Not stored in current DB model
+                notes=db_employee.notes,
+                tenant_id=str(db_employee.tenant_id),
+                createdBy="",  # Not stored in current DB model
+                createdAt=db_employee.createdAt.isoformat() if db_employee.createdAt else "",
+                updatedAt=db_employee.updatedAt.isoformat() if db_employee.updatedAt else ""
+            ))
+        
         return HRMEmployeesResponse(
-            employees=employees,
+            employees=employee_models,
             pagination={
                 "page": page,
                 "limit": limit,
@@ -103,20 +138,50 @@ async def create_hrm_employee(
         if not tenant_context:
             raise HTTPException(status_code=400, detail="Tenant context required")
         
-        employee = Employee(
-            id=str(uuid.uuid4()),
-            **employee_data.dict(),
+        # Create database employee record
+        db_employee = DBEmployee(
             tenant_id=tenant_context["tenant_id"],
-            createdBy=str(current_user.id),
-            createdAt=datetime.now(),
-            updatedAt=datetime.now()
+            userId=current_user.id,
+            employeeId=employee_data.employeeId,
+            department=employee_data.department.value,
+            position=employee_data.position,
+            hireDate=datetime.strptime(employee_data.hireDate, "%Y-%m-%d").date(),
+            salary=employee_data.salary,
+            managerId=uuid.UUID(employee_data.managerId) if employee_data.managerId else None,
+            notes=employee_data.notes
         )
         
-        db.add(employee)
+        db.add(db_employee)
         db.commit()
-        db.refresh(employee)
+        db.refresh(db_employee)
         
-        return employee
+        # Convert to response model
+        return Employee(
+            id=str(db_employee.id),
+            firstName=employee_data.firstName,
+            lastName=employee_data.lastName,
+            email=employee_data.email,
+            phone=employee_data.phone,
+            dateOfBirth=employee_data.dateOfBirth,
+            hireDate=employee_data.hireDate,
+            employeeId=employee_data.employeeId,
+            department=employee_data.department,
+            position=employee_data.position,
+            employeeType=employee_data.employeeType,
+            employmentStatus=employee_data.employmentStatus,
+            managerId=employee_data.managerId,
+            salary=employee_data.salary,
+            address=employee_data.address,
+            emergencyContact=employee_data.emergencyContact,
+            emergencyPhone=employee_data.emergencyPhone,
+            skills=employee_data.skills,
+            certifications=employee_data.certifications,
+            notes=employee_data.notes,
+            tenant_id=str(db_employee.tenant_id),
+            createdBy=str(current_user.id),
+            createdAt=db_employee.createdAt.isoformat() if db_employee.createdAt else None,
+            updatedAt=db_employee.updatedAt.isoformat() if db_employee.updatedAt else None
+        )
         
     except HTTPException:
         raise
@@ -152,10 +217,40 @@ async def update_hrm_employee(
     """Update employee"""
     try:
         update_data = {k: v for k, v in employee_update.dict().items() if v is not None}
-        employee = update_employee(db, employee_id, update_data, tenant_context["tenant_id"] if tenant_context else None)
-        if not employee:
+        db_employee = update_employee(employee_id, update_data, db, tenant_context["tenant_id"] if tenant_context else None)
+        if not db_employee:
             raise HTTPException(status_code=404, detail="Employee not found")
-        return employee
+        
+        # Get user data for this employee
+        user = get_user_by_id(str(db_employee.userId), db) if db_employee.userId else None
+        
+        # Convert to response model
+        return Employee(
+            id=str(db_employee.id),
+            firstName=user.firstName if user else "",
+            lastName=user.lastName if user else "",
+            email=user.email if user else "",
+            phone=None,  # Not stored in User model
+            dateOfBirth=None,  # Not stored in current DB model
+            hireDate=db_employee.hireDate.isoformat() if db_employee.hireDate else "",
+            employeeId=db_employee.employeeId,
+            department=Department(db_employee.department) if db_employee.department else Department.OTHER,
+            position=db_employee.position,
+            employeeType=EmployeeType.FULL_TIME,  # Default since not in DB model
+            employmentStatus=EmploymentStatus.ACTIVE,  # Default since not in DB model
+            managerId=str(db_employee.managerId) if db_employee.managerId else None,
+            salary=db_employee.salary,
+            address=None,  # Not stored in current DB model
+            emergencyContact=None,  # Not stored in current DB model
+            emergencyPhone=None,  # Not stored in current DB model
+            skills=[],  # Not stored in current DB model
+            certifications=[],  # Not stored in current DB model
+            notes=db_employee.notes,
+            tenant_id=str(db_employee.tenant_id),
+            createdBy="",  # Not stored in current DB model
+            createdAt=db_employee.createdAt.isoformat() if db_employee.createdAt else "",
+            updatedAt=db_employee.updatedAt.isoformat() if db_employee.updatedAt else ""
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating employee: {str(e)}")
 
@@ -168,7 +263,7 @@ async def delete_hrm_employee(
 ):
     """Delete employee"""
     try:
-        success = delete_employee(db, employee_id, tenant_context["tenant_id"] if tenant_context else None)
+        success = delete_employee(employee_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not success:
             raise HTTPException(status_code=404, detail="Employee not found")
         return {"message": "Employee deleted successfully"}

@@ -260,15 +260,13 @@ export function InvoiceList({
                         )}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      {invoice.status === 'draft' && (
-                        <DropdownMenuItem
-                          onClick={() => onDelete(invoice)}
-                          className="text-red-600"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete Invoice
-                        </DropdownMenuItem>
-                      )}
+                      <DropdownMenuItem
+                        onClick={() => onDelete(invoice)}
+                        className="text-red-600"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete Invoice
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>

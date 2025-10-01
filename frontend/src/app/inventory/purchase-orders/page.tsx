@@ -96,19 +96,32 @@ export default function PurchaseOrdersPage() {
         inventoryService.getPurchaseOrders(),
         inventoryService.getSuppliers(),
       ]);
-      setPurchaseOrders(ordersResponse.purchaseOrders);
-      setSuppliers(suppliersResponse.suppliers);
-
-      // Set default supplier if available
-      if (suppliersResponse.suppliers.length > 0 && !newOrder.supplierId) {
-        setNewOrder((prev) => ({
-          ...prev,
-          supplierId: suppliersResponse.suppliers[0].id,
-          supplierName: suppliersResponse.suppliers[0].name,
-        }));
+      
+      
+      if (ordersResponse && ordersResponse.purchaseOrders) {
+        setPurchaseOrders(ordersResponse.purchaseOrders);
+      } else {
+        setPurchaseOrders([]);
+      }
+      
+      if (suppliersResponse && suppliersResponse.suppliers) {
+        setSuppliers(suppliersResponse.suppliers);
+        
+        // Set default supplier if available
+        if (suppliersResponse.suppliers.length > 0 && !newOrder.supplierId) {
+          setNewOrder((prev) => ({
+            ...prev,
+            supplierId: suppliersResponse.suppliers[0].id,
+            supplierName: suppliersResponse.suppliers[0].name,
+          }));
+        }
+      } else {
+        setSuppliers([]);
       }
     } catch (error) {
-      } finally {
+      setPurchaseOrders([]);
+      setSuppliers([]);
+    } finally {
       setLoading(false);
     }
   };
@@ -528,7 +541,7 @@ export default function PurchaseOrdersPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="supplierId">Supplier *</Label>
+                <Label htmlFor="supplierId">Supplier * ({suppliers.length} available)</Label>
                 <div className="flex gap-2">
                   <Select
                     value={newOrder.supplierId}
@@ -545,11 +558,17 @@ export default function PurchaseOrdersPage() {
                       <SelectValue placeholder="Select supplier" />
                     </SelectTrigger>
                     <SelectContent>
-                      {suppliers.map((supplier) => (
-                        <SelectItem key={supplier.id} value={supplier.id}>
-                          {supplier.name}
+                      {suppliers.length === 0 ? (
+                        <SelectItem value="no-suppliers" disabled>
+                          No suppliers available
                         </SelectItem>
-                      ))}
+                      ) : (
+                        suppliers.map((supplier) => (
+                          <SelectItem key={supplier.id} value={supplier.id}>
+                            {supplier.name}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                   <Button

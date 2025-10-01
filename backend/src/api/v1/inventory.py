@@ -21,7 +21,7 @@ from ...config.database import (
     get_storage_locations, get_storage_location_by_id, create_storage_location, update_storage_location, delete_storage_location,
     get_stock_movements, get_stock_movement_by_id, create_stock_movement, update_stock_movement,
     get_suppliers, get_supplier_by_id, get_supplier_by_code, create_supplier, update_supplier, delete_supplier,
-    get_purchase_orders, get_purchase_order_by_id, create_purchase_order, update_purchase_order, delete_purchase_order,
+    get_purchase_orders, get_purchase_orders_by_status, get_purchase_order_by_id, create_purchase_order, update_purchase_order, delete_purchase_order,
     get_receivings, get_receiving_by_id, create_receiving, update_receiving, delete_receiving,
     get_inventory_dashboard_stats
 )
@@ -327,7 +327,7 @@ def update_supplier_endpoint(
     supplier_update = supplier.dict(exclude_unset=True)
     supplier_update["updatedAt"] = datetime.utcnow()
     
-    db_supplier = update_supplier(db, supplier_id, supplier_update, str(current_tenant["id"]))
+    db_supplier = update_supplier(supplier_id, supplier_update, db, str(current_tenant["id"]))
     if not db_supplier:
         raise HTTPException(status_code=404, detail="Supplier not found")
     
@@ -341,7 +341,7 @@ def delete_supplier_endpoint(
     current_tenant: dict = Depends(get_current_tenant)
 ):
     """Delete a supplier"""
-    success = delete_supplier(db, supplier_id, str(current_tenant["id"]))
+    success = delete_supplier(supplier_id, db, str(current_tenant["id"]))
     if not success:
         raise HTTPException(status_code=404, detail="Supplier not found")
     return {"message": "Supplier deleted successfully"}
@@ -357,7 +357,10 @@ def read_purchase_orders(
     current_tenant: dict = Depends(get_current_tenant)
 ):
     """Get all purchase orders for the current tenant"""
-    orders = get_purchase_orders(db, str(current_tenant["id"]), status, skip, limit)
+    if status:
+        orders = get_purchase_orders_by_status(status, db, str(current_tenant["id"]), skip, limit)
+    else:
+        orders = get_purchase_orders(db, str(current_tenant["id"]), skip, limit)
     total = len(orders)
     return PurchaseOrdersResponse(purchaseOrders=orders, total=total)
 

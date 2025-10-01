@@ -532,13 +532,7 @@ def delete_invoice(
         if not invoice:
             raise HTTPException(status_code=404, detail="Invoice not found")
         
-        # Check if invoice can be deleted
-        if invoice.status != InvoiceStatus.DRAFT:
-            raise HTTPException(status_code=400, detail="Only draft invoices can be deleted")
-        
-        # Check if invoice has payments
-        if invoice.totalPaid > 0:
-            raise HTTPException(status_code=400, detail="Cannot delete invoice with payments")
+        # Invoice can be deleted regardless of status or payments
         
         # Handle foreign key constraint by deleting related invoice_items first
         try:

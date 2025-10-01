@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
+import uuid
 from .hrm_models import Employee, JobPosting, PerformanceReview, TimeEntry, LeaveRequest, Payroll, Benefits
 
 # Employee functions
@@ -40,7 +41,15 @@ def update_employee(employee_id: str, update_data: dict, db: Session, tenant_id:
     if employee:
         for key, value in update_data.items():
             if hasattr(employee, key) and value is not None:
-                setattr(employee, key, value)
+                # Handle special field mappings
+                if key == 'department' and hasattr(value, 'value'):
+                    setattr(employee, key, value.value)
+                elif key == 'hireDate' and isinstance(value, str):
+                    setattr(employee, key, datetime.strptime(value, "%Y-%m-%d").date())
+                elif key == 'managerId' and value:
+                    setattr(employee, key, uuid.UUID(value))
+                else:
+                    setattr(employee, key, value)
         employee.updatedAt = datetime.utcnow()
         db.commit()
         db.refresh(employee)
