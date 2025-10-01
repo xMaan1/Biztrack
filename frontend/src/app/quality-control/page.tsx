@@ -11,6 +11,7 @@ import {
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 import {
   Select,
   SelectContent,
@@ -66,6 +67,7 @@ import { DashboardLayout } from '../../components/layout';
 import { formatDate } from '../../lib/utils';
 
 export default function QualityControlPage() {
+  const { getCurrencySymbol } = useCurrency();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(true);
@@ -389,7 +391,7 @@ export default function QualityControlPage() {
                                 {defect.severity}
                               </Badge>
                               <p className="text-xs text-muted-foreground mt-1">
-                                ${defect.cost_impact}
+                                {getCurrencySymbol()}{defect.cost_impact}
                               </p>
                             </div>
                           </div>

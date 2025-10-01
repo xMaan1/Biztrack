@@ -36,6 +36,7 @@ import {
   TableRow,
 } from '../ui/table';
 import { Badge } from '../ui/badge';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 import {
   FileText,
   Plus,
@@ -55,6 +56,7 @@ import { Opportunity, Contact, Company } from '../../models/crm';
 import { DashboardLayout } from '../layout';
 
 export default function ContractsPage() {
+  const { getCurrencySymbol } = useCurrency();
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -522,7 +524,7 @@ export default function ContractsPage() {
                       {getContactName(contract.contactId || '')}
                     </TableCell>
                     <TableCell>
-                      ${(contract.value || 0).toLocaleString()}
+                      {getCurrencySymbol()}{(contract.value || 0).toLocaleString()}
                     </TableCell>
                     <TableCell>
                       <Badge className={getStatusColor(contract.status)}>

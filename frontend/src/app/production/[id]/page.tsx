@@ -11,6 +11,7 @@ import {
 import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
 import { Progress } from '../../../components/ui/progress';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 import {
   Tabs,
   TabsContent,
@@ -65,6 +66,7 @@ export default function ProductionPlanDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { } = useAuth();
+  const { getCurrencySymbol } = useCurrency();
   const [productionPlan, setProductionPlan] = useState<ProductionPlan | null>(
     null,
   );
@@ -363,14 +365,14 @@ export default function ProductionPlanDetailPage() {
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
                     <DollarSign className="h-8 w-8 text-blue-600 mx-auto mb-2" />
                     <div className="text-2xl font-bold text-blue-600">
-                      ${productionPlan.estimated_material_cost}
+                      {getCurrencySymbol()}{productionPlan.estimated_material_cost}
                     </div>
                     <div className="text-sm text-gray-600">Material Cost</div>
                   </div>
                   <div className="text-center p-4 bg-green-50 rounded-lg">
                     <Users className="h-8 w-8 text-green-600 mx-auto mb-2" />
                     <div className="text-2xl font-bold text-green-600">
-                      ${productionPlan.estimated_labor_cost}
+                      {getCurrencySymbol()}{productionPlan.estimated_labor_cost}
                     </div>
                     <div className="text-sm text-gray-600">Labor Cost</div>
                   </div>
@@ -434,10 +436,10 @@ export default function ProductionPlanDetailPage() {
                           </div>
                           <div className="text-right">
                             <div className="font-medium">
-                              ${material.total_cost}
+                              {getCurrencySymbol()}{material.total_cost}
                             </div>
                             <div className="text-sm text-gray-500">
-                              ${material.cost_per_unit} per {material.unit}
+                              {getCurrencySymbol()}{material.cost_per_unit} per {material.unit}
                             </div>
                           </div>
                         </div>
@@ -479,10 +481,10 @@ export default function ProductionPlanDetailPage() {
                           </div>
                           <div className="text-right">
                             <div className="font-medium">
-                              ${labor.total_cost}
+                              {getCurrencySymbol()}{labor.total_cost}
                             </div>
                             <div className="text-sm text-gray-500">
-                              ${labor.hourly_rate}/hour
+                              {getCurrencySymbol()}{labor.hourly_rate}/hour
                             </div>
                           </div>
                         </div>

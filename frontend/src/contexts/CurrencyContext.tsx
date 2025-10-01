@@ -8,6 +8,7 @@ interface CurrencyContextType {
   currency: string;
   setCurrency: (currency: string) => void;
   formatCurrency: (amount: number, customCurrency?: string) => string;
+  getCurrencySymbol: (customCurrency?: string) => string;
   loading: boolean;
 }
 
@@ -49,12 +50,22 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     }).format(amount);
   };
 
+  const getCurrencySymbol = (customCurrency?: string): string => {
+    const currencyToUse = customCurrency || currency;
+    const formatter = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currencyToUse,
+    });
+    return formatter.formatToParts(0).find(part => part.type === 'currency')?.value || '$';
+  };
+
   return (
     <CurrencyContext.Provider
       value={{
         currency,
         setCurrency,
         formatCurrency,
+        getCurrencySymbol,
         loading,
       }}
     >

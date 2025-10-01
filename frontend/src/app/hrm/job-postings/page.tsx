@@ -29,6 +29,7 @@ import {
 } from '@/src/components/ui/dialog';
 import { Badge } from '@/src/components/ui/badge';
 import { Alert, AlertDescription } from '@/src/components/ui/alert';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 import {
   Briefcase,
   Plus,
@@ -57,6 +58,7 @@ import { useCustomOptions } from '@/src/hooks/useCustomOptions';
 import { CustomOptionDialog } from '@/src/components/common/CustomOptionDialog';
 
 export default function HRMJobPostingsPage() {
+  const { getCurrencySymbol } = useCurrency();
   const [jobPostings, setJobPostings] = useState<JobPosting[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -723,7 +725,7 @@ export default function HRMJobPostingsPage() {
                       salaryRange: e.target.value,
                     }))
                   }
-                  placeholder="e.g., $80,000 - $120,000"
+                  placeholder={`e.g., ${getCurrencySymbol()}80,000 - ${getCurrencySymbol()}120,000`}
                 />
               </div>
               <div>

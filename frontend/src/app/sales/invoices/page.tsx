@@ -50,8 +50,10 @@ import { InvoiceDialog } from '../../../components/sales/InvoiceDialog';
 import { InvoiceList } from '../../../components/sales/InvoiceList';
 import { InvoiceDashboard as InvoiceDashboardComponent } from '../../../components/sales/InvoiceDashboard';
 import { InvoiceCustomizationDialog } from '../../../components/sales/InvoiceCustomizationDialog';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 
 export default function InvoicesPage() {
+  const { formatCurrency } = useCurrency();
   const [dashboard, setDashboard] = useState<InvoiceDashboard | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -382,7 +384,7 @@ export default function InvoicesPage() {
                           <p className="text-sm text-gray-600">
                             Due: {InvoiceService.formatDate(invoice.dueDate)} •
                             Amount:{' '}
-                            {InvoiceService.formatCurrency(invoice.total)}
+                            {formatCurrency(invoice.total)}
                           </p>
                         </div>
                         <div className="flex space-x-2">

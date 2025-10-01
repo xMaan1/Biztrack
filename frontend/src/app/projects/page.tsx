@@ -11,6 +11,7 @@ import {
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 import {
   Avatar,
   AvatarFallback,
@@ -70,6 +71,7 @@ import { useCachedApi } from '../../hooks/useCachedApi';
 
 export default function ProjectsPage() {
   const { user } = useAuth();
+  const { getCurrencySymbol } = useCurrency();
   const router = useRouter();
   const { data: projects, loading, error, refetch } = useCachedApi<Project[]>(
     'projects_list',
@@ -214,7 +216,7 @@ export default function ProjectsPage() {
     }
   };
 
-  const handleProjectSave = (savedProject: Project) => {
+  const handleProjectSave = () => {
     refetch();
   };
 
@@ -542,7 +544,7 @@ export default function ProjectsPage() {
                         {project.budget && (
                           <div className="flex items-center gap-1">
                             <DollarSign className="h-3 w-3" />
-                            <span>${project.budget.toLocaleString()}</span>
+                            <span>{getCurrencySymbol()}{project.budget.toLocaleString()}</span>
                           </div>
                         )}
                       </div>

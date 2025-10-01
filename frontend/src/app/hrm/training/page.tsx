@@ -29,6 +29,7 @@ import {
 } from '@/src/components/ui/dialog';
 import { Badge } from '@/src/components/ui/badge';
 import { Alert, AlertDescription } from '@/src/components/ui/alert';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 import {
   Calendar,
   Plus,
@@ -59,6 +60,7 @@ import {
 import { DashboardLayout } from '@/src/components/layout';
 
 export default function HRMTrainingPage() {
+  const { getCurrencySymbol } = useCurrency();
   const [trainings, setTrainings] = useState<Training[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -939,7 +941,7 @@ export default function HRMTrainingPage() {
                     <Label className="text-sm font-medium text-gray-600">
                       Cost
                     </Label>
-                    <p className="text-gray-900">${viewingTraining.cost}</p>
+                    <p className="text-gray-900">{getCurrencySymbol()}{viewingTraining.cost}</p>
                   </div>
                   <div>
                     <Label className="text-sm font-medium text-gray-600">

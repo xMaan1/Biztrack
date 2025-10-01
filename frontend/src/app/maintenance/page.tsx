@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from '@/src/components/ui/select';
 import { Progress } from '@/src/components/ui/progress';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 import {
   Clock,
   CheckCircle,
@@ -52,6 +53,7 @@ import { MaintenanceScheduleDialog } from '@/src/components/maintenance/Maintena
 import { EquipmentDialog } from '@/src/components/maintenance/EquipmentDialog';
 
 export default function MaintenancePage() {
+  const { getCurrencySymbol } = useCurrency();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [dashboardStats, setDashboardStats] =
     useState<MaintenanceDashboardStats | null>(null);
@@ -248,7 +250,7 @@ export default function MaintenancePage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    ${dashboardStats?.total_cost?.toFixed(2) || '0.00'}
+                    {getCurrencySymbol()}{dashboardStats?.total_cost?.toFixed(2) || '0.00'}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {dashboardStats?.uptime_percentage || 0}% uptime

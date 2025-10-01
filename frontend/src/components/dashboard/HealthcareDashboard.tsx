@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 import {
   Stethoscope,
   Users,
@@ -39,6 +40,7 @@ export default function HealthcareDashboard({
   stats,
   onNavigate,
 }: HealthcareDashboardProps) {
+  const { getCurrencySymbol } = useCurrency();
   const handleCreateProject = () => onNavigate('/projects/new');
   const handleNewAppointment = () => onNavigate('/appointments/new');
   const handleViewPatients = () => onNavigate('/patients');
@@ -116,7 +118,7 @@ export default function HealthcareDashboard({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              ${stats.revenueThisMonth.toLocaleString()}
+              {getCurrencySymbol()}{stats.revenueThisMonth.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">This month</p>
           </CardContent>

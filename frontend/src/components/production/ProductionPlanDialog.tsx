@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '../ui/select';
 import { Badge } from '../ui/badge';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 import {
   Plus,
   X,
@@ -60,6 +61,7 @@ export default function ProductionPlanDialog({
   onSuccess,
 }: ProductionPlanDialogProps) {
   const { } = useAuth();
+  const { getCurrencySymbol } = useCurrency();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<ProductionPlanCreate>>({
     title: '',
@@ -555,7 +557,7 @@ export default function ProductionPlanDialog({
                         {material.quantity} {material.unit}
                       </span>
                       <span className="text-sm font-medium">
-                        ${material.total_cost}
+                        {getCurrencySymbol()}{material.total_cost}
                       </span>
                       <Button
                         type="button"
@@ -636,7 +638,7 @@ export default function ProductionPlanDialog({
                         {labor.hours_required}h
                       </span>
                       <span className="text-sm font-medium">
-                        ${labor.total_cost}
+                        {getCurrencySymbol()}{labor.total_cost}
                       </span>
                       <Button
                         type="button"
@@ -649,7 +651,7 @@ export default function ProductionPlanDialog({
                     </div>
                   ))}
                   <div className="text-sm text-gray-500">
-                    Total Labor Cost: ${formData.estimated_labor_cost || 0}
+                    Total Labor Cost: {getCurrencySymbol()}{formData.estimated_labor_cost || 0}
                   </div>
                 </div>
               )}

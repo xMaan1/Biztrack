@@ -11,6 +11,7 @@ import {
 import { Button } from '@/src/components/ui/button';
 import { Badge } from '@/src/components/ui/badge';
 import { Progress } from '@/src/components/ui/progress';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 import {
   Tabs,
   TabsContent,
@@ -34,6 +35,7 @@ import { DashboardLayout } from '../../components/layout';
 import { useCachedApi } from '../../hooks/useCachedApi';
 
 export default function HRMDashboardPage() {
+  const { getCurrencySymbol } = useCurrency();
   const { data: dashboard, loading, error, refetch } = useCachedApi<HRMDashboard>(
     'hrm_dashboard',
     () => HRMService.getDashboard(),
@@ -142,7 +144,7 @@ export default function HRMDashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${dashboard.metrics.averageSalary.toLocaleString()}
+                {getCurrencySymbol()}{dashboard.metrics.averageSalary.toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">Monthly average</p>
             </CardContent>
@@ -539,7 +541,7 @@ export default function HRMDashboardPage() {
                             {program.status.replace('_', ' ')}
                           </Badge>
                           <span className="text-sm font-medium">
-                            ${program.cost}
+                            {getCurrencySymbol()}{program.cost}
                           </span>
                         </div>
                       </div>

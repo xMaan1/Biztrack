@@ -10,6 +10,7 @@ import { Badge } from '@/src/components/ui/badge';
 import { Input } from '@/src/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/src/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/src/components/ui/dialog';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 import {
   CreditCard,
   DollarSign,
@@ -50,6 +51,7 @@ interface PlanStats {
 
 export default function AdminPlansPage() {
   const { user } = useAuth();
+  const { getCurrencySymbol } = useCurrency();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [planStats, setPlanStats] = useState<PlanStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -333,7 +335,7 @@ export default function AdminPlansPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-600">Price</span>
                     <span className="text-lg font-bold text-gray-900">
-                      ${plan.price}/{plan.billingCycle}
+                      {getCurrencySymbol()}{plan.price}/{plan.billingCycle}
                     </span>
                   </div>
 

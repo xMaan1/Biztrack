@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -389,12 +389,12 @@ export default function SalesPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {leads.length === 0 ? (
+                  {leads?.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
                       No leads found. Create your first lead to get started.
                     </div>
                   ) : (
-                    leads.map((lead) => (
+                    leads?.map((lead) => (
                       <div
                         key={lead.id}
                         className="flex items-center justify-between p-4 border rounded-lg"
@@ -444,13 +444,13 @@ export default function SalesPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {opportunities.length === 0 ? (
+                  {opportunities?.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
                       No opportunities found. Create your first opportunity to
                       get started.
                     </div>
                   ) : (
-                    opportunities.map((opportunity) => (
+                    opportunities?.map((opportunity) => (
                       <div
                         key={opportunity.id}
                         className="flex items-center justify-between p-4 border rounded-lg"

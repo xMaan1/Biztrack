@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { apiService } from '@/src/services/ApiService';
 import { DashboardLayout } from '../../../../components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
@@ -13,7 +14,6 @@ import { Alert, AlertDescription } from '@/src/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/src/components/ui/dialog';
 import { Separator } from '@/src/components/ui/separator';
 import { Checkbox } from '@/src/components/ui/checkbox';
-import InvoiceService from '@/src/services/InvoiceService';
 import { Invoice } from '@/src/models/sales';
 import {
   Building2,
@@ -118,6 +118,7 @@ export default function TenantDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
+  const { getCurrencySymbol, formatCurrency } = useCurrency();
   const tenantId = params.tenantId as string;
 
   const [tenantDetails, setTenantDetails] = useState<TenantDetails | null>(null);
@@ -464,7 +465,7 @@ export default function TenantDetailsPage() {
             <CardContent>
               <div className="text-2xl font-bold">{tenantDetails.statistics.totalInvoices}</div>
               <p className="text-xs text-muted-foreground">
-                ${tenantDetails.statistics.totalInvoiceValue.toLocaleString()} total value
+                {getCurrencySymbol()}{tenantDetails.statistics.totalInvoiceValue.toLocaleString()} total value
               </p>
             </CardContent>
           </Card>
@@ -531,7 +532,7 @@ export default function TenantDetailsPage() {
                       </div>
                       <div>
                         <label className="text-sm font-medium text-gray-500">Price</label>
-                        <p className="text-lg">${tenantDetails.subscription.plan.price}/{tenantDetails.subscription.plan.billingCycle}</p>
+                        <p className="text-lg">{getCurrencySymbol()}{tenantDetails.subscription.plan.price}/{tenantDetails.subscription.plan.billingCycle}</p>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-gray-500">Status</label>
@@ -627,7 +628,7 @@ export default function TenantDetailsPage() {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <p className="font-medium">${invoice.total.toLocaleString()}</p>
+                        <p className="font-medium">{getCurrencySymbol()}{invoice.total.toLocaleString()}</p>
                         <Badge className={getStatusColor(invoice.status)}>
                           {invoice.status}
                         </Badge>
@@ -1015,10 +1016,10 @@ export default function TenantDetailsPage() {
                               </div>
                             </td>
                             <td className="text-right p-2">{item.quantity}</td>
-                            <td className="text-right p-2">{InvoiceService.formatCurrency(item.unitPrice, selectedInvoice.currency)}</td>
+                            <td className="text-right p-2">{formatCurrency(item.unitPrice)}</td>
                             <td className="text-right p-2">{item.discount}%</td>
                             <td className="text-right p-2">{item.taxRate}%</td>
-                            <td className="text-right p-2 font-medium">{InvoiceService.formatCurrency(item.total, selectedInvoice.currency)}</td>
+                            <td className="text-right p-2 font-medium">{formatCurrency(item.total)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1049,11 +1050,11 @@ export default function TenantDetailsPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <span className="font-medium">Labour Total:</span>
-                        <p className="text-sm text-gray-600">{InvoiceService.formatCurrency(selectedInvoice.labourTotal || 0, selectedInvoice.currency)}</p>
+                        <p className="text-sm text-gray-600">{formatCurrency(selectedInvoice.labourTotal || 0)}</p>
                       </div>
                       <div>
                         <span className="font-medium">Parts Total:</span>
-                        <p className="text-sm text-gray-600">{InvoiceService.formatCurrency(selectedInvoice.partsTotal || 0, selectedInvoice.currency)}</p>
+                        <p className="text-sm text-gray-600">{formatCurrency(selectedInvoice.partsTotal || 0)}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -1070,28 +1071,28 @@ export default function TenantDetailsPage() {
                     <div className="w-64 space-y-2">
                       <div className="flex justify-between">
                         <span>Subtotal:</span>
-                        <span>{InvoiceService.formatCurrency(selectedInvoice.subtotal, selectedInvoice.currency)}</span>
+                        <span>{formatCurrency(selectedInvoice.subtotal)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Discount ({selectedInvoice.discount}%):</span>
-                        <span>-{InvoiceService.formatCurrency(selectedInvoice.subtotal * selectedInvoice.discount / 100, selectedInvoice.currency)}</span>
+                        <span>-{formatCurrency(selectedInvoice.subtotal * selectedInvoice.discount / 100)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Tax ({selectedInvoice.taxRate}%):</span>
-                        <span>{InvoiceService.formatCurrency(selectedInvoice.taxAmount, selectedInvoice.currency)}</span>
+                        <span>{formatCurrency(selectedInvoice.taxAmount)}</span>
                       </div>
                       <Separator />
                       <div className="flex justify-between font-bold text-lg">
                         <span>Total:</span>
-                        <span>{InvoiceService.formatCurrency(selectedInvoice.total, selectedInvoice.currency)}</span>
+                        <span>{formatCurrency(selectedInvoice.total)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Total Paid:</span>
-                        <span>{InvoiceService.formatCurrency(selectedInvoice.totalPaid || 0, selectedInvoice.currency)}</span>
+                        <span>{formatCurrency(selectedInvoice.totalPaid || 0)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Balance:</span>
-                        <span>{InvoiceService.formatCurrency(selectedInvoice.balance || selectedInvoice.total, selectedInvoice.currency)}</span>
+                        <span>{formatCurrency(selectedInvoice.balance || selectedInvoice.total)}</span>
                       </div>
                     </div>
                   </div>

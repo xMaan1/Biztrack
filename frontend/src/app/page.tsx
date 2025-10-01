@@ -20,6 +20,7 @@ import {
   DialogDescription,
 } from '../components/ui/dialog';
 import { useAuth } from '../contexts/AuthContext';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { apiService } from '../services/ApiService';
 import { LandingNav } from '../components/landing/LandingNav';
 import {
@@ -62,6 +63,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   onSubmit,
   loading,
 }) => {
+  const { getCurrencySymbol } = useCurrency();
   const [tenantName, setTenantName] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -99,7 +101,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
             <div className="p-3 bg-muted rounded-lg">
               <div className="flex items-center justify-between">
                 <span className="font-medium">{plan.name} Plan</span>
-                <Badge variant="secondary">${plan.price}/month</Badge>
+                <Badge variant="secondary">{getCurrencySymbol()}{plan.price}/month</Badge>
               </div>
               <p className="text-sm text-muted-foreground mt-1">
                 {plan.maxProjects} projects • {plan.maxUsers} users
@@ -136,6 +138,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
 export default function LandingPage() {
   const router = useRouter();
   const { isAuthenticated, loading: authLoading } = useAuth();
+  const { getCurrencySymbol } = useCurrency();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(false);
   const [subscriptionModal, setSubscriptionModal] = useState<{
@@ -478,7 +481,7 @@ export default function LandingPage() {
                 <CardHeader className="text-center pb-6">
                   <CardTitle className="text-2xl mb-2">{plan.name}</CardTitle>
                   <div className="text-4xl font-bold text-foreground mb-2">
-                    ${plan.price}
+                    {getCurrencySymbol()}{plan.price}
                     <span className="text-lg font-normal text-muted-foreground">
                       /month
                     </span>

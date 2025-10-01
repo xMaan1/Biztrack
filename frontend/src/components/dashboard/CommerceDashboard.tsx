@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 import {
   ShoppingCart,
   DollarSign,
@@ -41,6 +42,7 @@ export default function CommerceDashboard({
   stats,
   onNavigate,
 }: CommerceDashboardProps) {
+  const { getCurrencySymbol } = useCurrency();
   const handleCreateProject = () => onNavigate('/projects/new');
   const handleNewSale = () => onNavigate('/pos/sale');
   const handleViewSales = () => onNavigate('/sales');
@@ -86,7 +88,7 @@ export default function CommerceDashboard({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              ${stats.totalSales.toLocaleString()}
+              {getCurrencySymbol()}{stats.totalSales.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">This month</p>
           </CardContent>
@@ -114,7 +116,7 @@ export default function CommerceDashboard({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              ${stats.averageOrderValue}
+              {getCurrencySymbol()}{stats.averageOrderValue}
             </div>
             <p className="text-xs text-muted-foreground">Per transaction</p>
           </CardContent>
@@ -199,7 +201,7 @@ export default function CommerceDashboard({
               </div>
               <div className="flex items-center justify-between p-2 bg-blue-50 rounded-lg">
                 <span className="text-sm">Today's Sales</span>
-                <Badge variant="default">$2,450</Badge>
+                <Badge variant="default">{getCurrencySymbol()}2,450</Badge>
               </div>
             </div>
 

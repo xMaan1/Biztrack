@@ -28,9 +28,9 @@ import {
   InvoiceItemCreate,
 } from '../../models/sales';
 import InvoiceService from '../../services/InvoiceService';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { CustomerSearch } from '../ui/customer-search';
 import { Customer } from '../../services/CustomerService';
-import { useCurrency } from '../../contexts/CurrencyContext';
 
 interface InvoiceDialogProps {
   open: boolean;
@@ -47,7 +47,7 @@ export function InvoiceDialog({
   mode,
   invoice,
 }: InvoiceDialogProps) {
-  const { currency } = useCurrency();
+  const { currency, formatCurrency } = useCurrency();
   const [formData, setFormData] = useState<InvoiceCreate>({
     customerId: '',
     customerName: '',
@@ -813,7 +813,7 @@ export function InvoiceDialog({
                   <div className="col-span-1">
                     <Label>Total</Label>
                     <div className="text-sm font-medium p-2 bg-gray-50 rounded">
-                      {InvoiceService.formatCurrency(
+                      {formatCurrency(
                         item.quantity *
                           item.unitPrice *
                           (1 - item.discount / 100),
@@ -855,25 +855,25 @@ export function InvoiceDialog({
                   <div className="flex justify-between">
                     <span>Subtotal:</span>
                     <span>
-                      {InvoiceService.formatCurrency(totals.subtotal, formData.currency)}
+                      {formatCurrency(totals.subtotal)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Discount ({formData.discount}%):</span>
                     <span>
-                      -{InvoiceService.formatCurrency(totals.discount, formData.currency)}
+                      -{formatCurrency(totals.discount)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Tax ({formData.taxRate}%):</span>
                     <span>
-                      {InvoiceService.formatCurrency(totals.taxAmount, formData.currency)}
+                      {formatCurrency(totals.taxAmount)}
                     </span>
                   </div>
                   <div className="border-t pt-2 font-bold text-lg">
                     <div className="flex justify-between">
                       <span>Total:</span>
-                      <span>{InvoiceService.formatCurrency(totals.total, formData.currency)}</span>
+                      <span>{formatCurrency(totals.total)}</span>
                     </div>
                   </div>
                 </div>

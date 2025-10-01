@@ -30,6 +30,7 @@ import {
   DollarSign,
   FileText,
 } from 'lucide-react';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { Invoice } from '../../models/sales';
 import InvoiceService from '../../services/InvoiceService';
 import { toast } from 'sonner';
@@ -57,6 +58,7 @@ export function InvoiceList({
   totalPages,
   onPageChange,
 }: InvoiceListProps) {
+  const { formatCurrency } = useCurrency();
   const [downloading, setDownloading] = useState<string | null>(null);
 
   const handleDownload = async (invoiceId: string) => {
@@ -181,10 +183,7 @@ export function InvoiceList({
                   <div className="flex items-center gap-2">
                     <DollarSign className="h-4 w-4 text-gray-500" />
                     <span className="font-medium">
-                      {InvoiceService.formatCurrency(
-                        invoice.total,
-                        invoice.currency,
-                      )}
+                      {formatCurrency(invoice.total)}
                     </span>
                   </div>
                 </TableCell>
@@ -205,10 +204,7 @@ export function InvoiceList({
                           : 'text-green-600 font-medium'
                       }
                     >
-                      {InvoiceService.formatCurrency(
-                        invoice.balance,
-                        invoice.currency,
-                      )}
+                      {formatCurrency(invoice.balance)}
                     </span>
                   </div>
                 </TableCell>

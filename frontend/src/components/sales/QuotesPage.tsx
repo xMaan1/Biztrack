@@ -36,6 +36,7 @@ import {
   TableRow,
 } from '../ui/table';
 import { Badge } from '../ui/badge';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 import {
   FileText,
   Plus,
@@ -55,6 +56,7 @@ import { Opportunity, Contact } from '../../models/crm';
 import { DashboardLayout } from '../layout';
 
 export default function QuotesPage() {
+  const { getCurrencySymbol } = useCurrency();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -446,7 +448,7 @@ export default function QuotesPage() {
                       {getContactName(quote.contactId || '')}
                     </TableCell>
                     <TableCell>
-                      ${(quote.amount || 0).toLocaleString()}
+                      {getCurrencySymbol()}{(quote.amount || 0).toLocaleString()}
                     </TableCell>
                     <TableCell>
                       <Badge className={getStatusColor(quote.status)}>

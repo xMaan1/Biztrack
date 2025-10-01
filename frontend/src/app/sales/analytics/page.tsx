@@ -17,6 +17,7 @@ import {
 } from '../../../components/ui/select';
 import { Label } from '../../../components/ui/label';
 import { Badge } from '../../../components/ui/badge';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 import CRMService from '../../../services/CRMService';
 import { Opportunity, OpportunityStage } from '../../../models/crm';
 import { Contact, ContactType } from '../../../models/crm';
@@ -35,6 +36,7 @@ import {
 } from 'lucide-react';
 
 export default function SalesAnalyticsPage() {
+  const { getCurrencySymbol } = useCurrency();
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -239,7 +241,7 @@ export default function SalesAnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${totalPipelineValue.toLocaleString()}
+                {getCurrencySymbol()}{totalPipelineValue.toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
                 {filteredOpps.length} opportunities
@@ -256,7 +258,7 @@ export default function SalesAnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${weightedPipelineValue.toLocaleString()}
+                {getCurrencySymbol()}{weightedPipelineValue.toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
                 Probability-adjusted
@@ -286,7 +288,7 @@ export default function SalesAnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${totalRevenue.toLocaleString()}
+                {getCurrencySymbol()}{totalRevenue.toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">Closed won deals</p>
             </CardContent>
@@ -317,7 +319,7 @@ export default function SalesAnalyticsPage() {
                     </div>
                     <div className="text-right">
                       <div className="font-semibold">
-                        ${totalValue.toLocaleString()}
+                        {getCurrencySymbol()}{totalValue.toLocaleString()}
                       </div>
                       <div className="text-xs text-gray-500">
                         {totalPipelineValue > 0
@@ -403,7 +405,7 @@ export default function SalesAnalyticsPage() {
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Avg Deal Size</span>
                 <span className="font-semibold">
-                  ${avgDealSize.toLocaleString()}
+                  {getCurrencySymbol()}{avgDealSize.toLocaleString()}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -498,7 +500,7 @@ export default function SalesAnalyticsPage() {
                     </div>
                     <div className="text-right">
                       <div className="font-semibold text-lg">
-                        ${opp.amount?.toLocaleString()}
+                        {getCurrencySymbol()}{opp.amount?.toLocaleString()}
                       </div>
                       <div className="text-sm text-gray-500">
                         {opp.closedDate

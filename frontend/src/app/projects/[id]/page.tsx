@@ -35,6 +35,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '../../../components/ui/breadcrumb';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 import {
   Edit,
   Trash2,
@@ -67,6 +68,7 @@ export default function ProjectDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
+  const { getCurrencySymbol } = useCurrency();
   const projectId = params.id as string;
 
   const [project, setProject] = useState<Project | null>(null);
@@ -378,11 +380,11 @@ export default function ProjectDetailsPage() {
               <Card className="text-center p-4 bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200">
                 <DollarSign className="h-10 w-10 text-yellow-600 mx-auto mb-2" />
                 <div className="text-3xl font-bold text-yellow-600 mb-1">
-                  ${project.budget?.toLocaleString() || '0'}
+                  {getCurrencySymbol()}{project.budget?.toLocaleString() || '0'}
                 </div>
                 <div className="text-sm text-gray-600">Budget</div>
                 <div className="text-xs text-gray-500 mt-1">
-                  ${project.actualCost?.toLocaleString() || '0'} spent
+                  {getCurrencySymbol()}{project.actualCost?.toLocaleString() || '0'} spent
                 </div>
               </Card>
             </div>

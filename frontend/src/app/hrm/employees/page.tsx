@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/src/components/ui/select';
 import { UserPlus, Filter, Eye, Edit, Save, Trash2 } from 'lucide-react';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 import HRMService from '@/src/services/HRMService';
 import {
   Employee,
@@ -41,6 +42,7 @@ import { Textarea } from '@/src/components/ui/textarea';
 import { toast } from 'sonner';
 
 export default function HRMEmployeesPage() {
+  const { getCurrencySymbol } = useCurrency();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -89,10 +91,6 @@ export default function HRMEmployeesPage() {
     setIsViewModalOpen(true);
   };
 
-  const closeViewModal = () => {
-    setIsViewModalOpen(false);
-    setSelectedEmployee(null);
-  };
 
   const openEditModal = (employee: Employee) => {
     setSelectedEmployee(employee);
@@ -462,7 +460,7 @@ export default function HRMEmployeesPage() {
                     </div>
                     <div>
                       <Label className="text-sm font-medium text-gray-500">Salary</Label>
-                      <p className="text-sm">{selectedEmployee.salary ? `$${selectedEmployee.salary.toLocaleString()}` : 'Not set'}</p>
+                      <p className="text-sm">{selectedEmployee.salary ? `${getCurrencySymbol()}${selectedEmployee.salary.toLocaleString()}` : 'Not set'}</p>
                     </div>
                   </div>
                 </div>
