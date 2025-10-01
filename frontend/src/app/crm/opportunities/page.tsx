@@ -48,8 +48,10 @@ import {
   OpportunityCreate,
 } from '@/src/models/crm';
 import { DashboardLayout } from '../../../components/layout';
+import { useCurrency } from '../../../contexts/CurrencyContext';
 
 export default function CRMOpportunitiesPage() {
+  const { formatCurrency } = useCurrency();
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<CRMOpportunityFilters>({});
@@ -348,7 +350,7 @@ export default function CRMOpportunitiesPage() {
                         <div className="flex items-center space-x-1 text-sm text-gray-500">
                           <DollarSign className="w-4 h-4" />
                           <span className="font-medium">
-                            {CRMService.formatCurrency(opportunity.amount)}
+                            {formatCurrency(opportunity.amount)}
                           </span>
                         </div>
                       )}
@@ -455,7 +457,7 @@ export default function CRMOpportunitiesPage() {
                       {stageOpportunities.length}
                     </div>
                     <div className="text-xs text-gray-500">
-                      {CRMService.formatCurrency(totalValue)}
+                      {formatCurrency(totalValue)}
                     </div>
                   </div>
                 );
@@ -727,7 +729,7 @@ export default function CRMOpportunitiesPage() {
                         Amount
                       </Label>
                       <p className="text-gray-900 font-medium">
-                        {CRMService.formatCurrency(viewingOpportunity.amount)}
+                        {formatCurrency(viewingOpportunity.amount)}
                       </p>
                     </div>
                   )}

@@ -35,9 +35,11 @@ import {
 } from '@/src/models/pos';
 import { DashboardLayout } from '../../components/layout';
 import { useRouter } from 'next/navigation';
+import { useCurrency } from '../../contexts/CurrencyContext';
 
 const POSDashboard = () => {
   const { } = useAuth();
+  const { formatCurrency } = useCurrency();
   const router = useRouter();
   const [metrics, setMetrics] = useState<POSMetrics | null>(null);
   const [openShift, setOpenShift] = useState<POSShift | null>(null);
@@ -118,12 +120,6 @@ const POSDashboard = () => {
     router.push('/pos/reports');
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {

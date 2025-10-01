@@ -39,6 +39,7 @@ import {
   Download,
 } from 'lucide-react';
 import { DashboardLayout } from '../../../components/layout';
+import { useCurrency } from '../../../contexts/CurrencyContext';
 
 interface SalesReport {
   summary: {
@@ -91,6 +92,7 @@ interface ShiftsReport {
 
 const POSReports = () => {
   const { } = useAuth();
+  const { formatCurrency } = useCurrency();
   const [activeTab, setActiveTab] = useState('sales');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -188,12 +190,6 @@ const POSReports = () => {
     setLowStockOnly(false);
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US');

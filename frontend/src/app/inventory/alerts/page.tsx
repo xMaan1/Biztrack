@@ -39,7 +39,7 @@ import {
   Supplier,
 } from '../../../models/inventory';
 import { DashboardLayout } from '../../../components/layout';
-import { formatCurrency } from '../../../lib/utils';
+import { useCurrency } from '../../../contexts/CurrencyContext';
 import {
   Dialog,
   DialogContent,
@@ -52,6 +52,7 @@ import { Textarea } from '../../../components/ui/textarea';
 
 export default function AlertsPage() {
   const { } = useAuth();
+  const { formatCurrency } = useCurrency();
   const router = useRouter();
   const [dashboardStats, setDashboardStats] =
     useState<InventoryDashboardStats | null>(null);

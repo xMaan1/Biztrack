@@ -37,9 +37,11 @@ import {
   Eye,
 } from 'lucide-react';
 import { DashboardLayout } from '../../../components/layout';
+import { useCurrency } from '../../../contexts/CurrencyContext';
 
 const POSShifts = () => {
   const { } = useAuth();
+  const { formatCurrency } = useCurrency();
   const [shifts, setShifts] = useState<POSShift[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -115,12 +117,6 @@ const POSShifts = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {

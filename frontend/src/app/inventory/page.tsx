@@ -27,10 +27,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import { inventoryService } from '../../services/InventoryService';
 import { InventoryDashboardStats } from '../../models/inventory';
 import { DashboardLayout } from '../../components/layout';
-import { formatCurrency } from '../../lib/utils';
+import { useCurrency } from '../../contexts/CurrencyContext';
 
 export default function InventoryDashboardPage() {
   const { } = useAuth();
+  const { formatCurrency } = useCurrency();
   const router = useRouter();
   const [stats, setStats] = useState<InventoryDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);

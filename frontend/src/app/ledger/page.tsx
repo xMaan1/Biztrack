@@ -40,14 +40,15 @@ import {
   IncomeStatementResponse,
   AccountType,
   TransactionType,
-  formatCurrency,
   getAccountTypeLabel,
   getTransactionTypeLabel,
   getAccountTypeColor,
 } from '@/src/models/ledger';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { useCachedApi } from '../../hooks/useCachedApi';
 
 export default function LedgerDashboard() {
+  const { formatCurrency } = useCurrency();
   
   const { data: chartOfAccounts, loading: accountsLoading, refetch: refetchAccounts } = useCachedApi<ChartOfAccountsResponse[]>(
     'ledger_chart_of_accounts',

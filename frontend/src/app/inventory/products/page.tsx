@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { DashboardLayout } from '../../../components/layout';
-import { formatCurrency } from '../../../lib/utils';
+import { useCurrency } from '../../../contexts/CurrencyContext';
 
 // Mock data for demonstration - in real app this would come from API
 const mockProducts = [
@@ -83,6 +83,7 @@ const mockProducts = [
 
 export default function ProductsPage() {
   const { } = useAuth();
+  const { formatCurrency } = useCurrency();
   const router = useRouter();
   const [products] = useState(mockProducts);
   const [searchTerm, setSearchTerm] = useState('');

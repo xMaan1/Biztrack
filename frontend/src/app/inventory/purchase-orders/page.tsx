@@ -46,7 +46,8 @@ import {
   Supplier,
 } from '../../../models/inventory';
 import { DashboardLayout } from '../../../components/layout';
-import { formatDate, formatCurrency } from '../../../lib/utils';
+import { formatDate } from '../../../lib/utils';
+import { useCurrency } from '../../../contexts/CurrencyContext';
 import {
   Dialog,
   DialogContent,
@@ -59,6 +60,7 @@ import { Textarea } from '../../../components/ui/textarea';
 
 export default function PurchaseOrdersPage() {
   const { } = useAuth();
+  const { formatCurrency } = useCurrency();
   const router = useRouter();
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);

@@ -56,9 +56,11 @@ import {
 import { useCustomOptions } from '../../hooks/useCustomOptions';
 import { CustomOptionDialog } from '../../components/common/CustomOptionDialog';
 import { useCachedApi } from '../../hooks/useCachedApi';
+import { useCurrency } from '../../contexts/CurrencyContext';
 
 export default function SalesPage() {
   const apiService = useApiService();
+  const { formatCurrency } = useCurrency();
   const { data: dashboard, loading: dashboardLoading, error: dashboardError, refetch: refetchDashboard } = useCachedApi<SalesDashboard>(
     'sales_dashboard',
     () => apiService.get('/sales/dashboard'),
@@ -211,12 +213,6 @@ export default function SalesPage() {
     return colors[stage] || 'bg-gray-100 text-gray-800';
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
 
   if (dashboardLoading || leadsLoading || opportunitiesLoading) {
     return (

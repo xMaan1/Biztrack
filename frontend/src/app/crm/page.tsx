@@ -36,8 +36,10 @@ import {
 import Link from 'next/link';
 import { DashboardLayout } from '../../components/layout';
 import { useCachedApi } from '../../hooks/useCachedApi';
+import { useCurrency } from '../../contexts/CurrencyContext';
 
 export default function CRMDashboardPage() {
+  const { formatCurrency } = useCurrency();
   const { data: dashboard, loading, error, refetch } = useCachedApi<CRMDashboard>(
     'crm_dashboard',
     () => CRMService.getDashboard(),
@@ -136,10 +138,10 @@ export default function CRMDashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {CRMService.formatCurrency(dashboard.metrics.totalRevenue)}
+                {formatCurrency(dashboard.metrics.totalRevenue)}
               </div>
               <p className="text-xs text-muted-foreground">
-                {CRMService.formatCurrency(dashboard.metrics.projectedRevenue)}{' '}
+                {formatCurrency(dashboard.metrics.projectedRevenue)}{' '}
                 projected
               </p>
             </CardContent>
@@ -194,7 +196,7 @@ export default function CRMDashboardPage() {
                         </div>
                         <div className="text-right">
                           <div className="font-semibold">
-                            {CRMService.formatCurrency(stage.value)}
+                            {formatCurrency(stage.value)}
                           </div>
                           <div className="text-sm text-gray-500">
                             {stage.probability}% probability
@@ -314,7 +316,7 @@ export default function CRMDashboardPage() {
                       <div className="text-right">
                         <div className="font-semibold text-lg">
                           {opportunity.amount
-                            ? CRMService.formatCurrency(opportunity.amount)
+                            ? formatCurrency(opportunity.amount)
                             : 'N/A'}
                         </div>
                         <div className="text-sm text-gray-500">
@@ -377,7 +379,7 @@ export default function CRMDashboardPage() {
                         </div>
                         {lead.budget && (
                           <div className="text-sm font-medium">
-                            Budget: {CRMService.formatCurrency(lead.budget)}
+                            Budget: {formatCurrency(lead.budget)}
                           </div>
                         )}
                       </div>

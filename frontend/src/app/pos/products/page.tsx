@@ -42,6 +42,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { DashboardLayout } from '../../../components/layout';
+import { useCurrency } from '../../../contexts/CurrencyContext';
 
 interface ProductFormData {
   name: string;
@@ -60,6 +61,7 @@ interface ProductFormData {
 
 const POSProducts = () => {
   const { } = useAuth();
+  const { formatCurrency } = useCurrency();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -202,12 +204,6 @@ const POSProducts = () => {
     return matchesSearch && matchesCategory && matchesLowStock;
   });
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
 
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';

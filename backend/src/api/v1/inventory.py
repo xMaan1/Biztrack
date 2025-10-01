@@ -389,9 +389,10 @@ def create_purchase_order_endpoint(
     total_amount = sum(item.totalCost for item in order.items)
     
     order_data = order.dict()
+    order_data["poNumber"] = order_data.pop("orderNumber")
     order_data.update({
         "id": str(uuid.uuid4()),
-        "tenantId": str(current_tenant["id"]),
+        "tenant_id": str(current_tenant["id"]),
         "createdBy": str(current_user.id),
         "status": "draft",
         "totalAmount": total_amount,
@@ -412,6 +413,8 @@ def update_purchase_order_endpoint(
 ):
     """Update an existing purchase order"""
     order_update = order.dict(exclude_unset=True)
+    if "orderNumber" in order_update:
+        order_update["poNumber"] = order_update.pop("orderNumber")
     order_update["updatedAt"] = datetime.utcnow()
     
     db_order = update_purchase_order(db, order_id, order_update, str(current_tenant["id"]))
