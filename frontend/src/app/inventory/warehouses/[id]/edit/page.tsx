@@ -24,6 +24,7 @@ import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { useAuth } from '../../../../../contexts/AuthContext';
 import { inventoryService } from '../../../../../services/InventoryService';
 import { DashboardLayout } from '../../../../../components/layout';
+import { toast } from 'sonner';
 
 export default function EditWarehousePage() {
   const { } = useAuth();
@@ -78,7 +79,7 @@ export default function EditWarehousePage() {
       });
     } catch (error) {
       console.error('Error fetching warehouse:', error);
-      alert('Failed to load warehouse data. Please try again.');
+      toast.error('Failed to load warehouse data. Please try again.');
       router.push('/inventory/warehouses');
     } finally {
       setInitialLoading(false);
@@ -109,7 +110,7 @@ export default function EditWarehousePage() {
       router.push('/inventory/warehouses');
     } catch (error) {
       console.error('Error updating warehouse:', error);
-      alert('Failed to update warehouse. Please try again.');
+      toast.error('Failed to update warehouse. Please try again.');
     } finally {
       setLoading(false);
     }

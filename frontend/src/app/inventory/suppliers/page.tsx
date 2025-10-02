@@ -71,7 +71,7 @@ export default function SuppliersPage() {
       setSuppliers(response.suppliers);
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to load suppliers';
-      alert(`Load Error: ${errorMessage}`);
+      toast.error(`Load Error: ${errorMessage}`);
     } finally {
       setLoading(false);
     }

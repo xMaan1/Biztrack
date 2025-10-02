@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useCachedApi } from '../../../hooks/useCachedApi';
 import {
   Card,
   CardContent,
@@ -43,7 +44,6 @@ import {
   PurchaseOrder,
   PurchaseOrderCreate,
   PurchaseOrderItemCreate,
-  Supplier,
 } from '../../../models/inventory';
 import { DashboardLayout } from '../../../components/layout';
 import { formatDate } from '../../../lib/utils';
@@ -57,22 +57,47 @@ import {
 } from '../../../components/ui/dialog';
 import { Label } from '../../../components/ui/label';
 import { Textarea } from '../../../components/ui/textarea';
+import { toast } from 'sonner';
+import {
+  DialogDescription,
+} from '../../../components/ui/dialog';
 
 export default function PurchaseOrdersPage() {
   const { } = useAuth();
   const { formatCurrency } = useCurrency();
   const router = useRouter();
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Use cached API calls
+  const { data: suppliersData, loading: suppliersLoading } = useCachedApi(
+    'suppliers',
+    () => inventoryService.getSuppliers(),
+    { ttl: 5 * 60 * 1000 } // 5 minutes cache
+  );
+
+  const { data: warehousesData, loading: warehousesLoading } = useCachedApi(
+    'warehouses',
+    () => inventoryService.getWarehouses(),
+    { ttl: 5 * 60 * 1000 } // 5 minutes cache
+  );
+
+  const suppliers = suppliersData?.suppliers || [];
+  const warehouses = warehousesData?.warehouses || [];
+  const isDataLoading = loading || suppliersLoading || warehousesLoading;
   const [newOrder, setNewOrder] = useState<PurchaseOrderCreate>({
     orderNumber: '',
     supplierId: '',
     supplierName: '',
+    warehouseId: '',
+    orderDate: new Date().toISOString().split('T')[0], // Default to today
     expectedDeliveryDate: '',
     notes: '',
     items: [],
@@ -91,38 +116,39 @@ export default function PurchaseOrdersPage() {
     fetchData();
   }, []);
 
+  // Set default supplier and warehouse when data loads
+  useEffect(() => {
+    if (suppliers.length > 0 && !newOrder.supplierId) {
+      setNewOrder((prev) => ({
+        ...prev,
+        supplierId: suppliers[0].id,
+        supplierName: suppliers[0].name,
+      }));
+    }
+  }, [suppliers, newOrder.supplierId]);
+
+  useEffect(() => {
+    if (warehouses.length > 0 && !newOrder.warehouseId) {
+      setNewOrder((prev) => ({
+        ...prev,
+        warehouseId: warehouses[0].id,
+      }));
+    }
+  }, [warehouses, newOrder.warehouseId]);
+
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [ordersResponse, suppliersResponse] = await Promise.all([
-        inventoryService.getPurchaseOrders(),
-        inventoryService.getSuppliers(),
-      ]);
-      
+      const ordersResponse = await inventoryService.getPurchaseOrders();
       
       if (ordersResponse && ordersResponse.purchaseOrders) {
         setPurchaseOrders(ordersResponse.purchaseOrders);
       } else {
         setPurchaseOrders([]);
       }
-      
-      if (suppliersResponse && suppliersResponse.suppliers) {
-        setSuppliers(suppliersResponse.suppliers);
-        
-        // Set default supplier if available
-        if (suppliersResponse.suppliers.length > 0 && !newOrder.supplierId) {
-          setNewOrder((prev) => ({
-            ...prev,
-            supplierId: suppliersResponse.suppliers[0].id,
-            supplierName: suppliersResponse.suppliers[0].name,
-          }));
-        }
-      } else {
-        setSuppliers([]);
-      }
     } catch (error) {
+      console.error('Error fetching purchase orders:', error);
       setPurchaseOrders([]);
-      setSuppliers([]);
     } finally {
       setLoading(false);
     }
@@ -139,13 +165,29 @@ export default function PurchaseOrdersPage() {
     return matchesSearch && matchesStatus;
   });
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this purchase order?')) {
-      try {
-        await inventoryService.deletePurchaseOrder(id);
-        fetchData();
-      } catch (error) {
-        }
+  const openDeleteModal = (order: PurchaseOrder) => {
+    setSelectedOrder(order);
+    setIsDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setSelectedOrder(null);
+  };
+
+  const handleDelete = async () => {
+    if (!selectedOrder) return;
+
+    try {
+      setDeleteLoading(true);
+      await inventoryService.deletePurchaseOrder(selectedOrder.id);
+      toast.success('Purchase order deleted successfully');
+      fetchData();
+      closeDeleteModal();
+    } catch (error) {
+      toast.error('Failed to delete purchase order. Please try again.');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -156,7 +198,7 @@ export default function PurchaseOrdersPage() {
       newItem.quantity <= 0 ||
       newItem.unitCost <= 0
     ) {
-      alert('Please fill in all required fields for the item');
+      toast.error('Please fill in all required fields for the item');
       return;
     }
 
@@ -169,6 +211,8 @@ export default function PurchaseOrdersPage() {
       ...prev,
       items: [...prev.items, itemWithTotal],
     }));
+
+    toast.success('Item added to purchase order');
 
     // Reset item form
     setNewItem({
@@ -193,20 +237,23 @@ export default function PurchaseOrdersPage() {
     if (
       !newOrder.orderNumber ||
       !newOrder.supplierId ||
+      !newOrder.warehouseId ||
+      !newOrder.orderDate ||
       newOrder.items.length === 0
     ) {
-      alert('Please fill in all required fields and add at least one item');
+      toast.error('Please fill in all required fields and add at least one item');
       return;
     }
 
     try {
       setIsSubmitting(true);
       await inventoryService.createPurchaseOrder(newOrder);
+      toast.success('Purchase order created successfully');
       setIsAddModalOpen(false);
       resetForm();
       fetchData();
     } catch (error) {
-      alert('Failed to create purchase order. Please try again.');
+      toast.error('Failed to create purchase order. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -217,6 +264,8 @@ export default function PurchaseOrdersPage() {
       orderNumber: '',
       supplierId: suppliers.length > 0 ? suppliers[0].id : '',
       supplierName: suppliers.length > 0 ? suppliers[0].name : '',
+      warehouseId: warehouses.length > 0 ? warehouses[0].id : '',
+      orderDate: new Date().toISOString().split('T')[0], // Default to today
       expectedDeliveryDate: '',
       notes: '',
       items: [],
@@ -247,7 +296,7 @@ export default function PurchaseOrdersPage() {
     return <Badge variant={config.variant as any}>{config.label}</Badge>;
   };
 
-  if (loading) {
+  if (isDataLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
@@ -395,7 +444,7 @@ export default function PurchaseOrdersPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleDelete(order.id)}
+                            onClick={() => openDeleteModal(order)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -525,6 +574,20 @@ export default function PurchaseOrdersPage() {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="orderDate">Order Date *</Label>
+                  <Input
+                    id="orderDate"
+                    type="date"
+                    value={newOrder.orderDate}
+                    onChange={(e) =>
+                      setNewOrder((prev) => ({
+                        ...prev,
+                        orderDate: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="expectedDeliveryDate">
                     Expected Delivery *
                   </Label>
@@ -540,6 +603,36 @@ export default function PurchaseOrdersPage() {
                     }
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="warehouseId">Warehouse * ({warehouses.length} available)</Label>
+                <Select
+                  value={newOrder.warehouseId}
+                  onValueChange={(value) => {
+                    setNewOrder((prev) => ({
+                      ...prev,
+                      warehouseId: value,
+                    }));
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select warehouse" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {warehouses.length === 0 ? (
+                      <SelectItem value="no-warehouses" disabled>
+                        No warehouses available
+                      </SelectItem>
+                    ) : (
+                      warehouses.map((warehouse) => (
+                        <SelectItem key={warehouse.id} value={warehouse.id}>
+                          {warehouse.name}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
@@ -736,6 +829,35 @@ export default function PurchaseOrdersPage() {
                 {isSubmitting ? 'Creating...' : 'Create Purchase Order'}
               </Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Purchase Order Modal */}
+        <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Purchase Order</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete purchase order{' '}
+                <strong>{selectedOrder?.orderNumber}</strong>? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end space-x-2 mt-4">
+              <Button
+                variant="outline"
+                onClick={closeDeleteModal}
+                disabled={deleteLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleDelete}
+                disabled={deleteLoading}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {deleteLoading ? 'Deleting...' : 'Delete'}
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>

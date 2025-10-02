@@ -52,6 +52,8 @@ export interface PurchaseOrder {
   orderNumber: string;
   supplierId: string;
   supplierName: string;
+  warehouseId: string;
+  orderDate: string;
   expectedDeliveryDate: string;
   status: PurchaseOrderStatus;
   totalAmount: number;
@@ -65,6 +67,8 @@ export interface PurchaseOrderCreate {
   orderNumber: string;
   supplierId: string;
   supplierName: string;
+  warehouseId: string;
+  orderDate: string;
   expectedDeliveryDate: string;
   notes?: string;
   items: PurchaseOrderItemCreate[];
@@ -74,6 +78,8 @@ export interface PurchaseOrderUpdate {
   orderNumber?: string;
   supplierId?: string;
   supplierName?: string;
+  warehouseId?: string;
+  orderDate?: string;
   expectedDeliveryDate?: string;
   status?: PurchaseOrderStatus;
   totalAmount?: number;

@@ -40,7 +40,36 @@ def read_warehouses(
     """Get all warehouses for the current tenant"""
     warehouses = get_warehouses(db, str(current_tenant["id"]), skip, limit)
     total = len(warehouses)  # Simplified - you can add proper count query
-    return WarehousesResponse(warehouses=warehouses, total=total)
+    
+    # Convert SQLAlchemy models to Pydantic models
+    warehouse_list = []
+    for warehouse in warehouses:
+        warehouse_dict = {
+            "id": str(warehouse.id),
+            "tenantId": str(warehouse.tenant_id),
+            "createdBy": warehouse.createdBy,
+            "name": warehouse.name,
+            "code": warehouse.code,
+            "description": warehouse.description,
+            "address": warehouse.address,
+            "city": warehouse.city,
+            "state": warehouse.state,
+            "country": warehouse.country,
+            "postalCode": warehouse.postalCode,
+            "phone": warehouse.phone,
+            "email": warehouse.email,
+            "managerId": warehouse.managerId,
+            "isActive": warehouse.isActive,
+            "capacity": warehouse.capacity,
+            "usedCapacity": warehouse.usedCapacity,
+            "temperatureZone": warehouse.temperatureZone,
+            "securityLevel": warehouse.securityLevel,
+            "createdAt": warehouse.createdAt,
+            "updatedAt": warehouse.updatedAt,
+        }
+        warehouse_list.append(warehouse_dict)
+    
+    return WarehousesResponse(warehouses=warehouse_list, total=total)
 
 @router.get("/warehouses/{warehouse_id}", response_model=WarehouseResponse)
 def read_warehouse(
@@ -50,10 +79,36 @@ def read_warehouse(
     current_tenant: dict = Depends(get_current_tenant)
 ):
     """Get a specific warehouse by ID"""
-    warehouse = get_warehouse_by_id(db, warehouse_id, str(current_tenant["id"]))
+    warehouse = get_warehouse_by_id(warehouse_id, db, str(current_tenant["id"]))
     if not warehouse:
         raise HTTPException(status_code=404, detail="Warehouse not found")
-    return WarehouseResponse(warehouse=warehouse)
+    
+    # Convert SQLAlchemy model to Pydantic model
+    warehouse_dict = {
+        "id": str(warehouse.id),
+        "tenantId": str(warehouse.tenant_id),
+        "createdBy": warehouse.createdBy,
+        "name": warehouse.name,
+        "code": warehouse.code,
+        "description": warehouse.description,
+        "address": warehouse.address,
+        "city": warehouse.city,
+        "state": warehouse.state,
+        "country": warehouse.country,
+        "postalCode": warehouse.postalCode,
+        "phone": warehouse.phone,
+        "email": warehouse.email,
+        "managerId": warehouse.managerId,
+        "isActive": warehouse.isActive,
+        "capacity": warehouse.capacity,
+        "usedCapacity": warehouse.usedCapacity,
+        "temperatureZone": warehouse.temperatureZone,
+        "securityLevel": warehouse.securityLevel,
+        "createdAt": warehouse.createdAt,
+        "updatedAt": warehouse.updatedAt,
+    }
+    
+    return WarehouseResponse(warehouse=warehouse_dict)
 
 @router.post("/warehouses", response_model=WarehouseResponse)
 def create_warehouse_endpoint(
@@ -67,13 +122,40 @@ def create_warehouse_endpoint(
         warehouse_data = warehouse.dict()
         warehouse_data.update({
             "id": str(uuid.uuid4()),
-            "tenantId": str(current_tenant["id"]),
+            "tenant_id": str(current_tenant["id"]),
+            "createdBy": str(current_user.id),
             "createdAt": datetime.utcnow(),
             "updatedAt": datetime.utcnow()
         })
         
         db_warehouse = create_warehouse(warehouse_data, db)
-        return WarehouseResponse(warehouse=db_warehouse)
+        
+        # Convert SQLAlchemy model to Pydantic model
+        warehouse_dict = {
+            "id": str(db_warehouse.id),
+            "tenantId": str(db_warehouse.tenant_id),
+            "createdBy": db_warehouse.createdBy,
+            "name": db_warehouse.name,
+            "code": db_warehouse.code,
+            "description": db_warehouse.description,
+            "address": db_warehouse.address,
+            "city": db_warehouse.city,
+            "state": db_warehouse.state,
+            "country": db_warehouse.country,
+            "postalCode": db_warehouse.postalCode,
+            "phone": db_warehouse.phone,
+            "email": db_warehouse.email,
+            "managerId": db_warehouse.managerId,
+            "isActive": db_warehouse.isActive,
+            "capacity": db_warehouse.capacity,
+            "usedCapacity": db_warehouse.usedCapacity,
+            "temperatureZone": db_warehouse.temperatureZone,
+            "securityLevel": db_warehouse.securityLevel,
+            "createdAt": db_warehouse.createdAt,
+            "updatedAt": db_warehouse.updatedAt,
+        }
+        
+        return WarehouseResponse(warehouse=warehouse_dict)
         
     except Exception as e:
         db.rollback()
@@ -94,11 +176,36 @@ def update_warehouse_endpoint(
     warehouse_update = warehouse.dict(exclude_unset=True)
     warehouse_update["updatedAt"] = datetime.utcnow()
     
-    db_warehouse = update_warehouse(db, warehouse_id, warehouse_update, str(current_tenant["id"]))
+    db_warehouse = update_warehouse(warehouse_id, warehouse_update, db, str(current_tenant["id"]))
     if not db_warehouse:
         raise HTTPException(status_code=404, detail="Warehouse not found")
     
-    return WarehouseResponse(warehouse=db_warehouse)
+    # Convert SQLAlchemy model to Pydantic model
+    warehouse_dict = {
+        "id": str(db_warehouse.id),
+        "tenantId": str(db_warehouse.tenant_id),
+        "createdBy": db_warehouse.createdBy,
+        "name": db_warehouse.name,
+        "code": db_warehouse.code,
+        "description": db_warehouse.description,
+        "address": db_warehouse.address,
+        "city": db_warehouse.city,
+        "state": db_warehouse.state,
+        "country": db_warehouse.country,
+        "postalCode": db_warehouse.postalCode,
+        "phone": db_warehouse.phone,
+        "email": db_warehouse.email,
+        "managerId": db_warehouse.managerId,
+        "isActive": db_warehouse.isActive,
+        "capacity": db_warehouse.capacity,
+        "usedCapacity": db_warehouse.usedCapacity,
+        "temperatureZone": db_warehouse.temperatureZone,
+        "securityLevel": db_warehouse.securityLevel,
+        "createdAt": db_warehouse.createdAt,
+        "updatedAt": db_warehouse.updatedAt,
+    }
+    
+    return WarehouseResponse(warehouse=warehouse_dict)
 
 @router.delete("/warehouses/{warehouse_id}")
 def delete_warehouse_endpoint(
@@ -108,7 +215,7 @@ def delete_warehouse_endpoint(
     current_tenant: dict = Depends(get_current_tenant)
 ):
     """Delete a warehouse"""
-    success = delete_warehouse(db, warehouse_id, str(current_tenant["id"]))
+    success = delete_warehouse(warehouse_id, db, str(current_tenant["id"]))
     if not success:
         raise HTTPException(status_code=404, detail="Warehouse not found")
     return {"message": "Warehouse deleted successfully"}
@@ -361,8 +468,32 @@ def read_purchase_orders(
         orders = get_purchase_orders_by_status(status, db, str(current_tenant["id"]), skip, limit)
     else:
         orders = get_purchase_orders(db, str(current_tenant["id"]), skip, limit)
+    
     total = len(orders)
-    return PurchaseOrdersResponse(purchaseOrders=orders, total=total)
+    
+    # Convert to response format
+    response_orders = []
+    for order in orders:
+        response_data = {
+            "id": str(order.id),
+            "tenantId": str(order.tenant_id),
+            "orderNumber": order.poNumber,
+            "supplierId": str(order.supplierId),
+            "supplierName": "",  # Not stored in DB, will be empty
+            "warehouseId": str(order.warehouseId),
+            "orderDate": order.orderDate.isoformat() if order.orderDate else None,
+            "expectedDeliveryDate": order.expectedDeliveryDate.isoformat() if order.expectedDeliveryDate else None,
+            "status": order.status,
+            "totalAmount": order.totalAmount,
+            "notes": order.notes,
+            "items": [],  # Not stored in DB, will be empty
+            "createdBy": str(order.createdBy) if hasattr(order, 'createdBy') else "",
+            "createdAt": order.createdAt,
+            "updatedAt": order.updatedAt
+        }
+        response_orders.append(response_data)
+    
+    return PurchaseOrdersResponse(purchaseOrders=response_orders, total=total)
 
 @router.get("/purchase-orders/{order_id}", response_model=PurchaseOrderResponse)
 def read_purchase_order(
@@ -372,10 +503,30 @@ def read_purchase_order(
     current_tenant: dict = Depends(get_current_tenant)
 ):
     """Get a specific purchase order by ID"""
-    order = get_purchase_order_by_id(db, order_id, str(current_tenant["id"]))
+    order = get_purchase_order_by_id(order_id, db, str(current_tenant["id"]))
     if not order:
         raise HTTPException(status_code=404, detail="Purchase order not found")
-    return PurchaseOrderResponse(purchaseOrder=order)
+    
+    # Convert to response format
+    response_data = {
+        "id": str(order.id),
+        "tenantId": str(order.tenant_id),
+        "orderNumber": order.poNumber,
+        "supplierId": str(order.supplierId),
+        "supplierName": "",  # Not stored in DB, will be empty
+        "warehouseId": str(order.warehouseId),
+        "orderDate": order.orderDate.isoformat() if order.orderDate else None,
+        "expectedDeliveryDate": order.expectedDeliveryDate.isoformat() if order.expectedDeliveryDate else None,
+        "status": order.status,
+        "totalAmount": order.totalAmount,
+        "notes": order.notes,
+        "items": [],  # Not stored in DB, will be empty
+        "createdBy": str(order.createdBy) if hasattr(order, 'createdBy') else "",
+        "createdAt": order.createdAt,
+        "updatedAt": order.updatedAt
+    }
+    
+    return PurchaseOrderResponse(purchaseOrder=response_data)
 
 @router.post("/purchase-orders", response_model=PurchaseOrderResponse)
 def create_purchase_order_endpoint(
@@ -390,6 +541,16 @@ def create_purchase_order_endpoint(
     
     order_data = order.dict()
     order_data["poNumber"] = order_data.pop("orderNumber")
+    # Remove fields that don't exist in SQLAlchemy model
+    order_data.pop("supplierName", None)
+    order_data.pop("items", None)
+    
+    # Convert date strings to date objects
+    if order_data.get("orderDate"):
+        order_data["orderDate"] = datetime.strptime(order_data["orderDate"], "%Y-%m-%d").date()
+    if order_data.get("expectedDeliveryDate"):
+        order_data["expectedDeliveryDate"] = datetime.strptime(order_data["expectedDeliveryDate"], "%Y-%m-%d").date()
+    
     order_data.update({
         "id": str(uuid.uuid4()),
         "tenant_id": str(current_tenant["id"]),
@@ -401,7 +562,27 @@ def create_purchase_order_endpoint(
     })
     
     db_order = create_purchase_order(order_data, db)
-    return PurchaseOrderResponse(purchaseOrder=db_order)
+    
+    # Convert to response format
+    response_data = {
+        "id": str(db_order.id),
+        "tenantId": str(db_order.tenant_id),
+        "orderNumber": db_order.poNumber,
+        "supplierId": str(db_order.supplierId),
+        "supplierName": "",  # Not stored in DB, will be empty
+        "warehouseId": str(db_order.warehouseId),
+        "orderDate": db_order.orderDate.isoformat() if db_order.orderDate else None,
+        "expectedDeliveryDate": db_order.expectedDeliveryDate.isoformat() if db_order.expectedDeliveryDate else None,
+        "status": db_order.status,
+        "totalAmount": db_order.totalAmount,
+        "notes": db_order.notes,
+        "items": [],  # Not stored in DB, will be empty
+        "createdBy": str(db_order.createdBy),
+        "createdAt": db_order.createdAt,
+        "updatedAt": db_order.updatedAt
+    }
+    
+    return PurchaseOrderResponse(purchaseOrder=response_data)
 
 @router.put("/purchase-orders/{order_id}", response_model=PurchaseOrderResponse)
 def update_purchase_order_endpoint(
@@ -415,13 +596,42 @@ def update_purchase_order_endpoint(
     order_update = order.dict(exclude_unset=True)
     if "orderNumber" in order_update:
         order_update["poNumber"] = order_update.pop("orderNumber")
+    
+    # Remove fields that don't exist in SQLAlchemy model
+    order_update.pop("supplierName", None)
+    
+    # Convert date strings to date objects
+    if order_update.get("orderDate"):
+        order_update["orderDate"] = datetime.strptime(order_update["orderDate"], "%Y-%m-%d").date()
+    if order_update.get("expectedDeliveryDate"):
+        order_update["expectedDeliveryDate"] = datetime.strptime(order_update["expectedDeliveryDate"], "%Y-%m-%d").date()
+    
     order_update["updatedAt"] = datetime.utcnow()
     
-    db_order = update_purchase_order(db, order_id, order_update, str(current_tenant["id"]))
+    db_order = update_purchase_order(order_id, order_update, db, str(current_tenant["id"]))
     if not db_order:
         raise HTTPException(status_code=404, detail="Purchase order not found")
     
-    return PurchaseOrderResponse(purchaseOrder=db_order)
+    # Convert to response format
+    response_data = {
+        "id": str(db_order.id),
+        "tenantId": str(db_order.tenant_id),
+        "orderNumber": db_order.poNumber,
+        "supplierId": str(db_order.supplierId),
+        "supplierName": "",  # Not stored in DB, will be empty
+        "warehouseId": str(db_order.warehouseId),
+        "orderDate": db_order.orderDate.isoformat() if db_order.orderDate else None,
+        "expectedDeliveryDate": db_order.expectedDeliveryDate.isoformat() if db_order.expectedDeliveryDate else None,
+        "status": db_order.status,
+        "totalAmount": db_order.totalAmount,
+        "notes": db_order.notes,
+        "items": [],  # Not stored in DB, will be empty
+        "createdBy": str(db_order.createdBy) if hasattr(db_order, 'createdBy') else "",
+        "createdAt": db_order.createdAt,
+        "updatedAt": db_order.updatedAt
+    }
+    
+    return PurchaseOrderResponse(purchaseOrder=response_data)
 
 @router.delete("/purchase-orders/{order_id}")
 def delete_purchase_order_endpoint(
@@ -431,7 +641,7 @@ def delete_purchase_order_endpoint(
     current_tenant: dict = Depends(get_current_tenant)
 ):
     """Delete a purchase order"""
-    success = delete_purchase_order(db, order_id, str(current_tenant["id"]))
+    success = delete_purchase_order(order_id, db, str(current_tenant["id"]))
     if not success:
         raise HTTPException(status_code=404, detail="Purchase order not found")
     return {"message": "Purchase order deleted successfully"}

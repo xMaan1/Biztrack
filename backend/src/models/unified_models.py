@@ -2556,7 +2556,7 @@ class WarehouseUpdate(BaseModel):
 
 class Warehouse(WarehouseBase):
     id: str
-    tenant_id: str
+    tenantId: str
     createdBy: str
     createdAt: datetime
     updatedAt: datetime
@@ -2680,6 +2680,8 @@ class PurchaseOrderBase(BaseModel):
     orderNumber: str
     supplierId: str
     supplierName: str
+    warehouseId: str
+    orderDate: str
     expectedDeliveryDate: str
     status: PurchaseOrderStatus
     totalAmount: float
@@ -2690,6 +2692,8 @@ class PurchaseOrderCreate(BaseModel):
     orderNumber: str
     supplierId: str
     supplierName: str
+    warehouseId: str
+    orderDate: str
     expectedDeliveryDate: str
     notes: Optional[str] = None
     items: List[PurchaseOrderItemCreate]
@@ -2698,6 +2702,8 @@ class PurchaseOrderUpdate(BaseModel):
     orderNumber: Optional[str] = None
     supplierId: Optional[str] = None
     supplierName: Optional[str] = None
+    warehouseId: Optional[str] = None
+    orderDate: Optional[str] = None
     expectedDeliveryDate: Optional[str] = None
     status: Optional[PurchaseOrderStatus] = None
     totalAmount: Optional[float] = None
@@ -2705,7 +2711,7 @@ class PurchaseOrderUpdate(BaseModel):
 
 class PurchaseOrder(PurchaseOrderBase):
     id: str
-    tenant_id: str
+    tenantId: str
     createdBy: str
     createdAt: datetime
     updatedAt: datetime

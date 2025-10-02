@@ -65,6 +65,8 @@ export default function AlertsPage() {
     orderNumber: '',
     supplierId: '',
     supplierName: '',
+    warehouseId: '',
+    orderDate: new Date().toISOString().split('T')[0],
     expectedDeliveryDate: '',
     notes: '',
     items: [],
@@ -176,7 +178,7 @@ export default function AlertsPage() {
       await inventoryService.createPurchaseOrder(newOrder);
       setIsPOModalOpen(false);
       resetForm();
-      fetchData(); // Refresh alerts to see if any are resolved
+      fetchData();
     } catch (error) {
       alert('Failed to create purchase order. Please try again.');
     } finally {
@@ -189,6 +191,8 @@ export default function AlertsPage() {
       orderNumber: '',
       supplierId: suppliers.length > 0 ? suppliers[0].id : '',
       supplierName: suppliers.length > 0 ? suppliers[0].name : '',
+      warehouseId: '',
+      orderDate: new Date().toISOString().split('T')[0], 
       expectedDeliveryDate: '',
       notes: '',
       items: [],

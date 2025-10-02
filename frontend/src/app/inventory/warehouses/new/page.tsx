@@ -29,6 +29,7 @@ export default function NewWarehousePage() {
   const { } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     code: '',
@@ -59,6 +60,7 @@ export default function NewWarehousePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
 
     try {
       const warehouseData = {
@@ -68,8 +70,18 @@ export default function NewWarehousePage() {
 
       await inventoryService.createWarehouse(warehouseData);
       router.push('/inventory/warehouses');
-    } catch (error) {
-      alert('Failed to create warehouse. Please try again.');
+    } catch (error: any) {
+      let errorMessage = 'Failed to create warehouse. Please try again.';
+      
+      if (error?.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -93,6 +105,21 @@ export default function NewWarehousePage() {
             </p>
           </div>
         </div>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-4">
+            <div className="flex">
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">
+                  Error creating warehouse
+                </h3>
+                <div className="mt-2 text-sm text-red-700">
+                  {error}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="grid gap-6 md:grid-cols-2">

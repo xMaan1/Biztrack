@@ -36,6 +36,7 @@ class Warehouse(Base):
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
+    createdBy = Column(String, nullable=False)
     name = Column(String, nullable=False)
     code = Column(String, unique=True, index=True)
     description = Column(Text)
@@ -99,6 +100,7 @@ class PurchaseOrder(Base):
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
+    createdBy = Column(String, nullable=False)
     poNumber = Column(String, unique=True, index=True)
     supplierId = Column(UUID(as_uuid=True), ForeignKey("suppliers.id"), nullable=False)
     warehouseId = Column(UUID(as_uuid=True), ForeignKey("warehouses.id"), nullable=False)

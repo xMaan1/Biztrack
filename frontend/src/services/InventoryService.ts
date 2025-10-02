@@ -36,19 +36,19 @@ class InventoryService {
     const response = await apiService.get(
       `/inventory/warehouses?skip=${skip}&limit=${limit}`,
     );
-    return response.data;
+    return response;
   }
 
   async getWarehouse(id: string): Promise<WarehouseResponse> {
     const response = await apiService.get(`/inventory/warehouses/${id}`);
-    return response.data;
+    return response;
   }
 
   async createWarehouse(
     warehouse: WarehouseCreate,
   ): Promise<WarehouseResponse> {
     const response = await apiService.post('/inventory/warehouses', warehouse);
-    return response.data;
+    return response;
   }
 
   async updateWarehouse(
@@ -59,7 +59,7 @@ class InventoryService {
       `/inventory/warehouses/${id}`,
       warehouse,
     );
-    return response.data;
+    return response;
   }
 
   async deleteWarehouse(id: string): Promise<void> {
@@ -80,12 +80,12 @@ class InventoryService {
     const response = await apiService.get(
       `/inventory/storage-locations?${params.toString()}`,
     );
-    return response.data;
+    return response;
   }
 
   async getStorageLocation(id: string): Promise<StorageLocationResponse> {
     const response = await apiService.get(`/inventory/storage-locations/${id}`);
-    return response.data;
+    return response;
   }
 
   async createStorageLocation(
@@ -95,7 +95,7 @@ class InventoryService {
       '/inventory/storage-locations',
       location,
     );
-    return response.data;
+    return response;
   }
 
   async updateStorageLocation(
@@ -106,7 +106,7 @@ class InventoryService {
       `/inventory/storage-locations/${id}`,
       location,
     );
-    return response.data;
+    return response;
   }
 
   async deleteStorageLocation(id: string): Promise<void> {
@@ -129,12 +129,12 @@ class InventoryService {
     const response = await apiService.get(
       `/inventory/stock-movements?${params.toString()}`,
     );
-    return response.data;
+    return response;
   }
 
   async getStockMovement(id: string): Promise<StockMovementResponse> {
     const response = await apiService.get(`/inventory/stock-movements/${id}`);
-    return response.data;
+    return response;
   }
 
   async createStockMovement(
@@ -144,7 +144,7 @@ class InventoryService {
       '/inventory/stock-movements',
       movement,
     );
-    return response.data;
+    return response;
   }
 
   async updateStockMovement(
@@ -155,7 +155,7 @@ class InventoryService {
       `/inventory/stock-movements/${id}`,
       movement,
     );
-    return response.data;
+    return response;
   }
 
   // Supplier Management
@@ -171,12 +171,12 @@ class InventoryService {
 
   async getSupplier(id: string): Promise<SupplierResponse> {
     const response = await apiService.get(`/inventory/suppliers/${id}`);
-    return response.data;
+    return response;
   }
 
   async createSupplier(supplier: SupplierCreate): Promise<SupplierResponse> {
     const response = await apiService.post('/inventory/suppliers', supplier);
-    return response.data;
+    return response;
   }
 
   async updateSupplier(
@@ -187,7 +187,7 @@ class InventoryService {
       `/inventory/suppliers/${id}`,
       supplier,
     );
-    return response.data;
+    return response;
   }
 
   async deleteSupplier(id: string): Promise<void> {
@@ -208,19 +208,19 @@ class InventoryService {
     const response = await apiService.get(
       `/inventory/purchase-orders?${params.toString()}`,
     );
-    return response.data;
+    return response;
   }
 
   async getPurchaseOrder(id: string): Promise<PurchaseOrderResponse> {
     const response = await apiService.get(`/inventory/purchase-orders/${id}`);
-    return response.data;
+    return response;
   }
 
   async createPurchaseOrder(
     order: PurchaseOrderCreate,
   ): Promise<PurchaseOrderResponse> {
     const response = await apiService.post('/inventory/purchase-orders', order);
-    return response.data;
+    return response;
   }
 
   async updatePurchaseOrder(
@@ -231,7 +231,7 @@ class InventoryService {
       `/inventory/purchase-orders/${id}`,
       order,
     );
-    return response.data;
+    return response;
   }
 
   async deletePurchaseOrder(id: string): Promise<void> {
@@ -252,19 +252,19 @@ class InventoryService {
     const response = await apiService.get(
       `/inventory/receivings?${params.toString()}`,
     );
-    return response.data;
+    return response;
   }
 
   async getReceiving(id: string): Promise<ReceivingResponse> {
     const response = await apiService.get(`/inventory/receivings/${id}`);
-    return response.data;
+    return response;
   }
 
   async createReceiving(
     receiving: ReceivingCreate,
   ): Promise<ReceivingResponse> {
     const response = await apiService.post('/inventory/receivings', receiving);
-    return response.data;
+    return response;
   }
 
   async updateReceiving(
@@ -275,7 +275,7 @@ class InventoryService {
       `/inventory/receivings/${id}`,
       receiving,
     );
-    return response.data;
+    return response;
   }
 
   async deleteReceiving(id: string): Promise<void> {
@@ -285,7 +285,7 @@ class InventoryService {
   // Dashboard
   async getInventoryDashboard(): Promise<InventoryDashboardStats> {
     const response = await apiService.get('/inventory/dashboard');
-    return response.data;
+    return response;
   }
 }
 

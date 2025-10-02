@@ -16,6 +16,7 @@ import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { inventoryService } from '../../../../services/InventoryService';
 import { DashboardLayout } from '../../../../components/layout';
+import { toast } from 'sonner';
 
 export default function NewSupplierPage() {
   const { } = useAuth();
@@ -63,7 +64,7 @@ export default function NewSupplierPage() {
       await inventoryService.createSupplier(supplierData);
       router.push('/inventory/suppliers');
     } catch (error) {
-      alert('Failed to create supplier. Please try again.');
+      toast.error('Failed to create supplier. Please try again.');
     } finally {
       setLoading(false);
     }
