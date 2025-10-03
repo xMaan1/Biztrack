@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import React from "react";
-import Link from "next/link";
-import { Button } from "../../components/ui/button";
-import { Home } from "lucide-react";
-import { UsersList } from "../../components/users";
-import { DashboardLayout } from "../../components/layout";
+import React from 'react';
+import Link from 'next/link';
+import { Button } from '../../components/ui/button';
+import { Home } from 'lucide-react';
+import { UsersList } from '../../components/users';
+import { DashboardLayout } from '../../components/layout';
 
 export default function UsersPage() {
   return (

@@ -1,20 +1,21 @@
-"use client";
+'use client';
 
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { useAuth } from "./AuthContext";
-import InvoiceCustomizationService from "../services/InvoiceCustomizationService";
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
+import InvoiceCustomizationService from '../services/InvoiceCustomizationService';
 
 interface CurrencyContextType {
   currency: string;
   setCurrency: (currency: string) => void;
   formatCurrency: (amount: number, customCurrency?: string) => string;
+  getCurrencySymbol: (customCurrency?: string) => string;
   loading: boolean;
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
 export function CurrencyProvider({ children }: { children: React.ReactNode }) {
-  const [currency, setCurrencyState] = useState<string>("USD");
+  const [currency, setCurrencyState] = useState<string>('USD');
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
@@ -28,10 +29,10 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true);
       const customization = await InvoiceCustomizationService.getCustomization();
-      setCurrencyState(customization.default_currency || "USD");
+      setCurrencyState(customization.default_currency || 'USD');
     } catch (error) {
-      console.error("Failed to load currency settings:", error);
-      setCurrencyState("USD"); // fallback to USD
+      console.error('Failed to load currency settings:', error);
+      setCurrencyState('USD'); // fallback to USD
     } finally {
       setLoading(false);
     }
@@ -43,10 +44,19 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
 
   const formatCurrency = (amount: number, customCurrency?: string): string => {
     const currencyToUse = customCurrency || currency;
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
       currency: currencyToUse,
     }).format(amount);
+  };
+
+  const getCurrencySymbol = (customCurrency?: string): string => {
+    const currencyToUse = customCurrency || currency;
+    const formatter = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currencyToUse,
+    });
+    return formatter.formatToParts(0).find(part => part.type === 'currency')?.value || '$';
   };
 
   return (
@@ -55,6 +65,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
         currency,
         setCurrency,
         formatCurrency,
+        getCurrencySymbol,
         loading,
       }}
     >
@@ -66,7 +77,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
 export function useCurrency() {
   const context = useContext(CurrencyContext);
   if (context === undefined) {
-    throw new Error("useCurrency must be used within a CurrencyProvider");
+    throw new Error('useCurrency must be used within a CurrencyProvider');
   }
   return context;
 }

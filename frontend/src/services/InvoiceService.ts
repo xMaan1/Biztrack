@@ -1,4 +1,4 @@
-import { apiService } from "./ApiService";
+import { apiService } from './ApiService';
 import {
   Invoice,
   InvoiceCreate,
@@ -6,14 +6,13 @@ import {
   InvoiceFilters,
   Payment,
   PaymentCreate,
-  PaymentUpdate,
   PaymentFilters,
   InvoiceDashboard,
-} from "../models/sales";
-import { Customer, CustomerCreate, CustomerUpdate, CustomersResponse, CustomerService } from "./CustomerService";
+} from '../models/sales';
+import { Customer, CustomerCreate, CustomerUpdate, CustomersResponse, CustomerService } from './CustomerService';
 
 class InvoiceService {
-  private baseUrl = "/invoices";
+  private baseUrl = '/invoices';
 
   // Invoice CRUD operations
   async createInvoice(invoiceData: InvoiceCreate): Promise<Invoice> {
@@ -27,8 +26,8 @@ class InvoiceService {
     limit: number = 10,
   ): Promise<{ invoices: Invoice[]; pagination: any }> {
     const params = new URLSearchParams();
-    params.append("page", page.toString());
-    params.append("limit", limit.toString());
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
 
     // Add filters, filtering out undefined values and converting to strings
     Object.entries(filters).forEach(([key, value]) => {
@@ -71,10 +70,10 @@ class InvoiceService {
   }
 
   async downloadInvoice(invoiceId: string): Promise<Blob> {
-    const response = await apiService.client.get(`${this.baseUrl}/${invoiceId}/download`, {
-      responseType: 'blob'
+    const response = await apiService.get(`${this.baseUrl}/${invoiceId}/download`, {
+      responseType: 'blob',
     });
-    return response.data;
+    return response;
   }
 
   // Dashboard
@@ -117,8 +116,8 @@ class InvoiceService {
     limit: number = 10,
   ): Promise<{ payments: Payment[]; pagination: any }> {
     const params = new URLSearchParams();
-    params.append("page", page.toString());
-    params.append("limit", limit.toString());
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
 
     // Add filters, filtering out undefined values and converting to strings
     Object.entries(filters).forEach(([key, value]) => {
@@ -154,57 +153,57 @@ class InvoiceService {
 
   getStatusColor(status: string): string {
     const statusColors: { [key: string]: string } = {
-      draft: "bg-gray-100 text-gray-800",
-      sent: "bg-blue-100 text-blue-800",
-      viewed: "bg-yellow-100 text-yellow-800",
-      paid: "bg-green-100 text-green-800",
-      partially_paid: "bg-orange-100 text-orange-800",
-      overdue: "bg-red-100 text-red-800",
-      cancelled: "bg-red-100 text-red-800",
-      void: "bg-gray-100 text-gray-800",
+      draft: 'bg-gray-100 text-gray-800',
+      sent: 'bg-blue-100 text-blue-800',
+      viewed: 'bg-yellow-100 text-yellow-800',
+      paid: 'bg-green-100 text-green-800',
+      partially_paid: 'bg-orange-100 text-orange-800',
+      overdue: 'bg-red-100 text-red-800',
+      cancelled: 'bg-red-100 text-red-800',
+      void: 'bg-gray-100 text-gray-800',
     };
-    return statusColors[status] || "bg-gray-100 text-gray-800";
+    return statusColors[status] || 'bg-gray-100 text-gray-800';
   }
 
   getStatusLabel(status: string): string {
     const statusLabels: { [key: string]: string } = {
-      draft: "Draft",
-      sent: "Sent",
-      viewed: "Viewed",
-      paid: "Paid",
-      partially_paid: "Partially Paid",
-      overdue: "Overdue",
-      cancelled: "Cancelled",
-      void: "Void",
+      draft: 'Draft',
+      sent: 'Sent',
+      viewed: 'Viewed',
+      paid: 'Paid',
+      partially_paid: 'Partially Paid',
+      overdue: 'Overdue',
+      cancelled: 'Cancelled',
+      void: 'Void',
     };
     return statusLabels[status] || status;
   }
 
   getPaymentMethodLabel(method: string): string {
     const methodLabels: { [key: string]: string } = {
-      credit_card: "Credit Card",
-      bank_transfer: "Bank Transfer",
-      cash: "Cash",
-      check: "Check",
-      paypal: "PayPal",
-      stripe: "Stripe",
-      other: "Other",
+      credit_card: 'Credit Card',
+      bank_transfer: 'Bank Transfer',
+      cash: 'Cash',
+      check: 'Check',
+      paypal: 'PayPal',
+      stripe: 'Stripe',
+      other: 'Other',
     };
     return methodLabels[method] || method;
   }
 
-  formatCurrency(amount: number, currency: string = "USD"): string {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
+  formatCurrency(amount: number, currency: string = 'USD'): string {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
       currency: currency,
     }).format(amount);
   }
 
   formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
     });
   }
 

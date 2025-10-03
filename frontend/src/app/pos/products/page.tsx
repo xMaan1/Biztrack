@@ -1,24 +1,24 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Input } from "@/src/components/ui/input";
-import { Label } from "@/src/components/ui/label";
+} from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Input } from '@/src/components/ui/input';
+import { Label } from '@/src/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select";
-import { Badge } from "@/src/components/ui/badge";
+} from '@/src/components/ui/select';
+import { Badge } from '@/src/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -26,16 +26,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from "@/src/components/ui/dialog";
-import { useAuth } from "@/src/hooks/useAuth";
-import { apiService } from "@/src/services/ApiService";
+} from '@/src/components/ui/dialog';
+import { useAuth } from '@/src/hooks/useAuth';
+import { apiService } from '@/src/services/ApiService';
 import {
   Product,
   ProductCategory,
-  ProductCreate,
-  ProductUpdate,
-} from "@/src/models/pos";
+} from '@/src/models/pos';
 import {
   Package,
   Plus,
@@ -43,8 +40,9 @@ import {
   Edit,
   Trash2,
   AlertTriangle,
-} from "lucide-react";
-import { DashboardLayout } from "../../../components/layout";
+} from 'lucide-react';
+import { DashboardLayout } from '../../../components/layout';
+import { useCurrency } from '../../../contexts/CurrencyContext';
 
 interface ProductFormData {
   name: string;
@@ -62,10 +60,11 @@ interface ProductFormData {
 }
 
 const POSProducts = () => {
-  const { user } = useAuth();
+  const { } = useAuth();
+  const { formatCurrency } = useCurrency();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory>(
     ProductCategory.OTHER,
   );
@@ -73,18 +72,18 @@ const POSProducts = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState<ProductFormData>({
-    name: "",
-    sku: "",
-    description: "",
+    name: '',
+    sku: '',
+    description: '',
     category: ProductCategory.OTHER,
     price: 0,
     costPrice: 0,
     stockQuantity: 0,
     lowStockThreshold: 5,
-    barcode: "",
-    expiryDate: "",
-    batchNumber: "",
-    serialNumber: "",
+    barcode: '',
+    expiryDate: '',
+    batchNumber: '',
+    serialNumber: '',
   });
 
   const categories = Object.values(ProductCategory);
@@ -95,7 +94,7 @@ const POSProducts = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await apiService.get("/pos/products");
+      const response = await apiService.get('/pos/products');
       setProducts(response.products || []);
     } catch (error) {
       } finally {
@@ -113,23 +112,23 @@ const POSProducts = () => {
         await apiService.put(`/pos/products/${editingProduct.id}`, formData);
       } else {
         // Create new product
-        await apiService.post("/pos/products", formData);
+        await apiService.post('/pos/products', formData);
       }
 
       setEditingProduct(null);
       setFormData({
-        name: "",
-        sku: "",
-        description: "",
+        name: '',
+        sku: '',
+        description: '',
         category: ProductCategory.OTHER,
         price: 0,
         costPrice: 0,
         stockQuantity: 0,
         lowStockThreshold: 5,
-        barcode: "",
-        expiryDate: "",
-        batchNumber: "",
-        serialNumber: "",
+        barcode: '',
+        expiryDate: '',
+        batchNumber: '',
+        serialNumber: '',
       });
       fetchProducts();
     } catch (error) {
@@ -141,22 +140,22 @@ const POSProducts = () => {
     setFormData({
       name: product.name,
       sku: product.sku,
-      description: product.description || "",
+      description: product.description || '',
       category: product.category,
       price: product.price,
       costPrice: product.costPrice,
       stockQuantity: product.stockQuantity,
       lowStockThreshold: product.lowStockThreshold,
-      barcode: product.barcode || "",
-      expiryDate: product.expiryDate || "",
-      batchNumber: product.batchNumber || "",
-      serialNumber: product.serialNumber || "",
+      barcode: product.barcode || '',
+      expiryDate: product.expiryDate || '',
+      batchNumber: product.batchNumber || '',
+      serialNumber: product.serialNumber || '',
     });
     setIsDialogOpen(true);
   };
 
   const handleDelete = async (productId: string) => {
-    if (!confirm("Are you sure you want to delete this product?")) return;
+    if (!confirm('Are you sure you want to delete this product?')) return;
 
     try {
       await apiService.delete(`/pos/products/${productId}`);
@@ -167,18 +166,18 @@ const POSProducts = () => {
 
   const resetForm = () => {
     setFormData({
-      name: "",
-      sku: "",
-      description: "",
+      name: '',
+      sku: '',
+      description: '',
       category: ProductCategory.OTHER,
       price: 0,
       costPrice: 0,
       stockQuantity: 0,
       lowStockThreshold: 5,
-      barcode: "",
-      expiryDate: "",
-      batchNumber: "",
-      serialNumber: "",
+      barcode: '',
+      expiryDate: '',
+      batchNumber: '',
+      serialNumber: '',
     });
   };
 
@@ -205,16 +204,10 @@ const POSProducts = () => {
     return matchesSearch && matchesCategory && matchesLowStock;
   });
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
-  };
 
   const formatDate = (dateString: string) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("en-US");
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US');
   };
 
   if (loading) {
@@ -296,8 +289,8 @@ const POSProducts = () => {
               <div className="space-y-2">
                 <Label htmlFor="stock">Stock Status</Label>
                 <Select
-                  value={showLowStock ? "low" : "all"}
-                  onValueChange={(value) => setShowLowStock(value === "low")}
+                  value={showLowStock ? 'low' : 'all'}
+                  onValueChange={(value) => setShowLowStock(value === 'low')}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -313,7 +306,7 @@ const POSProducts = () => {
                 <Button
                   variant="outline"
                   onClick={() => {
-                    setSearchTerm("");
+                    setSearchTerm('');
                     setSelectedCategory(ProductCategory.OTHER);
                     setShowLowStock(false);
                   }}
@@ -405,8 +398,8 @@ const POSProducts = () => {
             <h3 className="mt-4 text-lg font-semibold">No products found</h3>
             <p className="mt-2 text-muted-foreground">
               {searchTerm || selectedCategory || showLowStock
-                ? "Try adjusting your filters or search terms."
-                : "Get started by adding your first product."}
+                ? 'Try adjusting your filters or search terms.'
+                : 'Get started by adding your first product.'}
             </p>
             {!searchTerm && !selectedCategory && !showLowStock && (
               <Button onClick={openNewProductDialog} className="mt-4">
@@ -422,12 +415,12 @@ const POSProducts = () => {
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {editingProduct ? "Edit Product" : "Add New Product"}
+                {editingProduct ? 'Edit Product' : 'Add New Product'}
               </DialogTitle>
               <DialogDescription>
                 {editingProduct
-                  ? "Update the product information below."
-                  : "Fill in the product details to add it to your catalog."}
+                  ? 'Update the product information below.'
+                  : 'Fill in the product details to add it to your catalog.'}
               </DialogDescription>
             </DialogHeader>
 
@@ -630,7 +623,7 @@ const POSProducts = () => {
                   Cancel
                 </Button>
                 <Button type="submit">
-                  {editingProduct ? "Update Product" : "Add Product"}
+                  {editingProduct ? 'Update Product' : 'Add Product'}
                 </Button>
               </DialogFooter>
             </form>

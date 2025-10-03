@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { User, LoginCredentials } from "@/src/models/auth";
-import { apiService } from "@/src/services/ApiService";
-import { SessionManager } from "@/src/services/SessionManager";
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { User, LoginCredentials } from '@/src/models/auth';
+import { apiService } from '@/src/services/ApiService';
+import { SessionManager } from '@/src/services/SessionManager';
 
 interface Tenant {
   id: string;
@@ -37,7 +37,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const sessionManager = new SessionManager();
 
-        // Immediately clear any corrupted session data
         if (!sessionManager.isSessionValid()) {
           sessionManager.clearSession();
           setUser(null);
@@ -47,9 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        // Check if session exists and is valid
         if (sessionManager.isSessionValid()) {
-          // If token is expired, try to refresh it
           if (sessionManager.isTokenExpired()) {
             const refreshSuccess = await sessionManager.refreshAccessToken();
             if (!refreshSuccess) {
@@ -65,36 +62,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (session && session.token && session.user) {
             setUser(session.user);
 
-            // Start proactive token refresh for authenticated users
             sessionManager.startProactiveRefresh();
 
-            // Load tenants from localStorage (no API call)
             const storedTenants = apiService.getUserTenants();
             if (storedTenants.length > 0) {
               setTenants(storedTenants);
 
-              // Get current tenant from localStorage
               const currentTenant = apiService.getCurrentTenant();
               if (currentTenant) {
                 setCurrentTenant(currentTenant);
               } else {
-                // Fallback to first tenant if no current tenant is set
                 setCurrentTenant(storedTenants[0]);
                 apiService.setTenantId(storedTenants[0].id);
               }
             }
           } else {
-            // Session exists but data is corrupted, clear it
             sessionManager.clearSession();
             setUser(null);
           }
         } else {
-          // No valid session, clear any corrupted data
           sessionManager.clearSession();
           setUser(null);
         }
       } catch (error) {
-        // Clear session on error
         const sessionManager = new SessionManager();
         sessionManager.clearSession();
         setUser(null);
@@ -114,17 +104,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (response.success && response.user) {
         setUser(response.user);
 
-        // Start proactive token refresh for newly logged in users
         const sessionManager = new SessionManager();
         sessionManager.startProactiveRefresh();
 
-        // Tenants are already fetched and stored during apiService.login()
-        // Just load them from localStorage
         const storedTenants = apiService.getUserTenants();
         if (storedTenants.length > 0) {
           setTenants(storedTenants);
 
-          // Current tenant is already set during login, just get it
           const currentTenant = apiService.getCurrentTenant();
           if (currentTenant) {
             setCurrentTenant(currentTenant);
@@ -135,7 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       return false;
     } catch (error) {
-      return false;
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -144,7 +130,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       await apiService.logout();
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to logout';
+      alert(`Logout Error: ${errorMessage}`);
       } finally {
       const sessionManager = new SessionManager();
       setUser(null);
@@ -152,15 +140,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setCurrentTenant(null);
       sessionManager.clearSession();
       apiService.setTenantId(null);
-      if (typeof window !== "undefined") {
-        window.location.href = "/login";
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
       }
     }
   };
 
   const switchTenant = async (tenantId: string): Promise<boolean> => {
     try {
-      // This now uses localStorage, no API call
       const tenant = await apiService.switchTenant(tenantId);
       setCurrentTenant(tenant);
       return true;
@@ -186,7 +173,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 }

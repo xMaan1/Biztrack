@@ -1,4 +1,4 @@
-import { apiService } from "./ApiService";
+import { apiService } from './ApiService';
 
 // Customer Types
 export interface Customer {
@@ -11,17 +11,17 @@ export interface Customer {
   mobile?: string;
   cnic?: string;
   dateOfBirth?: string;
-  gender?: "male" | "female" | "other";
+  gender?: 'male' | 'female' | 'other';
   address?: string;
   city?: string;
   state?: string;
   country?: string;
   postalCode?: string;
-  customerType: "individual" | "business";
-  customerStatus: "active" | "inactive" | "blocked";
+  customerType: 'individual' | 'business';
+  customerStatus: 'active' | 'inactive' | 'blocked';
   creditLimit: number;
   currentBalance: number;
-  paymentTerms: "Credit" | "Card" | "Cash" | "Due Payments";
+  paymentTerms: 'Credit' | 'Card' | 'Cash' | 'Due Payments';
   assignedToId?: string;
   notes?: string;
   tags: string[];
@@ -38,17 +38,17 @@ export interface CustomerCreate {
   mobile?: string;
   cnic?: string;
   dateOfBirth?: string;
-  gender?: "male" | "female" | "other";
+  gender?: 'male' | 'female' | 'other';
   address?: string;
   city?: string;
   state?: string;
   country?: string;
   postalCode?: string;
-  customerType?: "individual" | "business";
-  customerStatus?: "active" | "inactive" | "blocked";
+  customerType?: 'individual' | 'business';
+  customerStatus?: 'active' | 'inactive' | 'blocked';
   creditLimit?: number;
   currentBalance?: number;
-  paymentTerms?: "Credit" | "Card" | "Cash" | "Due Payments";
+  paymentTerms?: 'Credit' | 'Card' | 'Cash' | 'Due Payments';
   assignedToId?: string;
   notes?: string;
   tags?: string[];
@@ -73,7 +73,7 @@ export interface CustomersResponse {
 
 // Shared Customer Service - Can be used by both CRM and Invoice modules
 export class CustomerService {
-  private static baseUrl = "/crm/customers"; // Primary endpoint
+  private static baseUrl = '/crm/customers'; // Primary endpoint
 
   static async getCustomers(
     skip: number = 0,
@@ -87,9 +87,9 @@ export class CustomerService {
       limit: limit.toString(),
     });
 
-    if (search) params.append("search", search);
-    if (status) params.append("status", status);
-    if (customerType) params.append("customer_type", customerType);
+    if (search) params.append('search', search);
+    if (status) params.append('status', status);
+    if (customerType) params.append('customer_type', customerType);
 
     const response = await apiService.get(
       `${this.baseUrl}?${params.toString()}`,
@@ -142,33 +142,33 @@ export class CustomerService {
 
   static getCustomerStatusColor(status: string): string {
     const statusColors: { [key: string]: string } = {
-      active: "bg-green-100 text-green-800",
-      inactive: "bg-gray-100 text-gray-800",
-      blocked: "bg-red-100 text-red-800",
+      active: 'bg-green-100 text-green-800',
+      inactive: 'bg-gray-100 text-gray-800',
+      blocked: 'bg-red-100 text-red-800',
     };
-    return statusColors[status] || "bg-gray-100 text-gray-800";
+    return statusColors[status] || 'bg-gray-100 text-gray-800';
   }
 
   static getCustomerTypeColor(type: string): string {
     const typeColors: { [key: string]: string } = {
-      individual: "bg-blue-100 text-blue-800",
-      business: "bg-purple-100 text-purple-800",
+      individual: 'bg-blue-100 text-blue-800',
+      business: 'bg-purple-100 text-purple-800',
     };
-    return typeColors[type] || "bg-gray-100 text-gray-800";
+    return typeColors[type] || 'bg-gray-100 text-gray-800';
   }
 
   static formatCurrency(amount: number): string {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
     }).format(amount);
   }
 
   static formatDate(date: string): string {
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
     });
   }
 }

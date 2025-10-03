@@ -1,45 +1,42 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { Textarea } from "../ui/textarea";
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Textarea } from '../ui/textarea';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+} from '../ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import {
   Plus,
   Trash2,
   Calculator,
   User,
   Building,
-  Calendar,
-  DollarSign,
   FileText,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   Invoice,
   InvoiceCreate,
   InvoiceItemCreate,
-  InvoiceStatus,
-} from "../../models/sales";
-import InvoiceService from "../../services/InvoiceService";
-import { CustomerSearch } from "../ui/customer-search";
-import { Customer } from "../../services/CustomerService";
-import { useCurrency } from "../../contexts/CurrencyContext";
+} from '../../models/sales';
+import InvoiceService from '../../services/InvoiceService';
+import { useCurrency } from '../../contexts/CurrencyContext';
+import { CustomerSearch } from '../ui/customer-search';
+import { Customer } from '../../services/CustomerService';
 
 interface InvoiceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: InvoiceCreate) => void;
-  mode: "create" | "edit";
+  mode: 'create' | 'edit';
   invoice?: Invoice | null;
 }
 
@@ -50,39 +47,39 @@ export function InvoiceDialog({
   mode,
   invoice,
 }: InvoiceDialogProps) {
-  const { currency } = useCurrency();
+  const { currency, formatCurrency } = useCurrency();
   const [formData, setFormData] = useState<InvoiceCreate>({
-    customerId: "",
-    customerName: "",
-    customerEmail: "",
-    shippingAddress: "",
-    issueDate: new Date().toISOString().split("T")[0],
+    customerId: '',
+    customerName: '',
+    customerEmail: '',
+    shippingAddress: '',
+    issueDate: new Date().toISOString().split('T')[0],
     dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       .toISOString()
-      .split("T")[0],
-    orderNumber: "", // New field
+      .split('T')[0],
+    orderNumber: '', // New field
     orderTime: new Date().toISOString().slice(0, 16), // New field - current date/time
-    paymentTerms: "Cash",
+    paymentTerms: 'Cash',
     currency: currency,
     taxRate: 0,
     discount: 0,
-    notes: "",
-    terms: "",
+    notes: '',
+    terms: '',
     items: [],
-    opportunityId: "",
-    quoteId: "",
-    projectId: "",
+    opportunityId: '',
+    quoteId: '',
+    projectId: '',
     // Vehicle details for workshop invoices
-    vehicleMake: "",
-    vehicleModel: "",
-    vehicleYear: "",
-    vehicleColor: "",
-    vehicleVin: "",
-    vehicleReg: "",
-    vehicleMileage: "",
+    vehicleMake: '',
+    vehicleModel: '',
+    vehicleYear: '',
+    vehicleColor: '',
+    vehicleVin: '',
+    vehicleReg: '',
+    vehicleMileage: '',
     // Workshop specific fields
-    jobDescription: "",
-    partsDescription: "",
+    jobDescription: '',
+    partsDescription: '',
     labourTotal: 0,
     partsTotal: 0,
   });
@@ -95,46 +92,46 @@ export function InvoiceDialog({
 
   // Update currency when global currency changes
   useEffect(() => {
-    if (mode === "create") {
+    if (mode === 'create') {
       setFormData(prev => ({
         ...prev,
-        currency: currency
+        currency: currency,
       }));
     }
   }, [currency, mode]);
 
   useEffect(() => {
-    if (invoice && mode === "edit") {
+    if (invoice && mode === 'edit') {
       setFormData({
         customerId: invoice.customerId,
         customerName: invoice.customerName,
         customerEmail: invoice.customerEmail,
-        shippingAddress: invoice.shippingAddress || "",
+        shippingAddress: invoice.shippingAddress || '',
         issueDate: invoice.issueDate,
         dueDate: invoice.dueDate,
-        orderNumber: invoice.orderNumber || "",
+        orderNumber: invoice.orderNumber || '',
         orderTime: invoice.orderTime || new Date().toISOString().slice(0, 16),
         paymentTerms: invoice.paymentTerms,
         currency: invoice.currency,
         taxRate: invoice.taxRate,
         discount: invoice.discount,
-        notes: invoice.notes || "",
-        terms: invoice.terms || "",
+        notes: invoice.notes || '',
+        terms: invoice.terms || '',
         items: [],
-        opportunityId: invoice.opportunityId || "",
-        quoteId: invoice.quoteId || "",
-        projectId: invoice.projectId || "",
+        opportunityId: invoice.opportunityId || '',
+        quoteId: invoice.quoteId || '',
+        projectId: invoice.projectId || '',
         // Vehicle details for workshop invoices
-        vehicleMake: invoice.vehicleMake || "",
-        vehicleModel: invoice.vehicleModel || "",
-        vehicleYear: invoice.vehicleYear || "",
-        vehicleColor: invoice.vehicleColor || "",
-        vehicleVin: invoice.vehicleVin || "",
-        vehicleReg: invoice.vehicleReg || "",
-        vehicleMileage: invoice.vehicleMileage || "",
+        vehicleMake: invoice.vehicleMake || '',
+        vehicleModel: invoice.vehicleModel || '',
+        vehicleYear: invoice.vehicleYear || '',
+        vehicleColor: invoice.vehicleColor || '',
+        vehicleVin: invoice.vehicleVin || '',
+        vehicleReg: invoice.vehicleReg || '',
+        vehicleMileage: invoice.vehicleMileage || '',
         // Workshop specific fields
-        jobDescription: invoice.jobDescription || "",
-        partsDescription: invoice.partsDescription || "",
+        jobDescription: invoice.jobDescription || '',
+        partsDescription: invoice.partsDescription || '',
         labourTotal: invoice.labourTotal || 0,
         partsTotal: invoice.partsTotal || 0,
       });
@@ -157,7 +154,7 @@ export function InvoiceDialog({
           .then((customer) => {
             setSelectedCustomer(customer);
           })
-          .catch((error) => {
+          .catch(() => {
             // If customer fetch fails, create a mock customer object
             setSelectedCustomer({
               id: invoice.customerId,
@@ -181,37 +178,37 @@ export function InvoiceDialog({
     } else {
       // Reset form for create mode
       setFormData({
-        customerId: "",
-        customerName: "",
-        customerEmail: "",
-        shippingAddress: "",
-        issueDate: new Date().toISOString().split("T")[0],
+        customerId: '',
+        customerName: '',
+        customerEmail: '',
+        shippingAddress: '',
+        issueDate: new Date().toISOString().split('T')[0],
         dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
           .toISOString()
-          .split("T")[0],
-        orderNumber: "",
+          .split('T')[0],
+        orderNumber: '',
         orderTime: new Date().toISOString().slice(0, 16),
-        paymentTerms: "Cash",
-        currency: "USD",
+        paymentTerms: 'Cash',
+        currency: 'USD',
         taxRate: 0,
         discount: 0,
-        notes: "",
-        terms: "",
+        notes: '',
+        terms: '',
         items: [],
-        opportunityId: "",
-        quoteId: "",
-        projectId: "",
+        opportunityId: '',
+        quoteId: '',
+        projectId: '',
         // Vehicle details for workshop invoices
-        vehicleMake: "",
-        vehicleModel: "",
-        vehicleYear: "",
-        vehicleColor: "",
-        vehicleVin: "",
-        vehicleReg: "",
-        vehicleMileage: "",
+        vehicleMake: '',
+        vehicleModel: '',
+        vehicleYear: '',
+        vehicleColor: '',
+        vehicleVin: '',
+        vehicleReg: '',
+        vehicleMileage: '',
         // Workshop specific fields
-        jobDescription: "",
-        partsDescription: "",
+        jobDescription: '',
+        partsDescription: '',
         labourTotal: 0,
         partsTotal: 0,
       });
@@ -227,13 +224,13 @@ export function InvoiceDialog({
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }));
+      setErrors((prev) => ({ ...prev, [field]: '' }));
     }
   };
 
   const handleCustomerSelect = (customer: Customer | null) => {
     setSelectedCustomer(customer);
-    
+
     if (customer) {
       // Update form data with customer information
       setFormData((prev) => ({
@@ -242,28 +239,28 @@ export function InvoiceDialog({
         customerName: `${customer.firstName} ${customer.lastName}`,
         customerEmail: customer.email,
       }));
-      
+
       // Clear customer-related errors
       setErrors((prev) => ({
         ...prev,
-        customer: "",
-        customerName: "",
-        customerEmail: "",
+        customer: '',
+        customerName: '',
+        customerEmail: '',
       }));
     } else {
       // Clear customer data when no customer is selected
       setFormData((prev) => ({
         ...prev,
-        customerId: "",
-        customerName: "",
-        customerEmail: "",
+        customerId: '',
+        customerName: '',
+        customerEmail: '',
       }));
     }
   };
 
   const addItem = () => {
     const newItem: InvoiceItemCreate = {
-      description: "",
+      description: '',
       quantity: 1,
       unitPrice: 0,
       discount: 0,
@@ -308,28 +305,28 @@ export function InvoiceDialog({
     const newErrors: { [key: string]: string } = {};
 
     if (!selectedCustomer) {
-      newErrors.customer = "Please select a customer";
+      newErrors.customer = 'Please select a customer';
     }
     if (!formData.issueDate) {
-      newErrors.issueDate = "Issue date is required";
+      newErrors.issueDate = 'Issue date is required';
     }
     if (!formData.dueDate) {
-      newErrors.dueDate = "Due date is required";
+      newErrors.dueDate = 'Due date is required';
     }
     if (items.length === 0) {
-      newErrors.items = "At least one item is required";
+      newErrors.items = 'At least one item is required';
     }
 
     // Validate items
     items.forEach((item, index) => {
       if (!item.description.trim()) {
-        newErrors[`item_${index}_description`] = "Item description is required";
+        newErrors[`item_${index}_description`] = 'Item description is required';
       }
       if (item.quantity <= 0) {
-        newErrors[`item_${index}_quantity`] = "Quantity must be greater than 0";
+        newErrors[`item_${index}_quantity`] = 'Quantity must be greater than 0';
       }
       if (item.unitPrice < 0) {
-        newErrors[`item_${index}_unitPrice`] = "Unit price cannot be negative";
+        newErrors[`item_${index}_unitPrice`] = 'Unit price cannot be negative';
       }
     });
 
@@ -346,7 +343,6 @@ export function InvoiceDialog({
 
     setLoading(true);
     try {
-      const totals = calculateTotals();
       const submitData: InvoiceCreate = {
         ...formData,
         items: items,
@@ -354,7 +350,7 @@ export function InvoiceDialog({
 
       await onSubmit(submitData);
       onOpenChange(false);
-    } catch (error) {
+    } catch {
       } finally {
       setLoading(false);
     }
@@ -368,7 +364,7 @@ export function InvoiceDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            {mode === "create" ? "Create New Invoice" : "Edit Invoice"}
+            {mode === 'create' ? 'Create New Invoice' : 'Edit Invoice'}
           </DialogTitle>
         </DialogHeader>
 
@@ -409,9 +405,9 @@ export function InvoiceDialog({
                   type="date"
                   value={formData.issueDate}
                   onChange={(e) =>
-                    handleInputChange("issueDate", e.target.value)
+                    handleInputChange('issueDate', e.target.value)
                   }
-                  className={errors.issueDate ? "border-red-500" : ""}
+                  className={errors.issueDate ? 'border-red-500' : ''}
                 />
                 {errors.issueDate && (
                   <p className="text-red-500 text-sm mt-1">
@@ -426,8 +422,8 @@ export function InvoiceDialog({
                   id="dueDate"
                   type="date"
                   value={formData.dueDate}
-                  onChange={(e) => handleInputChange("dueDate", e.target.value)}
-                  className={errors.dueDate ? "border-red-500" : ""}
+                  onChange={(e) => handleInputChange('dueDate', e.target.value)}
+                  className={errors.dueDate ? 'border-red-500' : ''}
                 />
                 {errors.dueDate && (
                   <p className="text-red-500 text-sm mt-1">{errors.dueDate}</p>
@@ -440,7 +436,7 @@ export function InvoiceDialog({
                   id="orderNumber"
                   value={formData.orderNumber}
                   onChange={(e) =>
-                    handleInputChange("orderNumber", e.target.value)
+                    handleInputChange('orderNumber', e.target.value)
                   }
                   placeholder="Enter order number"
                 />
@@ -453,7 +449,7 @@ export function InvoiceDialog({
                   type="datetime-local"
                   value={formData.orderTime}
                   onChange={(e) =>
-                    handleInputChange("orderTime", e.target.value)
+                    handleInputChange('orderTime', e.target.value)
                   }
                   placeholder="Select order time"
                 />
@@ -464,7 +460,7 @@ export function InvoiceDialog({
                 <Select
                   value={formData.paymentTerms}
                   onValueChange={(value) =>
-                    handleInputChange("paymentTerms", value)
+                    handleInputChange('paymentTerms', value)
                   }
                 >
                   <SelectTrigger>
@@ -484,7 +480,7 @@ export function InvoiceDialog({
                 <Select
                   value={formData.currency}
                   onValueChange={(value) =>
-                    handleInputChange("currency", value)
+                    handleInputChange('currency', value)
                   }
                 >
                   <SelectTrigger>
@@ -510,7 +506,7 @@ export function InvoiceDialog({
                   value={formData.taxRate}
                   onChange={(e) =>
                     handleInputChange(
-                      "taxRate",
+                      'taxRate',
                       parseFloat(e.target.value) || 0,
                     )
                   }
@@ -529,7 +525,7 @@ export function InvoiceDialog({
                   value={formData.discount}
                   onChange={(e) =>
                     handleInputChange(
-                      "discount",
+                      'discount',
                       parseFloat(e.target.value) || 0,
                     )
                   }
@@ -554,7 +550,7 @@ export function InvoiceDialog({
                   id="vehicleMake"
                   value={formData.vehicleMake}
                   onChange={(e) =>
-                    handleInputChange("vehicleMake", e.target.value)
+                    handleInputChange('vehicleMake', e.target.value)
                   }
                   placeholder="e.g., VW, BMW, Ford"
                 />
@@ -566,7 +562,7 @@ export function InvoiceDialog({
                   id="vehicleModel"
                   value={formData.vehicleModel}
                   onChange={(e) =>
-                    handleInputChange("vehicleModel", e.target.value)
+                    handleInputChange('vehicleModel', e.target.value)
                   }
                   placeholder="e.g., Golf, 3 Series, Focus"
                 />
@@ -578,7 +574,7 @@ export function InvoiceDialog({
                   id="vehicleYear"
                   value={formData.vehicleYear}
                   onChange={(e) =>
-                    handleInputChange("vehicleYear", e.target.value)
+                    handleInputChange('vehicleYear', e.target.value)
                   }
                   placeholder="e.g., 2014, 2020"
                 />
@@ -590,7 +586,7 @@ export function InvoiceDialog({
                   id="vehicleColor"
                   value={formData.vehicleColor}
                   onChange={(e) =>
-                    handleInputChange("vehicleColor", e.target.value)
+                    handleInputChange('vehicleColor', e.target.value)
                   }
                   placeholder="e.g., Blue, Red, Silver"
                 />
@@ -602,7 +598,7 @@ export function InvoiceDialog({
                   id="vehicleVin"
                   value={formData.vehicleVin}
                   onChange={(e) =>
-                    handleInputChange("vehicleVin", e.target.value)
+                    handleInputChange('vehicleVin', e.target.value)
                   }
                   placeholder="Vehicle Identification Number"
                 />
@@ -614,7 +610,7 @@ export function InvoiceDialog({
                   id="vehicleReg"
                   value={formData.vehicleReg}
                   onChange={(e) =>
-                    handleInputChange("vehicleReg", e.target.value)
+                    handleInputChange('vehicleReg', e.target.value)
                   }
                   placeholder="e.g., KU14 MGV"
                 />
@@ -626,7 +622,7 @@ export function InvoiceDialog({
                   id="vehicleMileage"
                   value={formData.vehicleMileage}
                   onChange={(e) =>
-                    handleInputChange("vehicleMileage", e.target.value)
+                    handleInputChange('vehicleMileage', e.target.value)
                   }
                   placeholder="e.g., 50,000 miles"
                 />
@@ -638,7 +634,7 @@ export function InvoiceDialog({
                   id="jobDescription"
                   value={formData.jobDescription}
                   onChange={(e) =>
-                    handleInputChange("jobDescription", e.target.value)
+                    handleInputChange('jobDescription', e.target.value)
                   }
                   placeholder="Describe the work performed"
                 />
@@ -650,7 +646,7 @@ export function InvoiceDialog({
                   id="partsDescription"
                   value={formData.partsDescription}
                   onChange={(e) =>
-                    handleInputChange("partsDescription", e.target.value)
+                    handleInputChange('partsDescription', e.target.value)
                   }
                   placeholder="Describe the parts used"
                 />
@@ -666,7 +662,7 @@ export function InvoiceDialog({
                   value={formData.labourTotal}
                   onChange={(e) =>
                     handleInputChange(
-                      "labourTotal",
+                      'labourTotal',
                       parseFloat(e.target.value) || 0,
                     )
                   }
@@ -684,7 +680,7 @@ export function InvoiceDialog({
                   value={formData.partsTotal}
                   onChange={(e) =>
                     handleInputChange(
-                      "partsTotal",
+                      'partsTotal',
                       parseFloat(e.target.value) || 0,
                     )
                   }
@@ -719,13 +715,13 @@ export function InvoiceDialog({
                       id={`item_${index}_description`}
                       value={item.description}
                       onChange={(e) =>
-                        updateItem(index, "description", e.target.value)
+                        updateItem(index, 'description', e.target.value)
                       }
                       placeholder="Item description"
                       className={
                         errors[`item_${index}_description`]
-                          ? "border-red-500"
-                          : ""
+                          ? 'border-red-500'
+                          : ''
                       }
                     />
                     {errors[`item_${index}_description`] && (
@@ -746,12 +742,12 @@ export function InvoiceDialog({
                       onChange={(e) =>
                         updateItem(
                           index,
-                          "quantity",
+                          'quantity',
                           parseFloat(e.target.value) || 0,
                         )
                       }
                       className={
-                        errors[`item_${index}_quantity`] ? "border-red-500" : ""
+                        errors[`item_${index}_quantity`] ? 'border-red-500' : ''
                       }
                     />
                     {errors[`item_${index}_quantity`] && (
@@ -774,15 +770,15 @@ export function InvoiceDialog({
                       onChange={(e) =>
                         updateItem(
                           index,
-                          "unitPrice",
+                          'unitPrice',
                           parseFloat(e.target.value) || 0,
                         )
                       }
                       placeholder="0.00"
                       className={
                         errors[`item_${index}_unitPrice`]
-                          ? "border-red-500"
-                          : ""
+                          ? 'border-red-500'
+                          : ''
                       }
                     />
                     {errors[`item_${index}_unitPrice`] && (
@@ -806,7 +802,7 @@ export function InvoiceDialog({
                       onChange={(e) =>
                         updateItem(
                           index,
-                          "discount",
+                          'discount',
                           parseFloat(e.target.value) || 0,
                         )
                       }
@@ -817,7 +813,7 @@ export function InvoiceDialog({
                   <div className="col-span-1">
                     <Label>Total</Label>
                     <div className="text-sm font-medium p-2 bg-gray-50 rounded">
-                      {InvoiceService.formatCurrency(
+                      {formatCurrency(
                         item.quantity *
                           item.unitPrice *
                           (1 - item.discount / 100),
@@ -859,25 +855,25 @@ export function InvoiceDialog({
                   <div className="flex justify-between">
                     <span>Subtotal:</span>
                     <span>
-                      {InvoiceService.formatCurrency(totals.subtotal)}
+                      {formatCurrency(totals.subtotal)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Discount ({formData.discount}%):</span>
                     <span>
-                      -{InvoiceService.formatCurrency(totals.discount)}
+                      -{formatCurrency(totals.discount)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Tax ({formData.taxRate}%):</span>
                     <span>
-                      {InvoiceService.formatCurrency(totals.taxAmount)}
+                      {formatCurrency(totals.taxAmount)}
                     </span>
                   </div>
                   <div className="border-t pt-2 font-bold text-lg">
                     <div className="flex justify-between">
                       <span>Total:</span>
-                      <span>{InvoiceService.formatCurrency(totals.total)}</span>
+                      <span>{formatCurrency(totals.total)}</span>
                     </div>
                   </div>
                 </div>
@@ -896,7 +892,7 @@ export function InvoiceDialog({
                 <Textarea
                   id="notes"
                   value={formData.notes}
-                  onChange={(e) => handleInputChange("notes", e.target.value)}
+                  onChange={(e) => handleInputChange('notes', e.target.value)}
                   placeholder="Add any additional notes for the customer"
                   rows={3}
                 />
@@ -907,7 +903,7 @@ export function InvoiceDialog({
                 <Textarea
                   id="terms"
                   value={formData.terms}
-                  onChange={(e) => handleInputChange("terms", e.target.value)}
+                  onChange={(e) => handleInputChange('terms', e.target.value)}
                   placeholder="Add terms and conditions"
                   rows={3}
                 />
@@ -926,10 +922,10 @@ export function InvoiceDialog({
             </Button>
             <Button type="submit" disabled={loading} className="modern-button">
               {loading
-                ? "Saving..."
-                : mode === "create"
-                  ? "Create Invoice"
-                  : "Update Invoice"}
+                ? 'Saving...'
+                : mode === 'create'
+                  ? 'Create Invoice'
+                  : 'Update Invoice'}
             </Button>
           </div>
         </form>

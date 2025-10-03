@@ -1,41 +1,41 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../../../components/ui/card";
-import { Button } from "../../../../components/ui/button";
-import { Input } from "../../../../components/ui/input";
-import { Label } from "../../../../components/ui/label";
-import { Textarea } from "../../../../components/ui/textarea";
-import { Switch } from "../../../../components/ui/switch";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
-import { useAuth } from "../../../../contexts/AuthContext";
-import { inventoryService } from "../../../../services/InventoryService";
-import { DashboardLayout } from "../../../../components/layout";
+} from '../../../../components/ui/card';
+import { Button } from '../../../../components/ui/button';
+import { Input } from '../../../../components/ui/input';
+import { Label } from '../../../../components/ui/label';
+import { Switch } from '../../../../components/ui/switch';
+import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { useAuth } from '../../../../contexts/AuthContext';
+import { inventoryService } from '../../../../services/InventoryService';
+import { DashboardLayout } from '../../../../components/layout';
+import { toast } from 'sonner';
 
 export default function NewSupplierPage() {
-  const { user } = useAuth();
+  const { } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: "",
-    code: "",
-    contactPerson: "",
-    email: "",
-    phone: "",
-    address: "",
-    city: "",
-    state: "",
-    country: "",
-    postalCode: "",
-    website: "",
-    paymentTerms: "",
-    creditLimit: "",
+    name: '',
+    code: '',
+    contactPerson: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    country: '',
+    postalCode: '',
+    website: '',
+    paymentTerms: '',
+    creditLimit: '',
     isActive: true,
   });
 
@@ -62,9 +62,9 @@ export default function NewSupplierPage() {
       };
 
       await inventoryService.createSupplier(supplierData);
-      router.push("/inventory/suppliers");
+      router.push('/inventory/suppliers');
     } catch (error) {
-      alert("Failed to create supplier. Please try again.");
+      toast.error('Failed to create supplier. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -102,7 +102,7 @@ export default function NewSupplierPage() {
                   <Input
                     id="name"
                     value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
                     placeholder="ABC Corporation"
                     required
                   />
@@ -113,7 +113,7 @@ export default function NewSupplierPage() {
                   <Input
                     id="code"
                     value={formData.code}
-                    onChange={(e) => handleInputChange("code", e.target.value)}
+                    onChange={(e) => handleInputChange('code', e.target.value)}
                     placeholder="SUP-001"
                     required
                   />
@@ -125,7 +125,7 @@ export default function NewSupplierPage() {
                     id="contactPerson"
                     value={formData.contactPerson}
                     onChange={(e) =>
-                      handleInputChange("contactPerson", e.target.value)
+                      handleInputChange('contactPerson', e.target.value)
                     }
                     placeholder="John Doe"
                   />
@@ -137,7 +137,7 @@ export default function NewSupplierPage() {
                     id="website"
                     value={formData.website}
                     onChange={(e) =>
-                      handleInputChange("website", e.target.value)
+                      handleInputChange('website', e.target.value)
                     }
                     placeholder="https://www.example.com"
                     type="url"
@@ -158,7 +158,7 @@ export default function NewSupplierPage() {
                     id="email"
                     type="email"
                     value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
                     placeholder="contact@example.com"
                   />
                 </div>
@@ -168,7 +168,7 @@ export default function NewSupplierPage() {
                   <Input
                     id="phone"
                     value={formData.phone}
-                    onChange={(e) => handleInputChange("phone", e.target.value)}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
                     placeholder="+1 (555) 123-4567"
                   />
                 </div>
@@ -179,7 +179,7 @@ export default function NewSupplierPage() {
                     id="paymentTerms"
                     value={formData.paymentTerms}
                     onChange={(e) =>
-                      handleInputChange("paymentTerms", e.target.value)
+                      handleInputChange('paymentTerms', e.target.value)
                     }
                     placeholder="Net 30"
                   />
@@ -193,7 +193,7 @@ export default function NewSupplierPage() {
                     step="0.01"
                     value={formData.creditLimit}
                     onChange={(e) =>
-                      handleInputChange("creditLimit", e.target.value)
+                      handleInputChange('creditLimit', e.target.value)
                     }
                     placeholder="10000.00"
                   />
@@ -213,7 +213,7 @@ export default function NewSupplierPage() {
                     id="address"
                     value={formData.address}
                     onChange={(e) =>
-                      handleInputChange("address", e.target.value)
+                      handleInputChange('address', e.target.value)
                     }
                     placeholder="123 Business St"
                   />
@@ -224,7 +224,7 @@ export default function NewSupplierPage() {
                   <Input
                     id="city"
                     value={formData.city}
-                    onChange={(e) => handleInputChange("city", e.target.value)}
+                    onChange={(e) => handleInputChange('city', e.target.value)}
                     placeholder="New York"
                   />
                 </div>
@@ -234,7 +234,7 @@ export default function NewSupplierPage() {
                   <Input
                     id="state"
                     value={formData.state}
-                    onChange={(e) => handleInputChange("state", e.target.value)}
+                    onChange={(e) => handleInputChange('state', e.target.value)}
                     placeholder="NY"
                   />
                 </div>
@@ -245,7 +245,7 @@ export default function NewSupplierPage() {
                     id="country"
                     value={formData.country}
                     onChange={(e) =>
-                      handleInputChange("country", e.target.value)
+                      handleInputChange('country', e.target.value)
                     }
                     placeholder="United States"
                   />
@@ -257,7 +257,7 @@ export default function NewSupplierPage() {
                     id="postalCode"
                     value={formData.postalCode}
                     onChange={(e) =>
-                      handleInputChange("postalCode", e.target.value)
+                      handleInputChange('postalCode', e.target.value)
                     }
                     placeholder="10001"
                   />
@@ -276,7 +276,7 @@ export default function NewSupplierPage() {
                     id="isActive"
                     checked={formData.isActive}
                     onCheckedChange={(checked) =>
-                      handleInputChange("isActive", checked)
+                      handleInputChange('isActive', checked)
                     }
                   />
                   <Label htmlFor="isActive">Active Supplier</Label>

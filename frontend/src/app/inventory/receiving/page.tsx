@@ -1,23 +1,23 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
-import { Badge } from "../../../components/ui/badge";
-import { Input } from "../../../components/ui/input";
+} from '../../../components/ui/card';
+import { Button } from '../../../components/ui/button';
+import { Badge } from '../../../components/ui/badge';
+import { Input } from '../../../components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../../components/ui/select";
+} from '../../../components/ui/select';
 import {
   Table,
   TableBody,
@@ -25,7 +25,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../../../components/ui/table";
+} from '../../../components/ui/table';
 import {
   Truck,
   Plus,
@@ -37,45 +37,45 @@ import {
   Building2,
   ClipboardList,
   Package,
-} from "lucide-react";
-import { useAuth } from "../../../contexts/AuthContext";
-import { inventoryService } from "../../../services/InventoryService";
+} from 'lucide-react';
+import { useAuth } from '../../../contexts/AuthContext';
+import { inventoryService } from '../../../services/InventoryService';
 import {
   Receiving,
   ReceivingCreate,
   ReceivingItemCreate,
   PurchaseOrder,
   Warehouse,
-} from "../../../models/inventory";
-import { DashboardLayout } from "../../../components/layout";
-import { formatDate } from "../../../lib/utils";
+} from '../../../models/inventory';
+import { DashboardLayout } from '../../../components/layout';
+import { formatDate } from '../../../lib/utils';
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../../components/ui/dialog";
-import { Label } from "../../../components/ui/label";
-import { Textarea } from "../../../components/ui/textarea";
+} from '../../../components/ui/dialog';
+import { Label } from '../../../components/ui/label';
+import { Textarea } from '../../../components/ui/textarea';
 
 export default function ReceivingPage() {
-  const { user } = useAuth();
+  const { } = useAuth();
   const router = useRouter();
   const [receivings, setReceivings] = useState<Receiving[]>([]);
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isProcessModalOpen, setIsProcessModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newReceiving, setNewReceiving] = useState<ReceivingCreate>({
-    receivingNumber: "",
-    purchaseOrderId: "",
-    warehouseId: "",
-    receivedDate: "",
-    notes: "",
+    receivingNumber: '',
+    purchaseOrderId: '',
+    warehouseId: '',
+    receivedDate: '',
+    notes: '',
     items: [],
   });
   const [selectedPO, setSelectedPO] = useState<PurchaseOrder | null>(null);
@@ -121,7 +121,7 @@ export default function ReceivingPage() {
       receiving.notes?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
-      statusFilter === "all" ||
+      statusFilter === 'all' ||
       !statusFilter ||
       receiving.status === statusFilter;
 
@@ -129,7 +129,7 @@ export default function ReceivingPage() {
   });
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this receiving?")) {
+    if (confirm('Are you sure you want to delete this receiving?')) {
       try {
         await inventoryService.deleteReceiving(id);
         fetchData();
@@ -155,7 +155,7 @@ export default function ReceivingPage() {
               unitCost: item.unitCost,
               totalCost: item.quantity * item.unitCost,
               receivedQuantity: item.quantity, // Default to ordered quantity
-              notes: "",
+              notes: '',
             }),
           )
         : [],
@@ -177,7 +177,7 @@ export default function ReceivingPage() {
       !newReceiving.warehouseId ||
       newReceiving.items.length === 0
     ) {
-      alert("Please fill in all required fields and ensure items are selected");
+      alert('Please fill in all required fields and ensure items are selected');
       return;
     }
 
@@ -187,7 +187,7 @@ export default function ReceivingPage() {
     );
 
     if (invalidItems.length > 0) {
-      alert("Received quantities cannot exceed ordered quantities");
+      alert('Received quantities cannot exceed ordered quantities');
       return;
     }
 
@@ -198,7 +198,7 @@ export default function ReceivingPage() {
       resetForm();
       fetchData();
     } catch (error) {
-      alert("Failed to process receiving. Please try again.");
+      alert('Failed to process receiving. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -206,11 +206,11 @@ export default function ReceivingPage() {
 
   const resetForm = () => {
     setNewReceiving({
-      receivingNumber: "",
-      warehouseId: warehouses.length > 0 ? warehouses[0].id : "",
-      receivedDate: new Date().toISOString().split("T")[0], // Today's date
-      purchaseOrderId: "",
-      notes: "",
+      receivingNumber: '',
+      warehouseId: warehouses.length > 0 ? warehouses[0].id : '',
+      receivedDate: new Date().toISOString().split('T')[0], // Today's date
+      purchaseOrderId: '',
+      notes: '',
       items: [],
     });
     setSelectedPO(null);
@@ -218,11 +218,11 @@ export default function ReceivingPage() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      pending: { variant: "secondary", label: "Pending" },
-      in_progress: { variant: "default", label: "In Progress" },
-      completed: { variant: "default", label: "Completed" },
-      cancelled: { variant: "destructive", label: "Cancelled" },
-      failed: { variant: "destructive", label: "Failed" },
+      pending: { variant: 'secondary', label: 'Pending' },
+      in_progress: { variant: 'default', label: 'In Progress' },
+      completed: { variant: 'default', label: 'Completed' },
+      cancelled: { variant: 'destructive', label: 'Cancelled' },
+      failed: { variant: 'destructive', label: 'Failed' },
     };
 
     const config =
@@ -341,7 +341,7 @@ export default function ReceivingPage() {
                       <TableCell>{getStatusBadge(receiving.status)}</TableCell>
                       <TableCell>
                         <div className="max-w-48 truncate">
-                          {receiving.notes || "No notes"}
+                          {receiving.notes || 'No notes'}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -393,11 +393,11 @@ export default function ReceivingPage() {
                   No receivings found
                 </h3>
                 <p className="text-muted-foreground mb-4">
-                  {searchTerm || statusFilter !== "all"
-                    ? "Try adjusting your search terms or filters"
-                    : "Get started by processing your first receiving"}
+                  {searchTerm || statusFilter !== 'all'
+                    ? 'Try adjusting your search terms or filters'
+                    : 'Get started by processing your first receiving'}
                 </p>
-                {!searchTerm && statusFilter === "all" && (
+                {!searchTerm && statusFilter === 'all' && (
                   <Button onClick={() => setIsProcessModalOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Process Receiving
@@ -430,7 +430,7 @@ export default function ReceivingPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {receivings.filter((r) => r.status === "pending").length}
+                {receivings.filter((r) => r.status === 'pending').length}
               </div>
               <p className="text-xs text-muted-foreground">
                 Awaiting processing
@@ -445,7 +445,7 @@ export default function ReceivingPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {receivings.filter((r) => r.status === "in_progress").length}
+                {receivings.filter((r) => r.status === 'in_progress').length}
               </div>
               <p className="text-xs text-muted-foreground">
                 Currently processing
@@ -460,7 +460,7 @@ export default function ReceivingPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {receivings.filter((r) => r.status === "completed").length}
+                {receivings.filter((r) => r.status === 'completed').length}
               </div>
               <p className="text-xs text-muted-foreground">
                 Successfully received
@@ -490,7 +490,7 @@ export default function ReceivingPage() {
                       {purchaseOrders
                         .filter(
                           (po) =>
-                            po.status === "ordered" || po.status === "approved",
+                            po.status === 'ordered' || po.status === 'approved',
                         )
                         .map((po) => (
                           <SelectItem key={po.id} value={po.id}>
@@ -658,7 +658,7 @@ export default function ReceivingPage() {
                   newReceiving.items.length === 0
                 }
               >
-                {isSubmitting ? "Processing..." : "Process Receiving"}
+                {isSubmitting ? 'Processing...' : 'Process Receiving'}
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -1,19 +1,18 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Badge } from "../ui/badge";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent } from '../ui/card';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
-import { TaskCard } from "./TaskCard";
-import { TaskDialog } from "./TaskDialog";
+} from '../ui/select';
+import { TaskCard } from './TaskCard';
+import { TaskDialog } from './TaskDialog';
 import {
   Plus,
   Search,
@@ -24,19 +23,18 @@ import {
   Clock,
   PlayCircle,
   XCircle,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   Task,
   TaskCreate,
   TaskUpdate,
   TaskStatus,
-  TaskPriority,
   SubTask,
-} from "../../models/task";
-import { Project } from "../../models/project/Project";
-import { User } from "../../models/auth";
-import { apiService } from "../../services/ApiService";
-import { cn } from "../../lib/utils";
+} from '../../models/task';
+import { Project } from '../../models/project/Project';
+import { User } from '../../models/auth';
+import { apiService } from '../../services/ApiService';
+import { cn } from '../../lib/utils';
 
 interface TaskListProps {
   projectId?: string;
@@ -62,10 +60,10 @@ export const TaskList: React.FC<TaskListProps> = ({
 
   // Filter states
   const [filters, setFilters] = useState({
-    project: projectId || "",
-    status: "",
-    assignedTo: "",
-    search: "",
+    project: projectId || '',
+    status: '',
+    assignedTo: '',
+    search: '',
     mainTasksOnly: false,
   });
 
@@ -93,7 +91,7 @@ export const TaskList: React.FC<TaskListProps> = ({
       setProjects(projectsRes.projects || []);
       setUsers(usersRes.users || []);
     } catch (err) {
-      setError("Failed to load projects and users");
+      setError('Failed to load projects and users');
     }
   };
 
@@ -148,7 +146,7 @@ export const TaskList: React.FC<TaskListProps> = ({
       setTotalPages(response.pagination?.pages || 1);
       setTotalTasks(response.pagination?.total || filteredTasks.length);
     } catch (err) {
-      setError("Failed to load tasks");
+      setError('Failed to load tasks');
     } finally {
       setLoading(false);
     }
@@ -184,7 +182,7 @@ export const TaskList: React.FC<TaskListProps> = ({
       ...subtask,
       project:
         tasks.find((t) => t.subtasks.some((s) => s.id === subtask.id))
-          ?.project || "",
+          ?.project || '',
       subtasks: [],
       subtaskCount: 0,
       completedSubtaskCount: 0,
@@ -216,31 +214,31 @@ export const TaskList: React.FC<TaskListProps> = ({
       setParentTask(null);
       await loadTasks();
     } catch (err: any) {
-      setDialogError(err.response?.data?.detail || "Failed to save task");
+      setDialogError(err.response?.data?.detail || 'Failed to save task');
     } finally {
       setDialogLoading(false);
     }
   };
 
   const handleDeleteTask = async (taskId: string) => {
-    if (!confirm("Are you sure you want to delete this task?")) return;
+    if (!confirm('Are you sure you want to delete this task?')) return;
 
     try {
       await apiService.deleteTask(taskId);
       await loadTasks();
     } catch (err) {
-      setError("Failed to delete task");
+      setError('Failed to delete task');
     }
   };
 
   const handleDeleteSubtask = async (subtaskId: string) => {
-    if (!confirm("Are you sure you want to delete this subtask?")) return;
+    if (!confirm('Are you sure you want to delete this subtask?')) return;
 
     try {
       await apiService.deleteTask(subtaskId);
       await loadTasks();
     } catch (err) {
-      setError("Failed to delete subtask");
+      setError('Failed to delete subtask');
     }
   };
 
@@ -249,23 +247,23 @@ export const TaskList: React.FC<TaskListProps> = ({
       await apiService.updateTask(taskId, { status });
       await loadTasks();
     } catch (err) {
-      setError("Failed to update task status");
+      setError('Failed to update task status');
     }
   };
 
   const handleFilterChange = (field: string, value: string | boolean) => {
     // Convert "all" values to empty strings for filtering
-    const filterValue = value === "all" ? "" : value;
+    const filterValue = value === 'all' ? '' : value;
     setFilters((prev) => ({ ...prev, [field]: filterValue }));
     setPage(1); // Reset to first page when filters change
   };
 
   const clearFilters = () => {
     setFilters({
-      project: projectId || "",
-      status: "",
-      assignedTo: "",
-      search: "",
+      project: projectId || '',
+      status: '',
+      assignedTo: '',
+      search: '',
       mainTasksOnly: false,
     });
     setPage(1);
@@ -305,7 +303,7 @@ export const TaskList: React.FC<TaskListProps> = ({
             onClick={loadTasks}
             disabled={loading}
           >
-            <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+            <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
           </Button>
           <Button onClick={handleCreateTask} className="modern-button">
             <Plus className="h-4 w-4 mr-2" />
@@ -391,7 +389,7 @@ export const TaskList: React.FC<TaskListProps> = ({
                 <Input
                   placeholder="Search tasks..."
                   value={filters.search}
-                  onChange={(e) => handleFilterChange("search", e.target.value)}
+                  onChange={(e) => handleFilterChange('search', e.target.value)}
                   className="pl-10"
                 />
               </div>
@@ -400,9 +398,9 @@ export const TaskList: React.FC<TaskListProps> = ({
             {showProjectFilter && (
               <div>
                 <Select
-                  value={filters.project || "all"}
+                  value={filters.project || 'all'}
                   onValueChange={(value) =>
-                    handleFilterChange("project", value)
+                    handleFilterChange('project', value)
                   }
                 >
                   <SelectTrigger>
@@ -422,8 +420,8 @@ export const TaskList: React.FC<TaskListProps> = ({
 
             <div>
               <Select
-                value={filters.status || "all"}
-                onValueChange={(value) => handleFilterChange("status", value)}
+                value={filters.status || 'all'}
+                onValueChange={(value) => handleFilterChange('status', value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All Status" />
@@ -446,9 +444,9 @@ export const TaskList: React.FC<TaskListProps> = ({
 
             <div>
               <Select
-                value={filters.assignedTo || "all"}
+                value={filters.assignedTo || 'all'}
                 onValueChange={(value) =>
-                  handleFilterChange("assignedTo", value)
+                  handleFilterChange('assignedTo', value)
                 }
               >
                 <SelectTrigger>
@@ -458,10 +456,10 @@ export const TaskList: React.FC<TaskListProps> = ({
                   <SelectItem value="all">All Users</SelectItem>
                   {users.map((user) => (
                     <SelectItem
-                      key={user.id || user.userId || ""}
-                      value={user.id || user.userId || ""}
+                      key={user.id || user.userId || ''}
+                      value={user.id || user.userId || ''}
                     >
-                      {`${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() ||
+                      {`${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() ||
                         user.userName}
                     </SelectItem>
                   ))}
@@ -471,9 +469,9 @@ export const TaskList: React.FC<TaskListProps> = ({
 
             <div>
               <Select
-                value={filters.mainTasksOnly ? "main" : "all"}
+                value={filters.mainTasksOnly ? 'main' : 'all'}
                 onValueChange={(value) =>
-                  handleFilterChange("mainTasksOnly", value === "main")
+                  handleFilterChange('mainTasksOnly', value === 'main')
                 }
               >
                 <SelectTrigger>
@@ -539,8 +537,8 @@ export const TaskList: React.FC<TaskListProps> = ({
                 </h3>
                 <p className="text-gray-600 mb-4">
                   {Object.values(filters).some((v) => v)
-                    ? "Try adjusting your filters or create a new task."
-                    : "Get started by creating your first task."}
+                    ? 'Try adjusting your filters or create a new task.'
+                    : 'Get started by creating your first task.'}
                 </p>
                 <Button onClick={handleCreateTask} className="modern-button">
                   <Plus className="h-4 w-4 mr-2" />
@@ -580,7 +578,7 @@ export const TaskList: React.FC<TaskListProps> = ({
                       return (
                         <Button
                           key={pageNum}
-                          variant={page === pageNum ? "default" : "outline"}
+                          variant={page === pageNum ? 'default' : 'outline'}
                           size="sm"
                           onClick={() => setPage(pageNum)}
                         >
@@ -612,8 +610,8 @@ export const TaskList: React.FC<TaskListProps> = ({
         parentTask={parentTask ?? undefined}
         projects={projects}
         users={users.map((u) => ({
-          id: u.id || u.userId || "",
-          name: `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || u.userName,
+          id: u.id || u.userId || '',
+          name: `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() || u.userName,
           email: u.email,
         }))}
         loading={dialogLoading}

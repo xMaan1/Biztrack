@@ -1,108 +1,108 @@
 // HRM Enums
 export enum EmploymentStatus {
-  ACTIVE = "active",
-  INACTIVE = "inactive",
-  TERMINATED = "terminated",
-  RESIGNED = "resigned",
-  RETIRED = "retired",
-  PROBATION = "probation",
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+  TERMINATED = 'terminated',
+  RESIGNED = 'resigned',
+  RETIRED = 'retired',
+  PROBATION = 'probation',
 }
 
 export enum EmployeeType {
-  FULL_TIME = "full_time",
-  PART_TIME = "part_time",
-  CONTRACTOR = "contractor",
-  INTERN = "intern",
-  FREELANCER = "freelancer",
+  FULL_TIME = 'full_time',
+  PART_TIME = 'part_time',
+  CONTRACTOR = 'contractor',
+  INTERN = 'intern',
+  FREELANCER = 'freelancer',
 }
 
 export enum Department {
-  ENGINEERING = "engineering",
-  SALES = "sales",
-  MARKETING = "marketing",
-  HR = "hr",
-  FINANCE = "finance",
-  OPERATIONS = "operations",
-  CUSTOMER_SUPPORT = "customer_support",
-  LEGAL = "legal",
-  IT = "it",
-  OTHER = "other",
+  ENGINEERING = 'engineering',
+  SALES = 'sales',
+  MARKETING = 'marketing',
+  HR = 'hr',
+  FINANCE = 'finance',
+  OPERATIONS = 'operations',
+  CUSTOMER_SUPPORT = 'customer_support',
+  LEGAL = 'legal',
+  IT = 'it',
+  OTHER = 'other',
 }
 
 export enum JobStatus {
-  DRAFT = "draft",
-  PUBLISHED = "published",
-  CLOSED = "closed",
-  ON_HOLD = "on_hold",
+  DRAFT = 'draft',
+  PUBLISHED = 'published',
+  CLOSED = 'closed',
+  ON_HOLD = 'on_hold',
 }
 
 export enum ApplicationStatus {
-  APPLIED = "applied",
-  SCREENING = "screening",
-  INTERVIEW = "interview",
-  TECHNICAL_TEST = "technical_test",
-  REFERENCE_CHECK = "reference_check",
-  OFFER = "offer",
-  HIRED = "hired",
-  REJECTED = "rejected",
-  WITHDRAWN = "withdrawn",
+  APPLIED = 'applied',
+  SCREENING = 'screening',
+  INTERVIEW = 'interview',
+  TECHNICAL_TEST = 'technical_test',
+  REFERENCE_CHECK = 'reference_check',
+  OFFER = 'offer',
+  HIRED = 'hired',
+  REJECTED = 'rejected',
+  WITHDRAWN = 'withdrawn',
 }
 
 export enum ReviewType {
-  ANNUAL = "annual",
-  QUARTERLY = "quarterly",
-  MONTHLY = "monthly",
-  PROJECT_BASED = "project_based",
-  PROBATION = "probation",
+  ANNUAL = 'annual',
+  QUARTERLY = 'quarterly',
+  MONTHLY = 'monthly',
+  PROJECT_BASED = 'project_based',
+  PROBATION = 'probation',
 }
 
 export enum ReviewStatus {
-  DRAFT = "draft",
-  IN_PROGRESS = "in_progress",
-  COMPLETED = "completed",
-  APPROVED = "approved",
+  DRAFT = 'draft',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  APPROVED = 'approved',
 }
 
 export enum LeaveType {
-  ANNUAL = "annual",
-  SICK = "sick",
-  PERSONAL = "personal",
-  MATERNITY = "maternity",
-  PATERNITY = "paternity",
-  BEREAVEMENT = "bereavement",
-  UNPAID = "unpaid",
-  OTHER = "other",
+  ANNUAL = 'annual',
+  SICK = 'sick',
+  PERSONAL = 'personal',
+  MATERNITY = 'maternity',
+  PATERNITY = 'paternity',
+  BEREAVEMENT = 'bereavement',
+  UNPAID = 'unpaid',
+  OTHER = 'other',
 }
 
 export enum LeaveStatus {
-  PENDING = "pending",
-  APPROVED = "approved",
-  REJECTED = "rejected",
-  CANCELLED = "cancelled",
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  CANCELLED = 'cancelled',
 }
 
 export enum PayrollStatus {
-  DRAFT = "draft",
-  PROCESSED = "processed",
-  PAID = "paid",
-  CANCELLED = "cancelled",
+  DRAFT = 'draft',
+  PROCESSED = 'processed',
+  PAID = 'paid',
+  CANCELLED = 'cancelled',
 }
 
 export enum TrainingStatus {
-  NOT_STARTED = "not_started",
-  IN_PROGRESS = "in_progress",
-  COMPLETED = "completed",
-  EXPIRED = "expired",
+  NOT_STARTED = 'not_started',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  EXPIRED = 'expired',
 }
 
 export enum TrainingType {
-  ONBOARDING = "onboarding",
-  SKILL_DEVELOPMENT = "skill_development",
-  COMPLIANCE = "compliance",
-  LEADERSHIP = "leadership",
-  TECHNICAL = "technical",
-  SOFT_SKILLS = "soft_skills",
-  CERTIFICATION = "certification",
+  ONBOARDING = 'onboarding',
+  SKILL_DEVELOPMENT = 'skill_development',
+  COMPLIANCE = 'compliance',
+  LEADERSHIP = 'leadership',
+  TECHNICAL = 'technical',
+  SOFT_SKILLS = 'soft_skills',
+  CERTIFICATION = 'certification',
 }
 
 // HRM Models

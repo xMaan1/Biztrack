@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
-import { Badge } from "../../../components/ui/badge";
-import { Progress } from "../../../components/ui/progress";
+} from '../../../components/ui/card';
+import { Button } from '../../../components/ui/button';
+import { Badge } from '../../../components/ui/badge';
+import { Progress } from '../../../components/ui/progress';
 import {
   Factory,
   Clock,
@@ -20,28 +20,24 @@ import {
   Square,
   AlertTriangle,
   TrendingUp,
-  Package,
-  Users,
-  DollarSign,
   BarChart3,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   ProductionDashboard,
-  ProductionPlanResponse as ProductionPlan,
-} from "../../../models/production";
-import ProductionService from "../../../services/ProductionService";
-import { useAuth } from "../../../hooks/useAuth";
-import { DashboardLayout } from "../../../components/layout";
-import { useRouter } from "next/navigation";
+} from '../../../models/production';
+import ProductionService from '../../../services/ProductionService';
+import { useAuth } from '../../../hooks/useAuth';
+import { DashboardLayout } from '../../../components/layout';
+import { useRouter } from 'next/navigation';
 import {
   cn,
   getStatusColor,
   getPriorityColor,
   formatDate,
-} from "../../../lib/utils";
+} from '../../../lib/utils';
 
 export default function ProductionDashboardPage() {
-  const { user } = useAuth();
+  const { } = useAuth();
   const router = useRouter();
   const [dashboard, setDashboard] = useState<ProductionDashboard | null>(null);
   const [loading, setLoading] = useState(true);
@@ -64,15 +60,15 @@ export default function ProductionDashboardPage() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "planned":
+      case 'planned':
         return <Clock className="h-4 w-4" />;
-      case "in_progress":
+      case 'in_progress':
         return <Play className="h-4 w-4" />;
-      case "on_hold":
+      case 'on_hold':
         return <Pause className="h-4 w-4" />;
-      case "completed":
+      case 'completed':
         return <CheckCircle2 className="h-4 w-4" />;
-      case "cancelled":
+      case 'cancelled':
         return <Square className="h-4 w-4" />;
       default:
         return <Clock className="h-4 w-4" />;
@@ -81,13 +77,13 @@ export default function ProductionDashboardPage() {
 
   const getPriorityIcon = (priority: string) => {
     switch (priority) {
-      case "low":
+      case 'low':
         return <Clock className="h-4 w-4" />;
-      case "medium":
+      case 'medium':
         return <AlertTriangle className="h-4 w-4" />;
-      case "high":
+      case 'high':
         return <AlertTriangle className="h-4 w-4 text-orange-500" />;
-      case "urgent":
+      case 'urgent':
         return <AlertTriangle className="h-4 w-4 text-red-500" />;
       default:
         return <AlertTriangle className="h-4 w-4" />;
@@ -134,7 +130,7 @@ export default function ProductionDashboardPage() {
             </p>
           </div>
           <Button
-            onClick={() => router.push("/production")}
+            onClick={() => router.push('/production')}
             className="flex items-center gap-2"
           >
             <BarChart3 className="h-4 w-4" />
@@ -226,7 +222,7 @@ export default function ProductionDashboardPage() {
                     <div className="flex items-center gap-2">
                       {getStatusIcon(status)}
                       <span className="capitalize">
-                        {status.replace("_", " ")}
+                        {status.replace('_', ' ')}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -297,14 +293,14 @@ export default function ProductionDashboardPage() {
                         {getStatusIcon(plan.status)}
                         <Badge
                           variant="outline"
-                          className={cn("text-xs", getStatusColor(plan.status))}
+                          className={cn('text-xs', getStatusColor(plan.status))}
                         >
-                          {plan.status.replace("_", " ")}
+                          {plan.status.replace('_', ' ')}
                         </Badge>
                         <Badge
                           variant="outline"
                           className={cn(
-                            "text-xs",
+                            'text-xs',
                             getPriorityColor(plan.priority),
                           )}
                         >
@@ -363,16 +359,16 @@ export default function ProductionDashboardPage() {
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-orange-500" />
                         <Badge variant="outline" className="text-xs">
-                          {plan.status.replace("_", " ")}
+                          {plan.status.replace('_', ' ')}
                         </Badge>
                       </div>
                       <div>
                         <h4 className="font-medium">{plan.title}</h4>
                         <p className="text-sm text-gray-500">
-                          Due:{" "}
+                          Due:{' '}
                           {plan.planned_end_date
                             ? formatDate(plan.planned_end_date)
-                            : "No deadline"}
+                            : 'No deadline'}
                         </p>
                       </div>
                     </div>
@@ -424,7 +420,7 @@ export default function ProductionDashboardPage() {
                           {plan.priority.toUpperCase()}
                         </Badge>
                         <Badge variant="outline" className="text-xs">
-                          {plan.status.replace("_", " ")}
+                          {plan.status.replace('_', ' ')}
                         </Badge>
                       </div>
                       <div>

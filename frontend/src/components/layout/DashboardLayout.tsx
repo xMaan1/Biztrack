@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import Header from "./Header";
-import Sidebar from "./Sidebar";
+import React, { useState } from 'react';
+import Header from './Header';
+import Sidebar from './Sidebar';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -28,7 +28,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         )}
         <div
           className={`fixed left-0 top-0 z-50 h-full transform transition-transform duration-300 ${
-            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
           <Sidebar />

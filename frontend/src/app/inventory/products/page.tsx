@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
-import { Badge } from "../../../components/ui/badge";
-import { Input } from "../../../components/ui/input";
+} from '../../../components/ui/card';
+import { Button } from '../../../components/ui/button';
+import { Badge } from '../../../components/ui/badge';
+import { Input } from '../../../components/ui/input';
 import {
   Table,
   TableBody,
@@ -18,7 +18,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../../../components/ui/table";
+} from '../../../components/ui/table';
 import {
   Package,
   Plus,
@@ -28,18 +28,18 @@ import {
   TrendingUp,
   AlertTriangle,
   CheckCircle,
-} from "lucide-react";
-import { useAuth } from "../../../contexts/AuthContext";
-import { DashboardLayout } from "../../../components/layout";
-import { formatCurrency } from "../../../lib/utils";
+} from 'lucide-react';
+import { useAuth } from '../../../contexts/AuthContext';
+import { DashboardLayout } from '../../../components/layout';
+import { useCurrency } from '../../../contexts/CurrencyContext';
 
 // Mock data for demonstration - in real app this would come from API
 const mockProducts = [
   {
-    id: "1",
-    name: "Laptop Charger",
-    sku: "LAP-CHRG-001",
-    category: "Electronics",
+    id: '1',
+    name: 'Laptop Charger',
+    sku: 'LAP-CHRG-001',
+    category: 'Electronics',
     stockQuantity: 15,
     lowStockThreshold: 10,
     unitPrice: 29.99,
@@ -47,10 +47,10 @@ const mockProducts = [
     isActive: true,
   },
   {
-    id: "2",
-    name: "Wireless Mouse",
-    sku: "WIRE-MOUSE-002",
-    category: "Electronics",
+    id: '2',
+    name: 'Wireless Mouse',
+    sku: 'WIRE-MOUSE-002',
+    category: 'Electronics',
     stockQuantity: 8,
     lowStockThreshold: 10,
     unitPrice: 19.99,
@@ -58,10 +58,10 @@ const mockProducts = [
     isActive: true,
   },
   {
-    id: "3",
-    name: "USB Cable",
-    sku: "USB-CABLE-003",
-    category: "Electronics",
+    id: '3',
+    name: 'USB Cable',
+    sku: 'USB-CABLE-003',
+    category: 'Electronics',
     stockQuantity: 25,
     lowStockThreshold: 20,
     unitPrice: 9.99,
@@ -69,10 +69,10 @@ const mockProducts = [
     isActive: true,
   },
   {
-    id: "4",
-    name: "Office Chair",
-    sku: "OFF-CHAIR-004",
-    category: "Furniture",
+    id: '4',
+    name: 'Office Chair',
+    sku: 'OFF-CHAIR-004',
+    category: 'Furniture',
     stockQuantity: 0,
     lowStockThreshold: 5,
     unitPrice: 199.99,
@@ -82,10 +82,11 @@ const mockProducts = [
 ];
 
 export default function ProductsPage() {
-  const { user } = useAuth();
+  const { } = useAuth();
+  const { formatCurrency } = useCurrency();
   const router = useRouter();
-  const [products, setProducts] = useState(mockProducts);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [products] = useState(mockProducts);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const filteredProducts = products.filter(
     (product) =>
@@ -97,27 +98,27 @@ export default function ProductsPage() {
   const getStockStatus = (quantity: number, threshold: number) => {
     if (quantity === 0)
       return {
-        status: "out_of_stock",
-        color: "destructive",
+        status: 'out_of_stock',
+        color: 'destructive',
         icon: <AlertTriangle className="h-4 w-4" />,
       };
     if (quantity <= threshold)
       return {
-        status: "low_stock",
-        color: "secondary",
+        status: 'low_stock',
+        color: 'secondary',
         icon: <TrendingUp className="h-4 w-4" />,
       };
     return {
-      status: "in_stock",
-      color: "default",
+      status: 'in_stock',
+      color: 'default',
       icon: <CheckCircle className="h-4 w-4" />,
     };
   };
 
   const getStockStatusLabel = (quantity: number, threshold: number) => {
-    if (quantity === 0) return "Out of Stock";
-    if (quantity <= threshold) return "Low Stock";
-    return "In Stock";
+    if (quantity === 0) return 'Out of Stock';
+    if (quantity <= threshold) return 'Low Stock';
+    return 'In Stock';
   };
 
   return (
@@ -134,12 +135,12 @@ export default function ProductsPage() {
           <div className="flex gap-2">
             <Button
               variant="outline"
-              onClick={() => router.push("/pos/products")}
+              onClick={() => router.push('/pos/products')}
             >
               <ShoppingCart className="mr-2 h-4 w-4" />
               Manage in POS
             </Button>
-            <Button onClick={() => router.push("/pos/products/new")}>
+            <Button onClick={() => router.push('/pos/products/new')}>
               <Plus className="mr-2 h-4 w-4" />
               Add Product
             </Button>
@@ -235,9 +236,9 @@ export default function ProductsPage() {
                         </TableCell>
                         <TableCell>
                           <Badge
-                            variant={product.isActive ? "default" : "secondary"}
+                            variant={product.isActive ? 'default' : 'secondary'}
                           >
-                            {product.isActive ? "Active" : "Inactive"}
+                            {product.isActive ? 'Active' : 'Inactive'}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -257,7 +258,7 @@ export default function ProductsPage() {
                               <Button
                                 size="sm"
                                 onClick={() =>
-                                  router.push("/inventory/purchase-orders/new")
+                                  router.push('/inventory/purchase-orders/new')
                                 }
                               >
                                 <ShoppingCart className="mr-2 h-4 w-4" />
@@ -277,11 +278,11 @@ export default function ProductsPage() {
                 <h3 className="text-lg font-medium mb-2">No products found</h3>
                 <p className="text-muted-foreground mb-4">
                   {searchTerm
-                    ? "Try adjusting your search terms"
-                    : "Get started by adding your first product"}
+                    ? 'Try adjusting your search terms'
+                    : 'Get started by adding your first product'}
                 </p>
                 {!searchTerm && (
-                  <Button onClick={() => router.push("/pos/products/new")}>
+                  <Button onClick={() => router.push('/pos/products/new')}>
                     <Plus className="mr-2 h-4 w-4" />
                     Add Product
                   </Button>
@@ -372,7 +373,7 @@ export default function ProductsPage() {
                 To add, edit, or manage products, please use the POS module
                 which provides full product management capabilities.
               </p>
-              <Button onClick={() => router.push("/pos/products")}>
+              <Button onClick={() => router.push('/pos/products')}>
                 Go to POS Products
               </Button>
             </div>

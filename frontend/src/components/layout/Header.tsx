@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "../ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Badge } from "../ui/badge";
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '../ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Badge } from '../ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,10 +12,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { Menu, Bell, Settings, LogOut, User } from "lucide-react";
-import { useAuth } from "../../hooks/useAuth";
-import { getInitials } from "../../lib/utils";
+} from '../ui/dropdown-menu';
+import { Menu, Bell, Settings, LogOut, User } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
+import { getInitials } from '../../lib/utils';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -34,7 +34,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
   };
 
   const handleSettingsClick = () => {
-    router.push("/settings");
+    router.push('/settings');
   };
 
   return (
@@ -81,7 +81,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                       ? getInitials(
                           `${user.firstName} ${user.lastName}` || user.userName,
                         )
-                      : "U"}
+                      : 'U'}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -92,15 +92,15 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   <p className="text-sm font-medium leading-none">
                     {user?.firstName && user?.lastName
                       ? `${user.firstName} ${user.lastName}`
-                      : user?.userName || "User"}
+                      : user?.userName || 'User'}
                   </p>
                   <p className="text-xs leading-none text-muted-foreground">
                     {user?.email}
                   </p>
                   <Badge variant="secondary" className="w-fit text-xs mt-1">
                     {currentTenant?.role?.toUpperCase() ||
-                      user?.userRole?.replace("_", " ").toUpperCase() ||
-                      "MEMBER"}
+                      user?.userRole?.replace('_', ' ').toUpperCase() ||
+                      'MEMBER'}
                   </Badge>
                 </div>
               </DropdownMenuLabel>

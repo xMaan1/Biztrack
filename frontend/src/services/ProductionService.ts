@@ -1,4 +1,4 @@
-import { apiService } from "./ApiService";
+import { apiService } from './ApiService';
 import {
   ProductionPlanResponse as ProductionPlan,
   ProductionPlanCreate,
@@ -14,10 +14,10 @@ import {
   ProductionSchedulesResponse,
   ProductionDashboard,
   ProductionPlanFilters,
-} from "../models/production";
+} from '../models/production';
 
 export class ProductionService {
-  private baseUrl = "/production";
+  private baseUrl = '/production';
 
   // Production Plan CRUD operations
   async createProductionPlan(
@@ -34,37 +34,37 @@ export class ProductionService {
   ): Promise<ProductionPlansResponse> {
     const queryParams = new URLSearchParams();
 
-    if (filters.status) queryParams.append("status", filters.status);
-    if (filters.priority) queryParams.append("priority", filters.priority);
+    if (filters.status) queryParams.append('status', filters.status);
+    if (filters.priority) queryParams.append('priority', filters.priority);
     if (filters.production_type)
-      queryParams.append("production_type", filters.production_type);
+      queryParams.append('production_type', filters.production_type);
     if (filters.project_id)
-      queryParams.append("project_id", filters.project_id);
+      queryParams.append('project_id', filters.project_id);
     if (filters.work_order_id)
-      queryParams.append("work_order_id", filters.work_order_id);
+      queryParams.append('work_order_id', filters.work_order_id);
     if (filters.assigned_to_id)
-      queryParams.append("assigned_to_id", filters.assigned_to_id);
+      queryParams.append('assigned_to_id', filters.assigned_to_id);
     if (filters.planned_start_date_from)
       queryParams.append(
-        "planned_start_date_from",
+        'planned_start_date_from',
         filters.planned_start_date_from,
       );
     if (filters.planned_start_date_to)
       queryParams.append(
-        "planned_start_date_to",
+        'planned_start_date_to',
         filters.planned_start_date_to,
       );
     if (filters.planned_end_date_from)
       queryParams.append(
-        "planned_end_date_from",
+        'planned_end_date_from',
         filters.planned_end_date_from,
       );
     if (filters.planned_end_date_to)
-      queryParams.append("planned_end_date_to", filters.planned_end_date_to);
-    if (filters.search) queryParams.append("search", filters.search);
+      queryParams.append('planned_end_date_to', filters.planned_end_date_to);
+    if (filters.search) queryParams.append('search', filters.search);
 
-    queryParams.append("page", page.toString());
-    queryParams.append("limit", limit.toString());
+    queryParams.append('page', page.toString());
+    queryParams.append('limit', limit.toString());
 
     const response = await apiService.get(
       `${this.baseUrl}/?${queryParams.toString()}`,

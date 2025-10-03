@@ -1,44 +1,34 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Badge } from "../../components/ui/badge";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "../../components/ui/avatar";
-import { Progress } from "../../components/ui/progress";
+} from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Badge } from '../../components/ui/badge';
+import { Progress } from '../../components/ui/progress';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../components/ui/select";
+} from '../../components/ui/select';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "../../components/ui/dropdown-menu";
+} from '../../components/ui/dropdown-menu';
 import {
   Tabs,
-  TabsContent,
   TabsList,
   TabsTrigger,
-} from "../../components/ui/tabs";
-import { Alert, AlertDescription } from "../../components/ui/alert";
-import { Separator } from "../../components/ui/separator";
+} from '../../components/ui/tabs';
 import {
   Plus,
   Search,
@@ -46,36 +36,23 @@ import {
   Edit,
   Trash2,
   Eye,
-  Filter,
-  Star,
   Clock,
-  Flag,
-  CheckCircle2,
-  Users,
-  FolderOpen,
   Calendar,
   DollarSign,
   Loader2,
-  RefreshCw,
-  CheckSquare,
   Wrench,
-  Factory,
-  AlertTriangle,
   Package,
-  BarChart3,
-} from "lucide-react";
-import { apiService } from "../../services/ApiService";
-import { useAuth } from "../../hooks/useAuth";
-import { DashboardLayout } from "../../components/layout";
-import WorkOrderDialog from "../../components/work-orders/WorkOrderDialog";
+} from 'lucide-react';
+import { apiService } from '../../services/ApiService';
+import { DashboardLayout } from '../../components/layout';
+import WorkOrderDialog from '../../components/work-orders/WorkOrderDialog';
 import {
-  cn,
   getStatusColor,
   getPriorityColor,
   getStatusIcon,
   getTypeIcon,
   formatDate,
-} from "../../lib/utils";
+} from '../../lib/utils';
 
 interface WorkOrder {
   id: string;
@@ -100,26 +77,25 @@ interface WorkOrder {
 }
 
 export default function WorkOrdersPage() {
-  const { user } = useAuth();
   const router = useRouter();
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [filteredWorkOrders, setFilteredWorkOrders] = useState<WorkOrder[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [priorityFilter, setPriorityFilter] = useState<string>("all");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [priorityFilter, setPriorityFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(
     null,
   );
-  const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
+  const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [workOrderToDelete, setWorkOrderToDelete] = useState<WorkOrder | null>(
     null,
   );
-  const [sortBy, setSortBy] = useState<string>("newest");
-  const [activeTab, setActiveTab] = useState("all");
+  const [sortBy, setSortBy] = useState<string>('newest');
+  const [activeTab, setActiveTab] = useState('all');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -171,35 +147,35 @@ export default function WorkOrdersPage() {
     }
 
     // Status filter
-    if (statusFilter !== "all") {
+    if (statusFilter !== 'all') {
       filtered = filtered.filter((wo) => wo.status === statusFilter);
     }
 
     // Priority filter
-    if (priorityFilter !== "all") {
+    if (priorityFilter !== 'all') {
       filtered = filtered.filter((wo) => wo.priority === priorityFilter);
     }
 
     // Type filter
-    if (typeFilter !== "all") {
+    if (typeFilter !== 'all') {
       filtered = filtered.filter((wo) => wo.work_order_type === typeFilter);
     }
 
     // Sort
     switch (sortBy) {
-      case "newest":
+      case 'newest':
         filtered.sort(
           (a, b) =>
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
         );
         break;
-      case "oldest":
+      case 'oldest':
         filtered.sort(
           (a, b) =>
             new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
         );
         break;
-      case "priority":
+      case 'priority':
         filtered.sort((a, b) => {
           const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
           return (
@@ -208,7 +184,7 @@ export default function WorkOrdersPage() {
           );
         });
         break;
-      case "due_date":
+      case 'due_date':
         filtered.sort(
           (a, b) =>
             new Date(a.planned_end_date).getTime() -
@@ -222,13 +198,13 @@ export default function WorkOrdersPage() {
 
   const handleCreateWorkOrder = () => {
     setSelectedWorkOrder(null);
-    setDialogMode("create");
+    setDialogMode('create');
     setDialogOpen(true);
   };
 
   const handleEditWorkOrder = (workOrder: WorkOrder) => {
     setSelectedWorkOrder(workOrder);
-    setDialogMode("edit");
+    setDialogMode('edit');
     setDialogOpen(true);
   };
 
@@ -378,16 +354,16 @@ export default function WorkOrdersPage() {
                 </h3>
                 <p className="text-gray-600 mb-4">
                   {searchTerm ||
-                  statusFilter !== "all" ||
-                  priorityFilter !== "all" ||
-                  typeFilter !== "all"
-                    ? "Try adjusting your filters or search terms."
-                    : "Get started by creating your first work order."}
+                  statusFilter !== 'all' ||
+                  priorityFilter !== 'all' ||
+                  typeFilter !== 'all'
+                    ? 'Try adjusting your filters or search terms.'
+                    : 'Get started by creating your first work order.'}
                 </p>
                 {!searchTerm &&
-                  statusFilter === "all" &&
-                  priorityFilter === "all" &&
-                  typeFilter === "all" && (
+                  statusFilter === 'all' &&
+                  priorityFilter === 'all' &&
+                  typeFilter === 'all' && (
                     <Button onClick={handleCreateWorkOrder}>
                       <Plus className="h-4 w-4 mr-2" />
                       Create Work Order
@@ -420,7 +396,7 @@ export default function WorkOrdersPage() {
                             {getStatusIcon(workOrder.status)}
                           </span>
                           <span className="capitalize">
-                            {workOrder.status.replace("_", " ")}
+                            {workOrder.status.replace('_', ' ')}
                           </span>
                         </Badge>
                         <Badge className={getPriorityColor(workOrder.priority)}>

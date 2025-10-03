@@ -1,23 +1,23 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
-import { Badge } from "../../../components/ui/badge";
-import { Input } from "../../../components/ui/input";
+} from '../../../components/ui/card';
+import { Button } from '../../../components/ui/button';
+import { Badge } from '../../../components/ui/badge';
+import { Input } from '../../../components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../../components/ui/select";
+} from '../../../components/ui/select';
 import {
   AlertTriangle,
   Package,
@@ -29,54 +29,56 @@ import {
   ShoppingCart,
   AlertCircle,
   CheckCircle,
-} from "lucide-react";
-import { useAuth } from "../../../contexts/AuthContext";
-import { inventoryService } from "../../../services/InventoryService";
+} from 'lucide-react';
+import { useAuth } from '../../../contexts/AuthContext';
+import { inventoryService } from '../../../services/InventoryService';
 import {
-  StockAlert,
   InventoryDashboardStats,
   PurchaseOrderCreate,
   PurchaseOrderItemCreate,
   Supplier,
-} from "../../../models/inventory";
-import { DashboardLayout } from "../../../components/layout";
-import { formatCurrency } from "../../../lib/utils";
+} from '../../../models/inventory';
+import { DashboardLayout } from '../../../components/layout';
+import { useCurrency } from '../../../contexts/CurrencyContext';
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../../components/ui/dialog";
-import { Label } from "../../../components/ui/label";
-import { Textarea } from "../../../components/ui/textarea";
+} from '../../../components/ui/dialog';
+import { Label } from '../../../components/ui/label';
+import { Textarea } from '../../../components/ui/textarea';
 
 export default function AlertsPage() {
-  const { user } = useAuth();
+  const { } = useAuth();
+  const { formatCurrency } = useCurrency();
   const router = useRouter();
   const [dashboardStats, setDashboardStats] =
     useState<InventoryDashboardStats | null>(null);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterType, setFilterType] = useState<string>("all");
+  const [filterType, setFilterType] = useState<string>('all');
   const [isPOModalOpen, setIsPOModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newOrder, setNewOrder] = useState<PurchaseOrderCreate>({
-    orderNumber: "",
-    supplierId: "",
-    supplierName: "",
-    expectedDeliveryDate: "",
-    notes: "",
+    orderNumber: '',
+    supplierId: '',
+    supplierName: '',
+    warehouseId: '',
+    orderDate: new Date().toISOString().split('T')[0],
+    expectedDeliveryDate: '',
+    notes: '',
     items: [],
   });
   const [newItem, setNewItem] = useState<PurchaseOrderItemCreate>({
-    productId: "",
-    productName: "",
-    sku: "",
+    productId: '',
+    productName: '',
+    sku: '',
     quantity: 0,
     unitCost: 0,
     totalCost: 0,
-    notes: "",
+    notes: '',
   });
 
   useEffect(() => {
@@ -117,7 +119,7 @@ export default function AlertsPage() {
 
   const filteredAlerts =
     dashboardStats?.lowStockAlerts?.filter((alert) => {
-      if (filterType === "all") return true;
+      if (filterType === 'all') return true;
       return alert.alertType === filterType;
     }) || [];
 
@@ -128,7 +130,7 @@ export default function AlertsPage() {
       newItem.quantity <= 0 ||
       newItem.unitCost <= 0
     ) {
-      alert("Please fill in all required fields for the item");
+      alert('Please fill in all required fields for the item');
       return;
     }
 
@@ -144,13 +146,13 @@ export default function AlertsPage() {
 
     // Reset item form
     setNewItem({
-      productId: "",
-      productName: "",
-      sku: "",
+      productId: '',
+      productName: '',
+      sku: '',
       quantity: 0,
       unitCost: 0,
       totalCost: 0,
-      notes: "",
+      notes: '',
     });
   };
 
@@ -167,7 +169,7 @@ export default function AlertsPage() {
       !newOrder.supplierId ||
       newOrder.items.length === 0
     ) {
-      alert("Please fill in all required fields and add at least one item");
+      alert('Please fill in all required fields and add at least one item');
       return;
     }
 
@@ -176,9 +178,9 @@ export default function AlertsPage() {
       await inventoryService.createPurchaseOrder(newOrder);
       setIsPOModalOpen(false);
       resetForm();
-      fetchData(); // Refresh alerts to see if any are resolved
+      fetchData();
     } catch (error) {
-      alert("Failed to create purchase order. Please try again.");
+      alert('Failed to create purchase order. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -186,31 +188,33 @@ export default function AlertsPage() {
 
   const resetForm = () => {
     setNewOrder({
-      orderNumber: "",
-      supplierId: suppliers.length > 0 ? suppliers[0].id : "",
-      supplierName: suppliers.length > 0 ? suppliers[0].name : "",
-      expectedDeliveryDate: "",
-      notes: "",
+      orderNumber: '',
+      supplierId: suppliers.length > 0 ? suppliers[0].id : '',
+      supplierName: suppliers.length > 0 ? suppliers[0].name : '',
+      warehouseId: '',
+      orderDate: new Date().toISOString().split('T')[0], 
+      expectedDeliveryDate: '',
+      notes: '',
       items: [],
     });
     setNewItem({
-      productId: "",
-      productName: "",
-      sku: "",
+      productId: '',
+      productName: '',
+      sku: '',
       quantity: 0,
       unitCost: 0,
       totalCost: 0,
-      notes: "",
+      notes: '',
     });
   };
 
   const getAlertIcon = (alertType: string) => {
     switch (alertType) {
-      case "out_of_stock":
+      case 'out_of_stock':
         return <AlertTriangle className="h-5 w-5 text-red-500" />;
-      case "low_stock":
+      case 'low_stock':
         return <Package className="h-5 w-5 text-orange-500" />;
-      case "expiry_warning":
+      case 'expiry_warning':
         return <Clock className="h-5 w-5 text-yellow-500" />;
       default:
         return <AlertCircle className="h-5 w-5 text-gray-500" />;
@@ -219,9 +223,9 @@ export default function AlertsPage() {
 
   const getAlertBadge = (alertType: string) => {
     const badgeConfig = {
-      out_of_stock: { variant: "destructive", label: "Out of Stock" },
-      low_stock: { variant: "secondary", label: "Low Stock" },
-      expiry_warning: { variant: "default", label: "Expiry Warning" },
+      out_of_stock: { variant: 'destructive', label: 'Out of Stock' },
+      low_stock: { variant: 'secondary', label: 'Low Stock' },
+      expiry_warning: { variant: 'default', label: 'Expiry Warning' },
     };
 
     const config =
@@ -232,14 +236,14 @@ export default function AlertsPage() {
 
   const getPriorityColor = (alertType: string) => {
     switch (alertType) {
-      case "out_of_stock":
-        return "border-l-red-500 bg-red-50";
-      case "low_stock":
-        return "border-l-orange-500 bg-orange-50";
-      case "expiry_warning":
-        return "border-l-yellow-500 bg-yellow-50";
+      case 'out_of_stock':
+        return 'border-l-red-500 bg-red-50';
+      case 'low_stock':
+        return 'border-l-orange-500 bg-orange-50';
+      case 'expiry_warning':
+        return 'border-l-yellow-500 bg-yellow-50';
       default:
-        return "border-l-gray-500 bg-gray-50";
+        return 'border-l-gray-500 bg-gray-50';
     }
   };
 
@@ -347,20 +351,20 @@ export default function AlertsPage() {
           <CardContent>
             <div className="flex gap-4">
               <Button
-                variant={filterType === "all" ? "default" : "outline"}
-                onClick={() => setFilterType("all")}
+                variant={filterType === 'all' ? 'default' : 'outline'}
+                onClick={() => setFilterType('all')}
               >
                 All Alerts ({dashboardStats?.lowStockAlerts?.length || 0})
               </Button>
               <Button
-                variant={filterType === "out_of_stock" ? "default" : "outline"}
-                onClick={() => setFilterType("out_of_stock")}
+                variant={filterType === 'out_of_stock' ? 'default' : 'outline'}
+                onClick={() => setFilterType('out_of_stock')}
               >
                 Out of Stock ({dashboardStats?.outOfStockProducts || 0})
               </Button>
               <Button
-                variant={filterType === "low_stock" ? "default" : "outline"}
-                onClick={() => setFilterType("low_stock")}
+                variant={filterType === 'low_stock' ? 'default' : 'outline'}
+                onClick={() => setFilterType('low_stock')}
               >
                 Low Stock ({dashboardStats?.lowStockProducts || 0})
               </Button>
@@ -441,14 +445,14 @@ export default function AlertsPage() {
                 <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
                 <h3 className="text-lg font-medium mb-2">No alerts found</h3>
                 <p className="text-muted-foreground mb-4">
-                  {filterType === "all"
-                    ? "All inventory items are properly stocked"
-                    : `No ${filterType.replace("_", " ")} alerts at the moment`}
+                  {filterType === 'all'
+                    ? 'All inventory items are properly stocked'
+                    : `No ${filterType.replace('_', ' ')} alerts at the moment`}
                 </p>
-                {filterType !== "all" && (
+                {filterType !== 'all' && (
                   <Button
                     variant="outline"
-                    onClick={() => setFilterType("all")}
+                    onClick={() => setFilterType('all')}
                   >
                     View All Alerts
                   </Button>
@@ -476,7 +480,7 @@ export default function AlertsPage() {
               <Button
                 variant="outline"
                 className="h-20 flex-col gap-2"
-                onClick={() => router.push("/inventory/stock-movements")}
+                onClick={() => router.push('/inventory/stock-movements')}
               >
                 <Package className="h-6 w-6" />
                 <span>Record Stock Movement</span>
@@ -484,7 +488,7 @@ export default function AlertsPage() {
               <Button
                 variant="outline"
                 className="h-20 flex-col gap-2"
-                onClick={() => router.push("/inventory/products")}
+                onClick={() => router.push('/inventory/products')}
               >
                 <Eye className="h-6 w-6" />
                 <span>View All Products</span>
@@ -542,7 +546,7 @@ export default function AlertsPage() {
                     setNewOrder((prev) => ({
                       ...prev,
                       supplierId: value,
-                      supplierName: supplier?.name || "",
+                      supplierName: supplier?.name || '',
                     }));
                   }}
                 >
@@ -662,7 +666,7 @@ export default function AlertsPage() {
                               {item.productName}
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              {item.quantity} × {formatCurrency(item.unitCost)}{" "}
+                              {item.quantity} × {formatCurrency(item.unitCost)}{' '}
                               = {formatCurrency(item.totalCost)}
                             </div>
                           </div>
@@ -677,7 +681,7 @@ export default function AlertsPage() {
                       ))}
                     </div>
                     <div className="text-right font-medium">
-                      Total:{" "}
+                      Total:{' '}
                       {formatCurrency(
                         newOrder.items.reduce(
                           (sum, item) => sum + item.totalCost,
@@ -703,7 +707,7 @@ export default function AlertsPage() {
                 onClick={handleCreateOrder}
                 disabled={isSubmitting || newOrder.items.length === 0}
               >
-                {isSubmitting ? "Creating..." : "Create Purchase Order"}
+                {isSubmitting ? 'Creating...' : 'Create Purchase Order'}
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -1,28 +1,28 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "../components/ui/button";
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '../components/ui/button';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../components/ui/card";
-import { Badge } from "../components/ui/badge";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
+} from '../components/ui/card';
+import { Badge } from '../components/ui/badge';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogDescription,
-} from "../components/ui/dialog";
-import { useAuth } from "../contexts/AuthContext";
-import { apiService } from "../services/ApiService";
-import { LandingNav } from "../components/landing/LandingNav";
+} from '../components/ui/dialog';
+import { useAuth } from '../contexts/AuthContext';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
+import { apiService } from '../services/ApiService';
+import { LandingNav } from '../components/landing/LandingNav';
 import {
   Check,
   Star,
@@ -34,11 +34,8 @@ import {
   Globe,
   ArrowRight,
   Loader2,
-  Building2,
   CheckCircle,
-  Clock,
-  Heart,
-} from "lucide-react";
+} from 'lucide-react';
 
 interface Plan {
   id: string;
@@ -66,7 +63,8 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   onSubmit,
   loading,
 }) => {
-  const [tenantName, setTenantName] = useState("");
+  const { getCurrencySymbol } = useCurrency();
+  const [tenantName, setTenantName] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,7 +101,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
             <div className="p-3 bg-muted rounded-lg">
               <div className="flex items-center justify-between">
                 <span className="font-medium">{plan.name} Plan</span>
-                <Badge variant="secondary">${plan.price}/month</Badge>
+                <Badge variant="secondary">{getCurrencySymbol()}{plan.price}/month</Badge>
               </div>
               <p className="text-sm text-muted-foreground mt-1">
                 {plan.maxProjects} projects • {plan.maxUsers} users
@@ -139,15 +137,14 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
 
 export default function LandingPage() {
   const router = useRouter();
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { getCurrencySymbol } = useCurrency();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(false);
   const [subscriptionModal, setSubscriptionModal] = useState<{
     isOpen: boolean;
     plan: Plan | null;
   }>({ isOpen: false, plan: null });
-  const [selectedPlanForSignup, setSelectedPlanForSignup] =
-    useState<Plan | null>(null);
 
   useEffect(() => {
     fetchPlans();
@@ -157,16 +154,16 @@ export default function LandingPage() {
   useEffect(() => {
     if (isAuthenticated) {
       // Check localStorage for selected plan (for new signups)
-      const storedPlan = localStorage.getItem("selectedPlanForSignup");
+      const storedPlan = localStorage.getItem('selectedPlanForSignup');
       if (storedPlan) {
         try {
           const plan = JSON.parse(storedPlan);
           // Check if user already has tenants before showing workspace creation
           checkExistingTenantsAndHandlePlan(plan);
           // Clear the stored plan
-          localStorage.removeItem("selectedPlanForSignup");
+          localStorage.removeItem('selectedPlanForSignup');
         } catch (error) {
-          localStorage.removeItem("selectedPlanForSignup");
+          localStorage.removeItem('selectedPlanForSignup');
         }
       }
     }
@@ -179,8 +176,8 @@ export default function LandingPage() {
 
       if (existingTenants && existingTenants.length > 0) {
         // User already has tenants - show message and redirect to dashboard
-        alert("You already have a workspace! Redirecting to your dashboard.");
-        router.push("/dashboard");
+        alert('You already have a workspace! Redirecting to your dashboard.');
+        router.push('/dashboard');
         return;
       }
 
@@ -192,19 +189,9 @@ export default function LandingPage() {
     }
   };
 
-
-  const refreshTenantData = async () => {
-    try {
-      // Force refresh tenant data to get latest role information
-      await apiService.refreshTenants();
-    } catch (error) {
-      // Tenant refresh failed, continue silently
-    }
-  };
-
   const fetchPlans = async () => {
     try {
-      const response = await apiService.get("/public/plans");
+      const response = await apiService.get('/public/plans');
       setPlans(response.plans || []);
     } catch (error) {
       // Plans fetch failed, continue without plans
@@ -214,8 +201,8 @@ export default function LandingPage() {
   const handleSubscribe = (plan: Plan) => {
     if (!isAuthenticated) {
       // Store the selected plan in localStorage and redirect to signup
-      localStorage.setItem("selectedPlanForSignup", JSON.stringify(plan));
-      router.push("/signup");
+      localStorage.setItem('selectedPlanForSignup', JSON.stringify(plan));
+      router.push('/signup');
       return;
     }
 
@@ -231,7 +218,7 @@ export default function LandingPage() {
       const response = await apiService.createTenantFromLanding({
         planId: subscriptionModal.plan.id,
         tenantName,
-        domain: tenantName.toLowerCase().replace(/\s+/g, "-"),
+        domain: tenantName.toLowerCase().replace(/\s+/g, '-'),
       });
 
       if (response.success && response.tenant) {
@@ -241,31 +228,31 @@ export default function LandingPage() {
         // Refresh tenant data to get the newly created tenant
         try {
           await apiService.refreshTenants();
-          
+
           // Verify tenant was created and set as current
           const tenants = apiService.getUserTenants();
           const newTenant = tenants.find((t) => t.name === tenantName);
-          
+
           if (newTenant) {
             apiService.setTenantId(newTenant.id);
-            
+
             // Small delay to ensure localStorage is updated
             await new Promise((resolve) => setTimeout(resolve, 100));
-            
+
             // Only redirect if tenant was successfully created and set
-            router.push("/dashboard");
+            router.push('/dashboard');
           } else {
-            throw new Error("Tenant was not found after creation");
+            throw new Error('Tenant was not found after creation');
           }
         } catch (error) {
-          alert("Workspace created but there was an issue setting it up. Please refresh the page and try again.");
+          alert('Workspace created but there was an issue setting it up. Please refresh the page and try again.');
           return; // Don't redirect if tenant setup failed
         }
       } else {
-        throw new Error("Tenant creation failed: " + (response.message || "Unknown error"));
+        throw new Error('Tenant creation failed: ' + (response.message || 'Unknown error'));
       }
     } catch (error) {
-      alert("Failed to create workspace. Please try again.");
+      alert('Failed to create workspace. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -274,69 +261,69 @@ export default function LandingPage() {
   const features = [
     {
       icon: FolderOpen,
-      title: "Project Management",
+      title: 'Project Management',
       description:
-        "Plan, track, and manage projects with ease. Set milestones, assign tasks, and monitor progress in real-time.",
+        'Plan, track, and manage projects with ease. Set milestones, assign tasks, and monitor progress in real-time.',
     },
     {
       icon: Users,
-      title: "Team Collaboration",
+      title: 'Team Collaboration',
       description:
-        "Work together seamlessly with team chat, file sharing, and real-time collaboration tools.",
+        'Work together seamlessly with team chat, file sharing, and real-time collaboration tools.',
     },
     {
       icon: BarChart3,
-      title: "Advanced Analytics",
+      title: 'Advanced Analytics',
       description:
-        "Get insights into your business performance with comprehensive dashboards and reports.",
+        'Get insights into your business performance with comprehensive dashboards and reports.',
     },
     {
       icon: Shield,
-      title: "Enterprise Security",
+      title: 'Enterprise Security',
       description:
-        "Bank-level security with role-based access control, audit logs, and data encryption.",
+        'Bank-level security with role-based access control, audit logs, and data encryption.',
     },
     {
       icon: Zap,
-      title: "Automation",
+      title: 'Automation',
       description:
-        "Automate repetitive tasks and workflows to boost productivity and reduce errors.",
+        'Automate repetitive tasks and workflows to boost productivity and reduce errors.',
     },
     {
       icon: Globe,
-      title: "Multi-tenant",
+      title: 'Multi-tenant',
       description:
-        "Scale your business with our robust multi-tenant architecture designed for growth.",
+        'Scale your business with our robust multi-tenant architecture designed for growth.',
     },
   ];
 
   const stats = [
-    { label: "Active Users", value: "10,000+", icon: Users },
-    { label: "Projects Managed", value: "50,000+", icon: FolderOpen },
-    { label: "Uptime", value: "99.9%", icon: CheckCircle },
-    { label: "Customer Satisfaction", value: "4.9/5", icon: Star },
+    { label: 'Active Users', value: '10,000+', icon: Users },
+    { label: 'Projects Managed', value: '50,000+', icon: FolderOpen },
+    { label: 'Uptime', value: '99.9%', icon: CheckCircle },
+    { label: 'Customer Satisfaction', value: '4.9/5', icon: Star },
   ];
 
   const testimonials = [
     {
-      name: "Sarah Johnson",
-      role: "CEO, TechFlow Solutions",
+      name: 'Sarah Johnson',
+      role: 'CEO, TechFlow Solutions',
       content:
-        "BizTrack transformed our business operations. The project management and analytics features are game-changers.",
+        'BizTrack transformed our business operations. The project management and analytics features are game-changers.',
       rating: 5,
     },
     {
-      name: "Michael Chen",
-      role: "Operations Manager, Global Manufacturing",
+      name: 'Michael Chen',
+      role: 'Operations Manager, Global Manufacturing',
       content:
-        "We've increased productivity by 40% since implementing BizTrack. The automation features are incredible.",
+        'We\'ve increased productivity by 40% since implementing BizTrack. The automation features are incredible.',
       rating: 5,
     },
     {
-      name: "Emily Rodriguez",
-      role: "HR Director, Healthcare Plus",
+      name: 'Emily Rodriguez',
+      role: 'HR Director, Healthcare Plus',
       content:
-        "The multi-tenant setup and security features give us peace of mind while managing multiple locations.",
+        'The multi-tenant setup and security features give us peace of mind while managing multiple locations.',
       rating: 5,
     },
   ];
@@ -385,7 +372,7 @@ export default function LandingPage() {
               <Button
                 size="lg"
                 className="text-lg px-8 py-6 h-auto"
-                onClick={() => router.push("/signup")}
+                onClick={() => router.push('/signup')}
               >
                 Start Free Trial
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -396,8 +383,8 @@ export default function LandingPage() {
                 className="text-lg px-8 py-6 h-auto"
                 onClick={() =>
                   document
-                    .getElementById("features")
-                    ?.scrollIntoView({ behavior: "smooth" })
+                    .getElementById('features')
+                    ?.scrollIntoView({ behavior: 'smooth' })
                 }
               >
                 See How It Works
@@ -478,12 +465,12 @@ export default function LandingPage() {
               <Card
                 key={plan.id}
                 className={`relative group hover:shadow-xl transition-all duration-300 ${
-                  plan.planType === "enterprise"
-                    ? "border-primary shadow-lg scale-105"
-                    : "border-border hover:border-primary/50"
+                  plan.planType === 'enterprise'
+                    ? 'border-primary shadow-lg scale-105'
+                    : 'border-border hover:border-primary/50'
                 }`}
               >
-                {plan.planType === "enterprise" && (
+                {plan.planType === 'enterprise' && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                     <Badge className="bg-primary text-primary-foreground px-4 py-2 text-sm">
                       Most Popular
@@ -494,7 +481,7 @@ export default function LandingPage() {
                 <CardHeader className="text-center pb-6">
                   <CardTitle className="text-2xl mb-2">{plan.name}</CardTitle>
                   <div className="text-4xl font-bold text-foreground mb-2">
-                    ${plan.price}
+                    {getCurrencySymbol()}{plan.price}
                     <span className="text-lg font-normal text-muted-foreground">
                       /month
                     </span>
@@ -529,11 +516,11 @@ export default function LandingPage() {
 
                   <Button
                     className={`w-full group-hover:scale-105 transition-transform bg-blue-600 hover:bg-blue-700 ${
-                      plan.planType === "enterprise" ? "shadow-lg" : ""
+                      plan.planType === 'enterprise' ? 'shadow-lg' : ''
                     }`}
                     onClick={() => handleSubscribe(plan)}
                   >
-                    {isAuthenticated ? "Create Workspace" : "Start Free Trial"}
+                    {isAuthenticated ? 'Create Workspace' : 'Start Free Trial'}
                   </Button>
                 </CardContent>
               </Card>
@@ -602,7 +589,7 @@ export default function LandingPage() {
               size="lg"
               variant="secondary"
               className="text-lg px-8 py-6 h-auto"
-              onClick={() => router.push("/signup")}
+              onClick={() => router.push('/signup')}
             >
               Get Started Today
               <ArrowRight className="ml-2 h-5 w-5" />
@@ -613,8 +600,8 @@ export default function LandingPage() {
               className="text-lg px-8 py-6 h-auto border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary"
               onClick={() =>
                 document
-                  .getElementById("pricing")
-                  ?.scrollIntoView({ behavior: "smooth" })
+                  .getElementById('pricing')
+                  ?.scrollIntoView({ behavior: 'smooth' })
               }
             >
               View Pricing

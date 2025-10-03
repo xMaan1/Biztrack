@@ -2,7 +2,8 @@ from datetime import datetime
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 from .invoice_models import Invoice, Payment
-from sqlalchemy import func
+from sqlalchemy import func, case, and_
+from ..core.cache import cached_sync
 
 # Invoice functions
 def get_invoice_by_id(invoice_id: str, db: Session, tenant_id: str = None) -> Optional[Invoice]:
@@ -131,46 +132,36 @@ def get_payments(db: Session, tenant_id: str = None, skip: int = 0, limit: int =
     return get_all_payments(db, tenant_id, skip, limit)
 
 # Invoice Dashboard functions
+@cached_sync(ttl=60, key_prefix="invoice_dashboard_")
 def get_invoice_dashboard_data(db: Session, tenant_id: str) -> Dict[str, Any]:
-    """Get invoice dashboard statistics"""
-    total_invoices = db.query(Invoice).filter(Invoice.tenant_id == tenant_id).count()
-    draft_invoices = db.query(Invoice).filter(
-        Invoice.tenant_id == tenant_id,
-        Invoice.status == "draft"
-    ).count()
-    sent_invoices = db.query(Invoice).filter(
-        Invoice.tenant_id == tenant_id,
-        Invoice.status == "sent"
-    ).count()
-    paid_invoices = db.query(Invoice).filter(
-        Invoice.tenant_id == tenant_id,
-        Invoice.status == "paid"
-    ).count()
-    overdue_invoices = db.query(Invoice).filter(
-        Invoice.tenant_id == tenant_id,
-        Invoice.status.in_(["sent", "draft"]),
-        Invoice.dueDate < datetime.utcnow()
-    ).count()
+    # Single optimized query using CASE statements
+    result = db.query(
+        func.count(Invoice.id).label('total'),
+        func.sum(case([(Invoice.status == "draft", 1)], else_=0)).label('draft'),
+        func.sum(case([(Invoice.status == "sent", 1)], else_=0)).label('sent'),
+        func.sum(case([(Invoice.status == "paid", 1)], else_=0)).label('paid'),
+        func.sum(case([
+            (and_(Invoice.status.in_(["sent", "draft"]), Invoice.dueDate < datetime.utcnow()), 1)
+        ], else_=0)).label('overdue'),
+        func.sum(case([
+            (Invoice.status.in_(["sent", "paid"]), Invoice.total)
+        ], else_=0)).label('total_amount'),
+        func.sum(case([
+            (Invoice.status == "paid", Invoice.total)
+        ], else_=0)).label('paid_amount')
+    ).filter(Invoice.tenant_id == tenant_id).first()
     
-    total_amount = db.query(Invoice).filter(
-        Invoice.tenant_id == tenant_id,
-        Invoice.status.in_(["sent", "paid"])
-    ).with_entities(func.sum(Invoice.total)).scalar() or 0
-    
-    paid_amount = db.query(Invoice).filter(
-        Invoice.tenant_id == tenant_id,
-        Invoice.status == "paid"
-    ).with_entities(func.sum(Invoice.total)).scalar() or 0
-    
+    total_amount = result.total_amount or 0
+    paid_amount = result.paid_amount or 0
     outstanding_amount = total_amount - paid_amount
     
     return {
         "invoices": {
-            "total": total_invoices,
-            "draft": draft_invoices,
-            "sent": sent_invoices,
-            "paid": paid_invoices,
-            "overdue": overdue_invoices
+            "total": result.total or 0,
+            "draft": result.draft or 0,
+            "sent": result.sent or 0,
+            "paid": result.paid or 0,
+            "overdue": result.overdue or 0
         },
         "amounts": {
             "total": round(total_amount, 2),

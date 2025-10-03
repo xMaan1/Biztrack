@@ -1,12 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from 'react';
 import {
   Task,
   TaskCreate,
   TaskUpdate,
   TaskStatus,
-  SubTask,
-} from "../models/task";
-import { apiService } from "../services/ApiService";
+} from '../models/task';
+import { apiService } from '../services/ApiService';
 
 interface UseTasksOptions {
   projectId?: string;
@@ -49,7 +48,7 @@ export const useTasks = (options: UseTasksOptions = {}) => {
         const response = await apiService.getTasks(requestParams);
         setTasks(response.tasks || []);
       } catch (err: any) {
-        setError(err.response?.data?.detail || "Failed to load tasks");
+        setError(err.response?.data?.detail || 'Failed to load tasks');
       } finally {
         setLoading(false);
       }
@@ -64,7 +63,7 @@ export const useTasks = (options: UseTasksOptions = {}) => {
         await apiService.createTask(data);
         await loadTasks();
       } catch (err: any) {
-        setError(err.response?.data?.detail || "Failed to create task");
+        setError(err.response?.data?.detail || 'Failed to create task');
         throw err;
       }
     },
@@ -78,7 +77,7 @@ export const useTasks = (options: UseTasksOptions = {}) => {
         await apiService.updateTask(taskId, data);
         await loadTasks();
       } catch (err: any) {
-        setError(err.response?.data?.detail || "Failed to update task");
+        setError(err.response?.data?.detail || 'Failed to update task');
         throw err;
       }
     },
@@ -92,7 +91,7 @@ export const useTasks = (options: UseTasksOptions = {}) => {
         await apiService.deleteTask(taskId);
         await loadTasks();
       } catch (err: any) {
-        setError(err.response?.data?.detail || "Failed to delete task");
+        setError(err.response?.data?.detail || 'Failed to delete task');
         throw err;
       }
     },
@@ -106,7 +105,7 @@ export const useTasks = (options: UseTasksOptions = {}) => {
         await apiService.createSubtask(parentTaskId, data);
         await loadTasks();
       } catch (err: any) {
-        setError(err.response?.data?.detail || "Failed to create subtask");
+        setError(err.response?.data?.detail || 'Failed to create subtask');
         throw err;
       }
     },
@@ -120,7 +119,7 @@ export const useTasks = (options: UseTasksOptions = {}) => {
         await apiService.updateTask(taskId, { status });
         await loadTasks();
       } catch (err: any) {
-        setError(err.response?.data?.detail || "Failed to update task status");
+        setError(err.response?.data?.detail || 'Failed to update task status');
         throw err;
       }
     },

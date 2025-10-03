@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Boolean, DateTime, Float, Integer, Text, JSON, ForeignKey, Date
+from sqlalchemy import Column, String, Boolean, DateTime, Float, Integer, Text, JSON, ForeignKey, Date, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 from .database_config import Base
@@ -36,6 +36,7 @@ class Warehouse(Base):
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
+    createdBy = Column(String, nullable=False)
     name = Column(String, nullable=False)
     code = Column(String, unique=True, index=True)
     description = Column(Text)
@@ -64,9 +65,9 @@ class Supplier(Base):
     __tablename__ = "suppliers"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
+    tenantId = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
     name = Column(String, nullable=False)
-    code = Column(String, unique=True, index=True)
+    code = Column(String, index=True)
     contactPerson = Column(String)
     email = Column(String)
     phone = Column(String)
@@ -77,18 +78,29 @@ class Supplier(Base):
     postalCode = Column(String)
     website = Column(String)
     paymentTerms = Column(String)
+    creditLimit = Column(Float, nullable=True)
     isActive = Column(Boolean, default=True)
+    createdBy = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     tenant = relationship("Tenant", back_populates="suppliers")
+    creator = relationship("User", back_populates="created_suppliers")
+    
+    # Indexes for performance optimization
+    __table_args__ = (
+        Index("idx_suppliers_tenant_id", "tenantId"),
+        Index("idx_suppliers_code", "code"),
+        Index("idx_suppliers_tenant_code", "tenantId", "code", unique=True),  # Unique code per tenant
+    )
 
 class PurchaseOrder(Base):
     __tablename__ = "purchase_orders"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
+    createdBy = Column(String, nullable=False)
     poNumber = Column(String, unique=True, index=True)
     supplierId = Column(UUID(as_uuid=True), ForeignKey("suppliers.id"), nullable=False)
     warehouseId = Column(UUID(as_uuid=True), ForeignKey("warehouses.id"), nullable=False)

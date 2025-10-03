@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -6,26 +6,26 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/src/components/ui/dialog";
-import { Button } from "@/src/components/ui/button";
-import { Input } from "@/src/components/ui/input";
-import { Label } from "@/src/components/ui/label";
-import { Textarea } from "@/src/components/ui/textarea";
+} from '@/src/components/ui/dialog';
+import { Button } from '@/src/components/ui/button';
+import { Input } from '@/src/components/ui/input';
+import { Label } from '@/src/components/ui/label';
+import { Textarea } from '@/src/components/ui/textarea';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select";
-import { Badge } from "@/src/components/ui/badge";
-import { X } from "lucide-react";
+} from '@/src/components/ui/select';
+import { Badge } from '@/src/components/ui/badge';
+import { X } from 'lucide-react';
 import {
   EquipmentCreate,
   MaintenanceCategory,
   EquipmentStatus,
-} from "@/src/models/maintenance";
-import { maintenanceService } from "@/src/services/MaintenanceService";
+} from '@/src/models/maintenance';
+import { maintenanceService } from '@/src/services/MaintenanceService';
 
 interface EquipmentDialogProps {
   open: boolean;
@@ -40,35 +40,35 @@ export function EquipmentDialog({
 }: EquipmentDialogProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<EquipmentCreate>>({
-    name: "",
-    model: "",
-    serial_number: "",
-    manufacturer: "",
+    name: '',
+    model: '',
+    serial_number: '',
+    manufacturer: '',
     category: MaintenanceCategory.GENERAL,
-    location: "",
+    location: '',
     status: EquipmentStatus.OPERATIONAL,
-    installation_date: "",
-    warranty_expiry: "",
+    installation_date: '',
+    warranty_expiry: '',
     maintenance_interval_hours: 0,
     operating_hours: 0,
     specifications: {},
     assigned_technicians: [],
     critical_spare_parts: [],
-    operating_instructions: "",
+    operating_instructions: '',
     safety_guidelines: [],
     tags: [],
   });
 
-  const [newTechnician, setNewTechnician] = useState("");
-  const [newSparePart, setNewSparePart] = useState("");
-  const [newSafetyGuideline, setNewSafetyGuideline] = useState("");
-  const [newTag, setNewTag] = useState("");
-  const [newSpecKey, setNewSpecKey] = useState("");
-  const [newSpecValue, setNewSpecValue] = useState("");
+  const [newTechnician, setNewTechnician] = useState('');
+  const [newSparePart, setNewSparePart] = useState('');
+  const [newSafetyGuideline, setNewSafetyGuideline] = useState('');
+  const [newTag, setNewTag] = useState('');
+  const [newSpecKey, setNewSpecKey] = useState('');
+  const [newSpecValue, setNewSpecValue] = useState('');
 
   const handleInputChange = (
     field: keyof EquipmentCreate,
-    value: any
+    value: any,
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -79,18 +79,18 @@ export function EquipmentDialog({
   const addArrayItem = (
     field: keyof EquipmentCreate,
     value: string,
-    setter: (value: string) => void
+    setter: (value: string) => void,
   ) => {
     if (value.trim()) {
       const currentArray = (formData[field] as string[]) || [];
       handleInputChange(field, [...currentArray, value.trim()]);
-      setter("");
+      setter('');
     }
   };
 
   const removeArrayItem = (
     field: keyof EquipmentCreate,
-    index: number
+    index: number,
   ) => {
     const currentArray = (formData[field] as string[]) || [];
     const newArray = currentArray.filter((_, i) => i !== index);
@@ -100,12 +100,12 @@ export function EquipmentDialog({
   const addSpecification = () => {
     if (newSpecKey.trim() && newSpecValue.trim()) {
       const currentSpecs = formData.specifications || {};
-      handleInputChange("specifications", {
+      handleInputChange('specifications', {
         ...currentSpecs,
         [newSpecKey.trim()]: newSpecValue.trim(),
       });
-      setNewSpecKey("");
-      setNewSpecValue("");
+      setNewSpecKey('');
+      setNewSpecValue('');
     }
   };
 
@@ -113,20 +113,20 @@ export function EquipmentDialog({
     const currentSpecs = formData.specifications || {};
     const newSpecs = { ...currentSpecs };
     delete newSpecs[key];
-    handleInputChange("specifications", newSpecs);
+    handleInputChange('specifications', newSpecs);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name || !formData.category) {
-      alert("Please fill in all required fields");
+      alert('Please fill in all required fields');
       return;
     }
 
     try {
       setLoading(true);
-      
+
       // Prepare data for submission - convert empty strings to null for optional fields
       const submitData = {
         ...formData,
@@ -144,35 +144,29 @@ export function EquipmentDialog({
       onOpenChange(false);
       // Reset form
       setFormData({
-        name: "",
-        model: "",
-        serial_number: "",
-        manufacturer: "",
+        name: '',
+        model: '',
+        serial_number: '',
+        manufacturer: '',
         category: MaintenanceCategory.GENERAL,
-        location: "",
+        location: '',
         status: EquipmentStatus.OPERATIONAL,
-        installation_date: "",
-        warranty_expiry: "",
+        installation_date: '',
+        warranty_expiry: '',
         maintenance_interval_hours: 0,
         operating_hours: 0,
         specifications: {},
         assigned_technicians: [],
         critical_spare_parts: [],
-        operating_instructions: "",
+        operating_instructions: '',
         safety_guidelines: [],
         tags: [],
       });
     } catch (error) {
-      alert("Failed to create equipment. Please try again.");
+      alert('Failed to create equipment. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatDateForInput = (dateString: string) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toISOString().slice(0, 10);
   };
 
   return (
@@ -184,7 +178,7 @@ export function EquipmentDialog({
             Add a new piece of equipment to your inventory
           </DialogDescription>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
           <div className="grid gap-4">
@@ -193,29 +187,29 @@ export function EquipmentDialog({
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
+                onChange={(e) => handleInputChange('name', e.target.value)}
                 placeholder="Enter equipment name"
                 required
               />
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="model">Model</Label>
                 <Input
                   id="model"
                   value={formData.model}
-                  onChange={(e) => handleInputChange("model", e.target.value)}
+                  onChange={(e) => handleInputChange('model', e.target.value)}
                   placeholder="Model number"
                 />
               </div>
-              
+
               <div className="grid gap-2">
                 <Label htmlFor="serial_number">Serial Number</Label>
                 <Input
                   id="serial_number"
                   value={formData.serial_number}
-                  onChange={(e) => handleInputChange("serial_number", e.target.value)}
+                  onChange={(e) => handleInputChange('serial_number', e.target.value)}
                   placeholder="Serial number"
                 />
               </div>
@@ -226,7 +220,7 @@ export function EquipmentDialog({
               <Input
                 id="manufacturer"
                 value={formData.manufacturer}
-                onChange={(e) => handleInputChange("manufacturer", e.target.value)}
+                onChange={(e) => handleInputChange('manufacturer', e.target.value)}
                 placeholder="Manufacturer name"
               />
             </div>
@@ -238,7 +232,7 @@ export function EquipmentDialog({
               <Label htmlFor="category">Category *</Label>
               <Select
                 value={formData.category}
-                onValueChange={(value) => handleInputChange("category", value)}
+                onValueChange={(value) => handleInputChange('category', value)}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -257,7 +251,7 @@ export function EquipmentDialog({
               <Label htmlFor="status">Status</Label>
               <Select
                 value={formData.status}
-                onValueChange={(value) => handleInputChange("status", value)}
+                onValueChange={(value) => handleInputChange('status', value)}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -280,7 +274,7 @@ export function EquipmentDialog({
               <Input
                 id="location"
                 value={formData.location}
-                onChange={(e) => handleInputChange("location", e.target.value)}
+                onChange={(e) => handleInputChange('location', e.target.value)}
                 placeholder="Equipment location"
               />
             </div>
@@ -291,7 +285,7 @@ export function EquipmentDialog({
                 id="installation_date"
                 type="date"
                 value={formData.installation_date}
-                onChange={(e) => handleInputChange("installation_date", e.target.value)}
+                onChange={(e) => handleInputChange('installation_date', e.target.value)}
               />
             </div>
           </div>
@@ -303,7 +297,7 @@ export function EquipmentDialog({
                 id="warranty_expiry"
                 type="date"
                 value={formData.warranty_expiry}
-                onChange={(e) => handleInputChange("warranty_expiry", e.target.value)}
+                onChange={(e) => handleInputChange('warranty_expiry', e.target.value)}
               />
             </div>
 
@@ -314,7 +308,7 @@ export function EquipmentDialog({
                 type="number"
                 min="0"
                 value={formData.maintenance_interval_hours}
-                onChange={(e) => handleInputChange("maintenance_interval_hours", parseInt(e.target.value) || 0)}
+                onChange={(e) => handleInputChange('maintenance_interval_hours', parseInt(e.target.value) || 0)}
               />
             </div>
           </div>
@@ -328,7 +322,7 @@ export function EquipmentDialog({
               min="0"
               step="0.1"
               value={formData.operating_hours}
-              onChange={(e) => handleInputChange("operating_hours", parseFloat(e.target.value) || 0)}
+              onChange={(e) => handleInputChange('operating_hours', parseFloat(e.target.value) || 0)}
             />
           </div>
 
@@ -338,7 +332,7 @@ export function EquipmentDialog({
             <Textarea
               id="operating_instructions"
               value={formData.operating_instructions}
-              onChange={(e) => handleInputChange("operating_instructions", e.target.value)}
+              onChange={(e) => handleInputChange('operating_instructions', e.target.value)}
               placeholder="Operating instructions and procedures"
               rows={3}
             />
@@ -352,12 +346,12 @@ export function EquipmentDialog({
                 value={newTechnician}
                 onChange={(e) => setNewTechnician(e.target.value)}
                 placeholder="Add technician ID or name"
-                onKeyPress={(e) => e.key === "Enter" && addArrayItem("assigned_technicians", newTechnician, setNewTechnician)}
+                onKeyPress={(e) => e.key === 'Enter' && addArrayItem('assigned_technicians', newTechnician, setNewTechnician)}
               />
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => addArrayItem("assigned_technicians", newTechnician, setNewTechnician)}
+                onClick={() => addArrayItem('assigned_technicians', newTechnician, setNewTechnician)}
               >
                 Add
               </Button>
@@ -368,7 +362,7 @@ export function EquipmentDialog({
                   {tech}
                   <button
                     type="button"
-                    onClick={() => removeArrayItem("assigned_technicians", index)}
+                    onClick={() => removeArrayItem('assigned_technicians', index)}
                     className="ml-1 hover:text-red-500"
                   >
                     <X className="h-3 w-3" />
@@ -386,12 +380,12 @@ export function EquipmentDialog({
                 value={newSparePart}
                 onChange={(e) => setNewSparePart(e.target.value)}
                 placeholder="Add critical spare part"
-                onKeyPress={(e) => e.key === "Enter" && addArrayItem("critical_spare_parts", newSparePart, setNewSparePart)}
+                onKeyPress={(e) => e.key === 'Enter' && addArrayItem('critical_spare_parts', newSparePart, setNewSparePart)}
               />
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => addArrayItem("critical_spare_parts", newSparePart, setNewSparePart)}
+                onClick={() => addArrayItem('critical_spare_parts', newSparePart, setNewSparePart)}
               >
                 Add
               </Button>
@@ -402,7 +396,7 @@ export function EquipmentDialog({
                   {part}
                   <button
                     type="button"
-                    onClick={() => removeArrayItem("critical_spare_parts", index)}
+                    onClick={() => removeArrayItem('critical_spare_parts', index)}
                     className="ml-1 hover:text-red-500"
                   >
                     <X className="h-3 w-3" />
@@ -420,12 +414,12 @@ export function EquipmentDialog({
                 value={newSafetyGuideline}
                 onChange={(e) => setNewSafetyGuideline(e.target.value)}
                 placeholder="Add safety guideline"
-                onKeyPress={(e) => e.key === "Enter" && addArrayItem("safety_guidelines", newSafetyGuideline, setNewSafetyGuideline)}
+                onKeyPress={(e) => e.key === 'Enter' && addArrayItem('safety_guidelines', newSafetyGuideline, setNewSafetyGuideline)}
               />
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => addArrayItem("safety_guidelines", newSafetyGuideline, setNewSafetyGuideline)}
+                onClick={() => addArrayItem('safety_guidelines', newSafetyGuideline, setNewSafetyGuideline)}
               >
                 Add
               </Button>
@@ -436,7 +430,7 @@ export function EquipmentDialog({
                   {guideline}
                   <button
                     type="button"
-                    onClick={() => removeArrayItem("safety_guidelines", index)}
+                    onClick={() => removeArrayItem('safety_guidelines', index)}
                     className="ml-1 hover:text-red-500"
                   >
                     <X className="h-3 w-3" />
@@ -454,12 +448,12 @@ export function EquipmentDialog({
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
                 placeholder="Add tag"
-                onKeyPress={(e) => e.key === "Enter" && addArrayItem("tags", newTag, setNewTag)}
+                onKeyPress={(e) => e.key === 'Enter' && addArrayItem('tags', newTag, setNewTag)}
               />
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => addArrayItem("tags", newTag, setNewTag)}
+                onClick={() => addArrayItem('tags', newTag, setNewTag)}
               >
                 Add
               </Button>
@@ -470,7 +464,7 @@ export function EquipmentDialog({
                   {tag}
                   <button
                     type="button"
-                    onClick={() => removeArrayItem("tags", index)}
+                    onClick={() => removeArrayItem('tags', index)}
                     className="ml-1 hover:text-red-500"
                   >
                     <X className="h-3 w-3" />
@@ -528,7 +522,7 @@ export function EquipmentDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Creating..." : "Create Equipment"}
+              {loading ? 'Creating...' : 'Create Equipment'}
             </Button>
           </DialogFooter>
         </form>

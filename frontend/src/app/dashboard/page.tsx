@@ -1,14 +1,13 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
-import { useAuth } from "../../contexts/AuthContext";
-import { apiService } from "../../services/ApiService";
-import { Project } from "../../models/project/Project";
-import { DashboardLayout } from "../../components/layout";
-import PlanAwareDashboard from "../../components/dashboard/PlanAwareDashboard";
-import { usePlanInfo } from "../../hooks/usePlanInfo";
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import { DashboardLayout } from '../../components/layout';
+import PlanAwareDashboard from '../../components/dashboard/PlanAwareDashboard';
+import { usePlanInfo } from '../../hooks/usePlanInfo';
+import { useDashboard } from '../../hooks/useDashboard';
 
 interface DashboardStats {
   totalProjects: number;
@@ -23,112 +22,43 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
   const { planInfo, loading: planLoading } = usePlanInfo();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [stats, setStats] = useState<DashboardStats>({
+  const { data: dashboardData, loading: dashboardLoading, error: dashboardError } = useDashboard();
+
+  // Redirect unauthenticated users to root route
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push('/');
+    }
+  }, [isAuthenticated, authLoading, router]);
+
+  // Transform dashboard data to match existing stats interface
+  const stats: DashboardStats = dashboardData ? {
+    totalProjects: dashboardData.projects.stats.total,
+    activeProjects: dashboardData.projects.stats.active,
+    completedProjects: dashboardData.projects.stats.completed,
+    totalTeamMembers: dashboardData.users.total,
+    averageProgress: dashboardData.projects.recent.length > 0 
+      ? Math.round(
+          dashboardData.projects.recent.reduce(
+            (sum, p) => sum + p.completionPercent, 0
+          ) / dashboardData.projects.recent.length
+        )
+      : 0,
+    workOrders: dashboardData.workOrders.stats.total,
+    equipmentMaintenance: dashboardData.workOrders.stats.draft,
+    qualityIssues: dashboardData.workOrders.stats.in_progress,
+    productionEfficiency: dashboardData.workOrders.stats.total > 0
+      ? Math.round((dashboardData.workOrders.stats.completed / dashboardData.workOrders.stats.total) * 100)
+      : 0,
+  } : {
     totalProjects: 0,
     activeProjects: 0,
     completedProjects: 0,
     totalTeamMembers: 0,
     averageProgress: 0,
-  });
-  const [loading, setLoading] = useState(true);
-
-  // Redirect unauthenticated users to root route
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push("/");
-    }
-  }, [isAuthenticated, authLoading, router]);
-
-  useEffect(() => {
-    // Only fetch data if user is authenticated
-    if (isAuthenticated) {
-      fetchDashboardData();
-    }
-  }, [isAuthenticated]);
-
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      const [projectsResponse, usersResponse, workOrdersResponse] =
-        await Promise.all([
-          apiService.getProjects(),
-          apiService.getUsers().catch(() => ({ users: [] })),
-          apiService
-            .getWorkOrderStats()
-            .catch(() => ({
-              stats: {
-                total: 0,
-                draft: 0,
-                planned: 0,
-                in_progress: 0,
-                completed: 0,
-                on_hold: 0,
-                urgent: 0,
-              },
-            })),
-        ]);
-
-      const projectsData = projectsResponse.projects || [];
-      const usersData = usersResponse.users || [];
-      const workOrdersData = workOrdersResponse.stats || {
-        total: 0,
-        draft: 0,
-        planned: 0,
-        in_progress: 0,
-        completed: 0,
-        on_hold: 0,
-        urgent: 0,
-      };
-
-      setProjects(projectsData);
-
-      // Calculate stats
-      const totalProjects = projectsData.length;
-      const activeProjects = projectsData.filter(
-        (p: Project) => p.status === "in_progress",
-      ).length;
-      const completedProjects = projectsData.filter(
-        (p: Project) => p.status === "completed",
-      ).length;
-      const totalTeamMembers = usersData.length;
-      const averageProgress =
-        totalProjects > 0
-          ? Math.round(
-              projectsData.reduce(
-                (sum: number, p: Project) => sum + p.completionPercent,
-                0,
-              ) / totalProjects,
-            )
-          : 0;
-
-      // Work order stats
-      const workOrders = workOrdersData.total || 0;
-      const equipmentMaintenance = workOrdersData.draft || 0; // Use draft as maintenance due
-      const qualityIssues = workOrdersData.in_progress || 0; // Use in_progress as quality issues
-      const productionEfficiency =
-        workOrders > 0
-          ? Math.round((workOrdersData.completed / workOrders) * 100)
-          : 0;
-
-      setStats({
-        totalProjects,
-        activeProjects,
-        completedProjects,
-        totalTeamMembers,
-        averageProgress,
-        workOrders,
-        equipmentMaintenance,
-        qualityIssues,
-        productionEfficiency,
-      });
-    } catch (error) {
-      } finally {
-      setLoading(false);
-    }
   };
 
   const handleNavigate = (path: string) => {
@@ -136,7 +66,7 @@ export default function DashboardPage() {
   };
 
   // Show loading while checking authentication or fetching data
-  if (authLoading || planLoading || loading) {
+  if (authLoading || planLoading || dashboardLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
@@ -155,6 +85,27 @@ export default function DashboardPage() {
           <p className="text-muted-foreground">Redirecting to login...</p>
         </div>
       </div>
+    );
+  }
+
+  // Show error if dashboard data failed to load
+  if (dashboardError) {
+    return (
+      <DashboardLayout>
+        <div className="container mx-auto px-6 py-8">
+          <div className="text-center py-12">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              Dashboard Error
+            </h1>
+            <p className="text-gray-600 text-lg">
+              Failed to load dashboard data: {dashboardError}
+            </p>
+            <p className="text-gray-500 mt-2">
+              Please refresh the page or contact support.
+            </p>
+          </div>
+        </div>
+      </DashboardLayout>
     );
   }
 

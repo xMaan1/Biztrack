@@ -1,48 +1,47 @@
-"use client";
+'use client';
 
-import React, { useEffect, useCallback, useMemo } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import { useAuth } from "@/src/contexts/AuthContext";
-import { Loader2 } from "lucide-react";
+import React, { useEffect, useMemo } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { useAuth } from '@/src/contexts/AuthContext';
 
 interface AuthGuardProps {
   children: React.ReactNode;
 }
 
 export default function AuthGuard({ children }: AuthGuardProps) {
-  const { user, loading, isAuthenticated } = useAuth();
+  const { loading, isAuthenticated } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
   // List of public routes that don't require authentication
   const publicRoutes = [
-    "/", // Landing page
-    "/login", // Login page
-    "/signup", // Signup page
-    "/client-portal", // Client portal (if exists)
-    "/api", // API routes
-    "/_next", // Next.js internal routes
-    "/favicon.ico", // Favicon
-    "/manifest.json", // PWA manifest
+    '/', // Landing page
+    '/login', // Login page
+    '/signup', // Signup page
+    '/client-portal', // Client portal (if exists)
+    '/api', // API routes
+    '/_next', // Next.js internal routes
+    '/favicon.ico', // Favicon
+    '/manifest.json', // PWA manifest
   ];
 
   // List of protected routes that require authentication
   const protectedRoutes = [
-    "/dashboard",
-    "/inventory",
-    "/pos",
-    "/crm",
-    "/sales",
-    "/time-tracking",
-    "/team",
-    "/projects",
-    "/events",
-    "/tasks",
-    "/users",
-    "/workspace",
-    "/reports",
-    "/hrm",
-    "/production",
+    '/dashboard',
+    '/inventory',
+    '/pos',
+    '/crm',
+    '/sales',
+    '/time-tracking',
+    '/team',
+    '/projects',
+    '/events',
+    '/tasks',
+    '/users',
+    '/workspace',
+    '/reports',
+    '/hrm',
+    '/production',
   ];
 
   // Check if current route is public
@@ -59,16 +58,16 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     if (!loading) {
       // If user is not authenticated and trying to access protected route
       if (!isAuthenticated && isProtectedRoute) {
-        router.push("/login");
+        router.push('/login');
         return;
       }
 
       // If user is authenticated and trying to access login/signup pages
       if (
         isAuthenticated &&
-        (pathname === "/login" || pathname === "/signup")
+        (pathname === '/login' || pathname === '/signup')
       ) {
-        router.push("/dashboard");
+        router.push('/dashboard');
         return;
       }
     }

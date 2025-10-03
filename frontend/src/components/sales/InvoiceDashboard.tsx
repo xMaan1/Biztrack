@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import React from "react";
+import React from 'react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../ui/card";
-import { Badge } from "../ui/badge";
+} from '../ui/card';
+import { Badge } from '../ui/badge';
 import {
   TrendingUp,
   DollarSign,
@@ -18,15 +18,17 @@ import {
   Clock,
   Users,
   BarChart3,
-} from "lucide-react";
-import { InvoiceDashboard as InvoiceDashboardType } from "../../models/sales";
-import InvoiceService from "../../services/InvoiceService";
+} from 'lucide-react';
+import { InvoiceDashboard as InvoiceDashboardType } from '../../models/sales';
+import InvoiceService from '../../services/InvoiceService';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 
 interface InvoiceDashboardProps {
   dashboard: InvoiceDashboardType;
 }
 
 export function InvoiceDashboard({ dashboard }: InvoiceDashboardProps) {
+  const { formatCurrency } = useCurrency();
   const {
     metrics,
     recentInvoices,
@@ -115,7 +117,7 @@ export function InvoiceDashboard({ dashboard }: InvoiceDashboardProps) {
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-green-600">
-              {InvoiceService.formatCurrency(metrics.totalRevenue)}
+              {formatCurrency(metrics.totalRevenue)}
             </p>
             <p className="text-sm text-gray-600 mt-2">
               From {metrics.paidInvoices} paid invoices
@@ -132,7 +134,7 @@ export function InvoiceDashboard({ dashboard }: InvoiceDashboardProps) {
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-orange-600">
-              {InvoiceService.formatCurrency(metrics.outstandingAmount)}
+              {formatCurrency(metrics.outstandingAmount)}
             </p>
             <p className="text-sm text-gray-600 mt-2">Awaiting payment</p>
           </CardContent>
@@ -147,7 +149,7 @@ export function InvoiceDashboard({ dashboard }: InvoiceDashboardProps) {
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-red-600">
-              {InvoiceService.formatCurrency(metrics.overdueAmount)}
+              {formatCurrency(metrics.overdueAmount)}
             </p>
             <p className="text-sm text-gray-600 mt-2">Past due date</p>
           </CardContent>
@@ -184,10 +186,7 @@ export function InvoiceDashboard({ dashboard }: InvoiceDashboardProps) {
                   </div>
                   <div className="text-right">
                     <p className="font-medium text-gray-900">
-                      {InvoiceService.formatCurrency(
-                        invoice.total,
-                        invoice.currency,
-                      )}
+                      {formatCurrency(invoice.total)}
                     </p>
                     <Badge
                       className={InvoiceService.getStatusColor(invoice.status)}
@@ -236,7 +235,7 @@ export function InvoiceDashboard({ dashboard }: InvoiceDashboardProps) {
                   </div>
                   <div className="text-right">
                     <p className="font-medium text-gray-900">
-                      {InvoiceService.formatCurrency(customer.amount)}
+                      {formatCurrency(customer.amount)}
                     </p>
                   </div>
                 </div>
@@ -259,7 +258,7 @@ export function InvoiceDashboard({ dashboard }: InvoiceDashboardProps) {
         </CardHeader>
         <CardContent>
           <div className="h-64 flex items-end justify-between gap-2">
-            {monthlyRevenue.map((month, index) => (
+            {monthlyRevenue.map((month) => (
               <div
                 key={month.month}
                 className="flex-1 flex flex-col items-center"
@@ -274,7 +273,7 @@ export function InvoiceDashboard({ dashboard }: InvoiceDashboardProps) {
                   {month.month}
                 </p>
                 <p className="text-xs font-medium text-gray-900 mt-1">
-                  {InvoiceService.formatCurrency(month.revenue)}
+                  {formatCurrency(month.revenue)}
                 </p>
               </div>
             ))}
@@ -313,10 +312,7 @@ export function InvoiceDashboard({ dashboard }: InvoiceDashboardProps) {
                   </div>
                   <div className="text-right">
                     <p className="font-medium text-red-600">
-                      {InvoiceService.formatCurrency(
-                        invoice.total,
-                        invoice.currency,
-                      )}
+                      {formatCurrency(invoice.total)}
                     </p>
                   </div>
                 </div>

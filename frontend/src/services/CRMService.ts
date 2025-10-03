@@ -1,6 +1,5 @@
-import { apiService } from "./ApiService";
+import { apiService } from './ApiService';
 import {
-  Lead as CRMLead,
   LeadCreate,
   LeadUpdate,
   CRMLeadsResponse,
@@ -26,7 +25,7 @@ import {
   CRMCompanyFilters,
   CRMOpportunityFilters,
   CRMActivityFilters,
-} from "../models/crm";
+} from '../models/crm';
 
 // Re-export customer types and service from shared CustomerService
 export type {
@@ -35,9 +34,9 @@ export type {
   CustomerUpdate,
   CustomerStats,
   CustomersResponse,
-} from "./CustomerService";
+} from './CustomerService';
 
-export { CustomerService } from "./CustomerService";
+export { CustomerService } from './CustomerService';
 
 // Existing Lead Types
 export interface Lead {
@@ -49,8 +48,8 @@ export interface Lead {
   company?: string;
   jobTitle?: string;
   leadSource?: string;
-  status: "new" | "contacted" | "qualified" | "proposal" | "won" | "lost";
-  priority: "low" | "medium" | "high" | "urgent";
+  status: 'new' | 'contacted' | 'qualified' | 'proposal' | 'won' | 'lost';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
   assignedToId?: string;
   notes?: string;
   createdAt: string;
@@ -67,12 +66,12 @@ export class CRMService {
     limit: number = 10,
   ): Promise<CRMLeadsResponse> {
     const params = new URLSearchParams();
-    if (filters?.status) params.append("status", filters.status);
-    if (filters?.source) params.append("source", filters.source);
-    if (filters?.assignedTo) params.append("assigned_to", filters.assignedTo);
-    if (filters?.search) params.append("search", filters.search);
-    params.append("page", page.toString());
-    params.append("limit", limit.toString());
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.source) params.append('source', filters.source);
+    if (filters?.assignedTo) params.append('assigned_to', filters.assignedTo);
+    if (filters?.search) params.append('search', filters.search);
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
 
     return this.apiService.get(`/crm/leads?${params.toString()}`);
   }
@@ -82,7 +81,7 @@ export class CRMService {
   }
 
   async createLead(lead: LeadCreate): Promise<Lead> {
-    return this.apiService.post("/crm/leads", lead);
+    return this.apiService.post('/crm/leads', lead);
   }
 
   async updateLead(id: string, lead: LeadUpdate): Promise<Lead> {
@@ -107,11 +106,11 @@ export class CRMService {
     limit: number = 10,
   ): Promise<CRMContactsResponse> {
     const params = new URLSearchParams();
-    if (filters?.type) params.append("type", filters.type);
-    if (filters?.companyId) params.append("company_id", filters.companyId);
-    if (filters?.search) params.append("search", filters.search);
-    params.append("page", page.toString());
-    params.append("limit", limit.toString());
+    if (filters?.type) params.append('type', filters.type);
+    if (filters?.companyId) params.append('company_id', filters.companyId);
+    if (filters?.search) params.append('search', filters.search);
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
 
     return this.apiService.get(`/crm/contacts?${params.toString()}`);
   }
@@ -121,7 +120,7 @@ export class CRMService {
   }
 
   async createContact(contact: ContactCreate): Promise<Contact> {
-    return this.apiService.post("/crm/contacts", contact);
+    return this.apiService.post('/crm/contacts', contact);
   }
 
   async updateContact(id: string, contact: ContactUpdate): Promise<Contact> {
@@ -139,11 +138,11 @@ export class CRMService {
     limit: number = 10,
   ): Promise<CRMCompaniesResponse> {
     const params = new URLSearchParams();
-    if (filters?.industry) params.append("industry", filters.industry);
-    if (filters?.size) params.append("size", filters.size);
-    if (filters?.search) params.append("search", filters.search);
-    params.append("page", page.toString());
-    params.append("limit", limit.toString());
+    if (filters?.industry) params.append('industry', filters.industry);
+    if (filters?.size) params.append('size', filters.size);
+    if (filters?.search) params.append('search', filters.search);
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
 
     return this.apiService.get(`/crm/companies?${params.toString()}`);
   }
@@ -153,7 +152,7 @@ export class CRMService {
   }
 
   async createCompany(company: CompanyCreate): Promise<Company> {
-    return this.apiService.post("/crm/companies", company);
+    return this.apiService.post('/crm/companies', company);
   }
 
   async updateCompany(id: string, company: CompanyUpdate): Promise<Company> {
@@ -171,11 +170,11 @@ export class CRMService {
     limit: number = 10,
   ): Promise<CRMOpportunitiesResponse> {
     const params = new URLSearchParams();
-    if (filters?.stage) params.append("stage", filters.stage);
-    if (filters?.assignedTo) params.append("assigned_to", filters.assignedTo);
-    if (filters?.search) params.append("search", filters.search);
-    params.append("page", page.toString());
-    params.append("limit", limit.toString());
+    if (filters?.stage) params.append('stage', filters.stage);
+    if (filters?.assignedTo) params.append('assigned_to', filters.assignedTo);
+    if (filters?.search) params.append('search', filters.search);
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
 
     return this.apiService.get(`/crm/opportunities?${params.toString()}`);
   }
@@ -187,7 +186,7 @@ export class CRMService {
   async createOpportunity(
     opportunity: OpportunityCreate,
   ): Promise<Opportunity> {
-    return this.apiService.post("/crm/opportunities", opportunity);
+    return this.apiService.post('/crm/opportunities', opportunity);
   }
 
   async updateOpportunity(
@@ -208,12 +207,12 @@ export class CRMService {
     limit: number = 10,
   ): Promise<CRMActivitiesResponse> {
     const params = new URLSearchParams();
-    if (filters?.type) params.append("type", filters.type);
+    if (filters?.type) params.append('type', filters.type);
     if (filters?.completed !== undefined)
-      params.append("completed", filters.completed.toString());
-    if (filters?.search) params.append("search", filters.search);
-    params.append("page", page.toString());
-    params.append("limit", limit.toString());
+      params.append('completed', filters.completed.toString());
+    if (filters?.search) params.append('search', filters.search);
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
 
     return this.apiService.get(`/crm/activities?${params.toString()}`);
   }
@@ -223,7 +222,7 @@ export class CRMService {
   }
 
   async createActivity(activity: SalesActivityCreate): Promise<SalesActivity> {
-    return this.apiService.post("/crm/activities", activity);
+    return this.apiService.post('/crm/activities', activity);
   }
 
   async updateActivity(
@@ -239,70 +238,70 @@ export class CRMService {
 
   // Dashboard
   async getDashboard(): Promise<CRMDashboard> {
-    return this.apiService.get("/crm/dashboard");
+    return this.apiService.get('/crm/dashboard');
   }
 
   // Utility Methods
   getLeadStatusColor(status: string): string {
     const statusColors: { [key: string]: string } = {
-      new: "bg-blue-100 text-blue-800",
-      contacted: "bg-yellow-100 text-yellow-800",
-      qualified: "bg-green-100 text-green-800",
-      proposal_sent: "bg-purple-100 text-purple-800",
-      negotiation: "bg-orange-100 text-orange-800",
-      won: "bg-green-100 text-green-800",
-      lost: "bg-red-100 text-red-800",
+      new: 'bg-blue-100 text-blue-800',
+      contacted: 'bg-yellow-100 text-yellow-800',
+      qualified: 'bg-green-100 text-green-800',
+      proposal_sent: 'bg-purple-100 text-purple-800',
+      negotiation: 'bg-orange-100 text-orange-800',
+      won: 'bg-green-100 text-green-800',
+      lost: 'bg-red-100 text-red-800',
     };
-    return statusColors[status] || "bg-gray-100 text-gray-800";
+    return statusColors[status] || 'bg-gray-100 text-gray-800';
   }
 
   getOpportunityStageColor(stage: string): string {
     const stageColors: { [key: string]: string } = {
-      prospecting: "bg-blue-100 text-blue-800",
-      qualification: "bg-yellow-100 text-yellow-800",
-      proposal: "bg-purple-100 text-purple-800",
-      negotiation: "bg-orange-100 text-orange-800",
-      closed_won: "bg-green-100 text-green-800",
-      closed_lost: "bg-red-100 text-red-800",
+      prospecting: 'bg-blue-100 text-blue-800',
+      qualification: 'bg-yellow-100 text-yellow-800',
+      proposal: 'bg-purple-100 text-purple-800',
+      negotiation: 'bg-orange-100 text-orange-800',
+      closed_won: 'bg-green-100 text-green-800',
+      closed_lost: 'bg-red-100 text-red-800',
     };
-    return stageColors[stage] || "bg-gray-100 text-gray-800";
+    return stageColors[stage] || 'bg-gray-100 text-gray-800';
   }
 
   getActivityTypeColor(type: string): string {
     const typeColors: { [key: string]: string } = {
-      call: "bg-blue-100 text-blue-800",
-      email: "bg-green-100 text-green-800",
-      meeting: "bg-purple-100 text-purple-800",
-      task: "bg-yellow-100 text-yellow-800",
-      note: "bg-gray-100 text-gray-800",
-      proposal: "bg-indigo-100 text-indigo-800",
-      contract: "bg-pink-100 text-pink-800",
+      call: 'bg-blue-100 text-blue-800',
+      email: 'bg-green-100 text-green-800',
+      meeting: 'bg-purple-100 text-purple-800',
+      task: 'bg-yellow-100 text-yellow-800',
+      note: 'bg-gray-100 text-gray-800',
+      proposal: 'bg-indigo-100 text-indigo-800',
+      contract: 'bg-pink-100 text-pink-800',
     };
-    return typeColors[type] || "bg-gray-100 text-gray-800";
+    return typeColors[type] || 'bg-gray-100 text-gray-800';
   }
 
   formatCurrency(amount: number): string {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
     }).format(amount);
   }
 
   formatDate(date: string): string {
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
     });
   }
 
   formatDateTime(date: string): string {
-    return new Date(date).toLocaleString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+    return new Date(date).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
   }
 }

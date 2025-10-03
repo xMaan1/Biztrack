@@ -1,33 +1,32 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
-import { Input } from "@/src/components/ui/input";
+} from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Badge } from '@/src/components/ui/badge';
+import { Input } from '@/src/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select";
+} from '@/src/components/ui/select';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from "@/src/components/ui/dialog";
-import { Label } from "@/src/components/ui/label";
-import { Textarea } from "@/src/components/ui/textarea";
+} from '@/src/components/ui/dialog';
+import { Label } from '@/src/components/ui/label';
+import { Textarea } from '@/src/components/ui/textarea';
 import {
   Users,
   Plus,
@@ -36,31 +35,25 @@ import {
   Edit,
   Trash2,
   Eye,
-  Phone,
-  Mail,
   Building2,
-  Calendar,
-  Target,
-} from "lucide-react";
-import CRMService from "@/src/services/CRMService";
+} from 'lucide-react';
+import CRMService from '@/src/services/CRMService';
 import {
   Lead,
   LeadCreate,
-  LeadUpdate,
   LeadStatus,
   LeadSource,
   CRMLeadFilters,
-} from "@/src/models/crm";
-import { DashboardLayout } from "../../../components/layout";
-import { useCustomOptions } from "../../../hooks/useCustomOptions";
-import { CustomOptionDialog } from "../../../components/common/CustomOptionDialog";
+} from '@/src/models/crm';
+import { DashboardLayout } from '../../../components/layout';
+import { useCustomOptions } from '../../../hooks/useCustomOptions';
+import { CustomOptionDialog } from '../../../components/common/CustomOptionDialog';
 
 export default function CRMLeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<CRMLeadFilters>({});
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -78,19 +71,19 @@ export default function CRMLeadsPage() {
   } = useCustomOptions();
 
   const [formData, setFormData] = useState<LeadCreate>({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    company: "",
-    jobTitle: "",
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    company: '',
+    jobTitle: '',
     status: LeadStatus.NEW,
     source: LeadSource.WEBSITE,
-    notes: "",
+    notes: '',
     tags: [],
     score: 0,
     budget: undefined,
-    timeline: "",
+    timeline: '',
   });
 
   const loadLeads = useCallback(async () => {
@@ -100,7 +93,7 @@ export default function CRMLeadsPage() {
       setLeads(response.leads);
       setTotalPages(response.pagination.pages);
     } catch (err) {
-      setError("Failed to load leads");
+      // setError('Failed to load leads');
       } finally {
       setLoading(false);
     }
@@ -125,19 +118,19 @@ export default function CRMLeadsPage() {
       await CRMService.createLead(formData);
       setIsCreateDialogOpen(false);
       setFormData({
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: "",
-        company: "",
-        jobTitle: "",
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        company: '',
+        jobTitle: '',
         status: LeadStatus.NEW,
         source: LeadSource.WEBSITE,
-        notes: "",
+        notes: '',
         tags: [],
         score: 0,
         budget: undefined,
-        timeline: "",
+        timeline: '',
       });
       loadLeads();
     } catch (err) {
@@ -155,7 +148,7 @@ export default function CRMLeadsPage() {
   };
 
   const handleDeleteLead = async (id: string) => {
-    if (confirm("Are you sure you want to delete this lead?")) {
+    if (confirm('Are you sure you want to delete this lead?')) {
       try {
         await CRMService.deleteLead(id);
         loadLeads();
@@ -172,14 +165,14 @@ export default function CRMLeadsPage() {
   const handleFilterChange = (key: keyof CRMLeadFilters, value: string) => {
     setFilters((prev: CRMLeadFilters) => ({
       ...prev,
-      [key]: value === "all" ? undefined : value,
+      [key]: value === 'all' ? undefined : value,
     }));
     setPage(1);
   };
 
   const resetFilters = () => {
     setFilters({});
-    setSearch("");
+    setSearch('');
     setPage(1);
   };
 
@@ -227,7 +220,7 @@ export default function CRMLeadsPage() {
                     placeholder="Search leads..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                   />
                   <Button onClick={handleSearch}>
                     <Search className="w-4 h-4" />
@@ -237,8 +230,8 @@ export default function CRMLeadsPage() {
               <div>
                 <Label htmlFor="status">Status</Label>
                 <Select
-                  value={filters.status || "all"}
-                  onValueChange={(value) => handleFilterChange("status", value)}
+                  value={filters.status || 'all'}
+                  onValueChange={(value) => handleFilterChange('status', value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All Statuses" />
@@ -256,8 +249,8 @@ export default function CRMLeadsPage() {
               <div>
                 <Label htmlFor="source">Source</Label>
                 <Select
-                  value={filters.source || "all"}
-                  onValueChange={(value) => handleFilterChange("source", value)}
+                  value={filters.source || 'all'}
+                  onValueChange={(value) => handleFilterChange('source', value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All Sources" />
@@ -266,8 +259,8 @@ export default function CRMLeadsPage() {
                     <SelectItem value="all">All Sources</SelectItem>
                     {Object.values(LeadSource).map((source) => (
                       <SelectItem key={source} value={source}>
-                        {source.replace("_", " ").charAt(0).toUpperCase() +
-                          source.replace("_", " ").slice(1)}
+                        {source.replace('_', ' ').charAt(0).toUpperCase() +
+                          source.replace('_', ' ').slice(1)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -330,8 +323,8 @@ export default function CRMLeadsPage() {
                           lead.status.slice(1)}
                       </Badge>
                       <Badge variant="outline">
-                        {lead.source.replace("_", " ").charAt(0).toUpperCase() +
-                          lead.source.replace("_", " ").slice(1)}
+                        {lead.source.replace('_', ' ').charAt(0).toUpperCase() +
+                          lead.source.replace('_', ' ').slice(1)}
                       </Badge>
                       {lead.score > 0 && (
                         <Badge variant="secondary">Score: {lead.score}</Badge>
@@ -353,13 +346,13 @@ export default function CRMLeadsPage() {
                       </span>
                       {lead.lastContactDate && (
                         <span>
-                          Last Contact:{" "}
+                          Last Contact:{' '}
                           {CRMService.formatDate(lead.lastContactDate)}
                         </span>
                       )}
                       {lead.nextFollowUpDate && (
                         <span>
-                          Next Follow-up:{" "}
+                          Next Follow-up:{' '}
                           {CRMService.formatDate(lead.nextFollowUpDate)}
                         </span>
                       )}
@@ -385,16 +378,16 @@ export default function CRMLeadsPage() {
                           firstName: lead.firstName,
                           lastName: lead.lastName,
                           email: lead.email,
-                          phone: lead.phone || "",
-                          company: lead.company || "",
-                          jobTitle: lead.jobTitle || "",
+                          phone: lead.phone || '',
+                          company: lead.company || '',
+                          jobTitle: lead.jobTitle || '',
                           status: lead.status,
                           source: lead.source,
-                          notes: lead.notes || "",
+                          notes: lead.notes || '',
                           tags: lead.tags,
                           score: lead.score,
                           budget: lead.budget,
-                          timeline: lead.timeline || "",
+                          timeline: lead.timeline || '',
                         });
                         setIsEditDialogOpen(true);
                       }}
@@ -549,7 +542,7 @@ export default function CRMLeadsPage() {
                 <Select
                   value={formData.source}
                   onValueChange={(value) => {
-                    if (value === "create_new") {
+                    if (value === 'create_new') {
                       setShowCustomLeadSourceDialog(true);
                     } else {
                       setFormData((prev) => ({
@@ -565,8 +558,8 @@ export default function CRMLeadsPage() {
                   <SelectContent>
                     {Object.values(LeadSource).map((source) => (
                       <SelectItem key={source} value={source}>
-                        {source.replace("_", " ").charAt(0).toUpperCase() +
-                          source.replace("_", " ").slice(1)}
+                        {source.replace('_', ' ').charAt(0).toUpperCase() +
+                          source.replace('_', ' ').slice(1)}
                       </SelectItem>
                     ))}
 
@@ -610,7 +603,7 @@ export default function CRMLeadsPage() {
                 <Input
                   id="budget"
                   type="number"
-                  value={formData.budget || ""}
+                  value={formData.budget || ''}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
@@ -765,8 +758,8 @@ export default function CRMLeadsPage() {
                   <SelectContent>
                     {Object.values(LeadSource).map((source) => (
                       <SelectItem key={source} value={source}>
-                        {source.replace("_", " ").charAt(0).toUpperCase() +
-                          source.replace("_", " ").slice(1)}
+                        {source.replace('_', ' ').charAt(0).toUpperCase() +
+                          source.replace('_', ' ').slice(1)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -791,7 +784,7 @@ export default function CRMLeadsPage() {
                 <Input
                   id="editBudget"
                   type="number"
-                  value={formData.budget || ""}
+                  value={formData.budget || ''}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
@@ -849,15 +842,15 @@ export default function CRMLeadsPage() {
                   </div>
                   <div>
                     <Label className="font-medium">Phone</Label>
-                    <p>{selectedLead.phone || "N/A"}</p>
+                    <p>{selectedLead.phone || 'N/A'}</p>
                   </div>
                   <div>
                     <Label className="font-medium">Company</Label>
-                    <p>{selectedLead.company || "N/A"}</p>
+                    <p>{selectedLead.company || 'N/A'}</p>
                   </div>
                   <div>
                     <Label className="font-medium">Job Title</Label>
-                    <p>{selectedLead.jobTitle || "N/A"}</p>
+                    <p>{selectedLead.jobTitle || 'N/A'}</p>
                   </div>
                   <div>
                     <Label className="font-medium">Status</Label>
@@ -874,10 +867,10 @@ export default function CRMLeadsPage() {
                     <Label className="font-medium">Source</Label>
                     <Badge variant="outline">
                       {selectedLead.source
-                        .replace("_", " ")
+                        .replace('_', ' ')
                         .charAt(0)
                         .toUpperCase() +
-                        selectedLead.source.replace("_", " ").slice(1)}
+                        selectedLead.source.replace('_', ' ').slice(1)}
                     </Badge>
                   </div>
                   <div>
@@ -889,7 +882,7 @@ export default function CRMLeadsPage() {
                     <p>
                       {selectedLead.budget
                         ? CRMService.formatCurrency(selectedLead.budget)
-                        : "N/A"}
+                        : 'N/A'}
                     </p>
                   </div>
                 </div>

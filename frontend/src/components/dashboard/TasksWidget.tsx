@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Separator } from "../ui/separator";
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Separator } from '../ui/separator';
 import {
   CheckCircle2,
   Clock,
@@ -14,16 +14,16 @@ import {
   ArrowRight,
   FolderOpen,
   Loader2,
-} from "lucide-react";
-import { Task, TaskStatus, TaskPriority } from "../../models/task";
-import { apiService } from "../../services/ApiService";
+} from 'lucide-react';
+import { Task, TaskStatus } from '../../models/task';
+import { apiService } from '../../services/ApiService';
 import {
   cn,
   getStatusColor,
   getPriorityColor,
   getInitials,
   formatDate,
-} from "../../lib/utils";
+} from '../../lib/utils';
 
 export default function TasksWidget() {
   const router = useRouter();
@@ -45,7 +45,7 @@ export default function TasksWidget() {
       });
       setTasks(response.tasks || []);
     } catch (err) {
-      setError("Failed to load tasks");
+      setError('Failed to load tasks');
     } finally {
       setLoading(false);
     }
@@ -121,7 +121,7 @@ export default function TasksWidget() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.push("/tasks")}
+            onClick={() => router.push('/tasks')}
             className="text-blue-600 hover:text-blue-700"
           >
             View All
@@ -170,7 +170,7 @@ export default function TasksWidget() {
             <div
               key={task.id}
               className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
-              onClick={() => router.push("/tasks")}
+              onClick={() => router.push('/tasks')}
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
@@ -179,9 +179,9 @@ export default function TasksWidget() {
                   </h4>
                   <Badge
                     variant="outline"
-                    className={cn("text-xs", getStatusColor(task.status))}
+                    className={cn('text-xs', getStatusColor(task.status))}
                   >
-                    {task.status.replace("_", " ")}
+                    {task.status.replace('_', ' ')}
                   </Badge>
                 </div>
 
@@ -203,7 +203,7 @@ export default function TasksWidget() {
 
               <Badge
                 variant="outline"
-                className={cn("text-xs", getPriorityColor(task.priority))}
+                className={cn('text-xs', getPriorityColor(task.priority))}
               >
                 {task.priority}
               </Badge>
@@ -218,7 +218,7 @@ export default function TasksWidget() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => router.push("/tasks")}
+              onClick={() => router.push('/tasks')}
               className="mt-2"
             >
               Create Task
@@ -230,7 +230,7 @@ export default function TasksWidget() {
           <Button
             variant="outline"
             className="w-full"
-            onClick={() => router.push("/tasks")}
+            onClick={() => router.push('/tasks')}
           >
             View All Tasks
             <ArrowRight className="h-4 w-4 ml-2" />

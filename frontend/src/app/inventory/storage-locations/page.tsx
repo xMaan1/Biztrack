@@ -1,23 +1,23 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
-import { Badge } from "../../../components/ui/badge";
-import { Input } from "../../../components/ui/input";
+} from '../../../components/ui/card';
+import { Button } from '../../../components/ui/button';
+import { Badge } from '../../../components/ui/badge';
+import { Input } from '../../../components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../../components/ui/select";
+} from '../../../components/ui/select';
 import {
   Table,
   TableBody,
@@ -25,7 +25,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../../../components/ui/table";
+} from '../../../components/ui/table';
 import {
   MapPin,
   Plus,
@@ -35,45 +35,45 @@ import {
   Building2,
   Package,
   Layers,
-} from "lucide-react";
-import { useAuth } from "../../../contexts/AuthContext";
-import { inventoryService } from "../../../services/InventoryService";
+} from 'lucide-react';
+import { useAuth } from '../../../contexts/AuthContext';
+import { inventoryService } from '../../../services/InventoryService';
 import {
   StorageLocation,
   Warehouse,
   StorageLocationCreate,
-} from "../../../models/inventory";
-import { DashboardLayout } from "../../../components/layout";
-import { formatDate } from "../../../lib/utils";
+} from '../../../models/inventory';
+import { DashboardLayout } from '../../../components/layout';
+import { formatDate } from '../../../lib/utils';
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../../components/ui/dialog";
-import { Label } from "../../../components/ui/label";
-import { Textarea } from "../../../components/ui/textarea";
+} from '../../../components/ui/dialog';
+import { Label } from '../../../components/ui/label';
+import { Textarea } from '../../../components/ui/textarea';
 
 export default function StorageLocationsPage() {
-  const { user } = useAuth();
+  const { } = useAuth();
   const router = useRouter();
   const [storageLocations, setStorageLocations] = useState<StorageLocation[]>(
     [],
   );
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [warehouseFilter, setWarehouseFilter] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [warehouseFilter, setWarehouseFilter] = useState<string>('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newLocation, setNewLocation] = useState<StorageLocationCreate>({
-    warehouseId: "",
-    name: "",
-    code: "",
-    description: "",
-    locationType: "shelf",
-    parentLocationId: "",
+    warehouseId: '',
+    name: '',
+    code: '',
+    description: '',
+    locationType: 'shelf',
+    parentLocationId: '',
     capacity: undefined,
     usedCapacity: undefined,
     isActive: true,
@@ -116,7 +116,7 @@ export default function StorageLocationsPage() {
       location.description?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesWarehouse =
-      warehouseFilter === "all" ||
+      warehouseFilter === 'all' ||
       !warehouseFilter ||
       location.warehouseId === warehouseFilter;
 
@@ -125,11 +125,11 @@ export default function StorageLocationsPage() {
 
   const getWarehouseName = (warehouseId: string) => {
     const warehouse = warehouses.find((w) => w.id === warehouseId);
-    return warehouse ? warehouse.name : "Unknown Warehouse";
+    return warehouse ? warehouse.name : 'Unknown Warehouse';
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this storage location?")) {
+    if (confirm('Are you sure you want to delete this storage location?')) {
       try {
         await inventoryService.deleteStorageLocation(id);
         fetchData();
@@ -140,12 +140,12 @@ export default function StorageLocationsPage() {
 
   const getLocationTypeBadge = (type: string) => {
     const typeConfig = {
-      shelf: { variant: "default", label: "Shelf" },
-      rack: { variant: "secondary", label: "Rack" },
-      bin: { variant: "outline", label: "Bin" },
-      area: { variant: "outline", label: "Area" },
-      zone: { variant: "outline", label: "Zone" },
-      room: { variant: "outline", label: "Room" },
+      shelf: { variant: 'default', label: 'Shelf' },
+      rack: { variant: 'secondary', label: 'Rack' },
+      bin: { variant: 'outline', label: 'Bin' },
+      area: { variant: 'outline', label: 'Area' },
+      zone: { variant: 'outline', label: 'Zone' },
+      room: { variant: 'outline', label: 'Room' },
     };
 
     const config =
@@ -160,7 +160,7 @@ export default function StorageLocationsPage() {
 
   const handleAddLocation = async () => {
     if (!newLocation.warehouseId || !newLocation.name || !newLocation.code) {
-      alert("Please fill in all required fields");
+      alert('Please fill in all required fields');
       return;
     }
 
@@ -169,19 +169,19 @@ export default function StorageLocationsPage() {
       await inventoryService.createStorageLocation(newLocation);
       setIsAddModalOpen(false);
       setNewLocation({
-        warehouseId: warehouses.length > 0 ? warehouses[0].id : "",
-        name: "",
-        code: "",
-        description: "",
-        locationType: "shelf",
-        parentLocationId: "",
+        warehouseId: warehouses.length > 0 ? warehouses[0].id : '',
+        name: '',
+        code: '',
+        description: '',
+        locationType: 'shelf',
+        parentLocationId: '',
         capacity: undefined,
         usedCapacity: undefined,
         isActive: true,
       });
       fetchData();
     } catch (error) {
-      alert("Failed to create storage location. Please try again.");
+      alert('Failed to create storage location. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -189,12 +189,12 @@ export default function StorageLocationsPage() {
 
   const resetForm = () => {
     setNewLocation({
-      warehouseId: warehouses.length > 0 ? warehouses[0].id : "",
-      name: "",
-      code: "",
-      description: "",
-      locationType: "shelf",
-      parentLocationId: "",
+      warehouseId: warehouses.length > 0 ? warehouses[0].id : '',
+      name: '',
+      code: '',
+      description: '',
+      locationType: 'shelf',
+      parentLocationId: '',
       capacity: undefined,
       usedCapacity: undefined,
       isActive: true,
@@ -319,7 +319,7 @@ export default function StorageLocationsPage() {
                             <div className="flex items-center gap-2">
                               <Package className="h-4 w-4 text-muted-foreground" />
                               <span className="text-sm">
-                                {location.usedCapacity || 0} /{" "}
+                                {location.usedCapacity || 0} /{' '}
                                 {location.capacity} m³
                               </span>
                             </div>
@@ -338,9 +338,9 @@ export default function StorageLocationsPage() {
                       </TableCell>
                       <TableCell>
                         <Badge
-                          variant={location.isActive ? "default" : "secondary"}
+                          variant={location.isActive ? 'default' : 'secondary'}
                         >
-                          {location.isActive ? "Active" : "Inactive"}
+                          {location.isActive ? 'Active' : 'Inactive'}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -381,11 +381,11 @@ export default function StorageLocationsPage() {
                   No storage locations found
                 </h3>
                 <p className="text-muted-foreground mb-4">
-                  {searchTerm || warehouseFilter !== "all"
-                    ? "Try adjusting your search terms or filters"
-                    : "Get started by adding your first storage location"}
+                  {searchTerm || warehouseFilter !== 'all'
+                    ? 'Try adjusting your search terms or filters'
+                    : 'Get started by adding your first storage location'}
                 </p>
-                {!searchTerm && warehouseFilter === "all" && (
+                {!searchTerm && warehouseFilter === 'all' && (
                   <Button onClick={() => setIsAddModalOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Add Storage Location
@@ -555,7 +555,7 @@ export default function StorageLocationsPage() {
                 <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
-                  value={newLocation.description || ""}
+                  value={newLocation.description || ''}
                   onChange={(e) =>
                     setNewLocation((prev) => ({
                       ...prev,
@@ -574,7 +574,7 @@ export default function StorageLocationsPage() {
                     id="capacity"
                     type="number"
                     step="0.1"
-                    value={newLocation.capacity || ""}
+                    value={newLocation.capacity || ''}
                     onChange={(e) =>
                       setNewLocation((prev) => ({
                         ...prev,
@@ -592,7 +592,7 @@ export default function StorageLocationsPage() {
                     id="usedCapacity"
                     type="number"
                     step="0.1"
-                    value={newLocation.usedCapacity || ""}
+                    value={newLocation.usedCapacity || ''}
                     onChange={(e) =>
                       setNewLocation((prev) => ({
                         ...prev,
@@ -633,7 +633,7 @@ export default function StorageLocationsPage() {
                 Cancel
               </Button>
               <Button onClick={handleAddLocation} disabled={isSubmitting}>
-                {isSubmitting ? "Creating..." : "Create Location"}
+                {isSubmitting ? 'Creating...' : 'Create Location'}
               </Button>
             </DialogFooter>
           </DialogContent>

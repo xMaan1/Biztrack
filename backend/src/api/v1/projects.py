@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, status, Depends, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import or_, func
 from typing import Optional
 import json
 
@@ -60,18 +61,29 @@ async def get_projects(
     """Get all projects with optional filtering (tenant-scoped)"""
     skip = (page - 1) * limit
     tenant_id = tenant_context["tenant_id"] if tenant_context else None
-    projects = get_all_projects(db, tenant_id=tenant_id, skip=skip, limit=limit)
     
-    # Apply filters (basic implementation)
+    # Build query with database-level filtering instead of Python filtering
+    query = db.query(DBProject).filter(DBProject.tenant_id == tenant_id)
+    
+    # Apply database-level filters
     if status:
-        projects = [p for p in projects if p.status == status]
+        query = query.filter(DBProject.status == status)
     if priority:
-        projects = [p for p in projects if p.priority == priority]
+        query = query.filter(DBProject.priority == priority)
     if search:
-        search_lower = search.lower()
-        projects = [p for p in projects if 
-                   search_lower in p.name.lower() or 
-                   (p.description and search_lower in p.description.lower())]
+        search_lower = f"%{search.lower()}%"
+        query = query.filter(
+            or_(
+                func.lower(DBProject.name).like(search_lower),
+                func.lower(DBProject.description).like(search_lower)
+            )
+        )
+    
+    # Get total count for pagination
+    total = query.count()
+    
+    # Apply pagination and ordering
+    projects = query.order_by(DBProject.createdAt.desc()).offset(skip).limit(limit).all()
     
     project_list = [transform_project_to_response(project) for project in projects]
     
@@ -80,8 +92,8 @@ async def get_projects(
         pagination={
             "page": page,
             "limit": limit,
-            "total": len(project_list),
-            "pages": (len(project_list) + limit - 1) // limit
+            "total": total,
+            "pages": (total + limit - 1) // limit
         }
     )
 

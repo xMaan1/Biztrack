@@ -1,22 +1,22 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
+import React from 'react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
-import { Progress } from "@/src/components/ui/progress";
+} from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Badge } from '@/src/components/ui/badge';
+import { Progress } from '@/src/components/ui/progress';
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/src/components/ui/tabs";
+} from '@/src/components/ui/tabs';
 import {
   Users,
   Building2,
@@ -28,37 +28,23 @@ import {
   Plus,
   DollarSign,
   BarChart3,
-} from "lucide-react";
-import CRMService from "@/src/services/CRMService";
+} from 'lucide-react';
+import CRMService from '@/src/services/CRMService';
 import {
   CRMDashboard,
-  Lead,
-  Opportunity,
-  SalesActivity,
-} from "@/src/models/crm";
-import Link from "next/link";
-import { DashboardLayout } from "../../components/layout";
+} from '@/src/models/crm';
+import Link from 'next/link';
+import { DashboardLayout } from '../../components/layout';
+import { useCachedApi } from '../../hooks/useCachedApi';
+import { useCurrency } from '../../contexts/CurrencyContext';
 
 export default function CRMDashboardPage() {
-  const [dashboard, setDashboard] = useState<CRMDashboard | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    loadDashboard();
-  }, []);
-
-  const loadDashboard = async () => {
-    try {
-      setLoading(true);
-      const data = await CRMService.getDashboard();
-      setDashboard(data);
-    } catch (err) {
-      setError("Failed to load dashboard data");
-      } finally {
-      setLoading(false);
-    }
-  };
+  const { formatCurrency } = useCurrency();
+  const { data: dashboard, loading, error, refetch } = useCachedApi<CRMDashboard>(
+    'crm_dashboard',
+    () => CRMService.getDashboard(),
+    { ttl: 30000 }
+  );
 
   if (loading) {
     return (
@@ -76,9 +62,9 @@ export default function CRMDashboardPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <p className="text-red-500 text-lg mb-4">
-            {error || "Dashboard not available"}
+            {error || 'Dashboard not available'}
           </p>
-          <Button onClick={loadDashboard}>Retry</Button>
+          <Button onClick={refetch}>Retry</Button>
         </div>
       </div>
     );
@@ -152,10 +138,10 @@ export default function CRMDashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {CRMService.formatCurrency(dashboard.metrics.totalRevenue)}
+                {formatCurrency(dashboard.metrics.totalRevenue)}
               </div>
               <p className="text-xs text-muted-foreground">
-                {CRMService.formatCurrency(dashboard.metrics.projectedRevenue)}{" "}
+                {formatCurrency(dashboard.metrics.projectedRevenue)}{' '}
                 projected
               </p>
             </CardContent>
@@ -202,7 +188,7 @@ export default function CRMDashboardPage() {
                       <div className="flex justify-between items-center">
                         <div className="flex items-center space-x-2">
                           <Badge variant="outline" className="capitalize">
-                            {stage.stage.replace("_", " ")}
+                            {stage.stage.replace('_', ' ')}
                           </Badge>
                           <span className="text-sm text-gray-600">
                             {stage.count} opportunities
@@ -210,7 +196,7 @@ export default function CRMDashboardPage() {
                         </div>
                         <div className="text-right">
                           <div className="font-semibold">
-                            {CRMService.formatCurrency(stage.value)}
+                            {formatCurrency(stage.value)}
                           </div>
                           <div className="text-sm text-gray-500">
                             {stage.probability}% probability
@@ -256,19 +242,19 @@ export default function CRMDashboardPage() {
                       <div
                         className={`p-2 rounded-full ${CRMService.getActivityTypeColor(activity.type)}`}
                       >
-                        {activity.type === "call" && (
+                        {activity.type === 'call' && (
                           <Phone className="w-4 h-4" />
                         )}
-                        {activity.type === "email" && (
+                        {activity.type === 'email' && (
                           <Mail className="w-4 h-4" />
                         )}
-                        {activity.type === "meeting" && (
+                        {activity.type === 'meeting' && (
                           <Calendar className="w-4 h-4" />
                         )}
-                        {activity.type === "task" && (
+                        {activity.type === 'task' && (
                           <Target className="w-4 h-4" />
                         )}
-                        {activity.type === "note" && (
+                        {activity.type === 'note' && (
                           <BarChart3 className="w-4 h-4" />
                         )}
                       </div>
@@ -282,9 +268,9 @@ export default function CRMDashboardPage() {
                         </div>
                       </div>
                       <Badge
-                        variant={activity.completed ? "default" : "secondary"}
+                        variant={activity.completed ? 'default' : 'secondary'}
                       >
-                        {activity.completed ? "Completed" : "Pending"}
+                        {activity.completed ? 'Completed' : 'Pending'}
                       </Badge>
                     </div>
                   ))}
@@ -320,7 +306,7 @@ export default function CRMDashboardPage() {
                               opportunity.stage,
                             )}
                           >
-                            {opportunity.stage.replace("_", " ")}
+                            {opportunity.stage.replace('_', ' ')}
                           </Badge>
                           <span className="text-sm text-gray-500">
                             {opportunity.probability}% probability
@@ -330,8 +316,8 @@ export default function CRMDashboardPage() {
                       <div className="text-right">
                         <div className="font-semibold text-lg">
                           {opportunity.amount
-                            ? CRMService.formatCurrency(opportunity.amount)
-                            : "N/A"}
+                            ? formatCurrency(opportunity.amount)
+                            : 'N/A'}
                         </div>
                         <div className="text-sm text-gray-500">
                           {opportunity.expectedCloseDate &&
@@ -393,7 +379,7 @@ export default function CRMDashboardPage() {
                         </div>
                         {lead.budget && (
                           <div className="text-sm font-medium">
-                            Budget: {CRMService.formatCurrency(lead.budget)}
+                            Budget: {formatCurrency(lead.budget)}
                           </div>
                         )}
                       </div>

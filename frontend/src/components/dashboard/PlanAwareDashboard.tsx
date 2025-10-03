@@ -1,11 +1,9 @@
-"use client";
+'use client';
 
-import React from "react";
-import { useRouter } from "next/navigation";
-import WorkshopDashboard from "./WorkshopDashboard";
-import CommerceDashboard from "./CommerceDashboard";
-import HealthcareDashboard from "./HealthcareDashboard";
-import { PlanInfo as Plan } from "../../hooks/usePlanInfo";
+import React from 'react';
+import WorkshopDashboard from './WorkshopDashboard';
+import CommerceDashboard from './CommerceDashboard';
+import HealthcareDashboard from './HealthcareDashboard';
 
 interface PlanAwareDashboardProps {
   planType: string;
@@ -18,24 +16,23 @@ export default function PlanAwareDashboard({
   stats,
   onNavigate,
 }: PlanAwareDashboardProps) {
-  const router = useRouter();
 
   // Use real stats passed from parent, no fake data generation
   const enhancedStats = { ...stats };
 
   // Render appropriate dashboard based on plan type
   switch (planType) {
-    case "workshop":
+    case 'workshop':
       return (
         <WorkshopDashboard stats={enhancedStats} onNavigate={onNavigate} />
       );
 
-    case "commerce":
+    case 'commerce':
       return (
         <CommerceDashboard stats={enhancedStats} onNavigate={onNavigate} />
       );
 
-    case "healthcare":
+    case 'healthcare':
       return (
         <HealthcareDashboard stats={enhancedStats} onNavigate={onNavigate} />
       );
@@ -49,7 +46,7 @@ export default function PlanAwareDashboard({
               Welcome to Your Dashboard
             </h1>
             <p className="text-gray-600 text-lg">
-              Plan type: {planType || "Unknown"}
+              Plan type: {planType || 'Unknown'}
             </p>
             <p className="text-gray-500 mt-2">
               This is a generic dashboard view. Please contact support to

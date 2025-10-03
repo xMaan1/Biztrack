@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,26 +8,26 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../ui/dialog";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { Textarea } from "../ui/textarea";
+} from '../ui/dialog';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Textarea } from '../ui/textarea';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
-import { Badge } from "../ui/badge";
-import { Loader2, X } from "lucide-react";
-import { apiService } from "../../services/ApiService";
+} from '../ui/select';
+import { Badge } from '../ui/badge';
+import { Loader2, X } from 'lucide-react';
+import { apiService } from '../../services/ApiService';
 
 interface WorkOrderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  mode: "create" | "edit";
+  mode: 'create' | 'edit';
   workOrder?: any;
   onSuccess: () => void;
 }
@@ -61,49 +61,49 @@ export default function WorkOrderDialog({
 }: WorkOrderDialogProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<WorkOrderFormData>({
-    title: "",
-    description: "",
-    work_order_type: "production",
-    status: "draft",
-    priority: "medium",
-    planned_start_date: "",
-    planned_end_date: "",
+    title: '',
+    description: '',
+    work_order_type: 'production',
+    status: 'draft',
+    priority: 'medium',
+    planned_start_date: '',
+    planned_end_date: '',
     estimated_hours: 0,
-    assigned_to_id: "",
-    project_id: "",
-    location: "",
-    instructions: "",
-    safety_notes: "",
-    quality_requirements: "",
+    assigned_to_id: '',
+    project_id: '',
+    location: '',
+    instructions: '',
+    safety_notes: '',
+    quality_requirements: '',
     materials_required: [],
     estimated_cost: 0,
     tags: [],
   });
 
-  const [newMaterial, setNewMaterial] = useState("");
-  const [newTag, setNewTag] = useState("");
+  const [newMaterial, setNewMaterial] = useState('');
+  const [newTag, setNewTag] = useState('');
 
   useEffect(() => {
-    if (workOrder && mode === "edit") {
+    if (workOrder && mode === 'edit') {
       setFormData({
-        title: workOrder.title || "",
-        description: workOrder.description || "",
-        work_order_type: workOrder.work_order_type || "production",
-        status: workOrder.status || "draft",
-        priority: workOrder.priority || "medium",
+        title: workOrder.title || '',
+        description: workOrder.description || '',
+        work_order_type: workOrder.work_order_type || 'production',
+        status: workOrder.status || 'draft',
+        priority: workOrder.priority || 'medium',
         planned_start_date: workOrder.planned_start_date
-          ? workOrder.planned_start_date.split("T")[0]
-          : "",
+          ? workOrder.planned_start_date.split('T')[0]
+          : '',
         planned_end_date: workOrder.planned_end_date
-          ? workOrder.planned_end_date.split("T")[0]
-          : "",
+          ? workOrder.planned_end_date.split('T')[0]
+          : '',
         estimated_hours: workOrder.estimated_hours || 0,
-        assigned_to_id: workOrder.assigned_to_id || "",
-        project_id: workOrder.project_id || "",
-        location: workOrder.location || "",
-        instructions: workOrder.instructions || "",
-        safety_notes: workOrder.safety_notes || "",
-        quality_requirements: workOrder.quality_requirements || "",
+        assigned_to_id: workOrder.assigned_to_id || '',
+        project_id: workOrder.project_id || '',
+        location: workOrder.location || '',
+        instructions: workOrder.instructions || '',
+        safety_notes: workOrder.safety_notes || '',
+        quality_requirements: workOrder.quality_requirements || '',
         materials_required: workOrder.materials_required || [],
         estimated_cost: workOrder.estimated_cost || 0,
         tags: workOrder.tags || [],
@@ -116,8 +116,8 @@ export default function WorkOrderDialog({
     setLoading(true);
 
     try {
-      if (mode === "create") {
-        await apiService.post("/work-orders", formData);
+      if (mode === 'create') {
+        await apiService.post('/work-orders', formData);
       } else {
         await apiService.put(`/work-orders/${workOrder.id}`, formData);
       }
@@ -133,20 +133,20 @@ export default function WorkOrderDialog({
 
   const resetForm = () => {
     setFormData({
-      title: "",
-      description: "",
-      work_order_type: "production",
-      status: "draft",
-      priority: "medium",
-      planned_start_date: "",
-      planned_end_date: "",
+      title: '',
+      description: '',
+      work_order_type: 'production',
+      status: 'draft',
+      priority: 'medium',
+      planned_start_date: '',
+      planned_end_date: '',
       estimated_hours: 0,
-      assigned_to_id: "",
-      project_id: "",
-      location: "",
-      instructions: "",
-      safety_notes: "",
-      quality_requirements: "",
+      assigned_to_id: '',
+      project_id: '',
+      location: '',
+      instructions: '',
+      safety_notes: '',
+      quality_requirements: '',
       materials_required: [],
       estimated_cost: 0,
       tags: [],
@@ -165,7 +165,7 @@ export default function WorkOrderDialog({
           newMaterial.trim(),
         ],
       });
-      setNewMaterial("");
+      setNewMaterial('');
     }
   };
 
@@ -184,7 +184,7 @@ export default function WorkOrderDialog({
         ...formData,
         tags: [...formData.tags, newTag.trim()],
       });
-      setNewTag("");
+      setNewTag('');
     }
   };
 
@@ -200,12 +200,12 @@ export default function WorkOrderDialog({
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {mode === "create" ? "Create New Work Order" : "Edit Work Order"}
+            {mode === 'create' ? 'Create New Work Order' : 'Edit Work Order'}
           </DialogTitle>
           <DialogDescription>
-            {mode === "create"
-              ? "Fill in the details to create a new work order"
-              : "Update the work order information"}
+            {mode === 'create'
+              ? 'Fill in the details to create a new work order'
+              : 'Update the work order information'}
           </DialogDescription>
         </DialogHeader>
 
@@ -439,7 +439,7 @@ export default function WorkOrderDialog({
                 onChange={(e) => setNewMaterial(e.target.value)}
                 placeholder="Add material"
                 onKeyPress={(e) =>
-                  e.key === "Enter" && (e.preventDefault(), addMaterial())
+                  e.key === 'Enter' && (e.preventDefault(), addMaterial())
                 }
               />
               <Button type="button" onClick={addMaterial} variant="outline">
@@ -477,7 +477,7 @@ export default function WorkOrderDialog({
                 onChange={(e) => setNewTag(e.target.value)}
                 placeholder="Add tag"
                 onKeyPress={(e) =>
-                  e.key === "Enter" && (e.preventDefault(), addTag())
+                  e.key === 'Enter' && (e.preventDefault(), addTag())
                 }
               />
               <Button type="button" onClick={addTag} variant="outline">
@@ -516,7 +516,7 @@ export default function WorkOrderDialog({
             </Button>
             <Button type="submit" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {mode === "create" ? "Create Work Order" : "Update Work Order"}
+              {mode === 'create' ? 'Create Work Order' : 'Update Work Order'}
             </Button>
           </DialogFooter>
         </form>

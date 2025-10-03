@@ -1,6 +1,6 @@
-import React from "react";
-import EventsList from "../../components/events/EventsList";
-import { DashboardLayout } from "../../components/layout";
+import React from 'react';
+import EventsList from '../../components/events/EventsList';
+import { DashboardLayout } from '../../components/layout';
 
 export default function EventsPage() {
   return (

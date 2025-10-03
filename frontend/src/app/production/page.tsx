@@ -1,44 +1,35 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Badge } from "../../components/ui/badge";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "../../components/ui/avatar";
-import { Progress } from "../../components/ui/progress";
+} from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Badge } from '../../components/ui/badge';
+import { Progress } from '../../components/ui/progress';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../components/ui/select";
+} from '../../components/ui/select';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "../../components/ui/dropdown-menu";
+} from '../../components/ui/dropdown-menu';
 import {
   Tabs,
-  TabsContent,
   TabsList,
   TabsTrigger,
-} from "../../components/ui/tabs";
-import { Alert, AlertDescription } from "../../components/ui/alert";
-import { Separator } from "../../components/ui/separator";
+} from '../../components/ui/tabs';
+import { Alert, AlertDescription } from '../../components/ui/alert';
 import {
   Plus,
   Search,
@@ -46,62 +37,51 @@ import {
   Edit,
   Trash2,
   Eye,
-  Filter,
   Star,
   Clock,
-  Flag,
   CheckCircle2,
-  Users,
-  FolderOpen,
-  Calendar,
-  DollarSign,
   Loader2,
-  RefreshCw,
   CheckSquare,
   Factory,
   AlertTriangle,
   Package,
-  BarChart3,
   Play,
   Pause,
   Square,
   Wrench,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   ProductionPlanResponse as ProductionPlan,
   ProductionStatus,
   ProductionPriority,
   ProductionType,
-} from "../../models/production";
-import ProductionService from "../../services/ProductionService";
-import { useAuth } from "../../hooks/useAuth";
-import { DashboardLayout } from "../../components/layout";
-import ProductionPlanDialog from "../../components/production/ProductionPlanDialog";
+} from '../../models/production';
+import ProductionService from '../../services/ProductionService';
+import { DashboardLayout } from '../../components/layout';
+import ProductionPlanDialog from '../../components/production/ProductionPlanDialog';
 import {
-  cn,
   getStatusColor,
   getPriorityColor,
-  getInitials,
   formatDate,
-} from "../../lib/utils";
+  cn,
+} from '../../lib/utils';
 
 export default function ProductionPage() {
-  const { user } = useAuth();
   const router = useRouter();
   const [productionPlans, setProductionPlans] = useState<ProductionPlan[]>([]);
   const [filteredPlans, setFilteredPlans] = useState<ProductionPlan[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [priorityFilter, setPriorityFilter] = useState<string>("all");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [priorityFilter, setPriorityFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<ProductionPlan | null>(null);
-  const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
+  const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [planToDelete, setPlanToDelete] = useState<ProductionPlan | null>(null);
-  const [sortBy, setSortBy] = useState<string>("newest");
-  const [activeTab, setActiveTab] = useState("all");
+  const [sortBy, setSortBy] = useState<string>('newest');
+  const [activeTab, setActiveTab] = useState('all');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -153,35 +133,35 @@ export default function ProductionPage() {
     }
 
     // Status filter
-    if (statusFilter !== "all") {
+    if (statusFilter !== 'all') {
       filtered = filtered.filter((plan) => plan.status === statusFilter);
     }
 
     // Priority filter
-    if (priorityFilter !== "all") {
+    if (priorityFilter !== 'all') {
       filtered = filtered.filter((plan) => plan.priority === priorityFilter);
     }
 
     // Type filter
-    if (typeFilter !== "all") {
+    if (typeFilter !== 'all') {
       filtered = filtered.filter((plan) => plan.production_type === typeFilter);
     }
 
     // Sort
     switch (sortBy) {
-      case "newest":
+      case 'newest':
         filtered.sort(
           (a, b) =>
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
         );
         break;
-      case "oldest":
+      case 'oldest':
         filtered.sort(
           (a, b) =>
             new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
         );
         break;
-      case "priority":
+      case 'priority':
         filtered.sort((a, b) => {
           const priorityOrder: Record<string, number> = {
             urgent: 4,
@@ -192,7 +172,7 @@ export default function ProductionPage() {
           return priorityOrder[b.priority] - priorityOrder[a.priority];
         });
         break;
-      case "deadline":
+      case 'deadline':
         filtered.sort((a, b) => {
           if (!a.planned_end_date && !b.planned_end_date) return 0;
           if (!a.planned_end_date) return 1;
@@ -210,13 +190,13 @@ export default function ProductionPage() {
 
   const handleCreatePlan = () => {
     setSelectedPlan(null);
-    setDialogMode("create");
+    setDialogMode('create');
     setDialogOpen(true);
   };
 
   const handleEditPlan = (plan: ProductionPlan) => {
     setSelectedPlan(plan);
-    setDialogMode("edit");
+    setDialogMode('edit');
     setDialogOpen(true);
   };
 
@@ -449,16 +429,16 @@ export default function ProductionPage() {
               </h3>
               <p className="text-gray-500 mb-4">
                 {searchTerm ||
-                statusFilter !== "all" ||
-                priorityFilter !== "all" ||
-                typeFilter !== "all"
-                  ? "Try adjusting your filters or search terms"
-                  : "Get started by creating your first production plan"}
+                statusFilter !== 'all' ||
+                priorityFilter !== 'all' ||
+                typeFilter !== 'all'
+                  ? 'Try adjusting your filters or search terms'
+                  : 'Get started by creating your first production plan'}
               </p>
               {!searchTerm &&
-                statusFilter === "all" &&
-                priorityFilter === "all" &&
-                typeFilter === "all" && (
+                statusFilter === 'all' &&
+                priorityFilter === 'all' &&
+                typeFilter === 'all' && (
                   <Button onClick={handleCreatePlan}>
                     <Plus className="h-4 w-4 mr-2" />
                     Create Production Plan
@@ -479,16 +459,16 @@ export default function ProductionPage() {
                           <Badge
                             variant="outline"
                             className={cn(
-                              "text-xs",
+                              'text-xs',
                               getStatusColor(plan.status),
                             )}
                           >
-                            {plan.status.replace("_", " ")}
+                            {plan.status.replace('_', ' ')}
                           </Badge>
                           <Badge
                             variant="outline"
                             className={cn(
-                              "text-xs",
+                              'text-xs',
                               getPriorityColor(plan.priority),
                             )}
                           >

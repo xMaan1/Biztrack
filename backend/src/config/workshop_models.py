@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Boolean, DateTime, Float, Integer, Text, JSON, ForeignKey, Enum
+from sqlalchemy import Column, String, Boolean, DateTime, Float, Integer, Text, JSON, ForeignKey, Enum, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 from .database_config import Base
@@ -91,6 +91,19 @@ class WorkOrder(Base):
     # Quality Control relationships
     quality_checks = relationship("QualityCheck", back_populates="work_order")
     quality_defects = relationship("QualityDefect", back_populates="work_order")
+    
+    # Indexes for performance optimization
+    __table_args__ = (
+        Index("idx_work_orders_tenant_id", "tenant_id"),
+        Index("idx_work_orders_status", "status"),
+        Index("idx_work_orders_priority", "priority"),
+        Index("idx_work_orders_type", "work_order_type"),
+        Index("idx_work_orders_is_active", "is_active"),
+        Index("idx_work_orders_assigned_to", "assigned_to_id"),
+        Index("idx_work_orders_created_at", "created_at"),
+        Index("idx_work_orders_tenant_status", "tenant_id", "status"),
+        Index("idx_work_orders_tenant_active", "tenant_id", "is_active"),
+    )
 
 class WorkOrderTask(Base):
     __tablename__ = "work_order_tasks"

@@ -1,15 +1,14 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { Card, CardContent } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
+import React, { useState } from 'react';
+import { Card, CardContent } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Badge } from '../../components/ui/badge';
 import {
   Avatar,
   AvatarFallback,
-  AvatarImage,
-} from "../../components/ui/avatar";
-import { Progress } from "../../components/ui/progress";
+} from '../../components/ui/avatar';
+import { Progress } from '../../components/ui/progress';
 import {
   MoreVertical,
   User,
@@ -22,16 +21,16 @@ import {
   Circle,
   Trash2,
   Edit,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-} from "../../components/ui/dropdown-menu";
+} from '../../components/ui/dropdown-menu';
 // Add more imports for your UI components as needed
-import { Task, TaskStatus, TaskPriority, SubTask } from "../../models/task";
+import { Task, TaskStatus, TaskPriority, SubTask } from '../../models/task';
 
 interface TaskCardProps {
   task: Task;
@@ -261,7 +260,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 variant="ghost"
                 size="icon"
                 onClick={() => setShowSubtasks(!showSubtasks)}
-                title={showSubtasks ? "Hide Subtasks" : "Show Subtasks"}
+                title={showSubtasks ? 'Hide Subtasks' : 'Show Subtasks'}
               >
                 {showSubtasks ? (
                   <ChevronUp className="h-4 w-4" />
@@ -306,8 +305,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                   <span
                     className={
                       subtask.status === TaskStatus.COMPLETED
-                        ? "line-through opacity-70 text-gray-500"
-                        : ""
+                        ? 'line-through opacity-70 text-gray-500'
+                        : ''
                     }
                   >
                     {subtask.title}

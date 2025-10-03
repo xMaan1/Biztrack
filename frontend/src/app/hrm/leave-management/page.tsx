@@ -1,24 +1,24 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Input } from "@/src/components/ui/input";
-import { Label } from "@/src/components/ui/label";
-import { Textarea } from "@/src/components/ui/textarea";
+} from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Input } from '@/src/components/ui/input';
+import { Label } from '@/src/components/ui/label';
+import { Textarea } from '@/src/components/ui/textarea';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select";
+} from '@/src/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -26,9 +26,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/src/components/ui/dialog";
-import { Badge } from "@/src/components/ui/badge";
-import { Alert, AlertDescription } from "@/src/components/ui/alert";
+} from '@/src/components/ui/dialog';
+import { Badge } from '@/src/components/ui/badge';
+import { Alert, AlertDescription } from '@/src/components/ui/alert';
 import {
   Calendar,
   Plus,
@@ -40,7 +40,6 @@ import {
   Clock,
   User,
   CheckCircle,
-  AlertCircle,
   XCircle,
   Clock3,
   FileText,
@@ -50,20 +49,18 @@ import {
   Baby,
   Users,
   HelpCircle,
-} from "lucide-react";
-import HRMService from "@/src/services/HRMService";
+} from 'lucide-react';
+import HRMService from '@/src/services/HRMService';
 import {
   LeaveRequest,
   LeaveRequestCreate,
-  LeaveRequestUpdate,
   LeaveType,
   LeaveStatus,
-  HRMLeaveRequestsResponse,
   Employee,
-} from "@/src/models/hrm";
-import { DashboardLayout } from "@/src/components/layout";
-import { useCustomOptions } from "@/src/hooks/useCustomOptions";
-import { CustomOptionDialog } from "@/src/components/common/CustomOptionDialog";
+} from '@/src/models/hrm';
+import { DashboardLayout } from '@/src/components/layout';
+import { useCustomOptions } from '@/src/hooks/useCustomOptions';
+import { CustomOptionDialog } from '@/src/components/common/CustomOptionDialog';
 
 export default function HRMLeaveManagementPage() {
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
@@ -77,7 +74,7 @@ export default function HRMLeaveManagementPage() {
     startDate?: string;
     endDate?: string;
   }>({});
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingRequest, setEditingRequest] = useState<LeaveRequest | null>(
     null,
@@ -101,19 +98,20 @@ export default function HRMLeaveManagementPage() {
     loading: customOptionsLoading,
   } = useCustomOptions();
   const [formData, setFormData] = useState<LeaveRequestCreate>({
-    employeeId: "",
+    employeeId: '',
     leaveType: LeaveType.ANNUAL,
-    startDate: new Date().toISOString().split("T")[0],
-    endDate: new Date().toISOString().split("T")[0],
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date().toISOString().split('T')[0],
     totalDays: 1,
-    reason: "",
+    reason: '',
     status: LeaveStatus.PENDING,
-    notes: "",
+    notes: '',
   });
 
   useEffect(() => {
     loadLeaveRequests();
     loadEmployees();
+    return;
   }, [filters]);
 
   const loadLeaveRequests = useCallback(async () => {
@@ -122,7 +120,7 @@ export default function HRMLeaveManagementPage() {
       const response = await HRMService.getLeaveRequests(filters, 1, 100);
       setLeaveRequests(response.leaveRequests);
     } catch (err) {
-      setError("Failed to load leave requests");
+      setError('Failed to load leave requests');
       } finally {
       setLoading(false);
     }
@@ -142,7 +140,7 @@ export default function HRMLeaveManagementPage() {
 
   const resetFilters = () => {
     setFilters({});
-    setSearch("");
+    setSearch('');
   };
 
   const handleCreateCustomLeaveType = async (
@@ -157,14 +155,14 @@ export default function HRMLeaveManagementPage() {
 
   const resetForm = () => {
     setFormData({
-      employeeId: "",
+      employeeId: '',
       leaveType: LeaveType.ANNUAL,
-      startDate: new Date().toISOString().split("T")[0],
-      endDate: new Date().toISOString().split("T")[0],
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date().toISOString().split('T')[0],
       totalDays: 1,
-      reason: "",
+      reason: '',
       status: LeaveStatus.PENDING,
-      notes: "",
+      notes: '',
     });
     setEditingRequest(null);
     setError(null);
@@ -183,7 +181,7 @@ export default function HRMLeaveManagementPage() {
         !formData.endDate
       ) {
         setError(
-          "Please fill in all required fields (Employee, Reason, Start Date, and End Date)",
+          'Please fill in all required fields (Employee, Reason, Start Date, and End Date)',
         );
         return;
       }
@@ -198,17 +196,17 @@ export default function HRMLeaveManagementPage() {
 
       if (editingRequest) {
         await HRMService.updateLeaveRequest(editingRequest.id, updatedFormData);
-        setSuccessMessage("Leave request updated successfully!");
+        setSuccessMessage('Leave request updated successfully!');
       } else {
         await HRMService.createLeaveRequest(updatedFormData);
-        setSuccessMessage("Leave request created successfully!");
+        setSuccessMessage('Leave request created successfully!');
       }
 
       setShowCreateDialog(false);
       resetForm();
       loadLeaveRequests();
     } catch (err) {
-      setError("Failed to save leave request. Please try again.");
+      setError('Failed to save leave request. Please try again.');
       } finally {
       setSubmitting(false);
     }
@@ -219,12 +217,12 @@ export default function HRMLeaveManagementPage() {
     setFormData({
       employeeId: request.employeeId,
       leaveType: request.leaveType,
-      startDate: request.startDate.split("T")[0],
-      endDate: request.endDate.split("T")[0],
+      startDate: request.startDate.split('T')[0],
+      endDate: request.endDate.split('T')[0],
       totalDays: request.totalDays,
       reason: request.reason,
       status: request.status,
-      notes: request.notes || "",
+      notes: request.notes || '',
     });
     setShowCreateDialog(true);
   };
@@ -243,11 +241,11 @@ export default function HRMLeaveManagementPage() {
     try {
       setDeleting(true);
       await HRMService.deleteLeaveRequest(deletingRequest.id);
-      setSuccessMessage("Leave request deleted successfully!");
+      setSuccessMessage('Leave request deleted successfully!');
       setDeletingRequest(null);
       loadLeaveRequests();
     } catch (err) {
-      setError("Failed to delete leave request. Please try again.");
+      setError('Failed to delete leave request. Please try again.');
       } finally {
       setDeleting(false);
     }
@@ -255,24 +253,24 @@ export default function HRMLeaveManagementPage() {
 
   const getStatusColor = (status: LeaveStatus) => {
     const statusColors: { [key: string]: string } = {
-      pending: "bg-yellow-100 text-yellow-800",
-      approved: "bg-green-100 text-green-800",
-      rejected: "bg-red-100 text-red-800",
-      cancelled: "bg-gray-100 text-gray-800",
+      pending: 'bg-yellow-100 text-yellow-800',
+      approved: 'bg-green-100 text-green-800',
+      rejected: 'bg-red-100 text-red-800',
+      cancelled: 'bg-gray-100 text-gray-800',
     };
-    return statusColors[status] || "bg-gray-100 text-gray-800";
+    return statusColors[status] || 'bg-gray-100 text-gray-800';
   };
 
   const getLeaveTypeColor = (type: LeaveType) => {
     const typeColors: { [key: string]: string } = {
-      vacation: "bg-blue-100 text-blue-800",
-      sick: "bg-red-100 text-red-800",
-      personal: "bg-purple-100 text-purple-800",
-      maternity: "bg-pink-100 text-pink-800",
-      paternity: "bg-indigo-100 text-indigo-800",
-      other: "bg-gray-100 text-gray-800",
+      vacation: 'bg-blue-100 text-blue-800',
+      sick: 'bg-red-100 text-red-800',
+      personal: 'bg-purple-100 text-purple-800',
+      maternity: 'bg-pink-100 text-pink-800',
+      paternity: 'bg-indigo-100 text-indigo-800',
+      other: 'bg-gray-100 text-gray-800',
     };
-    return typeColors[type] || "bg-gray-100 text-gray-800";
+    return typeColors[type] || 'bg-gray-100 text-gray-800';
   };
 
   const getLeaveTypeIcon = (type: LeaveType) => {
@@ -291,7 +289,7 @@ export default function HRMLeaveManagementPage() {
     const employee = employees.find((emp) => emp.id === employeeId);
     return employee
       ? `${employee.firstName} ${employee.lastName}`
-      : "Unknown Employee";
+      : 'Unknown Employee';
   };
 
   // Clear success/error messages after 5 seconds
@@ -300,6 +298,7 @@ export default function HRMLeaveManagementPage() {
       const timer = setTimeout(() => setSuccessMessage(null), 5000);
       return () => clearTimeout(timer);
     }
+    return;
   }, [successMessage]);
 
   useEffect(() => {
@@ -307,6 +306,7 @@ export default function HRMLeaveManagementPage() {
       const timer = setTimeout(() => setError(null), 5000);
       return () => clearTimeout(timer);
     }
+    return;
   }, [error]);
 
   if (loading) {
@@ -378,7 +378,7 @@ export default function HRMLeaveManagementPage() {
                     placeholder="Search requests..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                   />
                   <Button onClick={handleSearch}>
                     <Search className="w-4 h-4" />
@@ -388,11 +388,11 @@ export default function HRMLeaveManagementPage() {
               <div>
                 <label className="text-sm font-medium">Leave Type</label>
                 <Select
-                  value={filters.leaveType || "all"}
+                  value={filters.leaveType || 'all'}
                   onValueChange={(value) =>
                     setFilters((prev) => ({
                       ...prev,
-                      leaveType: value === "all" ? undefined : value,
+                      leaveType: value === 'all' ? undefined : value,
                     }))
                   }
                 >
@@ -412,11 +412,11 @@ export default function HRMLeaveManagementPage() {
               <div>
                 <label className="text-sm font-medium">Status</label>
                 <Select
-                  value={filters.status || "all"}
+                  value={filters.status || 'all'}
                   onValueChange={(value) =>
                     setFilters((prev) => ({
                       ...prev,
-                      status: value === "all" ? undefined : value,
+                      status: value === 'all' ? undefined : value,
                     }))
                   }
                 >
@@ -436,11 +436,11 @@ export default function HRMLeaveManagementPage() {
               <div>
                 <label className="text-sm font-medium">Employee</label>
                 <Select
-                  value={filters.employeeId || "all"}
+                  value={filters.employeeId || 'all'}
                   onValueChange={(value) =>
                     setFilters((prev) => ({
                       ...prev,
-                      employeeId: value === "all" ? undefined : value,
+                      employeeId: value === 'all' ? undefined : value,
                     }))
                   }
                 >
@@ -461,7 +461,7 @@ export default function HRMLeaveManagementPage() {
                 <label className="text-sm font-medium">Start Date</label>
                 <Input
                   type="date"
-                  value={filters.startDate || ""}
+                  value={filters.startDate || ''}
                   onChange={(e) =>
                     setFilters((prev) => ({
                       ...prev,
@@ -562,14 +562,14 @@ export default function HRMLeaveManagementPage() {
                           <LeaveTypeIcon className="w-5 h-5 text-gray-500" />
                           <div>
                             <div className="font-medium text-lg">
-                              {getEmployeeName(request.employeeId)} -{" "}
+                              {getEmployeeName(request.employeeId)} -{' '}
                               {request.leaveType.charAt(0).toUpperCase() +
-                                request.leaveType.slice(1)}{" "}
+                                request.leaveType.slice(1)}{' '}
                               Leave
                             </div>
                             <div className="text-sm text-gray-500">
                               {request.totalDays} day
-                              {request.totalDays !== 1 ? "s" : ""}
+                              {request.totalDays !== 1 ? 's' : ''}
                             </div>
                           </div>
                         </div>
@@ -586,21 +586,21 @@ export default function HRMLeaveManagementPage() {
                         <Badge variant="outline">
                           <Clock3 className="w-3 h-3 mr-1" />
                           {request.totalDays} day
-                          {request.totalDays !== 1 ? "s" : ""}
+                          {request.totalDays !== 1 ? 's' : ''}
                         </Badge>
                       </div>
                       <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
                         <div className="flex items-center space-x-1">
                           <Calendar className="w-3 h-3" />
                           <span>
-                            Start:{" "}
+                            Start:{' '}
                             {new Date(request.startDate).toLocaleDateString()}
                           </span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <Calendar className="w-3 h-3" />
                           <span>
-                            End:{" "}
+                            End:{' '}
                             {new Date(request.endDate).toLocaleDateString()}
                           </span>
                         </div>
@@ -613,14 +613,14 @@ export default function HRMLeaveManagementPage() {
                         <div className="flex items-center space-x-1">
                           <Clock className="w-3 h-3" />
                           <span>
-                            Created:{" "}
+                            Created:{' '}
                             {new Date(request.createdAt).toLocaleDateString()}
                           </span>
                         </div>
                       </div>
                       {request.reason && (
                         <div className="mt-2 text-sm text-gray-600">
-                          <strong>Reason:</strong>{" "}
+                          <strong>Reason:</strong>{' '}
                           {request.reason.length > 100
                             ? `${request.reason.substring(0, 100)}...`
                             : request.reason}
@@ -668,12 +668,12 @@ export default function HRMLeaveManagementPage() {
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {editingRequest ? "Edit Leave Request" : "New Leave Request"}
+                {editingRequest ? 'Edit Leave Request' : 'New Leave Request'}
               </DialogTitle>
               <DialogDescription>
                 {editingRequest
-                  ? "Update leave request information"
-                  : "Create a new leave request for an employee"}
+                  ? 'Update leave request information'
+                  : 'Create a new leave request for an employee'}
               </DialogDescription>
             </DialogHeader>
 
@@ -709,7 +709,7 @@ export default function HRMLeaveManagementPage() {
                 <Select
                   value={formData.leaveType}
                   onValueChange={(value) => {
-                    if (value === "create_new") {
+                    if (value === 'create_new') {
                       setShowCustomLeaveTypeDialog(true);
                     } else {
                       setFormData((prev) => ({
@@ -849,10 +849,10 @@ export default function HRMLeaveManagementPage() {
               </Button>
               <Button onClick={handleSubmit} disabled={submitting}>
                 {submitting
-                  ? "Saving..."
+                  ? 'Saving...'
                   : editingRequest
-                    ? "Update Request"
-                    : "Create Request"}
+                    ? 'Update Request'
+                    : 'Create Request'}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -906,7 +906,7 @@ export default function HRMLeaveManagementPage() {
                     </Label>
                     <p className="text-gray-900">
                       {viewingRequest.totalDays} day
-                      {viewingRequest.totalDays !== 1 ? "s" : ""}
+                      {viewingRequest.totalDays !== 1 ? 's' : ''}
                     </p>
                   </div>
                 </div>
@@ -993,7 +993,7 @@ export default function HRMLeaveManagementPage() {
                 Are you sure you want to delete this leave request for &quot;
                 {deletingRequest
                   ? getEmployeeName(deletingRequest.employeeId)
-                  : ""}
+                  : ''}
                 &quot;? This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
@@ -1010,7 +1010,7 @@ export default function HRMLeaveManagementPage() {
                 onClick={confirmDelete}
                 disabled={deleting}
               >
-                {deleting ? "Deleting..." : "Delete Request"}
+                {deleting ? 'Deleting...' : 'Delete Request'}
               </Button>
             </DialogFooter>
           </DialogContent>

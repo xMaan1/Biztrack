@@ -1,11 +1,11 @@
-import React from "react";
+import React from 'react';
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../ui/dialog";
+} from '../ui/dialog';
 
 interface ModalProps {
   open: boolean;

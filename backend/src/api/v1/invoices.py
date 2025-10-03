@@ -166,7 +166,7 @@ def create_invoice(
             customerName=invoice_data.customerName,
             customerEmail=invoice_data.customerEmail,
             customerPhone="",  # Will be populated from customer record
-            billingAddress="",  # Will be populated from customer record
+            billingAddress=invoice_data.billingAddress or "",  # Use provided billing address or populate from customer record
             shippingAddress=invoice_data.shippingAddress,
             issueDate=issue_date,
             dueDate=due_date,
@@ -245,7 +245,13 @@ def create_invoice(
                 customer = get_customer_by_id(db, invoice_data.customerId, tenant_id)
                 if customer:
                     db_invoice.customerPhone = customer.phone or ""
-                    db_invoice.billingAddress = customer.address or ""
+                    if not db_invoice.billingAddress:
+                        db_invoice.billingAddress = customer.address or ""
+                    # Add customer address fields for PDF generation
+                    db_invoice.customerCity = customer.city or ""
+                    db_invoice.customerState = customer.state or ""
+                    db_invoice.customerPostalCode = customer.postalCode or ""
+                    db_invoice.customerCountry = customer.country or ""
             except Exception as e:
                 # If customer fetch fails, continue with empty values
                 print(f"Warning: Could not fetch customer details: {e}")
@@ -308,10 +314,13 @@ def get_invoices(
         if amount_to:
             query = query.filter(Invoice.total <= amount_to)
         if search:
+            # Normalize search term by replacing multiple spaces with single space
+            normalized_search = ' '.join(search.split())
+            
             search_filter = or_(
-                Invoice.invoiceNumber.contains(search),
-                Invoice.customerName.contains(search),
-                Invoice.customerEmail.contains(search)
+                Invoice.invoiceNumber.ilike(f"%{normalized_search}%"),
+                func.regexp_replace(Invoice.customerName, r'\s+', ' ', 'g').ilike(f"%{normalized_search}%"),
+                Invoice.customerEmail.ilike(f"%{normalized_search}%")
             )
             query = query.filter(search_filter)
         
@@ -526,13 +535,7 @@ def delete_invoice(
         if not invoice:
             raise HTTPException(status_code=404, detail="Invoice not found")
         
-        # Check if invoice can be deleted
-        if invoice.status != InvoiceStatus.DRAFT:
-            raise HTTPException(status_code=400, detail="Only draft invoices can be deleted")
-        
-        # Check if invoice has payments
-        if invoice.totalPaid > 0:
-            raise HTTPException(status_code=400, detail="Cannot delete invoice with payments")
+        # Invoice can be deleted regardless of status or payments
         
         # Handle foreign key constraint by deleting related invoice_items first
         try:

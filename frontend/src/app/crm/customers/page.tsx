@@ -1,24 +1,24 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
-import { Input } from "@/src/components/ui/input";
-import { Label } from "@/src/components/ui/label";
+} from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Badge } from '@/src/components/ui/badge';
+import { Input } from '@/src/components/ui/input';
+import { Label } from '@/src/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select";
+} from '@/src/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -27,7 +27,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/src/components/ui/dialog";
+} from '@/src/components/ui/dialog';
 import {
   Table,
   TableBody,
@@ -35,7 +35,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/src/components/ui/table";
+} from '@/src/components/ui/table';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,9 +43,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/src/components/ui/dropdown-menu";
-
-import { Separator } from "@/src/components/ui/separator";
+} from '@/src/components/ui/dropdown-menu';
 import {
   Plus,
   Search,
@@ -60,25 +58,24 @@ import {
   CheckCircle,
   XCircle,
   Upload,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   CustomerService,
   Customer,
   CustomerCreate,
-  CustomerUpdate,
   CustomerStats,
-} from "@/src/services/CRMService";
-import { DashboardLayout } from "../../../components/layout";
-import { toast } from "sonner";
-import CustomerImportDialog from "../../../components/crm/CustomerImportDialog";
+} from '@/src/services/CRMService';
+import { DashboardLayout } from '../../../components/layout';
+import { toast } from 'sonner';
+import CustomerImportDialog from '../../../components/crm/CustomerImportDialog';
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [stats, setStats] = useState<CustomerStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -90,17 +87,22 @@ export default function CustomersPage() {
     null,
   );
   const [formData, setFormData] = useState<CustomerCreate>({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    mobile: "",
-    cnic: "",
-    customerType: "individual",
-    customerStatus: "active",
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    mobile: '',
+    cnic: '',
+    address: '',
+    city: '',
+    state: '',
+    country: 'Pakistan',
+    postalCode: '',
+    customerType: 'individual',
+    customerStatus: 'active',
     creditLimit: 0,
     currentBalance: 0,
-      paymentTerms: "Cash",
+      paymentTerms: 'Cash',
     tags: [],
   });
 
@@ -119,8 +121,8 @@ export default function CustomersPage() {
         skip,
         itemsPerPage,
         searchTerm || undefined,
-        statusFilter === "all" ? undefined : statusFilter,
-        typeFilter === "all" ? undefined : typeFilter,
+        statusFilter === 'all' ? undefined : statusFilter,
+        typeFilter === 'all' ? undefined : typeFilter,
       );
       const customersData = response.customers || response;
       setCustomers(customersData);
@@ -128,7 +130,7 @@ export default function CustomersPage() {
         Math.ceil((response.total || customersData.length) / itemsPerPage),
       );
     } catch (error) {
-      toast.error("Failed to load customers");
+      toast.error('Failed to load customers');
     } finally {
       setLoading(false);
     }
@@ -138,8 +140,9 @@ export default function CustomersPage() {
     try {
       const statsData = await CustomerService.getCustomerStats();
       setStats(statsData);
-    } catch (error) {
-      // Stats loading failure is not critical, silently fail
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to load customer statistics';
+      console.warn('Customer stats load error:', errorMessage);
     }
   };
 
@@ -147,20 +150,20 @@ export default function CustomersPage() {
     try {
       // Validate required fields
       if (!formData.firstName || !formData.lastName || !formData.email) {
-        toast.error("Please fill in all required fields (First Name, Last Name, Email)");
+        toast.error('Please fill in all required fields (First Name, Last Name, Email)');
         return;
       }
 
-      const result = await CustomerService.createCustomer(formData);
-      toast.success("Customer created successfully");
+      await CustomerService.createCustomer(formData);
+      toast.success('Customer created successfully');
       setIsCreateDialogOpen(false);
       resetForm();
       loadCustomers();
       loadStats();
     } catch (error: any) {
       // Extract error message from API response
-      let errorMessage = "Failed to create customer";
-      
+      let errorMessage = 'Failed to create customer';
+
       if (error?.response?.data?.detail) {
         errorMessage = error.response.data.detail;
       } else if (error?.response?.data?.message) {
@@ -168,7 +171,7 @@ export default function CustomersPage() {
       } else if (error?.message) {
         errorMessage = error.message;
       }
-      
+
       toast.error(errorMessage);
     }
   };
@@ -177,15 +180,15 @@ export default function CustomersPage() {
     if (!selectedCustomer) return;
     try {
       await CustomerService.updateCustomer(selectedCustomer.id, formData);
-      toast.success("Customer updated successfully");
+      toast.success('Customer updated successfully');
       setIsEditDialogOpen(false);
       resetForm();
       loadCustomers();
       loadStats();
     } catch (error: any) {
       // Extract error message from API response
-      let errorMessage = "Failed to update customer";
-      
+      let errorMessage = 'Failed to update customer';
+
       if (error?.response?.data?.detail) {
         errorMessage = error.response.data.detail;
       } else if (error?.response?.data?.message) {
@@ -193,7 +196,7 @@ export default function CustomersPage() {
       } else if (error?.message) {
         errorMessage = error.message;
       }
-      
+
       toast.error(errorMessage);
     }
   };
@@ -201,15 +204,15 @@ export default function CustomersPage() {
   const handleDeleteCustomer = async (customerId: string) => {
     try {
       await CustomerService.deleteCustomer(customerId);
-      toast.success("Customer deleted successfully");
+      toast.success('Customer deleted successfully');
       setIsDeleteDialogOpen(false);
       setCustomerToDelete(null);
       loadCustomers();
       loadStats();
     } catch (error: any) {
       // Extract error message from API response
-      let errorMessage = "Failed to delete customer";
-      
+      let errorMessage = 'Failed to delete customer';
+
       if (error?.response?.data?.detail) {
         errorMessage = error.response.data.detail;
       } else if (error?.response?.data?.message) {
@@ -217,7 +220,7 @@ export default function CustomersPage() {
       } else if (error?.message) {
         errorMessage = error.message;
       }
-      
+
       toast.error(errorMessage);
     }
   };
@@ -234,17 +237,22 @@ export default function CustomersPage() {
 
   const resetForm = () => {
     setFormData({
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      mobile: "",
-      cnic: "",
-      customerType: "individual",
-      customerStatus: "active",
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      mobile: '',
+      cnic: '',
+      address: '',
+      city: '',
+      state: '',
+      country: 'Pakistan',
+      postalCode: '',
+      customerType: 'individual',
+      customerStatus: 'active',
       creditLimit: 0,
       currentBalance: 0,
-      paymentTerms: "Cash",
+      paymentTerms: 'Cash',
       tags: [],
     });
     setSelectedCustomer(null);
@@ -256,9 +264,14 @@ export default function CustomersPage() {
       firstName: customer.firstName,
       lastName: customer.lastName,
       email: customer.email,
-      phone: customer.phone || "",
-      mobile: customer.mobile || "",
-      cnic: customer.cnic || "",
+      phone: customer.phone || '',
+      mobile: customer.mobile || '',
+      cnic: customer.cnic || '',
+      address: customer.address || '',
+      city: customer.city || '',
+      state: customer.state || '',
+      country: customer.country || 'Pakistan',
+      postalCode: customer.postalCode || '',
       customerType: customer.customerType,
       customerStatus: customer.customerStatus,
       creditLimit: customer.creditLimit,
@@ -271,9 +284,9 @@ export default function CustomersPage() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      active: { color: "bg-green-100 text-green-800", icon: CheckCircle },
-      inactive: { color: "bg-gray-100 text-gray-800", icon: XCircle },
-      blocked: { color: "bg-red-100 text-red-800", icon: AlertCircle },
+      active: { color: 'bg-green-100 text-green-800', icon: CheckCircle },
+      inactive: { color: 'bg-gray-100 text-gray-800', icon: XCircle },
+      blocked: { color: 'bg-red-100 text-red-800', icon: AlertCircle },
     };
     const config =
       statusConfig[status as keyof typeof statusConfig] ||
@@ -289,8 +302,8 @@ export default function CustomersPage() {
 
   const getTypeBadge = (type: string) => {
     const typeConfig = {
-      individual: { color: "bg-blue-100 text-blue-800", icon: User },
-      business: { color: "bg-purple-100 text-purple-800", icon: Building2 },
+      individual: { color: 'bg-blue-100 text-blue-800', icon: User },
+      business: { color: 'bg-purple-100 text-purple-800', icon: Building2 },
     };
     const config =
       typeConfig[type as keyof typeof typeConfig] || typeConfig.individual;
@@ -414,7 +427,7 @@ export default function CustomersPage() {
                     onValueChange={(value) =>
                       setFormData({
                         ...formData,
-                        customerType: value as "individual" | "business",
+                        customerType: value as 'individual' | 'business',
                       })
                     }
                   >
@@ -435,9 +448,9 @@ export default function CustomersPage() {
                       setFormData({
                         ...formData,
                         customerStatus: value as
-                          | "active"
-                          | "inactive"
-                          | "blocked",
+                          | 'active'
+                          | 'inactive'
+                          | 'blocked',
                       })
                     }
                   >
@@ -473,7 +486,7 @@ export default function CustomersPage() {
                     onValueChange={(value) =>
                       setFormData({
                         ...formData,
-                        paymentTerms: value as "Credit" | "Card" | "Cash" | "Due Payments",
+                        paymentTerms: value as 'Credit' | 'Card' | 'Cash' | 'Due Payments',
                       })
                     }
                   >
@@ -489,15 +502,70 @@ export default function CustomersPage() {
                   </Select>
                 </div>
                 <div className="col-span-2">
+                  <Label htmlFor="address">Billing Address</Label>
+                  <Input
+                    id="address"
+                    value={formData.address}
+                    onChange={(e) =>
+                      setFormData({ ...formData, address: e.target.value })
+                    }
+                    placeholder="Street address, building number"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="city">City</Label>
+                  <Input
+                    id="city"
+                    value={formData.city}
+                    onChange={(e) =>
+                      setFormData({ ...formData, city: e.target.value })
+                    }
+                    placeholder="Karachi"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="state">State/Province</Label>
+                  <Input
+                    id="state"
+                    value={formData.state}
+                    onChange={(e) =>
+                      setFormData({ ...formData, state: e.target.value })
+                    }
+                    placeholder="Sindh"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="country">Country</Label>
+                  <Input
+                    id="country"
+                    value={formData.country}
+                    onChange={(e) =>
+                      setFormData({ ...formData, country: e.target.value })
+                    }
+                    placeholder="Pakistan"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="postalCode">Postal Code</Label>
+                  <Input
+                    id="postalCode"
+                    value={formData.postalCode}
+                    onChange={(e) =>
+                      setFormData({ ...formData, postalCode: e.target.value })
+                    }
+                    placeholder="75000"
+                  />
+                </div>
+                <div className="col-span-2">
                   <Label htmlFor="tags">Tags (comma separated)</Label>
                   <Input
                     id="tags"
-                    value={formData.tags?.join(", ") || ""}
+                    value={formData.tags?.join(', ') || ''}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
                         tags: e.target.value
-                          .split(",")
+                          .split(',')
                           .map((tag) => tag.trim())
                           .filter(Boolean),
                       })
@@ -719,6 +787,15 @@ export default function CustomersPage() {
                                 CNIC: {customer.cnic}
                               </div>
                             )}
+                            {(customer.address || customer.city) && (
+                              <div className="text-sm text-muted-foreground">
+                                {customer.address && customer.address}
+                                {customer.address && customer.city && ', '}
+                                {customer.city}
+                                {customer.state && `, ${customer.state}`}
+                                {customer.postalCode && ` ${customer.postalCode}`}
+                              </div>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -733,7 +810,7 @@ export default function CustomersPage() {
                               Rs. {customer.creditLimit.toLocaleString()}
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              Balance: Rs.{" "}
+                              Balance: Rs.{' '}
                               {customer.currentBalance.toLocaleString()}
                             </div>
                           </div>
@@ -885,7 +962,7 @@ export default function CustomersPage() {
                   onValueChange={(value) =>
                     setFormData({
                       ...formData,
-                      customerType: value as "individual" | "business",
+                      customerType: value as 'individual' | 'business',
                     })
                   }
                 >
@@ -906,9 +983,9 @@ export default function CustomersPage() {
                     setFormData({
                       ...formData,
                       customerStatus: value as
-                        | "active"
-                        | "inactive"
-                        | "blocked",
+                        | 'active'
+                        | 'inactive'
+                        | 'blocked',
                     })
                   }
                 >
@@ -944,7 +1021,7 @@ export default function CustomersPage() {
                   onValueChange={(value) =>
                     setFormData({
                       ...formData,
-                      paymentTerms: value as "Credit" | "Card" | "Cash" | "Due Payments",
+                      paymentTerms: value as 'Credit' | 'Card' | 'Cash' | 'Due Payments',
                     })
                   }
                 >
@@ -960,15 +1037,70 @@ export default function CustomersPage() {
                 </Select>
               </div>
               <div className="col-span-2">
+                <Label htmlFor="editAddress">Billing Address</Label>
+                <Input
+                  id="editAddress"
+                  value={formData.address}
+                  onChange={(e) =>
+                    setFormData({ ...formData, address: e.target.value })
+                  }
+                  placeholder="Street address, building number"
+                />
+              </div>
+              <div>
+                <Label htmlFor="editCity">City</Label>
+                <Input
+                  id="editCity"
+                  value={formData.city}
+                  onChange={(e) =>
+                    setFormData({ ...formData, city: e.target.value })
+                  }
+                  placeholder="Karachi"
+                />
+              </div>
+              <div>
+                <Label htmlFor="editState">State/Province</Label>
+                <Input
+                  id="editState"
+                  value={formData.state}
+                  onChange={(e) =>
+                    setFormData({ ...formData, state: e.target.value })
+                  }
+                  placeholder="Sindh"
+                />
+              </div>
+              <div>
+                <Label htmlFor="editCountry">Country</Label>
+                <Input
+                  id="editCountry"
+                  value={formData.country}
+                  onChange={(e) =>
+                    setFormData({ ...formData, country: e.target.value })
+                  }
+                  placeholder="Pakistan"
+                />
+              </div>
+              <div>
+                <Label htmlFor="editPostalCode">Postal Code</Label>
+                <Input
+                  id="editPostalCode"
+                  value={formData.postalCode}
+                  onChange={(e) =>
+                    setFormData({ ...formData, postalCode: e.target.value })
+                  }
+                  placeholder="75000"
+                />
+              </div>
+              <div className="col-span-2">
                 <Label htmlFor="editTags">Tags (comma separated)</Label>
                 <Input
                   id="editTags"
-                  value={formData.tags?.join(", ") || ""}
+                  value={formData.tags?.join(', ') || ''}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
                       tags: e.target.value
-                        .split(",")
+                        .split(',')
                         .map((tag) => tag.trim())
                         .filter(Boolean),
                     })
@@ -995,7 +1127,7 @@ export default function CustomersPage() {
             <DialogHeader>
               <DialogTitle>Delete Customer</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete{" "}
+                Are you sure you want to delete{' '}
                 <strong>
                   {customerToDelete?.firstName} {customerToDelete?.lastName}
                 </strong>

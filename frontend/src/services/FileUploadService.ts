@@ -1,5 +1,5 @@
 // Use the same pattern as other services
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export interface FileUploadResponse {
   success: boolean;
@@ -25,7 +25,7 @@ class FileUploadService {
   async uploadLogo(file: File): Promise<FileUploadResponse> {
     const token = localStorage.getItem('auth_token');  // Fixed: use correct key
     const tenantId = localStorage.getItem('currentTenantId');  // Fixed: use correct key
-    
+
     if (!token || !tenantId) {
       throw new Error('Authentication required');
     }
@@ -53,7 +53,7 @@ class FileUploadService {
   async deleteLogo(filename: string): Promise<{ success: boolean; message: string }> {
     const token = localStorage.getItem('auth_token');
     const tenantId = localStorage.getItem('currentTenantId');
-    
+
     if (!token || !tenantId) {
       throw new Error('Authentication required');
     }
@@ -77,7 +77,7 @@ class FileUploadService {
   async getLogoInfo(): Promise<LogoInfoResponse> {
     const token = localStorage.getItem('auth_token');
     const tenantId = localStorage.getItem('currentTenantId');
-    
+
     if (!token || !tenantId) {
       throw new Error('Authentication required');
     }

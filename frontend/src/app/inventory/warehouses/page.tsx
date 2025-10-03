@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
-import { Badge } from "../../../components/ui/badge";
-import { Input } from "../../../components/ui/input";
+} from '../../../components/ui/card';
+import { Button } from '../../../components/ui/button';
+import { Badge } from '../../../components/ui/badge';
+import { Input } from '../../../components/ui/input';
 import {
   Table,
   TableBody,
@@ -18,7 +18,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../../../components/ui/table";
+} from '../../../components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '../../../components/ui/dialog';
 import {
   Warehouse,
   Plus,
@@ -29,22 +36,36 @@ import {
   Building2,
   Phone,
   Mail,
-} from "lucide-react";
-import { useAuth } from "../../../contexts/AuthContext";
-import { inventoryService } from "../../../services/InventoryService";
-import { Warehouse as WarehouseType } from "../../../models/inventory";
-import { DashboardLayout } from "../../../components/layout";
-import { formatDate } from "../../../lib/utils";
+} from 'lucide-react';
+import { useAuth } from '../../../contexts/AuthContext';
+import { inventoryService } from '../../../services/InventoryService';
+import { Warehouse as WarehouseType } from '../../../models/inventory';
+import { DashboardLayout } from '../../../components/layout';
+import { formatDate } from '../../../lib/utils';
 
 export default function WarehousesPage() {
-  const { user } = useAuth();
+  const { } = useAuth();
   const router = useRouter();
   const [warehouses, setWarehouses] = useState<WarehouseType[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [warehouseToDelete, setWarehouseToDelete] = useState<WarehouseType | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     fetchWarehouses();
+  }, []);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchWarehouses();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   const fetchWarehouses = async () => {
@@ -65,13 +86,28 @@ export default function WarehousesPage() {
       warehouse.city.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this warehouse?")) {
-      try {
-        await inventoryService.deleteWarehouse(id);
-        fetchWarehouses();
-      } catch (error) {
-        }
+  const openDeleteDialog = (warehouse: WarehouseType) => {
+    setWarehouseToDelete(warehouse);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const closeDeleteDialog = () => {
+    setIsDeleteDialogOpen(false);
+    setWarehouseToDelete(null);
+  };
+
+  const handleDelete = async () => {
+    if (!warehouseToDelete) return;
+    
+    try {
+      setDeleteLoading(true);
+      await inventoryService.deleteWarehouse(warehouseToDelete.id);
+      fetchWarehouses();
+      closeDeleteDialog();
+    } catch (error) {
+      console.error('Error deleting warehouse:', error);
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -96,7 +132,7 @@ export default function WarehousesPage() {
               Manage your warehouse locations and storage facilities
             </p>
           </div>
-          <Button onClick={() => router.push("/inventory/warehouses/new")}>
+          <Button onClick={() => router.push('/inventory/warehouses/new')}>
             <Plus className="mr-2 h-4 w-4" />
             Add Warehouse
           </Button>
@@ -191,9 +227,9 @@ export default function WarehousesPage() {
                       </TableCell>
                       <TableCell>
                         <Badge
-                          variant={warehouse.isActive ? "default" : "secondary"}
+                          variant={warehouse.isActive ? 'default' : 'secondary'}
                         >
-                          {warehouse.isActive ? "Active" : "Inactive"}
+                          {warehouse.isActive ? 'Active' : 'Inactive'}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -217,7 +253,7 @@ export default function WarehousesPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleDelete(warehouse.id)}
+                            onClick={() => openDeleteDialog(warehouse)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -235,12 +271,12 @@ export default function WarehousesPage() {
                 </h3>
                 <p className="text-muted-foreground mb-4">
                   {searchTerm
-                    ? "Try adjusting your search terms"
-                    : "Get started by creating your first warehouse"}
+                    ? 'Try adjusting your search terms'
+                    : 'Get started by creating your first warehouse'}
                 </p>
                 {!searchTerm && (
                   <Button
-                    onClick={() => router.push("/inventory/warehouses/new")}
+                    onClick={() => router.push('/inventory/warehouses/new')}
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     Add Warehouse
@@ -302,6 +338,45 @@ export default function WarehousesPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Warehouse</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete{' '}
+                <strong>{warehouseToDelete?.name}</strong>? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end space-x-2 mt-4">
+              <Button
+                variant="outline"
+                onClick={closeDeleteDialog}
+                disabled={deleteLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleDelete}
+                disabled={deleteLoading}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {deleteLoading ? (
+                  <>
+                    <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-white" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Warehouse
+                  </>
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

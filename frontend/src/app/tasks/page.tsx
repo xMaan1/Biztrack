@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import React from "react";
-import { TaskList } from "../../components/tasks";
-import { DashboardLayout } from "../../components/layout";
-import { ErrorBoundary } from "../../components/ErrorBoundary";
+import React from 'react';
+import { TaskList } from '../../components/tasks';
+import { DashboardLayout } from '../../components/layout';
+import { ErrorBoundary } from '../../components/ErrorBoundary';
 
 export default function TasksPage() {
   return (

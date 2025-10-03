@@ -1,32 +1,32 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
-import { Badge } from "../../../components/ui/badge";
-import { Avatar, AvatarFallback } from "../../../components/ui/avatar";
-import { Progress } from "../../../components/ui/progress";
+} from '../../../components/ui/card';
+import { Button } from '../../../components/ui/button';
+import { Badge } from '../../../components/ui/badge';
+import { Avatar, AvatarFallback } from '../../../components/ui/avatar';
+import { Progress } from '../../../components/ui/progress';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "../../../components/ui/dropdown-menu";
+} from '../../../components/ui/dropdown-menu';
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "../../../components/ui/tabs";
-import { Alert, AlertDescription } from "../../../components/ui/alert";
+} from '../../../components/ui/tabs';
+import { Alert, AlertDescription } from '../../../components/ui/alert';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -34,7 +34,8 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "../../../components/ui/breadcrumb";
+} from '../../../components/ui/breadcrumb';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 import {
   Edit,
   Trash2,
@@ -43,32 +44,31 @@ import {
   DollarSign,
   Flag,
   MoreVertical,
-  CheckCircle2,
   Clock,
   TrendingUp,
   FileText,
   ArrowLeft,
   CheckSquare,
   Loader2,
-  Play,
   AlertCircle,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   Project,
   ProjectStatus,
   ProjectPriority,
-} from "../../../models/project";
-import { Task } from "../../../models/task";
-import { apiService } from "../../../services/ApiService";
-import { useAuth } from "../../../hooks/useAuth";
-import { DashboardLayout } from "../../../components/layout";
-import { ProjectDialog } from "../../../components/projects";
-import { TaskCard } from "../../../components/tasks";
+} from '../../../models/project';
+import { Task } from '../../../models/task';
+import { apiService } from '../../../services/ApiService';
+import { useAuth } from '../../../hooks/useAuth';
+import { DashboardLayout } from '../../../components/layout';
+import { ProjectDialog } from '../../../components/projects';
+import { TaskCard } from '../../../components/tasks';
 
 export default function ProjectDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
+  const { getCurrencySymbol } = useCurrency();
   const projectId = params.id as string;
 
   const [project, setProject] = useState<Project | null>(null);
@@ -76,7 +76,7 @@ export default function ProjectDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [tasksLoading, setTasksLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState('overview');
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const loadProjectDetails = useCallback(async () => {
@@ -86,8 +86,8 @@ export default function ProjectDetailsPage() {
       const response = await apiService.getProject(projectId);
       setProject(response);
     } catch (err: any) {
-      console.error("Failed to load project:", err);
-      setError(err.response?.data?.detail || "Failed to load project details");
+      console.error('Failed to load project:', err);
+      setError(err.response?.data?.detail || 'Failed to load project details');
     } finally {
       setLoading(false);
     }
@@ -103,7 +103,7 @@ export default function ProjectDetailsPage() {
       });
       setTasks(response.tasks || []);
     } catch (err) {
-      console.error("Failed to load tasks:", err);
+      console.error('Failed to load tasks:', err);
     } finally {
       setTasksLoading(false);
     }
@@ -114,7 +114,7 @@ export default function ProjectDetailsPage() {
   }, [loadProjectDetails]);
 
   useEffect(() => {
-    if (activeTab === "tasks") {
+    if (activeTab === 'tasks') {
       loadTasks();
     }
   }, [activeTab, loadTasks]);
@@ -126,7 +126,7 @@ export default function ProjectDetailsPage() {
   const handleDeleteProject = async () => {
     if (
       !confirm(
-        "Are you sure you want to delete this project? This action cannot be undone.",
+        'Are you sure you want to delete this project? This action cannot be undone.',
       )
     ) {
       return;
@@ -134,10 +134,10 @@ export default function ProjectDetailsPage() {
 
     try {
       await apiService.deleteProject(projectId);
-      router.push("/projects");
+      router.push('/projects');
     } catch (err) {
-      console.error("Failed to delete project:", err);
-      setError("Failed to delete project");
+      console.error('Failed to delete project:', err);
+      setError('Failed to delete project');
     }
   };
 
@@ -210,19 +210,19 @@ export default function ProjectDetailsPage() {
 
   const canEditProject = () => {
     return (
-      user?.userRole === "super_admin" ||
-      (user?.userRole === "project_manager" &&
+      user?.userRole === 'super_admin' ||
+      (user?.userRole === 'project_manager' &&
         project?.projectManager.id === user.userId)
     );
   };
 
   const getTaskStats = () => {
     const totalTasks = tasks.length;
-    const completedTasks = tasks.filter((t) => t.status === "completed").length;
+    const completedTasks = tasks.filter((t) => t.status === 'completed').length;
     const inProgressTasks = tasks.filter(
-      (t) => t.status === "in_progress",
+      (t) => t.status === 'in_progress',
     ).length;
-    const todoTasks = tasks.filter((t) => t.status === "todo").length;
+    const todoTasks = tasks.filter((t) => t.status === 'todo').length;
 
     return { totalTasks, completedTasks, inProgressTasks, todoTasks };
   };
@@ -246,11 +246,11 @@ export default function ProjectDetailsPage() {
           <Alert className="mb-4 border-red-200 bg-red-50">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription className="text-red-800">
-              {error || "Project not found"}
+              {error || 'Project not found'}
             </AlertDescription>
           </Alert>
           <Button
-            onClick={() => router.push("/projects")}
+            onClick={() => router.push('/projects')}
             className="flex items-center space-x-2"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -380,11 +380,11 @@ export default function ProjectDetailsPage() {
               <Card className="text-center p-4 bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200">
                 <DollarSign className="h-10 w-10 text-yellow-600 mx-auto mb-2" />
                 <div className="text-3xl font-bold text-yellow-600 mb-1">
-                  ${project.budget?.toLocaleString() || "0"}
+                  {getCurrencySymbol()}{project.budget?.toLocaleString() || '0'}
                 </div>
                 <div className="text-sm text-gray-600">Budget</div>
                 <div className="text-xs text-gray-500 mt-1">
-                  ${project.actualCost?.toLocaleString() || "0"} spent
+                  {getCurrencySymbol()}{project.actualCost?.toLocaleString() || '0'} spent
                 </div>
               </Card>
             </div>
@@ -494,7 +494,7 @@ export default function ProjectDetailsPage() {
                       </Button>
                       <Button
                         variant="outline"
-                        onClick={() => setActiveTab("tasks")}
+                        onClick={() => setActiveTab('tasks')}
                         className="flex items-center space-x-2"
                       >
                         <CheckSquare className="h-4 w-4" />
@@ -502,7 +502,7 @@ export default function ProjectDetailsPage() {
                       </Button>
                       <Button
                         variant="outline"
-                        onClick={() => setActiveTab("timeline")}
+                        onClick={() => setActiveTab('timeline')}
                         className="flex items-center space-x-2"
                       >
                         <Clock className="h-4 w-4" />
@@ -549,7 +549,7 @@ export default function ProjectDetailsPage() {
                           <div>
                             <p className="font-medium">{member.name}</p>
                             <p className="text-sm text-gray-500">
-                              {member.role || "Team Member"}
+                              {member.role || 'Team Member'}
                             </p>
                           </div>
                         </div>

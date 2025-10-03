@@ -1,34 +1,32 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { Textarea } from "../ui/textarea";
-import { Switch } from "../ui/switch";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Textarea } from '../ui/textarea';
+import { Switch } from '../ui/switch';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import {
   Building2,
   Palette,
   Settings,
   FileText,
-  Eye,
   Save,
   X,
-  Upload,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   InvoiceCustomization,
   InvoiceCustomizationCreate,
   InvoiceCustomizationUpdate,
-} from "../../models/sales/InvoiceCustomization";
-import InvoiceCustomizationService from "../../services/InvoiceCustomizationService";
-import FileUploadService from "../../services/FileUploadService";
-import { FileUpload } from "../ui/file-upload";
-import { toast } from "sonner";
+} from '../../models/sales/InvoiceCustomization';
+import InvoiceCustomizationService from '../../services/InvoiceCustomizationService';
+import FileUploadService from '../../services/FileUploadService';
+import { FileUpload } from '../ui/file-upload';
+import { toast } from 'sonner';
 
 interface InvoiceCustomizationDialogProps {
   open: boolean;
@@ -48,31 +46,31 @@ export function InvoiceCustomizationDialog({
 
   // Form state
   const [formData, setFormData] = useState<InvoiceCustomizationCreate>({
-    company_name: "",
-    company_logo_url: "",
-    company_address: "",
-    company_phone: "",
-    company_email: "",
-    company_website: "",
-    bank_sort_code: "",
-    bank_account_number: "",
-    payment_instructions: "Make all payments to your company name",
-    primary_color: "#1e40af",
-    secondary_color: "#6b7280",
-    accent_color: "#f3f4f6",
+    company_name: '',
+    company_logo_url: '',
+    company_address: '',
+    company_phone: '',
+    company_email: '',
+    company_website: '',
+    bank_sort_code: '',
+    bank_account_number: '',
+    payment_instructions: 'Make all payments to your company name',
+    primary_color: '#1e40af',
+    secondary_color: '#6b7280',
+    accent_color: '#f3f4f6',
     show_vehicle_info: true,
     show_parts_section: true,
     show_labour_section: true,
     show_comments_section: true,
-    footer_text: "",
+    footer_text: '',
     show_contact_info_in_footer: true,
-    footer_background_color: "#1e3a8a",
-    grid_color: "#cccccc",
-    thank_you_message: "Thank you for your business!",
-    enquiry_message: "Should you have any enquiries concerning this invoice,",
-    contact_message: "please contact us at your convenience.",
-    default_payment_instructions: "Make all payments to your company name",
-    default_currency: "USD",
+    footer_background_color: '#1e3a8a',
+    grid_color: '#cccccc',
+    thank_you_message: 'Thank you for your business!',
+    enquiry_message: 'Should you have any enquiries concerning this invoice,',
+    contact_message: 'please contact us at your convenience.',
+    default_payment_instructions: 'Make all payments to your company name',
+    default_currency: 'USD',
     custom_fields: {},
   });
 
@@ -89,14 +87,14 @@ export function InvoiceCustomizationDialog({
       setCustomization(data);
       setFormData({
         company_name: data.company_name,
-        company_logo_url: data.company_logo_url || "",
-        company_address: data.company_address || "",
-        company_phone: data.company_phone || "",
-        company_email: data.company_email || "",
-        company_website: data.company_website || "",
-        bank_sort_code: data.bank_sort_code || "",
-        bank_account_number: data.bank_account_number || "",
-        payment_instructions: data.payment_instructions || "Make all payments to your company name",
+        company_logo_url: data.company_logo_url || '',
+        company_address: data.company_address || '',
+        company_phone: data.company_phone || '',
+        company_email: data.company_email || '',
+        company_website: data.company_website || '',
+        bank_sort_code: data.bank_sort_code || '',
+        bank_account_number: data.bank_account_number || '',
+        payment_instructions: data.payment_instructions || 'Make all payments to your company name',
         primary_color: data.primary_color,
         secondary_color: data.secondary_color,
         accent_color: data.accent_color,
@@ -104,9 +102,9 @@ export function InvoiceCustomizationDialog({
         show_parts_section: data.show_parts_section,
         show_labour_section: data.show_labour_section,
         show_comments_section: data.show_comments_section,
-        footer_text: data.footer_text || "",
+        footer_text: data.footer_text || '',
         show_contact_info_in_footer: data.show_contact_info_in_footer,
-        default_currency: data.default_currency || "USD",
+        default_currency: data.default_currency || 'USD',
         custom_fields: data.custom_fields || {},
       });
 
@@ -115,7 +113,7 @@ export function InvoiceCustomizationDialog({
         setLogoPreviewUrl(data.company_logo_url);
       }
     } catch (error) {
-      toast.error("Failed to load invoice customization");
+      toast.error('Failed to load invoice customization');
     } finally {
       setLoading(false);
     }
@@ -124,17 +122,17 @@ export function InvoiceCustomizationDialog({
   const handleSave = async () => {
     try {
       setSaving(true);
-      
+
       if (customization) {
         await InvoiceCustomizationService.updateCustomization(formData as InvoiceCustomizationUpdate);
       } else {
         await InvoiceCustomizationService.createCustomization(formData);
       }
-      
-      toast.success("Invoice customization saved successfully!");
+
+      toast.success('Invoice customization saved successfully!');
       onOpenChange(false);
     } catch (error) {
-      toast.error("Failed to save invoice customization");
+      toast.error('Failed to save invoice customization');
     } finally {
       setSaving(false);
     }
@@ -143,20 +141,20 @@ export function InvoiceCustomizationDialog({
   const handleInputChange = (field: keyof InvoiceCustomizationCreate, value: any) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const handleLogoUpload = async (file: File) => {
     try {
       setUploading(true);
-      
+
       // Delete old logo if exists
       const currentLogoUrl = formData.company_logo_url;
       if (currentLogoUrl) {
         const urlParts = currentLogoUrl.split('/');
         const filename = urlParts[urlParts.length - 1];
-        
+
         if (filename && filename.startsWith('logo_')) {
           try {
             await FileUploadService.deleteLogo(filename);
@@ -167,21 +165,21 @@ export function InvoiceCustomizationDialog({
           }
         }
       }
-      
+
       const response = await FileUploadService.uploadLogo(file);
-      
+
       // Update form data with the new logo URL
       setFormData(prev => ({
         ...prev,
-        company_logo_url: response.file_url
+        company_logo_url: response.file_url,
       }));
-      
+
       setLogoFile(file);
       setLogoPreviewUrl(response.file_url);
-      
-      toast.success("Logo uploaded successfully!");
+
+      toast.success('Logo uploaded successfully!');
     } catch (error) {
-      toast.error("Failed to upload logo");
+      toast.error('Failed to upload logo');
     } finally {
       setUploading(false);
     }
@@ -190,7 +188,7 @@ export function InvoiceCustomizationDialog({
   const handleLogoRemove = async () => {
     try {
       setUploading(true);
-      
+
       // Extract filename from S3 URL for deletion
       const currentLogoUrl = formData.company_logo_url;
       if (currentLogoUrl) {
@@ -198,7 +196,7 @@ export function InvoiceCustomizationDialog({
         // URL format: https://bucket.s3.region.amazonaws.com/logos/tenant-id/filename
         const urlParts = currentLogoUrl.split('/');
         const filename = urlParts[urlParts.length - 1];
-        
+
         if (filename && filename.startsWith('logo_')) {
           try {
             await FileUploadService.deleteLogo(filename);
@@ -209,19 +207,19 @@ export function InvoiceCustomizationDialog({
           }
         }
       }
-      
+
       // Clear form data
       setFormData(prev => ({
         ...prev,
-        company_logo_url: ""
+        company_logo_url: '',
       }));
-      
+
       setLogoFile(null);
       setLogoPreviewUrl(null);
-      
-      toast.success("Logo removed successfully!");
+
+      toast.success('Logo removed successfully!');
     } catch (error) {
-      toast.error("Failed to remove logo");
+      toast.error('Failed to remove logo');
     } finally {
       setUploading(false);
     }
@@ -286,7 +284,7 @@ export function InvoiceCustomizationDialog({
                     <Input
                       id="company_name"
                       value={formData.company_name}
-                      onChange={(e) => handleInputChange("company_name", e.target.value)}
+                      onChange={(e) => handleInputChange('company_name', e.target.value)}
                       placeholder="Your Company Name"
                     />
                   </div>
@@ -309,7 +307,7 @@ export function InvoiceCustomizationDialog({
                       <Input
                         id="company_logo_url"
                         value={formData.company_logo_url}
-                        onChange={(e) => handleInputChange("company_logo_url", e.target.value)}
+                        onChange={(e) => handleInputChange('company_logo_url', e.target.value)}
                         placeholder="https://example.com/logo.png"
                         disabled={uploading}
                       />
@@ -322,7 +320,7 @@ export function InvoiceCustomizationDialog({
                   <Textarea
                     id="company_address"
                     value={formData.company_address}
-                    onChange={(e) => handleInputChange("company_address", e.target.value)}
+                    onChange={(e) => handleInputChange('company_address', e.target.value)}
                     placeholder="Unit 7 Pristine Business Park Newport Road, Milton Keynes, MK17 8UD"
                     rows={3}
                   />
@@ -334,7 +332,7 @@ export function InvoiceCustomizationDialog({
                     <Input
                       id="company_phone"
                       value={formData.company_phone}
-                      onChange={(e) => handleInputChange("company_phone", e.target.value)}
+                      onChange={(e) => handleInputChange('company_phone', e.target.value)}
                       placeholder="01908 991 123"
                     />
                   </div>
@@ -343,7 +341,7 @@ export function InvoiceCustomizationDialog({
                     <Input
                       id="company_email"
                       value={formData.company_email}
-                      onChange={(e) => handleInputChange("company_email", e.target.value)}
+                      onChange={(e) => handleInputChange('company_email', e.target.value)}
                       placeholder="contact@yourcompany.co.uk"
                     />
                   </div>
@@ -352,7 +350,7 @@ export function InvoiceCustomizationDialog({
                     <Input
                       id="company_website"
                       value={formData.company_website}
-                      onChange={(e) => handleInputChange("company_website", e.target.value)}
+                      onChange={(e) => handleInputChange('company_website', e.target.value)}
                       placeholder="www.yourcompany.co.uk"
                     />
                   </div>
@@ -373,7 +371,7 @@ export function InvoiceCustomizationDialog({
                   <Textarea
                     id="payment_instructions"
                     value={formData.payment_instructions}
-                    onChange={(e) => handleInputChange("payment_instructions", e.target.value)}
+                    onChange={(e) => handleInputChange('payment_instructions', e.target.value)}
                     placeholder="Make all payments to your company name"
                     rows={3}
                   />
@@ -383,7 +381,7 @@ export function InvoiceCustomizationDialog({
                   <Label htmlFor="default_currency">Default Currency</Label>
                   <Select
                     value={formData.default_currency}
-                    onValueChange={(value) => handleInputChange("default_currency", value)}
+                    onValueChange={(value) => handleInputChange('default_currency', value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select currency" />
@@ -405,7 +403,7 @@ export function InvoiceCustomizationDialog({
                     <Input
                       id="bank_sort_code"
                       value={formData.bank_sort_code}
-                      onChange={(e) => handleInputChange("bank_sort_code", e.target.value)}
+                      onChange={(e) => handleInputChange('bank_sort_code', e.target.value)}
                       placeholder="23-18-84"
                     />
                   </div>
@@ -414,7 +412,7 @@ export function InvoiceCustomizationDialog({
                     <Input
                       id="bank_account_number"
                       value={formData.bank_account_number}
-                      onChange={(e) => handleInputChange("bank_account_number", e.target.value)}
+                      onChange={(e) => handleInputChange('bank_account_number', e.target.value)}
                       placeholder="42798297"
                     />
                   </div>
@@ -438,12 +436,12 @@ export function InvoiceCustomizationDialog({
                         id="primary_color"
                         type="color"
                         value={formData.primary_color}
-                        onChange={(e) => handleInputChange("primary_color", e.target.value)}
+                        onChange={(e) => handleInputChange('primary_color', e.target.value)}
                         className="w-16 h-10"
                       />
                       <Input
                         value={formData.primary_color}
-                        onChange={(e) => handleInputChange("primary_color", e.target.value)}
+                        onChange={(e) => handleInputChange('primary_color', e.target.value)}
                         placeholder="#1e40af"
                         className="flex-1"
                       />
@@ -456,12 +454,12 @@ export function InvoiceCustomizationDialog({
                         id="secondary_color"
                         type="color"
                         value={formData.secondary_color}
-                        onChange={(e) => handleInputChange("secondary_color", e.target.value)}
+                        onChange={(e) => handleInputChange('secondary_color', e.target.value)}
                         className="w-16 h-10"
                       />
                       <Input
                         value={formData.secondary_color}
-                        onChange={(e) => handleInputChange("secondary_color", e.target.value)}
+                        onChange={(e) => handleInputChange('secondary_color', e.target.value)}
                         placeholder="#6b7280"
                         className="flex-1"
                       />
@@ -474,12 +472,12 @@ export function InvoiceCustomizationDialog({
                         id="accent_color"
                         type="color"
                         value={formData.accent_color}
-                        onChange={(e) => handleInputChange("accent_color", e.target.value)}
+                        onChange={(e) => handleInputChange('accent_color', e.target.value)}
                         className="w-16 h-10"
                       />
                       <Input
                         value={formData.accent_color}
-                        onChange={(e) => handleInputChange("accent_color", e.target.value)}
+                        onChange={(e) => handleInputChange('accent_color', e.target.value)}
                         placeholder="#f3f4f6"
                         className="flex-1"
                       />
@@ -502,12 +500,12 @@ export function InvoiceCustomizationDialog({
                         id="footer_background_color"
                         type="color"
                         value={formData.footer_background_color}
-                        onChange={(e) => handleInputChange("footer_background_color", e.target.value)}
+                        onChange={(e) => handleInputChange('footer_background_color', e.target.value)}
                         className="w-16 h-10"
                       />
                       <Input
                         value={formData.footer_background_color}
-                        onChange={(e) => handleInputChange("footer_background_color", e.target.value)}
+                        onChange={(e) => handleInputChange('footer_background_color', e.target.value)}
                         placeholder="#1e3a8a"
                         className="flex-1"
                       />
@@ -520,12 +518,12 @@ export function InvoiceCustomizationDialog({
                         id="grid_color"
                         type="color"
                         value={formData.grid_color}
-                        onChange={(e) => handleInputChange("grid_color", e.target.value)}
+                        onChange={(e) => handleInputChange('grid_color', e.target.value)}
                         className="w-16 h-10"
                       />
                       <Input
                         value={formData.grid_color}
-                        onChange={(e) => handleInputChange("grid_color", e.target.value)}
+                        onChange={(e) => handleInputChange('grid_color', e.target.value)}
                         placeholder="#cccccc"
                         className="flex-1"
                       />
@@ -551,7 +549,7 @@ export function InvoiceCustomizationDialog({
                   <Input
                     id="thank_you_message"
                     value={formData.thank_you_message}
-                    onChange={(e) => handleInputChange("thank_you_message", e.target.value)}
+                    onChange={(e) => handleInputChange('thank_you_message', e.target.value)}
                     placeholder="Thank you for your business!"
                   />
                 </div>
@@ -561,7 +559,7 @@ export function InvoiceCustomizationDialog({
                   <Input
                     id="enquiry_message"
                     value={formData.enquiry_message}
-                    onChange={(e) => handleInputChange("enquiry_message", e.target.value)}
+                    onChange={(e) => handleInputChange('enquiry_message', e.target.value)}
                     placeholder="Should you have any enquiries concerning this invoice,"
                   />
                 </div>
@@ -571,7 +569,7 @@ export function InvoiceCustomizationDialog({
                   <Input
                     id="contact_message"
                     value={formData.contact_message}
-                    onChange={(e) => handleInputChange("contact_message", e.target.value)}
+                    onChange={(e) => handleInputChange('contact_message', e.target.value)}
                     placeholder="please contact us at your convenience."
                   />
                 </div>
@@ -581,7 +579,7 @@ export function InvoiceCustomizationDialog({
                   <Textarea
                     id="default_payment_instructions"
                     value={formData.default_payment_instructions}
-                    onChange={(e) => handleInputChange("default_payment_instructions", e.target.value)}
+                    onChange={(e) => handleInputChange('default_payment_instructions', e.target.value)}
                     placeholder="Make all payments to your company name"
                     rows={3}
                   />
@@ -606,7 +604,7 @@ export function InvoiceCustomizationDialog({
                     <Switch
                       id="show_vehicle_info"
                       checked={formData.show_vehicle_info}
-                      onCheckedChange={(checked) => handleInputChange("show_vehicle_info", checked)}
+                      onCheckedChange={(checked) => handleInputChange('show_vehicle_info', checked)}
                     />
                   </div>
 
@@ -618,7 +616,7 @@ export function InvoiceCustomizationDialog({
                     <Switch
                       id="show_parts_section"
                       checked={formData.show_parts_section}
-                      onCheckedChange={(checked) => handleInputChange("show_parts_section", checked)}
+                      onCheckedChange={(checked) => handleInputChange('show_parts_section', checked)}
                     />
                   </div>
 
@@ -630,7 +628,7 @@ export function InvoiceCustomizationDialog({
                     <Switch
                       id="show_labour_section"
                       checked={formData.show_labour_section}
-                      onCheckedChange={(checked) => handleInputChange("show_labour_section", checked)}
+                      onCheckedChange={(checked) => handleInputChange('show_labour_section', checked)}
                     />
                   </div>
 
@@ -642,7 +640,7 @@ export function InvoiceCustomizationDialog({
                     <Switch
                       id="show_comments_section"
                       checked={formData.show_comments_section}
-                      onCheckedChange={(checked) => handleInputChange("show_comments_section", checked)}
+                      onCheckedChange={(checked) => handleInputChange('show_comments_section', checked)}
                     />
                   </div>
 
@@ -654,7 +652,7 @@ export function InvoiceCustomizationDialog({
                     <Switch
                       id="show_contact_info_in_footer"
                       checked={formData.show_contact_info_in_footer}
-                      onCheckedChange={(checked) => handleInputChange("show_contact_info_in_footer", checked)}
+                      onCheckedChange={(checked) => handleInputChange('show_contact_info_in_footer', checked)}
                     />
                   </div>
                 </div>
@@ -664,7 +662,7 @@ export function InvoiceCustomizationDialog({
                   <Textarea
                     id="footer_text"
                     value={formData.footer_text}
-                    onChange={(e) => handleInputChange("footer_text", e.target.value)}
+                    onChange={(e) => handleInputChange('footer_text', e.target.value)}
                     placeholder="Custom footer text (optional)"
                     rows={2}
                   />
@@ -689,7 +687,7 @@ export function InvoiceCustomizationDialog({
             className="modern-button"
           >
             <Save className="h-4 w-4 mr-2" />
-            {saving ? "Saving..." : uploading ? "Uploading..." : "Save Customization"}
+            {saving ? 'Saving...' : uploading ? 'Uploading...' : 'Save Customization'}
           </Button>
         </div>
       </DialogContent>

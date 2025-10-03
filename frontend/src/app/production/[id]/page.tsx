@@ -1,22 +1,23 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import React, { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
-import { Badge } from "../../../components/ui/badge";
-import { Progress } from "../../../components/ui/progress";
+} from '../../../components/ui/card';
+import { Button } from '../../../components/ui/button';
+import { Badge } from '../../../components/ui/badge';
+import { Progress } from '../../../components/ui/progress';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "../../../components/ui/tabs";
+} from '../../../components/ui/tabs';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -24,7 +25,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "../../../components/ui/breadcrumb";
+} from '../../../components/ui/breadcrumb';
 import {
   ArrowLeft,
   Edit,
@@ -44,29 +45,28 @@ import {
   DollarSign,
   Users,
   Package2,
-  CheckCircle,
   Eye,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   ProductionPlanResponse as ProductionPlan,
   ProductionStatus,
-  ProductionPriority,
   ProductionType,
-} from "../../../models/production";
-import ProductionService from "../../../services/ProductionService";
-import { useAuth } from "../../../hooks/useAuth";
-import { DashboardLayout } from "../../../components/layout";
+} from '../../../models/production';
+import ProductionService from '../../../services/ProductionService';
+import { useAuth } from '../../../hooks/useAuth';
+import { DashboardLayout } from '../../../components/layout';
 import {
   cn,
   getStatusColor,
   getPriorityColor,
   formatDate,
-} from "../../../lib/utils";
+} from '../../../lib/utils';
 
 export default function ProductionPlanDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { user } = useAuth();
+  const { } = useAuth();
+  const { getCurrencySymbol, formatCurrency } = useCurrency();
   const [productionPlan, setProductionPlan] = useState<ProductionPlan | null>(
     null,
   );
@@ -86,8 +86,8 @@ export default function ProductionPlanDetailPage() {
       const plan = await service.getProductionPlan(id);
       setProductionPlan(plan);
     } catch (error) {
-      console.error("Error fetching production plan:", error);
-      router.push("/production");
+      console.error('Error fetching production plan:', error);
+      router.push('/production');
     } finally {
       setLoading(false);
     }
@@ -99,9 +99,9 @@ export default function ProductionPlanDetailPage() {
     try {
       const service = new ProductionService();
       await service.deleteProductionPlan(productionPlan.id);
-      router.push("/production");
+      router.push('/production');
     } catch (error) {
-      console.error("Error deleting production plan:", error);
+      console.error('Error deleting production plan:', error);
     }
   };
 
@@ -157,7 +157,7 @@ export default function ProductionPlanDetailPage() {
           <h3 className="text-lg font-medium text-gray-900 mb-2">
             Production plan not found
           </h3>
-          <Button onClick={() => router.push("/production")}>
+          <Button onClick={() => router.push('/production')}>
             Back to Production
           </Button>
         </div>
@@ -187,7 +187,7 @@ export default function ProductionPlanDetailPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => router.push("/production")}
+              onClick={() => router.push('/production')}
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
@@ -222,9 +222,9 @@ export default function ProductionPlanDetailPage() {
             {getStatusIcon(productionPlan.status)}
             <Badge
               variant="outline"
-              className={cn("text-sm", getStatusColor(productionPlan.status))}
+              className={cn('text-sm', getStatusColor(productionPlan.status))}
             >
-              {productionPlan.status.replace("_", " ")}
+              {productionPlan.status.replace('_', ' ')}
             </Badge>
           </div>
           <div className="flex items-center gap-2">
@@ -238,7 +238,7 @@ export default function ProductionPlanDetailPage() {
             <Badge
               variant="outline"
               className={cn(
-                "text-sm",
+                'text-sm',
                 getPriorityColor(productionPlan.priority),
               )}
             >
@@ -268,14 +268,14 @@ export default function ProductionPlanDetailPage() {
                 <div>
                   <span className="text-gray-500">Target:</span>
                   <div className="font-medium">
-                    {productionPlan.target_quantity}{" "}
+                    {productionPlan.target_quantity}{' '}
                     {productionPlan.unit_of_measure}
                   </div>
                 </div>
                 <div>
                   <span className="text-gray-500">Actual:</span>
                   <div className="font-medium">
-                    {productionPlan.actual_quantity}{" "}
+                    {productionPlan.actual_quantity}{' '}
                     {productionPlan.unit_of_measure}
                   </div>
                 </div>
@@ -288,7 +288,7 @@ export default function ProductionPlanDetailPage() {
                 <div>
                   <span className="text-gray-500">Current Step:</span>
                   <div className="font-medium">
-                    {productionPlan.current_step || "Not started"}
+                    {productionPlan.current_step || 'Not started'}
                   </div>
                 </div>
               </div>
@@ -320,7 +320,7 @@ export default function ProductionPlanDetailPage() {
                       Description
                     </label>
                     <p className="mt-1">
-                      {productionPlan.description || "No description provided"}
+                      {productionPlan.description || 'No description provided'}
                     </p>
                   </div>
                   <div>
@@ -328,7 +328,7 @@ export default function ProductionPlanDetailPage() {
                       Production Line
                     </label>
                     <p className="mt-1">
-                      {productionPlan.production_line || "Not specified"}
+                      {productionPlan.production_line || 'Not specified'}
                     </p>
                   </div>
                   <div>
@@ -338,7 +338,7 @@ export default function ProductionPlanDetailPage() {
                     <p className="mt-1">
                       {productionPlan.planned_start_date
                         ? formatDate(productionPlan.planned_start_date)
-                        : "Not scheduled"}
+                        : 'Not scheduled'}
                     </p>
                   </div>
                   <div>
@@ -348,7 +348,7 @@ export default function ProductionPlanDetailPage() {
                     <p className="mt-1">
                       {productionPlan.planned_end_date
                         ? formatDate(productionPlan.planned_end_date)
-                        : "Not scheduled"}
+                        : 'Not scheduled'}
                     </p>
                   </div>
                 </div>
@@ -365,23 +365,24 @@ export default function ProductionPlanDetailPage() {
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
                     <DollarSign className="h-8 w-8 text-blue-600 mx-auto mb-2" />
                     <div className="text-2xl font-bold text-blue-600">
-                      ${productionPlan.estimated_material_cost}
+                      {getCurrencySymbol()}{productionPlan.estimated_material_cost}
                     </div>
                     <div className="text-sm text-gray-600">Material Cost</div>
                   </div>
                   <div className="text-center p-4 bg-green-50 rounded-lg">
                     <Users className="h-8 w-8 text-green-600 mx-auto mb-2" />
                     <div className="text-2xl font-bold text-green-600">
-                      ${productionPlan.estimated_labor_cost}
+                      {getCurrencySymbol()}{productionPlan.estimated_labor_cost}
                     </div>
                     <div className="text-sm text-gray-600">Labor Cost</div>
                   </div>
                   <div className="text-center p-4 bg-purple-50 rounded-lg">
                     <DollarSign className="h-8 w-8 text-purple-600 mx-auto mb-2" />
                     <div className="text-2xl font-bold text-purple-600">
-                      $
-                      {productionPlan.estimated_material_cost +
-                        productionPlan.estimated_labor_cost}
+                      {formatCurrency(
+                        productionPlan.estimated_material_cost +
+                        productionPlan.estimated_labor_cost
+                      )}
                     </div>
                     <div className="text-sm text-gray-600">Total Cost</div>
                   </div>
@@ -436,10 +437,10 @@ export default function ProductionPlanDetailPage() {
                           </div>
                           <div className="text-right">
                             <div className="font-medium">
-                              ${material.total_cost}
+                              {getCurrencySymbol()}{material.total_cost}
                             </div>
                             <div className="text-sm text-gray-500">
-                              ${material.cost_per_unit} per {material.unit}
+                              {getCurrencySymbol()}{material.cost_per_unit} per {material.unit}
                             </div>
                           </div>
                         </div>
@@ -481,10 +482,10 @@ export default function ProductionPlanDetailPage() {
                           </div>
                           <div className="text-right">
                             <div className="font-medium">
-                              ${labor.total_cost}
+                              {getCurrencySymbol()}{labor.total_cost}
                             </div>
                             <div className="text-sm text-gray-500">
-                              ${labor.hourly_rate}/hour
+                              {getCurrencySymbol()}{labor.hourly_rate}/hour
                             </div>
                           </div>
                         </div>
@@ -534,7 +535,7 @@ export default function ProductionPlanDetailPage() {
                 productionPlan.production_steps.length > 0 ? (
                   <div className="space-y-4">
                     {productionPlan.production_steps.map(
-                      (step: any, index: number) => (
+                      (step: any) => (
                         <div
                           key={step.id}
                           className="flex items-center justify-between p-4 border rounded-lg"
@@ -583,7 +584,7 @@ export default function ProductionPlanDetailPage() {
                 productionPlan.production_schedules.length > 0 ? (
                   <div className="space-y-4">
                     {productionPlan.production_schedules.map(
-                      (schedule: any, index: number) => (
+                      (schedule: any) => (
                         <div
                           key={schedule.id}
                           className="flex items-center justify-between p-4 border rounded-lg"
@@ -592,7 +593,7 @@ export default function ProductionPlanDetailPage() {
                             <Calendar className="h-5 w-5 text-gray-400" />
                             <div>
                               <div className="font-medium">
-                                {formatDate(schedule.scheduled_start)} -{" "}
+                                {formatDate(schedule.scheduled_start)} -{' '}
                                 {formatDate(schedule.scheduled_end)}
                               </div>
                               <div className="text-sm text-gray-500">

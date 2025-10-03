@@ -3,12 +3,12 @@ export interface User {
   userId?: string; // Keep for legacy compatibility if needed
   userName: string;
   userRole:
-    | "super_admin"
-    | "admin"
-    | "project_manager"
-    | "team_member"
-    | "client"
-    | "viewer";
+    | 'super_admin'
+    | 'admin'
+    | 'project_manager'
+    | 'team_member'
+    | 'client'
+    | 'viewer';
   email: string;
   firstName?: string;
   lastName?: string;
@@ -31,12 +31,12 @@ export interface RegisterData {
   firstName?: string;
   lastName?: string;
   userRole?:
-    | "super_admin"
-    | "admin"
-    | "project_manager"
-    | "team_member"
-    | "client"
-    | "viewer";
+    | 'super_admin'
+    | 'admin'
+    | 'project_manager'
+    | 'team_member'
+    | 'client'
+    | 'viewer';
 }
 
 export interface AuthResponse {
@@ -52,11 +52,11 @@ export interface UserUpdate {
   firstName?: string;
   lastName?: string;
   userRole?:
-    | "super_admin"
-    | "project_manager"
-    | "team_member"
-    | "client"
-    | "viewer";
+    | 'super_admin'
+    | 'project_manager'
+    | 'team_member'
+    | 'client'
+    | 'viewer';
   avatar?: string;
 }
 

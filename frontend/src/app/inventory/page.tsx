@@ -1,17 +1,15 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import { Progress } from "../../components/ui/progress";
-import { Separator } from "../../components/ui/separator";
+} from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Badge } from '../../components/ui/badge';
 import {
   Warehouse,
   Package,
@@ -23,17 +21,17 @@ import {
   ArrowRight,
   Loader2,
   Building2,
-  MapPin,
   ClipboardList,
-} from "lucide-react";
-import { useAuth } from "../../contexts/AuthContext";
-import { inventoryService } from "../../services/InventoryService";
-import { InventoryDashboardStats, StockAlert } from "../../models/inventory";
-import { DashboardLayout } from "../../components/layout";
-import { cn, formatCurrency } from "../../lib/utils";
+} from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import { inventoryService } from '../../services/InventoryService';
+import { InventoryDashboardStats } from '../../models/inventory';
+import { DashboardLayout } from '../../components/layout';
+import { useCurrency } from '../../contexts/CurrencyContext';
 
 export default function InventoryDashboardPage() {
-  const { user } = useAuth();
+  const { } = useAuth();
+  const { formatCurrency } = useCurrency();
   const router = useRouter();
   const [stats, setStats] = useState<InventoryDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,24 +53,24 @@ export default function InventoryDashboardPage() {
 
   const getAlertColor = (alertType: string) => {
     switch (alertType) {
-      case "out_of_stock":
-        return "destructive";
-      case "low_stock":
-        return "secondary";
-      case "expiry_warning":
-        return "default";
+      case 'out_of_stock':
+        return 'destructive';
+      case 'low_stock':
+        return 'secondary';
+      case 'expiry_warning':
+        return 'default';
       default:
-        return "default";
+        return 'default';
     }
   };
 
   const getAlertIcon = (alertType: string) => {
     switch (alertType) {
-      case "out_of_stock":
+      case 'out_of_stock':
         return <AlertTriangle className="h-4 w-4" />;
-      case "low_stock":
+      case 'low_stock':
         return <Package className="h-4 w-4" />;
-      case "expiry_warning":
+      case 'expiry_warning':
         return <Truck className="h-4 w-4" />;
       default:
         return <AlertTriangle className="h-4 w-4" />;
@@ -104,11 +102,11 @@ export default function InventoryDashboardPage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => router.push("/inventory/warehouses")}>
+            <Button onClick={() => router.push('/inventory/warehouses')}>
               <Warehouse className="mr-2 h-4 w-4" />
               Manage Warehouses
             </Button>
-            <Button onClick={() => router.push("/inventory/products")}>
+            <Button onClick={() => router.push('/inventory/products')}>
               <Package className="mr-2 h-4 w-4" />
               View Products
             </Button>
@@ -219,7 +217,7 @@ export default function InventoryDashboardPage() {
                     <Button
                       variant="outline"
                       className="w-full"
-                      onClick={() => router.push("/inventory/alerts")}
+                      onClick={() => router.push('/inventory/alerts')}
                     >
                       View All Alerts ({stats.lowStockAlerts.length})
                     </Button>
@@ -244,7 +242,7 @@ export default function InventoryDashboardPage() {
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => router.push("/inventory/stock-movements/new")}
+                onClick={() => router.push('/inventory/stock-movements/new')}
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Record Stock Movement
@@ -252,7 +250,7 @@ export default function InventoryDashboardPage() {
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => router.push("/inventory/purchase-orders/new")}
+                onClick={() => router.push('/inventory/purchase-orders/new')}
               >
                 <ClipboardList className="mr-2 h-4 w-4" />
                 Create Purchase Order
@@ -260,7 +258,7 @@ export default function InventoryDashboardPage() {
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => router.push("/inventory/receivings/new")}
+                onClick={() => router.push('/inventory/receivings/new')}
               >
                 <Truck className="mr-2 h-4 w-4" />
                 Process Receiving
@@ -268,7 +266,7 @@ export default function InventoryDashboardPage() {
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => router.push("/inventory/products/new")}
+                onClick={() => router.push('/inventory/products/new')}
               >
                 <Package className="mr-2 h-4 w-4" />
                 Add New Product
@@ -332,7 +330,7 @@ export default function InventoryDashboardPage() {
         <div className="grid gap-4 md:grid-cols-3">
           <Card
             className="cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => router.push("/inventory/warehouses")}
+            onClick={() => router.push('/inventory/warehouses')}
           >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -354,7 +352,7 @@ export default function InventoryDashboardPage() {
 
           <Card
             className="cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => router.push("/inventory/products")}
+            onClick={() => router.push('/inventory/products')}
           >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -376,7 +374,7 @@ export default function InventoryDashboardPage() {
 
           <Card
             className="cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => router.push("/inventory/suppliers")}
+            onClick={() => router.push('/inventory/suppliers')}
           >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

@@ -1,4 +1,4 @@
-import { apiService } from "./ApiService";
+import { apiService } from './ApiService';
 import {
   QualityCheckResponse as QualityCheck,
   QualityCheckCreate,
@@ -20,10 +20,10 @@ import {
   QualityCheckFilters,
   QualityInspectionFilters,
   QualityDefectFilters,
-} from "../models/qualityControl";
+} from '../models/qualityControl';
 
 export class QualityControlService {
-  private baseUrl = "/quality-control";
+  private baseUrl = '/quality-control';
 
   // Quality Check CRUD operations
   async createQualityCheck(
@@ -40,28 +40,28 @@ export class QualityControlService {
   ): Promise<QualityChecksResponse> {
     const queryParams = new URLSearchParams();
 
-    if (filters.status) queryParams.append("status", filters.status);
-    if (filters.priority) queryParams.append("priority", filters.priority);
+    if (filters.status) queryParams.append('status', filters.status);
+    if (filters.priority) queryParams.append('priority', filters.priority);
     if (filters.inspection_type)
-      queryParams.append("inspection_type", filters.inspection_type);
+      queryParams.append('inspection_type', filters.inspection_type);
     if (filters.quality_standard)
-      queryParams.append("quality_standard", filters.quality_standard);
+      queryParams.append('quality_standard', filters.quality_standard);
     if (filters.production_plan_id)
-      queryParams.append("production_plan_id", filters.production_plan_id);
+      queryParams.append('production_plan_id', filters.production_plan_id);
     if (filters.work_order_id)
-      queryParams.append("work_order_id", filters.work_order_id);
+      queryParams.append('work_order_id', filters.work_order_id);
     if (filters.project_id)
-      queryParams.append("project_id", filters.project_id);
+      queryParams.append('project_id', filters.project_id);
     if (filters.assigned_to_id)
-      queryParams.append("assigned_to_id", filters.assigned_to_id);
+      queryParams.append('assigned_to_id', filters.assigned_to_id);
     if (filters.scheduled_date_from)
-      queryParams.append("scheduled_date_from", filters.scheduled_date_from);
+      queryParams.append('scheduled_date_from', filters.scheduled_date_from);
     if (filters.scheduled_date_to)
-      queryParams.append("scheduled_date_to", filters.scheduled_date_to);
-    if (filters.search) queryParams.append("search", filters.search);
+      queryParams.append('scheduled_date_to', filters.scheduled_date_to);
+    if (filters.search) queryParams.append('search', filters.search);
 
-    queryParams.append("page", page.toString());
-    queryParams.append("limit", limit.toString());
+    queryParams.append('page', page.toString());
+    queryParams.append('limit', limit.toString());
 
     const response = await apiService.get(
       `${this.baseUrl}/checks?${queryParams.toString()}`,
@@ -105,29 +105,29 @@ export class QualityControlService {
   ): Promise<QualityInspectionsResponse> {
     const queryParams = new URLSearchParams();
 
-    if (filters.status) queryParams.append("status", filters.status);
+    if (filters.status) queryParams.append('status', filters.status);
     if (filters.inspector_id)
-      queryParams.append("inspector_id", filters.inspector_id);
+      queryParams.append('inspector_id', filters.inspector_id);
     if (filters.quality_check_id)
-      queryParams.append("quality_check_id", filters.quality_check_id);
+      queryParams.append('quality_check_id', filters.quality_check_id);
     if (filters.inspection_date_from)
-      queryParams.append("inspection_date_from", filters.inspection_date_from);
+      queryParams.append('inspection_date_from', filters.inspection_date_from);
     if (filters.inspection_date_to)
-      queryParams.append("inspection_date_to", filters.inspection_date_to);
+      queryParams.append('inspection_date_to', filters.inspection_date_to);
     if (filters.compliance_score_min)
       queryParams.append(
-        "compliance_score_min",
+        'compliance_score_min',
         filters.compliance_score_min.toString(),
       );
     if (filters.compliance_score_max)
       queryParams.append(
-        "compliance_score_max",
+        'compliance_score_max',
         filters.compliance_score_max.toString(),
       );
-    if (filters.search) queryParams.append("search", filters.search);
+    if (filters.search) queryParams.append('search', filters.search);
 
-    queryParams.append("page", page.toString());
-    queryParams.append("limit", limit.toString());
+    queryParams.append('page', page.toString());
+    queryParams.append('limit', limit.toString());
 
     const response = await apiService.get(
       `${this.baseUrl}/inspections?${queryParams.toString()}`,
@@ -180,24 +180,24 @@ export class QualityControlService {
   ): Promise<QualityDefectsResponse> {
     const queryParams = new URLSearchParams();
 
-    if (filters.severity) queryParams.append("severity", filters.severity);
-    if (filters.status) queryParams.append("status", filters.status);
-    if (filters.priority) queryParams.append("priority", filters.priority);
-    if (filters.category) queryParams.append("category", filters.category);
+    if (filters.severity) queryParams.append('severity', filters.severity);
+    if (filters.status) queryParams.append('status', filters.status);
+    if (filters.priority) queryParams.append('priority', filters.priority);
+    if (filters.category) queryParams.append('category', filters.category);
     if (filters.assigned_to_id)
-      queryParams.append("assigned_to_id", filters.assigned_to_id);
+      queryParams.append('assigned_to_id', filters.assigned_to_id);
     if (filters.detected_date_from)
-      queryParams.append("detected_date_from", filters.detected_date_from);
+      queryParams.append('detected_date_from', filters.detected_date_from);
     if (filters.detected_date_to)
-      queryParams.append("detected_date_to", filters.detected_date_to);
+      queryParams.append('detected_date_to', filters.detected_date_to);
     if (filters.cost_impact_min)
-      queryParams.append("cost_impact_min", filters.cost_impact_min.toString());
+      queryParams.append('cost_impact_min', filters.cost_impact_min.toString());
     if (filters.cost_impact_max)
-      queryParams.append("cost_impact_max", filters.cost_impact_max.toString());
-    if (filters.search) queryParams.append("search", filters.search);
+      queryParams.append('cost_impact_max', filters.cost_impact_max.toString());
+    if (filters.search) queryParams.append('search', filters.search);
 
-    queryParams.append("page", page.toString());
-    queryParams.append("limit", limit.toString());
+    queryParams.append('page', page.toString());
+    queryParams.append('limit', limit.toString());
 
     const response = await apiService.get(
       `${this.baseUrl}/defects?${queryParams.toString()}`,
@@ -250,9 +250,9 @@ export class QualityControlService {
   ): Promise<QualityReportsResponse> {
     const queryParams = new URLSearchParams();
 
-    if (reportType) queryParams.append("report_type", reportType);
-    queryParams.append("page", page.toString());
-    queryParams.append("limit", limit.toString());
+    if (reportType) queryParams.append('report_type', reportType);
+    queryParams.append('page', page.toString());
+    queryParams.append('limit', limit.toString());
 
     const response = await apiService.get(
       `${this.baseUrl}/reports?${queryParams.toString()}`,

@@ -1,33 +1,33 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
-import { Input } from "@/src/components/ui/input";
-import { Textarea } from "@/src/components/ui/textarea";
-import { Label } from "@/src/components/ui/label";
+} from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Badge } from '@/src/components/ui/badge';
+import { Input } from '@/src/components/ui/input';
+import { Textarea } from '@/src/components/ui/textarea';
+import { Label } from '@/src/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select";
+} from '@/src/components/ui/select';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/src/components/ui/dialog";
-import { Alert, AlertDescription } from "@/src/components/ui/alert";
+} from '@/src/components/ui/dialog';
+import { Alert, AlertDescription } from '@/src/components/ui/alert';
 import {
   Users,
   Plus,
@@ -37,31 +37,31 @@ import {
   Trash2,
   Eye,
   Building2,
-} from "lucide-react";
-import CRMService from "@/src/services/CRMService";
+} from 'lucide-react';
+import CRMService from '@/src/services/CRMService';
 import {
   Contact,
   ContactType,
   CRMContactFilters,
   ContactCreate,
-} from "@/src/models/crm";
-import { DashboardLayout } from "../../../components/layout";
-import { useCustomOptions } from "../../../hooks/useCustomOptions";
-import { CustomOptionDialog } from "../../../components/common/CustomOptionDialog";
+} from '@/src/models/crm';
+import { DashboardLayout } from '../../../components/layout';
+import { useCustomOptions } from '../../../hooks/useCustomOptions';
+import { CustomOptionDialog } from '../../../components/common/CustomOptionDialog';
 
 export default function CRMContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<CRMContactFilters>({});
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [viewingContact, setViewingContact] = useState<Contact | null>(null);
   const [deletingContact, setDeletingContact] = useState<Contact | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const [showCustomContactTypeDialog, setShowCustomContactTypeDialog] =
     useState(false);
 
@@ -73,16 +73,16 @@ export default function CRMContactsPage() {
   } = useCustomOptions();
 
   const [formData, setFormData] = useState<ContactCreate>({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    mobile: "",
-    jobTitle: "",
-    department: "",
-    companyId: "",
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    mobile: '',
+    jobTitle: '',
+    department: '',
+    companyId: '',
     type: ContactType.CUSTOMER,
-    notes: "",
+    notes: '',
     tags: [],
     isActive: true,
   });
@@ -118,7 +118,7 @@ export default function CRMContactsPage() {
 
   const resetFilters = () => {
     setFilters({});
-    setSearch("");
+    setSearch('');
   };
 
   const handleCreateCustomContactType = async (
@@ -133,16 +133,16 @@ export default function CRMContactsPage() {
 
   const resetForm = () => {
     setFormData({
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      mobile: "",
-      jobTitle: "",
-      department: "",
-      companyId: "",
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      mobile: '',
+      jobTitle: '',
+      department: '',
+      companyId: '',
       type: ContactType.CUSTOMER,
-      notes: "",
+      notes: '',
       tags: [],
       isActive: true,
     });
@@ -156,7 +156,7 @@ export default function CRMContactsPage() {
       !formData.lastName.trim() ||
       !formData.email.trim()
     ) {
-      alert("First name, last name, and email are required");
+      alert('First name, last name, and email are required');
       return;
     }
 
@@ -166,15 +166,15 @@ export default function CRMContactsPage() {
         // TODO: Implement update functionality
         } else {
         await CRMService.createContact(formData);
-        setSuccessMessage("Contact created successfully!");
+        setSuccessMessage('Contact created successfully!');
         setShowCreateDialog(false);
         resetForm();
         loadContacts();
-        setTimeout(() => setSuccessMessage(""), 3000);
+        setTimeout(() => setSuccessMessage(''), 3000);
       }
     } catch (error) {
-      setErrorMessage("Error saving contact. Please try again.");
-      setTimeout(() => setErrorMessage(""), 5000);
+      setErrorMessage('Error saving contact. Please try again.');
+      setTimeout(() => setErrorMessage(''), 5000);
     } finally {
       setSubmitting(false);
     }
@@ -182,19 +182,19 @@ export default function CRMContactsPage() {
 
   const handleEdit = (contact: Contact) => {
     setEditingContact(contact);
-    setErrorMessage("");
-    setSuccessMessage("");
+    setErrorMessage('');
+    setSuccessMessage('');
     setFormData({
       firstName: contact.firstName,
       lastName: contact.lastName,
       email: contact.email,
-      phone: contact.phone || "",
-      mobile: contact.mobile || "",
-      jobTitle: contact.jobTitle || "",
-      department: contact.department || "",
-      companyId: contact.companyId || "",
+      phone: contact.phone || '',
+      mobile: contact.mobile || '',
+      jobTitle: contact.jobTitle || '',
+      department: contact.department || '',
+      companyId: contact.companyId || '',
       type: contact.type,
-      notes: contact.notes || "",
+      notes: contact.notes || '',
       tags: contact.tags || [],
       isActive: contact.isActive,
     });
@@ -215,13 +215,13 @@ export default function CRMContactsPage() {
     setDeleting(true);
     try {
       await CRMService.deleteContact(deletingContact.id);
-      setSuccessMessage("Contact deleted successfully!");
+      setSuccessMessage('Contact deleted successfully!');
       setDeletingContact(null);
       loadContacts();
-      setTimeout(() => setSuccessMessage(""), 3000);
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
-      setErrorMessage("Error deleting contact. Please try again.");
-      setTimeout(() => setErrorMessage(""), 5000);
+      setErrorMessage('Error deleting contact. Please try again.');
+      setTimeout(() => setErrorMessage(''), 5000);
     } finally {
       setDeleting(false);
     }
@@ -258,8 +258,8 @@ export default function CRMContactsPage() {
             onClick={() => {
               setEditingContact(null);
               resetForm();
-              setErrorMessage("");
-              setSuccessMessage("");
+              setErrorMessage('');
+              setSuccessMessage('');
               setShowCreateDialog(true);
             }}
           >
@@ -285,7 +285,7 @@ export default function CRMContactsPage() {
                     placeholder="Search contacts..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                   />
                   <Button onClick={handleSearch}>
                     <Search className="w-4 h-4" />
@@ -295,12 +295,12 @@ export default function CRMContactsPage() {
               <div>
                 <label className="text-sm font-medium">Type</label>
                 <Select
-                  value={filters.type || "all"}
+                  value={filters.type || 'all'}
                   onValueChange={(value) =>
                     setFilters((prev: CRMContactFilters) => ({
                       ...prev,
                       type:
-                        value === "all" ? undefined : (value as ContactType),
+                        value === 'all' ? undefined : (value as ContactType),
                     }))
                   }
                 >
@@ -372,9 +372,9 @@ export default function CRMContactsPage() {
                           contact.type.slice(1)}
                       </Badge>
                       <Badge
-                        variant={contact.isActive ? "default" : "secondary"}
+                        variant={contact.isActive ? 'default' : 'secondary'}
                       >
-                        {contact.isActive ? "Active" : "Inactive"}
+                        {contact.isActive ? 'Active' : 'Inactive'}
                       </Badge>
                     </div>
                     {contact.notes && (
@@ -388,13 +388,13 @@ export default function CRMContactsPage() {
                       </span>
                       {contact.lastContactDate && (
                         <span>
-                          Last Contact:{" "}
+                          Last Contact:{' '}
                           {CRMService.formatDate(contact.lastContactDate)}
                         </span>
                       )}
                       {contact.nextFollowUpDate && (
                         <span>
-                          Next Follow-up:{" "}
+                          Next Follow-up:{' '}
                           {CRMService.formatDate(contact.nextFollowUpDate)}
                         </span>
                       )}
@@ -434,7 +434,7 @@ export default function CRMContactsPage() {
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {editingContact ? "Edit Contact" : "Create New Contact"}
+                {editingContact ? 'Edit Contact' : 'Create New Contact'}
               </DialogTitle>
             </DialogHeader>
 
@@ -536,11 +536,11 @@ export default function CRMContactsPage() {
                 <div>
                   <Label htmlFor="companyId">Company</Label>
                   <Select
-                    value={formData.companyId || "none"}
+                    value={formData.companyId || 'none'}
                     onValueChange={(value) =>
                       setFormData({
                         ...formData,
-                        companyId: value === "none" ? "" : value,
+                        companyId: value === 'none' ? '' : value,
                       })
                     }
                   >
@@ -563,7 +563,7 @@ export default function CRMContactsPage() {
                   <Select
                     value={formData.type}
                     onValueChange={(value) => {
-                      if (value === "create_new") {
+                      if (value === 'create_new') {
                         setShowCustomContactTypeDialog(true);
                       } else {
                         setFormData({
@@ -605,9 +605,9 @@ export default function CRMContactsPage() {
                 <div>
                   <Label htmlFor="isActive">Status</Label>
                   <Select
-                    value={formData.isActive ? "active" : "inactive"}
+                    value={formData.isActive ? 'active' : 'inactive'}
                     onValueChange={(value) =>
-                      setFormData({ ...formData, isActive: value === "active" })
+                      setFormData({ ...formData, isActive: value === 'active' })
                     }
                   >
                     <SelectTrigger>
@@ -637,12 +637,12 @@ export default function CRMContactsPage() {
                   <Label htmlFor="tags">Tags (comma-separated)</Label>
                   <Input
                     id="tags"
-                    value={formData.tags?.join(", ") || ""}
+                    value={formData.tags?.join(', ') || ''}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
                         tags: e.target.value
-                          ? e.target.value.split(",").map((tag) => tag.trim())
+                          ? e.target.value.split(',').map((tag) => tag.trim())
                           : [],
                       })
                     }
@@ -659,18 +659,18 @@ export default function CRMContactsPage() {
                     setShowCreateDialog(false);
                     setEditingContact(null);
                     resetForm();
-                    setErrorMessage("");
-                    setSuccessMessage("");
+                    setErrorMessage('');
+                    setSuccessMessage('');
                   }}
                 >
                   Cancel
                 </Button>
                 <Button type="submit" disabled={submitting}>
                   {submitting
-                    ? "Saving..."
+                    ? 'Saving...'
                     : editingContact
-                      ? "Update Contact"
-                      : "Create Contact"}
+                      ? 'Update Contact'
+                      : 'Create Contact'}
                 </Button>
               </DialogFooter>
             </form>
@@ -719,28 +719,28 @@ export default function CRMContactsPage() {
                     <Label className="text-sm font-medium text-gray-500">
                       Phone
                     </Label>
-                    <p>{viewingContact.phone || "Not specified"}</p>
+                    <p>{viewingContact.phone || 'Not specified'}</p>
                   </div>
 
                   <div>
                     <Label className="text-sm font-medium text-gray-500">
                       Mobile
                     </Label>
-                    <p>{viewingContact.mobile || "Not specified"}</p>
+                    <p>{viewingContact.mobile || 'Not specified'}</p>
                   </div>
 
                   <div>
                     <Label className="text-sm font-medium text-gray-500">
                       Job Title
                     </Label>
-                    <p>{viewingContact.jobTitle || "Not specified"}</p>
+                    <p>{viewingContact.jobTitle || 'Not specified'}</p>
                   </div>
 
                   <div>
                     <Label className="text-sm font-medium text-gray-500">
                       Department
                     </Label>
-                    <p>{viewingContact.department || "Not specified"}</p>
+                    <p>{viewingContact.department || 'Not specified'}</p>
                   </div>
 
                   <div>
@@ -751,8 +751,8 @@ export default function CRMContactsPage() {
                       {viewingContact.companyId
                         ? companies.find(
                             (c) => c.id === viewingContact.companyId,
-                          )?.name || "Company ID: " + viewingContact.companyId
-                        : "Not specified"}
+                          )?.name || 'Company ID: ' + viewingContact.companyId
+                        : 'Not specified'}
                     </p>
                   </div>
 
@@ -772,10 +772,10 @@ export default function CRMContactsPage() {
                     </Label>
                     <Badge
                       variant={
-                        viewingContact.isActive ? "default" : "secondary"
+                        viewingContact.isActive ? 'default' : 'secondary'
                       }
                     >
-                      {viewingContact.isActive ? "Active" : "Inactive"}
+                      {viewingContact.isActive ? 'Active' : 'Inactive'}
                     </Badge>
                   </div>
 
@@ -783,7 +783,7 @@ export default function CRMContactsPage() {
                     <Label className="text-sm font-medium text-gray-500">
                       Notes
                     </Label>
-                    <p>{viewingContact.notes || "No notes"}</p>
+                    <p>{viewingContact.notes || 'No notes'}</p>
                   </div>
 
                   <div className="md:col-span-2">
@@ -854,7 +854,7 @@ export default function CRMContactsPage() {
             {deletingContact && (
               <div className="space-y-4">
                 <p className="text-gray-600">
-                  Are you sure you want to delete{" "}
+                  Are you sure you want to delete{' '}
                   <strong>
                     &quot;{deletingContact.firstName} {deletingContact.lastName}
                     &quot;
@@ -876,7 +876,7 @@ export default function CRMContactsPage() {
                     onClick={confirmDelete}
                     disabled={deleting}
                   >
-                    {deleting ? "Deleting..." : "Delete Contact"}
+                    {deleting ? 'Deleting...' : 'Delete Contact'}
                   </Button>
                 </DialogFooter>
               </div>

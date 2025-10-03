@@ -1,33 +1,33 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
-import { Input } from "@/src/components/ui/input";
-import { Textarea } from "@/src/components/ui/textarea";
-import { Label } from "@/src/components/ui/label";
-import { Alert, AlertDescription } from "@/src/components/ui/alert";
+} from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Badge } from '@/src/components/ui/badge';
+import { Input } from '@/src/components/ui/input';
+import { Textarea } from '@/src/components/ui/textarea';
+import { Label } from '@/src/components/ui/label';
+import { Alert, AlertDescription } from '@/src/components/ui/alert';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select";
+} from '@/src/components/ui/select';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/src/components/ui/dialog";
+} from '@/src/components/ui/dialog';
 import {
   Building2,
   Plus,
@@ -39,32 +39,32 @@ import {
   Globe,
   Phone,
   MapPin,
-} from "lucide-react";
-import CRMService from "@/src/services/CRMService";
+} from 'lucide-react';
+import CRMService from '@/src/services/CRMService';
 import {
   Company,
   Industry,
   CompanySize,
   CRMCompanyFilters,
   CompanyCreate,
-} from "@/src/models/crm";
-import { DashboardLayout } from "../../../components/layout";
-import { useCustomOptions } from "../../../hooks/useCustomOptions";
-import { CustomOptionDialog } from "../../../components/common/CustomOptionDialog";
+} from '@/src/models/crm';
+import { DashboardLayout } from '../../../components/layout';
+import { useCustomOptions } from '../../../hooks/useCustomOptions';
+import { CustomOptionDialog } from '../../../components/common/CustomOptionDialog';
 
 export default function CRMCompaniesPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<CRMCompanyFilters>({});
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const [viewingCompany, setViewingCompany] = useState<Company | null>(null);
   const [deletingCompany, setDeletingCompany] = useState<Company | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const [showCustomIndustryDialog, setShowCustomIndustryDialog] =
     useState(false);
 
@@ -76,18 +76,18 @@ export default function CRMCompaniesPage() {
   } = useCustomOptions();
 
   const [formData, setFormData] = useState<CompanyCreate>({
-    name: "",
+    name: '',
     industry: undefined,
     size: undefined,
-    website: "",
-    phone: "",
-    address: "",
-    city: "",
-    state: "",
-    country: "",
-    postalCode: "",
-    description: "",
-    notes: "",
+    website: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    country: '',
+    postalCode: '',
+    description: '',
+    notes: '',
     tags: [],
     isActive: true,
     annualRevenue: undefined,
@@ -116,7 +116,7 @@ export default function CRMCompaniesPage() {
 
   const resetFilters = () => {
     setFilters({});
-    setSearch("");
+    setSearch('');
   };
 
   const handleCreateCustomIndustry = async (
@@ -131,18 +131,18 @@ export default function CRMCompaniesPage() {
 
   const resetForm = () => {
     setFormData({
-      name: "",
+      name: '',
       industry: undefined,
       size: undefined,
-      website: "",
-      phone: "",
-      address: "",
-      city: "",
-      state: "",
-      country: "",
-      postalCode: "",
-      description: "",
-      notes: "",
+      website: '',
+      phone: '',
+      address: '',
+      city: '',
+      state: '',
+      country: '',
+      postalCode: '',
+      description: '',
+      notes: '',
       tags: [],
       isActive: true,
       annualRevenue: undefined,
@@ -155,7 +155,7 @@ export default function CRMCompaniesPage() {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      alert("Company name is required");
+      alert('Company name is required');
       return;
     }
 
@@ -163,23 +163,23 @@ export default function CRMCompaniesPage() {
     try {
       if (editingCompany) {
         await CRMService.updateCompany(editingCompany.id, formData);
-        setSuccessMessage("Company updated successfully!");
+        setSuccessMessage('Company updated successfully!');
         setShowCreateDialog(false);
         setEditingCompany(null);
         resetForm();
         loadCompanies();
-        setTimeout(() => setSuccessMessage(""), 3000);
+        setTimeout(() => setSuccessMessage(''), 3000);
       } else {
         await CRMService.createCompany(formData);
-        setSuccessMessage("Company created successfully!");
+        setSuccessMessage('Company created successfully!');
         setShowCreateDialog(false);
         resetForm();
         loadCompanies();
-        setTimeout(() => setSuccessMessage(""), 3000);
+        setTimeout(() => setSuccessMessage(''), 3000);
       }
     } catch (error) {
-      setErrorMessage("Error saving company. Please try again.");
-      setTimeout(() => setErrorMessage(""), 5000);
+      setErrorMessage('Error saving company. Please try again.');
+      setTimeout(() => setErrorMessage(''), 5000);
     } finally {
       setSubmitting(false);
     }
@@ -187,21 +187,21 @@ export default function CRMCompaniesPage() {
 
   const handleEdit = (company: Company) => {
     setEditingCompany(company);
-    setErrorMessage("");
-    setSuccessMessage("");
+    setErrorMessage('');
+    setSuccessMessage('');
     setFormData({
       name: company.name,
       industry: company.industry,
       size: company.size,
-      website: company.website || "",
-      phone: company.phone || "",
-      address: company.address || "",
-      city: company.city || "",
-      state: company.state || "",
-      country: company.country || "",
-      postalCode: company.postalCode || "",
-      description: company.description || "",
-      notes: company.notes || "",
+      website: company.website || '',
+      phone: company.phone || '',
+      address: company.address || '',
+      city: company.city || '',
+      state: company.state || '',
+      country: company.country || '',
+      postalCode: company.postalCode || '',
+      description: company.description || '',
+      notes: company.notes || '',
       tags: company.tags || [],
       isActive: company.isActive,
       annualRevenue: company.annualRevenue,
@@ -221,13 +221,13 @@ export default function CRMCompaniesPage() {
     setDeleting(true);
     try {
       await CRMService.deleteCompany(deletingCompany.id);
-      setSuccessMessage("Company deleted successfully!");
+      setSuccessMessage('Company deleted successfully!');
       setDeletingCompany(null);
       loadCompanies();
-      setTimeout(() => setSuccessMessage(""), 3000);
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
-      setErrorMessage("Error deleting company. Please try again.");
-      setTimeout(() => setErrorMessage(""), 5000);
+      setErrorMessage('Error deleting company. Please try again.');
+      setTimeout(() => setErrorMessage(''), 5000);
     } finally {
       setDeleting(false);
     }
@@ -268,8 +268,8 @@ export default function CRMCompaniesPage() {
             onClick={() => {
               setEditingCompany(null);
               resetForm();
-              setErrorMessage("");
-              setSuccessMessage("");
+              setErrorMessage('');
+              setSuccessMessage('');
               setShowCreateDialog(true);
             }}
           >
@@ -295,7 +295,7 @@ export default function CRMCompaniesPage() {
                     placeholder="Search companies..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                   />
                   <Button onClick={handleSearch}>
                     <Search className="w-4 h-4" />
@@ -305,12 +305,12 @@ export default function CRMCompaniesPage() {
               <div>
                 <label className="text-sm font-medium">Industry</label>
                 <Select
-                  value={filters.industry || "all"}
+                  value={filters.industry || 'all'}
                   onValueChange={(value) =>
                     setFilters((prev: CRMCompanyFilters) => ({
                       ...prev,
                       industry:
-                        value === "all" ? undefined : (value as Industry),
+                        value === 'all' ? undefined : (value as Industry),
                     }))
                   }
                 >
@@ -330,12 +330,12 @@ export default function CRMCompaniesPage() {
               <div>
                 <label className="text-sm font-medium">Size</label>
                 <Select
-                  value={filters.size || "all"}
+                  value={filters.size || 'all'}
                   onValueChange={(value) =>
                     setFilters((prev: CRMCompanyFilters) => ({
                       ...prev,
                       size:
-                        value === "all" ? undefined : (value as CompanySize),
+                        value === 'all' ? undefined : (value as CompanySize),
                     }))
                   }
                 >
@@ -417,9 +417,9 @@ export default function CRMCompaniesPage() {
                         </Badge>
                       )}
                       <Badge
-                        variant={company.isActive ? "default" : "secondary"}
+                        variant={company.isActive ? 'default' : 'secondary'}
                       >
-                        {company.isActive ? "Active" : "Inactive"}
+                        {company.isActive ? 'Active' : 'Inactive'}
                       </Badge>
                     </div>
                     {company.description && (
@@ -444,7 +444,7 @@ export default function CRMCompaniesPage() {
                       )}
                       {company.annualRevenue && (
                         <span>
-                          Revenue:{" "}
+                          Revenue:{' '}
                           {CRMService.formatCurrency(company.annualRevenue)}
                         </span>
                       )}
@@ -484,7 +484,7 @@ export default function CRMCompaniesPage() {
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {editingCompany ? "Edit Company" : "Create New Company"}
+                {editingCompany ? 'Edit Company' : 'Create New Company'}
               </DialogTitle>
             </DialogHeader>
 
@@ -511,15 +511,15 @@ export default function CRMCompaniesPage() {
                 <div>
                   <Label htmlFor="industry">Industry</Label>
                   <Select
-                    value={formData.industry || "all"}
+                    value={formData.industry || 'all'}
                     onValueChange={(value) => {
-                      if (value === "create_new") {
+                      if (value === 'create_new') {
                         setShowCustomIndustryDialog(true);
                       } else {
                         setFormData({
                           ...formData,
                           industry:
-                            value === "all" ? undefined : (value as Industry),
+                            value === 'all' ? undefined : (value as Industry),
                         });
                       }
                     }}
@@ -560,12 +560,12 @@ export default function CRMCompaniesPage() {
                 <div>
                   <Label htmlFor="size">Company Size</Label>
                   <Select
-                    value={formData.size || "all"}
+                    value={formData.size || 'all'}
                     onValueChange={(value) =>
                       setFormData({
                         ...formData,
                         size:
-                          value === "all" ? undefined : (value as CompanySize),
+                          value === 'all' ? undefined : (value as CompanySize),
                       })
                     }
                   >
@@ -672,7 +672,7 @@ export default function CRMCompaniesPage() {
                   <Label htmlFor="annualRevenue">Annual Revenue</Label>
                   <Input
                     id="annualRevenue"
-                    value={formData.annualRevenue || ""}
+                    value={formData.annualRevenue || ''}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -692,7 +692,7 @@ export default function CRMCompaniesPage() {
                   <Label htmlFor="employeeCount">Employee Count</Label>
                   <Input
                     id="employeeCount"
-                    value={formData.employeeCount || ""}
+                    value={formData.employeeCount || ''}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -711,7 +711,7 @@ export default function CRMCompaniesPage() {
                   <Label htmlFor="foundedYear">Founded Year</Label>
                   <Input
                     id="foundedYear"
-                    value={formData.foundedYear || ""}
+                    value={formData.foundedYear || ''}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -757,12 +757,12 @@ export default function CRMCompaniesPage() {
                   <Label htmlFor="tags">Tags (comma-separated)</Label>
                   <Input
                     id="tags"
-                    value={formData.tags?.join(", ") || ""}
+                    value={formData.tags?.join(', ') || ''}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
                         tags: e.target.value
-                          ? e.target.value.split(",").map((tag) => tag.trim())
+                          ? e.target.value.split(',').map((tag) => tag.trim())
                           : [],
                       })
                     }
@@ -773,9 +773,9 @@ export default function CRMCompaniesPage() {
                 <div className="md:col-span-2">
                   <Label htmlFor="isActive">Status</Label>
                   <Select
-                    value={formData.isActive ? "active" : "inactive"}
+                    value={formData.isActive ? 'active' : 'inactive'}
                     onValueChange={(value) =>
-                      setFormData({ ...formData, isActive: value === "active" })
+                      setFormData({ ...formData, isActive: value === 'active' })
                     }
                   >
                     <SelectTrigger>
@@ -797,18 +797,18 @@ export default function CRMCompaniesPage() {
                     setShowCreateDialog(false);
                     setEditingCompany(null);
                     resetForm();
-                    setErrorMessage("");
-                    setSuccessMessage("");
+                    setErrorMessage('');
+                    setSuccessMessage('');
                   }}
                 >
                   Cancel
                 </Button>
                 <Button type="submit" disabled={submitting}>
                   {submitting
-                    ? "Saving..."
+                    ? 'Saving...'
                     : editingCompany
-                      ? "Update Company"
-                      : "Create Company"}
+                      ? 'Update Company'
+                      : 'Create Company'}
                 </Button>
               </DialogFooter>
             </form>
@@ -845,7 +845,7 @@ export default function CRMCompaniesPage() {
                       {viewingCompany.industry
                         ? viewingCompany.industry.charAt(0).toUpperCase() +
                           viewingCompany.industry.slice(1)
-                        : "Not specified"}
+                        : 'Not specified'}
                     </p>
                   </div>
 
@@ -857,7 +857,7 @@ export default function CRMCompaniesPage() {
                       {viewingCompany.size
                         ? viewingCompany.size.charAt(0).toUpperCase() +
                           viewingCompany.size.slice(1)
-                        : "Not specified"}
+                        : 'Not specified'}
                     </p>
                   </div>
 
@@ -865,49 +865,49 @@ export default function CRMCompaniesPage() {
                     <Label className="text-sm font-medium text-gray-500">
                       Website
                     </Label>
-                    <p>{viewingCompany.website || "Not specified"}</p>
+                    <p>{viewingCompany.website || 'Not specified'}</p>
                   </div>
 
                   <div>
                     <Label className="text-sm font-medium text-gray-500">
                       Phone
                     </Label>
-                    <p>{viewingCompany.phone || "Not specified"}</p>
+                    <p>{viewingCompany.phone || 'Not specified'}</p>
                   </div>
 
                   <div className="md:col-span-2">
                     <Label className="text-sm font-medium text-gray-500">
                       Address
                     </Label>
-                    <p>{viewingCompany.address || "Not specified"}</p>
+                    <p>{viewingCompany.address || 'Not specified'}</p>
                   </div>
 
                   <div>
                     <Label className="text-sm font-medium text-gray-500">
                       City
                     </Label>
-                    <p>{viewingCompany.city || "Not specified"}</p>
+                    <p>{viewingCompany.city || 'Not specified'}</p>
                   </div>
 
                   <div>
                     <Label className="text-sm font-medium text-gray-500">
                       State/Province
                     </Label>
-                    <p>{viewingCompany.state || "Not specified"}</p>
+                    <p>{viewingCompany.state || 'Not specified'}</p>
                   </div>
 
                   <div>
                     <Label className="text-sm font-medium text-gray-500">
                       Country
                     </Label>
-                    <p>{viewingCompany.country || "Not specified"}</p>
+                    <p>{viewingCompany.country || 'Not specified'}</p>
                   </div>
 
                   <div>
                     <Label className="text-sm font-medium text-gray-500">
                       Postal Code
                     </Label>
-                    <p>{viewingCompany.postalCode || "Not specified"}</p>
+                    <p>{viewingCompany.postalCode || 'Not specified'}</p>
                   </div>
 
                   <div>
@@ -919,7 +919,7 @@ export default function CRMCompaniesPage() {
                         ? CRMService.formatCurrency(
                             viewingCompany.annualRevenue,
                           )
-                        : "Not specified"}
+                        : 'Not specified'}
                     </p>
                   </div>
 
@@ -927,28 +927,28 @@ export default function CRMCompaniesPage() {
                     <Label className="text-sm font-medium text-gray-500">
                       Employee Count
                     </Label>
-                    <p>{viewingCompany.employeeCount || "Not specified"}</p>
+                    <p>{viewingCompany.employeeCount || 'Not specified'}</p>
                   </div>
 
                   <div>
                     <Label className="text-sm font-medium text-gray-500">
                       Founded Year
                     </Label>
-                    <p>{viewingCompany.foundedYear || "Not specified"}</p>
+                    <p>{viewingCompany.foundedYear || 'Not specified'}</p>
                   </div>
 
                   <div className="md:col-span-2">
                     <Label className="text-sm font-medium text-gray-500">
                       Description
                     </Label>
-                    <p>{viewingCompany.description || "Not specified"}</p>
+                    <p>{viewingCompany.description || 'Not specified'}</p>
                   </div>
 
                   <div className="md:col-span-2">
                     <Label className="text-sm font-medium text-gray-500">
                       Notes
                     </Label>
-                    <p>{viewingCompany.notes || "Not specified"}</p>
+                    <p>{viewingCompany.notes || 'Not specified'}</p>
                   </div>
 
                   <div className="md:col-span-2">
@@ -974,10 +974,10 @@ export default function CRMCompaniesPage() {
                     </Label>
                     <Badge
                       variant={
-                        viewingCompany.isActive ? "default" : "secondary"
+                        viewingCompany.isActive ? 'default' : 'secondary'
                       }
                     >
-                      {viewingCompany.isActive ? "Active" : "Inactive"}
+                      {viewingCompany.isActive ? 'Active' : 'Inactive'}
                     </Badge>
                   </div>
 
@@ -1032,7 +1032,7 @@ export default function CRMCompaniesPage() {
             {deletingCompany && (
               <div className="space-y-4">
                 <p className="text-gray-600">
-                  Are you sure you want to delete{" "}
+                  Are you sure you want to delete{' '}
                   <strong>&quot;{deletingCompany.name}&quot;</strong>? This
                   action cannot be undone.
                 </p>
@@ -1051,7 +1051,7 @@ export default function CRMCompaniesPage() {
                     onClick={confirmDelete}
                     disabled={deleting}
                   >
-                    {deleting ? "Deleting..." : "Delete Company"}
+                    {deleting ? 'Deleting...' : 'Delete Company'}
                   </Button>
                 </DialogFooter>
               </div>

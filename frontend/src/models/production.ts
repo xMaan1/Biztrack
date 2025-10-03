@@ -1,26 +1,26 @@
 // Production Planning Models
 
 export enum ProductionStatus {
-  PLANNED = "planned",
-  IN_PROGRESS = "in_progress",
-  ON_HOLD = "on_hold",
-  COMPLETED = "completed",
-  CANCELLED = "cancelled",
+  PLANNED = 'planned',
+  IN_PROGRESS = 'in_progress',
+  ON_HOLD = 'on_hold',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
 }
 
 export enum ProductionPriority {
-  LOW = "low",
-  MEDIUM = "medium",
-  HIGH = "high",
-  URGENT = "urgent",
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+  URGENT = 'urgent',
 }
 
 export enum ProductionType {
-  BATCH = "batch",
-  CONTINUOUS = "continuous",
-  JOB_SHOP = "job_shop",
-  ASSEMBLY = "assembly",
-  CUSTOM = "custom",
+  BATCH = 'batch',
+  CONTINUOUS = 'continuous',
+  JOB_SHOP = 'job_shop',
+  ASSEMBLY = 'assembly',
+  CUSTOM = 'custom',
 }
 
 // Base Models
@@ -318,17 +318,17 @@ export interface ProductionNote {
   author_id: string;
   author_name: string;
   timestamp: string;
-  type: "general" | "quality" | "safety" | "technical";
+  type: 'general' | 'quality' | 'safety' | 'technical';
 }
 
 // Utility Types
 export type ProductionPlanFormData = Omit<
   ProductionPlanCreate,
-  | "materials_required"
-  | "labor_requirements"
-  | "inspection_points"
-  | "tolerance_specs"
-  | "tags"
+  | 'materials_required'
+  | 'labor_requirements'
+  | 'inspection_points'
+  | 'tolerance_specs'
+  | 'tags'
 > & {
   materials_required: MaterialRequirement[];
   labor_requirements: LaborRequirement[];
@@ -339,11 +339,11 @@ export type ProductionPlanFormData = Omit<
 
 export type ProductionStepFormData = Omit<
   ProductionStepCreate,
-  | "equipment_required"
-  | "materials_consumed"
-  | "labor_required"
-  | "quality_checkpoints"
-  | "depends_on_steps"
+  | 'equipment_required'
+  | 'materials_consumed'
+  | 'labor_required'
+  | 'quality_checkpoints'
+  | 'depends_on_steps'
 > & {
   equipment_required: string[];
   materials_consumed: MaterialConsumption[];

@@ -1,13 +1,12 @@
-import { apiService } from "./ApiService";
+import { apiService } from './ApiService';
 import {
   InvoiceCustomization,
   InvoiceCustomizationCreate,
   InvoiceCustomizationUpdate,
-  InvoiceCustomizationResponse,
-} from "../models/sales/InvoiceCustomization";
+} from '../models/sales/InvoiceCustomization';
 
 class InvoiceCustomizationService {
-  private baseUrl = "/invoice-customization";
+  private baseUrl = '/invoice-customization';
 
   // Get invoice customization for current tenant
   async getCustomization(): Promise<InvoiceCustomization> {
@@ -17,7 +16,7 @@ class InvoiceCustomizationService {
 
   // Create or update invoice customization
   async createCustomization(
-    customizationData: InvoiceCustomizationCreate
+    customizationData: InvoiceCustomizationCreate,
   ): Promise<InvoiceCustomization> {
     const response = await apiService.post(`${this.baseUrl}/`, customizationData);
     return response.customization;
@@ -25,7 +24,7 @@ class InvoiceCustomizationService {
 
   // Update invoice customization
   async updateCustomization(
-    customizationData: InvoiceCustomizationUpdate
+    customizationData: InvoiceCustomizationUpdate,
   ): Promise<InvoiceCustomization> {
     const response = await apiService.put(`${this.baseUrl}/`, customizationData);
     return response.customization;
@@ -37,19 +36,19 @@ class InvoiceCustomizationService {
   }
 
   // Format currency for display
-  static formatCurrency(amount: number, currency: string = "USD"): string {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
+  static formatCurrency(amount: number, currency: string = 'USD'): string {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
       currency: currency,
     }).format(amount);
   }
 
   // Format date for display
   static formatDate(date: string): string {
-    return new Date(date).toLocaleDateString("en-GB", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
+    return new Date(date).toLocaleDateString('en-GB', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
   }
 }

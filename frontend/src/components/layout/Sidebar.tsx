@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import React, { useState, useMemo, useEffect } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { cn } from "../../lib/utils";
-import { usePlanInfo } from "../../hooks/usePlanInfo";
-import { useAuth } from "../../contexts/AuthContext";
+import React, { useState, useMemo, useEffect } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { cn } from '../../lib/utils';
+import { usePlanInfo } from '../../hooks/usePlanInfo';
+import { useAuth } from '../../contexts/AuthContext';
 import {
   LayoutDashboard,
   FolderOpen,
@@ -44,12 +44,10 @@ import {
   Factory,
   Wrench,
   Stethoscope,
-  Heart,
   Pill,
-  Calculator,
   Building2,
   Settings,
-} from "lucide-react";
+} from 'lucide-react';
 
 interface SubMenuItem {
   text: string;
@@ -71,454 +69,454 @@ interface MenuItem {
 
 const allMenuItems: MenuItem[] = [
   {
-    text: "Dashboard",
+    text: 'Dashboard',
     icon: LayoutDashboard,
-    path: "/dashboard",
-    roles: ["*"],
-    planTypes: ["*"], // Available for all plans
-    gradient: "from-blue-500 to-cyan-500",
+    path: '/dashboard',
+    roles: ['*'],
+    planTypes: ['*'], // Available for all plans
+    gradient: 'from-blue-500 to-cyan-500',
   },
   {
-    text: "CRM",
+    text: 'CRM',
     icon: Users,
-    roles: ["*"],
-    planTypes: ["commerce", "healthcare"], // Commerce and Healthcare focused
-    gradient: "from-blue-500 to-indigo-500",
+    roles: ['*'],
+    planTypes: ['commerce', 'healthcare'], // Commerce and Healthcare focused
+    gradient: 'from-blue-500 to-indigo-500',
     subItems: [
       {
-        text: "Dashboard",
+        text: 'Dashboard',
         icon: LayoutDashboard,
-        path: "/crm",
-        roles: ["*"],
-        planTypes: ["commerce", "healthcare"],
+        path: '/crm',
+        roles: ['*'],
+        planTypes: ['commerce', 'healthcare'],
       },
       {
-        text: "Customers",
+        text: 'Customers',
         icon: Users,
-        path: "/crm/customers",
-        roles: ["*"],
-        planTypes: ["commerce", "healthcare"],
+        path: '/crm/customers',
+        roles: ['*'],
+        planTypes: ['commerce', 'healthcare'],
       },
       {
-        text: "Companies",
+        text: 'Companies',
         icon: Building,
-        path: "/crm/companies",
-        roles: ["*"],
-        planTypes: ["commerce", "healthcare"],
+        path: '/crm/companies',
+        roles: ['*'],
+        planTypes: ['commerce', 'healthcare'],
       },
       {
-        text: "Contacts",
+        text: 'Contacts',
         icon: Users,
-        path: "/crm/contacts",
-        roles: ["*"],
-        planTypes: ["commerce", "healthcare"],
+        path: '/crm/contacts',
+        roles: ['*'],
+        planTypes: ['commerce', 'healthcare'],
       },
       {
-        text: "Leads",
+        text: 'Leads',
         icon: Target,
-        path: "/crm/leads",
-        roles: ["*"],
-        planTypes: ["commerce", "healthcare"],
+        path: '/crm/leads',
+        roles: ['*'],
+        planTypes: ['commerce', 'healthcare'],
       },
       {
-        text: "Opportunities",
+        text: 'Opportunities',
         icon: TrendingUp,
-        path: "/crm/opportunities",
-        roles: ["*"],
-        planTypes: ["commerce", "healthcare"],
+        path: '/crm/opportunities',
+        roles: ['*'],
+        planTypes: ['commerce', 'healthcare'],
       },
     ],
   },
   {
-    text: "Customers",
+    text: 'Customers',
     icon: Users,
-    path: "/crm/customers",
-    roles: ["*"],
-    planTypes: ["workshop"], // Workshop plan - only customers needed
-    gradient: "from-blue-500 to-indigo-500",
+    path: '/crm/customers',
+    roles: ['*'],
+    planTypes: ['workshop'], // Workshop plan - only customers needed
+    gradient: 'from-blue-500 to-indigo-500',
   },
   {
-    text: "Invoicing",
+    text: 'Invoicing',
     icon: Banknote,
-    path: "/sales/invoices",
-    roles: ["*"],
-    planTypes: ["workshop"], // Workshop plan - invoicing needed
-    gradient: "from-green-500 to-emerald-500",
+    path: '/sales/invoices',
+    roles: ['*'],
+    planTypes: ['workshop'], // Workshop plan - invoicing needed
+    gradient: 'from-green-500 to-emerald-500',
   },
   {
-    text: "Sales",
+    text: 'Sales',
     icon: DollarSign,
-    roles: ["*"],
-    planTypes: ["commerce"], // Commerce focused
-    gradient: "from-green-500 to-emerald-500",
+    roles: ['*'],
+    planTypes: ['commerce'], // Commerce focused
+    gradient: 'from-green-500 to-emerald-500',
     subItems: [
       {
-        text: "Quotes",
+        text: 'Quotes',
         icon: FileText,
-        path: "/sales/quotes",
-        roles: ["*"],
-        planTypes: ["commerce"],
+        path: '/sales/quotes',
+        roles: ['*'],
+        planTypes: ['commerce'],
       },
       {
-        text: "Contracts",
+        text: 'Contracts',
         icon: FileCheck,
-        path: "/sales/contracts",
-        roles: ["*"],
-        planTypes: ["commerce"],
+        path: '/sales/contracts',
+        roles: ['*'],
+        planTypes: ['commerce'],
       },
       {
-        text: "Analytics",
+        text: 'Analytics',
         icon: BarChart3,
-        path: "/sales/analytics",
-        roles: ["*"],
-        planTypes: ["commerce"],
+        path: '/sales/analytics',
+        roles: ['*'],
+        planTypes: ['commerce'],
       },
       {
-        text: "Invoices",
+        text: 'Invoices',
         icon: Banknote,
-        path: "/sales/invoices",
-        roles: ["*"],
-        planTypes: ["commerce"],
+        path: '/sales/invoices',
+        roles: ['*'],
+        planTypes: ['commerce'],
       },
     ],
   },
   {
-    text: "POS",
+    text: 'POS',
     icon: Banknote,
-    roles: ["*"],
-    planTypes: ["commerce"], // Commerce focused
-    gradient: "from-yellow-500 to-orange-500",
+    roles: ['*'],
+    planTypes: ['commerce'], // Commerce focused
+    gradient: 'from-yellow-500 to-orange-500',
     subItems: [
       {
-        text: "Dashboard",
+        text: 'Dashboard',
         icon: LayoutDashboard,
-        path: "/pos",
-        roles: ["*"],
-        planTypes: ["commerce"],
+        path: '/pos',
+        roles: ['*'],
+        planTypes: ['commerce'],
       },
       {
-        text: "New Sale",
+        text: 'New Sale',
         icon: Plus,
-        path: "/pos/sale",
-        roles: ["*"],
-        planTypes: ["commerce"],
+        path: '/pos/sale',
+        roles: ['*'],
+        planTypes: ['commerce'],
       },
       {
-        text: "Products",
+        text: 'Products',
         icon: Package,
-        path: "/pos/products",
-        roles: ["*"],
-        planTypes: ["commerce"],
+        path: '/pos/products',
+        roles: ['*'],
+        planTypes: ['commerce'],
       },
       {
-        text: "Transactions",
+        text: 'Transactions',
         icon: Receipt,
-        path: "/pos/transactions",
-        roles: ["*"],
-        planTypes: ["commerce"],
+        path: '/pos/transactions',
+        roles: ['*'],
+        planTypes: ['commerce'],
       },
       {
-        text: "Shifts",
+        text: 'Shifts',
         icon: Clock3,
-        path: "/pos/shifts",
-        roles: ["*"],
-        planTypes: ["commerce"],
+        path: '/pos/shifts',
+        roles: ['*'],
+        planTypes: ['commerce'],
       },
       {
-        text: "Reports",
+        text: 'Reports',
         icon: BarChart3,
-        path: "/pos/reports",
-        roles: ["*"],
-        planTypes: ["commerce"],
+        path: '/pos/reports',
+        roles: ['*'],
+        planTypes: ['commerce'],
       },
     ],
   },
   {
-    text: "Inventory",
+    text: 'Inventory',
     icon: Warehouse,
-    roles: ["*"],
-    planTypes: ["*"], // Available for all plans
-    gradient: "from-teal-500 to-green-500",
+    roles: ['*'],
+    planTypes: ['*'], // Available for all plans
+    gradient: 'from-teal-500 to-green-500',
     subItems: [
       {
-        text: "Dashboard",
+        text: 'Dashboard',
         icon: LayoutDashboard,
-        path: "/inventory",
-        roles: ["*"],
-        planTypes: ["*"],
+        path: '/inventory',
+        roles: ['*'],
+        planTypes: ['*'],
       },
       {
-        text: "Warehouses",
+        text: 'Warehouses',
         icon: Warehouse,
-        path: "/inventory/warehouses",
-        roles: ["*"],
-        planTypes: ["*"],
+        path: '/inventory/warehouses',
+        roles: ['*'],
+        planTypes: ['*'],
       },
       {
-        text: "Storage Locations",
+        text: 'Storage Locations',
         icon: MapPin,
-        path: "/inventory/storage-locations",
-        roles: ["*"],
-        planTypes: ["*"],
+        path: '/inventory/storage-locations',
+        roles: ['*'],
+        planTypes: ['*'],
       },
       {
-        text: "Stock Movements",
+        text: 'Stock Movements',
         icon: Truck,
-        path: "/inventory/stock-movements",
-        roles: ["*"],
-        planTypes: ["*"],
+        path: '/inventory/stock-movements',
+        roles: ['*'],
+        planTypes: ['*'],
       },
       {
-        text: "Purchase Orders",
+        text: 'Purchase Orders',
         icon: ClipboardList,
-        path: "/inventory/purchase-orders",
-        roles: ["*"],
-        planTypes: ["*"],
+        path: '/inventory/purchase-orders',
+        roles: ['*'],
+        planTypes: ['*'],
       },
       {
-        text: "Receiving",
+        text: 'Receiving',
         icon: PackageCheck,
-        path: "/inventory/receiving",
-        roles: ["*"],
-        planTypes: ["*"],
+        path: '/inventory/receiving',
+        roles: ['*'],
+        planTypes: ['*'],
       },
       {
-        text: "Suppliers",
+        text: 'Suppliers',
         icon: Building,
-        path: "/inventory/suppliers",
-        roles: ["*"],
-        planTypes: ["*"],
+        path: '/inventory/suppliers',
+        roles: ['*'],
+        planTypes: ['*'],
       },
       {
-        text: "Stock Alerts",
+        text: 'Stock Alerts',
         icon: AlertTriangle,
-        path: "/inventory/alerts",
-        roles: ["*"],
-        planTypes: ["*"],
+        path: '/inventory/alerts',
+        roles: ['*'],
+        planTypes: ['*'],
       },
     ],
   },
   {
-    text: "HRM",
+    text: 'HRM',
     icon: UserCheck,
-    roles: ["*"],
-    planTypes: ["*"], // Available for all plans
-    gradient: "from-purple-500 to-pink-500",
+    roles: ['*'],
+    planTypes: ['*'], // Available for all plans
+    gradient: 'from-purple-500 to-pink-500',
     subItems: [
       {
-        text: "Employees",
+        text: 'Employees',
         icon: Users,
-        path: "/hrm/employees",
-        roles: ["*"],
-        planTypes: ["*"],
+        path: '/hrm/employees',
+        roles: ['*'],
+        planTypes: ['*'],
       },
       {
-        text: "Job Postings",
+        text: 'Job Postings',
         icon: Briefcase,
-        path: "/hrm/job-postings",
-        roles: ["*"],
-        planTypes: ["*"],
+        path: '/hrm/job-postings',
+        roles: ['*'],
+        planTypes: ['*'],
       },
       {
-        text: "Performance Reviews",
+        text: 'Performance Reviews',
         icon: Award,
-        path: "/hrm/performance-reviews",
-        roles: ["*"],
-        planTypes: ["*"],
+        path: '/hrm/performance-reviews',
+        roles: ['*'],
+        planTypes: ['*'],
       },
       {
-        text: "Leave Management",
+        text: 'Leave Management',
         icon: Calendar,
-        path: "/hrm/leave-management",
-        roles: ["*"],
-        planTypes: ["*"],
+        path: '/hrm/leave-management',
+        roles: ['*'],
+        planTypes: ['*'],
       },
       {
-        text: "Training",
+        text: 'Training',
         icon: GraduationCap,
-        path: "/hrm/training",
-        roles: ["*"],
-        planTypes: ["*"],
+        path: '/hrm/training',
+        roles: ['*'],
+        planTypes: ['*'],
       },
       {
-        text: "Payroll",
+        text: 'Payroll',
         icon: Banknote,
-        path: "/hrm/payroll",
-        roles: ["*"],
-        planTypes: ["*"],
+        path: '/hrm/payroll',
+        roles: ['*'],
+        planTypes: ['*'],
       },
     ],
   },
   {
-    text: "Project Management",
+    text: 'Project Management',
     icon: FolderOpen,
-    roles: ["*"],
-    planTypes: ["*"], // Available for all plans
-    gradient: "from-orange-500 to-red-500",
+    roles: ['*'],
+    planTypes: ['*'], // Available for all plans
+    gradient: 'from-orange-500 to-red-500',
     subItems: [
       {
-        text: "Projects",
+        text: 'Projects',
         icon: FolderOpen,
-        path: "/projects",
-        roles: ["*"],
-        planTypes: ["*"],
+        path: '/projects',
+        roles: ['*'],
+        planTypes: ['*'],
       },
       {
-        text: "Tasks",
+        text: 'Tasks',
         icon: CheckSquare,
-        path: "/tasks",
-        roles: ["*"],
-        planTypes: ["*"],
+        path: '/tasks',
+        roles: ['*'],
+        planTypes: ['*'],
       },
       {
-        text: "Team Members",
+        text: 'Team Members',
         icon: Users,
-        path: "/team",
-        roles: ["*"],
-        planTypes: ["*"],
+        path: '/team',
+        roles: ['*'],
+        planTypes: ['*'],
       },
       {
-        text: "Time Tracking",
+        text: 'Time Tracking',
         icon: Clock,
-        path: "/time-tracking",
-        roles: ["*"],
-        planTypes: ["*"],
+        path: '/time-tracking',
+        roles: ['*'],
+        planTypes: ['*'],
       },
       {
-        text: "Reports",
+        text: 'Reports',
         icon: PieChart,
-        path: "/reports",
-        roles: ["*"],
-        planTypes: ["*"],
+        path: '/reports',
+        roles: ['*'],
+        planTypes: ['*'],
       },
     ],
   },
   {
-    text: "Events",
+    text: 'Events',
     icon: Calendar,
-    path: "/events",
-    roles: ["*"],
-    planTypes: ["*"], // Available for all plans
-    gradient: "from-indigo-500 to-blue-500",
+    path: '/events',
+    roles: ['*'],
+    planTypes: ['*'], // Available for all plans
+    gradient: 'from-indigo-500 to-blue-500',
   },
   // Workshop-specific modules
   {
-    text: "Workshop Management",
+    text: 'Workshop Management',
     icon: Factory,
-    roles: ["*"],
-    planTypes: ["workshop"], // Workshop focused
-    gradient: "from-orange-500 to-red-500",
+    roles: ['*'],
+    planTypes: ['workshop'], // Workshop focused
+    gradient: 'from-orange-500 to-red-500',
     subItems: [
       {
-        text: "Work Orders",
+        text: 'Work Orders',
         icon: Wrench,
-        path: "/work-orders",
-        roles: ["*"],
-        planTypes: ["workshop"],
+        path: '/work-orders',
+        roles: ['*'],
+        planTypes: ['workshop'],
       },
       {
-        text: "Production Planning",
+        text: 'Production Planning',
         icon: Factory,
-        path: "/production",
-        roles: ["*"],
-        planTypes: ["workshop"],
+        path: '/production',
+        roles: ['*'],
+        planTypes: ['workshop'],
       },
       {
-        text: "Quality Control",
+        text: 'Quality Control',
         icon: CheckSquare,
-        path: "/quality-control",
-        roles: ["*"],
-        planTypes: ["workshop"],
+        path: '/quality-control',
+        roles: ['*'],
+        planTypes: ['workshop'],
       },
       {
-        text: "Equipment Maintenance",
+        text: 'Equipment Maintenance',
         icon: Wrench,
-        path: "/maintenance",
-        roles: ["*"],
-        planTypes: ["workshop"],
+        path: '/maintenance',
+        roles: ['*'],
+        planTypes: ['workshop'],
       },
     ],
   },
   // Healthcare-specific modules
   {
-    text: "Healthcare",
+    text: 'Healthcare',
     icon: Stethoscope,
-    roles: ["*"],
-    planTypes: ["healthcare"], // Healthcare focused
-    gradient: "from-blue-500 to-purple-500",
+    roles: ['*'],
+    planTypes: ['healthcare'], // Healthcare focused
+    gradient: 'from-blue-500 to-purple-500',
     subItems: [
       {
-        text: "Patients",
+        text: 'Patients',
         icon: Users,
-        path: "/patients",
-        roles: ["*"],
-        planTypes: ["healthcare"],
+        path: '/patients',
+        roles: ['*'],
+        planTypes: ['healthcare'],
       },
       {
-        text: "Appointments",
+        text: 'Appointments',
         icon: Calendar,
-        path: "/appointments",
-        roles: ["*"],
-        planTypes: ["healthcare"],
+        path: '/appointments',
+        roles: ['*'],
+        planTypes: ['healthcare'],
       },
       {
-        text: "Medical Records",
+        text: 'Medical Records',
         icon: FileText,
-        path: "/medical-records",
-        roles: ["*"],
-        planTypes: ["healthcare"],
+        path: '/medical-records',
+        roles: ['*'],
+        planTypes: ['healthcare'],
       },
       {
-        text: "Medical Supplies",
+        text: 'Medical Supplies',
         icon: Pill,
-        path: "/medical-supplies",
-        roles: ["*"],
-        planTypes: ["healthcare"],
+        path: '/medical-supplies',
+        roles: ['*'],
+        planTypes: ['healthcare'],
       },
     ],
   },
   // Ledger - Available for all plan types
   {
-    text: "Financial Ledger",
+    text: 'Financial Ledger',
     icon: BookOpen,
-    path: "/ledger",
-    roles: ["*"],
-    planTypes: ["*"], // Available for all plans
-    gradient: "from-emerald-500 to-teal-500",
+    path: '/ledger',
+    roles: ['*'],
+    planTypes: ['*'], // Available for all plans
+    gradient: 'from-emerald-500 to-teal-500',
   },
   // Settings - Available for all plan types
   {
-    text: "Settings",
+    text: 'Settings',
     icon: Settings,
-    path: "/settings",
-    roles: ["*"],
-    planTypes: ["*"], // Available for all plans
-    gradient: "from-gray-500 to-slate-500",
+    path: '/settings',
+    roles: ['*'],
+    planTypes: ['*'], // Available for all plans
+    gradient: 'from-gray-500 to-slate-500',
   },
 ];
 
 // Super admin menu items - only show Tenants and Plans
 const superAdminMenuItems: MenuItem[] = [
   {
-    text: "Tenants",
+    text: 'Tenants',
     icon: Building2,
-    path: "/admin/tenants",
-    roles: ["super_admin"],
-    planTypes: ["*"],
-    gradient: "from-purple-500 to-indigo-500",
+    path: '/admin/tenants',
+    roles: ['super_admin'],
+    planTypes: ['*'],
+    gradient: 'from-purple-500 to-indigo-500',
   },
   {
-    text: "Plans",
+    text: 'Plans',
     icon: CreditCard,
-    path: "/admin/plans",
-    roles: ["super_admin"],
-    planTypes: ["*"],
-    gradient: "from-green-500 to-emerald-500",
+    path: '/admin/plans',
+    roles: ['super_admin'],
+    planTypes: ['*'],
+    gradient: 'from-green-500 to-emerald-500',
   },
 ];
 
 export default function Sidebar() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const pathname = usePathname();
   const { planInfo } = usePlanInfo();
@@ -537,7 +535,7 @@ export default function Sidebar() {
   // Filter menu items based on user role and plan type
   const filteredItems = useMemo(() => {
     // If user is super admin, only show super admin menu items
-    if (user?.userRole === "super_admin") {
+    if (user?.userRole === 'super_admin') {
       return superAdminMenuItems.filter((item) => {
         // If searching, check if main item matches
         if (searchQuery.trim()) {
@@ -556,7 +554,7 @@ export default function Sidebar() {
     return allMenuItems.filter((item) => {
       // Check if item is available for current plan
       const isAvailableForPlan =
-        item.planTypes.includes("*") ||
+        item.planTypes.includes('*') ||
         item.planTypes.includes(currentPlanType);
 
       if (!isAvailableForPlan) return false;
@@ -574,7 +572,7 @@ export default function Sidebar() {
         if (item.subItems) {
           return item.subItems.some((subItem) => {
             const subItemAvailable =
-              subItem.planTypes.includes("*") ||
+              subItem.planTypes.includes('*') ||
               subItem.planTypes.includes(currentPlanType);
             return (
               subItemAvailable && subItem.text.toLowerCase().includes(query)
@@ -603,12 +601,12 @@ export default function Sidebar() {
         item.subItems &&
         item.subItems.some((subItem) => {
           // For super admin, all sub-items are available
-          if (user?.userRole === "super_admin") {
+          if (user?.userRole === 'super_admin') {
             return subItem.text.toLowerCase().includes(query);
           }
           // For regular users, check plan availability
           const subItemAvailable =
-            subItem.planTypes.includes("*") ||
+            subItem.planTypes.includes('*') ||
             (planInfo && subItem.planTypes.includes(planInfo.planType));
           return subItemAvailable && subItem.text.toLowerCase().includes(query);
         })
@@ -621,26 +619,26 @@ export default function Sidebar() {
   }, [searchQuery, filteredItems, planInfo, user]);
 
   const isActive = (path: string) => {
-    if (path === "/") {
-      return pathname === "/";
+    if (path === '/') {
+      return pathname === '/';
     }
     return pathname.startsWith(path);
   };
 
   // Show plan info in header
   const getPlanDisplayName = () => {
-    if (user?.userRole === "super_admin") {
-      return "Super Admin";
+    if (user?.userRole === 'super_admin') {
+      return 'Super Admin';
     }
-    if (!planInfo) return "Loading...";
+    if (!planInfo) return 'Loading...';
 
     switch (planInfo.planType) {
-      case "workshop":
-        return "Workshop Master";
-      case "commerce":
-        return "Commerce Pro";
-      case "healthcare":
-        return "Healthcare Suite";
+      case 'workshop':
+        return 'Workshop Master';
+      case 'commerce':
+        return 'Commerce Pro';
+      case 'healthcare':
+        return 'Healthcare Suite';
       default:
         return planInfo.planName;
     }
@@ -679,7 +677,7 @@ export default function Sidebar() {
           />
           {searchQuery && (
             <button
-              onClick={() => setSearchQuery("")}
+              onClick={() => setSearchQuery('')}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
             >
               <X size={16} />
@@ -708,33 +706,33 @@ export default function Sidebar() {
                 <Link
                   href={item.path}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group cursor-pointer",
+                    'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group cursor-pointer',
                     isMainItemActive
-                      ? "bg-gradient-to-r " +
+                      ? 'bg-gradient-to-r ' +
                           item.gradient +
-                          " text-white shadow-lg"
-                      : "text-gray-700 hover:bg-gray-100",
+                          ' text-white shadow-lg'
+                      : 'text-gray-700 hover:bg-gray-100',
                   )}
                 >
                   <div
                     className={cn(
-                      "p-2 rounded-lg transition-colors",
+                      'p-2 rounded-lg transition-colors',
                       isMainItemActive
-                        ? "bg-white/20"
-                        : "bg-gray-100 group-hover:bg-gray-200",
+                        ? 'bg-white/20'
+                        : 'bg-gray-100 group-hover:bg-gray-200',
                     )}
                   >
                     <item.icon
                       className={cn(
-                        "h-5 w-5 transition-colors",
-                        isMainItemActive ? "text-white" : "text-gray-600",
+                        'h-5 w-5 transition-colors',
+                        isMainItemActive ? 'text-white' : 'text-gray-600',
                       )}
                     />
                   </div>
                   <span
                     className={cn(
-                      "font-medium transition-colors flex-1",
-                      isMainItemActive ? "text-white" : "text-gray-700",
+                      'font-medium transition-colors flex-1',
+                      isMainItemActive ? 'text-white' : 'text-gray-700',
                     )}
                   >
                     {item.text}
@@ -747,34 +745,34 @@ export default function Sidebar() {
                 <button
                   onClick={() => toggleExpanded(item.text)}
                   className={cn(
-                    "w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group cursor-pointer",
+                    'w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group cursor-pointer',
                     hasActiveSubItem
-                      ? "bg-gradient-to-r " +
+                      ? 'bg-gradient-to-r ' +
                           item.gradient +
-                          " text-white shadow-lg"
-                      : "text-gray-700 hover:bg-gray-100",
+                          ' text-white shadow-lg'
+                      : 'text-gray-700 hover:bg-gray-100',
                   )}
                 >
                   <div className="flex items-center gap-3">
                     <div
                       className={cn(
-                        "p-2 rounded-lg transition-colors",
+                        'p-2 rounded-lg transition-colors',
                         hasActiveSubItem
-                          ? "bg-white/20"
-                          : "bg-gray-100 group-hover:bg-gray-200",
+                          ? 'bg-white/20'
+                          : 'bg-gray-100 group-hover:bg-gray-200',
                       )}
                     >
                       <item.icon
                         className={cn(
-                          "h-5 w-5 transition-colors",
-                          hasActiveSubItem ? "text-white" : "text-gray-600",
+                          'h-5 w-5 transition-colors',
+                          hasActiveSubItem ? 'text-white' : 'text-gray-600',
                         )}
                       />
                     </div>
                     <span
                       className={cn(
-                        "font-medium transition-colors flex-1",
-                        hasActiveSubItem ? "text-white" : "text-gray-700",
+                        'font-medium transition-colors flex-1',
+                        hasActiveSubItem ? 'text-white' : 'text-gray-700',
                       )}
                     >
                       {item.text}
@@ -783,14 +781,14 @@ export default function Sidebar() {
                   {hasSubItems && (
                     <div
                       className={cn(
-                        "p-1 rounded transition-transform duration-200",
-                        isExpanded ? "rotate-180" : "rotate-0",
+                        'p-1 rounded transition-transform duration-200',
+                        isExpanded ? 'rotate-180' : 'rotate-0',
                       )}
                     >
                       <ChevronDown
                         className={cn(
-                          "h-4 w-4 transition-colors",
-                          hasActiveSubItem ? "text-white" : "text-gray-500",
+                          'h-4 w-4 transition-colors',
+                          hasActiveSubItem ? 'text-white' : 'text-gray-500',
                         )}
                       />
                     </div>
@@ -803,7 +801,7 @@ export default function Sidebar() {
                   {item.subItems!.map((subItem) => {
                     const isSubItemActive = isActive(subItem.path);
                     const subItemAvailable =
-                      subItem.planTypes.includes("*") ||
+                      subItem.planTypes.includes('*') ||
                       (planInfo &&
                         subItem.planTypes.includes(planInfo.planType));
 
@@ -814,33 +812,33 @@ export default function Sidebar() {
                         key={subItem.text}
                         href={subItem.path}
                         className={cn(
-                          "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all duration-200 group",
+                          'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all duration-200 group',
                           isSubItemActive
-                            ? "bg-blue-50 text-blue-700 border-l-2 border-blue-500"
-                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-800",
+                            ? 'bg-blue-50 text-blue-700 border-l-2 border-blue-500'
+                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800',
                         )}
                       >
                         <div
                           className={cn(
-                            "p-1.5 rounded-md transition-colors",
+                            'p-1.5 rounded-md transition-colors',
                             isSubItemActive
-                              ? "bg-blue-100"
-                              : "bg-gray-100 group-hover:bg-gray-200",
+                              ? 'bg-blue-100'
+                              : 'bg-gray-100 group-hover:bg-gray-200',
                           )}
                         >
                           <subItem.icon
                             className={cn(
-                              "h-4 w-4 transition-colors",
+                              'h-4 w-4 transition-colors',
                               isSubItemActive
-                                ? "text-blue-600"
-                                : "text-gray-500",
+                                ? 'text-blue-600'
+                                : 'text-gray-500',
                             )}
                           />
                         </div>
                         <span
                           className={cn(
-                            "text-sm font-medium transition-colors",
-                            isSubItemActive ? "text-blue-700" : "text-gray-600",
+                            'text-sm font-medium transition-colors',
+                            isSubItemActive ? 'text-blue-700' : 'text-gray-600',
                           )}
                         >
                           {subItem.text}

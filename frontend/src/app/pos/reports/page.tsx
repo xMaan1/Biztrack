@@ -1,33 +1,33 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Input } from "@/src/components/ui/input";
-import { Label } from "@/src/components/ui/label";
+} from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Input } from '@/src/components/ui/input';
+import { Label } from '@/src/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select";
-import { Badge } from "@/src/components/ui/badge";
+} from '@/src/components/ui/select';
+import { Badge } from '@/src/components/ui/badge';
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/src/components/ui/tabs";
-import { useAuth } from "@/src/hooks/useAuth";
-import { apiService } from "@/src/services/ApiService";
-import { POSPaymentMethod } from "@/src/models/pos";
+} from '@/src/components/ui/tabs';
+import { useAuth } from '@/src/hooks/useAuth';
+import { apiService } from '@/src/services/ApiService';
+import { POSPaymentMethod } from '@/src/models/pos';
 import {
   BarChart3,
   TrendingUp,
@@ -37,8 +37,9 @@ import {
   ShoppingCart,
   Calendar,
   Download,
-} from "lucide-react";
-import { DashboardLayout } from "../../../components/layout";
+} from 'lucide-react';
+import { DashboardLayout } from '../../../components/layout';
+import { useCurrency } from '../../../contexts/CurrencyContext';
 
 interface SalesReport {
   summary: {
@@ -90,13 +91,14 @@ interface ShiftsReport {
 }
 
 const POSReports = () => {
-  const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("sales");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<string>("all");
-  const [cashierId, setCashierId] = useState<string>("");
-  const [category, setCategory] = useState<string>("all");
+  const { } = useAuth();
+  const { formatCurrency } = useCurrency();
+  const [activeTab, setActiveTab] = useState('sales');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<string>('all');
+  const [cashierId, setCashierId] = useState<string>('');
+  const [category, setCategory] = useState<string>('all');
   const [lowStockOnly, setLowStockOnly] = useState(false);
 
   const [salesReport, setSalesReport] = useState<SalesReport | null>(null);
@@ -107,11 +109,11 @@ const POSReports = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (activeTab === "sales") {
+    if (activeTab === 'sales') {
       fetchSalesReport();
-    } else if (activeTab === "inventory") {
+    } else if (activeTab === 'inventory') {
       fetchInventoryReport();
-    } else if (activeTab === "shifts") {
+    } else if (activeTab === 'shifts') {
       fetchShiftsReport();
     }
   }, [
@@ -128,11 +130,11 @@ const POSReports = () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (dateFrom) params.append("date_from", dateFrom);
-      if (dateTo) params.append("date_to", dateTo);
-      if (paymentMethod && paymentMethod !== "all")
-        params.append("payment_method", paymentMethod);
-      if (cashierId) params.append("cashier_id", cashierId);
+      if (dateFrom) params.append('date_from', dateFrom);
+      if (dateTo) params.append('date_to', dateTo);
+      if (paymentMethod && paymentMethod !== 'all')
+        params.append('payment_method', paymentMethod);
+      if (cashierId) params.append('cashier_id', cashierId);
 
       const response = await apiService.get(
         `/pos/reports/sales?${params.toString()}`,
@@ -148,8 +150,8 @@ const POSReports = () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (lowStockOnly) params.append("low_stock_only", "true");
-      if (category && category !== "all") params.append("category", category);
+      if (lowStockOnly) params.append('low_stock_only', 'true');
+      if (category && category !== 'all') params.append('category', category);
 
       const response = await apiService.get(
         `/pos/reports/inventory?${params.toString()}`,
@@ -165,9 +167,9 @@ const POSReports = () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (dateFrom) params.append("date_from", dateFrom);
-      if (dateTo) params.append("date_to", dateTo);
-      if (cashierId) params.append("cashier_id", cashierId);
+      if (dateFrom) params.append('date_from', dateFrom);
+      if (dateTo) params.append('date_to', dateTo);
+      if (cashierId) params.append('cashier_id', cashierId);
 
       const response = await apiService.get(
         `/pos/reports/shifts?${params.toString()}`,
@@ -180,23 +182,17 @@ const POSReports = () => {
   };
 
   const clearFilters = () => {
-    setDateFrom("");
-    setDateTo("");
-    setPaymentMethod("all");
-    setCashierId("");
-    setCategory("all");
+    setDateFrom('');
+    setDateTo('');
+    setPaymentMethod('all');
+    setCashierId('');
+    setCategory('all');
     setLowStockOnly(false);
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
-  };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US");
+    return new Date(dateString).toLocaleDateString('en-US');
   };
 
   const exportReport = (type: string) => {
@@ -252,7 +248,7 @@ const POSReports = () => {
                 />
               </div>
 
-              {activeTab === "sales" && (
+              {activeTab === 'sales' && (
                 <div className="space-y-2">
                   <Label htmlFor="paymentMethod">Payment Method</Label>
                   <Select
@@ -266,7 +262,7 @@ const POSReports = () => {
                       <SelectItem value="all">All Methods</SelectItem>
                       {Object.values(POSPaymentMethod).map((method) => (
                         <SelectItem key={method} value={method}>
-                          {method.replace("_", " ")}
+                          {method.replace('_', ' ')}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -274,7 +270,7 @@ const POSReports = () => {
                 </div>
               )}
 
-              {activeTab === "inventory" && (
+              {activeTab === 'inventory' && (
                 <div className="space-y-2">
                   <Label htmlFor="category">Category</Label>
                   <Select value={category} onValueChange={setCategory}>
@@ -293,7 +289,7 @@ const POSReports = () => {
                 </div>
               )}
 
-              {activeTab === "inventory" && (
+              {activeTab === 'inventory' && (
                 <div className="flex items-end">
                   <div className="flex items-center space-x-2">
                     <input
@@ -390,8 +386,8 @@ const POSReports = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="text-sm font-medium">
-                        {salesReport.summary.dateRange.from || "All time"} -{" "}
-                        {salesReport.summary.dateRange.to || "Today"}
+                        {salesReport.summary.dateRange.from || 'All time'} -{' '}
+                        {salesReport.summary.dateRange.to || 'Today'}
                       </div>
                       <p className="text-xs text-muted-foreground">
                         Report period
@@ -418,7 +414,7 @@ const POSReports = () => {
                           >
                             <div className="flex items-center space-x-2">
                               <Badge variant="outline">
-                                {method.replace("_", " ")}
+                                {method.replace('_', ' ')}
                               </Badge>
                               <span className="text-sm text-muted-foreground">
                                 {data.count} transactions
@@ -624,7 +620,7 @@ const POSReports = () => {
                                   {product.name}
                                 </div>
                                 <div className="text-sm text-muted-foreground">
-                                  SKU: {product.sku} | Category:{" "}
+                                  SKU: {product.sku} | Category:{' '}
                                   {product.category}
                                 </div>
                               </div>
@@ -633,7 +629,7 @@ const POSReports = () => {
                                   {formatCurrency(product.price)}
                                 </div>
                                 <div className="text-sm text-red-600">
-                                  Stock: {product.stockQuantity} (Min:{" "}
+                                  Stock: {product.stockQuantity} (Min:{' '}
                                   {product.lowStockThreshold})
                                 </div>
                               </div>

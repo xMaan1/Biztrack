@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { User, LoginCredentials } from "@/src/models/auth";
-import { apiService } from "@/src/services/ApiService";
-import { SessionManager } from "@/src/services/SessionManager";
+import { useState, useEffect } from 'react';
+import { User, LoginCredentials } from '@/src/models/auth';
+import { apiService } from '@/src/services/ApiService';
+import { SessionManager } from '@/src/services/SessionManager';
 
 interface Tenant {
   id: string;
@@ -88,7 +88,7 @@ export function useAuth() {
       }
       return false;
     } catch (error) {
-      return false;
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -97,7 +97,9 @@ export function useAuth() {
   const logout = async () => {
     try {
       await apiService.logout();
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to logout';
+      alert(`Logout Error: ${errorMessage}`);
       } finally {
       const sessionManager = new SessionManager();
       setUser(null);
@@ -105,8 +107,8 @@ export function useAuth() {
       setCurrentTenant(null);
       sessionManager.clearSession();
       apiService.setTenantId(null);
-      if (typeof window !== "undefined") {
-        window.location.href = "/login";
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
       }
     }
   };

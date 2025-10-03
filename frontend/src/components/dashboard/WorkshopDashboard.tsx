@@ -1,25 +1,22 @@
-"use client";
+'use client';
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import { Progress } from "../ui/progress";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
+import { Progress } from '../ui/progress';
 import {
   Factory,
   Wrench,
-  Clock,
   Users,
   TrendingUp,
   AlertTriangle,
   CheckCircle2,
   Package,
-  Truck,
   BarChart3,
   Plus,
   ArrowRight,
-} from "lucide-react";
-import { useRouter } from "next/navigation";
+} from 'lucide-react';
 
 interface WorkshopStats {
   totalProjects: number;
@@ -42,18 +39,16 @@ export default function WorkshopDashboard({
   stats,
   onNavigate,
 }: WorkshopDashboardProps) {
-  const router = useRouter();
 
   // Provide default values for optional stats
   const workOrders = stats.workOrders || 0;
   const equipmentMaintenance = stats.equipmentMaintenance || 0;
-  const qualityIssues = stats.qualityIssues || 0;
   const productionEfficiency = stats.productionEfficiency || 0;
 
-  const handleCreateProject = () => onNavigate("/projects/new");
-  const handleCreateWorkOrder = () => onNavigate("/work-orders/new");
-  const handleViewProduction = () => onNavigate("/production");
-  const handleViewMaintenance = () => onNavigate("/maintenance");
+  const handleCreateProject = () => onNavigate('/projects/new');
+  const handleCreateWorkOrder = () => onNavigate('/work-orders/new');
+  const handleViewProduction = () => onNavigate('/production');
+  const handleViewMaintenance = () => onNavigate('/maintenance');
 
   return (
     <div className="space-y-8">
@@ -240,7 +235,7 @@ export default function WorkshopDashboard({
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Button
-              onClick={() => onNavigate("/work-orders")}
+              onClick={() => onNavigate('/work-orders')}
               variant="outline"
               className="h-20 flex-col gap-2"
             >
@@ -249,7 +244,7 @@ export default function WorkshopDashboard({
             </Button>
 
             <Button
-              onClick={() => onNavigate("/quality-control")}
+              onClick={() => onNavigate('/quality-control')}
               variant="outline"
               className="h-20 flex-col gap-2"
             >
@@ -258,7 +253,7 @@ export default function WorkshopDashboard({
             </Button>
 
             <Button
-              onClick={() => onNavigate("/inventory")}
+              onClick={() => onNavigate('/inventory')}
               variant="outline"
               className="h-20 flex-col gap-2"
             >
@@ -267,7 +262,7 @@ export default function WorkshopDashboard({
             </Button>
 
             <Button
-              onClick={() => onNavigate("/reports")}
+              onClick={() => onNavigate('/reports')}
               variant="outline"
               className="h-20 flex-col gap-2"
             >

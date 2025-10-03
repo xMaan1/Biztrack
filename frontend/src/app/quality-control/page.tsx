@@ -1,107 +1,75 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Badge } from "../../components/ui/badge";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "../../components/ui/avatar";
-import { Progress } from "../../components/ui/progress";
+} from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Badge } from '../../components/ui/badge';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../components/ui/select";
+} from '../../components/ui/select';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "../../components/ui/dropdown-menu";
+} from '../../components/ui/dropdown-menu';
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "../../components/ui/tabs";
-import { Alert, AlertDescription } from "../../components/ui/alert";
-import { Separator } from "../../components/ui/separator";
+} from '../../components/ui/tabs';
 import {
   Plus,
-  Search,
   MoreVertical,
   Edit,
   Trash2,
   Eye,
-  Filter,
-  Star,
   Clock,
   Flag,
-  CheckCircle2,
-  Users,
-  FolderOpen,
-  Calendar,
-  DollarSign,
   Loader2,
   RefreshCw,
   CheckSquare,
-  Factory,
   AlertTriangle,
-  Package,
-  BarChart3,
   Play,
-  Pause,
-  Square,
-  Shield,
-  Target,
-  TrendingUp,
-  TrendingDown,
-  FileText,
-  ClipboardList,
   Bug,
   AlertCircle,
   CheckCircle,
   XCircle,
   Clock3,
-  UserCheck,
   FileCheck,
   BarChart,
-  PieChart,
-} from "lucide-react";
+  Calendar,
+  Target,
+} from 'lucide-react';
 import {
   QualityCheckResponse as QualityCheck,
   QualityStatus,
   QualityPriority,
-  InspectionType,
-  QualityStandard,
-  DefectSeverity,
   getQualityStatusColor,
   getQualityPriorityColor,
-  getDefectSeverityColor,
-  getInspectionTypeIcon,
-} from "../../models/qualityControl";
-import QualityControlService from "../../services/QualityControlService";
-import { useAuth } from "../../hooks/useAuth";
-import { DashboardLayout } from "../../components/layout";
-import { cn, getInitials, formatDate } from "../../lib/utils";
+} from '../../models/qualityControl';
+import QualityControlService from '../../services/QualityControlService';
+import { DashboardLayout } from '../../components/layout';
+import { formatDate } from '../../lib/utils';
 
 export default function QualityControlPage() {
-  const { user } = useAuth();
+  const { getCurrencySymbol } = useCurrency();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
 
@@ -113,10 +81,9 @@ export default function QualityControlPage() {
 
   // Quality Checks data
   const [qualityChecks, setQualityChecks] = useState<QualityCheck[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [priorityFilter, setPriorityFilter] = useState<string>("all");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [priorityFilter, setPriorityFilter] = useState<string>('all');
 
   useEffect(() => {
     setMounted(true);
@@ -198,7 +165,7 @@ export default function QualityControlPage() {
             </p>
           </div>
           <div className="flex items-center space-x-2">
-            <Button onClick={() => router.push("/quality-control/checks/new")}>
+            <Button onClick={() => router.push('/quality-control/checks/new')}>
               <Plus className="mr-2 h-4 w-4" />
               New Quality Check
             </Button>
@@ -335,7 +302,7 @@ export default function QualityControlPage() {
                             <Badge
                               className={getQualityStatusColor(check.status)}
                             >
-                              {check.status.replace("_", " ")}
+                              {check.status.replace('_', ' ')}
                             </Badge>
                           </div>
                         ))
@@ -373,7 +340,7 @@ export default function QualityControlPage() {
                                 <p className="text-xs text-muted-foreground">
                                   {check.scheduled_date
                                     ? formatDate(check.scheduled_date)
-                                    : "Not scheduled"}
+                                    : 'Not scheduled'}
                                 </p>
                               </div>
                             </div>
@@ -414,8 +381,8 @@ export default function QualityControlPage() {
                                   {defect.title}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                  {defect.category} •{" "}
-                                  {defect.location || "No location"}
+                                  {defect.category} •{' '}
+                                  {defect.location || 'No location'}
                                 </p>
                               </div>
                             </div>
@@ -424,7 +391,7 @@ export default function QualityControlPage() {
                                 {defect.severity}
                               </Badge>
                               <p className="text-xs text-muted-foreground mt-1">
-                                ${defect.cost_impact}
+                                {getCurrencySymbol()}{defect.cost_impact}
                               </p>
                             </div>
                           </div>
@@ -477,7 +444,7 @@ export default function QualityControlPage() {
                     </SelectContent>
                   </Select>
                   <Button
-                    onClick={() => router.push("/quality-control/checks/new")}
+                    onClick={() => router.push('/quality-control/checks/new')}
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     New Check
@@ -507,7 +474,7 @@ export default function QualityControlPage() {
                               >
                                 {getStatusIcon(check.status)}
                                 <span className="ml-1">
-                                  {check.status.replace("_", " ")}
+                                  {check.status.replace('_', ' ')}
                                 </span>
                               </Badge>
                               <Badge
@@ -529,7 +496,7 @@ export default function QualityControlPage() {
                             <p className="text-xs text-muted-foreground">
                               {check.scheduled_date
                                 ? formatDate(check.scheduled_date)
-                                : "Not scheduled"}
+                                : 'Not scheduled'}
                             </p>
                           </div>
                           <DropdownMenu>
@@ -581,7 +548,7 @@ export default function QualityControlPage() {
                       <div className="mt-6">
                         <Button
                           onClick={() =>
-                            router.push("/quality-control/checks/new")
+                            router.push('/quality-control/checks/new')
                           }
                         >
                           <Plus className="mr-2 h-4 w-4" />

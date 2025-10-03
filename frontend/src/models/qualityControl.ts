@@ -1,45 +1,45 @@
 // Quality Control Models
 
 export enum QualityStatus {
-  PENDING = "pending",
-  IN_PROGRESS = "in_progress",
-  PASSED = "passed",
-  FAILED = "failed",
-  CONDITIONAL_PASS = "conditional_pass",
-  REQUIRES_REVIEW = "requires_review",
+  PENDING = 'pending',
+  IN_PROGRESS = 'in_progress',
+  PASSED = 'passed',
+  FAILED = 'failed',
+  CONDITIONAL_PASS = 'conditional_pass',
+  REQUIRES_REVIEW = 'requires_review',
 }
 
 export enum QualityPriority {
-  LOW = "low",
-  MEDIUM = "medium",
-  HIGH = "high",
-  CRITICAL = "critical",
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+  CRITICAL = 'critical',
 }
 
 export enum InspectionType {
-  VISUAL = "visual",
-  DIMENSIONAL = "dimensional",
-  FUNCTIONAL = "functional",
-  MATERIAL = "material",
-  SAFETY = "safety",
-  ENVIRONMENTAL = "environmental",
-  DOCUMENTATION = "documentation",
+  VISUAL = 'visual',
+  DIMENSIONAL = 'dimensional',
+  FUNCTIONAL = 'functional',
+  MATERIAL = 'material',
+  SAFETY = 'safety',
+  ENVIRONMENTAL = 'environmental',
+  DOCUMENTATION = 'documentation',
 }
 
 export enum DefectSeverity {
-  MINOR = "minor",
-  MAJOR = "major",
-  CRITICAL = "critical",
-  BLOCKER = "blocker",
+  MINOR = 'minor',
+  MAJOR = 'major',
+  CRITICAL = 'critical',
+  BLOCKER = 'blocker',
 }
 
 export enum QualityStandard {
-  ISO_9001 = "iso_9001",
-  ISO_14001 = "iso_14001",
-  ISO_45001 = "iso_45001",
-  FDA = "fda",
-  CE = "ce",
-  CUSTOM = "custom",
+  ISO_9001 = 'iso_9001',
+  ISO_14001 = 'iso_14001',
+  ISO_45001 = 'iso_45001',
+  FDA = 'fda',
+  CE = 'ce',
+  CUSTOM = 'custom',
 }
 
 // Base Models
@@ -318,69 +318,69 @@ export interface QualityDefectFilters {
 export const getQualityStatusColor = (status: QualityStatus): string => {
   switch (status) {
     case QualityStatus.PENDING:
-      return "bg-yellow-100 text-yellow-800";
+      return 'bg-yellow-100 text-yellow-800';
     case QualityStatus.IN_PROGRESS:
-      return "bg-blue-100 text-blue-800";
+      return 'bg-blue-100 text-blue-800';
     case QualityStatus.PASSED:
-      return "bg-green-100 text-green-800";
+      return 'bg-green-100 text-green-800';
     case QualityStatus.FAILED:
-      return "bg-red-100 text-red-800";
+      return 'bg-red-100 text-red-800';
     case QualityStatus.CONDITIONAL_PASS:
-      return "bg-orange-100 text-orange-800";
+      return 'bg-orange-100 text-orange-800';
     case QualityStatus.REQUIRES_REVIEW:
-      return "bg-purple-100 text-purple-800";
+      return 'bg-purple-100 text-purple-800';
     default:
-      return "bg-gray-100 text-gray-800";
+      return 'bg-gray-100 text-gray-800';
   }
 };
 
 export const getQualityPriorityColor = (priority: QualityPriority): string => {
   switch (priority) {
     case QualityPriority.LOW:
-      return "bg-gray-100 text-gray-800";
+      return 'bg-gray-100 text-gray-800';
     case QualityPriority.MEDIUM:
-      return "bg-blue-100 text-blue-800";
+      return 'bg-blue-100 text-blue-800';
     case QualityPriority.HIGH:
-      return "bg-orange-100 text-orange-800";
+      return 'bg-orange-100 text-orange-800';
     case QualityPriority.CRITICAL:
-      return "bg-red-100 text-red-800";
+      return 'bg-red-100 text-red-800';
     default:
-      return "bg-gray-100 text-gray-800";
+      return 'bg-gray-100 text-gray-800';
   }
 };
 
 export const getDefectSeverityColor = (severity: DefectSeverity): string => {
   switch (severity) {
     case DefectSeverity.MINOR:
-      return "bg-gray-100 text-gray-800";
+      return 'bg-gray-100 text-gray-800';
     case DefectSeverity.MAJOR:
-      return "bg-yellow-100 text-yellow-800";
+      return 'bg-yellow-100 text-yellow-800';
     case DefectSeverity.CRITICAL:
-      return "bg-orange-100 text-orange-800";
+      return 'bg-orange-100 text-orange-800';
     case DefectSeverity.BLOCKER:
-      return "bg-red-100 text-red-800";
+      return 'bg-red-100 text-red-800';
     default:
-      return "bg-gray-100 text-gray-800";
+      return 'bg-gray-100 text-gray-800';
   }
 };
 
 export const getInspectionTypeIcon = (type: InspectionType): string => {
   switch (type) {
     case InspectionType.VISUAL:
-      return "👁️";
+      return '👁️';
     case InspectionType.DIMENSIONAL:
-      return "📏";
+      return '📏';
     case InspectionType.FUNCTIONAL:
-      return "⚙️";
+      return '⚙️';
     case InspectionType.MATERIAL:
-      return "🧪";
+      return '🧪';
     case InspectionType.SAFETY:
-      return "🛡️";
+      return '🛡️';
     case InspectionType.ENVIRONMENTAL:
-      return "🌱";
+      return '🌱';
     case InspectionType.DOCUMENTATION:
-      return "📋";
+      return '📋';
     default:
-      return "❓";
+      return '❓';
   }
 };

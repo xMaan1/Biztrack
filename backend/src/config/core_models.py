@@ -67,6 +67,9 @@ class User(Base):
     # Invoice relationships
     created_invoices = relationship("Invoice", back_populates="creator", foreign_keys="Invoice.createdBy")
     
+    # Inventory relationships
+    created_suppliers = relationship("Supplier", back_populates="creator", foreign_keys="Supplier.createdBy")
+    
     # Work Order relationships
     assigned_work_orders = relationship("WorkOrder", foreign_keys="WorkOrder.assigned_to_id", back_populates="assigned_to")
     created_work_orders = relationship("WorkOrder", foreign_keys="WorkOrder.created_by_id", back_populates="created_by")

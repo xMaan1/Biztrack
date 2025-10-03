@@ -1,50 +1,50 @@
 // Maintenance Module Types and Interfaces
 
 export enum MaintenanceStatus {
-  SCHEDULED = "scheduled",
-  IN_PROGRESS = "in_progress",
-  COMPLETED = "completed",
-  OVERDUE = "overdue",
-  CANCELLED = "cancelled",
-  REQUIRES_APPROVAL = "requires_approval",
+  SCHEDULED = 'scheduled',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  OVERDUE = 'overdue',
+  CANCELLED = 'cancelled',
+  REQUIRES_APPROVAL = 'requires_approval',
 }
 
 export enum MaintenancePriority {
-  LOW = "low",
-  MEDIUM = "medium",
-  HIGH = "high",
-  CRITICAL = "critical",
-  EMERGENCY = "emergency",
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+  CRITICAL = 'critical',
+  EMERGENCY = 'emergency',
 }
 
 export enum MaintenanceType {
-  PREVENTIVE = "preventive",
-  CORRECTIVE = "corrective",
-  PREDICTIVE = "predictive",
-  EMERGENCY = "emergency",
-  INSPECTION = "inspection",
-  CALIBRATION = "calibration",
-  REPAIR = "repair",
-  REPLACEMENT = "replacement",
+  PREVENTIVE = 'preventive',
+  CORRECTIVE = 'corrective',
+  PREDICTIVE = 'predictive',
+  EMERGENCY = 'emergency',
+  INSPECTION = 'inspection',
+  CALIBRATION = 'calibration',
+  REPAIR = 'repair',
+  REPLACEMENT = 'replacement',
 }
 
 export enum EquipmentStatus {
-  OPERATIONAL = "operational",
-  MAINTENANCE = "maintenance",
-  REPAIR = "repair",
-  OUT_OF_SERVICE = "out_of_service",
-  RETIRED = "retired",
+  OPERATIONAL = 'operational',
+  MAINTENANCE = 'maintenance',
+  REPAIR = 'repair',
+  OUT_OF_SERVICE = 'out_of_service',
+  RETIRED = 'retired',
 }
 
 export enum MaintenanceCategory {
-  MECHANICAL = "mechanical",
-  ELECTRICAL = "electrical",
-  ELECTRONIC = "electronic",
-  HYDRAULIC = "hydraulic",
-  PNEUMATIC = "pneumatic",
-  SOFTWARE = "software",
-  SAFETY = "safety",
-  GENERAL = "general",
+  MECHANICAL = 'mechanical',
+  ELECTRICAL = 'electrical',
+  ELECTRONIC = 'electronic',
+  HYDRAULIC = 'hydraulic',
+  PNEUMATIC = 'pneumatic',
+  SOFTWARE = 'software',
+  SAFETY = 'safety',
+  GENERAL = 'general',
 }
 
 // Base Models
@@ -299,19 +299,19 @@ export const getMaintenanceStatusColor = (
 ): string => {
   switch (status) {
     case MaintenanceStatus.SCHEDULED:
-      return "bg-blue-100 text-blue-800";
+      return 'bg-blue-100 text-blue-800';
     case MaintenanceStatus.IN_PROGRESS:
-      return "bg-yellow-100 text-yellow-800";
+      return 'bg-yellow-100 text-yellow-800';
     case MaintenanceStatus.COMPLETED:
-      return "bg-green-100 text-green-800";
+      return 'bg-green-100 text-green-800';
     case MaintenanceStatus.OVERDUE:
-      return "bg-red-100 text-red-800";
+      return 'bg-red-100 text-red-800';
     case MaintenanceStatus.CANCELLED:
-      return "bg-gray-100 text-gray-800";
+      return 'bg-gray-100 text-gray-800';
     case MaintenanceStatus.REQUIRES_APPROVAL:
-      return "bg-purple-100 text-purple-800";
+      return 'bg-purple-100 text-purple-800';
     default:
-      return "bg-gray-100 text-gray-800";
+      return 'bg-gray-100 text-gray-800';
   }
 };
 
@@ -320,67 +320,67 @@ export const getMaintenancePriorityColor = (
 ): string => {
   switch (priority) {
     case MaintenancePriority.LOW:
-      return "bg-gray-100 text-gray-800";
+      return 'bg-gray-100 text-gray-800';
     case MaintenancePriority.MEDIUM:
-      return "bg-blue-100 text-blue-800";
+      return 'bg-blue-100 text-blue-800';
     case MaintenancePriority.HIGH:
-      return "bg-orange-100 text-orange-800";
+      return 'bg-orange-100 text-orange-800';
     case MaintenancePriority.CRITICAL:
-      return "bg-red-100 text-red-800";
+      return 'bg-red-100 text-red-800';
     case MaintenancePriority.EMERGENCY:
-      return "bg-red-200 text-red-900";
+      return 'bg-red-200 text-red-900';
     default:
-      return "bg-gray-100 text-gray-800";
+      return 'bg-gray-100 text-gray-800';
   }
 };
 
 export const getEquipmentStatusColor = (status: EquipmentStatus): string => {
   switch (status) {
     case EquipmentStatus.OPERATIONAL:
-      return "bg-green-100 text-green-800";
+      return 'bg-green-100 text-green-800';
     case EquipmentStatus.MAINTENANCE:
-      return "bg-yellow-100 text-yellow-800";
+      return 'bg-yellow-100 text-yellow-800';
     case EquipmentStatus.REPAIR:
-      return "bg-orange-100 text-orange-800";
+      return 'bg-orange-100 text-orange-800';
     case EquipmentStatus.OUT_OF_SERVICE:
-      return "bg-red-100 text-red-800";
+      return 'bg-red-100 text-red-800';
     case EquipmentStatus.RETIRED:
-      return "bg-gray-100 text-gray-800";
+      return 'bg-gray-100 text-gray-800';
     default:
-      return "bg-gray-100 text-gray-800";
+      return 'bg-gray-100 text-gray-800';
   }
 };
 
 export const getMaintenanceTypeIcon = (type: MaintenanceType): string => {
   switch (type) {
     case MaintenanceType.PREVENTIVE:
-      return "🛡️";
+      return '🛡️';
     case MaintenanceType.CORRECTIVE:
-      return "🔧";
+      return '🔧';
     case MaintenanceType.PREDICTIVE:
-      return "📊";
+      return '📊';
     case MaintenanceType.EMERGENCY:
-      return "🚨";
+      return '🚨';
     case MaintenanceType.INSPECTION:
-      return "🔍";
+      return '🔍';
     case MaintenanceType.CALIBRATION:
-      return "⚖️";
+      return '⚖️';
     case MaintenanceType.REPAIR:
-      return "🔨";
+      return '🔨';
     case MaintenanceType.REPLACEMENT:
-      return "🔄";
+      return '🔄';
     default:
-      return "⚙️";
+      return '⚙️';
   }
 };
 
 export const formatMaintenanceDate = (date: string): string => {
-  return new Date(date).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
+  return new Date(date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   });
 };
 

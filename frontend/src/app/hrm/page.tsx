@@ -1,75 +1,46 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
+import React from 'react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
-import { Progress } from "@/src/components/ui/progress";
+} from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Badge } from '@/src/components/ui/badge';
+import { Progress } from '@/src/components/ui/progress';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/src/components/ui/tabs";
+} from '@/src/components/ui/tabs';
 import {
   Users,
-  Building2,
-  Target,
-  TrendingUp,
-  Calendar,
-  Phone,
-  Mail,
-  Plus,
   DollarSign,
-  BarChart3,
   UserPlus,
-  FileText,
-  Clock,
   Award,
   GraduationCap,
   Briefcase,
-  Heart,
-  CreditCard,
-} from "lucide-react";
-import HRMService from "@/src/services/HRMService";
+} from 'lucide-react';
+import HRMService from '@/src/services/HRMService';
 import {
   HRMDashboard,
-  Employee,
-  JobPosting,
-  Application,
-  PerformanceReview,
-  LeaveRequest,
-  Training,
-} from "@/src/models/hrm";
-import Link from "next/link";
-import { DashboardLayout } from "../../components/layout";
+} from '@/src/models/hrm';
+import Link from 'next/link';
+import { DashboardLayout } from '../../components/layout';
+import { useCachedApi } from '../../hooks/useCachedApi';
 
 export default function HRMDashboardPage() {
-  const [dashboard, setDashboard] = useState<HRMDashboard | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    loadDashboard();
-  }, []);
-
-  const loadDashboard = async () => {
-    try {
-      setLoading(true);
-      const data = await HRMService.getDashboard();
-      setDashboard(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load dashboard");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { getCurrencySymbol } = useCurrency();
+  const { data: dashboard, loading, error, refetch } = useCachedApi<HRMDashboard>(
+    'hrm_dashboard',
+    () => HRMService.getDashboard(),
+    { ttl: 30000 }
+  );
 
   if (loading) {
     return (
@@ -86,7 +57,7 @@ export default function HRMDashboardPage() {
       <div className="container mx-auto p-6">
         <div className="text-center">
           <div className="text-red-600 mb-4">Error: {error}</div>
-          <Button onClick={loadDashboard}>Retry</Button>
+          <Button onClick={refetch}>Retry</Button>
         </div>
       </div>
     );
@@ -173,7 +144,7 @@ export default function HRMDashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${dashboard.metrics.averageSalary.toLocaleString()}
+                {getCurrencySymbol()}{dashboard.metrics.averageSalary.toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">Monthly average</p>
             </CardContent>
@@ -259,7 +230,7 @@ export default function HRMDashboardPage() {
                               {HRMService.getDepartmentIcon(dept)}
                             </span>
                             <span className="capitalize">
-                              {dept.replace("_", " ")}
+                              {dept.replace('_', ' ')}
                             </span>
                           </div>
                           <Badge variant="secondary">
@@ -351,7 +322,7 @@ export default function HRMDashboardPage() {
                             employee.employeeType,
                           )}
                         >
-                          {employee.employeeType.replace("_", " ")}
+                          {employee.employeeType.replace('_', ' ')}
                         </Badge>
                       </div>
                     </div>
@@ -425,7 +396,7 @@ export default function HRMDashboardPage() {
                               app.status,
                             )}
                           >
-                            {app.status.replace("_", " ")}
+                            {app.status.replace('_', ' ')}
                           </Badge>
                         </div>
                       </div>
@@ -470,7 +441,7 @@ export default function HRMDashboardPage() {
                               review.status,
                             )}
                           >
-                            {review.status.replace("_", " ")}
+                            {review.status.replace('_', ' ')}
                           </Badge>
                           <span className="text-xs text-gray-500">
                             {HRMService.formatDate(review.reviewDate)}
@@ -510,7 +481,7 @@ export default function HRMDashboardPage() {
                             {leave.leaveType} - {leave.totalDays} days
                           </div>
                           <div className="text-xs text-gray-500">
-                            {HRMService.formatDate(leave.startDate)} -{" "}
+                            {HRMService.formatDate(leave.startDate)} -{' '}
                             {HRMService.formatDate(leave.endDate)}
                           </div>
                         </div>
@@ -557,7 +528,7 @@ export default function HRMDashboardPage() {
                             {program.provider}
                           </div>
                           <div className="text-xs text-gray-500">
-                            {HRMService.formatDate(program.startDate)} -{" "}
+                            {HRMService.formatDate(program.startDate)} -{' '}
                             {HRMService.formatDate(program.endDate)}
                           </div>
                         </div>
@@ -567,10 +538,10 @@ export default function HRMDashboardPage() {
                               program.status,
                             )}
                           >
-                            {program.status.replace("_", " ")}
+                            {program.status.replace('_', ' ')}
                           </Badge>
                           <span className="text-sm font-medium">
-                            ${program.cost}
+                            {getCurrencySymbol()}{program.cost}
                           </span>
                         </div>
                       </div>

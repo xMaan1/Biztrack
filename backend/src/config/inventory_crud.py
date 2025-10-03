@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from .inventory_models import Product, Warehouse, Supplier, PurchaseOrder, Receiving, StorageLocation
+from .inventory_models import Product, Warehouse, Supplier, PurchaseOrder, Receiving, StorageLocation, StockMovement
 
 # Product functions
 def get_product_by_id(product_id: str, db: Session, tenant_id: str = None) -> Optional[Product]:
@@ -129,19 +129,19 @@ def delete_warehouse(warehouse_id: str, db: Session, tenant_id: str = None) -> b
 def get_supplier_by_id(supplier_id: str, db: Session, tenant_id: str = None) -> Optional[Supplier]:
     query = db.query(Supplier).filter(Supplier.id == supplier_id)
     if tenant_id:
-        query = query.filter(Supplier.tenant_id == tenant_id)
+        query = query.filter(Supplier.tenantId == tenant_id)
     return query.first()
 
 def get_supplier_by_code(code: str, db: Session, tenant_id: str = None) -> Optional[Supplier]:
     query = db.query(Supplier).filter(Supplier.code == code)
     if tenant_id:
-        query = query.filter(Supplier.tenant_id == tenant_id)
+        query = query.filter(Supplier.tenantId == tenant_id)
     return query.first()
 
 def get_all_suppliers(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Supplier]:
     query = db.query(Supplier)
     if tenant_id:
-        query = query.filter(Supplier.tenant_id == tenant_id)
+        query = query.filter(Supplier.tenantId == tenant_id)
     return query.order_by(Supplier.createdAt.desc()).offset(skip).limit(limit).all()
 
 # Alias function for backward compatibility
@@ -152,7 +152,7 @@ def get_suppliers(db: Session, tenant_id: str = None, skip: int = 0, limit: int 
 def get_active_suppliers(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Supplier]:
     query = db.query(Supplier).filter(Supplier.isActive == True)
     if tenant_id:
-        query = query.filter(Supplier.tenant_id == tenant_id)
+        query = query.filter(Supplier.tenantId == tenant_id)
     return query.order_by(Supplier.createdAt.desc()).offset(skip).limit(limit).all()
 
 def create_supplier(supplier_data: dict, db: Session) -> Supplier:
@@ -358,29 +358,51 @@ def get_storage_locations(db: Session, tenant_id: str = None, skip: int = 0, lim
     return get_all_storage_locations(db, tenant_id, skip, limit)
 
 # Stock Movement functions
-def get_stock_movement_by_id(movement_id: str, db: Session, tenant_id: str = None) -> Optional[Any]:
+def get_stock_movement_by_id(movement_id: str, db: Session, tenant_id: str = None) -> Optional[StockMovement]:
     """Get a stock movement by ID"""
-    # Note: This function needs the StockMovement model to be imported
-    # For now, returning None as placeholder
-    return None
+    query = db.query(StockMovement).filter(StockMovement.id == movement_id)
+    if tenant_id:
+        query = query.filter(StockMovement.tenant_id == tenant_id)
+    return query.first()
 
-def get_stock_movements(db: Session, tenant_id: str = None, product_id: str = None, warehouse_id: str = None, skip: int = 0, limit: int = 100) -> List[Any]:
+def get_stock_movements(db: Session, tenant_id: str = None, product_id: str = None, warehouse_id: str = None, skip: int = 0, limit: int = 100) -> List[StockMovement]:
     """Get stock movements with optional filters"""
-    # Note: This function needs the StockMovement model to be imported
-    # For now, returning empty list as placeholder
-    return []
+    query = db.query(StockMovement)
+    
+    if tenant_id:
+        query = query.filter(StockMovement.tenant_id == tenant_id)
+    if product_id:
+        query = query.filter(StockMovement.productId == product_id)
+    if warehouse_id:
+        query = query.filter(StockMovement.warehouseId == warehouse_id)
+    
+    return query.order_by(StockMovement.createdAt.desc()).offset(skip).limit(limit).all()
 
-def create_stock_movement(movement_data: dict, db: Session) -> Any:
+def create_stock_movement(movement_data: dict, db: Session) -> StockMovement:
     """Create a new stock movement"""
-    # Note: This function needs the StockMovement model to be imported
-    # For now, returning None as placeholder
-    return None
+    db_movement = StockMovement(**movement_data)
+    db.add(db_movement)
+    db.commit()
+    db.refresh(db_movement)
+    return db_movement
 
-def update_stock_movement(movement_id: str, update_data: dict, db: Session, tenant_id: str = None) -> Optional[Any]:
+def update_stock_movement(movement_id: str, update_data: dict, db: Session, tenant_id: str = None) -> Optional[StockMovement]:
     """Update a stock movement"""
-    # Note: This function needs the StockMovement model to be imported
-    # For now, returning None as placeholder
-    return None
+    query = db.query(StockMovement).filter(StockMovement.id == movement_id)
+    if tenant_id:
+        query = query.filter(StockMovement.tenant_id == tenant_id)
+    
+    db_movement = query.first()
+    if not db_movement:
+        return None
+    
+    for key, value in update_data.items():
+        if hasattr(db_movement, key):
+            setattr(db_movement, key, value)
+    
+    db.commit()
+    db.refresh(db_movement)
+    return db_movement
 
 # Inventory dashboard functions
 def get_inventory_dashboard_stats(db: Session, tenant_id: str) -> Dict[str, Any]:

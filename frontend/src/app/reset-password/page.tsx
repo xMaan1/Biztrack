@@ -1,56 +1,56 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { Alert, AlertDescription } from "../../components/ui/alert";
-import { Loader2, ArrowLeft, Eye, EyeOff, CheckCircle } from "lucide-react";
-import { apiService } from "../../services/ApiService";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { Alert, AlertDescription } from '../../components/ui/alert';
+import { Loader2, ArrowLeft, Eye, EyeOff, CheckCircle } from 'lucide-react';
+import { apiService } from '../../services/ApiService';
 
 export default function ResetPasswordPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [step, setStep] = useState(1); // 1: email, 2: password
-  const [resetToken, setResetToken] = useState(""); // Store the reset token
+  const [resetToken, setResetToken] = useState(''); // Store the reset token
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setError('');
 
     try {
       // Verify email exists by attempting to get a reset token
-      const response = await apiService.post("/auth/reset-password", { email });
-      
+      const response = await apiService.post('/auth/reset-password', { email });
+
       // Check if token was returned (user exists)
       if (response.token) {
         setResetToken(response.token);
         setStep(2); // Move to password step
       } else {
-        setError("No account found with this email address.");
+        setError('No account found with this email address.');
       }
     } catch (err: any) {
       if (err.response) {
         setError(
           err.response.data?.detail ||
             err.response.data?.message ||
-            "An error occurred",
+            'An error occurred',
         );
       } else if (err.request) {
-        setError("No response from server. Please check your connection.");
+        setError('No response from server. Please check your connection.');
       } else {
-        setError(err.message || "An error occurred");
+        setError(err.message || 'An error occurred');
       }
     } finally {
       setLoading(false);
@@ -60,41 +60,41 @@ export default function ResetPasswordPage() {
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setError('');
 
     // Validate passwords match
     if (newPassword !== confirmPassword) {
-      setError("Passwords do not match");
+      setError('Passwords do not match');
       setLoading(false);
       return;
     }
 
     // Validate password strength
     if (newPassword.length < 6) {
-      setError("Password must be at least 6 characters long");
+      setError('Password must be at least 6 characters long');
       setLoading(false);
       return;
     }
 
     try {
       // Use the stored reset token to reset the password
-      await apiService.post("/auth/reset-password/confirm", {
+      await apiService.post('/auth/reset-password/confirm', {
         token: resetToken,
-        new_password: newPassword
+        new_password: newPassword,
       });
-      
+
       setSuccess(true);
     } catch (err: any) {
       if (err.response) {
         setError(
           err.response.data?.detail ||
             err.response.data?.message ||
-            "An error occurred",
+            'An error occurred',
         );
       } else if (err.request) {
-        setError("No response from server. Please check your connection.");
+        setError('No response from server. Please check your connection.');
       } else {
-        setError(err.message || "An error occurred");
+        setError(err.message || 'An error occurred');
       }
     } finally {
       setLoading(false);
@@ -126,7 +126,7 @@ export default function ResetPasswordPage() {
             </Alert>
 
             <Button
-              onClick={() => router.push("/login")}
+              onClick={() => router.push('/login')}
               className="w-full modern-button"
             >
               Continue to Login
@@ -152,11 +152,11 @@ export default function ResetPasswordPage() {
       <Card className="w-full max-w-md modern-card">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            {step === 1 ? "Reset Password" : "Set New Password"}
+            {step === 1 ? 'Reset Password' : 'Set New Password'}
           </CardTitle>
           <p className="text-gray-600 mt-2">
-            {step === 1 
-              ? "Enter your email address to reset your password."
+            {step === 1
+              ? 'Enter your email address to reset your password.'
               : `Setting new password for ${email}`
             }
           </p>
@@ -197,7 +197,7 @@ export default function ResetPasswordPage() {
                     Verifying Email...
                   </>
                 ) : (
-                  "Continue"
+                  'Continue'
                 )}
               </Button>
             </form>
@@ -208,7 +208,7 @@ export default function ResetPasswordPage() {
                 <div className="relative">
                   <Input
                     id="newPassword"
-                    type={showPassword ? "text" : "password"}
+                    type={showPassword ? 'text' : 'password'}
                     required
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
@@ -236,7 +236,7 @@ export default function ResetPasswordPage() {
                 <div className="relative">
                   <Input
                     id="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
+                    type={showConfirmPassword ? 'text' : 'password'}
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
@@ -279,18 +279,18 @@ export default function ResetPasswordPage() {
                       Resetting Password...
                     </>
                   ) : (
-                    "Reset Password"
+                    'Reset Password'
                   )}
                 </Button>
-                
+
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => {
                     setStep(1);
-                    setError("");
-                    setNewPassword("");
-                    setConfirmPassword("");
+                    setError('');
+                    setNewPassword('');
+                    setConfirmPassword('');
                   }}
                   className="w-full"
                 >
@@ -302,7 +302,7 @@ export default function ResetPasswordPage() {
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Remember your password?{" "}
+              Remember your password?{' '}
               <Link href="/login" className="text-blue-600 hover:text-blue-800 font-medium">
                 Sign in
               </Link>

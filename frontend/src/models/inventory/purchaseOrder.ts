@@ -1,11 +1,11 @@
 export enum PurchaseOrderStatus {
-  DRAFT = "draft",
-  SUBMITTED = "submitted",
-  APPROVED = "approved",
-  ORDERED = "ordered",
-  PARTIALLY_RECEIVED = "partially_received",
-  RECEIVED = "received",
-  CANCELLED = "cancelled",
+  DRAFT = 'draft',
+  SUBMITTED = 'submitted',
+  APPROVED = 'approved',
+  ORDERED = 'ordered',
+  PARTIALLY_RECEIVED = 'partially_received',
+  RECEIVED = 'received',
+  CANCELLED = 'cancelled',
 }
 
 export interface PurchaseOrderItem {
@@ -52,6 +52,8 @@ export interface PurchaseOrder {
   orderNumber: string;
   supplierId: string;
   supplierName: string;
+  warehouseId: string;
+  orderDate: string;
   expectedDeliveryDate: string;
   status: PurchaseOrderStatus;
   totalAmount: number;
@@ -65,6 +67,8 @@ export interface PurchaseOrderCreate {
   orderNumber: string;
   supplierId: string;
   supplierName: string;
+  warehouseId: string;
+  orderDate: string;
   expectedDeliveryDate: string;
   notes?: string;
   items: PurchaseOrderItemCreate[];
@@ -74,6 +78,8 @@ export interface PurchaseOrderUpdate {
   orderNumber?: string;
   supplierId?: string;
   supplierName?: string;
+  warehouseId?: string;
+  orderDate?: string;
   expectedDeliveryDate?: string;
   status?: PurchaseOrderStatus;
   totalAmount?: number;

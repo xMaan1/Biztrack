@@ -1,35 +1,35 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "../ui/dialog";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Textarea } from "../ui/textarea";
-import { Label } from "../ui/label";
-import { Badge } from "../ui/badge";
-import { Alert, AlertDescription } from "../ui/alert";
+} from '../ui/dialog';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Textarea } from '../ui/textarea';
+import { Label } from '../ui/label';
+import { Badge } from '../ui/badge';
+import { Alert, AlertDescription } from '../ui/alert';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
-import { Calendar, X, Loader2, AlertCircle, DollarSign } from "lucide-react";
+} from '../ui/select';
+import { Calendar, Loader2, AlertCircle, DollarSign } from 'lucide-react';
 import {
   Project,
   ProjectCreate,
   ProjectUpdate,
   ProjectStatus,
   ProjectPriority,
-} from "../../models/project/Project";
-import { User } from "../../models/auth";
+} from '../../models/project/Project';
+import { User } from '../../models/auth';
 
 interface ProjectDialogProps {
   open: boolean;
@@ -42,18 +42,18 @@ interface ProjectDialogProps {
 }
 
 const statusOptions = [
-  { value: ProjectStatus.PLANNING, label: "Planning" },
-  { value: ProjectStatus.IN_PROGRESS, label: "In Progress" },
-  { value: ProjectStatus.ON_HOLD, label: "On Hold" },
-  { value: ProjectStatus.COMPLETED, label: "Completed" },
-  { value: ProjectStatus.CANCELLED, label: "Cancelled" },
+  { value: ProjectStatus.PLANNING, label: 'Planning' },
+  { value: ProjectStatus.IN_PROGRESS, label: 'In Progress' },
+  { value: ProjectStatus.ON_HOLD, label: 'On Hold' },
+  { value: ProjectStatus.COMPLETED, label: 'Completed' },
+  { value: ProjectStatus.CANCELLED, label: 'Cancelled' },
 ];
 
 const priorityOptions = [
-  { value: ProjectPriority.LOW, label: "Low" },
-  { value: ProjectPriority.MEDIUM, label: "Medium" },
-  { value: ProjectPriority.HIGH, label: "High" },
-  { value: ProjectPriority.CRITICAL, label: "Critical" },
+  { value: ProjectPriority.LOW, label: 'Low' },
+  { value: ProjectPriority.MEDIUM, label: 'Medium' },
+  { value: ProjectPriority.HIGH, label: 'High' },
+  { value: ProjectPriority.CRITICAL, label: 'Critical' },
 ];
 
 export const ProjectDialog: React.FC<ProjectDialogProps> = ({
@@ -66,15 +66,15 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
   error,
 }) => {
   const [formData, setFormData] = useState<ProjectCreate | ProjectUpdate>({
-    name: "",
-    description: "",
+    name: '',
+    description: '',
     status: ProjectStatus.PLANNING,
     priority: ProjectPriority.MEDIUM,
-    startDate: "",
-    endDate: "",
+    startDate: '',
+    endDate: '',
     budget: 0,
-    notes: "",
-    projectManagerId: "",
+    notes: '',
+    projectManagerId: '',
     teamMemberIds: [],
   });
 
@@ -86,14 +86,14 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
     if (project) {
       setFormData({
         name: project.name,
-        description: project.description || "",
+        description: project.description || '',
         status: project.status,
         priority: project.priority,
-        startDate: project.startDate || "",
-        endDate: project.endDate || "",
+        startDate: project.startDate || '',
+        endDate: project.endDate || '',
         budget: project.budget || 0,
-        notes: project.notes || "",
-        projectManagerId: project.projectManager?.id || "",
+        notes: project.notes || '',
+        projectManagerId: project.projectManager?.id || '',
         teamMemberIds: project.teamMembers?.map((member) => member.id) || [],
       });
       setSelectedTeamMembers(
@@ -101,25 +101,25 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
           id: member.id,
           userId: member.id, // fallback for userId
           userName: member.name,
-          userRole: "team_member", // default role
+          userRole: 'team_member', // default role
           email: member.email,
-          firstName: member.name.split(" ")[0] || "",
-          lastName: member.name.split(" ").slice(1).join(" ") || "",
+          firstName: member.name.split(' ')[0] || '',
+          lastName: member.name.split(' ').slice(1).join(' ') || '',
           avatar: member.avatar,
         })),
       );
     } else {
       setFormData({
-        name: "",
-        description: "",
+        name: '',
+        description: '',
         status: ProjectStatus.PLANNING,
         priority: ProjectPriority.MEDIUM,
-        startDate: "",
-        endDate: "",
+        startDate: '',
+        endDate: '',
         completionPercent: 0,
         budget: 0,
-        notes: "",
-        projectManagerId: "",
+        notes: '',
+        projectManagerId: '',
         teamMemberIds: [],
       });
       setSelectedTeamMembers([]);
@@ -149,7 +149,7 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
 
     setSelectedTeamMembers(newTeamMembers);
     handleInputChange(
-      "teamMemberIds",
+      'teamMemberIds',
       newTeamMembers.map((user) => user.userId),
     );
   };
@@ -171,7 +171,7 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold bg-gradient-primary bg-clip-text text-transparent">
-            {isEditing ? "Edit Project" : "Create Project"}
+            {isEditing ? 'Edit Project' : 'Create Project'}
           </DialogTitle>
         </DialogHeader>
 
@@ -189,7 +189,7 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
+                onChange={(e) => handleInputChange('name', e.target.value)}
                 placeholder="Enter project name"
                 className="mt-1"
               />
@@ -201,7 +201,7 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
                 id="description"
                 value={formData.description}
                 onChange={(e) =>
-                  handleInputChange("description", e.target.value)
+                  handleInputChange('description', e.target.value)
                 }
                 placeholder="Enter project description"
                 rows={3}
@@ -213,7 +213,7 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
               <Label htmlFor="status">Status</Label>
               <Select
                 value={formData.status}
-                onValueChange={(value) => handleInputChange("status", value)}
+                onValueChange={(value) => handleInputChange('status', value)}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select status" />
@@ -232,7 +232,7 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
               <Label htmlFor="priority">Priority</Label>
               <Select
                 value={formData.priority}
-                onValueChange={(value) => handleInputChange("priority", value)}
+                onValueChange={(value) => handleInputChange('priority', value)}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select priority" />
@@ -252,7 +252,7 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
               <Select
                 value={formData.projectManagerId}
                 onValueChange={(value) =>
-                  handleInputChange("projectManagerId", value)
+                  handleInputChange('projectManagerId', value)
                 }
               >
                 <SelectTrigger className="mt-1">
@@ -261,8 +261,8 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
                 <SelectContent>
                   {users.map((user) => (
                     <SelectItem
-                      key={user.userId ?? user.id ?? ""}
-                      value={user.userId ?? user.id ?? ""}
+                      key={user.userId ?? user.id ?? ''}
+                      value={user.userId ?? user.id ?? ''}
                     >
                       {user.firstName} {user.lastName} ({user.email})
                     </SelectItem>
@@ -279,7 +279,7 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
                   type="date"
                   value={formData.startDate}
                   onChange={(e) =>
-                    handleInputChange("startDate", e.target.value)
+                    handleInputChange('startDate', e.target.value)
                   }
                   className="pl-10"
                 />
@@ -294,7 +294,7 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
                   id="endDate"
                   type="date"
                   value={formData.endDate}
-                  onChange={(e) => handleInputChange("endDate", e.target.value)}
+                  onChange={(e) => handleInputChange('endDate', e.target.value)}
                   min={formData.startDate}
                   className="pl-10"
                 />
@@ -310,7 +310,7 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
                   type="number"
                   value={formData.budget}
                   onChange={(e) =>
-                    handleInputChange("budget", parseFloat(e.target.value) || 0)
+                    handleInputChange('budget', parseFloat(e.target.value) || 0)
                   }
                   min="0"
                   step="0.01"
@@ -359,7 +359,7 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
               <Textarea
                 id="notes"
                 value={formData.notes}
-                onChange={(e) => handleInputChange("notes", e.target.value)}
+                onChange={(e) => handleInputChange('notes', e.target.value)}
                 placeholder="Additional notes about the project"
                 rows={3}
                 className="mt-1"
@@ -382,13 +382,13 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
             onClick={handleSubmit}
             disabled={
               loading ||
-              !(formData.name ?? "").trim() ||
-              !(formData.projectManagerId ?? "")
+              !(formData.name ?? '').trim() ||
+              !(formData.projectManagerId ?? '')
             }
             className="modern-button"
           >
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {loading ? "Saving..." : isEditing ? "Update" : "Create"}
+            {loading ? 'Saving...' : isEditing ? 'Update' : 'Create'}
           </Button>
         </DialogFooter>
       </DialogContent>

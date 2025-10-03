@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Boolean, DateTime, Float, Integer, Text, JSON, ForeignKey
+from sqlalchemy import Column, String, Boolean, DateTime, Float, Integer, Text, JSON, ForeignKey, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 from .database_config import Base
@@ -36,6 +36,16 @@ class Project(Base):
     # Quality Control relationships
     quality_checks = relationship("QualityCheck", back_populates="project")
     quality_defects = relationship("QualityDefect", back_populates="project")
+    
+    # Indexes for performance optimization
+    __table_args__ = (
+        Index("idx_projects_tenant_id", "tenant_id"),
+        Index("idx_projects_status", "status"),
+        Index("idx_projects_priority", "priority"),
+        Index("idx_projects_created_at", "createdAt"),
+        Index("idx_projects_manager", "projectManagerId"),
+        Index("idx_projects_tenant_status", "tenant_id", "status"),
+    )
 
 class Task(Base):
     __tablename__ = "tasks"
