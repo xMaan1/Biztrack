@@ -5,7 +5,7 @@ charset-normalizer==3.4.3
 greenlet==3.2.4
 idna==3.10
 jmespath==1.0.1
-numpy==1.26.4
+numpy>=2.1.0
 pandas==2.1.4
 psycopg2-binary==2.9.10
 PyPDF2==3.0.1
