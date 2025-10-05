@@ -25,11 +25,11 @@ from .sales_models import (
 
 from .hrm_models import (
     Employee, JobPosting, PerformanceReview, TimeEntry, LeaveRequest, Payroll, Benefits,
-    Training, TrainingEnrollment, Application
+    Training, TrainingEnrollment, Application, Supplier
 )
 
 from .inventory_models import (
-    Product, Warehouse, Supplier, PurchaseOrder, Receiving,
+    Product, Warehouse, PurchaseOrder, Receiving,
     StorageLocation, StockMovement
 )
 
@@ -164,6 +164,10 @@ from .hrm_crud import (
     get_application_by_id, get_all_applications, get_applications,
     create_application, update_application, delete_application,
     
+    # Supplier functions
+    get_supplier_by_id, get_supplier_by_code, get_all_suppliers, get_suppliers, get_active_suppliers,
+    create_supplier, update_supplier, delete_supplier,
+    
     # HRM Dashboard functions
     get_hrm_dashboard_data
 )
@@ -182,10 +186,6 @@ from .inventory_crud import (
     
     # Stock Movement functions
     get_stock_movements, get_stock_movement_by_id, create_stock_movement, update_stock_movement,
-    
-    # Supplier functions
-    get_supplier_by_id, get_supplier_by_code, get_all_suppliers, get_suppliers, get_active_suppliers,
-    create_supplier, update_supplier, delete_supplier,
     
     # PurchaseOrder functions
     get_purchase_order_by_id, get_purchase_order_by_number, get_all_purchase_orders, get_purchase_orders,

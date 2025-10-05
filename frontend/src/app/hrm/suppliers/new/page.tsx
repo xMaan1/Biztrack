@@ -14,7 +14,7 @@ import { Label } from '../../../../components/ui/label';
 import { Switch } from '../../../../components/ui/switch';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { useAuth } from '../../../../contexts/AuthContext';
-import { inventoryService } from '../../../../services/InventoryService';
+import HRMService from '../../../../services/HRMService';
 import { DashboardLayout } from '../../../../components/layout';
 import { toast } from 'sonner';
 
@@ -61,8 +61,8 @@ export default function NewSupplierPage() {
           : undefined,
       };
 
-      await inventoryService.createSupplier(supplierData);
-      router.push('/inventory/suppliers');
+      await HRMService.createSupplier(supplierData);
+      router.push('/hrm/suppliers');
     } catch (error) {
       toast.error('Failed to create supplier. Please try again.');
     } finally {

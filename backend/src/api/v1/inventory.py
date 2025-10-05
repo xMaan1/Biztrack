@@ -11,7 +11,6 @@ from ...models.unified_models import (
     Warehouse, WarehouseCreate, WarehouseUpdate, WarehouseResponse, WarehousesResponse,
     StorageLocation, StorageLocationCreate, StorageLocationUpdate, StorageLocationResponse, StorageLocationsResponse,
     StockMovement, StockMovementCreate, StockMovementUpdate, StockMovementResponse, StockMovementsResponse,
-    Supplier, SupplierCreate, SupplierUpdate, SupplierResponse, SuppliersResponse,
     PurchaseOrder, PurchaseOrderCreate, PurchaseOrderUpdate, PurchaseOrderResponse, PurchaseOrdersResponse,
     Receiving, ReceivingCreate, ReceivingUpdate, ReceivingResponse, ReceivingsResponse,
     InventoryDashboardStats, StockAlert
@@ -20,7 +19,6 @@ from ...config.database import (
     get_warehouses, get_warehouse_by_id, create_warehouse, update_warehouse, delete_warehouse,
     get_storage_locations, get_storage_location_by_id, create_storage_location, update_storage_location, delete_storage_location,
     get_stock_movements, get_stock_movement_by_id, create_stock_movement, update_stock_movement,
-    get_suppliers, get_supplier_by_id, get_supplier_by_code, create_supplier, update_supplier, delete_supplier,
     get_purchase_orders, get_purchase_orders_by_status, get_purchase_order_by_id, create_purchase_order, update_purchase_order, delete_purchase_order,
     get_receivings, get_receiving_by_id, create_receiving, update_receiving, delete_receiving,
     get_inventory_dashboard_stats
@@ -367,91 +365,6 @@ def update_stock_movement_endpoint(
     
     return StockMovementResponse(stockMovement=db_movement)
 
-# Supplier Endpoints
-@router.get("/suppliers", response_model=SuppliersResponse)
-def read_suppliers(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=1000),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    current_tenant: dict = Depends(get_current_tenant)
-):
-    """Get all suppliers for the current tenant"""
-    suppliers = get_suppliers(db, str(current_tenant["id"]), skip, limit)
-    total = len(suppliers)
-    return SuppliersResponse(suppliers=suppliers, total=total)
-
-@router.get("/suppliers/{supplier_id}", response_model=SupplierResponse)
-def read_supplier(
-    supplier_id: str,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    current_tenant: dict = Depends(get_current_tenant)
-):
-    """Get a specific supplier by ID"""
-    supplier = get_supplier_by_id(db, supplier_id, str(current_tenant["id"]))
-    if not supplier:
-        raise HTTPException(status_code=404, detail="Supplier not found")
-    return SupplierResponse(supplier=supplier)
-
-@router.post("/suppliers", response_model=SupplierResponse)
-def create_supplier_endpoint(
-    supplier: SupplierCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    current_tenant: dict = Depends(get_current_tenant)
-):
-    """Create a new supplier"""
-    # Check if supplier code already exists for this tenant
-    existing_supplier = get_supplier_by_code(supplier.code, db, str(current_tenant["id"]))
-    if existing_supplier:
-        raise HTTPException(
-            status_code=400, 
-            detail=f"Supplier with code '{supplier.code}' already exists"
-        )
-    
-    supplier_data = supplier.dict()
-    supplier_data.update({
-        "id": str(uuid.uuid4()),
-        "tenantId": str(current_tenant["id"]),
-        "createdBy": str(current_user.id),
-        "createdAt": datetime.utcnow(),
-        "updatedAt": datetime.utcnow()
-    })
-    
-    db_supplier = create_supplier(supplier_data, db)
-    return SupplierResponse(supplier=db_supplier)
-
-@router.put("/suppliers/{supplier_id}", response_model=SupplierResponse)
-def update_supplier_endpoint(
-    supplier_id: str,
-    supplier: SupplierUpdate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    current_tenant: dict = Depends(get_current_tenant)
-):
-    """Update an existing supplier"""
-    supplier_update = supplier.dict(exclude_unset=True)
-    supplier_update["updatedAt"] = datetime.utcnow()
-    
-    db_supplier = update_supplier(supplier_id, supplier_update, db, str(current_tenant["id"]))
-    if not db_supplier:
-        raise HTTPException(status_code=404, detail="Supplier not found")
-    
-    return SupplierResponse(supplier=db_supplier)
-
-@router.delete("/suppliers/{supplier_id}")
-def delete_supplier_endpoint(
-    supplier_id: str,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    current_tenant: dict = Depends(get_current_tenant)
-):
-    """Delete a supplier"""
-    success = delete_supplier(supplier_id, db, str(current_tenant["id"]))
-    if not success:
-        raise HTTPException(status_code=404, detail="Supplier not found")
-    return {"message": "Supplier deleted successfully"}
 
 # Purchase Order Endpoints
 @router.get("/purchase-orders", response_model=PurchaseOrdersResponse)

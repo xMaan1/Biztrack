@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { inventoryService } from '../../../services/InventoryService';
+import HRMService from '../../../services/HRMService';
 import {
   PurchaseOrder,
   PurchaseOrderCreate,
@@ -79,7 +80,7 @@ export default function PurchaseOrdersPage() {
   // Use cached API calls
   const { data: suppliersData, loading: suppliersLoading } = useCachedApi(
     'suppliers',
-    () => inventoryService.getSuppliers(),
+    () => HRMService.getSuppliers(),
     { ttl: 5 * 60 * 1000 } // 5 minutes cache
   );
 
@@ -672,7 +673,7 @@ export default function PurchaseOrdersPage() {
                     size="sm"
                     onClick={() => {
                       setIsAddModalOpen(false);
-                      router.push('/inventory/suppliers/new');
+                      router.push('/hrm/suppliers/new');
                     }}
                     className="whitespace-nowrap"
                   >

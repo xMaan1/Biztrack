@@ -32,12 +32,13 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { inventoryService } from '../../../services/InventoryService';
+import HRMService from '../../../services/HRMService';
 import {
   InventoryDashboardStats,
   PurchaseOrderCreate,
   PurchaseOrderItemCreate,
-  Supplier,
 } from '../../../models/inventory';
+import { Supplier } from '../../../models/hrm';
 import { DashboardLayout } from '../../../components/layout';
 import { useCurrency } from '../../../contexts/CurrencyContext';
 import {
@@ -90,7 +91,7 @@ export default function AlertsPage() {
       setLoading(true);
       const [statsResponse, suppliersResponse] = await Promise.all([
         inventoryService.getInventoryDashboard(),
-        inventoryService.getSuppliers(),
+        HRMService.getSuppliers(),
       ]);
       setDashboardStats(statsResponse);
       setSuppliers(suppliersResponse.suppliers);

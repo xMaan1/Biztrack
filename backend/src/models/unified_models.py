@@ -1924,6 +1924,59 @@ class HRMTrainingFilters(BaseModel):
     provider: Optional[str] = None
     search: Optional[str] = None
 
+# Supplier Models (moved from Inventory to HRM)
+class SupplierBase(BaseModel):
+    name: str
+    code: str
+    contactPerson: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    country: Optional[str] = None
+    postalCode: Optional[str] = None
+    website: Optional[str] = None
+    paymentTerms: Optional[str] = None
+    creditLimit: Optional[float] = None
+    isActive: bool = True
+
+class SupplierCreate(SupplierBase):
+    pass
+
+class SupplierUpdate(BaseModel):
+    name: Optional[str] = None
+    code: Optional[str] = None
+    contactPerson: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    country: Optional[str] = None
+    postalCode: Optional[str] = None
+    website: Optional[str] = None
+    paymentTerms: Optional[str] = None
+    creditLimit: Optional[float] = None
+    isActive: Optional[bool] = None
+
+class Supplier(SupplierBase):
+    id: UUID
+    tenantId: UUID
+    createdBy: UUID
+    createdAt: datetime
+    updatedAt: datetime
+
+    class Config:
+        from_attributes = True
+
+class SupplierResponse(BaseModel):
+    supplier: Supplier
+
+class SuppliersResponse(BaseModel):
+    suppliers: List[Supplier]
+    total: int
+
 # Custom Tenant-Specific Options Models
 class CustomEventType(BaseModel):
     name: str
@@ -2719,51 +2772,6 @@ class PurchaseOrder(PurchaseOrderBase):
     class Config:
         from_attributes = True
 
-# Supplier Models
-class SupplierBase(BaseModel):
-    name: str
-    code: str
-    contactPerson: Optional[str] = None
-    email: Optional[str] = None
-    phone: Optional[str] = None
-    address: Optional[str] = None
-    city: Optional[str] = None
-    state: Optional[str] = None
-    country: Optional[str] = None
-    postalCode: Optional[str] = None
-    website: Optional[str] = None
-    paymentTerms: Optional[str] = None
-    creditLimit: Optional[float] = None
-    isActive: bool = True
-
-class SupplierCreate(SupplierBase):
-    pass
-
-class SupplierUpdate(BaseModel):
-    name: Optional[str] = None
-    code: Optional[str] = None
-    contactPerson: Optional[str] = None
-    email: Optional[str] = None
-    phone: Optional[str] = None
-    address: Optional[str] = None
-    city: Optional[str] = None
-    state: Optional[str] = None
-    country: Optional[str] = None
-    postalCode: Optional[str] = None
-    website: Optional[str] = None
-    paymentTerms: Optional[str] = None
-    creditLimit: Optional[float] = None
-    isActive: Optional[bool] = None
-
-class Supplier(SupplierBase):
-    id: UUID
-    tenantId: UUID
-    createdBy: UUID
-    createdAt: datetime
-    updatedAt: datetime
-
-    class Config:
-        from_attributes = True
 
 # Receiving Models
 class ReceivingItemBase(BaseModel):
@@ -3011,12 +3019,6 @@ class PurchaseOrdersResponse(BaseModel):
     purchaseOrders: List[PurchaseOrder]
     total: int
 
-class SupplierResponse(BaseModel):
-    supplier: Supplier
-
-class SuppliersResponse(BaseModel):
-    suppliers: List[Supplier]
-    total: int
 
 class ReceivingResponse(BaseModel):
     receiving: Receiving

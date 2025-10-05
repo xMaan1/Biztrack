@@ -61,40 +61,6 @@ class Warehouse(Base):
     storage_locations = relationship("StorageLocation", back_populates="warehouse")
     stock_movements = relationship("StockMovement", back_populates="warehouse")
 
-class Supplier(Base):
-    __tablename__ = "suppliers"
-    
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    tenantId = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
-    name = Column(String, nullable=False)
-    code = Column(String, index=True)
-    contactPerson = Column(String)
-    email = Column(String)
-    phone = Column(String)
-    address = Column(Text)
-    city = Column(String)
-    state = Column(String)
-    country = Column(String)
-    postalCode = Column(String)
-    website = Column(String)
-    paymentTerms = Column(String)
-    creditLimit = Column(Float, nullable=True)
-    isActive = Column(Boolean, default=True)
-    createdBy = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    createdAt = Column(DateTime, default=datetime.utcnow)
-    updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # Relationships
-    tenant = relationship("Tenant", back_populates="suppliers")
-    creator = relationship("User", back_populates="created_suppliers")
-    
-    # Indexes for performance optimization
-    __table_args__ = (
-        Index("idx_suppliers_tenant_id", "tenantId"),
-        Index("idx_suppliers_code", "code"),
-        Index("idx_suppliers_tenant_code", "tenantId", "code", unique=True),  # Unique code per tenant
-    )
-
 class PurchaseOrder(Base):
     __tablename__ = "purchase_orders"
     

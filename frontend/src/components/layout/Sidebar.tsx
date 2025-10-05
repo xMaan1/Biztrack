@@ -281,13 +281,6 @@ const allMenuItems: MenuItem[] = [
         planTypes: ['*'],
       },
       {
-        text: 'Suppliers',
-        icon: Building,
-        path: '/inventory/suppliers',
-        roles: ['*'],
-        planTypes: ['*'],
-      },
-      {
         text: 'Stock Alerts',
         icon: AlertTriangle,
         path: '/inventory/alerts',
@@ -342,6 +335,13 @@ const allMenuItems: MenuItem[] = [
         text: 'Payroll',
         icon: Banknote,
         path: '/hrm/payroll',
+        roles: ['*'],
+        planTypes: ['*'],
+      },
+      {
+        text: 'Suppliers',
+        icon: Building,
+        path: '/hrm/suppliers',
         roles: ['*'],
         planTypes: ['*'],
       },

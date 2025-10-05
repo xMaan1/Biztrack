@@ -41,8 +41,8 @@ import {
   Building2,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
-import { inventoryService } from '../../../services/InventoryService';
-import { Supplier, SupplierUpdate } from '../../../models/inventory';
+import HRMService from '../../../services/HRMService';
+import { Supplier, SupplierUpdate } from '../../../models/hrm';
 import { DashboardLayout } from '../../../components/layout';
 import { formatDate } from '../../../lib/utils';
 import { toast } from 'sonner';
@@ -67,7 +67,7 @@ export default function SuppliersPage() {
   const fetchSuppliers = async () => {
     try {
       setLoading(true);
-      const response = await inventoryService.getSuppliers();
+      const response = await HRMService.getSuppliers();
       setSuppliers(response.suppliers);
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to load suppliers';
@@ -101,7 +101,7 @@ export default function SuppliersPage() {
     if (!supplierToDelete) return;
 
     try {
-      await inventoryService.deleteSupplier(supplierToDelete.id);
+      await HRMService.deleteSupplier(supplierToDelete.id);
       fetchSuppliers();
       closeDeleteDialog();
       toast.success('Supplier deleted successfully');
@@ -150,7 +150,7 @@ export default function SuppliersPage() {
 
     try {
       setEditLoading(true);
-      await inventoryService.updateSupplier(supplierToEdit.id, editFormData);
+      await HRMService.updateSupplier(supplierToEdit.id, editFormData);
       fetchSuppliers();
       closeEditDialog();
       toast.success('Supplier updated successfully');
@@ -183,7 +183,7 @@ export default function SuppliersPage() {
               Manage your supplier relationships and vendor information
             </p>
           </div>
-          <Button onClick={() => router.push('/inventory/suppliers/new')}>
+          <Button onClick={() => router.push('/hrm/suppliers/new')}>
             <Plus className="mr-2 h-4 w-4" />
             Add Supplier
           </Button>
@@ -328,7 +328,7 @@ export default function SuppliersPage() {
                 </p>
                 {!searchTerm && (
                   <Button
-                    onClick={() => router.push('/inventory/suppliers/new')}
+                    onClick={() => router.push('/hrm/suppliers/new')}
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     Add Supplier

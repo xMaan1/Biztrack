@@ -374,7 +374,7 @@ export default function InventoryDashboardPage() {
 
           <Card
             className="cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => router.push('/inventory/suppliers')}
+            onClick={() => router.push('/hrm/suppliers')}
           >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

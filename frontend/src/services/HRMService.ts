@@ -49,6 +49,10 @@ import {
   HRMLeaveFilters,
   HRMPayrollFilters,
   HRMTrainingFilters,
+  SupplierCreate,
+  SupplierUpdate,
+  SupplierResponse,
+  SuppliersResponse,
 } from '../models/hrm';
 
 export class HRMService {
@@ -602,6 +606,42 @@ export class HRMService {
       default:
         return '🏢';
     }
+  }
+
+  // Supplier Management
+  async getSuppliers(
+    skip: number = 0,
+    limit: number = 100,
+  ): Promise<SuppliersResponse> {
+    const response = await this.apiService.get(
+      `/hrm/suppliers?skip=${skip}&limit=${limit}`,
+    );
+    return response;
+  }
+
+  async getSupplier(id: string): Promise<SupplierResponse> {
+    const response = await this.apiService.get(`/hrm/suppliers/${id}`);
+    return response;
+  }
+
+  async createSupplier(supplier: SupplierCreate): Promise<SupplierResponse> {
+    const response = await this.apiService.post('/hrm/suppliers', supplier);
+    return response;
+  }
+
+  async updateSupplier(
+    id: string,
+    supplier: SupplierUpdate,
+  ): Promise<SupplierResponse> {
+    const response = await this.apiService.put(
+      `/hrm/suppliers/${id}`,
+      supplier,
+    );
+    return response;
+  }
+
+  async deleteSupplier(id: string): Promise<void> {
+    await this.apiService.delete(`/hrm/suppliers/${id}`);
   }
 }
 

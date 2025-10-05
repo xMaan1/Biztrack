@@ -18,7 +18,8 @@ from ...models.unified_models import (
     TrainingEnrollment, TrainingEnrollmentCreate, TrainingEnrollmentUpdate, HRMEnrollmentsResponse,
     HRMDashboard, HRMEmployeeFilters, HRMJobFilters, HRMApplicationFilters, HRMReviewFilters,
     HRMTimeFilters, HRMLeaveFilters, HRMPayrollFilters, HRMTrainingFilters,
-    Department, EmploymentStatus, EmployeeType
+    Department, EmploymentStatus, EmployeeType,
+    Supplier, SupplierCreate, SupplierUpdate, SupplierResponse, SuppliersResponse
 )
 from ...config.hrm_models import Employee as DBEmployee
 from ...config.database import (
@@ -33,7 +34,8 @@ from ...config.database import (
     get_benefits, get_benefit_by_id, create_benefit, update_benefit, delete_benefit,
     get_training, get_training_by_id, create_training, update_training, delete_training,
     get_training_enrollments, get_training_enrollment_by_id, create_training_enrollment, update_training_enrollment, delete_training_enrollment,
-    get_hrm_dashboard_data
+    get_hrm_dashboard_data,
+    get_suppliers, get_supplier_by_id, get_supplier_by_code, create_supplier, update_supplier, delete_supplier
 )
 from ...api.dependencies import get_current_user, get_tenant_context, require_tenant_admin_or_super_admin
 
@@ -1269,6 +1271,113 @@ async def delete_hrm_training_enrollment(
         return {"message": "Training enrollment deleted successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error deleting training enrollment: {str(e)}")
+
+# Supplier endpoints
+@router.get("/suppliers", response_model=SuppliersResponse)
+def read_suppliers(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context)
+):
+    """Get all suppliers for the current tenant"""
+    try:
+        suppliers = get_suppliers(db, tenant_context["tenant_id"] if tenant_context else None, skip, limit)
+        total = len(suppliers)
+        return SuppliersResponse(suppliers=suppliers, total=total)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching suppliers: {str(e)}")
+
+@router.get("/suppliers/{supplier_id}", response_model=SupplierResponse)
+def read_supplier(
+    supplier_id: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context)
+):
+    """Get supplier by ID"""
+    try:
+        supplier = get_supplier_by_id(supplier_id, db, tenant_context["tenant_id"] if tenant_context else None)
+        if not supplier:
+            raise HTTPException(status_code=404, detail="Supplier not found")
+        return SupplierResponse(supplier=supplier)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching supplier: {str(e)}")
+
+@router.post("/suppliers", response_model=SupplierResponse)
+def create_supplier_endpoint(
+    supplier: SupplierCreate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context)
+):
+    """Create a new supplier"""
+    try:
+        # Check if supplier code already exists for this tenant
+        existing_supplier = get_supplier_by_code(supplier.code, db, tenant_context["tenant_id"] if tenant_context else None)
+        if existing_supplier:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Supplier with code '{supplier.code}' already exists"
+            )
+        
+        supplier_data = supplier.dict()
+        supplier_data.update({
+            "id": str(uuid.uuid4()),
+            "tenantId": tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            "createdBy": str(current_user.id),
+            "createdAt": datetime.utcnow(),
+            "updatedAt": datetime.utcnow()
+        })
+        
+        db_supplier = create_supplier(supplier_data, db)
+        return SupplierResponse(supplier=db_supplier)
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error creating supplier: {str(e)}")
+
+@router.put("/suppliers/{supplier_id}", response_model=SupplierResponse)
+def update_supplier_endpoint(
+    supplier_id: str,
+    supplier: SupplierUpdate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context)
+):
+    """Update supplier"""
+    try:
+        update_data = {k: v for k, v in supplier.dict().items() if v is not None}
+        db_supplier = update_supplier(supplier_id, update_data, db, tenant_context["tenant_id"] if tenant_context else None)
+        if not db_supplier:
+            raise HTTPException(status_code=404, detail="Supplier not found")
+        return SupplierResponse(supplier=db_supplier)
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error updating supplier: {str(e)}")
+
+@router.delete("/suppliers/{supplier_id}")
+def delete_supplier_endpoint(
+    supplier_id: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context)
+):
+    """Delete supplier"""
+    try:
+        success = delete_supplier(supplier_id, db, tenant_context["tenant_id"] if tenant_context else None)
+        if not success:
+            raise HTTPException(status_code=404, detail="Supplier not found")
+        return {"message": "Supplier deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error deleting supplier: {str(e)}")
 
 # HRM Dashboard endpoint
 @router.get("/dashboard", response_model=HRMDashboard)

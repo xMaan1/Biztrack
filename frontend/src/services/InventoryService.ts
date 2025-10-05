@@ -12,10 +12,6 @@ import {
   StockMovementUpdate,
   StockMovementsResponse,
   StockMovementResponse,
-  SupplierCreate,
-  SupplierUpdate,
-  SuppliersResponse,
-  SupplierResponse,
   PurchaseOrderCreate,
   PurchaseOrderUpdate,
   PurchaseOrdersResponse,
@@ -156,42 +152,6 @@ class InventoryService {
       movement,
     );
     return response;
-  }
-
-  // Supplier Management
-  async getSuppliers(
-    skip: number = 0,
-    limit: number = 100,
-  ): Promise<SuppliersResponse> {
-    const response = await apiService.get(
-      `/inventory/suppliers?skip=${skip}&limit=${limit}`,
-    );
-    return response;
-  }
-
-  async getSupplier(id: string): Promise<SupplierResponse> {
-    const response = await apiService.get(`/inventory/suppliers/${id}`);
-    return response;
-  }
-
-  async createSupplier(supplier: SupplierCreate): Promise<SupplierResponse> {
-    const response = await apiService.post('/inventory/suppliers', supplier);
-    return response;
-  }
-
-  async updateSupplier(
-    id: string,
-    supplier: SupplierUpdate,
-  ): Promise<SupplierResponse> {
-    const response = await apiService.put(
-      `/inventory/suppliers/${id}`,
-      supplier,
-    );
-    return response;
-  }
-
-  async deleteSupplier(id: string): Promise<void> {
-    await apiService.delete(`/inventory/suppliers/${id}`);
   }
 
   // Purchase Order Management

@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from .inventory_models import Product, Warehouse, Supplier, PurchaseOrder, Receiving, StorageLocation, StockMovement
+from .inventory_models import Product, Warehouse, PurchaseOrder, Receiving, StorageLocation, StockMovement
 
 # Product functions
 def get_product_by_id(product_id: str, db: Session, tenant_id: str = None) -> Optional[Product]:
@@ -121,62 +121,6 @@ def delete_warehouse(warehouse_id: str, db: Session, tenant_id: str = None) -> b
     warehouse = get_warehouse_by_id(warehouse_id, db, tenant_id)
     if warehouse:
         db.delete(warehouse)
-        db.commit()
-        return True
-    return False
-
-# Supplier functions
-def get_supplier_by_id(supplier_id: str, db: Session, tenant_id: str = None) -> Optional[Supplier]:
-    query = db.query(Supplier).filter(Supplier.id == supplier_id)
-    if tenant_id:
-        query = query.filter(Supplier.tenantId == tenant_id)
-    return query.first()
-
-def get_supplier_by_code(code: str, db: Session, tenant_id: str = None) -> Optional[Supplier]:
-    query = db.query(Supplier).filter(Supplier.code == code)
-    if tenant_id:
-        query = query.filter(Supplier.tenantId == tenant_id)
-    return query.first()
-
-def get_all_suppliers(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Supplier]:
-    query = db.query(Supplier)
-    if tenant_id:
-        query = query.filter(Supplier.tenantId == tenant_id)
-    return query.order_by(Supplier.createdAt.desc()).offset(skip).limit(limit).all()
-
-# Alias function for backward compatibility
-def get_suppliers(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Supplier]:
-    """Get all suppliers (alias for get_all_suppliers)"""
-    return get_all_suppliers(db, tenant_id, skip, limit)
-
-def get_active_suppliers(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Supplier]:
-    query = db.query(Supplier).filter(Supplier.isActive == True)
-    if tenant_id:
-        query = query.filter(Supplier.tenantId == tenant_id)
-    return query.order_by(Supplier.createdAt.desc()).offset(skip).limit(limit).all()
-
-def create_supplier(supplier_data: dict, db: Session) -> Supplier:
-    db_supplier = Supplier(**supplier_data)
-    db.add(db_supplier)
-    db.commit()
-    db.refresh(db_supplier)
-    return db_supplier
-
-def update_supplier(supplier_id: str, update_data: dict, db: Session, tenant_id: str = None) -> Optional[Supplier]:
-    supplier = get_supplier_by_id(supplier_id, db, tenant_id)
-    if supplier:
-        for key, value in update_data.items():
-            if hasattr(supplier, key) and value is not None:
-                setattr(supplier, key, value)
-        supplier.updatedAt = datetime.utcnow()
-        db.commit()
-        db.refresh(supplier)
-    return supplier
-
-def delete_supplier(supplier_id: str, db: Session, tenant_id: str = None) -> bool:
-    supplier = get_supplier_by_id(supplier_id, db, tenant_id)
-    if supplier:
-        db.delete(supplier)
         db.commit()
         return True
     return False
