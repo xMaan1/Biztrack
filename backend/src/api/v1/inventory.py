@@ -257,7 +257,7 @@ def create_storage_location_endpoint(
     location_data = location.dict()
     location_data.update({
         "id": str(uuid.uuid4()),
-        "tenantId": str(current_tenant["id"]),
+        "tenant_id": str(current_tenant["id"]),
         "createdBy": str(current_user.id),
         "createdAt": datetime.utcnow(),
         "updatedAt": datetime.utcnow()
@@ -337,7 +337,7 @@ def create_stock_movement_endpoint(
     movement_data = movement.dict()
     movement_data.update({
         "id": str(uuid.uuid4()),
-        "tenantId": str(current_tenant["id"]),
+        "tenant_id": str(current_tenant["id"]),
         "createdBy": str(current_user.id),
         "status": "pending",
         "createdAt": datetime.utcnow(),
@@ -598,7 +598,7 @@ def create_receiving_endpoint(
     receiving_data = receiving.dict()
     receiving_data.update({
         "id": str(uuid.uuid4()),
-        "tenantId": str(current_tenant["id"]),
+        "tenant_id": str(current_tenant["id"]),
         "createdBy": str(current_user.id),
         "status": "pending",
         "createdAt": datetime.utcnow(),
