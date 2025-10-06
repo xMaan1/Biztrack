@@ -25,6 +25,7 @@ WEBHOOK_PORT=$WEBHOOK_PORT
 EOF
     
     log "Installing required Python packages..."
+    source ../venv/bin/activate
     pip install pycryptodome
     
     log "Creating PM2 ecosystem file for webhook server..."
@@ -33,7 +34,7 @@ module.exports = {
   apps: [{
     name: 'webhook-server',
     script: 'webhook_server.py',
-    interpreter: 'python3',
+    interpreter: '../venv/bin/python',
     cwd: '$PROJECT_ROOT/backend/scripts',
     env_file: 'webhook.env',
     instances: 1,
