@@ -16,7 +16,7 @@ NEXT_PUBLIC_API_URL=http://ec2-13-60-230-120.eu-north-1.compute.amazonaws.com:80
 
 to connect to the server in terminal run this
 
-ssh -i "sparkco-erp2.pem" ubuntu@ec2-34-229-90-27.compute-1.amazonaws.com
+ssh -i "sparkco-erp2.pem" ubuntu@ec2-51-21-115-252.eu-north-1.compute.amazonaws.com
 
 for psql:
 psql "host=database-2.cx2ueqemct2p.eu-north-1.rds.amazonaws.com port=5432 dbname=postgres user=postgres password=abdulrehman25 sslmode=require"
