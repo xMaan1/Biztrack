@@ -1,0 +1,61 @@
+name: Auto Deploy to EC2
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Detect changes
+      id: changes
+      run: |
+        if git diff --name-only HEAD~1 HEAD | grep -q "^frontend/"; then
+          echo "frontend_changed=true" >> $GITHUB_OUTPUT
+        else
+          echo "frontend_changed=false" >> $GITHUB_OUTPUT
+        fi
+        
+        if git diff --name-only HEAD~1 HEAD | grep -q "^backend/"; then
+          echo "backend_changed=true" >> $GITHUB_OUTPUT
+        else
+          echo "backend_changed=false" >> $GITHUB_OUTPUT
+        fi
+        
+        if [ "${{ steps.changes.outputs.frontend_changed }}" = "true" ] && [ "${{ steps.changes.outputs.backend_changed }}" = "true" ]; then
+          echo "deploy_type=both" >> $GITHUB_OUTPUT
+        elif [ "${{ steps.changes.outputs.frontend_changed }}" = "true" ]; then
+          echo "deploy_type=frontend" >> $GITHUB_OUTPUT
+        elif [ "${{ steps.changes.outputs.backend_changed }}" = "true" ]; then
+          echo "deploy_type=backend" >> $GITHUB_OUTPUT
+        else
+          echo "deploy_type=none" >> $GITHUB_OUTPUT
+        fi
+        
+        echo "Changes detected: ${{ steps.changes.outputs.deploy_type }}"
+        
+    - name: Deploy to EC2
+      if: steps.changes.outputs.deploy_type != 'none'
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ubuntu
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          cd /home/ubuntu/sparkco-erp/backend/scripts
+          ./deploy.sh ${{ steps.changes.outputs.deploy_type }}
+          
+    - name: Notify deployment status
+      if: always()
+      run: |
+        if [ "${{ steps.changes.outputs.deploy_type }}" = "none" ]; then
+          echo "No deployment needed - no frontend or backend changes detected"
+        else
+          echo "Deployment completed for: ${{ steps.changes.outputs.deploy_type }}"
+        fi
