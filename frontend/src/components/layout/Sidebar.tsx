@@ -479,10 +479,39 @@ const allMenuItems: MenuItem[] = [
   {
     text: 'Financial Ledger',
     icon: BookOpen,
-    path: '/ledger',
     roles: ['*'],
     planTypes: ['*'], // Available for all plans
     gradient: 'from-emerald-500 to-teal-500',
+    subItems: [
+      {
+        text: 'Chart of Accounts',
+        icon: BookOpen,
+        path: '/ledger',
+        roles: ['*'],
+        planTypes: ['*'],
+      },
+      {
+        text: 'Investments',
+        icon: DollarSign,
+        path: '/investments',
+        roles: ['*'],
+        planTypes: ['*'],
+      },
+      {
+        text: 'Transactions',
+        icon: Receipt,
+        path: '/ledger/transactions',
+        roles: ['*'],
+        planTypes: ['*'],
+      },
+      {
+        text: 'Reports',
+        icon: BarChart3,
+        path: '/ledger/reports',
+        roles: ['*'],
+        planTypes: ['*'],
+      },
+    ],
   },
   // Settings - Available for all plan types
   {

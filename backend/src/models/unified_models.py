@@ -3102,7 +3102,7 @@ class LedgerTransactionBase(BaseModel):
     account_id: str
     contra_account_id: Optional[str] = None
     status: str = "pending"
-    metadata: Optional[Dict[str, Any]] = None
+    meta_data: Optional[Dict[str, Any]] = None
 
 class LedgerTransactionCreate(LedgerTransactionBase):
     pass
@@ -3116,7 +3116,7 @@ class LedgerTransactionUpdate(BaseModel):
     account_id: Optional[str] = None
     contra_account_id: Optional[str] = None
     status: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
+    meta_data: Optional[Dict[str, Any]] = None
 
 class LedgerTransactionResponse(LedgerTransactionBase):
     id: str
@@ -3135,7 +3135,7 @@ class JournalEntryBase(BaseModel):
     status: str = "draft"
     is_posted: bool = False
     posted_date: Optional[datetime] = None
-    metadata: Optional[Dict[str, Any]] = None
+    meta_data: Optional[Dict[str, Any]] = None
 
 class JournalEntryCreate(JournalEntryBase):
     pass
@@ -3147,7 +3147,7 @@ class JournalEntryUpdate(BaseModel):
     status: Optional[str] = None
     is_posted: Optional[bool] = None
     posted_date: Optional[datetime] = None
-    metadata: Optional[Dict[str, Any]] = None
+    meta_data: Optional[Dict[str, Any]] = None
 
 class JournalEntryResponse(JournalEntryBase):
     id: str
@@ -3196,7 +3196,7 @@ class BudgetBase(BaseModel):
     total_amount: float
     currency: str = "USD"
     is_active: bool = True
-    metadata: Optional[Dict[str, Any]] = None
+    meta_data: Optional[Dict[str, Any]] = None
 
 class BudgetCreate(BudgetBase):
     pass
@@ -3209,7 +3209,7 @@ class BudgetUpdate(BaseModel):
     total_amount: Optional[float] = None
     currency: Optional[str] = None
     is_active: Optional[bool] = None
-    metadata: Optional[Dict[str, Any]] = None
+    meta_data: Optional[Dict[str, Any]] = None
 
 class BudgetResponse(BudgetBase):
     id: str
@@ -3309,4 +3309,159 @@ class BudgetsListResponse(BaseModel):
 
 class BudgetItemsListResponse(BaseModel):
     items: List[BudgetItemResponse]
+    total: int
+
+# Investment Models
+class InvestmentType(str, Enum):
+    CASH_INVESTMENT = "cash_investment"
+    CARD_TRANSFER = "card_transfer"
+    BANK_TRANSFER = "bank_transfer"
+    EQUIPMENT_PURCHASE = "equipment_purchase"
+
+class InvestmentStatus(str, Enum):
+    PENDING = "pending"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+    FAILED = "failed"
+
+class InvestmentBase(BaseModel):
+    investment_date: datetime
+    investment_type: InvestmentType
+    amount: float
+    currency: str = "USD"
+    description: str
+    notes: Optional[str] = None
+    reference_number: Optional[str] = None
+    reference_type: Optional[str] = None
+    meta_data: Optional[Dict[str, Any]] = {}
+    tags: Optional[List[str]] = []
+
+class InvestmentCreate(InvestmentBase):
+    pass
+
+class InvestmentUpdate(BaseModel):
+    investment_date: Optional[datetime] = None
+    investment_type: Optional[InvestmentType] = None
+    amount: Optional[float] = None
+    currency: Optional[str] = None
+    description: Optional[str] = None
+    notes: Optional[str] = None
+    reference_number: Optional[str] = None
+    reference_type: Optional[str] = None
+    meta_data: Optional[Dict[str, Any]] = None
+    tags: Optional[List[str]] = None
+    status: Optional[InvestmentStatus] = None
+
+class InvestmentResponse(InvestmentBase):
+    id: str
+    tenant_id: str
+    investment_number: str
+    status: InvestmentStatus
+    attachments: Optional[List[str]] = []
+    created_by_id: str
+    approved_by_id: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class EquipmentInvestmentBase(BaseModel):
+    equipment_name: str
+    equipment_type: str
+    manufacturer: Optional[str] = None
+    model_number: Optional[str] = None
+    serial_number: Optional[str] = None
+    purchase_price: float
+    estimated_life_years: int = 5
+    depreciation_method: str = "straight_line"
+    purchase_date: datetime
+    warranty_expiry: Optional[datetime] = None
+    location: Optional[str] = None
+    condition: str = "new"
+    notes: Optional[str] = None
+
+class EquipmentInvestmentCreate(EquipmentInvestmentBase):
+    pass
+
+class EquipmentInvestmentUpdate(BaseModel):
+    equipment_name: Optional[str] = None
+    equipment_type: Optional[str] = None
+    manufacturer: Optional[str] = None
+    model_number: Optional[str] = None
+    serial_number: Optional[str] = None
+    purchase_price: Optional[float] = None
+    estimated_life_years: Optional[int] = None
+    depreciation_method: Optional[str] = None
+    purchase_date: Optional[datetime] = None
+    warranty_expiry: Optional[datetime] = None
+    location: Optional[str] = None
+    condition: Optional[str] = None
+    notes: Optional[str] = None
+
+class EquipmentInvestmentResponse(EquipmentInvestmentBase):
+    id: str
+    tenant_id: str
+    investment_id: str
+    attachments: Optional[List[str]] = []
+    created_by_id: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class InvestmentTransactionBase(BaseModel):
+    transaction_date: datetime
+    transaction_type: str
+    amount: float
+    currency: str = "USD"
+    debit_account_id: str
+    credit_account_id: str
+    description: str
+    reference_number: Optional[str] = None
+
+class InvestmentTransactionCreate(InvestmentTransactionBase):
+    pass
+
+class InvestmentTransactionUpdate(BaseModel):
+    transaction_date: Optional[datetime] = None
+    transaction_type: Optional[str] = None
+    amount: Optional[float] = None
+    currency: Optional[str] = None
+    debit_account_id: Optional[str] = None
+    credit_account_id: Optional[str] = None
+    description: Optional[str] = None
+    reference_number: Optional[str] = None
+    status: Optional[str] = None
+
+class InvestmentTransactionResponse(InvestmentTransactionBase):
+    id: str
+    tenant_id: str
+    investment_id: str
+    status: str
+    created_by_id: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class InvestmentDashboardStats(BaseModel):
+    total_investments: int
+    total_amount: float
+    cash_investments: int
+    equipment_investments: int
+    pending_investments: int
+    completed_investments: int
+    monthly_investments: float
+    quarterly_investments: float
+    yearly_investments: float
+
+class InvestmentsListResponse(BaseModel):
+    investments: List[InvestmentResponse]
+    total: int
+
+class EquipmentInvestmentsListResponse(BaseModel):
+    equipment_investments: List[EquipmentInvestmentResponse]
     total: int

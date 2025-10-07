@@ -244,7 +244,7 @@ class FrontendCacheService {
 export const frontendCache = new FrontendCacheService({
   ttl: 5 * 60 * 1000, // 5 minutes default
   maxSize: 100,
-  enableLogging: true
+  enableLogging: process.env.NODE_ENV === 'development' 
 });
 
 // Auto-cleanup expired entries every 5 minutes

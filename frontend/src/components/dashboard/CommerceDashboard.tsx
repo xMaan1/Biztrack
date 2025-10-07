@@ -47,6 +47,7 @@ export default function CommerceDashboard({
   const handleNewSale = () => onNavigate('/pos/sale');
   const handleViewSales = () => onNavigate('/sales');
   const handleViewInventory = () => onNavigate('/inventory');
+  const handleAddInvestment = () => onNavigate('/investments/new');
 
   return (
     <div className="space-y-8">
@@ -75,6 +76,14 @@ export default function CommerceDashboard({
           >
             <ShoppingCart className="mr-2 h-4 w-4" />
             New Sale
+          </Button>
+          <Button
+            onClick={handleAddInvestment}
+            variant="outline"
+            className="border-blue-600 text-blue-600 hover:bg-blue-50"
+          >
+            <DollarSign className="mr-2 h-4 w-4" />
+            Add Investment
           </Button>
         </div>
       </div>

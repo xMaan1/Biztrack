@@ -16,6 +16,7 @@ import {
   BarChart3,
   Plus,
   ArrowRight,
+  DollarSign,
 } from 'lucide-react';
 
 interface WorkshopStats {
@@ -49,6 +50,7 @@ export default function WorkshopDashboard({
   const handleCreateWorkOrder = () => onNavigate('/work-orders/new');
   const handleViewProduction = () => onNavigate('/production');
   const handleViewMaintenance = () => onNavigate('/maintenance');
+  const handleAddInvestment = () => onNavigate('/investments/new');
 
   return (
     <div className="space-y-8">
@@ -77,6 +79,14 @@ export default function WorkshopDashboard({
           >
             <Wrench className="mr-2 h-4 w-4" />
             Work Order
+          </Button>
+          <Button
+            onClick={handleAddInvestment}
+            variant="outline"
+            className="border-green-600 text-green-600 hover:bg-green-50"
+          >
+            <DollarSign className="mr-2 h-4 w-4" />
+            Add Investment
           </Button>
         </div>
       </div>

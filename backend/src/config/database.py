@@ -54,6 +54,10 @@ from .ledger_models import (
     FinancialPeriod, Budget, BudgetItem
 )
 
+from .investment_models import (
+    Investment, EquipmentInvestment, InvestmentTransaction
+)
+
 from .pos_models import (
     POSShift, POSTransaction
 )
@@ -327,6 +331,9 @@ __all__ = [
     'CustomEventType', 'CustomDepartment', 'CustomLeaveType', 'CustomLeadSource',
     'CustomContactSource', 'CustomCompanyIndustry', 'CustomContactType', 'CustomIndustry',
     'AuditLog', 'Permission', 'CustomRole',
+    'ChartOfAccounts', 'LedgerTransaction', 'JournalEntry', 
+    'FinancialPeriod', 'Budget', 'BudgetItem',
+    'Investment', 'EquipmentInvestment', 'InvestmentTransaction',
     
     # All CRUD functions are also exported
 ]

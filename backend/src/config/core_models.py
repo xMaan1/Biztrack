@@ -114,6 +114,12 @@ class User(Base):
     # Equipment relationships
     created_equipment = relationship("Equipment", foreign_keys="Equipment.created_by_id", back_populates="created_by")
     updated_equipment = relationship("Equipment", foreign_keys="Equipment.updated_by_id", back_populates="updated_by")
+    
+    # Investment relationships
+    created_investments = relationship("Investment", foreign_keys="Investment.created_by", back_populates="created_by_user")
+    approved_investments = relationship("Investment", foreign_keys="Investment.approved_by", back_populates="approved_by_user")
+    created_equipment_investments = relationship("EquipmentInvestment", foreign_keys="EquipmentInvestment.created_by", back_populates="created_by_user")
+    created_investment_transactions = relationship("InvestmentTransaction", foreign_keys="InvestmentTransaction.created_by", back_populates="created_by_user")
 
 class Tenant(Base):
     __tablename__ = "tenants"
@@ -215,6 +221,11 @@ class Tenant(Base):
     
     # Invoice customization relationships
     invoice_customizations = relationship("InvoiceCustomization", back_populates="tenant")
+    
+    # Investment relationships
+    investments = relationship("Investment", back_populates="tenant")
+    equipment_investments = relationship("EquipmentInvestment", back_populates="tenant")
+    investment_transactions = relationship("InvestmentTransaction", back_populates="tenant")
 
 class Plan(Base):
     __tablename__ = "plans"

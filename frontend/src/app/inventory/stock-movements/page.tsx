@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -62,7 +61,6 @@ import { Textarea } from '../../../components/ui/textarea';
 export default function StockMovementsPage() {
   const { } = useAuth();
   const { getCurrencySymbol } = useCurrency();
-  const router = useRouter();
   const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
