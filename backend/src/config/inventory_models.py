@@ -29,7 +29,6 @@ class Product(Base):
     
     # Relationships
     tenant = relationship("Tenant", back_populates="products")
-    stock_movements = relationship("StockMovement", back_populates="product")
 
 class Warehouse(Base):
     __tablename__ = "warehouses"
@@ -130,7 +129,6 @@ class StorageLocation(Base):
     warehouse = relationship("Warehouse", back_populates="storage_locations")
     parentLocation = relationship("StorageLocation", remote_side=[id], back_populates="childLocations")
     childLocations = relationship("StorageLocation", back_populates="parentLocation")
-    stock_movements = relationship("StockMovement", back_populates="location")
     creator = relationship("User", back_populates="created_storage_locations")
 
 class StockMovement(Base):
@@ -138,9 +136,9 @@ class StockMovement(Base):
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
-    productId = Column(UUID(as_uuid=True), ForeignKey("products.id"), nullable=False)
+    productId = Column(String, nullable=False)
     warehouseId = Column(UUID(as_uuid=True), ForeignKey("warehouses.id"), nullable=False)
-    locationId = Column(UUID(as_uuid=True), ForeignKey("storage_locations.id"), nullable=True)
+    locationId = Column(String, nullable=True)
     movementType = Column(String, nullable=False)  # inbound, outbound, transfer, adjustment, return, damage, expiry, cycle_count
     quantity = Column(Integer, nullable=False)
     unitCost = Column(Float, nullable=False)
@@ -157,7 +155,5 @@ class StockMovement(Base):
     
     # Relationships
     tenant = relationship("Tenant", back_populates="stock_movements")
-    product = relationship("Product", back_populates="stock_movements")
     warehouse = relationship("Warehouse", back_populates="stock_movements")
-    location = relationship("StorageLocation", back_populates="stock_movements")
     creator = relationship("User", back_populates="created_stock_movements")

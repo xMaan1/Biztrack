@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
 import uuid
+import re
 
 from ..dependencies import get_current_user, get_current_tenant
 from ...config.database import get_db
@@ -17,14 +18,16 @@ from ...models.unified_models import (
 )
 from ...config.database import (
     get_warehouses, get_warehouse_by_id, create_warehouse, update_warehouse, delete_warehouse,
-    get_storage_locations, get_storage_location_by_id, create_storage_location, update_storage_location, delete_storage_location,
-    get_stock_movements, get_stock_movement_by_id, create_stock_movement, update_stock_movement,
+    get_storage_locations, get_storage_locations_by_warehouse, get_storage_location_by_id, create_storage_location, update_storage_location, delete_storage_location,
+    get_stock_movements, get_stock_movement_by_id, create_stock_movement, update_stock_movement, delete_stock_movement,
     get_purchase_orders, get_purchase_orders_by_status, get_purchase_order_by_id, create_purchase_order, update_purchase_order, delete_purchase_order,
     get_receivings, get_receiving_by_id, create_receiving, update_receiving, delete_receiving,
     get_inventory_dashboard_stats
 )
 
 router = APIRouter(prefix="/inventory", tags=["Inventory Management"])
+
+
 
 # Warehouse Endpoints
 @router.get("/warehouses", response_model=WarehousesResponse)
@@ -229,7 +232,10 @@ def read_storage_locations(
     current_tenant: dict = Depends(get_current_tenant)
 ):
     """Get all storage locations for the current tenant"""
-    locations = get_storage_locations(db, str(current_tenant["id"]), warehouse_id, skip, limit)
+    if warehouse_id:
+        locations = get_storage_locations_by_warehouse(warehouse_id, db, str(current_tenant["id"]), skip, limit)
+    else:
+        locations = get_storage_locations(db, str(current_tenant["id"]), skip, limit)
     total = len(locations)
     return StorageLocationsResponse(storageLocations=locations, total=total)
 
@@ -310,8 +316,34 @@ def read_stock_movements(
 ):
     """Get all stock movements for the current tenant"""
     movements = get_stock_movements(db, str(current_tenant["id"]), product_id, warehouse_id, skip, limit)
-    total = len(movements)
-    return StockMovementsResponse(stockMovements=movements, total=total)
+    
+    # Convert each movement to response format (convert UUIDs to strings)
+    response_movements = []
+    for movement in movements:
+        response_data = {
+            "id": str(movement.id),
+            "tenant_id": str(movement.tenant_id),
+            "productId": movement.productId,
+            "warehouseId": str(movement.warehouseId),
+            "locationId": movement.locationId,
+            "movementType": movement.movementType,
+            "quantity": movement.quantity,
+            "unitCost": movement.unitCost,
+            "referenceNumber": movement.referenceNumber,
+            "referenceType": movement.referenceType,
+            "notes": movement.notes,
+            "batchNumber": movement.batchNumber,
+            "serialNumber": movement.serialNumber,
+            "expiryDate": movement.expiryDate.isoformat() if movement.expiryDate else None,
+            "status": movement.status,
+            "createdBy": str(movement.createdBy),
+            "createdAt": movement.createdAt,
+            "updatedAt": movement.updatedAt
+        }
+        response_movements.append(response_data)
+    
+    total = len(response_movements)
+    return StockMovementsResponse(stockMovements=response_movements, total=total)
 
 @router.get("/stock-movements/{movement_id}", response_model=StockMovementResponse)
 def read_stock_movement(
@@ -324,7 +356,30 @@ def read_stock_movement(
     movement = get_stock_movement_by_id(db, movement_id, str(current_tenant["id"]))
     if not movement:
         raise HTTPException(status_code=404, detail="Stock movement not found")
-    return StockMovementResponse(stockMovement=movement)
+    
+    # Convert to response format (convert UUIDs to strings)
+    response_data = {
+        "id": str(movement.id),
+        "tenant_id": str(movement.tenant_id),
+        "productId": movement.productId,
+        "warehouseId": str(movement.warehouseId),
+        "locationId": movement.locationId,
+        "movementType": movement.movementType,
+        "quantity": movement.quantity,
+        "unitCost": movement.unitCost,
+        "referenceNumber": movement.referenceNumber,
+        "referenceType": movement.referenceType,
+        "notes": movement.notes,
+        "batchNumber": movement.batchNumber,
+        "serialNumber": movement.serialNumber,
+        "expiryDate": movement.expiryDate.isoformat() if movement.expiryDate else None,
+        "status": movement.status,
+        "createdBy": str(movement.createdBy),
+        "createdAt": movement.createdAt,
+        "updatedAt": movement.updatedAt
+    }
+    
+    return StockMovementResponse(stockMovement=response_data)
 
 @router.post("/stock-movements", response_model=StockMovementResponse)
 def create_stock_movement_endpoint(
@@ -334,10 +389,12 @@ def create_stock_movement_endpoint(
     current_tenant: dict = Depends(get_current_tenant)
 ):
     """Create a new stock movement"""
+    tenant_id = str(current_tenant["id"])
+    
     movement_data = movement.dict()
     movement_data.update({
         "id": str(uuid.uuid4()),
-        "tenant_id": str(current_tenant["id"]),
+        "tenant_id": tenant_id,
         "createdBy": str(current_user.id),
         "status": "pending",
         "createdAt": datetime.utcnow(),
@@ -345,7 +402,30 @@ def create_stock_movement_endpoint(
     })
     
     db_movement = create_stock_movement(movement_data, db)
-    return StockMovementResponse(stockMovement=db_movement)
+    
+    # Convert to response format (convert UUIDs to strings)
+    response_data = {
+        "id": str(db_movement.id),
+        "tenant_id": str(db_movement.tenant_id),
+        "productId": db_movement.productId,
+        "warehouseId": str(db_movement.warehouseId),
+        "locationId": db_movement.locationId,
+        "movementType": db_movement.movementType,
+        "quantity": db_movement.quantity,
+        "unitCost": db_movement.unitCost,
+        "referenceNumber": db_movement.referenceNumber,
+        "referenceType": db_movement.referenceType,
+        "notes": db_movement.notes,
+        "batchNumber": db_movement.batchNumber,
+        "serialNumber": db_movement.serialNumber,
+        "expiryDate": db_movement.expiryDate.isoformat() if db_movement.expiryDate else None,
+        "status": db_movement.status,
+        "createdBy": str(db_movement.createdBy),
+        "createdAt": db_movement.createdAt,
+        "updatedAt": db_movement.updatedAt
+    }
+    
+    return StockMovementResponse(stockMovement=response_data)
 
 @router.put("/stock-movements/{movement_id}", response_model=StockMovementResponse)
 def update_stock_movement_endpoint(
@@ -359,11 +439,46 @@ def update_stock_movement_endpoint(
     movement_update = movement.dict(exclude_unset=True)
     movement_update["updatedAt"] = datetime.utcnow()
     
-    db_movement = update_stock_movement(db, movement_id, movement_update, str(current_tenant["id"]))
+    db_movement = update_stock_movement(movement_id, movement_update, db, str(current_tenant["id"]))
     if not db_movement:
         raise HTTPException(status_code=404, detail="Stock movement not found")
     
-    return StockMovementResponse(stockMovement=db_movement)
+    # Convert to response format (convert UUIDs to strings)
+    response_data = {
+        "id": str(db_movement.id),
+        "tenant_id": str(db_movement.tenant_id),
+        "productId": db_movement.productId,
+        "warehouseId": str(db_movement.warehouseId),
+        "locationId": db_movement.locationId,
+        "movementType": db_movement.movementType,
+        "quantity": db_movement.quantity,
+        "unitCost": db_movement.unitCost,
+        "referenceNumber": db_movement.referenceNumber,
+        "referenceType": db_movement.referenceType,
+        "notes": db_movement.notes,
+        "batchNumber": db_movement.batchNumber,
+        "serialNumber": db_movement.serialNumber,
+        "expiryDate": db_movement.expiryDate.isoformat() if db_movement.expiryDate else None,
+        "status": db_movement.status,
+        "createdBy": str(db_movement.createdBy),
+        "createdAt": db_movement.createdAt,
+        "updatedAt": db_movement.updatedAt
+    }
+    
+    return StockMovementResponse(stockMovement=response_data)
+
+@router.delete("/stock-movements/{movement_id}")
+def delete_stock_movement_endpoint(
+    movement_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    current_tenant: dict = Depends(get_current_tenant)
+):
+    """Delete a stock movement"""
+    success = delete_stock_movement(movement_id, db, str(current_tenant["id"]))
+    if not success:
+        raise HTTPException(status_code=404, detail="Stock movement not found")
+    return {"message": "Stock movement deleted successfully"}
 
 
 # Purchase Order Endpoints

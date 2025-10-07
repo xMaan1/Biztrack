@@ -154,6 +154,10 @@ class InventoryService {
     return response;
   }
 
+  async deleteStockMovement(id: string): Promise<void> {
+    await apiService.delete(`/inventory/stock-movements/${id}`);
+  }
+
   // Purchase Order Management
   async getPurchaseOrders(
     status?: string,

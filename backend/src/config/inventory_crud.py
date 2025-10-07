@@ -3,6 +3,7 @@ from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from .inventory_models import Product, Warehouse, PurchaseOrder, Receiving, StorageLocation, StockMovement
+from .hrm_models import Supplier
 
 # Product functions
 def get_product_by_id(product_id: str, db: Session, tenant_id: str = None) -> Optional[Product]:
@@ -258,6 +259,12 @@ def get_storage_location_by_id(location_id: str, db: Session, tenant_id: str = N
         query = query.filter(StorageLocation.tenant_id == tenant_id)
     return query.first()
 
+def get_storage_location_by_code(code: str, db: Session, tenant_id: str = None) -> Optional[StorageLocation]:
+    query = db.query(StorageLocation).filter(StorageLocation.code == code)
+    if tenant_id:
+        query = query.filter(StorageLocation.tenant_id == tenant_id)
+    return query.first()
+
 def create_storage_location(storage_location_data: dict, db: Session) -> StorageLocation:
     db_storage_location = StorageLocation(**storage_location_data)
     db.add(db_storage_location)
@@ -347,6 +354,15 @@ def update_stock_movement(movement_id: str, update_data: dict, db: Session, tena
     db.commit()
     db.refresh(db_movement)
     return db_movement
+
+def delete_stock_movement(movement_id: str, db: Session, tenant_id: str = None) -> bool:
+    """Delete a stock movement"""
+    movement = get_stock_movement_by_id(movement_id, db, tenant_id)
+    if movement:
+        db.delete(movement)
+        db.commit()
+        return True
+    return False
 
 # Inventory dashboard functions
 def get_inventory_dashboard_stats(db: Session, tenant_id: str) -> Dict[str, Any]:

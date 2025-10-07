@@ -182,10 +182,10 @@ from .inventory_crud import (
     create_warehouse, update_warehouse, delete_warehouse,
     
     # StorageLocation functions
-    get_storage_locations, get_storage_location_by_id, create_storage_location, update_storage_location, delete_storage_location,
+    get_storage_locations, get_storage_locations_by_warehouse, get_storage_location_by_id, create_storage_location, update_storage_location, delete_storage_location,
     
     # Stock Movement functions
-    get_stock_movements, get_stock_movement_by_id, create_stock_movement, update_stock_movement,
+    get_stock_movements, get_stock_movement_by_id, create_stock_movement, update_stock_movement, delete_stock_movement,
     
     # PurchaseOrder functions
     get_purchase_order_by_id, get_purchase_order_by_number, get_all_purchase_orders, get_purchase_orders,

@@ -45,6 +45,7 @@ import {
   PurchaseOrder,
   PurchaseOrderCreate,
   PurchaseOrderItemCreate,
+  PurchaseOrderUpdate,
 } from '../../../models/inventory';
 import { DashboardLayout } from '../../../components/layout';
 import { formatDate } from '../../../lib/utils';
@@ -260,6 +261,20 @@ export default function PurchaseOrdersPage() {
     }
   };
 
+  const handleStatusChange = async (orderId: string, newStatus: string) => {
+    try {
+      const updateData: PurchaseOrderUpdate = {
+        status: newStatus as any,
+      };
+      
+      await inventoryService.updatePurchaseOrder(orderId, updateData);
+      toast.success(`Purchase order status updated to ${newStatus}`);
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to update purchase order status. Please try again.');
+    }
+  };
+
   const resetForm = () => {
     setNewOrder({
       orderNumber: '',
@@ -442,6 +457,26 @@ export default function PurchaseOrdersPage() {
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
+                          {order.status === 'draft' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleStatusChange(order.id, 'ordered')}
+                              className="bg-blue-50 hover:bg-blue-100 text-blue-700"
+                            >
+                              Order
+                            </Button>
+                          )}
+                          {order.status === 'ordered' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleStatusChange(order.id, 'approved')}
+                              className="bg-green-50 hover:bg-green-100 text-green-700"
+                            >
+                              Approve
+                            </Button>
+                          )}
                           <Button
                             variant="outline"
                             size="sm"
