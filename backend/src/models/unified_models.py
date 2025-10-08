@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from enum import Enum
@@ -2652,6 +2652,13 @@ class StorageLocation(StorageLocationBase):
 
     class Config:
         from_attributes = True
+
+    @field_validator('id', 'tenant_id', 'warehouseId', 'parentLocationId', 'createdBy', mode='before')
+    @classmethod
+    def convert_uuid_to_str(cls, v):
+        if v is not None:
+            return str(v)
+        return v
 
 # Stock Movement Models
 class StockMovementBase(BaseModel):

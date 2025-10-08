@@ -48,6 +48,7 @@ import { formatDate } from '../../../lib/utils';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -66,6 +67,11 @@ export default function StorageLocationsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [warehouseFilter, setWarehouseFilter] = useState<string>('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
+  const [locationToDelete, setLocationToDelete] = useState<StorageLocation | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newLocation, setNewLocation] = useState<StorageLocationCreate>({
     warehouseId: '',
@@ -128,13 +134,29 @@ export default function StorageLocationsPage() {
     return warehouse ? warehouse.name : 'Unknown Warehouse';
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this storage location?')) {
-      try {
-        await inventoryService.deleteStorageLocation(id);
-        fetchData();
-      } catch (error) {
-        }
+  const openDeleteDialog = (location: StorageLocation) => {
+    setLocationToDelete(location);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const closeDeleteDialog = () => {
+    setIsDeleteDialogOpen(false);
+    setLocationToDelete(null);
+  };
+
+  const handleDelete = async () => {
+    if (!locationToDelete) return;
+    
+    try {
+      setDeleteLoading(true);
+      await inventoryService.deleteStorageLocation(locationToDelete.id);
+      fetchData();
+      closeDeleteDialog();
+    } catch (error) {
+      setErrorMessage('Failed to delete storage location. Please try again.');
+      setIsErrorDialogOpen(true);
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -160,7 +182,8 @@ export default function StorageLocationsPage() {
 
   const handleAddLocation = async () => {
     if (!newLocation.warehouseId || !newLocation.name || !newLocation.code) {
-      alert('Please fill in all required fields');
+      setErrorMessage('Please fill in all required fields');
+      setIsErrorDialogOpen(true);
       return;
     }
 
@@ -181,7 +204,8 @@ export default function StorageLocationsPage() {
       });
       fetchData();
     } catch (error) {
-      alert('Failed to create storage location. Please try again.');
+      setErrorMessage('Failed to create storage location. Please try again.');
+      setIsErrorDialogOpen(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -364,7 +388,7 @@ export default function StorageLocationsPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleDelete(location.id)}
+                            onClick={() => openDeleteDialog(location)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -634,6 +658,52 @@ export default function StorageLocationsPage() {
               </Button>
               <Button onClick={handleAddLocation} disabled={isSubmitting}>
                 {isSubmitting ? 'Creating...' : 'Create Location'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Storage Location</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete{' '}
+                <strong>{locationToDelete?.name}</strong>? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={closeDeleteDialog}
+                disabled={deleteLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={deleteLoading}
+              >
+                {deleteLoading ? 'Deleting...' : 'Delete'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Error Dialog */}
+        <Dialog open={isErrorDialogOpen} onOpenChange={setIsErrorDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Error</DialogTitle>
+              <DialogDescription>
+                {errorMessage}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button onClick={() => setIsErrorDialogOpen(false)}>
+                OK
               </Button>
             </DialogFooter>
           </DialogContent>

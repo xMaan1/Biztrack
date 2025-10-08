@@ -266,6 +266,9 @@ def get_storage_location_by_code(code: str, db: Session, tenant_id: str = None) 
     return query.first()
 
 def create_storage_location(storage_location_data: dict, db: Session) -> StorageLocation:
+    if storage_location_data.get('parentLocationId') == '':
+        storage_location_data['parentLocationId'] = None
+    
     db_storage_location = StorageLocation(**storage_location_data)
     db.add(db_storage_location)
     db.commit()
@@ -273,6 +276,9 @@ def create_storage_location(storage_location_data: dict, db: Session) -> Storage
     return db_storage_location
 
 def update_storage_location(location_id: str, update_data: dict, db: Session, tenant_id: str = None) -> Optional[StorageLocation]:
+    if update_data.get('parentLocationId') == '':
+        update_data['parentLocationId'] = None
+        
     location = get_storage_location_by_id(location_id, db, tenant_id)
     if location:
         for key, value in update_data.items():
