@@ -66,7 +66,7 @@ import {
   getPriorityColor,
   getInitials,
   formatDate,
-} from '../../lib/utils';
+} from '../../utils/utils';
 import { useCachedApi } from '../../hooks/useCachedApi';
 
 export default function ProjectsPage() {

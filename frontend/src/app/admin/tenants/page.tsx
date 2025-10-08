@@ -8,14 +8,18 @@ import { DashboardLayout } from '../../../components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
 import { Button } from '@/src/components/ui/button';
 import { Badge } from '@/src/components/ui/badge';
-import { Input } from '@/src/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/src/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/src/components/ui/dialog';
 import { Checkbox } from '@/src/components/ui/checkbox';
+import { Tenant, AdminStats } from '@/src/models/admin';
+import {
+  PageHeader,
+  SearchFilterBar,
+  ErrorHandlerProvider,
+  useAsyncErrorHandler
+} from '../../../components/common';
 import {
   Building2,
   Users,
-  Search,
   Eye,
   ToggleLeft,
   ToggleRight,
@@ -24,76 +28,21 @@ import {
   Trash2,
 } from 'lucide-react';
 
-interface Tenant {
-  id: string;
-  name: string;
-  domain: string;
-  description: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-  settings: any;
-  userCount: number;
-  subscription?: {
-    id: string;
-    isActive: boolean;
-    status: string;
-    startDate: string;
-    endDate: string;
-    plan: {
-      id: string;
-      name: string;
-      description: string;
-      planType: string;
-      price: number;
-      billingCycle: string;
-      features: string[];
-    };
-  };
-}
-
-interface AdminStats {
-  tenants: {
-    total: number;
-    active: number;
-    inactive: number;
-  };
-  users: {
-    total: number;
-    active: number;
-    inactive: number;
-    superAdmins: number;
-    tenantAssigned: number;
-    systemUsers: number;
-  };
-  subscriptions: {
-    total: number;
-    active: number;
-    inactive: number;
-  };
-  planDistribution: Array<{
-    planName: string;
-    planType: string;
-    count: number;
-  }>;
-}
-
-export default function AdminTenantsPage() {
+function AdminTenantsPageContent() {
   const router = useRouter();
   const { user } = useAuth();
+  const { handleAsync, showSuccess } = useAsyncErrorHandler();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [adminStats, setAdminStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  // Delete tenant modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [deleteAllData, setDeleteAllData] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  // Check if user is super admin
   if (user?.userRole !== 'super_admin') {
     return (
       <DashboardLayout>
@@ -117,22 +66,20 @@ export default function AdminTenantsPage() {
   }, []);
 
   const fetchTenants = async () => {
-    try {
+    await handleAsync(async () => {
       setLoading(true);
       const response = await apiService.get('/admin/tenants');
       setTenants(response);
-    } catch (error) {
-      } finally {
-      setLoading(false);
-    }
+    }, 'Failed to load tenants. Please try again.');
+
+    setLoading(false);
   };
 
   const fetchAdminStats = async () => {
-    try {
+    await handleAsync(async () => {
       const response = await apiService.get('/admin/stats');
       setAdminStats(response);
-    } catch (error) {
-      }
+    }, 'Failed to load admin statistics. Please try again.');
   };
 
   const viewTenantDetails = (tenantId: string) => {
@@ -140,19 +87,17 @@ export default function AdminTenantsPage() {
   };
 
   const toggleTenantStatus = async (tenantId: string, currentStatus: boolean) => {
-    try {
+    await handleAsync(async () => {
       await apiService.put(`/admin/tenants/${tenantId}/status`, {
         is_active: !currentStatus,
       });
 
-      // Update local state
       setTenants(prev => prev.map(tenant =>
         tenant.id === tenantId
           ? { ...tenant, isActive: !currentStatus }
           : tenant,
       ));
 
-      // Update admin stats
       if (adminStats) {
         setAdminStats(prev => prev ? {
           ...prev,
@@ -163,22 +108,22 @@ export default function AdminTenantsPage() {
           },
         } : null);
       }
-    } catch (error) {
-      }
+
+      showSuccess(`Tenant ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
+    }, `Failed to ${!currentStatus ? 'activate' : 'deactivate'} tenant. Please try again.`);
   };
 
   const handleDeleteTenant = async () => {
     if (!selectedTenant) return;
 
-    setActionLoading('delete-tenant');
-    try {
+    await handleAsync(async () => {
+      setActionLoading('delete-tenant');
       await apiService.delete(`/admin/tenants/${selectedTenant.id}`, {
         data: {
           deleteAllData: deleteAllData,
         },
       });
 
-      // Remove tenant from local state
       setTenants(prev => prev.filter(tenant => tenant.id !== selectedTenant.id));
 
       // Update admin stats
@@ -194,13 +139,13 @@ export default function AdminTenantsPage() {
         } : null);
       }
 
+      showSuccess('Tenant deleted successfully');
       setShowDeleteModal(false);
       setSelectedTenant(null);
       setDeleteAllData(false);
-    } catch (error) {
-      } finally {
-      setActionLoading(null);
-    }
+    }, 'Failed to delete tenant. Please try again.');
+
+    setActionLoading(null);
   };
 
   const openDeleteModal = (tenant: Tenant) => {
@@ -240,15 +185,11 @@ export default function AdminTenantsPage() {
   return (
     <DashboardLayout>
       <div className="container mx-auto px-6 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Tenant Management</h1>
-            <p className="text-gray-600 mt-2">Manage all tenants and their subscriptions</p>
-          </div>
-        </div>
+        <PageHeader
+          title="Tenant Management"
+          description="Manage all tenants and their subscriptions"
+        />
 
-        {/* Statistics Cards */}
         {adminStats && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <Card>
@@ -305,30 +246,28 @@ export default function AdminTenantsPage() {
           </div>
         )}
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search tenants..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active Only</SelectItem>
-              <SelectItem value="inactive">Inactive Only</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <SearchFilterBar
+          searchTerm={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Search tenants..."
+          filters={[
+            {
+              key: 'status',
+              label: 'Filter by status',
+              options: [
+                { value: 'all', label: 'All Status' },
+                { value: 'active', label: 'Active Only' },
+                { value: 'inactive', label: 'Inactive Only' }
+              ]
+            }
+          ]}
+          onFilterChange={(key, value) => {
+            if (key === 'status') {
+              setStatusFilter(value);
+            }
+          }}
+        />
 
-        {/* Tenants Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredTenants.map((tenant) => (
             <Card key={tenant.id} className="hover:shadow-lg transition-shadow">
@@ -415,7 +354,6 @@ export default function AdminTenantsPage() {
         )}
       </div>
 
-      {/* Delete Tenant Confirmation Modal */}
       <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -490,5 +428,13 @@ export default function AdminTenantsPage() {
         </DialogContent>
       </Dialog>
     </DashboardLayout>
+  );
+}
+
+export default function AdminTenantsPage() {
+  return (
+    <ErrorHandlerProvider defaultErrorType="toast">
+      <AdminTenantsPageContent />
+    </ErrorHandlerProvider>
   );
 }

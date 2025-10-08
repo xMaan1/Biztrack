@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 import { User } from '../../models/auth';
 import { apiService } from '../../services/ApiService';
-import { cn, getInitials } from '../../lib/utils';
+import { cn, getInitials } from '../../utils/utils';
 
 export default function UsersList() {
   const [users, setUsers] = useState<User[]>([]);

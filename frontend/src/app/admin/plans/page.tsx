@@ -9,8 +9,15 @@ import { Button } from '@/src/components/ui/button';
 import { Badge } from '@/src/components/ui/badge';
 import { Input } from '@/src/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/src/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/src/components/ui/dialog';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
+import { Plan, PlanStats } from '@/src/models/admin';
+import {
+  PageHeader,
+  SearchFilterBar,
+  FormModal,
+  ErrorHandlerProvider,
+  useAsyncErrorHandler
+} from '../../../components/common';
 import {
   CreditCard,
   DollarSign,
@@ -19,7 +26,6 @@ import {
   CheckCircle,
   XCircle,
   Edit,
-  Search,
   Settings,
   Activity,
   Package,
@@ -27,31 +33,10 @@ import {
   Zap,
 } from 'lucide-react';
 
-interface Plan {
-  id: string;
-  name: string;
-  description: string;
-  planType: string;
-  price: number;
-  billingCycle: string;
-  maxProjects?: number;
-  maxUsers?: number;
-  features: string[];
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface PlanStats {
-  totalPlans: number;
-  activePlans: number;
-  inactivePlans: number;
-  totalSubscriptions: number;
-}
-
-export default function AdminPlansPage() {
+function AdminPlansPageContent() {
   const { user } = useAuth();
   const { getCurrencySymbol } = useCurrency();
+  const { handleAsync, showSuccess, showError } = useAsyncErrorHandler();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [planStats, setPlanStats] = useState<PlanStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -61,7 +46,6 @@ export default function AdminPlansPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Check if user is super admin
   if (user?.userRole !== 'super_admin') {
     return (
       <DashboardLayout>
@@ -83,25 +67,22 @@ export default function AdminPlansPage() {
     fetchPlans();
   }, []);
 
-  // Update stats whenever plans change
   useEffect(() => {
     fetchPlanStats();
   }, [plans]);
 
   const fetchPlans = async () => {
-    try {
+    await handleAsync(async () => {
       setLoading(true);
       const response = await apiService.get('/plans');
       setPlans(response.plans || []);
-    } catch (error) {
-      } finally {
-      setLoading(false);
-    }
+    }, 'Failed to load plans. Please try again.');
+
+    setLoading(false);
   };
 
   const fetchPlanStats = () => {
     try {
-      // Calculate stats from plans data
       const totalPlans = plans.length;
       const activePlans = plans.filter(plan => plan.isActive).length;
       const inactivePlans = totalPlans - activePlans;
@@ -110,41 +91,42 @@ export default function AdminPlansPage() {
         totalPlans,
         activePlans,
         inactivePlans,
-        totalSubscriptions: 0, // This would need a separate API call
+        totalSubscriptions: 0, 
       });
     } catch (error) {
-      }
+      showError('Failed to calculate plan statistics', 'toast');
+    }
   };
 
   const handleActivatePlan = async (planId: string) => {
-    try {
+    await handleAsync(async () => {
       await apiService.put(`/plans/${planId}/activate`);
-      await fetchPlans(); // This will trigger stats recalculation via useEffect
-    } catch (error) {
-      }
+      showSuccess('Plan activated successfully');
+      await fetchPlans(); 
+    }, 'Failed to activate plan. Please try again.');
   };
 
   const handleDeactivatePlan = async (planId: string) => {
-    try {
+    await handleAsync(async () => {
       await apiService.put(`/plans/${planId}/deactivate`);
-      await fetchPlans(); // This will trigger stats recalculation via useEffect
-    } catch (error) {
-      }
+      showSuccess('Plan deactivated successfully');
+      await fetchPlans(); 
+    }, 'Failed to deactivate plan. Please try again.');
   };
 
   const handleUpdatePlan = async (planData: Partial<Plan>) => {
     if (!selectedPlan) return;
 
-    try {
+    await handleAsync(async () => {
       setIsUpdating(true);
       await apiService.put(`/plans/${selectedPlan.id}`, planData);
+      showSuccess('Plan updated successfully');
       await fetchPlans(); // This will trigger stats recalculation via useEffect
       setIsEditDialogOpen(false);
       setSelectedPlan(null);
-    } catch (error) {
-      } finally {
-      setIsUpdating(false);
-    }
+    }, 'Failed to update plan. Please try again.');
+
+    setIsUpdating(false);
   };
 
   const filteredPlans = plans.filter(plan => {
@@ -213,13 +195,11 @@ export default function AdminPlansPage() {
   return (
     <DashboardLayout>
       <div className="container mx-auto px-6 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Plan Management</h1>
-          <p className="text-gray-600">Manage subscription plans and their availability</p>
-        </div>
+        <PageHeader
+          title="Plan Management"
+          description="Manage subscription plans and their availability"
+        />
 
-        {/* Stats Cards */}
         {planStats && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <Card>
@@ -280,38 +260,28 @@ export default function AdminPlansPage() {
           </div>
         )}
 
-        {/* Filters */}
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder="Search plans..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <div className="sm:w-48">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filter by status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Plans</SelectItem>
-                    <SelectItem value="active">Active Only</SelectItem>
-                    <SelectItem value="inactive">Inactive Only</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <SearchFilterBar
+          searchTerm={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Search plans..."
+          filters={[
+            {
+              key: 'status',
+              label: 'Filter by status',
+              options: [
+                { value: 'all', label: 'All Plans' },
+                { value: 'active', label: 'Active Only' },
+                { value: 'inactive', label: 'Inactive Only' }
+              ]
+            }
+          ]}
+          onFilterChange={(key, value) => {
+            if (key === 'status') {
+              setStatusFilter(value);
+            }
+          }}
+        />
 
-        {/* Plans Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredPlans.map((plan) => (
             <Card key={plan.id} className="relative">
@@ -339,7 +309,6 @@ export default function AdminPlansPage() {
                     </span>
                   </div>
 
-                  {/* Limits */}
                   <div className="space-y-2">
                     {plan.maxUsers && (
                       <div className="flex items-center justify-between">
@@ -378,7 +347,6 @@ export default function AdminPlansPage() {
                     </div>
                   </div>
 
-                  {/* Status */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       {plan.isActive ? (
@@ -394,7 +362,6 @@ export default function AdminPlansPage() {
                     </div>
                   </div>
 
-                  {/* Actions */}
                   <div className="flex space-x-2 pt-4">
                     <Button
                       variant="outline"
@@ -451,103 +418,98 @@ export default function AdminPlansPage() {
           </Card>
         )}
 
-        {/* Edit Plan Dialog */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Edit Plan</DialogTitle>
-              <DialogDescription>
-                Update the plan details and settings.
-              </DialogDescription>
-            </DialogHeader>
-
-            {selectedPlan && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Plan Name</label>
-                    <Input
-                      defaultValue={selectedPlan.name}
-                      onChange={(e) => setSelectedPlan({...selectedPlan, name: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Price</label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      defaultValue={selectedPlan.price}
-                      onChange={(e) => setSelectedPlan({...selectedPlan, price: parseFloat(e.target.value)})}
-                    />
-                  </div>
-                </div>
-
+        <FormModal
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          title="Edit Plan"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (selectedPlan) {
+              handleUpdatePlan(selectedPlan);
+            }
+          }}
+          loading={isUpdating}
+          submitText="Update Plan"
+        >
+          {selectedPlan && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Description</label>
+                  <label className="text-sm font-medium text-gray-700">Plan Name</label>
                   <Input
-                    defaultValue={selectedPlan.description}
-                    onChange={(e) => setSelectedPlan({...selectedPlan, description: e.target.value})}
+                    value={selectedPlan.name}
+                    onChange={(e) => setSelectedPlan({...selectedPlan, name: e.target.value})}
                   />
                 </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Billing Cycle</label>
-                    <Select
-                      defaultValue={selectedPlan.billingCycle}
-                      onValueChange={(value) => setSelectedPlan({...selectedPlan, billingCycle: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="monthly">Monthly</SelectItem>
-                        <SelectItem value="yearly">Yearly</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Max Users</label>
-                    <Input
-                      type="number"
-                      defaultValue={selectedPlan.maxUsers || ''}
-                      onChange={(e) => setSelectedPlan({...selectedPlan, maxUsers: parseInt(e.target.value) || undefined})}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="isActive"
-                    checked={selectedPlan.isActive}
-                    onChange={(e) => setSelectedPlan({...selectedPlan, isActive: e.target.checked})}
-                    className="rounded"
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Price</label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={selectedPlan.price}
+                    onChange={(e) => setSelectedPlan({...selectedPlan, price: parseFloat(e.target.value)})}
                   />
-                  <label htmlFor="isActive" className="text-sm font-medium text-gray-700">
-                    Plan is active
-                  </label>
-                </div>
-
-                <div className="flex justify-end space-x-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsEditDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={() => handleUpdatePlan(selectedPlan)}
-                    disabled={isUpdating}
-                  >
-                    {isUpdating ? 'Updating...' : 'Update Plan'}
-                  </Button>
                 </div>
               </div>
-            )}
-          </DialogContent>
-        </Dialog>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700">Description</label>
+                <Input
+                  value={selectedPlan.description}
+                  onChange={(e) => setSelectedPlan({...selectedPlan, description: e.target.value})}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Billing Cycle</label>
+                  <Select
+                    value={selectedPlan.billingCycle}
+                    onValueChange={(value) => setSelectedPlan({...selectedPlan, billingCycle: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="monthly">Monthly</SelectItem>
+                      <SelectItem value="yearly">Yearly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Max Users</label>
+                  <Input
+                    type="number"
+                    value={selectedPlan.maxUsers || ''}
+                    onChange={(e) => setSelectedPlan({...selectedPlan, maxUsers: parseInt(e.target.value) || undefined})}
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="isActive"
+                  checked={selectedPlan.isActive}
+                  onChange={(e) => setSelectedPlan({...selectedPlan, isActive: e.target.checked})}
+                  className="rounded"
+                />
+                <label htmlFor="isActive" className="text-sm font-medium text-gray-700">
+                  Plan is active
+                </label>
+              </div>
+            </div>
+          )}
+        </FormModal>
       </div>
     </DashboardLayout>
+  );
+}
+
+export default function AdminPlansPage() {
+  return (
+    <ErrorHandlerProvider defaultErrorType="toast">
+      <AdminPlansPageContent />
+    </ErrorHandlerProvider>
   );
 }

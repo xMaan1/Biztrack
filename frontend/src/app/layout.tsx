@@ -4,6 +4,7 @@ import './globals.css';
 import { AuthGuard } from '@/src/components/auth';
 import { AuthProvider } from '@/src/contexts/AuthContext';
 import { CurrencyProvider } from '@/src/contexts/CurrencyContext';
+import { ErrorBoundary } from '@/src/components/ErrorBoundary';
 
 const inter = Inter({
   variable: '--font-inter',
@@ -31,11 +32,13 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
-        <AuthProvider>
-          <CurrencyProvider>
-            <AuthGuard>{children}</AuthGuard>
-          </CurrencyProvider>
-        </AuthProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            <CurrencyProvider>
+              <AuthGuard>{children}</AuthGuard>
+            </CurrencyProvider>
+          </AuthProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

@@ -34,7 +34,7 @@ import {
 import { Project } from '../../models/project/Project';
 import { User } from '../../models/auth';
 import { apiService } from '../../services/ApiService';
-import { cn } from '../../lib/utils';
+import { cn } from '../../utils/utils';
 
 interface TaskListProps {
   projectId?: string;

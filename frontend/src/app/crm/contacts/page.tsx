@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card,
@@ -27,12 +25,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/src/components/ui/dialog';
-import { Alert, AlertDescription } from '@/src/components/ui/alert';
 import {
   Users,
   Plus,
-  Search,
-  Filter,
   Edit,
   Trash2,
   Eye,
@@ -48,8 +43,15 @@ import {
 import { DashboardLayout } from '../../../components/layout';
 import { useCustomOptions } from '../../../hooks/useCustomOptions';
 import { CustomOptionDialog } from '../../../components/common/CustomOptionDialog';
+import {
+  PageHeader,
+  SearchFilterBar,
+  DeleteConfirmationModal,
+  ErrorHandlerProvider,
+  useAsyncErrorHandler
+} from '../../../components/common';
 
-export default function CRMContactsPage() {
+function CRMContactsPageContent() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<CRMContactFilters>({});
@@ -60,12 +62,10 @@ export default function CRMContactsPage() {
   const [deletingContact, setDeletingContact] = useState<Contact | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
-  const [showCustomContactTypeDialog, setShowCustomContactTypeDialog] =
-    useState(false);
+  const [showCustomContactTypeDialog, setShowCustomContactTypeDialog] = useState(false);
 
-  // Custom options hook
+  const { handleAsync, showSuccess } = useAsyncErrorHandler();
+
   const {
     customContactTypes,
     createCustomContactType,
@@ -94,23 +94,21 @@ export default function CRMContactsPage() {
   }, [filters]);
 
   const loadContacts = useCallback(async () => {
-    try {
+    await handleAsync(async () => {
       setLoading(true);
       const response = await CRMService.getContacts(filters, 1, 100);
       setContacts(response.contacts);
-    } catch (err) {
-      } finally {
-      setLoading(false);
-    }
-  }, [filters]);
+    }, 'Failed to load contacts. Please try again.');
+    
+    setLoading(false);
+  }, [filters, handleAsync]);
 
   const loadCompanies = useCallback(async () => {
-    try {
+    await handleAsync(async () => {
       const response = await CRMService.getCompanies({}, 1, 100);
       setCompanies(response.companies || []);
-    } catch (err) {
-      }
-  }, []);
+    }, 'Failed to load companies. Please try again.');
+  }, [handleAsync]);
 
   const handleSearch = () => {
     setFilters((prev: CRMContactFilters) => ({ ...prev, search }));
@@ -125,10 +123,9 @@ export default function CRMContactsPage() {
     name: string,
     description: string,
   ) => {
-    try {
+    await handleAsync(async () => {
       await createCustomContactType(name, description);
-    } catch (error) {
-      }
+    }, 'Failed to create custom contact type. Please try again.');
   };
 
   const resetForm = () => {
@@ -160,30 +157,29 @@ export default function CRMContactsPage() {
       return;
     }
 
-    setSubmitting(true);
-    try {
+    await handleAsync(async () => {
+      setSubmitting(true);
       if (editingContact) {
-        // TODO: Implement update functionality
-        } else {
+        await CRMService.updateContact(editingContact.id, formData);
+        showSuccess('Contact updated successfully!');
+        setShowCreateDialog(false);
+        setEditingContact(null);
+        resetForm();
+        loadContacts();
+      } else {
         await CRMService.createContact(formData);
-        setSuccessMessage('Contact created successfully!');
+        showSuccess('Contact created successfully!');
         setShowCreateDialog(false);
         resetForm();
         loadContacts();
-        setTimeout(() => setSuccessMessage(''), 3000);
       }
-    } catch (error) {
-      setErrorMessage('Error saving contact. Please try again.');
-      setTimeout(() => setErrorMessage(''), 5000);
-    } finally {
-      setSubmitting(false);
-    }
+    }, 'Error saving contact. Please try again.');
+    
+    setSubmitting(false);
   };
 
   const handleEdit = (contact: Contact) => {
     setEditingContact(contact);
-    setErrorMessage('');
-    setSuccessMessage('');
     setFormData({
       firstName: contact.firstName,
       lastName: contact.lastName,
@@ -212,19 +208,15 @@ export default function CRMContactsPage() {
   const confirmDelete = async () => {
     if (!deletingContact) return;
 
-    setDeleting(true);
-    try {
+    await handleAsync(async () => {
+      setDeleting(true);
       await CRMService.deleteContact(deletingContact.id);
-      setSuccessMessage('Contact deleted successfully!');
+      showSuccess('Contact deleted successfully!');
       setDeletingContact(null);
       loadContacts();
-      setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (error) {
-      setErrorMessage('Error deleting contact. Please try again.');
-      setTimeout(() => setErrorMessage(''), 5000);
-    } finally {
-      setDeleting(false);
-    }
+    }, 'Error deleting contact. Please try again.');
+    
+    setDeleting(false);
   };
 
   if (loading) {
@@ -241,90 +233,48 @@ export default function CRMContactsPage() {
   return (
     <DashboardLayout>
       <div className="container mx-auto p-6 space-y-6">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">CRM Contacts</h1>
-            <p className="text-gray-600">
-              Manage your customer contacts and relationships
-            </p>
-            {successMessage && (
-              <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-md">
-                <p className="text-green-800 text-sm">{successMessage}</p>
-              </div>
-            )}
-          </div>
-          <Button
-            onClick={() => {
-              setEditingContact(null);
-              resetForm();
-              setErrorMessage('');
-              setSuccessMessage('');
-              setShowCreateDialog(true);
-            }}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Contact
-          </Button>
-        </div>
+        <PageHeader
+          title="CRM Contacts"
+          description="Manage your customer contacts and relationships"
+          actions={[
+            {
+              label: 'New Contact',
+              onClick: () => {
+                setEditingContact(null);
+                resetForm();
+                setShowCreateDialog(true);
+              },
+              icon: <Plus className="w-4 h-4" />
+            }
+          ]}
+        />
 
-        {/* Filters and Search */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Filter className="w-4 h-4 mr-2" />
-              Filters & Search
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="text-sm font-medium">Search</label>
-                <div className="flex space-x-2">
-                  <Input
-                    placeholder="Search contacts..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  />
-                  <Button onClick={handleSearch}>
-                    <Search className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Type</label>
-                <Select
-                  value={filters.type || 'all'}
-                  onValueChange={(value) =>
-                    setFilters((prev: CRMContactFilters) => ({
-                      ...prev,
-                      type:
-                        value === 'all' ? undefined : (value as ContactType),
-                    }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Types" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    {Object.values(ContactType).map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-end">
-                <Button variant="outline" onClick={resetFilters}>
-                  Reset Filters
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <SearchFilterBar
+          searchTerm={search}
+          onSearchChange={setSearch}
+          onSearch={handleSearch}
+          searchPlaceholder="Search contacts..."
+          filters={[
+            {
+              key: 'type',
+              label: 'Type',
+              options: [
+                { value: 'all', label: 'All Types' },
+                ...Object.values(ContactType).map((type) => ({
+                  value: type,
+                  label: type.charAt(0).toUpperCase() + type.slice(1)
+                }))
+              ]
+            }
+          ]}
+          onFilterChange={(key, value) => {
+            setFilters((prev: CRMContactFilters) => ({
+              ...prev,
+              [key]: value === 'all' ? undefined : value
+            }));
+          }}
+          onClearFilters={resetFilters}
+        />
 
         {/* Contacts List */}
         <Card>
@@ -439,11 +389,6 @@ export default function CRMContactsPage() {
             </DialogHeader>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {errorMessage && (
-                <Alert variant="destructive">
-                  <AlertDescription>{errorMessage}</AlertDescription>
-                </Alert>
-              )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="firstName">First Name *</Label>
@@ -659,8 +604,6 @@ export default function CRMContactsPage() {
                     setShowCreateDialog(false);
                     setEditingContact(null);
                     resetForm();
-                    setErrorMessage('');
-                    setSuccessMessage('');
                   }}
                 >
                   Cancel
@@ -841,48 +784,15 @@ export default function CRMContactsPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Delete Confirmation Dialog */}
-        <Dialog
+        <DeleteConfirmationModal
           open={!!deletingContact}
           onOpenChange={() => setDeletingContact(null)}
-        >
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Delete Contact</DialogTitle>
-            </DialogHeader>
-
-            {deletingContact && (
-              <div className="space-y-4">
-                <p className="text-gray-600">
-                  Are you sure you want to delete{' '}
-                  <strong>
-                    &quot;{deletingContact.firstName} {deletingContact.lastName}
-                    &quot;
-                  </strong>
-                  ? This action cannot be undone.
-                </p>
-
-                <DialogFooter>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setDeletingContact(null)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    onClick={confirmDelete}
-                    disabled={deleting}
-                  >
-                    {deleting ? 'Deleting...' : 'Delete Contact'}
-                  </Button>
-                </DialogFooter>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
+          onConfirm={confirmDelete}
+          title="Delete Contact"
+          description={`Are you sure you want to delete "${deletingContact?.firstName} ${deletingContact?.lastName}"? This action cannot be undone.`}
+          itemName={deletingContact ? `${deletingContact.firstName} ${deletingContact.lastName}` : ''}
+          loading={deleting}
+        />
 
         {/* Custom Contact Type Dialog */}
         <CustomOptionDialog
@@ -897,5 +807,13 @@ export default function CRMContactsPage() {
         />
       </div>
     </DashboardLayout>
+  );
+}
+
+export default function CRMContactsPage() {
+  return (
+    <ErrorHandlerProvider defaultErrorType="toast">
+      <CRMContactsPageContent />
+    </ErrorHandlerProvider>
   );
 }

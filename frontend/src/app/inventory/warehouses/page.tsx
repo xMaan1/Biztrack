@@ -41,7 +41,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { inventoryService } from '../../../services/InventoryService';
 import { Warehouse as WarehouseType } from '../../../models/inventory';
 import { DashboardLayout } from '../../../components/layout';
-import { formatDate } from '../../../lib/utils';
+import { formatDate } from '../../../utils/utils';
 
 export default function WarehousesPage() {
   const { } = useAuth();

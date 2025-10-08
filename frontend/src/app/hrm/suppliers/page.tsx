@@ -44,7 +44,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import HRMService from '../../../services/HRMService';
 import { Supplier, SupplierUpdate } from '../../../models/hrm';
 import { DashboardLayout } from '../../../components/layout';
-import { formatDate } from '../../../lib/utils';
+import { formatDate } from '../../../utils/utils';
 import { toast } from 'sonner';
 
 export default function SuppliersPage() {

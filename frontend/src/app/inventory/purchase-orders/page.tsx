@@ -48,7 +48,7 @@ import {
   PurchaseOrderUpdate,
 } from '../../../models/inventory';
 import { DashboardLayout } from '../../../components/layout';
-import { formatDate } from '../../../lib/utils';
+import { formatDate } from '../../../utils/utils';
 import { useCurrency } from '../../../contexts/CurrencyContext';
 import {
   Dialog,

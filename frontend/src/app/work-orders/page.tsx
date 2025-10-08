@@ -52,7 +52,7 @@ import {
   getStatusIcon,
   getTypeIcon,
   formatDate,
-} from '../../lib/utils';
+} from '../../utils/utils';
 
 interface WorkOrder {
   id: string;

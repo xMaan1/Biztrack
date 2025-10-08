@@ -64,7 +64,7 @@ import {
 } from '../../models/qualityControl';
 import QualityControlService from '../../services/QualityControlService';
 import { DashboardLayout } from '../../components/layout';
-import { formatDate } from '../../lib/utils';
+import { formatDate } from '../../utils/utils';
 
 export default function QualityControlPage() {
   const { getCurrencySymbol } = useCurrency();

@@ -15,7 +15,7 @@ import {
 } from '../ui/dropdown-menu';
 import { Menu, Bell, Settings, LogOut, User } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { getInitials } from '../../lib/utils';
+import { getInitials } from '../../utils/utils';
 
 interface HeaderProps {
   onMenuClick: () => void;

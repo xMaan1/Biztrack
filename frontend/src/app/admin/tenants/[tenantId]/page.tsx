@@ -10,11 +10,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src
 import { Button } from '@/src/components/ui/button';
 import { Badge } from '@/src/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/src/components/ui/tabs';
-import { Alert, AlertDescription } from '@/src/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/src/components/ui/dialog';
 import { Separator } from '@/src/components/ui/separator';
 import { Checkbox } from '@/src/components/ui/checkbox';
 import { Invoice } from '@/src/models/sales';
+import { TenantDetails } from '@/src/models/admin';
+import {
+  PageHeader,
+  ErrorHandlerProvider,
+  useAsyncErrorHandler
+} from '../../../../components/common';
 import {
   Building2,
   Users,
@@ -28,102 +33,20 @@ import {
   Eye,
   UserPlus,
   Plus,
-  AlertTriangle,
   Loader2,
 } from 'lucide-react';
 
-interface TenantDetails {
-  tenant: {
-    id: string;
-    name: string;
-    domain: string;
-    description: string;
-    isActive: boolean;
-    createdAt: string;
-    updatedAt: string;
-    settings: any;
-  };
-  subscription?: {
-    id: string;
-    isActive: boolean;
-    status: string;
-    startDate: string;
-    endDate: string;
-    plan: {
-      id: string;
-      name: string;
-      description: string;
-      planType: string;
-      price: number;
-      billingCycle: string;
-      maxProjects: number;
-      maxUsers: number;
-      features: string[];
-      modules: string[];
-    };
-  };
-  users: Array<{
-    id: string;
-    userName: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    userRole: string;
-    isActive: boolean;
-    createdAt: string;
-    lastLogin: string | null;
-    tenantUserActive: boolean;
-  }>;
-  invoices: Array<{
-    id: string;
-    invoiceNumber: string;
-    customerName: string;
-    customerEmail: string;
-    total: number;
-    status: string;
-    issueDate: string;
-    dueDate: string;
-    createdAt: string;
-  }>;
-  projects: Array<{
-    id: string;
-    name: string;
-    description: string;
-    status: string;
-    startDate: string;
-    endDate: string;
-    createdAt: string;
-  }>;
-  customers: Array<{
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-    company: string;
-    status: string;
-    createdAt: string;
-  }>;
-  statistics: {
-    totalUsers: number;
-    activeUsers: number;
-    totalProjects: number;
-    totalCustomers: number;
-    totalInvoices: number;
-    totalInvoiceValue: number;
-    lastActivity: string;
-  };
-}
 
-export default function TenantDetailsPage() {
+function TenantDetailsPageContent() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
   const { getCurrencySymbol, formatCurrency } = useCurrency();
+  const { handleAsync, showSuccess } = useAsyncErrorHandler();
   const tenantId = params.tenantId as string;
 
   const [tenantDetails, setTenantDetails] = useState<TenantDetails | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   // Invoice details modal state
@@ -160,85 +83,72 @@ export default function TenantDetailsPage() {
   }, [tenantId]);
 
   const fetchTenantDetails = async () => {
-    try {
+    await handleAsync(async () => {
       setLoading(true);
-      setError('');
       const response = await apiService.get(`/admin/tenants/${tenantId}/complete`);
       setTenantDetails(response);
-    } catch (err: any) {
-      console.error('Error fetching tenant details:', err);
-      setError(err.response?.data?.detail || 'Failed to load tenant details');
-    } finally {
-      setLoading(false);
-    }
+    }, 'Failed to load tenant details. Please try again.');
+    
+    setLoading(false);
   };
 
   const handleToggleTenantStatus = async () => {
     if (!tenantDetails) return;
 
-    try {
+    await handleAsync(async () => {
       setActionLoading('toggle-status');
       await apiService.put(`/admin/tenants/${tenantId}/status`, {
         is_active: !tenantDetails.tenant.isActive,
       });
       await fetchTenantDetails(); // Refresh data
-    } catch (err: any) {
-      console.error('Error updating tenant status:', err);
-      setError(err.response?.data?.detail || 'Failed to update tenant status');
-    } finally {
-      setActionLoading(null);
-    }
+      showSuccess(`Tenant ${!tenantDetails.tenant.isActive ? 'activated' : 'deactivated'} successfully`);
+    }, 'Failed to update tenant status. Please try again.');
+    
+    setActionLoading(null);
   };
 
   const handleDeleteUser = async (userId: string) => {
     if (!confirm('Are you sure you want to remove this user from the tenant?')) return;
 
-    try {
+    await handleAsync(async () => {
       setActionLoading(`delete-user-${userId}`);
       await apiService.delete(`/admin/tenants/${tenantId}/users/${userId}`);
       await fetchTenantDetails(); // Refresh data
-    } catch (err: any) {
-      console.error('Error deleting user:', err);
-      setError(err.response?.data?.detail || 'Failed to remove user');
-    } finally {
-      setActionLoading(null);
-    }
+      showSuccess('User removed from tenant successfully');
+    }, 'Failed to remove user. Please try again.');
+    
+    setActionLoading(null);
   };
 
   const handleDeleteInvoice = async (invoiceId: string) => {
     if (!confirm('Are you sure you want to delete this invoice?')) return;
 
-    try {
+    await handleAsync(async () => {
       setActionLoading(`delete-invoice-${invoiceId}`);
       await apiService.delete(`/admin/tenants/${tenantId}/invoices/${invoiceId}`);
       await fetchTenantDetails(); // Refresh data
-    } catch (err: any) {
-      console.error('Error deleting invoice:', err);
-      setError(err.response?.data?.detail || 'Failed to delete invoice');
-    } finally {
-      setActionLoading(null);
-    }
+      showSuccess('Invoice deleted successfully');
+    }, 'Failed to delete invoice. Please try again.');
+    
+    setActionLoading(null);
   };
 
   const handleViewInvoiceDetails = async (invoiceId: string) => {
-    setInvoiceDetailsLoading(true);
-    try {
+    await handleAsync(async () => {
+      setInvoiceDetailsLoading(true);
       const response = await apiService.get(`/admin/tenants/${tenantId}/invoices/${invoiceId}`);
       setSelectedInvoice(response.invoice);
       setShowInvoiceDetails(true);
-    } catch (error) {
-      console.error('Error fetching invoice details:', error);
-      setError('Failed to load invoice details');
-    } finally {
-      setInvoiceDetailsLoading(false);
-    }
+    }, 'Failed to load invoice details. Please try again.');
+    
+    setInvoiceDetailsLoading(false);
   };
 
   const handleDeleteTenant = async () => {
     if (!tenantDetails) return;
 
-    setActionLoading('delete-tenant');
-    try {
+    await handleAsync(async () => {
+      setActionLoading('delete-tenant');
       await apiService.delete(`/admin/tenants/${tenantId}`, {
         data: {
           deleteAllData: deleteAllData,
@@ -246,44 +156,37 @@ export default function TenantDetailsPage() {
       });
       setShowDeleteTenantModal(false);
       setDeleteAllData(false);
-      // Redirect to tenants list after successful deletion
+      showSuccess('Tenant deleted successfully');
       router.push('/admin/tenants');
-    } catch (err: any) {
-      console.error('Error deleting tenant:', err);
-      setError(err.response?.data?.detail || 'Failed to delete tenant');
-    } finally {
-      setActionLoading(null);
-    }
+    }, 'Failed to delete tenant. Please try again.');
+    
+    setActionLoading(null);
   };
 
   const handleDeleteProject = async (projectId: string) => {
     if (!confirm('Are you sure you want to delete this project?')) return;
 
-    try {
+    await handleAsync(async () => {
       setActionLoading(`delete-project-${projectId}`);
       await apiService.delete(`/admin/tenants/${tenantId}/projects/${projectId}`);
       await fetchTenantDetails(); // Refresh data
-    } catch (err: any) {
-      console.error('Error deleting project:', err);
-      setError(err.response?.data?.detail || 'Failed to delete project');
-    } finally {
-      setActionLoading(null);
-    }
+      showSuccess('Project deleted successfully');
+    }, 'Failed to delete project. Please try again.');
+    
+    setActionLoading(null);
   };
 
   const handleDeleteCustomer = async (customerId: string) => {
     if (!confirm('Are you sure you want to delete this customer?')) return;
 
-    try {
+    await handleAsync(async () => {
       setActionLoading(`delete-customer-${customerId}`);
       await apiService.delete(`/admin/tenants/${tenantId}/customers/${customerId}`);
       await fetchTenantDetails(); // Refresh data
-    } catch (err: any) {
-      console.error('Error deleting customer:', err);
-      setError(err.response?.data?.detail || 'Failed to delete customer');
-    } finally {
-      setActionLoading(null);
-    }
+      showSuccess('Customer deleted successfully');
+    }, 'Failed to delete customer. Please try again.');
+    
+    setActionLoading(null);
   };
 
   const getStatusColor = (status: string) => {
@@ -320,7 +223,7 @@ export default function TenantDetailsPage() {
     );
   }
 
-  if (error || !tenantDetails) {
+  if (!tenantDetails) {
     return (
       <DashboardLayout>
         <div className="container mx-auto px-6 py-8">
@@ -328,7 +231,7 @@ export default function TenantDetailsPage() {
             <CardHeader>
               <CardTitle className="text-center text-red-600">Error</CardTitle>
               <CardDescription className="text-center">
-                {error || 'Failed to load tenant details'}
+                Failed to load tenant details
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -349,25 +252,43 @@ export default function TenantDetailsPage() {
   return (
     <DashboardLayout>
       <div className="container mx-auto px-6 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="outline"
-              onClick={() => router.push('/admin/tenants')}
-              className="gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Tenants
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                {tenantDetails.tenant.name}
-              </h1>
-              <p className="text-gray-600">{tenantDetails.tenant.domain}</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
+        <PageHeader
+          title={tenantDetails.tenant.name}
+          description={tenantDetails.tenant.domain}
+          actions={[
+            {
+              label: 'Back to Tenants',
+              onClick: () => router.push('/admin/tenants'),
+              icon: <ArrowLeft className="h-4 w-4" />,
+              variant: 'outline' as const
+            },
+            {
+              label: tenantDetails.tenant.isActive ? 'Deactivate' : 'Activate',
+              onClick: handleToggleTenantStatus,
+              icon: actionLoading === 'toggle-status' ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              ) : tenantDetails.tenant.isActive ? (
+                <ToggleLeft className="h-4 w-4" />
+              ) : (
+                <ToggleRight className="h-4 w-4" />
+              ),
+              variant: 'outline' as const,
+              disabled: actionLoading === 'toggle-status'
+            },
+            {
+              label: 'Delete Tenant',
+              onClick: () => setShowDeleteTenantModal(true),
+              icon: actionLoading === 'delete-tenant' ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              ),
+              variant: 'destructive' as const,
+              disabled: actionLoading === 'delete-tenant'
+            }
+          ]}
+        >
+          <div className="flex items-center space-x-2 mt-2">
             <Badge
               className={tenantDetails.tenant.isActive
                 ? 'bg-green-100 text-green-800'
@@ -376,45 +297,9 @@ export default function TenantDetailsPage() {
             >
               {tenantDetails.tenant.isActive ? 'Active' : 'Inactive'}
             </Badge>
-            <Button
-              onClick={handleToggleTenantStatus}
-              disabled={actionLoading === 'toggle-status'}
-              variant="outline"
-              className="gap-2"
-            >
-              {actionLoading === 'toggle-status' ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-              ) : tenantDetails.tenant.isActive ? (
-                <ToggleLeft className="h-4 w-4" />
-              ) : (
-                <ToggleRight className="h-4 w-4" />
-              )}
-              {tenantDetails.tenant.isActive ? 'Deactivate' : 'Activate'}
-            </Button>
-            <Button
-              onClick={() => setShowDeleteTenantModal(true)}
-              disabled={actionLoading === 'delete-tenant'}
-              variant="destructive"
-              className="gap-2"
-            >
-              {actionLoading === 'delete-tenant' ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              ) : (
-                <Trash2 className="h-4 w-4" />
-              )}
-              Delete Tenant
-            </Button>
           </div>
-        </div>
+        </PageHeader>
 
-        {error && (
-          <Alert className="mb-6 border-red-200 bg-red-50">
-            <AlertTriangle className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-red-800">
-              {error}
-            </AlertDescription>
-          </Alert>
-        )}
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -1126,5 +1011,13 @@ export default function TenantDetailsPage() {
         </DialogContent>
       </Dialog>
     </DashboardLayout>
+  );
+}
+
+export default function TenantDetailsPage() {
+  return (
+    <ErrorHandlerProvider defaultErrorType="toast">
+      <TenantDetailsPageContent />
+    </ErrorHandlerProvider>
   );
 }

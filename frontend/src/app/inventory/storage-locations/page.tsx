@@ -8,7 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
 import { Input } from '../../../components/ui/input';
 import {
@@ -19,17 +18,8 @@ import {
   SelectValue,
 } from '../../../components/ui/select';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '../../../components/ui/table';
-import {
   MapPin,
   Plus,
-  Search,
   Edit,
   Trash2,
   Building2,
@@ -44,21 +34,23 @@ import {
   StorageLocationCreate,
 } from '../../../models/inventory';
 import { DashboardLayout } from '../../../components/layout';
-import { formatDate } from '../../../lib/utils';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '../../../components/ui/dialog';
+import { formatDate } from '../../../utils/date';
 import { Label } from '../../../components/ui/label';
 import { Textarea } from '../../../components/ui/textarea';
+import { 
+  PageHeader, 
+  DataTable, 
+  SearchFilterBar, 
+  FormModal, 
+  DeleteConfirmationModal,
+  ErrorHandlerProvider,
+  useAsyncErrorHandler
+} from '../../../components/common';
 
-export default function StorageLocationsPage() {
+function StorageLocationsPageContent() {
   const { } = useAuth();
   const router = useRouter();
+  const { handleAsync, showSuccess, showError } = useAsyncErrorHandler();
   const [storageLocations, setStorageLocations] = useState<StorageLocation[]>(
     [],
   );
@@ -68,10 +60,8 @@ export default function StorageLocationsPage() {
   const [warehouseFilter, setWarehouseFilter] = useState<string>('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
   const [locationToDelete, setLocationToDelete] = useState<StorageLocation | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newLocation, setNewLocation] = useState<StorageLocationCreate>({
     warehouseId: '',
@@ -90,7 +80,7 @@ export default function StorageLocationsPage() {
   }, []);
 
   const fetchData = async () => {
-    try {
+    await handleAsync(async () => {
       setLoading(true);
       const [locationsResponse, warehousesResponse] = await Promise.all([
         inventoryService.getStorageLocations(),
@@ -99,7 +89,6 @@ export default function StorageLocationsPage() {
       setStorageLocations(locationsResponse.storageLocations);
       setWarehouses(warehousesResponse.warehouses);
 
-      // Set default warehouse if available
       if (
         warehousesResponse.warehouses.length > 0 &&
         !newLocation.warehouseId
@@ -109,10 +98,9 @@ export default function StorageLocationsPage() {
           warehouseId: warehousesResponse.warehouses[0].id,
         }));
       }
-    } catch (error) {
-      } finally {
-      setLoading(false);
-    }
+    }, 'Failed to load storage locations. Please try again.');
+
+    setLoading(false);
   };
 
   const filteredLocations = storageLocations.filter((location) => {
@@ -147,17 +135,15 @@ export default function StorageLocationsPage() {
   const handleDelete = async () => {
     if (!locationToDelete) return;
     
-    try {
+    await handleAsync(async () => {
       setDeleteLoading(true);
       await inventoryService.deleteStorageLocation(locationToDelete.id);
+      showSuccess('Storage location deleted successfully');
       fetchData();
       closeDeleteDialog();
-    } catch (error) {
-      setErrorMessage('Failed to delete storage location. Please try again.');
-      setIsErrorDialogOpen(true);
-    } finally {
-      setDeleteLoading(false);
-    }
+    }, 'Failed to delete storage location. Please try again.');
+
+    setDeleteLoading(false);
   };
 
   const getLocationTypeBadge = (type: string) => {
@@ -182,14 +168,14 @@ export default function StorageLocationsPage() {
 
   const handleAddLocation = async () => {
     if (!newLocation.warehouseId || !newLocation.name || !newLocation.code) {
-      setErrorMessage('Please fill in all required fields');
-      setIsErrorDialogOpen(true);
+      showError('Please fill in all required fields', 'toast');
       return;
     }
 
-    try {
+    await handleAsync(async () => {
       setIsSubmitting(true);
       await inventoryService.createStorageLocation(newLocation);
+      showSuccess('Storage location created successfully');
       setIsAddModalOpen(false);
       setNewLocation({
         warehouseId: warehouses.length > 0 ? warehouses[0].id : '',
@@ -203,26 +189,9 @@ export default function StorageLocationsPage() {
         isActive: true,
       });
       fetchData();
-    } catch (error) {
-      setErrorMessage('Failed to create storage location. Please try again.');
-      setIsErrorDialogOpen(true);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    }, 'Failed to create storage location. Please try again.');
 
-  const resetForm = () => {
-    setNewLocation({
-      warehouseId: warehouses.length > 0 ? warehouses[0].id : '',
-      name: '',
-      code: '',
-      description: '',
-      locationType: 'shelf',
-      parentLocationId: '',
-      capacity: undefined,
-      usedCapacity: undefined,
-      isActive: true,
-    });
+    setIsSubmitting(false);
   };
 
   if (loading) {
@@ -238,187 +207,153 @@ export default function StorageLocationsPage() {
   return (
     <DashboardLayout>
       <div className="container mx-auto p-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              Storage Locations
-            </h1>
-            <p className="text-muted-foreground">
-              Manage storage locations and organize your warehouse space
-            </p>
-          </div>
-          <Button onClick={() => setIsAddModalOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Location
-          </Button>
-        </div>
+        <PageHeader
+          title="Storage Locations"
+          description="Manage storage locations and organize your warehouse space"
+          actions={[
+            {
+              label: 'Add Location',
+              onClick: () => setIsAddModalOpen(true),
+              icon: <Plus className="mr-2 h-4 w-4" />
+            }
+          ]}
+        />
 
-        {/* Search and Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Search & Filters</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search by name, code, or description..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Select
-                value={warehouseFilter}
-                onValueChange={setWarehouseFilter}
-              >
-                <SelectTrigger className="w-64">
-                  <SelectValue placeholder="Filter by warehouse" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Warehouses</SelectItem>
-                  {warehouses.map((warehouse) => (
-                    <SelectItem key={warehouse.id} value={warehouse.id}>
-                      {warehouse.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
+        <SearchFilterBar
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          searchPlaceholder="Search by name, code, or description..."
+          filters={[
+            {
+              key: 'warehouse',
+              label: 'Filter by warehouse',
+              options: [
+                { value: 'all', label: 'All Warehouses' },
+                ...warehouses.map(warehouse => ({
+                  value: warehouse.id,
+                  label: warehouse.name
+                }))
+              ]
+            }
+          ]}
+          onFilterChange={(key, value) => {
+            if (key === 'warehouse') {
+              setWarehouseFilter(value);
+            }
+          }}
+        />
 
-        {/* Storage Locations Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Storage Locations</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {filteredLocations.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Warehouse</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Capacity</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredLocations.map((location) => (
-                    <TableRow key={location.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <MapPin className="h-5 w-5 text-muted-foreground" />
-                          <div>
-                            <div className="font-medium">{location.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              Code: {location.code}
-                            </div>
-                            {location.description && (
-                              <div className="text-sm text-muted-foreground truncate max-w-48">
-                                {location.description}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Building2 className="h-4 w-4 text-muted-foreground" />
-                          <span>{getWarehouseName(location.warehouseId)}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {getLocationTypeBadge(location.locationType)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-2">
-                          {location.capacity && (
-                            <div className="flex items-center gap-2">
-                              <Package className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-sm">
-                                {location.usedCapacity || 0} /{' '}
-                                {location.capacity} m³
-                              </span>
-                            </div>
-                          )}
-                          {location.capacity && (
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div
-                                className="bg-blue-600 h-2 rounded-full"
-                                style={{
-                                  width: `${getCapacityPercentage(location.usedCapacity || 0, location.capacity)}%`,
-                                }}
-                              ></div>
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={location.isActive ? 'default' : 'secondary'}
-                        >
-                          {location.isActive ? 'Active' : 'Inactive'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm text-muted-foreground">
-                          {formatDate(location.createdAt)}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              router.push(
-                                `/inventory/storage-locations/${location.id}/edit`,
-                              )
-                            }
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => openDeleteDialog(location)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <div className="text-center py-12">
-                <MapPin className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-medium mb-2">
-                  No storage locations found
-                </h3>
-                <p className="text-muted-foreground mb-4">
-                  {searchTerm || warehouseFilter !== 'all'
-                    ? 'Try adjusting your search terms or filters'
-                    : 'Get started by adding your first storage location'}
-                </p>
-                {!searchTerm && warehouseFilter === 'all' && (
-                  <Button onClick={() => setIsAddModalOpen(true)}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Storage Location
-                  </Button>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <DataTable
+          data={filteredLocations}
+          columns={[
+            {
+              key: 'name',
+              label: 'Location',
+              render: (_, row) => (
+                <div className="flex items-center gap-3">
+                  <MapPin className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <div className="font-medium">{row.name}</div>
+                    <div className="text-sm text-muted-foreground">
+                      Code: {row.code}
+                    </div>
+                    {row.description && (
+                      <div className="text-sm text-muted-foreground truncate max-w-48">
+                        {row.description}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            },
+            {
+              key: 'warehouseId',
+              label: 'Warehouse',
+              render: (value) => (
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                  <span>{getWarehouseName(value)}</span>
+                </div>
+              )
+            },
+            {
+              key: 'locationType',
+              label: 'Type',
+              render: (value) => getLocationTypeBadge(value)
+            },
+            {
+              key: 'capacity',
+              label: 'Capacity',
+              render: (_, row) => (
+                <div className="space-y-2">
+                  {row.capacity && (
+                    <div className="flex items-center gap-2">
+                      <Package className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">
+                        {row.usedCapacity || 0} / {row.capacity} m³
+                      </span>
+                    </div>
+                  )}
+                  {row.capacity && (
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full"
+                        style={{
+                          width: `${getCapacityPercentage(row.usedCapacity || 0, row.capacity)}%`,
+                        }}
+                      ></div>
+                    </div>
+                  )}
+                </div>
+              )
+            },
+            {
+              key: 'isActive',
+              label: 'Status',
+              render: (value) => (
+                <Badge variant={value ? 'default' : 'secondary'}>
+                  {value ? 'Active' : 'Inactive'}
+                </Badge>
+              )
+            },
+            {
+              key: 'createdAt',
+              label: 'Created',
+              render: (value) => (
+                <div className="text-sm text-muted-foreground">
+                  {formatDate(value)}
+                </div>
+              )
+            }
+          ]}
+          actions={[
+            {
+              key: 'edit',
+              label: 'Edit',
+              icon: <Edit className="h-4 w-4" />,
+              variant: 'outline',
+              onClick: (row) => router.push(`/inventory/storage-locations/${row.id}/edit`)
+            },
+            {
+              key: 'delete',
+              label: 'Delete',
+              icon: <Trash2 className="h-4 w-4" />,
+              variant: 'outline',
+              onClick: (row) => openDeleteDialog(row)
+            }
+          ]}
+          emptyState={{
+            icon: <MapPin className="h-12 w-12" />,
+            title: 'No storage locations found',
+            description: searchTerm || warehouseFilter !== 'all'
+              ? 'Try adjusting your search terms or filters'
+              : 'Get started by adding your first storage location',
+            action: !searchTerm && warehouseFilter === 'all' ? {
+              label: 'Add Storage Location',
+              onClick: () => setIsAddModalOpen(true)
+            } : undefined
+          }}
+        />
 
         {/* Summary Stats */}
         <div className="grid gap-4 md:grid-cols-4">
@@ -487,228 +422,186 @@ export default function StorageLocationsPage() {
           </Card>
         </div>
 
-        {/* Add Location Modal */}
-        <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Add New Storage Location</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="warehouse">Warehouse *</Label>
-                  <Select
-                    value={newLocation.warehouseId}
-                    onValueChange={(value) =>
-                      setNewLocation((prev) => ({
-                        ...prev,
-                        warehouseId: value,
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select warehouse" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {warehouses.map((warehouse) => (
-                        <SelectItem key={warehouse.id} value={warehouse.id}>
-                          {warehouse.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="locationType">Location Type *</Label>
-                  <Select
-                    value={newLocation.locationType}
-                    onValueChange={(value) =>
-                      setNewLocation((prev) => ({
-                        ...prev,
-                        locationType: value,
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="shelf">Shelf</SelectItem>
-                      <SelectItem value="rack">Rack</SelectItem>
-                      <SelectItem value="bin">Bin</SelectItem>
-                      <SelectItem value="area">Area</SelectItem>
-                      <SelectItem value="zone">Zone</SelectItem>
-                      <SelectItem value="room">Room</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name *</Label>
-                  <Input
-                    id="name"
-                    value={newLocation.name}
-                    onChange={(e) =>
-                      setNewLocation((prev) => ({
-                        ...prev,
-                        name: e.target.value,
-                      }))
-                    }
-                    placeholder="Enter location name"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="code">Code *</Label>
-                  <Input
-                    id="code"
-                    value={newLocation.code}
-                    onChange={(e) =>
-                      setNewLocation((prev) => ({
-                        ...prev,
-                        code: e.target.value,
-                      }))
-                    }
-                    placeholder="Enter location code"
-                  />
-                </div>
-              </div>
-
+        <FormModal
+          open={isAddModalOpen}
+          onOpenChange={setIsAddModalOpen}
+          title="Add New Storage Location"
+          onSubmit={handleAddLocation}
+          loading={isSubmitting}
+        >
+          <div className="grid gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={newLocation.description || ''}
-                  onChange={(e) =>
+                <Label htmlFor="warehouse">Warehouse *</Label>
+                <Select
+                  value={newLocation.warehouseId}
+                  onValueChange={(value) =>
                     setNewLocation((prev) => ({
                       ...prev,
-                      description: e.target.value,
+                      warehouseId: value,
                     }))
                   }
-                  placeholder="Enter location description"
-                  rows={3}
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select warehouse" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {warehouses.map((warehouse) => (
+                      <SelectItem key={warehouse.id} value={warehouse.id}>
+                        {warehouse.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="capacity">Capacity (m³)</Label>
-                  <Input
-                    id="capacity"
-                    type="number"
-                    step="0.1"
-                    value={newLocation.capacity || ''}
-                    onChange={(e) =>
-                      setNewLocation((prev) => ({
-                        ...prev,
-                        capacity: e.target.value
-                          ? parseFloat(e.target.value)
-                          : undefined,
-                      }))
-                    }
-                    placeholder="Enter capacity"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="usedCapacity">Used Capacity (m³)</Label>
-                  <Input
-                    id="usedCapacity"
-                    type="number"
-                    step="0.1"
-                    value={newLocation.usedCapacity || ''}
-                    onChange={(e) =>
-                      setNewLocation((prev) => ({
-                        ...prev,
-                        usedCapacity: e.target.value
-                          ? parseFloat(e.target.value)
-                          : undefined,
-                      }))
-                    }
-                    placeholder="Enter used capacity"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="isActive"
-                  checked={newLocation.isActive}
-                  onChange={(e) =>
+              <div className="space-y-2">
+                <Label htmlFor="locationType">Location Type *</Label>
+                <Select
+                  value={newLocation.locationType}
+                  onValueChange={(value) =>
                     setNewLocation((prev) => ({
                       ...prev,
-                      isActive: e.target.checked,
+                      locationType: value,
                     }))
                   }
-                  className="rounded border-gray-300"
-                />
-                <Label htmlFor="isActive">Active</Label>
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="shelf">Shelf</SelectItem>
+                    <SelectItem value="rack">Rack</SelectItem>
+                    <SelectItem value="bin">Bin</SelectItem>
+                    <SelectItem value="area">Area</SelectItem>
+                    <SelectItem value="zone">Zone</SelectItem>
+                    <SelectItem value="room">Room</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setIsAddModalOpen(false);
-                  resetForm();
-                }}
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleAddLocation} disabled={isSubmitting}>
-                {isSubmitting ? 'Creating...' : 'Create Location'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
 
-        {/* Delete Confirmation Dialog */}
-        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Delete Storage Location</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to delete{' '}
-                <strong>{locationToDelete?.name}</strong>? This action cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={closeDeleteDialog}
-                disabled={deleteLoading}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={handleDelete}
-                disabled={deleteLoading}
-              >
-                {deleteLoading ? 'Deleting...' : 'Delete'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Name *</Label>
+                <Input
+                  id="name"
+                  value={newLocation.name}
+                  onChange={(e) =>
+                    setNewLocation((prev) => ({
+                      ...prev,
+                      name: e.target.value,
+                    }))
+                  }
+                  placeholder="Enter location name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="code">Code *</Label>
+                <Input
+                  id="code"
+                  value={newLocation.code}
+                  onChange={(e) =>
+                    setNewLocation((prev) => ({
+                      ...prev,
+                      code: e.target.value,
+                    }))
+                  }
+                  placeholder="Enter location code"
+                />
+              </div>
+            </div>
 
-        {/* Error Dialog */}
-        <Dialog open={isErrorDialogOpen} onOpenChange={setIsErrorDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Error</DialogTitle>
-              <DialogDescription>
-                {errorMessage}
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button onClick={() => setIsErrorDialogOpen(false)}>
-                OK
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={newLocation.description || ''}
+                onChange={(e) =>
+                  setNewLocation((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
+                }
+                placeholder="Enter location description"
+                rows={3}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="capacity">Capacity (m³)</Label>
+                <Input
+                  id="capacity"
+                  type="number"
+                  step="0.1"
+                  value={newLocation.capacity || ''}
+                  onChange={(e) =>
+                    setNewLocation((prev) => ({
+                      ...prev,
+                      capacity: e.target.value
+                        ? parseFloat(e.target.value)
+                        : undefined,
+                    }))
+                  }
+                  placeholder="Enter capacity"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="usedCapacity">Used Capacity (m³)</Label>
+                <Input
+                  id="usedCapacity"
+                  type="number"
+                  step="0.1"
+                  value={newLocation.usedCapacity || ''}
+                  onChange={(e) =>
+                    setNewLocation((prev) => ({
+                      ...prev,
+                      usedCapacity: e.target.value
+                        ? parseFloat(e.target.value)
+                        : undefined,
+                    }))
+                  }
+                  placeholder="Enter used capacity"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="isActive"
+                checked={newLocation.isActive}
+                onChange={(e) =>
+                  setNewLocation((prev) => ({
+                    ...prev,
+                    isActive: e.target.checked,
+                  }))
+                }
+                className="rounded border-gray-300"
+              />
+              <Label htmlFor="isActive">Active</Label>
+            </div>
+          </div>
+        </FormModal>
+
+        <DeleteConfirmationModal
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          onConfirm={handleDelete}
+          title="Delete Storage Location"
+          description="Are you sure you want to delete"
+          itemName={locationToDelete?.name}
+          loading={deleteLoading}
+        />
       </div>
     </DashboardLayout>
+  );
+}
+
+export default function StorageLocationsPage() {
+  return (
+    <ErrorHandlerProvider defaultErrorType="toast">
+      <StorageLocationsPageContent />
+    </ErrorHandlerProvider>
   );
 }

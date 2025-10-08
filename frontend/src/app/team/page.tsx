@@ -39,7 +39,7 @@ import {
 import { apiService } from '../../services/ApiService';
 import { User } from '../../models/auth';
 import { DashboardLayout } from '../../components/layout';
-import { cn, getInitials } from '../../lib/utils';
+import { cn, getInitials } from '../../utils/utils';
 
 export default function TeamPage() {
   const [teamMembers, setTeamMembers] = useState<User[]>([]);

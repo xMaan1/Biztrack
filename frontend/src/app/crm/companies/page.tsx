@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card,
@@ -13,7 +11,6 @@ import { Badge } from '@/src/components/ui/badge';
 import { Input } from '@/src/components/ui/input';
 import { Textarea } from '@/src/components/ui/textarea';
 import { Label } from '@/src/components/ui/label';
-import { Alert, AlertDescription } from '@/src/components/ui/alert';
 import {
   Select,
   SelectContent,
@@ -31,8 +28,6 @@ import {
 import {
   Building2,
   Plus,
-  Search,
-  Filter,
   Edit,
   Trash2,
   Eye,
@@ -51,8 +46,15 @@ import {
 import { DashboardLayout } from '../../../components/layout';
 import { useCustomOptions } from '../../../hooks/useCustomOptions';
 import { CustomOptionDialog } from '../../../components/common/CustomOptionDialog';
+import {
+  PageHeader,
+  SearchFilterBar,
+  DeleteConfirmationModal,
+  ErrorHandlerProvider,
+  useAsyncErrorHandler
+} from '../../../components/common';
 
-export default function CRMCompaniesPage() {
+function CRMCompaniesPageContent() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<CRMCompanyFilters>({});
@@ -63,12 +65,10 @@ export default function CRMCompaniesPage() {
   const [deletingCompany, setDeletingCompany] = useState<Company | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
-  const [showCustomIndustryDialog, setShowCustomIndustryDialog] =
-    useState(false);
+  const [showCustomIndustryDialog, setShowCustomIndustryDialog] = useState(false);
 
-  // Custom options hook
+  const { handleAsync, showSuccess } = useAsyncErrorHandler();
+
   const {
     customIndustries,
     createCustomIndustry,
@@ -96,15 +96,14 @@ export default function CRMCompaniesPage() {
   });
 
   const loadCompanies = useCallback(async () => {
-    try {
+    await handleAsync(async () => {
       setLoading(true);
       const response = await CRMService.getCompanies(filters, 1, 100);
       setCompanies(response.companies);
-    } catch (err) {
-      } finally {
-      setLoading(false);
-    }
-  }, [filters]);
+    }, 'Failed to load companies. Please try again.');
+    
+    setLoading(false);
+  }, [filters, handleAsync]);
 
   useEffect(() => {
     loadCompanies();
@@ -123,10 +122,9 @@ export default function CRMCompaniesPage() {
     name: string,
     description: string,
   ) => {
-    try {
+    await handleAsync(async () => {
       await createCustomIndustry(name, description);
-    } catch (error) {
-      }
+    }, 'Failed to create custom industry. Please try again.');
   };
 
   const resetForm = () => {
@@ -159,36 +157,29 @@ export default function CRMCompaniesPage() {
       return;
     }
 
-    setSubmitting(true);
-    try {
+    await handleAsync(async () => {
+      setSubmitting(true);
       if (editingCompany) {
         await CRMService.updateCompany(editingCompany.id, formData);
-        setSuccessMessage('Company updated successfully!');
+        showSuccess('Company updated successfully!');
         setShowCreateDialog(false);
         setEditingCompany(null);
         resetForm();
         loadCompanies();
-        setTimeout(() => setSuccessMessage(''), 3000);
       } else {
         await CRMService.createCompany(formData);
-        setSuccessMessage('Company created successfully!');
+        showSuccess('Company created successfully!');
         setShowCreateDialog(false);
         resetForm();
         loadCompanies();
-        setTimeout(() => setSuccessMessage(''), 3000);
       }
-    } catch (error) {
-      setErrorMessage('Error saving company. Please try again.');
-      setTimeout(() => setErrorMessage(''), 5000);
-    } finally {
-      setSubmitting(false);
-    }
+    }, 'Error saving company. Please try again.');
+    
+    setSubmitting(false);
   };
 
   const handleEdit = (company: Company) => {
     setEditingCompany(company);
-    setErrorMessage('');
-    setSuccessMessage('');
     setFormData({
       name: company.name,
       industry: company.industry,
@@ -218,19 +209,15 @@ export default function CRMCompaniesPage() {
   const confirmDelete = async () => {
     if (!deletingCompany) return;
 
-    setDeleting(true);
-    try {
+    await handleAsync(async () => {
+      setDeleting(true);
       await CRMService.deleteCompany(deletingCompany.id);
-      setSuccessMessage('Company deleted successfully!');
+      showSuccess('Company deleted successfully!');
       setDeletingCompany(null);
       loadCompanies();
-      setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (error) {
-      setErrorMessage('Error deleting company. Please try again.');
-      setTimeout(() => setErrorMessage(''), 5000);
-    } finally {
-      setDeleting(false);
-    }
+    }, 'Error deleting company. Please try again.');
+    
+    setDeleting(false);
   };
 
   const handleView = (company: Company) => {
@@ -251,115 +238,59 @@ export default function CRMCompaniesPage() {
   return (
     <DashboardLayout>
       <div className="container mx-auto p-6 space-y-6">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">CRM Companies</h1>
-            <p className="text-gray-600">
-              Manage your company database and relationships
-            </p>
-            {successMessage && (
-              <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-md">
-                <p className="text-green-800 text-sm">{successMessage}</p>
-              </div>
-            )}
-          </div>
-          <Button
-            onClick={() => {
-              setEditingCompany(null);
-              resetForm();
-              setErrorMessage('');
-              setSuccessMessage('');
-              setShowCreateDialog(true);
-            }}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Company
-          </Button>
-        </div>
+        <PageHeader
+          title="CRM Companies"
+          description="Manage your company database and relationships"
+          actions={[
+            {
+              label: 'New Company',
+              onClick: () => {
+                setEditingCompany(null);
+                resetForm();
+                setShowCreateDialog(true);
+              },
+              icon: <Plus className="w-4 h-4" />
+            }
+          ]}
+        />
 
-        {/* Filters and Search */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Filter className="w-4 h-4 mr-2" />
-              Filters & Search
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <label className="text-sm font-medium">Search</label>
-                <div className="flex space-x-2">
-                  <Input
-                    placeholder="Search companies..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  />
-                  <Button onClick={handleSearch}>
-                    <Search className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Industry</label>
-                <Select
-                  value={filters.industry || 'all'}
-                  onValueChange={(value) =>
-                    setFilters((prev: CRMCompanyFilters) => ({
-                      ...prev,
-                      industry:
-                        value === 'all' ? undefined : (value as Industry),
-                    }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Industries" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Industries</SelectItem>
-                    {Object.values(Industry).map((industry) => (
-                      <SelectItem key={industry} value={industry}>
-                        {industry.charAt(0).toUpperCase() + industry.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Size</label>
-                <Select
-                  value={filters.size || 'all'}
-                  onValueChange={(value) =>
-                    setFilters((prev: CRMCompanyFilters) => ({
-                      ...prev,
-                      size:
-                        value === 'all' ? undefined : (value as CompanySize),
-                    }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Sizes" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Sizes</SelectItem>
-                    {Object.values(CompanySize).map((size) => (
-                      <SelectItem key={size} value={size}>
-                        {size.charAt(0).toUpperCase() + size.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-end">
-                <Button variant="outline" onClick={resetFilters}>
-                  Reset Filters
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <SearchFilterBar
+          searchTerm={search}
+          onSearchChange={setSearch}
+          onSearch={handleSearch}
+          searchPlaceholder="Search companies..."
+          filters={[
+            {
+              key: 'industry',
+              label: 'Industry',
+              options: [
+                { value: 'all', label: 'All Industries' },
+                ...Object.values(Industry).map((industry) => ({
+                  value: industry,
+                  label: industry.charAt(0).toUpperCase() + industry.slice(1)
+                }))
+              ]
+            },
+            {
+              key: 'size',
+              label: 'Size',
+              options: [
+                { value: 'all', label: 'All Sizes' },
+                ...Object.values(CompanySize).map((size) => ({
+                  value: size,
+                  label: size.charAt(0).toUpperCase() + size.slice(1)
+                }))
+              ]
+            }
+          ]}
+          onFilterChange={(key, value) => {
+            setFilters((prev: CRMCompanyFilters) => ({
+              ...prev,
+              [key]: value === 'all' ? undefined : value
+            }));
+          }}
+          onClearFilters={resetFilters}
+        />
 
         {/* Companies List */}
         <Card>
@@ -489,11 +420,6 @@ export default function CRMCompaniesPage() {
             </DialogHeader>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {errorMessage && (
-                <Alert variant="destructive">
-                  <AlertDescription>{errorMessage}</AlertDescription>
-                </Alert>
-              )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
                   <Label htmlFor="name">Company Name *</Label>
@@ -797,8 +723,6 @@ export default function CRMCompaniesPage() {
                     setShowCreateDialog(false);
                     setEditingCompany(null);
                     resetForm();
-                    setErrorMessage('');
-                    setSuccessMessage('');
                   }}
                 >
                   Cancel
@@ -1019,45 +943,15 @@ export default function CRMCompaniesPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Delete Confirmation Dialog */}
-        <Dialog
+        <DeleteConfirmationModal
           open={!!deletingCompany}
           onOpenChange={() => setDeletingCompany(null)}
-        >
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Delete Company</DialogTitle>
-            </DialogHeader>
-
-            {deletingCompany && (
-              <div className="space-y-4">
-                <p className="text-gray-600">
-                  Are you sure you want to delete{' '}
-                  <strong>&quot;{deletingCompany.name}&quot;</strong>? This
-                  action cannot be undone.
-                </p>
-
-                <DialogFooter>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setDeletingCompany(null)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    onClick={confirmDelete}
-                    disabled={deleting}
-                  >
-                    {deleting ? 'Deleting...' : 'Delete Company'}
-                  </Button>
-                </DialogFooter>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
+          onConfirm={confirmDelete}
+          title="Delete Company"
+          description={`Are you sure you want to delete "${deletingCompany?.name}"? This action cannot be undone.`}
+          itemName={deletingCompany?.name}
+          loading={deleting}
+        />
 
         {/* Custom Industry Dialog */}
         <CustomOptionDialog
@@ -1072,5 +966,13 @@ export default function CRMCompaniesPage() {
         />
       </div>
     </DashboardLayout>
+  );
+}
+
+export default function CRMCompaniesPage() {
+  return (
+    <ErrorHandlerProvider defaultErrorType="toast">
+      <CRMCompaniesPageContent />
+    </ErrorHandlerProvider>
   );
 }

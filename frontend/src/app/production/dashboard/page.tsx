@@ -34,7 +34,7 @@ import {
   getStatusColor,
   getPriorityColor,
   formatDate,
-} from '../../../lib/utils';
+} from '../../../utils/utils';
 
 export default function ProductionDashboardPage() {
   const { } = useAuth();

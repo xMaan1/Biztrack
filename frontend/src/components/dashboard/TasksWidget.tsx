@@ -23,7 +23,7 @@ import {
   getPriorityColor,
   getInitials,
   formatDate,
-} from '../../lib/utils';
+} from '../../utils/utils';
 
 export default function TasksWidget() {
   const router = useRouter();

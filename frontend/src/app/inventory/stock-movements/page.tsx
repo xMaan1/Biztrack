@@ -46,7 +46,7 @@ import {
   Warehouse,
 } from '../../../models/inventory';
 import { DashboardLayout } from '../../../components/layout';
-import { formatDate } from '../../../lib/utils';
+import { formatDate } from '../../../utils/utils';
 import {
   Dialog,
   DialogContent,
