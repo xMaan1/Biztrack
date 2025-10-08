@@ -47,6 +47,9 @@ import {
   Pill,
   Building2,
   Settings,
+  Trash2,
+  ArrowLeft,
+  ArrowRight,
 } from 'lucide-react';
 
 interface SubMenuItem {
@@ -287,13 +290,34 @@ const allMenuItems: MenuItem[] = [
         roles: ['*'],
         planTypes: ['*'],
       },
+      {
+        text: 'Dumps',
+        icon: Trash2,
+        path: '/inventory/dumps',
+        roles: ['*'],
+        planTypes: ['*'],
+      },
+      {
+        text: 'Return from Customer',
+        icon: ArrowLeft,
+        path: '/inventory/customer-returns',
+        roles: ['*'],
+        planTypes: ['*'],
+      },
+      {
+        text: 'Return to Supplier',
+        icon: ArrowRight,
+        path: '/inventory/supplier-returns',
+        roles: ['*'],
+        planTypes: ['*'],
+      },
     ],
   },
   {
     text: 'HRM',
     icon: UserCheck,
     roles: ['*'],
-    planTypes: ['*'], // Available for all plans
+    planTypes: ['*'],
     gradient: 'from-purple-500 to-pink-500',
     subItems: [
       {

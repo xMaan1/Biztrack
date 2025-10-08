@@ -763,3 +763,47 @@ def get_inventory_dashboard(
 ):
     """Get inventory dashboard statistics"""
     return get_inventory_dashboard_stats(db, str(current_tenant["id"]))
+
+# Dumps Endpoints
+@router.get("/dumps", response_model=StockMovementsResponse)
+def get_dumps(
+    warehouse_id: Optional[str] = Query(None),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    current_tenant: dict = Depends(get_current_tenant)
+):
+    """Get all damaged items (dumps) for the current tenant"""
+    movements = get_stock_movements(db, str(current_tenant["id"]), None, warehouse_id, skip, limit)
+    
+    # Filter only DAMAGE type movements
+    damage_movements = [movement for movement in movements if movement.movementType == "damage"]
+    
+    # Convert each movement to response format (convert UUIDs to strings)
+    response_movements = []
+    for movement in damage_movements:
+        response_data = {
+            "id": str(movement.id),
+            "tenant_id": str(movement.tenant_id),
+            "productId": movement.productId,
+            "warehouseId": str(movement.warehouseId),
+            "locationId": movement.locationId,
+            "movementType": movement.movementType,
+            "quantity": movement.quantity,
+            "unitCost": movement.unitCost,
+            "referenceNumber": movement.referenceNumber,
+            "referenceType": movement.referenceType,
+            "notes": movement.notes,
+            "batchNumber": movement.batchNumber,
+            "serialNumber": movement.serialNumber,
+            "expiryDate": movement.expiryDate.isoformat() if movement.expiryDate else None,
+            "status": movement.status,
+            "createdBy": str(movement.createdBy),
+            "createdAt": movement.createdAt,
+            "updatedAt": movement.updatedAt
+        }
+        response_movements.append(response_data)
+    
+    total = len(response_movements)
+    return StockMovementsResponse(stockMovements=response_movements, total=total)

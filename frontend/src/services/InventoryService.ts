@@ -251,6 +251,78 @@ class InventoryService {
     const response = await apiService.get('/inventory/dashboard');
     return response;
   }
+
+  // Dumps Management
+  async getDumps(
+    warehouseId?: string,
+    skip: number = 0,
+    limit: number = 100,
+  ): Promise<StockMovementsResponse> {
+    const params = new URLSearchParams();
+    if (warehouseId) params.append('warehouse_id', warehouseId);
+    params.append('skip', skip.toString());
+    params.append('limit', limit.toString());
+
+    const response = await apiService.get(
+      `/inventory/dumps?${params.toString()}`,
+    );
+    return response;
+  }
+
+  async createDump(
+    dump: StockMovementCreate,
+  ): Promise<StockMovementResponse> {
+    const response = await apiService.post('/inventory/dumps', dump);
+    return response;
+  }
+
+  // Customer Returns Management
+  async getCustomerReturns(
+    warehouseId?: string,
+    skip: number = 0,
+    limit: number = 100,
+  ): Promise<StockMovementsResponse> {
+    const params = new URLSearchParams();
+    if (warehouseId) params.append('warehouse_id', warehouseId);
+    params.append('skip', skip.toString());
+    params.append('limit', limit.toString());
+
+    const response = await apiService.get(
+      `/inventory/customer-returns?${params.toString()}`,
+    );
+    return response;
+  }
+
+  async createCustomerReturn(
+    returnData: StockMovementCreate,
+  ): Promise<StockMovementResponse> {
+    const response = await apiService.post('/inventory/customer-returns', returnData);
+    return response;
+  }
+
+  // Supplier Returns Management
+  async getSupplierReturns(
+    warehouseId?: string,
+    skip: number = 0,
+    limit: number = 100,
+  ): Promise<StockMovementsResponse> {
+    const params = new URLSearchParams();
+    if (warehouseId) params.append('warehouse_id', warehouseId);
+    params.append('skip', skip.toString());
+    params.append('limit', limit.toString());
+
+    const response = await apiService.get(
+      `/inventory/supplier-returns?${params.toString()}`,
+    );
+    return response;
+  }
+
+  async createSupplierReturn(
+    returnData: StockMovementCreate,
+  ): Promise<StockMovementResponse> {
+    const response = await apiService.post('/inventory/supplier-returns', returnData);
+    return response;
+  }
 }
 
 export const inventoryService = new InventoryService();

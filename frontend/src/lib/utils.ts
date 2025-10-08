@@ -23,6 +23,13 @@ export function formatDateTime(date: string | Date) {
   });
 }
 
+export function formatCurrency(amount: number, currency: string = 'USD') {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency,
+  }).format(amount);
+}
+
 export function getInitials(name: string) {
   return name
     .split(' ')
