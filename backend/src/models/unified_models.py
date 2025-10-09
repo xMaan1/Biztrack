@@ -1962,7 +1962,7 @@ class SupplierUpdate(BaseModel):
 
 class Supplier(SupplierBase):
     id: UUID
-    tenantId: UUID
+    tenant_id: UUID
     createdBy: UUID
     createdAt: datetime
     updatedAt: datetime
@@ -2609,7 +2609,7 @@ class WarehouseUpdate(BaseModel):
 
 class Warehouse(WarehouseBase):
     id: str
-    tenantId: str
+    tenant_id: str
     createdBy: str
     createdAt: datetime
     updatedAt: datetime
@@ -2771,7 +2771,7 @@ class PurchaseOrderUpdate(BaseModel):
 
 class PurchaseOrder(PurchaseOrderBase):
     id: str
-    tenantId: str
+    tenant_id: str
     createdBy: str
     createdAt: datetime
     updatedAt: datetime

@@ -1325,7 +1325,7 @@ def create_supplier_endpoint(
         supplier_data = supplier.dict()
         supplier_data.update({
             "id": str(uuid.uuid4()),
-            "tenantId": tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            "tenant_id": tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             "createdBy": str(current_user.id),
             "createdAt": datetime.utcnow(),
             "updatedAt": datetime.utcnow()

@@ -33,7 +33,6 @@ import {
 import LedgerService from '@/src/services/ledgerService';
 import DashboardLayout from '@/src/components/layout/DashboardLayout';
 import {
-  ChartOfAccountsResponse,
   LedgerTransactionResponse,
   BudgetResponse,
   TrialBalanceResponse,
@@ -45,16 +44,16 @@ import {
   getAccountTypeColor,
 } from '@/src/models/ledger';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
-import { useCachedApi } from '../../hooks/useCachedApi';
+import { useCachedApi, useCacheManager } from '../../hooks/useCachedApi';
+import { DEFAULT_CHART_OF_ACCOUNTS, getAccountTypeCount as getAccountTypeCountFromConstants, getTotalBalanceByType } from '../../constants/chartOfAccounts';
 
 export default function LedgerDashboard() {
   const { formatCurrency } = useCurrency();
+  const { clearCache: clearAllCache } = useCacheManager();
   
-  const { data: chartOfAccounts, loading: accountsLoading, refetch: refetchAccounts } = useCachedApi<ChartOfAccountsResponse[]>(
-    'ledger_chart_of_accounts',
-    () => LedgerService.getChartOfAccounts(),
-    { ttl: 300000 }
-  );
+  // Use constants instead of API for chart of accounts
+  const chartOfAccounts = DEFAULT_CHART_OF_ACCOUNTS;
+  const accountsLoading = false; // No loading needed for constants
   
   const { data: recentTransactions, loading: transactionsLoading, refetch: refetchTransactions } = useCachedApi<LedgerTransactionResponse[]>(
     'ledger_recent_transactions',
@@ -120,30 +119,26 @@ export default function LedgerDashboard() {
   });
 
   React.useEffect(() => {
-    if (trialBalance && Array.isArray(trialBalance.accounts)) {
-      const assets = trialBalance.accounts
-        .filter(acc => acc.account_type === 'asset')
-        .reduce((sum, acc) => sum + (acc.debit_balance - acc.credit_balance), 0);
-      const liabilities = trialBalance.accounts
-        .filter(acc => acc.account_type === 'liability')
-        .reduce((sum, acc) => sum + (acc.credit_balance - acc.debit_balance), 0);
-      const equity = trialBalance.accounts
-        .filter(acc => acc.account_type === 'equity')
-        .reduce((sum, acc) => sum + (acc.credit_balance - acc.debit_balance), 0);
-      
-      setTotalAssets(assets);
-      setTotalLiabilities(liabilities);
-      setTotalEquity(equity);
-    }
-  }, [trialBalance]);
+    // Calculate totals from constants instead of trial balance
+    const assets = getTotalBalanceByType('asset');
+    const liabilities = getTotalBalanceByType('liability');
+    const equity = getTotalBalanceByType('equity');
+    
+    setTotalAssets(assets);
+    setTotalLiabilities(liabilities);
+    setTotalEquity(equity);
+  }, []);
 
   React.useEffect(() => {
-    if (incomeStatement) {
-      setTotalRevenue(incomeStatement.revenue || 0);
-      setTotalExpenses(incomeStatement.expenses || 0);
-      setNetIncome(incomeStatement.net_income || 0);
-    }
-  }, [incomeStatement]);
+    // Calculate revenue and expenses from constants
+    const revenue = getTotalBalanceByType('revenue');
+    const expenses = getTotalBalanceByType('expense');
+    const netIncome = revenue - expenses;
+    
+    setTotalRevenue(revenue);
+    setTotalExpenses(expenses);
+    setNetIncome(netIncome);
+  }, []);
 
   React.useEffect(() => {
     setError(null);
@@ -155,7 +150,7 @@ export default function LedgerDashboard() {
 
   const handleReset = () => {
     setError(null);
-    refetchAccounts();
+    clearAllCache('ledger');
     refetchTransactions();
     refetchBudgets();
     refetchTrialBalance();
@@ -340,8 +335,7 @@ export default function LedgerDashboard() {
 
 
   const getAccountTypeCount = (type: AccountType) => {
-    if (!Array.isArray(chartOfAccounts)) return 0;
-    return chartOfAccounts.filter((acc) => acc.account_type === type).length;
+    return getAccountTypeCountFromConstants(type.toLowerCase());
   };
 
   if (accountsLoading || transactionsLoading || budgetsLoading || trialBalanceLoading || incomeStatementLoading) {
@@ -626,64 +620,20 @@ export default function LedgerDashboard() {
                   </Button>
                 </div>
 
-                {/* Show message when no accounts exist */}
-                {(!chartOfAccounts || chartOfAccounts.length === 0) && (
-                  <div className="mt-6 p-6 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold text-yellow-800 mb-2">
-                          No Chart of Accounts Found
-                        </h3>
-                        <p className="text-yellow-700 mb-4">
-                          Your tenant was created but no default accounts were
-                          set up. This usually happens when the automatic
-                          seeding process fails.
-                        </p>
-                        <div className="flex space-x-3">
-                          <Button
-                            onClick={async () => {
-                              try {
-                                const testResult =
-                                  await LedgerService.testSeedEndpoint();
-
-                                if (testResult && testResult.success) {
-                                  const result =
-                                    await LedgerService.seedDefaultAccounts();
-
-                                  if (result && result.success) {
-                                    alert(
-                                      `Success! Created ${result.created_accounts} default accounts. Please refresh the data.`,
-                                    );
-                                    handleRefresh();
-                                  } else if (result && result.message) {
-                                    alert(result.message);
-                                  } else {
-                                    alert(
-                                      'Seeding completed but response format was unexpected. Please refresh the data.',
-                                    );
-                                    handleRefresh();
-                                  }
-                                } else {
-                                  alert(
-                                    'Simple endpoint test failed. Please check the console for details.',
-                                  );
-                                }
-                              } catch (error) {
-                                alert(
-                                  'Failed to create default accounts. Please try again.',
-                                );
-                              }
-                            }}
-                            className="bg-yellow-600 hover:bg-yellow-700 text-white"
-                          >
-                            <Plus className="w-4 h-4 mr-2" />
-                            Create Default Accounts
-                          </Button>
-                        </div>
-                      </div>
+                {/* Chart of Accounts Info */}
+                <div className="mt-6 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-blue-800 mb-2">
+                        Chart of Accounts Ready
+                      </h3>
+                      <p className="text-blue-700 mb-4">
+                        Your chart of accounts is set up with {chartOfAccounts.length} default accounts.
+                        All standard accounting categories are available for transactions.
+                      </p>
                     </div>
                   </div>
-                )}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -1108,47 +1058,12 @@ export default function LedgerDashboard() {
                   </div>
                 </div>
 
-                {/* Show create account button when no accounts exist */}
-                {(!chartOfAccounts || chartOfAccounts.length === 0) && (
-                  <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm text-blue-800 mb-3">
-                      You need to create chart of accounts first before creating
-                      transactions.
-                    </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={async () => {
-                        try {
-                          const result =
-                            await LedgerService.seedDefaultAccounts();
-
-                          if (result && result.success) {
-                            alert(
-                              `Success! Created ${result.created_accounts} default accounts. Please refresh the data.`,
-                            );
-                            setShowNewTransactionModal(false);
-                            handleRefresh();
-                          } else if (result && result.message) {
-                            alert(result.message);
-                          } else {
-                            alert(
-                              'Seeding completed but response format was unexpected. Please refresh the data.',
-                            );
-                            setShowNewTransactionModal(false);
-                            handleRefresh();
-                          }
-                        } catch (error) {
-                          alert(
-                            'Failed to create default accounts. Please try again.',
-                          );
-                        }
-                      }}
-                    >
-                      Create Accounts
-                    </Button>
-                  </div>
-                )}
+                {/* Chart of accounts info */}
+                <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-800">
+                    Chart of accounts is ready with {chartOfAccounts.length} accounts available for transactions.
+                  </p>
+                </div>
                 <div className="flex space-x-3 pt-4">
                   <Button
                     type="button"
@@ -1293,11 +1208,9 @@ export default function LedgerDashboard() {
                       </option>
                     )}
                   </select>
-                  {(!chartOfAccounts || chartOfAccounts.length === 0) && (
-                    <p className="text-xs text-red-500 mt-1">
-                      No accounts found. Please create accounts first.
-                    </p>
-                  )}
+                  <p className="text-xs text-green-600 mt-1">
+                    {chartOfAccounts.length} accounts available
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">

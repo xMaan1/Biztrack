@@ -250,7 +250,7 @@ class Supplier(Base):
     __tablename__ = "suppliers"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    tenantId = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
     name = Column(String, nullable=False)
     code = Column(String, index=True)
     contactPerson = Column(String)
@@ -275,7 +275,7 @@ class Supplier(Base):
     
     # Indexes for performance optimization
     __table_args__ = (
-        Index("idx_suppliers_tenant_id", "tenantId"),
+        Index("idx_suppliers_tenant_id", "tenant_id"),
         Index("idx_suppliers_code", "code"),
-        Index("idx_suppliers_tenant_code", "tenantId", "code", unique=True),  # Unique code per tenant
+        Index("idx_suppliers_tenant_code", "tenant_id", "code", unique=True),  # Unique code per tenant
     )

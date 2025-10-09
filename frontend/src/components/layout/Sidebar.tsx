@@ -508,8 +508,8 @@ const allMenuItems: MenuItem[] = [
     gradient: 'from-emerald-500 to-teal-500',
     subItems: [
       {
-        text: 'Chart of Accounts',
-        icon: BookOpen,
+        text: 'Dashboard',
+        icon: LayoutDashboard,
         path: '/ledger',
         roles: ['*'],
         planTypes: ['*'],

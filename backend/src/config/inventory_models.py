@@ -74,6 +74,7 @@ class PurchaseOrder(Base):
     status = Column(String, default="draft")  # draft, submitted, approved, ordered, received, cancelled
     totalAmount = Column(Float, default=0.0)
     notes = Column(Text)
+    items = Column(JSON, default=[])  # Store purchase order items as JSON
     approvedBy = Column(UUID(as_uuid=True), ForeignKey("users.id"))
     approvedAt = Column(DateTime)
     createdAt = Column(DateTime, default=datetime.utcnow)
@@ -97,6 +98,7 @@ class Receiving(Base):
     status = Column(String, default="pending")  # pending, in_progress, completed, cancelled
     receivedBy = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     notes = Column(Text)
+    items = Column(JSON, default=[])  # Store receiving items as JSON
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

@@ -47,7 +47,7 @@ def read_warehouses(
     for warehouse in warehouses:
         warehouse_dict = {
             "id": str(warehouse.id),
-            "tenantId": str(warehouse.tenant_id),
+            "tenant_id": str(warehouse.tenant_id),
             "createdBy": warehouse.createdBy,
             "name": warehouse.name,
             "code": warehouse.code,
@@ -87,7 +87,7 @@ def read_warehouse(
     # Convert SQLAlchemy model to Pydantic model
     warehouse_dict = {
         "id": str(warehouse.id),
-        "tenantId": str(warehouse.tenant_id),
+        "tenant_id": str(warehouse.tenant_id),
         "createdBy": warehouse.createdBy,
         "name": warehouse.name,
         "code": warehouse.code,
@@ -134,7 +134,7 @@ def create_warehouse_endpoint(
         # Convert SQLAlchemy model to Pydantic model
         warehouse_dict = {
             "id": str(db_warehouse.id),
-            "tenantId": str(db_warehouse.tenant_id),
+            "tenant_id": str(db_warehouse.tenant_id),
             "createdBy": db_warehouse.createdBy,
             "name": db_warehouse.name,
             "code": db_warehouse.code,
@@ -184,7 +184,7 @@ def update_warehouse_endpoint(
     # Convert SQLAlchemy model to Pydantic model
     warehouse_dict = {
         "id": str(db_warehouse.id),
-        "tenantId": str(db_warehouse.tenant_id),
+        "tenant_id": str(db_warehouse.tenant_id),
         "createdBy": db_warehouse.createdBy,
         "name": db_warehouse.name,
         "code": db_warehouse.code,
@@ -298,7 +298,7 @@ def delete_storage_location_endpoint(
     current_tenant: dict = Depends(get_current_tenant)
 ):
     """Delete a storage location"""
-    success = delete_storage_location(db, location_id, str(current_tenant["id"]))
+    success = delete_storage_location(location_id, str(current_tenant["id"]), db)
     if not success:
         raise HTTPException(status_code=404, detail="Storage location not found")
     return {"message": "Storage location deleted successfully"}
@@ -344,6 +344,80 @@ def read_stock_movements(
     
     total = len(response_movements)
     return StockMovementsResponse(stockMovements=response_movements, total=total)
+
+# Customer Returns Endpoints
+@router.get("/customer-returns", response_model=StockMovementsResponse)
+def get_customer_returns(
+    warehouse_id: Optional[str] = Query(None),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    current_tenant: dict = Depends(get_current_tenant)
+):
+    """Get all customer returns for the current tenant"""
+    movements = get_stock_movements(db, str(current_tenant["id"]), None, warehouse_id, skip, limit)
+    
+    # Filter only customer return movements
+    customer_returns = [movement for movement in movements if movement.referenceType == "customer_return"]
+    
+    # Convert each movement to response format (convert UUIDs to strings)
+    response_movements = []
+    for movement in customer_returns:
+        response_data = {
+            "id": str(movement.id),
+            "tenant_id": str(movement.tenant_id),
+            "productId": movement.productId,
+            "warehouseId": str(movement.warehouseId),
+            "locationId": movement.locationId,
+            "movementType": movement.movementType,
+            "quantity": movement.quantity,
+            "unitCost": movement.unitCost,
+            "referenceNumber": movement.referenceNumber,
+            "referenceType": movement.referenceType,
+            "notes": movement.notes,
+            "batchNumber": movement.batchNumber,
+            "serialNumber": movement.serialNumber,
+            "expiryDate": movement.expiryDate.isoformat() if movement.expiryDate else None,
+            "status": movement.status,
+            "createdBy": str(movement.createdBy),
+            "createdAt": movement.createdAt,
+            "updatedAt": movement.updatedAt
+        }
+        response_movements.append(response_data)
+    
+    total = len(response_movements)
+    return StockMovementsResponse(stockMovements=response_movements, total=total)
+
+@router.post("/customer-returns", response_model=StockMovementResponse)
+def create_customer_return(
+    return_data: StockMovementCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    current_tenant: dict = Depends(get_current_tenant)
+):
+    """Create a new customer return"""
+    # Convert to dict and ensure the movement type is RETURN and reference type is customer_return
+    movement_data = return_data.dict()
+    
+    # Handle empty date strings - convert to None for database compatibility
+    if movement_data.get("expiryDate") == "":
+        movement_data["expiryDate"] = None
+    
+    movement_data.update({
+        "movementType": "return",
+        "referenceType": "customer_return",
+        "tenant_id": str(current_tenant["id"]),
+        "createdBy": str(current_user.id),
+        "status": "pending",
+        "createdAt": datetime.utcnow(),
+        "updatedAt": datetime.utcnow()
+    })
+    
+    # Create the stock movement
+    movement = create_stock_movement(movement_data, db)
+    
+    return StockMovementResponse(stockMovement=movement)
 
 @router.get("/stock-movements/{movement_id}", response_model=StockMovementResponse)
 def read_stock_movement(
@@ -392,6 +466,11 @@ def create_stock_movement_endpoint(
     tenant_id = str(current_tenant["id"])
     
     movement_data = movement.dict()
+    
+    # Handle empty date strings - convert to None for database compatibility
+    if movement_data.get("expiryDate") == "":
+        movement_data["expiryDate"] = None
+    
     movement_data.update({
         "id": str(uuid.uuid4()),
         "tenant_id": tenant_id,
@@ -504,7 +583,7 @@ def read_purchase_orders(
     for order in orders:
         response_data = {
             "id": str(order.id),
-            "tenantId": str(order.tenant_id),
+            "tenant_id": str(order.tenant_id),
             "orderNumber": order.poNumber,
             "supplierId": str(order.supplierId),
             "supplierName": "",  # Not stored in DB, will be empty
@@ -514,7 +593,7 @@ def read_purchase_orders(
             "status": order.status,
             "totalAmount": order.totalAmount,
             "notes": order.notes,
-            "items": [],  # Not stored in DB, will be empty
+            "items": order.items or [],
             "createdBy": str(order.createdBy) if hasattr(order, 'createdBy') else "",
             "createdAt": order.createdAt,
             "updatedAt": order.updatedAt
@@ -538,7 +617,7 @@ def read_purchase_order(
     # Convert to response format
     response_data = {
         "id": str(order.id),
-        "tenantId": str(order.tenant_id),
+        "tenant_id": str(order.tenant_id),
         "orderNumber": order.poNumber,
         "supplierId": str(order.supplierId),
         "supplierName": "",  # Not stored in DB, will be empty
@@ -594,7 +673,7 @@ def create_purchase_order_endpoint(
     # Convert to response format
     response_data = {
         "id": str(db_order.id),
-        "tenantId": str(db_order.tenant_id),
+        "tenant_id": str(db_order.tenant_id),
         "orderNumber": db_order.poNumber,
         "supplierId": str(db_order.supplierId),
         "supplierName": "",  # Not stored in DB, will be empty
@@ -643,7 +722,7 @@ def update_purchase_order_endpoint(
     # Convert to response format
     response_data = {
         "id": str(db_order.id),
-        "tenantId": str(db_order.tenant_id),
+        "tenant_id": str(db_order.tenant_id),
         "orderNumber": db_order.poNumber,
         "supplierId": str(db_order.supplierId),
         "supplierName": "",  # Not stored in DB, will be empty
@@ -687,7 +766,28 @@ def read_receivings(
     """Get all receivings for the current tenant"""
     receivings = get_receivings(db, str(current_tenant["id"]), status, skip, limit)
     total = len(receivings)
-    return ReceivingsResponse(receivings=receivings, total=total)
+    
+    # Convert to response format (convert UUIDs to strings)
+    response_receivings = []
+    for receiving in receivings:
+        response_data = {
+            "id": str(receiving.id),
+            "tenant_id": str(receiving.tenant_id),
+            "receivingNumber": receiving.receivingNumber,
+            "purchaseOrderId": str(receiving.purchaseOrderId),
+            "warehouseId": str(receiving.warehouseId),
+            "receivedDate": receiving.receivedDate.isoformat() if receiving.receivedDate else None,
+            "status": receiving.status,
+            "receivedBy": str(receiving.receivedBy),
+            "notes": receiving.notes,
+            "items": receiving.items or [],
+            "createdBy": str(receiving.receivedBy), 
+            "createdAt": receiving.createdAt,
+            "updatedAt": receiving.updatedAt
+        }
+        response_receivings.append(response_data)
+    
+    return ReceivingsResponse(receivings=response_receivings, total=total)
 
 @router.get("/receivings/{receiving_id}", response_model=ReceivingResponse)
 def read_receiving(
@@ -700,7 +800,25 @@ def read_receiving(
     receiving = get_receiving_by_id(db, receiving_id, str(current_tenant["id"]))
     if not receiving:
         raise HTTPException(status_code=404, detail="Receiving not found")
-    return ReceivingResponse(receiving=receiving)
+    
+    # Convert to response format (convert UUIDs to strings)
+    response_data = {
+        "id": str(receiving.id),
+        "tenant_id": str(receiving.tenant_id),
+        "receivingNumber": receiving.receivingNumber,
+        "purchaseOrderId": str(receiving.purchaseOrderId),
+        "warehouseId": str(receiving.warehouseId),
+        "receivedDate": receiving.receivedDate.isoformat() if receiving.receivedDate else None,
+        "status": receiving.status,
+        "receivedBy": str(receiving.receivedBy),
+        "notes": receiving.notes,
+        "items": receiving.items or [],
+        "createdBy": str(receiving.receivedBy),  # Map receivedBy to createdBy for Pydantic model
+        "createdAt": receiving.createdAt,
+        "updatedAt": receiving.updatedAt
+    }
+    
+    return ReceivingResponse(receiving=response_data)
 
 @router.post("/receivings", response_model=ReceivingResponse)
 def create_receiving_endpoint(
@@ -711,17 +829,40 @@ def create_receiving_endpoint(
 ):
     """Create a new receiving"""
     receiving_data = receiving.dict()
+    
+    # Generate unique receiving number if not provided
+    if not receiving_data.get("receivingNumber"):
+        receiving_data["receivingNumber"] = f"REC-{datetime.utcnow().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
+    
     receiving_data.update({
         "id": str(uuid.uuid4()),
         "tenant_id": str(current_tenant["id"]),
-        "createdBy": str(current_user.id),
+        "receivedBy": str(current_user.id),
         "status": "pending",
         "createdAt": datetime.utcnow(),
         "updatedAt": datetime.utcnow()
     })
     
     db_receiving = create_receiving(receiving_data, db)
-    return ReceivingResponse(receiving=db_receiving)
+    
+    # Convert to response format (convert UUIDs to strings)
+    response_data = {
+        "id": str(db_receiving.id),
+        "tenant_id": str(db_receiving.tenant_id),
+        "receivingNumber": db_receiving.receivingNumber,
+        "purchaseOrderId": str(db_receiving.purchaseOrderId),
+        "warehouseId": str(db_receiving.warehouseId),
+        "receivedDate": db_receiving.receivedDate.isoformat() if db_receiving.receivedDate else None,
+        "status": db_receiving.status,
+        "receivedBy": str(db_receiving.receivedBy),
+        "notes": db_receiving.notes,
+        "items": db_receiving.items or [],
+        "createdBy": str(db_receiving.receivedBy),  # Map receivedBy to createdBy for Pydantic model
+        "createdAt": db_receiving.createdAt,
+        "updatedAt": db_receiving.updatedAt
+    }
+    
+    return ReceivingResponse(receiving=response_data)
 
 @router.put("/receivings/{receiving_id}", response_model=ReceivingResponse)
 def update_receiving_endpoint(
@@ -749,7 +890,7 @@ def delete_receiving_endpoint(
     current_tenant: dict = Depends(get_current_tenant)
 ):
     """Delete a receiving"""
-    success = delete_receiving(db, receiving_id, str(current_tenant["id"]))
+    success = delete_receiving(receiving_id, db, str(current_tenant["id"]))
     if not success:
         raise HTTPException(status_code=404, detail="Receiving not found")
     return {"message": "Receiving deleted successfully"}
@@ -807,3 +948,151 @@ def get_dumps(
     
     total = len(response_movements)
     return StockMovementsResponse(stockMovements=response_movements, total=total)
+
+# Customer Returns Endpoints
+@router.get("/customer-returns", response_model=StockMovementsResponse)
+def get_customer_returns(
+    warehouse_id: Optional[str] = Query(None),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    current_tenant: dict = Depends(get_current_tenant)
+):
+    """Get all customer returns for the current tenant"""
+    movements = get_stock_movements(db, str(current_tenant["id"]), None, warehouse_id, skip, limit)
+    
+    # Filter only customer return movements
+    customer_returns = [movement for movement in movements if movement.referenceType == "customer_return"]
+    
+    # Convert each movement to response format (convert UUIDs to strings)
+    response_movements = []
+    for movement in customer_returns:
+        response_data = {
+            "id": str(movement.id),
+            "tenant_id": str(movement.tenant_id),
+            "productId": movement.productId,
+            "warehouseId": str(movement.warehouseId),
+            "locationId": movement.locationId,
+            "movementType": movement.movementType,
+            "quantity": movement.quantity,
+            "unitCost": movement.unitCost,
+            "referenceNumber": movement.referenceNumber,
+            "referenceType": movement.referenceType,
+            "notes": movement.notes,
+            "batchNumber": movement.batchNumber,
+            "serialNumber": movement.serialNumber,
+            "expiryDate": movement.expiryDate.isoformat() if movement.expiryDate else None,
+            "status": movement.status,
+            "createdBy": str(movement.createdBy),
+            "createdAt": movement.createdAt,
+            "updatedAt": movement.updatedAt
+        }
+        response_movements.append(response_data)
+    
+    total = len(response_movements)
+    return StockMovementsResponse(stockMovements=response_movements, total=total)
+
+@router.post("/customer-returns", response_model=StockMovementResponse)
+def create_customer_return(
+    return_data: StockMovementCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    current_tenant: dict = Depends(get_current_tenant)
+):
+    """Create a new customer return"""
+    # Convert to dict and ensure the movement type is RETURN and reference type is customer_return
+    movement_data = return_data.dict()
+    
+    # Handle empty date strings - convert to None for database compatibility
+    if movement_data.get("expiryDate") == "":
+        movement_data["expiryDate"] = None
+    
+    movement_data.update({
+        "movementType": "return",
+        "referenceType": "customer_return",
+        "tenant_id": str(current_tenant["id"]),
+        "createdBy": str(current_user.id),
+        "status": "pending",
+        "createdAt": datetime.utcnow(),
+        "updatedAt": datetime.utcnow()
+    })
+    
+    # Create the stock movement
+    movement = create_stock_movement(movement_data, db)
+    
+    return StockMovementResponse(stockMovement=movement)
+
+# Supplier Returns Endpoints
+@router.get("/supplier-returns", response_model=StockMovementsResponse)
+def get_supplier_returns(
+    warehouse_id: Optional[str] = Query(None),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    current_tenant: dict = Depends(get_current_tenant)
+):
+    """Get all supplier returns for the current tenant"""
+    movements = get_stock_movements(db, str(current_tenant["id"]), None, warehouse_id, skip, limit)
+    
+    # Filter only supplier return movements
+    supplier_returns = [movement for movement in movements if movement.referenceType == "supplier_return"]
+    
+    # Convert each movement to response format (convert UUIDs to strings)
+    response_movements = []
+    for movement in supplier_returns:
+        response_data = {
+            "id": str(movement.id),
+            "tenant_id": str(movement.tenant_id),
+            "productId": movement.productId,
+            "warehouseId": str(movement.warehouseId),
+            "locationId": movement.locationId,
+            "movementType": movement.movementType,
+            "quantity": movement.quantity,
+            "unitCost": movement.unitCost,
+            "referenceNumber": movement.referenceNumber,
+            "referenceType": movement.referenceType,
+            "notes": movement.notes,
+            "batchNumber": movement.batchNumber,
+            "serialNumber": movement.serialNumber,
+            "expiryDate": movement.expiryDate.isoformat() if movement.expiryDate else None,
+            "status": movement.status,
+            "createdBy": str(movement.createdBy),
+            "createdAt": movement.createdAt,
+            "updatedAt": movement.updatedAt
+        }
+        response_movements.append(response_data)
+    
+    total = len(response_movements)
+    return StockMovementsResponse(stockMovements=response_movements, total=total)
+
+@router.post("/supplier-returns", response_model=StockMovementResponse)
+def create_supplier_return(
+    return_data: StockMovementCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    current_tenant: dict = Depends(get_current_tenant)
+):
+    """Create a new supplier return"""
+    # Convert to dict and ensure the movement type is RETURN and reference type is supplier_return
+    movement_data = return_data.dict()
+    
+    # Handle empty date strings - convert to None for database compatibility
+    if movement_data.get("expiryDate") == "":
+        movement_data["expiryDate"] = None
+    
+    movement_data.update({
+        "movementType": "return",
+        "referenceType": "supplier_return",
+        "tenant_id": str(current_tenant["id"]),
+        "createdBy": str(current_user.id),
+        "status": "pending",
+        "createdAt": datetime.utcnow(),
+        "updatedAt": datetime.utcnow()
+    })
+    
+    # Create the stock movement
+    movement = create_stock_movement(movement_data, db)
+    
+    return StockMovementResponse(stockMovement=movement)

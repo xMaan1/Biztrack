@@ -52,12 +52,14 @@ import { formatDate } from '../../../lib/utils';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '../../../components/ui/dialog';
 import { Label } from '../../../components/ui/label';
 import { Textarea } from '../../../components/ui/textarea';
+import { toast } from 'sonner';
 
 export default function ReceivingPage() {
   const { } = useAuth();
@@ -69,7 +71,10 @@ export default function ReceivingPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isProcessModalOpen, setIsProcessModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [selectedReceiving, setSelectedReceiving] = useState<Receiving | null>(null);
   const [newReceiving, setNewReceiving] = useState<ReceivingCreate>({
     receivingNumber: '',
     purchaseOrderId: '',
@@ -128,13 +133,29 @@ export default function ReceivingPage() {
     return matchesSearch && matchesStatus;
   });
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this receiving?')) {
-      try {
-        await inventoryService.deleteReceiving(id);
-        fetchData();
-      } catch (error) {
-        }
+  const openDeleteModal = (receiving: Receiving) => {
+    setSelectedReceiving(receiving);
+    setIsDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setSelectedReceiving(null);
+  };
+
+  const handleDelete = async () => {
+    if (!selectedReceiving) return;
+
+    try {
+      setDeleteLoading(true);
+      await inventoryService.deleteReceiving(selectedReceiving.id);
+      toast.success('Receiving deleted successfully');
+      fetchData();
+      closeDeleteModal();
+    } catch (error) {
+      toast.error('Failed to delete receiving. Please try again.');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -144,7 +165,7 @@ export default function ReceivingPage() {
     setNewReceiving((prev) => ({
       ...prev,
       purchaseOrderId: poId,
-      items: po
+      items: po && po.items && po.items.length > 0
         ? po.items.map(
             (item): ReceivingItemCreate => ({
               purchaseOrderId: poId,
@@ -175,30 +196,32 @@ export default function ReceivingPage() {
     if (
       !newReceiving.purchaseOrderId ||
       !newReceiving.warehouseId ||
-      newReceiving.items.length === 0
+      !newReceiving.receivedDate
     ) {
-      alert('Please fill in all required fields and ensure items are selected');
+      toast.error('Please fill in all required fields');
       return;
     }
 
-    // Validate that received quantities don't exceed ordered quantities
-    const invalidItems = newReceiving.items.filter(
-      (item) => item.receivedQuantity > item.quantity,
-    );
+    if (newReceiving.items.length > 0) {
+      const invalidItems = newReceiving.items.filter(
+        (item) => item.receivedQuantity > item.quantity,
+      );
 
-    if (invalidItems.length > 0) {
-      alert('Received quantities cannot exceed ordered quantities');
-      return;
+      if (invalidItems.length > 0) {
+        toast.error('Received quantities cannot exceed ordered quantities');
+        return;
+      }
     }
 
     try {
       setIsSubmitting(true);
       await inventoryService.createReceiving(newReceiving);
+      toast.success('Receiving processed successfully');
       setIsProcessModalOpen(false);
       resetForm();
       fetchData();
     } catch (error) {
-      alert('Failed to process receiving. Please try again.');
+      toast.error('Failed to process receiving. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -376,7 +399,7 @@ export default function ReceivingPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleDelete(receiving.id)}
+                            onClick={() => openDeleteModal(receiving)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -626,17 +649,6 @@ export default function ReceivingPage() {
                       </div>
                     ))}
                   </div>
-
-                  <div className="text-right font-medium text-lg">
-                    Total Received Value: $
-                    {newReceiving.items
-                      .reduce(
-                        (sum, item) =>
-                          sum + item.receivedQuantity * item.unitCost,
-                        0,
-                      )
-                      .toFixed(2)}
-                  </div>
                 </div>
               )}
             </div>
@@ -655,12 +667,42 @@ export default function ReceivingPage() {
                 disabled={
                   isSubmitting ||
                   !newReceiving.purchaseOrderId ||
-                  newReceiving.items.length === 0
+                  !newReceiving.warehouseId ||
+                  !newReceiving.receivedDate
                 }
               >
                 {isSubmitting ? 'Processing...' : 'Process Receiving'}
               </Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Modal */}
+        <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Receiving</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete receiving{' '}
+                <strong>{selectedReceiving?.receivingNumber}</strong>? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end space-x-2 mt-4">
+              <Button
+                variant="outline"
+                onClick={closeDeleteModal}
+                disabled={deleteLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleDelete}
+                disabled={deleteLoading}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {deleteLoading ? 'Deleting...' : 'Delete'}
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>

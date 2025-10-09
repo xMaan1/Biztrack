@@ -289,7 +289,7 @@ def update_storage_location(location_id: str, update_data: dict, db: Session, te
         db.refresh(location)
     return location
 
-def delete_storage_location(location_id: str, db: Session, tenant_id: str = None) -> bool:
+def delete_storage_location(location_id: str, tenant_id: str, db: Session) -> bool:
     location = get_storage_location_by_id(location_id, db, tenant_id)
     if location:
         db.delete(location)

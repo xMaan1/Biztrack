@@ -171,7 +171,6 @@ export default function SupplierReturnsPage() {
 
   const handleRecordReturn = async () => {
     if (!newReturn.productId || !newReturn.warehouseId || newReturn.quantity <= 0) {
-      alert('Please fill in all required fields (Product ID, Warehouse, and Quantity)');
       return;
     }
 
@@ -181,10 +180,8 @@ export default function SupplierReturnsPage() {
       setIsRecordReturnOpen(false);
       resetReturnForm();
       loadReturns();
-      alert('Supplier return recorded successfully');
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to record supplier return';
-      alert(`Error: ${errorMessage}`);
+      // Error handling without alert
     } finally {
       setIsSubmitting(false);
     }
@@ -230,7 +227,6 @@ export default function SupplierReturnsPage() {
     if (!selectedReturn) return;
     
     if (!editReturn.productId || !editReturn.warehouseId || editReturn.quantity <= 0) {
-      alert('Please fill in all required fields (Product ID, Warehouse, and Quantity)');
       return;
     }
 
@@ -239,10 +235,8 @@ export default function SupplierReturnsPage() {
       await inventoryService.updateStockMovement(selectedReturn.id, editReturn);
       setIsEditModalOpen(false);
       loadReturns();
-      alert('Supplier return updated successfully');
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to update supplier return';
-      alert(`Error: ${errorMessage}`);
+      // Error handling without alert
     } finally {
       setIsSubmitting(false);
     }

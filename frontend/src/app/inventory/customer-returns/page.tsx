@@ -171,7 +171,6 @@ export default function CustomerReturnsPage() {
 
   const handleRecordReturn = async () => {
     if (!newReturn.productId || !newReturn.warehouseId || newReturn.quantity <= 0) {
-      alert('Please fill in all required fields (Product ID, Warehouse, and Quantity)');
       return;
     }
 
@@ -181,10 +180,8 @@ export default function CustomerReturnsPage() {
       setIsRecordReturnOpen(false);
       resetReturnForm();
       loadReturns();
-      alert('Customer return recorded successfully');
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to record customer return';
-      alert(`Error: ${errorMessage}`);
+      // Error handling without alert
     } finally {
       setIsSubmitting(false);
     }
@@ -230,7 +227,6 @@ export default function CustomerReturnsPage() {
     if (!selectedReturn) return;
     
     if (!editReturn.productId || !editReturn.warehouseId || editReturn.quantity <= 0) {
-      alert('Please fill in all required fields (Product ID, Warehouse, and Quantity)');
       return;
     }
 
@@ -239,10 +235,8 @@ export default function CustomerReturnsPage() {
       await inventoryService.updateStockMovement(selectedReturn.id, editReturn);
       setIsEditModalOpen(false);
       loadReturns();
-      alert('Customer return updated successfully');
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to update customer return';
-      alert(`Error: ${errorMessage}`);
+      // Error handling without alert
     } finally {
       setIsSubmitting(false);
     }

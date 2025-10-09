@@ -486,19 +486,19 @@ def get_hrm_dashboard_data(db: Session, tenant_id: str) -> Dict[str, Any]:
 def get_supplier_by_id(supplier_id: str, db: Session, tenant_id: str = None) -> Optional[Supplier]:
     query = db.query(Supplier).filter(Supplier.id == supplier_id)
     if tenant_id:
-        query = query.filter(Supplier.tenantId == tenant_id)
+        query = query.filter(Supplier.tenant_id == tenant_id)
     return query.first()
 
 def get_supplier_by_code(code: str, db: Session, tenant_id: str = None) -> Optional[Supplier]:
     query = db.query(Supplier).filter(Supplier.code == code)
     if tenant_id:
-        query = query.filter(Supplier.tenantId == tenant_id)
+        query = query.filter(Supplier.tenant_id == tenant_id)
     return query.first()
 
 def get_all_suppliers(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Supplier]:
     query = db.query(Supplier)
     if tenant_id:
-        query = query.filter(Supplier.tenantId == tenant_id)
+        query = query.filter(Supplier.tenant_id == tenant_id)
     return query.order_by(Supplier.createdAt.desc()).offset(skip).limit(limit).all()
 
 def get_suppliers(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Supplier]:
@@ -508,7 +508,7 @@ def get_suppliers(db: Session, tenant_id: str = None, skip: int = 0, limit: int 
 def get_active_suppliers(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Supplier]:
     query = db.query(Supplier).filter(Supplier.isActive == True)
     if tenant_id:
-        query = query.filter(Supplier.tenantId == tenant_id)
+        query = query.filter(Supplier.tenant_id == tenant_id)
     return query.order_by(Supplier.createdAt.desc()).offset(skip).limit(limit).all()
 
 def create_supplier(supplier_data: dict, db: Session) -> Supplier:
