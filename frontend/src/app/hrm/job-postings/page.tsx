@@ -54,16 +54,15 @@ import {
   HRMJobFilters,
 } from '@/src/models/hrm';
 import { DashboardLayout } from '@/src/components/layout';
-import { useCustomOptions } from '@/src/hooks/useCustomOptions';
+import { useCustomDepartments } from '@/src/hooks/useCustomDepartments';
+import { useCachedApi } from '@/src/hooks/useCachedApi';
 import { CustomOptionDialog } from '@/src/components/common/CustomOptionDialog';
 
 export default function HRMJobPostingsPage() {
   const { getCurrencySymbol } = useCurrency();
-  const [jobPostings, setJobPostings] = useState<JobPosting[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<HRMJobFilters>({});
   const [search, setSearch] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingJobPosting, setEditingJobPosting] = useState<JobPosting | null>(
     null,
@@ -79,12 +78,34 @@ export default function HRMJobPostingsPage() {
   const [showCustomDepartmentDialog, setShowCustomDepartmentDialog] =
     useState(false);
 
-  // Custom options hook
+  // Custom departments hook with caching
   const {
     customDepartments,
     createCustomDepartment,
     loading: customOptionsLoading,
-  } = useCustomOptions();
+  } = useCustomDepartments();
+
+  // Cached job postings with shorter TTL since they change more frequently
+  const { 
+    data: jobPostingsData, 
+    loading: jobPostingsLoading, 
+    error: jobPostingsError,
+    refetch: refetchJobPostings 
+  } = useCachedApi<{ jobPostings: JobPosting[] }>(
+    `job-postings-${JSON.stringify(filters)}`,
+    () => HRMService.getJobPostings(filters, 1, 100),
+    { ttl: 2 * 60 * 1000 } // 2 minutes cache
+  );
+
+  const jobPostings = jobPostingsData?.jobPostings || [];
+  const loading = jobPostingsLoading || customOptionsLoading;
+  
+  // Set error from API if there's an error
+  useEffect(() => {
+    if (jobPostingsError) {
+      setError('Failed to load job postings');
+    }
+  }, [jobPostingsError]);
   const [formData, setFormData] = useState<JobPostingCreate>({
     title: '',
     department: Department.ENGINEERING,
@@ -102,22 +123,7 @@ export default function HRMJobPostingsPage() {
     tags: [] as string[],
   });
 
-  useEffect(() => {
-    loadJobPostings();
-    return;
-  }, [filters]);
-
-  const loadJobPostings = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await HRMService.getJobPostings(filters, 1, 100);
-      setJobPostings(response.jobPostings);
-    } catch (err) {
-      setError('Failed to load job postings');
-      } finally {
-      setLoading(false);
-    }
-  }, [filters]);
+  // Job postings are now loaded automatically via cached API
 
   const handleSearch = () => {
     setFilters((prev: HRMJobFilters) => ({ ...prev, search }));
@@ -174,7 +180,7 @@ export default function HRMJobPostingsPage() {
 
       setShowCreateDialog(false);
       resetForm();
-      loadJobPostings();
+      refetchJobPostings();
     } catch (err) {
       setError('Failed to save job posting. Please try again.');
       } finally {
@@ -219,7 +225,7 @@ export default function HRMJobPostingsPage() {
       await HRMService.deleteJobPosting(deletingJobPosting.id);
       setSuccessMessage('Job posting deleted successfully!');
       setDeletingJobPosting(null);
-      loadJobPostings();
+      refetchJobPostings();
     } catch (err) {
       setError('Failed to delete job posting. Please try again.');
       } finally {

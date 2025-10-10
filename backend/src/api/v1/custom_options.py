@@ -5,7 +5,7 @@ from datetime import datetime
 import uuid
 
 from ...config.database import get_db
-from ..dependencies import get_current_user
+from ..dependencies import get_current_user, get_tenant_context
 from ...models.unified_models import User as UserModel
 from ...config.database import (
     CustomEventType, CustomDepartment, CustomLeaveType, CustomLeadSource,
@@ -20,16 +20,17 @@ async def create_custom_event_type(
     name: str,
     description: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
-    if not current_user.tenant_id:
-        raise HTTPException(status_code=400, detail="User must belong to a tenant")
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     
     custom_type = CustomEventType(
         id=str(uuid.uuid4()),
         name=name,
         description=description,
-        tenant_id=current_user.tenant_id,
+        tenant_id=tenant_context["tenant_id"],
         createdBy=current_user.id
     )
     
@@ -50,13 +51,14 @@ async def create_custom_event_type(
 @router.get("/event-types")
 async def get_custom_event_types(
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
-    if not current_user.tenant_id:
-        raise HTTPException(status_code=400, detail="User must belong to a tenant")
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     
     custom_types = db.query(CustomEventType).filter(
-        CustomEventType.tenant_id == current_user.tenant_id
+        CustomEventType.tenant_id == tenant_context["tenant_id"]
     ).all()
     
     return [
@@ -75,16 +77,17 @@ async def create_custom_department(
     name: str,
     description: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
-    if not current_user.tenant_id:
-        raise HTTPException(status_code=400, detail="User must belong to a tenant")
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     
     custom_dept = CustomDepartment(
         id=str(uuid.uuid4()),
         name=name,
         description=description,
-        tenant_id=current_user.tenant_id,
+        tenant_id=tenant_context["tenant_id"],
         createdBy=current_user.id
     )
     
@@ -105,13 +108,14 @@ async def create_custom_department(
 @router.get("/departments")
 async def get_custom_departments(
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
-    if not current_user.tenant_id:
-        raise HTTPException(status_code=400, detail="User must belong to a tenant")
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     
     custom_depts = db.query(CustomDepartment).filter(
-        CustomDepartment.tenant_id == current_user.tenant_id
+        CustomDepartment.tenant_id == tenant_context["tenant_id"]
     ).all()
     
     return [
@@ -130,16 +134,17 @@ async def create_custom_leave_type(
     name: str,
     description: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
-    if not current_user.tenant_id:
-        raise HTTPException(status_code=400, detail="User must belong to a tenant")
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     
     custom_leave = CustomLeaveType(
         id=str(uuid.uuid4()),
         name=name,
         description=description,
-        tenant_id=current_user.tenant_id,
+        tenant_id=tenant_context["tenant_id"],
         createdBy=current_user.id
     )
     
@@ -160,13 +165,14 @@ async def create_custom_leave_type(
 @router.get("/leave-types")
 async def get_custom_leave_types(
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
-    if not current_user.tenant_id:
-        raise HTTPException(status_code=400, detail="User must belong to a tenant")
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     
     custom_leaves = db.query(CustomLeaveType).filter(
-        CustomLeaveType.tenant_id == current_user.tenant_id
+        CustomLeaveType.tenant_id == tenant_context["tenant_id"]
     ).all()
     
     return [
@@ -185,16 +191,17 @@ async def create_custom_lead_source(
     name: str,
     description: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
-    if not current_user.tenant_id:
-        raise HTTPException(status_code=400, detail="User must belong to a tenant")
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     
     custom_source = CustomLeadSource(
         id=str(uuid.uuid4()),
         name=name,
         description=description,
-        tenant_id=current_user.tenant_id,
+        tenant_id=tenant_context["tenant_id"],
         createdBy=current_user.id
     )
     
@@ -215,13 +222,14 @@ async def create_custom_lead_source(
 @router.get("/lead-sources")
 async def get_custom_lead_sources(
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
-    if not current_user.tenant_id:
-        raise HTTPException(status_code=400, detail="User must belong to a tenant")
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     
     custom_sources = db.query(CustomLeadSource).filter(
-        CustomLeadSource.tenant_id == current_user.tenant_id
+        CustomLeadSource.tenant_id == tenant_context["tenant_id"]
     ).all()
     
     return [
@@ -240,16 +248,17 @@ async def create_custom_contact_source(
     name: str,
     description: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
-    if not current_user.tenant_id:
-        raise HTTPException(status_code=400, detail="User must belong to a tenant")
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     
     custom_source = CustomContactSource(
         id=str(uuid.uuid4()),
         name=name,
         description=description,
-        tenant_id=current_user.tenant_id,
+        tenant_id=tenant_context["tenant_id"],
         createdBy=current_user.id
     )
     
@@ -270,13 +279,14 @@ async def create_custom_contact_source(
 @router.get("/contact-sources")
 async def get_custom_contact_sources(
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
-    if not current_user.tenant_id:
-        raise HTTPException(status_code=400, detail="User must belong to a tenant")
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     
     custom_sources = db.query(CustomContactSource).filter(
-        CustomContactSource.tenant_id == current_user.tenant_id
+        CustomContactSource.tenant_id == tenant_context["tenant_id"]
     ).all()
     
     return [
@@ -295,16 +305,17 @@ async def create_custom_company_industry(
     name: str,
     description: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
-    if not current_user.tenant_id:
-        raise HTTPException(status_code=400, detail="User must belong to a tenant")
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     
     custom_industry = CustomCompanyIndustry(
         id=str(uuid.uuid4()),
         name=name,
         description=description,
-        tenant_id=current_user.tenant_id,
+        tenant_id=tenant_context["tenant_id"],
         createdBy=current_user.id
     )
     
@@ -325,13 +336,14 @@ async def create_custom_company_industry(
 @router.get("/company-industries")
 async def get_custom_company_industries(
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
-    if not current_user.tenant_id:
-        raise HTTPException(status_code=400, detail="User must belong to a tenant")
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     
     custom_industries = db.query(CustomCompanyIndustry).filter(
-        CustomCompanyIndustry.tenant_id == current_user.tenant_id
+        CustomCompanyIndustry.tenant_id == tenant_context["tenant_id"]
     ).all()
     
     return [
@@ -350,16 +362,17 @@ async def create_custom_contact_type(
     name: str,
     description: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
-    if not current_user.tenant_id:
-        raise HTTPException(status_code=400, detail="User must belong to a tenant")
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     
     custom_type = CustomContactType(
         id=str(uuid.uuid4()),
         name=name,
         description=description,
-        tenant_id=current_user.tenant_id,
+        tenant_id=tenant_context["tenant_id"],
         createdBy=current_user.id
     )
     
@@ -380,13 +393,14 @@ async def create_custom_contact_type(
 @router.get("/contact-types")
 async def get_custom_contact_types(
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
-    if not current_user.tenant_id:
-        raise HTTPException(status_code=400, detail="User must belong to a tenant")
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     
     custom_types = db.query(CustomContactType).filter(
-        CustomContactType.tenant_id == current_user.tenant_id
+        CustomContactType.tenant_id == tenant_context["tenant_id"]
     ).all()
     
     return [
@@ -405,16 +419,17 @@ async def create_custom_industry(
     name: str,
     description: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
-    if not current_user.tenant_id:
-        raise HTTPException(status_code=400, detail="User must belong to a tenant")
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     
     custom_industry = CustomIndustry(
         id=str(uuid.uuid4()),
         name=name,
         description=description,
-        tenant_id=current_user.tenant_id,
+        tenant_id=tenant_context["tenant_id"],
         createdBy=current_user.id
     )
     
@@ -435,13 +450,14 @@ async def create_custom_industry(
 @router.get("/industries")
 async def get_custom_industries(
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
 ):
-    if not current_user.tenant_id:
-        raise HTTPException(status_code=400, detail="User must belong to a tenant")
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     
     custom_industries = db.query(CustomIndustry).filter(
-        CustomIndustry.tenant_id == current_user.tenant_id
+        CustomIndustry.tenant_id == tenant_context["tenant_id"]
     ).all()
     
     return [

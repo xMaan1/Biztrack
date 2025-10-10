@@ -38,19 +38,26 @@ class JobPosting(Base):
     department = Column(String)
     description = Column(Text, nullable=False)
     requirements = Column(Text)
+    responsibilities = Column(JSON, default=[])  # Store as JSON array
     salary = Column(String)
     location = Column(String)
     type = Column(String)  # full_time, part_time, contract, internship
     status = Column(String, default="open")  # open, closed, draft
     postedDate = Column(DateTime, default=datetime.utcnow)
     closingDate = Column(DateTime)
+    benefits = Column(JSON, default=[])  # Store as JSON array
+    hiringManagerId = Column("hiringmanagerid", UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    tags = Column(JSON, default=[])  # Store as JSON array
     isActive = Column(Boolean, default=True)
+    createdBy = Column("createdby", UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     tenant = relationship("Tenant", back_populates="job_postings")
     applications = relationship("Application", back_populates="jobPosting")
+    hiring_manager = relationship("User", foreign_keys=[hiringManagerId])
+    creator = relationship("User", foreign_keys=[createdBy])
 
 class PerformanceReview(Base):
     __tablename__ = "performance_reviews"

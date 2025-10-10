@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime, timedelta
 
 from ...models.unified_models import (
-    Employee, EmployeeCreate, EmployeeUpdate, HRMEmployeesResponse,
+    User, Employee, EmployeeCreate, EmployeeUpdate, HRMEmployeesResponse,
     JobPosting, JobPostingCreate, JobPostingUpdate, HRMJobPostingsResponse,
     Application, ApplicationCreate, ApplicationUpdate, HRMApplicationsResponse,
     PerformanceReview, PerformanceReviewCreate, PerformanceReviewUpdate, HRMReviewsResponse,
@@ -18,7 +18,7 @@ from ...models.unified_models import (
     TrainingEnrollment, TrainingEnrollmentCreate, TrainingEnrollmentUpdate, HRMEnrollmentsResponse,
     HRMDashboard, HRMEmployeeFilters, HRMJobFilters, HRMApplicationFilters, HRMReviewFilters,
     HRMTimeFilters, HRMLeaveFilters, HRMPayrollFilters, HRMTrainingFilters,
-    Department, EmploymentStatus, EmployeeType,
+    Department, EmploymentStatus, EmployeeType, JobStatus, ApplicationStatus,
     Supplier, SupplierCreate, SupplierUpdate, SupplierResponse, SuppliersResponse
 )
 from ...config.hrm_models import Employee as DBEmployee
@@ -51,7 +51,7 @@ async def get_hrm_employees(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get all employees with optional filtering"""
     try:
@@ -197,7 +197,7 @@ async def create_hrm_employee(
 async def get_hrm_employee(
     employee_id: str,
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get employee by ID"""
     try:
@@ -214,7 +214,7 @@ async def update_hrm_employee(
     employee_update: EmployeeUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Update employee"""
     try:
@@ -261,7 +261,7 @@ async def delete_hrm_employee(
     employee_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Delete employee"""
     try:
@@ -282,7 +282,7 @@ async def get_hrm_jobs(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get all job postings with optional filtering"""
     try:
@@ -310,11 +310,37 @@ async def get_hrm_jobs(
                 filtered_jobs.append(job)
             jobs = filtered_jobs
         
+        # Convert SQLAlchemy models to Pydantic models
+        job_postings = []
+        for job in jobs:
+            job_data = {
+                "id": str(job.id),
+                "title": job.title,
+                "department": Department(job.department) if job.department else None,
+                "description": job.description,
+                "requirements": job.requirements.split('\n') if job.requirements else [],
+                "responsibilities": job.responsibilities or [],
+                "location": job.location,
+                "type": EmployeeType(job.type) if job.type else None,
+                "salaryRange": job.salary,
+                "benefits": job.benefits or [],
+                "status": JobStatus(job.status) if job.status else None,
+                "openDate": job.postedDate.isoformat() if job.postedDate else None,
+                "closeDate": job.closingDate.isoformat() if job.closingDate else None,
+                "hiringManagerId": str(job.hiringManagerId) if job.hiringManagerId else None,
+                "tags": job.tags or [],
+                "tenant_id": str(job.tenant_id),
+                "createdBy": str(job.createdBy),
+                "createdAt": job.createdAt.isoformat() if job.createdAt else None,
+                "updatedAt": job.updatedAt.isoformat() if job.updatedAt else None
+            }
+            job_postings.append(JobPosting(**job_data))
+        
         # Get total count for pagination
-        total = len(jobs)
+        total = len(job_postings)
         
         return HRMJobPostingsResponse(
-            jobPostings=jobs,
+            jobPostings=job_postings,
             pagination={
                 "page": page,
                 "limit": limit,
@@ -326,44 +352,103 @@ async def get_hrm_jobs(
         raise HTTPException(status_code=500, detail=f"Error fetching job postings: {str(e)}")
 
 @router.post("/jobs", response_model=JobPosting)
-async def create_hrm_job(
+def create_hrm_job(
     job_data: JobPostingCreate,
-    current_user = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Create a new job posting"""
-    try:
-        job = JobPosting(
-            id=str(uuid.uuid4()),
-            **job_data.dict(),
-            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
-            createdBy=str(current_user.id),
-            createdAt=datetime.now(),
-            updatedAt=datetime.now()
-        )
-        
-        db.add(job)
-        db.commit()
-        db.refresh(job)
-        
-        return job
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Error creating job posting: {str(e)}")
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    
+    tenant_id = tenant_context["tenant_id"]
+    
+    # Convert Pydantic model to SQLAlchemy model data
+    job_dict = {
+        "id": str(uuid.uuid4()),
+        "tenant_id": tenant_id,
+        "title": job_data.title,
+        "department": job_data.department.value if job_data.department else None,
+        "description": job_data.description,
+        "requirements": "\n".join(job_data.requirements) if job_data.requirements else None,
+        "responsibilities": job_data.responsibilities,
+        "salary": job_data.salaryRange,
+        "location": job_data.location,
+        "type": job_data.type.value if job_data.type else None,
+        "status": job_data.status.value if job_data.status else "draft",
+        "postedDate": datetime.fromisoformat(job_data.openDate) if job_data.openDate else datetime.utcnow(),
+        "closingDate": datetime.fromisoformat(job_data.closeDate) if job_data.closeDate else None,
+        "benefits": job_data.benefits,
+        "hiringManagerId": job_data.hiringManagerId if job_data.hiringManagerId else None,
+        "tags": job_data.tags,
+        "createdBy": str(current_user.id),
+        "createdAt": datetime.utcnow(),
+        "updatedAt": datetime.utcnow()
+    }
+    
+    db_job = create_job_posting(job_dict, db)
+    
+    # Convert SQLAlchemy model to Pydantic response model
+    response_data = {
+        "id": str(db_job.id),
+        "title": db_job.title,
+        "department": Department(db_job.department) if db_job.department else None,
+        "description": db_job.description,
+        "requirements": db_job.requirements.split('\n') if db_job.requirements else [],
+        "responsibilities": db_job.responsibilities or [],
+        "location": db_job.location,
+        "type": EmployeeType(db_job.type) if db_job.type else None,
+        "salaryRange": db_job.salary,
+        "benefits": db_job.benefits or [],
+        "status": JobStatus(db_job.status) if db_job.status else None,
+        "openDate": db_job.postedDate.isoformat() if db_job.postedDate else None,
+        "closeDate": db_job.closingDate.isoformat() if db_job.closingDate else None,
+        "hiringManagerId": str(db_job.hiringManagerId) if db_job.hiringManagerId else None,
+        "tags": db_job.tags or [],
+        "tenant_id": str(db_job.tenant_id),
+        "createdBy": str(db_job.createdBy),
+        "createdAt": db_job.createdAt.isoformat() if db_job.createdAt else None,
+        "updatedAt": db_job.updatedAt.isoformat() if db_job.updatedAt else None
+    }
+    
+    return JobPosting(**response_data)
 
 @router.get("/jobs/{job_id}", response_model=JobPosting)
 async def get_hrm_job_by_id(
     job_id: str,
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get a specific job posting by ID"""
     try:
         job = get_job_posting_by_id(db, job_id, tenant_context["tenant_id"] if tenant_context else None)
         if not job:
             raise HTTPException(status_code=404, detail="Job posting not found")
-        return job
+        
+        # Convert SQLAlchemy model to Pydantic model
+        job_data = {
+            "id": str(job.id),
+            "title": job.title,
+            "department": Department(job.department) if job.department else None,
+            "description": job.description,
+            "requirements": job.requirements.split('\n') if job.requirements else [],
+            "responsibilities": job.responsibilities or [],
+            "location": job.location,
+            "type": EmployeeType(job.type) if job.type else None,
+            "salaryRange": job.salary,
+            "benefits": job.benefits or [],
+            "status": JobStatus(job.status) if job.status else None,
+            "openDate": job.postedDate.isoformat() if job.postedDate else None,
+            "closeDate": job.closingDate.isoformat() if job.closingDate else None,
+            "hiringManagerId": str(job.hiringManagerId) if job.hiringManagerId else None,
+            "tags": job.tags or [],
+            "tenant_id": str(job.tenant_id),
+            "createdBy": str(job.createdBy),
+            "createdAt": job.createdAt.isoformat() if job.createdAt else None,
+            "updatedAt": job.updatedAt.isoformat() if job.updatedAt else None
+        }
+        return JobPosting(**job_data)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching job posting: {str(e)}")
 
@@ -373,14 +458,37 @@ async def update_hrm_job(
     job_data: JobPostingUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Update an existing job posting"""
     try:
         job = update_job_posting(db, job_id, job_data.dict(exclude_unset=True), tenant_context["tenant_id"] if tenant_context else None)
         if not job:
             raise HTTPException(status_code=404, detail="Job posting not found")
-        return job
+        
+        # Convert SQLAlchemy model to Pydantic model
+        job_data = {
+            "id": str(job.id),
+            "title": job.title,
+            "department": Department(job.department) if job.department else None,
+            "description": job.description,
+            "requirements": job.requirements.split('\n') if job.requirements else [],
+            "responsibilities": job.responsibilities or [],
+            "location": job.location,
+            "type": EmployeeType(job.type) if job.type else None,
+            "salaryRange": job.salary,
+            "benefits": job.benefits or [],
+            "status": JobStatus(job.status) if job.status else None,
+            "openDate": job.postedDate.isoformat() if job.postedDate else None,
+            "closeDate": job.closingDate.isoformat() if job.closingDate else None,
+            "hiringManagerId": str(job.hiringManagerId) if job.hiringManagerId else None,
+            "tags": job.tags or [],
+            "tenant_id": str(job.tenant_id),
+            "createdBy": str(job.createdBy),
+            "createdAt": job.createdAt.isoformat() if job.createdAt else None,
+            "updatedAt": job.updatedAt.isoformat() if job.updatedAt else None
+        }
+        return JobPosting(**job_data)
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error updating job posting: {str(e)}")
@@ -390,11 +498,11 @@ async def delete_hrm_job(
     job_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Delete a job posting"""
     try:
-        success = delete_job_posting(db, job_id, tenant_context["tenant_id"] if tenant_context else None)
+        success = delete_job_posting(job_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not success:
             raise HTTPException(status_code=404, detail="Job posting not found")
         return {"message": "Job posting deleted successfully"}
@@ -412,7 +520,7 @@ async def get_hrm_applications(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get all applications with optional filtering"""
     try:
@@ -440,11 +548,38 @@ async def get_hrm_applications(
                 filtered_applications.append(app)
             applications = filtered_applications
         
+        # Convert SQLAlchemy models to Pydantic models
+        application_list = []
+        for app in applications:
+            app_data = {
+                "id": str(app.id),
+                "jobPostingId": str(app.jobPostingId),
+                "firstName": app.firstName,
+                "lastName": app.lastName,
+                "email": app.email,
+                "phone": app.phone,
+                "resume": app.resume,
+                "coverLetter": app.coverLetter,
+                "experience": app.experience,
+                "education": app.education,
+                "skills": app.skills or [],
+                "status": ApplicationStatus(app.status) if app.status else None,
+                "assignedTo": str(app.assignedTo) if app.assignedTo else None,
+                "notes": app.notes,
+                "interviewDate": app.interviewDate.isoformat() if app.interviewDate else None,
+                "interviewNotes": app.interviewNotes,
+                "tenant_id": str(app.tenant_id),
+                "createdBy": str(app.createdBy),
+                "createdAt": app.createdAt.isoformat() if app.createdAt else None,
+                "updatedAt": app.updatedAt.isoformat() if app.updatedAt else None
+            }
+            application_list.append(Application(**app_data))
+        
         # Get total count for pagination
-        total = len(applications)
+        total = len(application_list)
         
         return HRMApplicationsResponse(
-            applications=applications,
+            applications=application_list,
             pagination={
                 "page": page,
                 "limit": limit,
@@ -456,31 +591,74 @@ async def get_hrm_applications(
         raise HTTPException(status_code=500, detail=f"Error fetching applications: {str(e)}")
 
 @router.post("/applications", response_model=Application)
-async def create_hrm_application(
+def create_hrm_application(
     application_data: ApplicationCreate,
-    current_user = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Create a new application"""
-    try:
-        application = Application(
-            id=str(uuid.uuid4()),
-            **application_data.dict(),
-            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
-            createdBy=str(current_user.id),
-            createdAt=datetime.now(),
-            updatedAt=datetime.now()
-        )
-        
-        db.add(application)
-        db.commit()
-        db.refresh(application)
-        
-        return application
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Error creating application: {str(e)}")
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    
+    tenant_id = tenant_context["tenant_id"]
+    
+    # Import the SQLAlchemy Application model
+    from ...config.hrm_models import Application as DBApplication
+    
+    # Create database application record
+    db_application = DBApplication(
+        id=uuid.uuid4(),
+        tenant_id=uuid.UUID(tenant_id),
+        jobPostingId=uuid.UUID(application_data.jobPostingId),
+        firstName=application_data.firstName,
+        lastName=application_data.lastName,
+        email=application_data.email,
+        phone=application_data.phone,
+        resume=application_data.resume,
+        coverLetter=application_data.coverLetter,
+        experience=application_data.experience,
+        education=application_data.education,
+        skills=application_data.skills,
+        status=application_data.status.value if application_data.status else "applied",
+        assignedTo=uuid.UUID(application_data.assignedTo) if application_data.assignedTo else None,
+        notes=application_data.notes,
+        interviewDate=datetime.fromisoformat(application_data.interviewDate) if application_data.interviewDate else None,
+        interviewNotes=application_data.interviewNotes,
+        createdBy=current_user.id,
+        createdAt=datetime.utcnow(),
+        updatedAt=datetime.utcnow()
+    )
+    
+    db.add(db_application)
+    db.commit()
+    db.refresh(db_application)
+    
+    # Convert to response format
+    response_data = {
+        "id": str(db_application.id),
+        "jobPostingId": str(db_application.jobPostingId),
+        "firstName": db_application.firstName,
+        "lastName": db_application.lastName,
+        "email": db_application.email,
+        "phone": db_application.phone,
+        "resume": db_application.resume,
+        "coverLetter": db_application.coverLetter,
+        "experience": db_application.experience,
+        "education": db_application.education,
+        "skills": db_application.skills,
+        "status": ApplicationStatus(db_application.status) if db_application.status else None,
+        "assignedTo": str(db_application.assignedTo) if db_application.assignedTo else None,
+        "notes": db_application.notes,
+        "interviewDate": db_application.interviewDate.isoformat() if db_application.interviewDate else None,
+        "interviewNotes": db_application.interviewNotes,
+        "tenant_id": str(db_application.tenant_id),
+        "createdBy": str(db_application.createdBy),
+        "createdAt": db_application.createdAt.isoformat() if db_application.createdAt else None,
+        "updatedAt": db_application.updatedAt.isoformat() if db_application.updatedAt else None
+    }
+    
+    return Application(**response_data)
 
 # Performance Review endpoints
 @router.get("/reviews", response_model=HRMReviewsResponse)
@@ -492,7 +670,7 @@ async def get_hrm_reviews(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get all performance reviews with optional filtering"""
     try:
@@ -534,7 +712,7 @@ async def create_hrm_review(
     review_data: PerformanceReviewCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Create a new performance review"""
     try:
@@ -560,7 +738,7 @@ async def create_hrm_review(
 async def get_hrm_review_by_id(
     review_id: str,
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get a specific performance review by ID"""
     try:
@@ -577,7 +755,7 @@ async def update_hrm_review(
     review_data: PerformanceReviewUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Update an existing performance review"""
     try:
@@ -594,7 +772,7 @@ async def delete_hrm_review(
     review_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Delete a performance review"""
     try:
@@ -616,7 +794,7 @@ async def get_hrm_time_entries(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get all time entries with optional filtering"""
     try:
@@ -658,7 +836,7 @@ async def create_hrm_time_entry(
     time_entry_data: TimeEntryCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Create a new time entry"""
     try:
@@ -691,7 +869,7 @@ async def get_hrm_leave_requests(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get all leave requests with optional filtering"""
     try:
@@ -735,7 +913,7 @@ async def create_hrm_leave_request(
     leave_request_data: LeaveRequestCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Create a new leave request"""
     try:
@@ -762,7 +940,7 @@ async def get_hrm_leave_request(
     leave_request_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get a specific leave request by ID"""
     try:
@@ -779,7 +957,7 @@ async def update_hrm_leave_request(
     leave_request_update: LeaveRequestUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Update a leave request"""
     try:
@@ -800,7 +978,7 @@ async def delete_hrm_leave_request(
     leave_request_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Delete a leave request"""
     try:
@@ -822,7 +1000,7 @@ async def get_hrm_payroll(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get all payroll records with optional filtering"""
     try:
@@ -866,7 +1044,7 @@ async def create_hrm_payroll(
     payroll_data: PayrollCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Create a new payroll record"""
     try:
@@ -893,7 +1071,7 @@ async def get_hrm_payroll(
     payroll_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get a specific payroll record by ID"""
     try:
@@ -910,7 +1088,7 @@ async def update_hrm_payroll(
     payroll_update: PayrollUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Update a payroll record"""
     try:
@@ -931,7 +1109,7 @@ async def delete_hrm_payroll(
     payroll_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Delete a payroll record"""
     try:
@@ -951,7 +1129,7 @@ async def get_hrm_benefits(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get all benefits with optional filtering"""
     try:
@@ -991,7 +1169,7 @@ async def create_hrm_benefit(
     benefit_data: BenefitsCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Create a new benefit"""
     try:
@@ -1023,7 +1201,7 @@ async def get_hrm_training(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get all training programs with optional filtering"""
     try:
@@ -1071,7 +1249,7 @@ async def create_hrm_training(
     training_data: TrainingCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Create a new training program"""
     try:
@@ -1098,7 +1276,7 @@ async def get_hrm_training(
     training_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get a specific training program by ID"""
     try:
@@ -1115,7 +1293,7 @@ async def update_hrm_training(
     training_update: TrainingUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Update a training program"""
     try:
@@ -1136,7 +1314,7 @@ async def delete_hrm_training(
     training_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Delete a training program"""
     try:
@@ -1156,7 +1334,7 @@ async def get_hrm_training_enrollments(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get all training enrollments with optional filtering"""
     try:
@@ -1196,7 +1374,7 @@ async def create_hrm_training_enrollment(
     enrollment_data: TrainingEnrollmentCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Create a new training enrollment"""
     try:
@@ -1223,7 +1401,7 @@ async def get_hrm_training_enrollment(
     enrollment_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get a specific training enrollment by ID"""
     try:
@@ -1240,7 +1418,7 @@ async def update_hrm_training_enrollment(
     enrollment_update: TrainingEnrollmentUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Update a training enrollment"""
     try:
@@ -1261,7 +1439,7 @@ async def delete_hrm_training_enrollment(
     enrollment_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Delete a training enrollment"""
     try:
@@ -1279,7 +1457,7 @@ def read_suppliers(
     limit: int = Query(100, ge=1, le=1000),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get all suppliers for the current tenant"""
     try:
@@ -1294,7 +1472,7 @@ def read_supplier(
     supplier_id: str,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get supplier by ID"""
     try:
@@ -1310,7 +1488,7 @@ def create_supplier_endpoint(
     supplier: SupplierCreate,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Create a new supplier"""
     try:
@@ -1345,7 +1523,7 @@ def update_supplier_endpoint(
     supplier: SupplierUpdate,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Update supplier"""
     try:
@@ -1365,7 +1543,7 @@ def delete_supplier_endpoint(
     supplier_id: str,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Delete supplier"""
     try:
@@ -1383,7 +1561,7 @@ def delete_supplier_endpoint(
 @router.get("/dashboard", response_model=HRMDashboard)
 async def get_hrm_dashboard(
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get HRM dashboard data"""
     try:

@@ -6,7 +6,7 @@ import uuid
 
 from ...config.database import get_db, get_event_by_id, get_all_events, create_event, update_event, delete_event, get_events_by_project, get_events_by_user, get_upcoming_events
 from ...models.unified_models import EventCreate, EventUpdate, Event, EventResponse, EventType, EventStatus, RecurrenceType
-from ...api.dependencies import get_current_user, get_current_tenant
+from ...api.dependencies import get_current_user, get_tenant_context
 from ...services.google_meet_service import GoogleMeetService
 
 router = APIRouter(prefix="/events", tags=["events"])
@@ -50,14 +50,14 @@ async def create_new_event(
     event: EventCreate,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
-    current_tenant: dict = Depends(get_current_tenant)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Create a new event with Google Meet integration"""
     try:
         # Prepare event data
         event_data = event.dict()
         event_data['id'] = str(uuid.uuid4())
-        event_data['tenant_id'] = str(current_tenant['id'])
+        event_data['tenant_id'] = str(tenant_context['tenant_id'])
         event_data['createdById'] = str(current_user.id)
         event_data['createdAt'] = datetime.utcnow()
         event_data['updatedAt'] = datetime.utcnow()
@@ -108,16 +108,16 @@ async def get_events(
     status_filter: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
-    current_tenant: dict = Depends(get_current_tenant)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get all events with optional filtering"""
     try:
         if project_id:
-            events = get_events_by_project(project_id, db, str(current_tenant['id']))
+            events = get_events_by_project(project_id, db, str(tenant_context['tenant_id']))
         elif user_id:
-            events = get_events_by_user(user_id, db, str(current_tenant['id']))
+            events = get_events_by_user(user_id, db, str(tenant_context['tenant_id']))
         else:
-            events = get_all_events(db, str(current_tenant['id']), skip, limit)
+            events = get_all_events(db, str(tenant_context['tenant_id']), skip, limit)
         
         # Apply status filter if provided
         if status_filter:
@@ -146,11 +146,11 @@ async def get_upcoming_events_route(
     days: int = 7,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
-    current_tenant: dict = Depends(get_current_tenant)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get upcoming events for the next N days"""
     try:
-        events = get_upcoming_events(db, str(current_tenant['id']), days)
+        events = get_upcoming_events(db, str(tenant_context['tenant_id']), days)
         
         # Convert database objects to response models
         events_response = [convert_event_to_response(event) for event in events]
@@ -174,11 +174,11 @@ async def get_event(
     event_id: str,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
-    current_tenant: dict = Depends(get_current_tenant)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get a specific event by ID"""
     try:
-        event = get_event_by_id(event_id, db, str(current_tenant['id']))
+        event = get_event_by_id(event_id, db, str(tenant_context['tenant_id']))
         if not event:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -202,12 +202,12 @@ async def update_existing_event(
     event_update: EventUpdate,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
-    current_tenant: dict = Depends(get_current_tenant)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Update an existing event"""
     try:
         # Get existing event
-        existing_event = get_event_by_id(event_id, db, str(current_tenant['id']))
+        existing_event = get_event_by_id(event_id, db, str(tenant_context['tenant_id']))
         if not existing_event:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -229,7 +229,7 @@ async def update_existing_event(
                 print(f"Google Calendar update failed: {meet_result.get('error')}")
         
         # Update event in database
-        updated_event = update_event(event_id, update_data, db, str(current_tenant['id']))
+        updated_event = update_event(event_id, update_data, db, str(tenant_context['tenant_id']))
         
         if not updated_event:
             raise HTTPException(
@@ -253,12 +253,12 @@ async def delete_existing_event(
     event_id: str,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
-    current_tenant: dict = Depends(get_current_tenant)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Delete an existing event"""
     try:
         # Get existing event
-        existing_event = get_event_by_id(event_id, db, str(current_tenant['id']))
+        existing_event = get_event_by_id(event_id, db, str(tenant_context['tenant_id']))
         if not existing_event:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -273,7 +273,7 @@ async def delete_existing_event(
                 print(f"Google Calendar deletion failed: {meet_result.get('error')}")
         
         # Delete event from database
-        success = delete_event(event_id, db, str(current_tenant['id']))
+        success = delete_event(event_id, db, str(tenant_context['tenant_id']))
         
         if not success:
             raise HTTPException(
@@ -296,12 +296,12 @@ async def regenerate_meet_link(
     event_id: str,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
-    current_tenant: dict = Depends(get_current_tenant)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Regenerate Google Meet link for an existing event"""
     try:
         # Get existing event
-        existing_event = get_event_by_id(event_id, db, str(current_tenant['id']))
+        existing_event = get_event_by_id(event_id, db, str(tenant_context['tenant_id']))
         if not existing_event:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -337,7 +337,7 @@ async def regenerate_meet_link(
             'updatedAt': datetime.utcnow()
         }
         
-        updated_event = update_event(event_id, update_data, db, str(current_tenant['id']))
+        updated_event = update_event(event_id, update_data, db, str(tenant_context['tenant_id']))
         
         if not updated_event:
             raise HTTPException(
@@ -361,11 +361,11 @@ async def join_event(
     event_id: str,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
-    current_tenant: dict = Depends(get_current_tenant)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Join an event (add user to participants)"""
     try:
-        event = get_event_by_id(event_id, db, str(current_tenant['id']))
+        event = get_event_by_id(event_id, db, str(tenant_context['tenant_id']))
         if not event:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -382,7 +382,7 @@ async def join_event(
                 'updatedAt': datetime.utcnow()
             }
             
-            updated_event = update_event(event_id, update_data, db, str(current_tenant['id']))
+            updated_event = update_event(event_id, update_data, db, str(tenant_context['tenant_id']))
             if not updated_event:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -404,11 +404,11 @@ async def leave_event(
     event_id: str,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
-    current_tenant: dict = Depends(get_current_tenant)
+    tenant_context: dict = Depends(get_tenant_context)
 ):
     """Leave an event (remove user from participants)"""
     try:
-        event = get_event_by_id(event_id, db, str(current_tenant['id']))
+        event = get_event_by_id(event_id, db, str(tenant_context['tenant_id']))
         if not event:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -425,7 +425,7 @@ async def leave_event(
                 'updatedAt': datetime.utcnow()
             }
             
-            updated_event = update_event(event_id, update_data, db, str(current_tenant['id']))
+            updated_event = update_event(event_id, update_data, db, str(tenant_context['tenant_id']))
             if not updated_event:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

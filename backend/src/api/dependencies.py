@@ -66,21 +66,6 @@ def get_tenant_context(
         "tenant_id": x_tenant_id
     }
 
-def get_current_tenant(
-    tenant_context = Depends(get_tenant_context)
-):
-    """Get current tenant from context"""
-    if not tenant_context:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Tenant context required"
-        )
-    return {
-        "id": tenant_context["tenant_id"],
-        "name": tenant_context["tenant"].name,
-        "domain": tenant_context["tenant"].domain,
-        "isActive": tenant_context["tenant"].isActive
-    }
 
 def require_super_admin(current_user = Depends(get_current_user)):
     if getattr(current_user, 'userRole', None) != 'super_admin':

@@ -308,7 +308,7 @@ async def get_tenant_users_list(
     return {"users": user_dicts}
 
 @router.get("/current/subscription")
-async def get_current_tenant_subscription(
+async def get_tenant_subscription(
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):

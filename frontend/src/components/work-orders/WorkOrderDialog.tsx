@@ -41,8 +41,6 @@ interface WorkOrderFormData {
   planned_start_date: string;
   planned_end_date: string;
   estimated_hours: number;
-  assigned_to_id: string;
-  project_id: string;
   location: string;
   instructions: string;
   safety_notes: string;
@@ -69,8 +67,6 @@ export default function WorkOrderDialog({
     planned_start_date: '',
     planned_end_date: '',
     estimated_hours: 0,
-    assigned_to_id: '',
-    project_id: '',
     location: '',
     instructions: '',
     safety_notes: '',
@@ -98,8 +94,6 @@ export default function WorkOrderDialog({
           ? workOrder.planned_end_date.split('T')[0]
           : '',
         estimated_hours: workOrder.estimated_hours || 0,
-        assigned_to_id: workOrder.assigned_to_id || '',
-        project_id: workOrder.project_id || '',
         location: workOrder.location || '',
         instructions: workOrder.instructions || '',
         safety_notes: workOrder.safety_notes || '',
@@ -111,8 +105,23 @@ export default function WorkOrderDialog({
     }
   }, [workOrder, mode]);
 
+  const isFormValid = () => {
+    return (
+      formData.title.trim() !== '' &&
+      formData.description.trim() !== '' &&
+      formData.planned_start_date !== '' &&
+      formData.planned_end_date !== '' &&
+      formData.estimated_hours > 0
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!isFormValid()) {
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -141,8 +150,6 @@ export default function WorkOrderDialog({
       planned_start_date: '',
       planned_end_date: '',
       estimated_hours: 0,
-      assigned_to_id: '',
-      project_id: '',
       location: '',
       instructions: '',
       safety_notes: '',
@@ -222,6 +229,7 @@ export default function WorkOrderDialog({
                 }
                 placeholder="Enter work order title"
                 required
+                className={formData.title.trim() === '' ? 'border-red-500' : ''}
               />
             </div>
 
@@ -291,7 +299,7 @@ export default function WorkOrderDialog({
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">Description *</Label>
             <Textarea
               id="description"
               value={formData.description}
@@ -300,13 +308,14 @@ export default function WorkOrderDialog({
               }
               placeholder="Describe the work to be performed"
               rows={3}
+              className={formData.description.trim() === '' ? 'border-red-500' : ''}
             />
           </div>
 
           {/* Scheduling */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="planned_start_date">Planned Start Date</Label>
+              <Label htmlFor="planned_start_date">Planned Start Date *</Label>
               <Input
                 id="planned_start_date"
                 type="date"
@@ -317,11 +326,12 @@ export default function WorkOrderDialog({
                     planned_start_date: e.target.value,
                   })
                 }
+                className={formData.planned_start_date === '' ? 'border-red-500' : ''}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="planned_end_date">Planned End Date</Label>
+              <Label htmlFor="planned_end_date">Planned End Date *</Label>
               <Input
                 id="planned_end_date"
                 type="date"
@@ -329,11 +339,12 @@ export default function WorkOrderDialog({
                 onChange={(e) =>
                   setFormData({ ...formData, planned_end_date: e.target.value })
                 }
+                className={formData.planned_end_date === '' ? 'border-red-500' : ''}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="estimated_hours">Estimated Hours</Label>
+              <Label htmlFor="estimated_hours">Estimated Hours *</Label>
               <Input
                 id="estimated_hours"
                 type="number"
@@ -347,6 +358,7 @@ export default function WorkOrderDialog({
                   })
                 }
                 placeholder="0.0"
+                className={formData.estimated_hours <= 0 ? 'border-red-500' : ''}
               />
             </div>
           </div>
@@ -514,7 +526,7 @@ export default function WorkOrderDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading || !isFormValid()}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {mode === 'create' ? 'Create Work Order' : 'Update Work Order'}
             </Button>

@@ -257,6 +257,12 @@ from .production_crud import (
     update_production_schedule, delete_production_schedule
 )
 
+from .reports_crud import (
+    # Reports functions
+    get_reports_dashboard_data, get_work_order_analytics,
+    get_project_analytics, get_financial_analytics
+)
+
 from .custom_options_crud import (
     # CustomEventType functions
     get_custom_event_type_by_id, get_all_custom_event_types, get_active_custom_event_types,

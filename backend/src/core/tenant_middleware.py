@@ -272,7 +272,7 @@ async def get_tenant_context_from_request(request: Request) -> Dict[str, Any]:
     return request.state.tenant_context
 
 # Enhanced dependency that includes tenant context
-async def get_current_tenant_user(
+async def get_tenant_user_context(
     current_user = Depends(get_current_user),
     tenant_context = Depends(get_tenant_context_from_request)
 ):
