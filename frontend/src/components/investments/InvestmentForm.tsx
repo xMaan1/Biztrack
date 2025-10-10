@@ -23,16 +23,17 @@ import {
 import { Card, CardContent } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { useCurrency } from '../../contexts/CurrencyContext';
-import { investmentService, InvestmentCreate } from '../../services/InvestmentService';
+import { investmentService, InvestmentCreate, Investment } from '../../services/InvestmentService';
 import { Loader2, Calendar, FileText, Tag } from 'lucide-react';
 
 interface InvestmentFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  editingInvestment?: Investment | null;
 }
 
-export default function InvestmentForm({ isOpen, onClose, onSuccess }: InvestmentFormProps) {
+export default function InvestmentForm({ isOpen, onClose, onSuccess, editingInvestment }: InvestmentFormProps) {
   const router = useRouter();
   const { getCurrencySymbol } = useCurrency();
   const [loading, setLoading] = useState(false);
@@ -46,6 +47,32 @@ export default function InvestmentForm({ isOpen, onClose, onSuccess }: Investmen
     reference_type: '',
     tags: [],
   });
+
+  useEffect(() => {
+    if (editingInvestment) {
+      setFormData({
+        investment_date: editingInvestment.investment_date.split('T')[0],
+        investment_type: editingInvestment.investment_type,
+        amount: editingInvestment.amount,
+        description: editingInvestment.description,
+        notes: editingInvestment.notes || '',
+        reference_number: editingInvestment.reference_number || '',
+        reference_type: editingInvestment.reference_type || '',
+        tags: editingInvestment.tags || [],
+      });
+    } else {
+      setFormData({
+        investment_date: new Date().toISOString().split('T')[0],
+        investment_type: 'cash_investment',
+        amount: 0,
+        description: '',
+        notes: '',
+        reference_number: '',
+        reference_type: '',
+        tags: [],
+      });
+    }
+  }, [editingInvestment, isOpen]);
 
   const [newTag, setNewTag] = useState('');
 
@@ -61,13 +88,17 @@ export default function InvestmentForm({ isOpen, onClose, onSuccess }: Investmen
     setLoading(true);
 
     try {
-      await investmentService.createInvestment(formData);
+      if (editingInvestment) {
+        await investmentService.updateInvestment(editingInvestment.id, formData);
+      } else {
+        await investmentService.createInvestment(formData);
+      }
       onSuccess?.();
       onClose();
       router.refresh();
     } catch (error) {
-      console.error('Failed to create investment:', error);
-      alert('Failed to create investment. Please try again.');
+      console.error(`Failed to ${editingInvestment ? 'update' : 'create'} investment:`, error);
+      alert(`Failed to ${editingInvestment ? 'update' : 'create'} investment. Please try again.`);
     } finally {
       setLoading(false);
     }
@@ -97,7 +128,7 @@ export default function InvestmentForm({ isOpen, onClose, onSuccess }: Investmen
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            Add New Investment
+            {editingInvestment ? 'Edit Investment' : 'Add New Investment'}
           </DialogTitle>
           <DialogDescription>
             Record external capital investment to sustain business operations
@@ -252,7 +283,7 @@ export default function InvestmentForm({ isOpen, onClose, onSuccess }: Investmen
             </Button>
             <Button type="submit" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Investment
+              {editingInvestment ? 'Update Investment' : 'Create Investment'}
             </Button>
           </div>
         </form>

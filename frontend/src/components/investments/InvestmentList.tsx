@@ -25,9 +25,20 @@ import {
   CardHeader,
   CardTitle,
 } from '../ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../ui/alert-dialog';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { investmentService, Investment, InvestmentDashboardStats } from '../../services/InvestmentService';
 import InvestmentForm from './InvestmentForm';
+import InvestmentDetails from './InvestmentDetails';
 import { 
   DollarSign, 
   Plus, 
@@ -42,7 +53,10 @@ import {
   CreditCard,
   Building,
   Check,
-  X
+  X,
+  Edit,
+  Eye,
+  Trash2
 } from 'lucide-react';
 
 export default function InvestmentList() {
@@ -51,6 +65,9 @@ export default function InvestmentList() {
   const [stats, setStats] = useState<InvestmentDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingInvestment, setEditingInvestment] = useState<Investment | null>(null);
+  const [viewingInvestment, setViewingInvestment] = useState<Investment | null>(null);
+  const [deletingInvestment, setDeletingInvestment] = useState<Investment | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -169,6 +186,39 @@ export default function InvestmentList() {
   const handleFormSuccess = () => {
     fetchInvestments();
     fetchStats();
+    setEditingInvestment(null);
+  };
+
+  const handleEdit = (investment: Investment) => {
+    setEditingInvestment(investment);
+    setIsFormOpen(true);
+  };
+
+  const handleView = (investment: Investment) => {
+    setViewingInvestment(investment);
+  };
+
+  const handleDelete = (investment: Investment) => {
+    setDeletingInvestment(investment);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingInvestment) return;
+
+    try {
+      await investmentService.deleteInvestment(deletingInvestment.id);
+      await fetchInvestments();
+      await fetchStats();
+      setDeletingInvestment(null);
+    } catch (error) {
+      console.error('Failed to delete investment:', error);
+      alert('Failed to delete investment. Please try again.');
+    }
+  };
+
+  const handleCloseForm = () => {
+    setIsFormOpen(false);
+    setEditingInvestment(null);
   };
 
   if (loading) {
@@ -359,6 +409,26 @@ export default function InvestmentList() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleView(investment)}
+                        className="h-8 px-2"
+                      >
+                        <Eye className="h-3 w-3 mr-1" />
+                        View
+                      </Button>
+                      {investment.status === 'pending' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEdit(investment)}
+                          className="h-8 px-2"
+                        >
+                          <Edit className="h-3 w-3 mr-1" />
+                          Edit
+                        </Button>
+                      )}
                       {investment.status === 'pending' && (
                         <>
                           <Button
@@ -380,6 +450,17 @@ export default function InvestmentList() {
                             Cancel
                           </Button>
                         </>
+                      )}
+                      {investment.status === 'pending' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDelete(investment)}
+                          className="h-8 px-2 text-red-600 border-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Delete
+                        </Button>
                       )}
                       {investment.status === 'completed' && (
                         <span className="text-sm text-green-600 font-medium">
@@ -422,9 +503,47 @@ export default function InvestmentList() {
       {/* Investment Form Modal */}
       <InvestmentForm
         isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
+        onClose={handleCloseForm}
         onSuccess={handleFormSuccess}
+        editingInvestment={editingInvestment}
       />
+
+      {/* Investment Details Modal */}
+      <InvestmentDetails
+        investment={viewingInvestment}
+        isOpen={!!viewingInvestment}
+        onClose={() => setViewingInvestment(null)}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deletingInvestment} onOpenChange={() => setDeletingInvestment(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Investment</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this investment? This action cannot be undone.
+              {deletingInvestment && (
+                <div className="mt-2 p-3 bg-gray-50 rounded-md">
+                  <p className="font-medium">{deletingInvestment.investment_number}</p>
+                  <p className="text-sm text-gray-600">{deletingInvestment.description}</p>
+                  <p className="text-sm text-gray-600">
+                    Amount: {getCurrencySymbol()}{deletingInvestment.amount.toLocaleString()}
+                  </p>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete Investment
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
