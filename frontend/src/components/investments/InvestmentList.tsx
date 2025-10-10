@@ -26,15 +26,13 @@ import {
   CardTitle,
 } from '../ui/card';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '../ui/alert-dialog';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '../ui/dialog';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { investmentService, Investment, InvestmentDashboardStats } from '../../services/InvestmentService';
 import InvestmentForm from './InvestmentForm';
@@ -516,11 +514,11 @@ export default function InvestmentList() {
       />
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deletingInvestment} onOpenChange={() => setDeletingInvestment(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Investment</AlertDialogTitle>
-            <AlertDialogDescription>
+      <Dialog open={!!deletingInvestment} onOpenChange={() => setDeletingInvestment(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Investment</DialogTitle>
+            <DialogDescription>
               Are you sure you want to delete this investment? This action cannot be undone.
               {deletingInvestment && (
                 <div className="mt-2 p-3 bg-gray-50 rounded-md">
@@ -531,19 +529,18 @@ export default function InvestmentList() {
                   </p>
                 </div>
               )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-red-600 hover:bg-red-700"
-            >
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletingInvestment(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete}>
               Delete Investment
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
