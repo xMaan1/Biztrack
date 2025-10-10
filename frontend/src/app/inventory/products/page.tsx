@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Card,
@@ -32,61 +32,33 @@ import {
 import { useAuth } from '../../../contexts/AuthContext';
 import { DashboardLayout } from '../../../components/layout';
 import { useCurrency } from '../../../contexts/CurrencyContext';
-
-// Mock data for demonstration - in real app this would come from API
-const mockProducts = [
-  {
-    id: '1',
-    name: 'Laptop Charger',
-    sku: 'LAP-CHRG-001',
-    category: 'Electronics',
-    stockQuantity: 15,
-    lowStockThreshold: 10,
-    unitPrice: 29.99,
-    costPrice: 15.0,
-    isActive: true,
-  },
-  {
-    id: '2',
-    name: 'Wireless Mouse',
-    sku: 'WIRE-MOUSE-002',
-    category: 'Electronics',
-    stockQuantity: 8,
-    lowStockThreshold: 10,
-    unitPrice: 19.99,
-    costPrice: 8.0,
-    isActive: true,
-  },
-  {
-    id: '3',
-    name: 'USB Cable',
-    sku: 'USB-CABLE-003',
-    category: 'Electronics',
-    stockQuantity: 25,
-    lowStockThreshold: 20,
-    unitPrice: 9.99,
-    costPrice: 3.0,
-    isActive: true,
-  },
-  {
-    id: '4',
-    name: 'Office Chair',
-    sku: 'OFF-CHAIR-004',
-    category: 'Furniture',
-    stockQuantity: 0,
-    lowStockThreshold: 5,
-    unitPrice: 199.99,
-    costPrice: 120.0,
-    isActive: true,
-  },
-];
+import { apiService } from '../../../services/ApiService';
+import { Product } from '../../../models/pos';
 
 export default function ProductsPage() {
   const { } = useAuth();
   const { formatCurrency } = useCurrency();
   const router = useRouter();
-  const [products] = useState(mockProducts);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.get('/pos/products');
+      setProducts(response.products || []);
+    } catch (error) {
+      console.error('Failed to fetch products:', error);
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredProducts = products.filter(
     (product) =>
@@ -121,6 +93,19 @@ export default function ProductsPage() {
     return 'In Stock';
   };
 
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+            <p className="mt-2 text-sm text-gray-600">Loading products...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="container mx-auto p-6 space-y-6">
@@ -140,7 +125,7 @@ export default function ProductsPage() {
               <ShoppingCart className="mr-2 h-4 w-4" />
               Manage in POS
             </Button>
-            <Button onClick={() => router.push('/pos/products/new')}>
+            <Button onClick={() => router.push('/pos/products')}>
               <Plus className="mr-2 h-4 w-4" />
               Add Product
             </Button>
@@ -187,7 +172,7 @@ export default function ProductsPage() {
                   {filteredProducts.map((product) => {
                     const stockStatus = getStockStatus(
                       product.stockQuantity,
-                      product.lowStockThreshold,
+                      product.minStockLevel,
                     );
                     return (
                       <TableRow key={product.id}>
@@ -213,13 +198,13 @@ export default function ProductsPage() {
                                 {product.stockQuantity}
                               </span>
                               <span className="text-sm text-muted-foreground">
-                                / {product.lowStockThreshold} min
+                                / {product.minStockLevel || 0} min
                               </span>
                             </div>
                             <Badge variant={stockStatus.color as any}>
                               {getStockStatusLabel(
                                 product.stockQuantity,
-                                product.lowStockThreshold,
+                                product.minStockLevel,
                               )}
                             </Badge>
                           </div>
@@ -227,18 +212,16 @@ export default function ProductsPage() {
                         <TableCell>
                           <div className="space-y-1">
                             <div className="font-medium">
-                              {formatCurrency(product.unitPrice)}
+                              {formatCurrency(product.unitPrice || 0)}
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              Cost: {formatCurrency(product.costPrice)}
+                              Cost: {formatCurrency(product.costPrice || 0)}
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant={product.isActive ? 'default' : 'secondary'}
-                          >
-                            {product.isActive ? 'Active' : 'Inactive'}
+                          <Badge variant="default">
+                            Active
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -254,7 +237,7 @@ export default function ProductsPage() {
                               View
                             </Button>
                             {product.stockQuantity <=
-                              product.lowStockThreshold && (
+                              (product.minStockLevel || 0) && (
                               <Button
                                 size="sm"
                                 onClick={() =>
@@ -282,7 +265,7 @@ export default function ProductsPage() {
                     : 'Get started by adding your first product'}
                 </p>
                 {!searchTerm && (
-                  <Button onClick={() => router.push('/pos/products/new')}>
+                  <Button onClick={() => router.push('/pos/products')}>
                     <Plus className="mr-2 h-4 w-4" />
                     Add Product
                   </Button>
@@ -315,7 +298,7 @@ export default function ProductsPage() {
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
                 {
-                  products.filter((p) => p.stockQuantity > p.lowStockThreshold)
+                  products.filter((p) => p.stockQuantity > p.minStockLevel)
                     .length
                 }
               </div>
@@ -334,7 +317,7 @@ export default function ProductsPage() {
                   products.filter(
                     (p) =>
                       p.stockQuantity > 0 &&
-                      p.stockQuantity <= p.lowStockThreshold,
+                      p.stockQuantity <= p.minStockLevel,
                   ).length
                 }
               </div>

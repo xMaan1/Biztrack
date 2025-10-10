@@ -626,11 +626,11 @@ const POSReports = () => {
                               </div>
                               <div className="text-right">
                                 <div className="font-semibold">
-                                  {formatCurrency(product.price)}
+                                  {formatCurrency(product.unitPrice)}
                                 </div>
                                 <div className="text-sm text-red-600">
                                   Stock: {product.stockQuantity} (Min:{' '}
-                                  {product.lowStockThreshold})
+                                  {product.minStockLevel})
                                 </div>
                               </div>
                             </div>

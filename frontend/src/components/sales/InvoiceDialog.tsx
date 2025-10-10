@@ -31,6 +31,8 @@ import InvoiceService from '../../services/InvoiceService';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { CustomerSearch } from '../ui/customer-search';
 import { Customer } from '../../services/CustomerService';
+import { Product } from '../../models/pos';
+import { apiService } from '../../services/ApiService';
 
 interface InvoiceDialogProps {
   open: boolean;
@@ -85,8 +87,17 @@ export function InvoiceDialog({
   });
 
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
 
   const [items, setItems] = useState<InvoiceItemCreate[]>([]);
+  const [newItem, setNewItem] = useState<InvoiceItemCreate>({
+    description: '',
+    quantity: 1,
+    unitPrice: 0,
+    discount: 0,
+    taxRate: 0,
+    productId: '',
+  });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -99,6 +110,23 @@ export function InvoiceDialog({
       }));
     }
   }, [currency, mode]);
+
+  // Fetch products when dialog opens
+  useEffect(() => {
+    if (open) {
+      fetchProducts();
+    }
+  }, [open]);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await apiService.get('/pos/products');
+      setProducts(response.products || []);
+    } catch (error) {
+      console.error('Failed to fetch products:', error);
+      setProducts([]);
+    }
+  };
 
   useEffect(() => {
     if (invoice && mode === 'edit') {
@@ -259,25 +287,17 @@ export function InvoiceDialog({
   };
 
   const addItem = () => {
-    const newItem: InvoiceItemCreate = {
+    setItems((prev) => [...prev, { ...newItem }]);
+    setNewItem({
       description: '',
       quantity: 1,
       unitPrice: 0,
       discount: 0,
       taxRate: 0,
-    };
-    setItems((prev) => [...prev, newItem]);
+      productId: '',
+    });
   };
 
-  const updateItem = (
-    index: number,
-    field: keyof InvoiceItemCreate,
-    value: string | number,
-  ) => {
-    const updatedItems = [...items];
-    updatedItems[index] = { ...updatedItems[index], [field]: value };
-    setItems(updatedItems);
-  };
 
   const removeItem = (index: number) => {
     setItems((prev) => prev.filter((_, i) => i !== index));
@@ -285,7 +305,7 @@ export function InvoiceDialog({
 
   const calculateTotals = () => {
     const subtotal = items.reduce(
-      (sum, item) => sum + item.quantity * item.unitPrice,
+      (sum, item) => sum + item.quantity * item.unitPrice * (1 - item.discount / 100),
       0,
     );
     const discountAmount = subtotal * (formData.discount / 100);
@@ -702,125 +722,156 @@ export function InvoiceDialog({
               )}
             </CardHeader>
             <CardContent className="space-y-4">
-              {items.map((item, index) => (
-                <div
-                  key={index}
-                  className="grid grid-cols-12 gap-2 items-end border p-3 rounded-lg"
-                >
-                  <div className="col-span-4">
-                    <Label htmlFor={`item_${index}_description`}>
-                      Description *
-                    </Label>
+              {/* Add Item Form */}
+              <div className="grid grid-cols-4 gap-4 p-4 border rounded-lg">
+                <div className="space-y-2">
+                  <Label htmlFor="productId">Product *</Label>
+                  <Select
+                    value={newItem.productId}
+                    onValueChange={(value) => {
+                      const product = products.find((p) => p.id === value);
+                      setNewItem((prev) => ({
+                        ...prev,
+                        productId: value,
+                        description: product?.name || '',
+                        unitPrice: product?.unitPrice || 0,
+                      }));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select product" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {products.length === 0 ? (
+                        <SelectItem value="no-products" disabled>
+                          No products available
+                        </SelectItem>
+                      ) : (
+                        products.map((product) => (
+                          <SelectItem key={product.id} value={product.id}>
+                            {product.name} ({product.sku})
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description *</Label>
                     <Input
-                      id={`item_${index}_description`}
-                      value={item.description}
+                    id="description"
+                    value={newItem.description}
                       onChange={(e) =>
-                        updateItem(index, 'description', e.target.value)
+                      setNewItem((prev) => ({
+                        ...prev,
+                        description: e.target.value,
+                      }))
                       }
                       placeholder="Item description"
-                      className={
-                        errors[`item_${index}_description`]
-                          ? 'border-red-500'
-                          : ''
-                      }
                     />
-                    {errors[`item_${index}_description`] && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {errors[`item_${index}_description`]}
-                      </p>
-                    )}
                   </div>
-
-                  <div className="col-span-2">
-                    <Label htmlFor={`item_${index}_quantity`}>Qty *</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="quantity">Quantity *</Label>
                     <Input
-                      id={`item_${index}_quantity`}
+                    id="quantity"
                       type="number"
                       min="0.01"
                       step="0.01"
-                      value={item.quantity}
+                    value={newItem.quantity}
                       onChange={(e) =>
-                        updateItem(
-                          index,
-                          'quantity',
-                          parseFloat(e.target.value) || 0,
-                        )
-                      }
-                      className={
-                        errors[`item_${index}_quantity`] ? 'border-red-500' : ''
-                      }
-                    />
-                    {errors[`item_${index}_quantity`] && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {errors[`item_${index}_quantity`]}
-                      </p>
-                    )}
+                      setNewItem((prev) => ({
+                        ...prev,
+                        quantity: parseFloat(e.target.value) || 0,
+                      }))
+                    }
+                    placeholder="Qty"
+                  />
                   </div>
-
-                  <div className="col-span-2">
-                    <Label htmlFor={`item_${index}_unitPrice`}>
-                      Unit Price *
-                    </Label>
+                <div className="space-y-2">
+                  <Label htmlFor="unitPrice">Unit Price *</Label>
                     <Input
-                      id={`item_${index}_unitPrice`}
+                    id="unitPrice"
                       type="number"
                       min="0"
                       step="0.01"
-                      value={item.unitPrice}
+                    value={newItem.unitPrice}
                       onChange={(e) =>
-                        updateItem(
-                          index,
-                          'unitPrice',
-                          parseFloat(e.target.value) || 0,
-                        )
+                      setNewItem((prev) => ({
+                        ...prev,
+                        unitPrice: parseFloat(e.target.value) || 0,
+                      }))
                       }
                       placeholder="0.00"
-                      className={
-                        errors[`item_${index}_unitPrice`]
-                          ? 'border-red-500'
-                          : ''
-                      }
                     />
-                    {errors[`item_${index}_unitPrice`] && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {errors[`item_${index}_unitPrice`]}
-                      </p>
-                    )}
                   </div>
-
-                  <div className="col-span-2">
-                    <Label htmlFor={`item_${index}_discount`}>
-                      Discount (%)
-                    </Label>
+                <div className="space-y-2">
+                  <Label htmlFor="discount">Discount (%)</Label>
                     <Input
-                      id={`item_${index}_discount`}
+                    id="discount"
                       type="number"
                       min="0"
                       max="100"
                       step="0.01"
-                      value={item.discount}
+                    value={newItem.discount}
                       onChange={(e) =>
-                        updateItem(
-                          index,
-                          'discount',
-                          parseFloat(e.target.value) || 0,
-                        )
+                      setNewItem((prev) => ({
+                        ...prev,
+                        discount: parseFloat(e.target.value) || 0,
+                      }))
                       }
                       placeholder="0.00"
                     />
                   </div>
-
-                  <div className="col-span-1">
+                <div className="space-y-2">
                     <Label>Total</Label>
                     <div className="text-sm font-medium p-2 bg-gray-50 rounded">
+                    {formatCurrency(
+                      newItem.quantity *
+                        newItem.unitPrice *
+                        (1 - newItem.discount / 100),
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Button variant="outline" size="sm" onClick={addItem}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Item
+                  </Button>
+                </div>
+              </div>
+
+              {/* Items List */}
+              {items.map((item, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-12 gap-2 items-center border p-3 rounded-lg"
+                >
+                  <div className="col-span-3">
+                    <span className="font-medium">{item.description}</span>
+                    {item.productId && (
+                      <div className="text-sm text-gray-500">
+                        Product ID: {item.productId}
+                      </div>
+                    )}
+                  </div>
+                  <div className="col-span-2">
+                    <span>Qty: {item.quantity}</span>
+                  </div>
+                  <div className="col-span-2">
+                    <span>Price: {formatCurrency(item.unitPrice)}</span>
+                  </div>
+                  <div className="col-span-2">
+                    <span>Discount: {item.discount}%</span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="font-medium">
                       {formatCurrency(
                         item.quantity *
                           item.unitPrice *
                           (1 - item.discount / 100),
                       )}
+                    </span>
                     </div>
-                  </div>
-
                   <div className="col-span-1">
                     <Button
                       type="button"
@@ -834,16 +885,6 @@ export function InvoiceDialog({
                   </div>
                 </div>
               ))}
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={addItem}
-                className="w-full"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Item
-              </Button>
             </CardContent>
           </Card>
 

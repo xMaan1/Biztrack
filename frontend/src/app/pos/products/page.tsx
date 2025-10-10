@@ -49,10 +49,11 @@ interface ProductFormData {
   sku: string;
   description: string;
   category: ProductCategory;
-  price: number;
+  unitPrice: number;
   costPrice: number;
   stockQuantity: number;
-  lowStockThreshold: number;
+  minStockLevel: number;
+  unitOfMeasure: string;
   barcode: string;
   expiryDate: string;
   batchNumber: string;
@@ -70,16 +71,19 @@ const POSProducts = () => {
   );
   const [showLowStock, setShowLowStock] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     sku: '',
     description: '',
     category: ProductCategory.OTHER,
-    price: 0,
+    unitPrice: 0,
     costPrice: 0,
     stockQuantity: 0,
-    lowStockThreshold: 5,
+    minStockLevel: 5,
+    unitOfMeasure: 'piece',
     barcode: '',
     expiryDate: '',
     batchNumber: '',
@@ -104,10 +108,9 @@ const POSProducts = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!editingProduct) return;
 
     try {
-      if (editingProduct.id) {
+      if (editingProduct && editingProduct.id) {
         // Update existing product
         await apiService.put(`/pos/products/${editingProduct.id}`, formData);
       } else {
@@ -121,10 +124,11 @@ const POSProducts = () => {
         sku: '',
         description: '',
         category: ProductCategory.OTHER,
-        price: 0,
+        unitPrice: 0,
         costPrice: 0,
         stockQuantity: 0,
-        lowStockThreshold: 5,
+        minStockLevel: 5,
+        unitOfMeasure: 'piece',
         barcode: '',
         expiryDate: '',
         batchNumber: '',
@@ -142,10 +146,11 @@ const POSProducts = () => {
       sku: product.sku,
       description: product.description || '',
       category: product.category,
-      price: product.price,
+      unitPrice: product.unitPrice,
       costPrice: product.costPrice,
       stockQuantity: product.stockQuantity,
-      lowStockThreshold: product.lowStockThreshold,
+      minStockLevel: product.minStockLevel,
+      unitOfMeasure: product.unitOfMeasure || 'piece',
       barcode: product.barcode || '',
       expiryDate: product.expiryDate || '',
       batchNumber: product.batchNumber || '',
@@ -154,14 +159,26 @@ const POSProducts = () => {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = async (productId: string) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
+  const handleDeleteClick = (product: Product) => {
+    setProductToDelete(product);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!productToDelete) return;
 
     try {
-      await apiService.delete(`/pos/products/${productId}`);
+      await apiService.delete(`/pos/products/${productToDelete.id}`);
       fetchProducts();
+      setIsDeleteDialogOpen(false);
+      setProductToDelete(null);
     } catch (error) {
       }
+  };
+
+  const handleDeleteCancel = () => {
+    setIsDeleteDialogOpen(false);
+    setProductToDelete(null);
   };
 
   const resetForm = () => {
@@ -170,10 +187,11 @@ const POSProducts = () => {
       sku: '',
       description: '',
       category: ProductCategory.OTHER,
-      price: 0,
+      unitPrice: 0,
       costPrice: 0,
       stockQuantity: 0,
-      lowStockThreshold: 5,
+      minStockLevel: 5,
+      unitOfMeasure: 'piece',
       barcode: '',
       expiryDate: '',
       batchNumber: '',
@@ -199,7 +217,7 @@ const POSProducts = () => {
       product.category === selectedCategory;
 
     const matchesLowStock =
-      !showLowStock || product.stockQuantity <= product.lowStockThreshold;
+      !showLowStock || product.stockQuantity <= product.minStockLevel;
 
     return matchesSearch && matchesCategory && matchesLowStock;
   });
@@ -341,7 +359,7 @@ const POSProducts = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDelete(product.id)}
+                      onClick={() => handleDeleteClick(product)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -353,7 +371,7 @@ const POSProducts = () => {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Price</span>
                   <span className="font-semibold">
-                    {formatCurrency(product.price)}
+                    {formatCurrency(product.unitPrice)}
                   </span>
                 </div>
 
@@ -376,7 +394,7 @@ const POSProducts = () => {
                   </Badge>
                 </div>
 
-                {product.stockQuantity <= product.lowStockThreshold && (
+                {product.stockQuantity <= product.minStockLevel && (
                   <div className="flex items-center space-x-2 text-amber-600">
                     <AlertTriangle className="h-4 w-4" />
                     <span className="text-xs font-medium">Low Stock</span>
@@ -491,17 +509,17 @@ const POSProducts = () => {
 
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="price">Price *</Label>
+                  <Label htmlFor="unitPrice">Price *</Label>
                   <Input
-                    id="price"
+                    id="unitPrice"
                     type="number"
                     step="0.01"
                     min="0"
-                    value={formData.price}
+                    value={formData.unitPrice}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        price: parseFloat(e.target.value) || 0,
+                        unitPrice: parseFloat(e.target.value) || 0,
                       })
                     }
                     required
@@ -546,16 +564,16 @@ const POSProducts = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="lowStockThreshold">Low Stock Threshold</Label>
+                  <Label htmlFor="minStockLevel">Low Stock Threshold</Label>
                   <Input
-                    id="lowStockThreshold"
+                    id="minStockLevel"
                     type="number"
                     min="0"
-                    value={formData.lowStockThreshold}
+                    value={formData.minStockLevel}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        lowStockThreshold: parseInt(e.target.value) || 0,
+                        minStockLevel: parseInt(e.target.value) || 0,
                       })
                     }
                   />
@@ -627,6 +645,34 @@ const POSProducts = () => {
                 </Button>
               </DialogFooter>
             </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Product</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete "{productToDelete?.name}"? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleDeleteCancel}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleDeleteConfirm}
+              >
+                Delete
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>

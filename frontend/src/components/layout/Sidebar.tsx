@@ -284,6 +284,13 @@ const allMenuItems: MenuItem[] = [
         planTypes: ['*'],
       },
       {
+        text: 'Products',
+        icon: Package,
+        path: '/inventory/products',
+        roles: ['*'],
+        planTypes: ['*'],
+      },
+      {
         text: 'Stock Alerts',
         icon: AlertTriangle,
         path: '/inventory/alerts',

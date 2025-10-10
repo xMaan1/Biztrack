@@ -10,20 +10,11 @@ import {
 } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
-import { Input } from '../../../components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../../components/ui/select';
 import {
   AlertTriangle,
   Package,
   TrendingDown,
   Clock,
-  Plus,
   RefreshCw,
   Eye,
   ShoppingCart,
@@ -32,55 +23,18 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { inventoryService } from '../../../services/InventoryService';
-import HRMService from '../../../services/HRMService';
 import {
   InventoryDashboardStats,
-  PurchaseOrderCreate,
-  PurchaseOrderItemCreate,
 } from '../../../models/inventory';
-import { Supplier } from '../../../models/hrm';
 import { DashboardLayout } from '../../../components/layout';
-import { useCurrency } from '../../../contexts/CurrencyContext';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '../../../components/ui/dialog';
-import { Label } from '../../../components/ui/label';
-import { Textarea } from '../../../components/ui/textarea';
 
 export default function AlertsPage() {
   const { } = useAuth();
-  const { formatCurrency } = useCurrency();
   const router = useRouter();
   const [dashboardStats, setDashboardStats] =
     useState<InventoryDashboardStats | null>(null);
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<string>('all');
-  const [isPOModalOpen, setIsPOModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [newOrder, setNewOrder] = useState<PurchaseOrderCreate>({
-    orderNumber: '',
-    supplierId: '',
-    supplierName: '',
-    warehouseId: '',
-    orderDate: new Date().toISOString().split('T')[0],
-    expectedDeliveryDate: '',
-    notes: '',
-    items: [],
-  });
-  const [newItem, setNewItem] = useState<PurchaseOrderItemCreate>({
-    productId: '',
-    productName: '',
-    sku: '',
-    quantity: 0,
-    unitCost: 0,
-    totalCost: 0,
-    notes: '',
-  });
 
   useEffect(() => {
     fetchData();
@@ -89,21 +43,8 @@ export default function AlertsPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [statsResponse, suppliersResponse] = await Promise.all([
-        inventoryService.getInventoryDashboard(),
-        HRMService.getSuppliers(),
-      ]);
+      const statsResponse = await inventoryService.getInventoryDashboard();
       setDashboardStats(statsResponse);
-      setSuppliers(suppliersResponse.suppliers);
-
-      // Set default supplier if available
-      if (suppliersResponse.suppliers.length > 0 && !newOrder.supplierId) {
-        setNewOrder((prev) => ({
-          ...prev,
-          supplierId: suppliersResponse.suppliers[0].id,
-          supplierName: suppliersResponse.suppliers[0].name,
-        }));
-      }
     } catch (error) {
       } finally {
       setLoading(false);
@@ -124,90 +65,6 @@ export default function AlertsPage() {
       return alert.alertType === filterType;
     }) || [];
 
-  const handleAddItem = () => {
-    if (
-      !newItem.productId ||
-      !newItem.productName ||
-      newItem.quantity <= 0 ||
-      newItem.unitCost <= 0
-    ) {
-      alert('Please fill in all required fields for the item');
-      return;
-    }
-
-    const itemWithTotal = {
-      ...newItem,
-      totalCost: newItem.quantity * newItem.unitCost,
-    };
-
-    setNewOrder((prev) => ({
-      ...prev,
-      items: [...prev.items, itemWithTotal],
-    }));
-
-    // Reset item form
-    setNewItem({
-      productId: '',
-      productName: '',
-      sku: '',
-      quantity: 0,
-      unitCost: 0,
-      totalCost: 0,
-      notes: '',
-    });
-  };
-
-  const removeItem = (index: number) => {
-    setNewOrder((prev) => ({
-      ...prev,
-      items: prev.items.filter((_, i) => i !== index),
-    }));
-  };
-
-  const handleCreateOrder = async () => {
-    if (
-      !newOrder.orderNumber ||
-      !newOrder.supplierId ||
-      newOrder.items.length === 0
-    ) {
-      alert('Please fill in all required fields and add at least one item');
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-      await inventoryService.createPurchaseOrder(newOrder);
-      setIsPOModalOpen(false);
-      resetForm();
-      fetchData();
-    } catch (error) {
-      alert('Failed to create purchase order. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const resetForm = () => {
-    setNewOrder({
-      orderNumber: '',
-      supplierId: suppliers.length > 0 ? suppliers[0].id : '',
-      supplierName: suppliers.length > 0 ? suppliers[0].name : '',
-      warehouseId: '',
-      orderDate: new Date().toISOString().split('T')[0], 
-      expectedDeliveryDate: '',
-      notes: '',
-      items: [],
-    });
-    setNewItem({
-      productId: '',
-      productName: '',
-      sku: '',
-      quantity: 0,
-      unitCost: 0,
-      totalCost: 0,
-      notes: '',
-    });
-  };
 
   const getAlertIcon = (alertType: string) => {
     switch (alertType) {
@@ -275,10 +132,6 @@ export default function AlertsPage() {
             <Button variant="outline" onClick={fetchAlerts}>
               <RefreshCw className="mr-2 h-4 w-4" />
               Refresh
-            </Button>
-            <Button onClick={() => setIsPOModalOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create PO
             </Button>
           </div>
         </div>
@@ -431,7 +284,7 @@ export default function AlertsPage() {
                         </Button>
                         <Button
                           size="sm"
-                          onClick={() => setIsPOModalOpen(true)}
+                          onClick={() => router.push('/inventory/purchase-orders')}
                         >
                           <ShoppingCart className="mr-2 h-4 w-4" />
                           Order
@@ -469,15 +322,7 @@ export default function AlertsPage() {
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-3">
-              <Button
-                variant="outline"
-                className="h-20 flex-col gap-2"
-                onClick={() => setIsPOModalOpen(true)}
-              >
-                <ShoppingCart className="h-6 w-6" />
-                <span>Create Purchase Order</span>
-              </Button>
+            <div className="grid gap-4 md:grid-cols-2">
               <Button
                 variant="outline"
                 className="h-20 flex-col gap-2"
@@ -498,221 +343,6 @@ export default function AlertsPage() {
           </CardContent>
         </Card>
 
-        {/* Create Purchase Order Modal */}
-        <Dialog open={isPOModalOpen} onOpenChange={setIsPOModalOpen}>
-          <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Create Purchase Order from Alert</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="orderNumber">Order Number *</Label>
-                  <Input
-                    id="orderNumber"
-                    value={newOrder.orderNumber}
-                    onChange={(e) =>
-                      setNewOrder((prev) => ({
-                        ...prev,
-                        orderNumber: e.target.value,
-                      }))
-                    }
-                    placeholder="Enter PO number"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="expectedDeliveryDate">
-                    Expected Delivery *
-                  </Label>
-                  <Input
-                    id="expectedDeliveryDate"
-                    type="date"
-                    value={newOrder.expectedDeliveryDate}
-                    onChange={(e) =>
-                      setNewOrder((prev) => ({
-                        ...prev,
-                        expectedDeliveryDate: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="supplierId">Supplier *</Label>
-                <Select
-                  value={newOrder.supplierId}
-                  onValueChange={(value) => {
-                    const supplier = suppliers.find((s) => s.id === value);
-                    setNewOrder((prev) => ({
-                      ...prev,
-                      supplierId: value,
-                      supplierName: supplier?.name || '',
-                    }));
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select supplier" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {suppliers.map((supplier) => (
-                      <SelectItem key={supplier.id} value={supplier.id}>
-                        {supplier.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  value={newOrder.notes}
-                  onChange={(e) =>
-                    setNewOrder((prev) => ({ ...prev, notes: e.target.value }))
-                  }
-                  placeholder="Enter order notes"
-                  rows={3}
-                />
-              </div>
-
-              {/* Items Section */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label className="text-lg font-medium">Order Items</Label>
-                  <Button variant="outline" size="sm" onClick={handleAddItem}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Item
-                  </Button>
-                </div>
-
-                {/* Add Item Form */}
-                <div className="grid grid-cols-4 gap-4 p-4 border rounded-lg">
-                  <div className="space-y-2">
-                    <Label htmlFor="productId">Product ID *</Label>
-                    <Input
-                      id="productId"
-                      value={newItem.productId}
-                      onChange={(e) =>
-                        setNewItem((prev) => ({
-                          ...prev,
-                          productId: e.target.value,
-                        }))
-                      }
-                      placeholder="Product ID"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="productName">Product Name *</Label>
-                    <Input
-                      id="productName"
-                      value={newItem.productName}
-                      onChange={(e) =>
-                        setNewItem((prev) => ({
-                          ...prev,
-                          productName: e.target.value,
-                        }))
-                      }
-                      placeholder="Product name"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="quantity">Quantity *</Label>
-                    <Input
-                      id="quantity"
-                      type="number"
-                      min="1"
-                      value={newItem.quantity}
-                      onChange={(e) =>
-                        setNewItem((prev) => ({
-                          ...prev,
-                          quantity: parseInt(e.target.value) || 0,
-                        }))
-                      }
-                      placeholder="Qty"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="unitCost">Unit Cost *</Label>
-                    <Input
-                      id="unitCost"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={newItem.unitCost}
-                      onChange={(e) =>
-                        setNewItem((prev) => ({
-                          ...prev,
-                          unitCost: parseFloat(e.target.value) || 0,
-                        }))
-                      }
-                      placeholder="Cost"
-                    />
-                  </div>
-                </div>
-
-                {/* Items List */}
-                {newOrder.items.length > 0 && (
-                  <div className="space-y-2">
-                    <Label>Added Items</Label>
-                    <div className="space-y-2">
-                      {newOrder.items.map((item, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between p-3 border rounded-lg"
-                        >
-                          <div className="flex-1">
-                            <div className="font-medium">
-                              {item.productName}
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              {item.quantity} × {formatCurrency(item.unitCost)}{' '}
-                              = {formatCurrency(item.totalCost)}
-                            </div>
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => removeItem(index)}
-                          >
-                            <Plus className="h-4 w-4 rotate-45" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="text-right font-medium">
-                      Total:{' '}
-                      {formatCurrency(
-                        newOrder.items.reduce(
-                          (sum, item) => sum + item.totalCost,
-                          0,
-                        ),
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setIsPOModalOpen(false);
-                  resetForm();
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleCreateOrder}
-                disabled={isSubmitting || newOrder.items.length === 0}
-              >
-                {isSubmitting ? 'Creating...' : 'Create Purchase Order'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
     </DashboardLayout>
   );

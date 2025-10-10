@@ -92,7 +92,7 @@ const POSSale = () => {
             ? {
                 ...item,
                 quantity: item.quantity + 1,
-                total: (item.quantity + 1) * product.price,
+                total: (item.quantity + 1) * product.unitPrice,
               }
             : item,
         ),
@@ -103,7 +103,7 @@ const POSSale = () => {
         {
           product,
           quantity: 1,
-          total: product.price,
+          total: product.unitPrice,
         },
       ]);
     }
@@ -123,7 +123,7 @@ const POSSale = () => {
           ? {
               ...item,
               quantity: newQuantity,
-              total: newQuantity * item.product.price,
+              total: newQuantity * item.product.unitPrice,
             }
           : item,
       ),
@@ -159,7 +159,7 @@ const POSSale = () => {
           productId: item.product.id,
           productName: item.product.name,
           quantity: item.quantity,
-          unitPrice: item.product.price,
+          unitPrice: item.product.unitPrice,
           discount: 0,
           taxRate: 0,
           taxAmount: 0,
@@ -250,7 +250,7 @@ const POSSale = () => {
                           </div>
                           <div className="text-right">
                             <p className="font-semibold">
-                              {formatCurrency(product.price)}
+                              {formatCurrency(product.unitPrice)}
                             </p>
                             <Badge variant="outline" className="text-xs">
                               {product.category}
@@ -294,7 +294,7 @@ const POSSale = () => {
                         <div className="flex-1">
                           <p className="font-medium">{item.product.name}</p>
                           <p className="text-sm text-muted-foreground">
-                            {formatCurrency(item.product.price)} each
+                            {formatCurrency(item.product.unitPrice)} each
                           </p>
                         </div>
 

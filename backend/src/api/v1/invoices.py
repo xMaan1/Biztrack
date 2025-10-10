@@ -212,8 +212,27 @@ def create_invoice(
             if item_data.unitPrice < 0:
                 raise HTTPException(status_code=400, detail="Item unit price cannot be negative")
             
+            product_description = item_data.description
+            product_unit_price = item_data.unitPrice
+            product_sku = ""
+            
+            if item_data.productId:
+                try:
+                    from ...config.pos_models import Product
+                    product = db.query(Product).filter(
+                        Product.id == item_data.productId,
+                        Product.tenant_id == tenant_id
+                    ).first()
+                    
+                    if product:
+                        product_description = product.name
+                        product_unit_price = product.unitPrice
+                        product_sku = product.sku
+                except Exception as e:
+                    print(f"Warning: Could not fetch product details: {e}")
+            
             # Calculate item total
-            item_subtotal = item_data.quantity * item_data.unitPrice
+            item_subtotal = item_data.quantity * product_unit_price
             item_discount = item_subtotal * (item_data.discount / 100) if item_data.discount > 0 else 0
             item_tax = (item_subtotal - item_discount) * (item_data.taxRate / 100) if item_data.taxRate > 0 else 0
             item_total = item_subtotal - item_discount + item_tax
@@ -221,14 +240,15 @@ def create_invoice(
             # Create item as dict with all required fields
             invoice_item = {
                 "id": str(uuid.uuid4()),
-                "description": item_data.description,
+                "description": product_description,
                 "quantity": float(item_data.quantity),
-                "unitPrice": float(item_data.unitPrice),
+                "unitPrice": float(product_unit_price),
                 "discount": float(item_data.discount or 0),
                 "taxRate": float(item_data.taxRate or 0),
                 "taxAmount": round(item_tax, 2),
                 "total": round(item_total, 2),
                 "productId": item_data.productId,
+                "productSku": product_sku,
                 "projectId": item_data.projectId,
                 "taskId": item_data.taskId
             }

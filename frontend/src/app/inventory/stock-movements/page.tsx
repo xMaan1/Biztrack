@@ -45,6 +45,7 @@ import {
   StockMovementType,
   Warehouse,
 } from '../../../models/inventory';
+import { Product } from '../../../models/pos';
 import { DashboardLayout } from '../../../components/layout';
 import { formatDate } from '../../../lib/utils';
 import {
@@ -57,12 +58,14 @@ import {
 } from '../../../components/ui/dialog';
 import { Label } from '../../../components/ui/label';
 import { Textarea } from '../../../components/ui/textarea';
+import { apiService } from '../../../services/ApiService';
 
 export default function StockMovementsPage() {
   const { } = useAuth();
   const { getCurrencySymbol } = useCurrency();
   const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -110,12 +113,14 @@ export default function StockMovementsPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [stockMovementsResponse, warehousesResponse] = await Promise.all([
+      const [stockMovementsResponse, warehousesResponse, productsResponse] = await Promise.all([
         inventoryService.getStockMovements(),
         inventoryService.getWarehouses(),
+        apiService.get('/pos/products'),
       ]);
       setStockMovements(stockMovementsResponse.stockMovements);
       setWarehouses(warehousesResponse.warehouses);
+      setProducts(productsResponse.products || []);
 
       // Set default warehouse if available
       if (
@@ -171,6 +176,7 @@ export default function StockMovementsPage() {
     if (
       !newMovement.productId ||
       !newMovement.warehouseId ||
+      !newMovement.referenceNumber ||
       newMovement.quantity <= 0
     ) {
       alert('Please fill in all required fields');
@@ -248,6 +254,7 @@ export default function StockMovementsPage() {
     if (
       !editMovement.productId ||
       !editMovement.warehouseId ||
+      !editMovement.referenceNumber ||
       editMovement.quantity <= 0
     ) {
       alert('Please fill in all required fields');
@@ -644,18 +651,35 @@ export default function StockMovementsPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="productId">Product ID *</Label>
-                  <Input
-                    id="productId"
+                  <Label htmlFor="productId">Product *</Label>
+                  <Select
                     value={newMovement.productId}
-                    onChange={(e) =>
+                    onValueChange={(value) => {
+                      const product = products.find((p) => p.id === value);
                       setNewMovement((prev) => ({
                         ...prev,
-                        productId: e.target.value,
-                      }))
-                    }
-                    placeholder="Enter product ID"
-                  />
+                        productId: value,
+                        unitCost: product?.costPrice || 0,
+                      }));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select product" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {products.length === 0 ? (
+                        <SelectItem value="no-products" disabled>
+                          No products available
+                        </SelectItem>
+                      ) : (
+                        products.map((product) => (
+                          <SelectItem key={product.id} value={product.id}>
+                            {product.name} ({product.sku})
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="locationId">Location ID</Label>
@@ -711,7 +735,7 @@ export default function StockMovementsPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="referenceNumber">Reference Number</Label>
+                  <Label htmlFor="referenceNumber">Reference Number *</Label>
                   <Input
                     id="referenceNumber"
                     value={newMovement.referenceNumber}
@@ -735,7 +759,7 @@ export default function StockMovementsPage() {
                         referenceType: e.target.value,
                       }))
                     }
-                    placeholder="Enter reference type"
+                    placeholder="e.g., Purchase Order, Sale, Transfer"
                   />
                 </div>
               </div>
@@ -1004,18 +1028,35 @@ export default function StockMovementsPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-productId">Product ID *</Label>
-                  <Input
-                    id="edit-productId"
+                  <Label htmlFor="edit-productId">Product *</Label>
+                  <Select
                     value={editMovement.productId}
-                    onChange={(e) =>
+                    onValueChange={(value) => {
+                      const product = products.find((p) => p.id === value);
                       setEditMovement((prev) => ({
                         ...prev,
-                        productId: e.target.value,
-                      }))
-                    }
-                    placeholder="Enter product ID"
-                  />
+                        productId: value,
+                        unitCost: product?.costPrice || 0,
+                      }));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select product" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {products.length === 0 ? (
+                        <SelectItem value="no-products" disabled>
+                          No products available
+                        </SelectItem>
+                      ) : (
+                        products.map((product) => (
+                          <SelectItem key={product.id} value={product.id}>
+                            {product.name} ({product.sku})
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-locationId">Location ID</Label>
@@ -1071,7 +1112,7 @@ export default function StockMovementsPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-referenceNumber">Reference Number</Label>
+                  <Label htmlFor="edit-referenceNumber">Reference Number *</Label>
                   <Input
                     id="edit-referenceNumber"
                     value={editMovement.referenceNumber}

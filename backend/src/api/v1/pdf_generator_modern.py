@@ -387,14 +387,18 @@ def create_items_table(invoice, styles: Dict[str, ParagraphStyle], colors: Dict[
     
     elements.append(Paragraph("Items & Services", styles['header']))
     
-    headers = ['Description', 'Qty', 'Unit Price', 'Discount', 'Total']
+    headers = ['Description', 'SKU', 'Qty', 'Unit Price', 'Discount', 'Total']
     table_data = [headers]
     if hasattr(invoice, 'items') and invoice.items:
         for item in invoice.items:
             item_total = item['quantity'] * item['unitPrice'] * (1 - item.get('discount', 0) / 100)
             
+            # Include SKU if available from product selection
+            sku = item.get('productSku', '') if item.get('productSku') else ''
+            
             row = [
                 item['description'],
+                sku,
                 f"{item['quantity']:.2f}",
                 format_currency(item['unitPrice'], currency),
                 f"{item.get('discount', 0):.1f}%",
@@ -405,6 +409,7 @@ def create_items_table(invoice, styles: Dict[str, ParagraphStyle], colors: Dict[
     if hasattr(invoice, 'labourTotal') and invoice.labourTotal and invoice.labourTotal > 0:
         table_data.append([
             "Labour & Services",
+            "",
             "1",
             format_currency(invoice.labourTotal, currency),
             "0%",
@@ -414,13 +419,14 @@ def create_items_table(invoice, styles: Dict[str, ParagraphStyle], colors: Dict[
     if hasattr(invoice, 'partsTotal') and invoice.partsTotal and invoice.partsTotal > 0:
         table_data.append([
             "Parts & Materials",
+            "",
             "1",
             format_currency(invoice.partsTotal, currency),
             "0%",
             format_currency(invoice.partsTotal, currency)
         ])
     
-    items_table = Table(table_data, colWidths=[3*inch, 0.8*inch, 1*inch, 0.8*inch, 1*inch])
+    items_table = Table(table_data, colWidths=[2.5*inch, 1*inch, 0.7*inch, 0.9*inch, 0.7*inch, 1*inch])
     table_style = [
         ('BACKGROUND', (0, 0), (-1, 0), colors['primary']),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors['white']),

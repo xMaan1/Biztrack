@@ -593,7 +593,7 @@ def read_purchase_orders(
             "status": order.status,
             "totalAmount": order.totalAmount,
             "notes": order.notes,
-            "items": order.items or [],
+            "items": order.items if order.items else [],
             "createdBy": str(order.createdBy) if hasattr(order, 'createdBy') else "",
             "createdAt": order.createdAt,
             "updatedAt": order.updatedAt
@@ -627,7 +627,7 @@ def read_purchase_order(
         "status": order.status,
         "totalAmount": order.totalAmount,
         "notes": order.notes,
-        "items": [],  # Not stored in DB, will be empty
+        "items": order.items if order.items else [],
         "createdBy": str(order.createdBy) if hasattr(order, 'createdBy') else "",
         "createdAt": order.createdAt,
         "updatedAt": order.updatedAt
@@ -650,7 +650,7 @@ def create_purchase_order_endpoint(
     order_data["poNumber"] = order_data.pop("orderNumber")
     # Remove fields that don't exist in SQLAlchemy model
     order_data.pop("supplierName", None)
-    order_data.pop("items", None)
+    # Keep items - they are stored as JSON in the database
     
     # Convert date strings to date objects
     if order_data.get("orderDate"):
@@ -683,7 +683,7 @@ def create_purchase_order_endpoint(
         "status": db_order.status,
         "totalAmount": db_order.totalAmount,
         "notes": db_order.notes,
-        "items": [],  # Not stored in DB, will be empty
+        "items": db_order.items if db_order.items else [],
         "createdBy": str(db_order.createdBy),
         "createdAt": db_order.createdAt,
         "updatedAt": db_order.updatedAt
@@ -732,7 +732,7 @@ def update_purchase_order_endpoint(
         "status": db_order.status,
         "totalAmount": db_order.totalAmount,
         "notes": db_order.notes,
-        "items": [],  # Not stored in DB, will be empty
+        "items": db_order.items if db_order.items else [],
         "createdBy": str(db_order.createdBy) if hasattr(db_order, 'createdBy') else "",
         "createdAt": db_order.createdAt,
         "updatedAt": db_order.updatedAt

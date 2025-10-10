@@ -68,6 +68,9 @@ export default function DumpsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isRecordDamageOpen, setIsRecordDamageOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [dumpToDelete, setDumpToDelete] = useState<StockMovement | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editDamage, setEditDamage] = useState<StockMovementCreate>({
@@ -204,6 +207,31 @@ export default function DumpsPage() {
       serialNumber: '',
       expiryDate: '',
     });
+  };
+
+  const openDeleteDialog = (dump: StockMovement) => {
+    setDumpToDelete(dump);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const closeDeleteDialog = () => {
+    setIsDeleteDialogOpen(false);
+    setDumpToDelete(null);
+  };
+
+  const handleDelete = async () => {
+    if (!dumpToDelete) return;
+
+    try {
+      setDeleteLoading(true);
+      await inventoryService.deleteStockMovement(dumpToDelete.id);
+      loadDumps();
+      closeDeleteDialog();
+    } catch (error) {
+      console.error('Failed to delete dump:', error);
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   const handleEditDamage = (damage: StockMovement) => {
@@ -473,6 +501,14 @@ export default function DumpsPage() {
                          >
                            <Edit className="h-4 w-4" />
                          </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openDeleteDialog(dump)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -801,6 +837,44 @@ export default function DumpsPage() {
                  )}
                </Button>
              </DialogFooter>
+           </DialogContent>
+         </Dialog>
+
+         {/* Delete Confirmation Dialog */}
+         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+           <DialogContent>
+             <DialogHeader>
+               <DialogTitle>Delete Damaged Item</DialogTitle>
+               <DialogDescription>
+                 Are you sure you want to delete this damaged item record? This action cannot be undone.
+               </DialogDescription>
+             </DialogHeader>
+             <div className="flex justify-end space-x-2 mt-4">
+               <Button
+                 variant="outline"
+                 onClick={closeDeleteDialog}
+                 disabled={deleteLoading}
+               >
+                 Cancel
+               </Button>
+               <Button
+                 onClick={handleDelete}
+                 disabled={deleteLoading}
+                 className="bg-red-600 hover:bg-red-700"
+               >
+                 {deleteLoading ? (
+                   <>
+                     <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-white" />
+                     Deleting...
+                   </>
+                 ) : (
+                   <>
+                     <Trash2 className="w-4 h-4 mr-2" />
+                     Delete Item
+                   </>
+                 )}
+               </Button>
+             </div>
            </DialogContent>
          </Dialog>
        </div>

@@ -31,6 +31,47 @@ def generate_shift_number():
     """Generate unique shift number"""
     return f"SHIFT-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:8].upper()}"
 
+def convert_db_product_to_pydantic(db_product):
+    """Convert database Product model to Pydantic Product model"""
+    from ...models.unified_models import Product as PydanticProduct, UnitOfMeasure, ProductCategory
+    
+    return PydanticProduct(
+        id=str(db_product.id),
+        tenant_id=str(db_product.tenant_id),
+        name=db_product.name,
+        sku=db_product.sku,
+        description=db_product.description,
+        category=ProductCategory(db_product.category) if db_product.category else ProductCategory.OTHER,
+        unitPrice=db_product.unitPrice,
+        costPrice=db_product.costPrice,
+        stockQuantity=db_product.stockQuantity,
+        minStockLevel=db_product.minStockLevel,
+        maxStockLevel=db_product.maxStockLevel,
+        unitOfMeasure=UnitOfMeasure(db_product.unit) if db_product.unit else UnitOfMeasure.PIECE,
+        barcode=db_product.barcode,
+        expiryDate=db_product.expiryDate.isoformat() if db_product.expiryDate else None,
+        batchNumber=db_product.batchNumber,
+        serialNumber=db_product.serialNumber,
+        isActive=db_product.isActive,
+        imageUrl=None,
+        weight=None,
+        dimensions=None,
+        supplierId=None,
+        supplierName=None,
+        leadTime=None,
+        reorderPoint=None,
+        reorderQuantity=None,
+        isSerialized=False,
+        isBatchTracked=False,
+        storageLocation=None,
+        warehouseId=None,
+        lastStockCount=None,
+        lastStockMovement=None,
+        createdBy="system",  # Default value since DB model doesn't have this field
+        createdAt=db_product.createdAt,
+        updatedAt=db_product.updatedAt
+    )
+
 def calculate_transaction_totals(items: List[dict], discount: float = 0.0, tax_rate: float = 0.0) -> dict:
     """Calculate transaction totals"""
     subtotal = sum(item['total'] for item in items)
@@ -87,11 +128,14 @@ async def get_pos_products(
                 filtered_products.append(product)
             products = filtered_products
         
+        # Convert database models to Pydantic response format
+        pydantic_products = [convert_db_product_to_pydantic(db_product) for db_product in products]
+        
         # Get total count for pagination
-        total = len(products)
+        total = len(pydantic_products)
         
         return ProductsResponse(
-            products=products,
+            products=pydantic_products,
             pagination={
                 "page": page,
                 "limit": limit,
@@ -110,10 +154,14 @@ async def get_pos_product(
 ):
     """Get a specific product by ID"""
     try:
-        product = get_product_by_id(db, product_id, tenant_context["tenant_id"] if tenant_context else None)
-        if not product:
+        db_product = get_product_by_id(product_id, db, tenant_context["tenant_id"] if tenant_context else None)
+        if not db_product:
             raise HTTPException(status_code=404, detail="Product not found")
-        return ProductResponse(product=product)
+        
+        # Convert database model to Pydantic response format
+        pydantic_product = convert_db_product_to_pydantic(db_product)
+        
+        return ProductResponse(product=pydantic_product)
     except HTTPException:
         raise
     except Exception as e:
@@ -128,17 +176,47 @@ async def create_pos_product(
 ):
     """Create a new product"""
     try:
-        product = Product(
-            id=str(uuid.uuid4()),
-            **product_data.dict(),
-            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
-            createdBy=str(current_user.id),
-            createdAt=datetime.now(),
-            updatedAt=datetime.now()
-        )
+        # Map Pydantic model fields to database model fields
+        product_dict = product_data.dict()
         
-        db_product = create_product(db, product.__dict__)
-        return ProductResponse(product=db_product)
+        # Map fields that exist in both models
+        mapped_data = {
+            'name': product_dict.get('name'),
+            'sku': product_dict.get('sku'),
+            'description': product_dict.get('description'),
+            'category': product_dict.get('category'),
+            'brand': None,  # Add brand field with default None
+            'costPrice': product_dict.get('costPrice'),
+            'unitPrice': product_dict.get('unitPrice', 0),
+            'stockQuantity': product_dict.get('stockQuantity', 0),
+            'minStockLevel': product_dict.get('minStockLevel', 0),
+            'maxStockLevel': product_dict.get('maxStockLevel'),
+            'unit': product_dict.get('unitOfMeasure', 'piece'),
+            'weight': None,  # Add weight field with default None
+            'dimensions': None,  # Add dimensions field with default None
+            'barcode': product_dict.get('barcode'),
+            'expiryDate': product_dict.get('expiryDate'),
+            'batchNumber': product_dict.get('batchNumber'),
+            'serialNumber': product_dict.get('serialNumber'),
+            'isActive': product_dict.get('isActive', True)
+        }
+        
+        product_data = {
+            'id': str(uuid.uuid4()),
+            **mapped_data,
+            'tenant_id': tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            'createdAt': datetime.now(),
+            'updatedAt': datetime.now()
+        }
+        
+        db_product = create_product(product_data, db)
+        
+        # Convert database model to Pydantic response format
+        pydantic_product = convert_db_product_to_pydantic(db_product)
+        # Override createdBy with actual user ID for new products
+        pydantic_product.createdBy = str(current_user.id)
+        
+        return ProductResponse(product=pydantic_product)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error creating product: {str(e)}")
 
@@ -153,14 +231,18 @@ async def update_pos_product(
     """Update an existing product"""
     try:
         db_product = update_product(
-            db, 
-            product_id, 
-            product_data.dict(exclude_unset=True), 
+            product_id,
+            product_data.dict(exclude_unset=True),
+            db,
             tenant_context["tenant_id"] if tenant_context else None
         )
         if not db_product:
             raise HTTPException(status_code=404, detail="Product not found")
-        return ProductResponse(product=db_product)
+        
+        # Convert database model to Pydantic response format
+        pydantic_product = convert_db_product_to_pydantic(db_product)
+        
+        return ProductResponse(product=pydantic_product)
     except HTTPException:
         raise
     except Exception as e:
@@ -175,7 +257,7 @@ async def delete_pos_product(
 ):
     """Delete a product"""
     try:
-        success = delete_product(db, product_id, tenant_context["tenant_id"] if tenant_context else None)
+        success = delete_product(product_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not success:
             raise HTTPException(status_code=404, detail="Product not found")
         return {"message": "Product deleted successfully"}

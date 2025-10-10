@@ -415,14 +415,14 @@ const POSDashboard = () => {
                         </div>
                         <div className="text-right">
                           <p className="font-medium">
-                            {formatCurrency(product.price)}
+                            {formatCurrency(product.unitPrice)}
                           </p>
                           <div className="flex items-center space-x-2">
                             <Badge variant="destructive">
                               Stock: {product.stockQuantity}
                             </Badge>
                             <Badge variant="outline">
-                              Min: {product.lowStockThreshold}
+                              Min: {product.minStockLevel}
                             </Badge>
                           </div>
                         </div>

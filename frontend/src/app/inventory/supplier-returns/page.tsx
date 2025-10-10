@@ -47,6 +47,7 @@ import {
   DollarSign,
   TrendingUp,
   Loader2,
+  Trash2,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { inventoryService } from '../../../services/InventoryService';
@@ -68,6 +69,9 @@ export default function SupplierReturnsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isRecordReturnOpen, setIsRecordReturnOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [returnToDelete, setReturnToDelete] = useState<StockMovement | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editReturn, setEditReturn] = useState<StockMovementCreate>({
@@ -202,6 +206,31 @@ export default function SupplierReturnsPage() {
       serialNumber: '',
       expiryDate: '',
     });
+  };
+
+  const openDeleteDialog = (returnItem: StockMovement) => {
+    setReturnToDelete(returnItem);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const closeDeleteDialog = () => {
+    setIsDeleteDialogOpen(false);
+    setReturnToDelete(null);
+  };
+
+  const handleDelete = async () => {
+    if (!returnToDelete) return;
+
+    try {
+      setDeleteLoading(true);
+      await inventoryService.deleteStockMovement(returnToDelete.id);
+      loadReturns();
+      closeDeleteDialog();
+    } catch (error) {
+      console.error('Failed to delete supplier return:', error);
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   const handleEditReturn = (returnItem: StockMovement) => {
@@ -471,6 +500,14 @@ export default function SupplierReturnsPage() {
                           onClick={() => handleEditReturn(returnItem)}
                         >
                           <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openDeleteDialog(returnItem)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
@@ -780,6 +817,44 @@ export default function SupplierReturnsPage() {
                 )}
               </Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Supplier Return</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this supplier return? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end space-x-2 mt-4">
+              <Button
+                variant="outline"
+                onClick={closeDeleteDialog}
+                disabled={deleteLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleDelete}
+                disabled={deleteLoading}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {deleteLoading ? (
+                  <>
+                    <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-white" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Return
+                  </>
+                )}
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>

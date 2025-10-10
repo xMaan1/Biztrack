@@ -29,6 +29,7 @@ export interface InvoiceItem {
   taxAmount: number;
   total: number;
   productId?: string;
+  productSku?: string;
   projectId?: string;
   taskId?: string;
 }
