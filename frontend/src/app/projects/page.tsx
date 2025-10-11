@@ -48,55 +48,27 @@ import {
 
 } from '../../components/ui/select';
 
-import {
-
-  Tabs,
-
-  TabsContent,
-
-  TabsList,
-
-  TabsTrigger,
-
-} from '../../components/ui/tabs';
-
-import {
-
-  DropdownMenu,
-
-  DropdownMenuContent,
-
-  DropdownMenuItem,
-
-  DropdownMenuSeparator,
-
-  DropdownMenuTrigger,
-
-} from '../../components/ui/dropdown-menu';
-
 import { DashboardLayout } from '../../components/layout';
-
-import { Project, ProjectCreate, ProjectStatus, ProjectPriority } from '../../models/project';
-
-import { User } from '../../models/auth';
-
-import { apiService } from '../../services/ApiService';
 
 import { useAuth } from '../../contexts/AuthContext';
 
-import { useCurrency } from '../../contexts/CurrencyContext';
+import { apiService } from '../../services/ApiService';
 
-import { Alert, AlertDescription } from '../../components/ui/alert';
+import { Project, User } from '../../models';
 
 import {
 
-  Search,
-
   Plus,
+
+  Search,
 
   Star,
 
   MoreVertical,
+
+  Calendar,
+
+  DollarSign,
 
   Eye,
 
@@ -107,12 +79,6 @@ import {
   FolderOpen,
 
   CheckSquare,
-
-  Calendar,
-
-  DollarSign,
-
-  Filter,
 
   RefreshCw,
 
@@ -160,37 +126,11 @@ const ProjectCard = React.memo(({
 
 }) => {
 
-  const { getCurrencySymbol } = useCurrency();
-
-
-
-  const handleStarClick = useCallback((e: React.MouseEvent) => {
-
-    e.stopPropagation();
+  const handleStarClick = useCallback(() => {
 
     onToggleStarred(project.id);
 
   }, [project.id, onToggleStarred]);
-
-
-
-  const handleViewClick = useCallback((e: React.MouseEvent) => {
-
-    e.stopPropagation();
-
-    onViewProject(project.id);
-
-  }, [project.id, onViewProject]);
-
-
-
-  const handleTasksClick = useCallback((e: React.MouseEvent) => {
-
-    e.stopPropagation();
-
-    onViewTasks(project.id);
-
-  }, [project.id, onViewTasks]);
 
 
 
@@ -207,6 +147,22 @@ const ProjectCard = React.memo(({
     onDeleteProject(project);
 
   }, [project, onDeleteProject]);
+
+
+
+  const handleViewClick = useCallback(() => {
+
+    onViewProject(project.id);
+
+  }, [project.id, onViewProject]);
+
+
+
+  const handleTasksClick = useCallback(() => {
+
+    onViewTasks(project.id);
+
+  }, [project.id, onViewTasks]);
 
 
 
@@ -252,9 +208,9 @@ const ProjectCard = React.memo(({
 
                           </Button>
 
-                          <DropdownMenu>
+                          {canEdit && (
 
-                            <DropdownMenuTrigger asChild>
+                            <div className="relative">
 
                               <Button
 
@@ -270,123 +226,139 @@ const ProjectCard = React.memo(({
 
                               </Button>
 
-                            </DropdownMenuTrigger>
+                              <div className="absolute right-0 top-8 bg-white rounded-md shadow-lg border py-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
 
-                            <DropdownMenuContent align="end" className="w-48">
+                                <Button
 
-                <DropdownMenuItem onClick={handleViewClick}>
+                                  variant="ghost"
 
-                                <Eye className="h-4 w-4 mr-2" />
+                                  size="sm"
 
-                                View Details
+                                  onClick={handleEditClick}
 
-                              </DropdownMenuItem>
-
-                <DropdownMenuItem onClick={handleTasksClick}>
-
-                                <FolderOpen className="h-4 w-4 mr-2" />
-
-                                Manage Tasks
-
-                              </DropdownMenuItem>
-
-                {canEdit && (
-
-                  <DropdownMenuItem onClick={handleEditClick}>
-
-                                  <Edit className="h-4 w-4 mr-2" />
-
-                                  Edit Project
-
-                                </DropdownMenuItem>
-
-                              )}
-
-                              <DropdownMenuSeparator />
-
-                {canEdit && (
-
-                                <DropdownMenuItem
-
-                    onClick={handleDeleteClick}
-
-                                  className="text-red-600 focus:text-red-600"
+                                  className="w-full justify-start px-3 py-2 text-sm"
 
                                 >
 
-                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  <Edit className="h-3 w-3 mr-2" />
 
-                                  Delete Project
+                                  Edit
 
-                                </DropdownMenuItem>
+                                </Button>
 
-                              )}
+                                <Button
 
-                            </DropdownMenuContent>
+                                  variant="ghost"
 
-                          </DropdownMenu>
+                                  size="sm"
+
+                                  onClick={handleDeleteClick}
+
+                                  className="w-full justify-start px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50"
+
+                                >
+
+                                  <Trash2 className="h-3 w-3 mr-2" />
+
+                                  Delete
+
+                                </Button>
+
+                              </div>
+
+                            </div>
+
+                          )}
 
                         </div>
 
                       </div>
 
+                      <p className="text-sm text-gray-600 line-clamp-2 mt-1">
 
-
-                      <p className="text-sm text-gray-600 line-clamp-2 mt-2">
-
-                        {project.description}
+                        {project.description || 'No description provided'}
 
                       </p>
 
                     </CardHeader>
 
+                    <CardContent className="pt-0 space-y-4">
 
+                      <div className="flex items-center justify-between">
 
-                    <CardContent className="pt-0">
+                        <div className="flex items-center gap-2">
 
-                      <div className="flex gap-2 mb-4 flex-wrap">
+                          <Badge variant={
 
-          <Badge variant="outline" className="text-xs font-medium">
+                            project.status === 'completed' ? 'default' :
 
-                          {project.status.replace('_', ' ').toUpperCase()}
+                            project.status === 'in_progress' ? 'secondary' :
 
-                        </Badge>
+                            project.status === 'on_hold' ? 'outline' : 'destructive'
 
-          <Badge variant="outline" className="text-xs font-medium">
+                          }>
 
-                          {project.priority.toUpperCase()}
+                            {project.status.replace('_', ' ')}
 
-                        </Badge>
+                          </Badge>
 
-                      </div>
+                          <Badge variant={
 
+                            project.priority === 'high' ? 'destructive' :
 
+                            project.priority === 'medium' ? 'secondary' : 'outline'
 
-                      <div className="mb-4">
+                          }>
 
-                        <div className="flex justify-between items-center mb-2">
+                            {project.priority}
 
-            <span className="text-sm font-medium text-gray-700">Progress</span>
-
-                          <span className="text-sm font-bold text-gray-900">
-
-                            {project.completionPercent}%
-
-                          </span>
+                          </Badge>
 
                         </div>
 
-          <Progress value={project.completionPercent} className="h-2" />
+                        <div className="text-sm text-gray-500">
+
+                          {project.completionPercent}%
+
+                        </div>
 
                       </div>
 
+                      <Progress value={project.completionPercent} className="h-2" />
 
+                      <div className="flex items-center justify-between text-sm text-gray-600">
 
-                      <Separator className="my-4" />
+                        <div className="flex items-center gap-4">
 
+                          <div className="flex items-center gap-1">
 
+                            <Calendar className="h-3 w-3" />
 
-                      <div className="flex items-center justify-between mb-4">
+                            <span>
+
+                              {project.startDate ? new Date(project.startDate).toLocaleDateString() : 'No start date'}
+
+                            </span>
+
+                          </div>
+
+                          <div className="flex items-center gap-1">
+
+                            <DollarSign className="h-3 w-3" />
+
+                            <span>
+
+                              {project.budget ? `$${project.budget.toLocaleString()}` : 'No budget'}
+
+                            </span>
+
+                          </div>
+
+                        </div>
+
+                      </div>
+
+                      <div className="flex items-center justify-between">
 
                         <div className="flex items-center gap-2">
 
@@ -394,9 +366,9 @@ const ProjectCard = React.memo(({
 
                             <AvatarImage src={project.projectManager.name} />
 
-                            <AvatarFallback className="text-xs bg-gradient-primary text-white">
+                            <AvatarFallback className="text-xs bg-gradient-secondary text-white">
 
-                {project.projectManager.name.charAt(0)}
+                              {project.projectManager.name.charAt(0)}
 
                             </AvatarFallback>
 
@@ -448,33 +420,7 @@ const ProjectCard = React.memo(({
 
                       </div>
 
-
-
-                      <div className="flex justify-between items-center text-xs text-gray-500 mb-4">
-
-                        <div className="flex items-center gap-1">
-
-                          <Calendar className="h-3 w-3" />
-
-            <span>Due: {new Date(project.endDate).toLocaleDateString()}</span>
-
-                        </div>
-
-                        {project.budget && (
-
-                          <div className="flex items-center gap-1">
-
-                            <DollarSign className="h-3 w-3" />
-
-                            <span>{getCurrencySymbol()}{project.budget.toLocaleString()}</span>
-
-                          </div>
-
-                        )}
-
-                      </div>
-
-
+                      <Separator />
 
                       <div className="flex gap-2">
 
@@ -484,19 +430,21 @@ const ProjectCard = React.memo(({
 
                           size="sm"
 
-            onClick={handleViewClick}
+                          onClick={handleViewClick}
 
-                          className="flex-1"
+                          className="flex-1 modern-button"
 
                         >
 
                           <Eye className="h-3 w-3 mr-1" />
 
-                          Details
+                          View
 
                         </Button>
 
                         <Button
+
+                          variant="outline"
 
                           size="sm"
 
@@ -552,11 +500,7 @@ export default function ProjectsPage() {
 
   const [priorityFilter, setPriorityFilter] = useState('all');
 
-  const [activeTab, setActiveTab] = useState('all');
-
   const [starredProjects, setStarredProjects] = useState<string[]>([]);
-
-  const [sortBy] = useState('name');
 
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -564,29 +508,21 @@ export default function ProjectsPage() {
 
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-
-  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
-
-  
-
-  // Form states
-
-  const [formData, setFormData] = useState<ProjectCreate>({
+  const [formData, setFormData] = useState({
 
     name: '',
 
     description: '',
 
-    status: ProjectStatus.PLANNING,
+    status: 'planning',
 
-    priority: ProjectPriority.MEDIUM,
+    priority: 'medium',
 
     startDate: '',
 
     endDate: '',
 
-    budget: undefined,
+    budget: 0,
 
     notes: '',
 
@@ -594,7 +530,7 @@ export default function ProjectsPage() {
 
     projectManagerId: '',
 
-    teamMemberIds: [],
+    teamMemberIds: [] as string[],
 
   });
 
@@ -602,11 +538,19 @@ export default function ProjectsPage() {
 
   const [formError, setFormError] = useState<string | null>(null);
 
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
+
 
 
   useEffect(() => {
 
     setMounted(true);
+
+    fetchProjects();
+
+    fetchUsers();
 
   }, []);
 
@@ -618,15 +562,15 @@ export default function ProjectsPage() {
 
       setLoading(true);
 
-      setError(null);
-
       const response = await apiService.get('/projects');
 
       setProjects(response.projects || []);
 
-    } catch (err: any) {
+    } catch (error) {
 
-      setError(err?.response?.data?.detail || err?.message || 'Failed to fetch projects');
+      console.error('Failed to fetch projects:', error);
+
+      setError('Failed to load projects');
 
     } finally {
 
@@ -642,13 +586,13 @@ export default function ProjectsPage() {
 
     try {
 
-      const response = await apiService.getUsers();
+      const response = await apiService.get('/users');
 
       setUsers(response.users || []);
 
-    } catch (err: any) {
+    } catch (error) {
 
-      console.error('Failed to fetch users:', err);
+      console.error('Failed to fetch users:', error);
 
     }
 
@@ -656,109 +600,25 @@ export default function ProjectsPage() {
 
 
 
-  useEffect(() => {
+  const filteredProjects = projects.filter(project => {
 
-    if (mounted) {
+    const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
 
-      Promise.all([fetchProjects(), fetchUsers()]);
+                         project.description?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    }
+    const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
 
-  }, [mounted, fetchProjects, fetchUsers]);
+    const matchesPriority = priorityFilter === 'all' || project.priority === priorityFilter;
 
+    return matchesSearch && matchesStatus && matchesPriority;
 
-
-  const filteredProjects = React.useMemo(() => {
-
-    let filtered = [...projects];
-
-
-
-    if (searchTerm) {
-
-      filtered = filtered.filter(project =>
-
-        project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-
-        project.description.toLowerCase().includes(searchTerm.toLowerCase())
-
-      );
-
-    }
-
-
-
-    if (statusFilter !== 'all') {
-
-      filtered = filtered.filter(project => project.status === statusFilter);
-
-    }
-
-
-
-    if (priorityFilter !== 'all') {
-
-      filtered = filtered.filter(project => project.priority === priorityFilter);
-
-    }
-
-
-
-    if (activeTab === 'my') {
-
-      filtered = filtered.filter(project => project.projectManager.id === user?.id);
-
-    } else if (activeTab === 'starred') {
-
-      filtered = filtered.filter(project => starredProjects.includes(project.id));
-
-    }
-
-
-
-    filtered.sort((a, b) => {
-
-      switch (sortBy) {
-
-        case 'name':
-
-          return a.name.localeCompare(b.name);
-
-        case 'status':
-
-          return a.status.localeCompare(b.status);
-
-        case 'priority':
-
-          return a.priority.localeCompare(b.priority);
-
-        case 'progress':
-
-          return b.completionPercent - a.completionPercent;
-
-        case 'endDate':
-
-          return new Date(a.endDate).getTime() - new Date(b.endDate).getTime();
-
-        default:
-
-          return 0;
-
-      }
-
-    });
-
-
-
-    return filtered;
-
-  }, [projects, searchTerm, statusFilter, priorityFilter, activeTab, starredProjects, sortBy, user?.id]);
+  });
 
 
 
   const canCreateProject = useCallback(() => {
 
-    return !!user;
+    return user?.userRole === 'admin' || user?.userRole === 'super_admin';
 
   }, [user]);
 
@@ -766,13 +626,9 @@ export default function ProjectsPage() {
 
   const canEditProject = useCallback((project: Project) => {
 
-    return (
+    return user?.userRole === 'admin' || user?.userRole === 'super_admin' || 
 
-      user?.userRole === 'super_admin' ||
-
-      (user?.userRole === 'project_manager' && project.projectManager.id === user.id)
-
-    );
+           project.projectManager.id === user?.id;
 
   }, [user]);
 
@@ -780,9 +636,9 @@ export default function ProjectsPage() {
 
   const handleCreateProject = useCallback(() => {
 
-    setSelectedProject(null);
-
     setDialogMode('create');
+
+    setSelectedProject(null);
 
     setFormData({
 
@@ -790,21 +646,21 @@ export default function ProjectsPage() {
 
       description: '',
 
-      status: ProjectStatus.PLANNING,
+      status: 'planning',
 
-      priority: ProjectPriority.MEDIUM,
+      priority: 'medium',
 
       startDate: '',
 
       endDate: '',
 
-      budget: undefined,
+      budget: 0,
 
       notes: '',
 
       clientEmail: '',
 
-      projectManagerId: user?.id || '',
+      projectManagerId: users.length > 0 ? users[0].id || '' : '',
 
       teamMemberIds: [],
 
@@ -814,31 +670,31 @@ export default function ProjectsPage() {
 
     setDialogOpen(true);
 
-  }, [user?.id]);
+  }, [users]);
 
 
 
   const handleEditProject = useCallback((project: Project) => {
 
-    setSelectedProject(project);
-
     setDialogMode('edit');
+
+    setSelectedProject(project);
 
     setFormData({
 
       name: project.name,
 
-      description: project.description,
+      description: project.description || '',
 
       status: project.status,
 
       priority: project.priority,
 
-      startDate: project.startDate,
+      startDate: project.startDate || '',
 
-      endDate: project.endDate,
+      endDate: project.endDate || '',
 
-      budget: project.budget,
+      budget: project.budget || 0,
 
       notes: project.notes || '',
 
@@ -1092,7 +948,7 @@ export default function ProjectsPage() {
 
               <SelectContent>
 
-                <SelectItem value="all">All Priorities</SelectItem>
+                <SelectItem value="all">All Priority</SelectItem>
 
                 <SelectItem value="low">Low</SelectItem>
 
@@ -1100,15 +956,13 @@ export default function ProjectsPage() {
 
                 <SelectItem value="high">High</SelectItem>
 
-                <SelectItem value="critical">Critical</SelectItem>
-
               </SelectContent>
 
             </Select>
 
-            <Button variant="outline" onClick={clearFilters}>
+            <Button variant="outline" onClick={clearFilters} className="flex items-center gap-2">
 
-              <Filter className="h-4 w-4 mr-2" />
+              <RefreshCw className="h-4 w-4" />
 
               Clear
 
@@ -1116,15 +970,13 @@ export default function ProjectsPage() {
 
           </div>
 
-
-
           {canCreateProject() && (
 
             <Button onClick={handleCreateProject} className="modern-button">
 
               <Plus className="h-4 w-4 mr-2" />
 
-              Create Project
+              New Project
 
             </Button>
 
@@ -1134,960 +986,111 @@ export default function ProjectsPage() {
 
 
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        {loading ? (
 
-          <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
+          <div className="flex items-center justify-center h-64">
 
-            <TabsTrigger value="all">All Projects</TabsTrigger>
-
-            <TabsTrigger value="my">My Projects</TabsTrigger>
-
-            <TabsTrigger value="starred">Starred</TabsTrigger>
-
-          </TabsList>
-
-
-
-          <TabsContent value={activeTab} className="space-y-6">
-
-            {loading && (
-
-              <div className="flex items-center justify-center py-8">
-
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-
-              </div>
-
-            )}
-
-
-
-            {error && (
-
-              <div className="flex flex-col items-center justify-center py-8">
-
-                <p className="text-red-500 text-lg mb-4">{error}</p>
-
-                <Button onClick={fetchProjects} variant="outline">
-
-                  <RefreshCw className="h-4 w-4 mr-2" />
-
-                  Retry
-
-                </Button>
-
-              </div>
-
-            )}
-
-
-
-            {!loading && !error && (
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-                {filteredProjects.map((project) => (
-
-                  <ProjectCard
-
-                    key={project.id}
-
-                    project={project}
-
-                    isStarred={starredProjects.includes(project.id)}
-
-                    onToggleStarred={toggleStarred}
-
-                    onEditProject={handleEditProject}
-
-                    onDeleteProject={handleDeleteProject}
-
-                    onViewProject={handleViewProject}
-
-                    onViewTasks={handleViewTasks}
-
-                    canEdit={canEditProject(project)}
-
-                  />
-
-                ))}
-
-              </div>
-
-            )}
-
-
-
-            {!loading && !error && filteredProjects.length === 0 && (
-
-              <Card className="modern-card">
-
-                <CardContent className="p-8 text-center">
-
-                  <FolderOpen className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-
-                    No projects found
-
-                  </h3>
-
-                  <p className="text-gray-600 mb-4">
-
-                    {searchTerm || statusFilter !== 'all' || priorityFilter !== 'all'
-
-                      ? 'Try adjusting your filters'
-
-                      : 'Create your first project to get started'}
-
-                  </p>
-
-                  {canCreateProject() && (
-
-                    <Button onClick={handleCreateProject} className="modern-button">
-
-                      <Plus className="h-4 w-4 mr-2" />
-
-                      Create Project
-
-                    </Button>
-
-                  )}
-
-                </CardContent>
-
-              </Card>
-
-            )}
-
-          </TabsContent>
-
-        </Tabs>
-
-
-
-        {dialogOpen && (
-
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-
-            <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-
-              <h2 className="text-lg font-semibold mb-4">
-
-                {dialogMode === 'create' ? 'Create New Project' : 'Edit Project'}
-
-              </h2>
-
-              
-
-              <form onSubmit={handleFormSubmit} className="space-y-6">
-
-                {formError && (
-
-                  <Alert variant="destructive">
-
-                    <AlertDescription>{formError}</AlertDescription>
-
-                  </Alert>
-
-                )}
-
-                
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                  <div className="md:col-span-2">
-
-                    <Label htmlFor="name">Project Name *</Label>
-
-                    <Input
-
-                      id="name"
-
-                      value={formData.name}
-
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-
-                      placeholder="Enter project name"
-
-                      required
-
-                    />
-
-                  </div>
-
-                  
-
-                  <div className="md:col-span-2">
-
-                    <Label htmlFor="description">Description</Label>
-
-                    <Textarea
-
-                      id="description"
-
-                      value={formData.description || ''}
-
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-
-                      placeholder="Enter project description"
-
-                      rows={3}
-
-                    />
-
-                  </div>
-
-                  
-
-                  <div>
-
-                    <Label htmlFor="status">Status</Label>
-
-                    <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value as ProjectStatus })}>
-
-                      <SelectTrigger>
-
-                        <SelectValue />
-
-                      </SelectTrigger>
-
-                      <SelectContent>
-
-                        <SelectItem value={ProjectStatus.PLANNING}>Planning</SelectItem>
-
-                        <SelectItem value={ProjectStatus.IN_PROGRESS}>In Progress</SelectItem>
-
-                        <SelectItem value={ProjectStatus.ON_HOLD}>On Hold</SelectItem>
-
-                        <SelectItem value={ProjectStatus.COMPLETED}>Completed</SelectItem>
-
-                        <SelectItem value={ProjectStatus.CANCELLED}>Cancelled</SelectItem>
-
-                      </SelectContent>
-
-                    </Select>
-
-                  </div>
-
-                  
-
-                  <div>
-
-                    <Label htmlFor="priority">Priority</Label>
-
-                    <Select value={formData.priority} onValueChange={(value) => setFormData({ ...formData, priority: value as ProjectPriority })}>
-
-                      <SelectTrigger>
-
-                        <SelectValue />
-
-                      </SelectTrigger>
-
-                      <SelectContent>
-
-                        <SelectItem value={ProjectPriority.LOW}>Low</SelectItem>
-
-                        <SelectItem value={ProjectPriority.MEDIUM}>Medium</SelectItem>
-
-                        <SelectItem value={ProjectPriority.HIGH}>High</SelectItem>
-
-                        <SelectItem value={ProjectPriority.CRITICAL}>Critical</SelectItem>
-
-                      </SelectContent>
-
-                    </Select>
-
-                  </div>
-
-                  
-
-                  <div>
-
-                    <Label htmlFor="startDate">Start Date</Label>
-
-                    <Input
-
-                      id="startDate"
-
-                      type="date"
-
-                      value={formData.startDate || ''}
-
-                      onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-
-                    />
-
-                  </div>
-
-                  
-
-                  <div>
-
-                    <Label htmlFor="endDate">End Date</Label>
-
-                    <Input
-
-                      id="endDate"
-
-                      type="date"
-
-                      value={formData.endDate || ''}
-
-                      onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-
-                    />
-
-                  </div>
-
-                  
-
-                  <div>
-
-                    <Label htmlFor="budget">Budget</Label>
-
-                    <Input
-
-                      id="budget"
-
-                      type="number"
-
-                      value={formData.budget || ''}
-
-                      onChange={(e) => setFormData({ ...formData, budget: e.target.value ? Number(e.target.value) : undefined })}
-
-                      placeholder="Enter budget amount"
-
-                    />
-
-                  </div>
-
-                  
-
-                  <div>
-
-                    <Label htmlFor="clientEmail">Client Email</Label>
-
-                    <Input
-
-                      id="clientEmail"
-
-                      type="email"
-
-                      value={formData.clientEmail || ''}
-
-                      onChange={(e) => setFormData({ ...formData, clientEmail: e.target.value })}
-
-                      placeholder="Enter client email"
-
-                    />
-
-                  </div>
-
-                  
-
-                  <div>
-
-                    <Label htmlFor="projectManager">Project Manager</Label>
-
-                    <Select value={formData.projectManagerId} onValueChange={(value) => setFormData({ ...formData, projectManagerId: value })}>
-
-                      <SelectTrigger>
-
-                        <SelectValue placeholder="Select project manager" />
-
-                      </SelectTrigger>
-
-                      <SelectContent>
-
-                        {users.map((user) => (
-
-                          <SelectItem key={user.id} value={user.id}>
-
-                            {user.firstName} {user.lastName} ({user.email})
-
-                          </SelectItem>
-
-                        ))}
-
-                      </SelectContent>
-
-                    </Select>
-
-                  </div>
-
-                  
-
-                  <div className="md:col-span-2">
-
-                    <Label htmlFor="notes">Notes</Label>
-
-                    <Textarea
-
-                      id="notes"
-
-                      value={formData.notes}
-
-                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-
-                      placeholder="Additional notes..."
-
-                      rows={3}
-
-                    />
-
-                  </div>
-
-                  
-
-                  <div className="md:col-span-2">
-
-                    <Label>Team Members</Label>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2 max-h-32 overflow-y-auto border rounded p-2">
-
-                      {users.map((user) => (
-
-                        <div key={user.id} className="flex items-center space-x-2">
-
-                          <input
-
-                            type="checkbox"
-
-                            id={`member-${user.id}`}
-
-                            checked={formData.teamMemberIds.includes(user.id)}
-
-                            onChange={() => handleTeamMemberToggle(user.id)}
-
-                            className="rounded"
-
-                          />
-
-                          <Label htmlFor={`member-${user.id}`} className="text-sm">
-
-                            {user.firstName} {user.lastName} ({user.email})
-
-                          </Label>
-
-                        </div>
-
-                      ))}
-
-                    </div>
-
-                  </div>
-
-                </div>
-
-                
-
-                <div className="flex gap-2 justify-end">
-
-                  <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={formLoading}>
-
-                    Cancel
-
-                  </Button>
-
-                  <Button type="submit" className="modern-button" disabled={formLoading}>
-
-                    {formLoading ? 'Saving...' : dialogMode === 'create' ? 'Create Project' : 'Update Project'}
-
-                  </Button>
-
-                </div>
-
-              </form>
-
-            </div>
+            <RefreshCw className="h-8 w-8 animate-spin" />
 
           </div>
 
-        )}
+        ) : error ? (
 
+          <Card className="modern-card">
 
+            <CardContent className="p-8 text-center">
 
-        {deleteDialogOpen && (
+              <p className="text-red-600">{error}</p>
 
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <Button onClick={fetchProjects} className="mt-4">
 
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                <RefreshCw className="h-4 w-4 mr-2" />
 
-              <h2 className="text-lg font-semibold mb-4">Delete Project</h2>
+                Retry
 
-              <p className="text-gray-600 mb-4">
+              </Button>
 
-                Are you sure you want to delete "{projectToDelete?.name}"? This action cannot be undone.
+            </CardContent>
 
-              </p>
+          </Card>
 
-              <div className="flex gap-2 justify-end">
+        ) : (
 
-                <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-                  Cancel
+            {filteredProjects.map((project) => (
 
-                </Button>
+              <ProjectCard
 
-                <Button onClick={confirmDeleteProject} className="bg-red-600 hover:bg-red-700">
+                key={project.id}
 
-                  Delete
+                project={project}
 
-                </Button>
+                isStarred={starredProjects.includes(project.id)}
 
-              </div>
+                onToggleStarred={toggleStarred}
 
-            </div>
+                onEditProject={handleEditProject}
 
-          </div>
+                onDeleteProject={handleDeleteProject}
 
-        )}
+                onViewProject={handleViewProject}
 
-      </div>
+                onViewTasks={handleViewTasks}
 
-    </DashboardLayout>
-
-  );
-
-}
-      name: project.name,
-
-      description: project.description,
-
-      status: project.status,
-
-      priority: project.priority,
-
-      startDate: project.startDate,
-
-      endDate: project.endDate,
-
-      budget: project.budget,
-
-      notes: project.notes || '',
-
-      clientEmail: project.clientEmail || '',
-
-      projectManagerId: project.projectManager.id,
-
-      teamMemberIds: project.teamMembers.map(member => member.id),
-
-    });
-
-    setFormError(null);
-
-    setDialogOpen(true);
-
-  }, []);
-
-
-
-  const handleDeleteProject = useCallback((project: Project) => {
-
-    setProjectToDelete(project);
-
-    setDeleteDialogOpen(true);
-
-  }, []);
-
-
-
-  const confirmDeleteProject = useCallback(async () => {
-
-    if (projectToDelete) {
-
-      try {
-
-        await apiService.deleteProject(projectToDelete.id);
-
-        await fetchProjects();
-
-        setDeleteDialogOpen(false);
-
-        setProjectToDelete(null);
-
-      } catch (error: any) {
-
-        const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to delete project';
-
-        alert(`Delete Error: ${errorMessage}`);
-
-      }
-
-    }
-
-  }, [projectToDelete, fetchProjects]);
-
-
-
-  const handleFormSubmit = useCallback(async (e: React.FormEvent) => {
-
-    e.preventDefault();
-
-    
-
-    try {
-
-      setFormLoading(true);
-
-      setFormError(null);
-
-      
-
-      if (dialogMode === 'create') {
-
-        await apiService.createProject(formData);
-
-      } else if (selectedProject) {
-
-        await apiService.updateProject(selectedProject.id, formData);
-
-      }
-
-      
-
-      await fetchProjects();
-
-      setDialogOpen(false);
-
-    } catch (err: any) {
-
-      setFormError(err?.response?.data?.detail || err?.message || 'Failed to save project');
-
-    } finally {
-
-      setFormLoading(false);
-
-    }
-
-  }, [formData, dialogMode, selectedProject, fetchProjects]);
-
-
-
-  const handleTeamMemberToggle = useCallback((userId: string) => {
-
-    setFormData(prev => ({
-
-      ...prev,
-
-      teamMemberIds: prev.teamMemberIds.includes(userId)
-
-        ? prev.teamMemberIds.filter(id => id !== userId)
-
-        : [...prev.teamMemberIds, userId]
-
-    }));
-
-  }, []);
-
-
-
-  const toggleStarred = useCallback((projectId: string) => {
-
-    setStarredProjects(prev =>
-
-      prev.includes(projectId)
-
-        ? prev.filter(id => id !== projectId)
-
-        : [...prev, projectId]
-
-    );
-
-  }, []);
-
-
-
-  const handleViewProject = useCallback((projectId: string) => {
-
-    router.push(`/projects/${projectId}`);
-
-  }, [router]);
-
-
-
-  const handleViewTasks = useCallback((projectId: string) => {
-
-    router.push(`/projects/${projectId}/tasks`);
-
-  }, [router]);
-
-
-
-  const clearFilters = useCallback(() => {
-
-    setSearchTerm('');
-
-    setStatusFilter('all');
-
-    setPriorityFilter('all');
-
-  }, []);
-
-
-
-  if (!mounted) {
-
-    return null;
-
-  }
-
-
-
-  return (
-
-    <DashboardLayout>
-
-      <div className="container mx-auto px-6 py-8 space-y-8">
-
-        <div>
-
-          <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-
-            Projects
-
-          </h1>
-
-          <p className="text-gray-600 mt-2">
-
-            Manage and track your projects
-
-          </p>
-
-        </div>
-
-
-
-        <div className="flex justify-between items-center">
-
-          <div className="flex items-center gap-4">
-
-            <div className="relative">
-
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-
-              <Input
-
-                placeholder="Search projects..."
-
-                value={searchTerm}
-
-                onChange={(e) => setSearchTerm(e.target.value)}
-
-                className="pl-10 w-64"
+                canEdit={canEditProject(project)}
 
               />
 
-            </div>
-
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-
-              <SelectTrigger className="w-32">
-
-                <SelectValue placeholder="Status" />
-
-              </SelectTrigger>
-
-              <SelectContent>
-
-                <SelectItem value="all">All Status</SelectItem>
-
-                <SelectItem value="planning">Planning</SelectItem>
-
-                <SelectItem value="in_progress">In Progress</SelectItem>
-
-                <SelectItem value="on_hold">On Hold</SelectItem>
-
-                <SelectItem value="completed">Completed</SelectItem>
-
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-
-              </SelectContent>
-
-            </Select>
-
-            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-
-              <SelectTrigger className="w-32">
-
-                <SelectValue placeholder="Priority" />
-
-              </SelectTrigger>
-
-              <SelectContent>
-
-                <SelectItem value="all">All Priorities</SelectItem>
-
-                <SelectItem value="low">Low</SelectItem>
-
-                <SelectItem value="medium">Medium</SelectItem>
-
-                <SelectItem value="high">High</SelectItem>
-
-                <SelectItem value="critical">Critical</SelectItem>
-
-              </SelectContent>
-
-            </Select>
-
-            <Button variant="outline" onClick={clearFilters}>
-
-              <Filter className="h-4 w-4 mr-2" />
-
-              Clear
-
-            </Button>
+            ))}
 
           </div>
 
-
-
-          {canCreateProject() && (
-
-            <Button onClick={handleCreateProject} className="modern-button">
-
-              <Plus className="h-4 w-4 mr-2" />
-
-              Create Project
-
-            </Button>
-
-          )}
-
-        </div>
+        )}
 
 
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        {!loading && !error && filteredProjects.length === 0 && (
 
-          <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
+          <Card className="modern-card">
 
-            <TabsTrigger value="all">All Projects</TabsTrigger>
+            <CardContent className="p-8 text-center">
 
-            <TabsTrigger value="my">My Projects</TabsTrigger>
+              <FolderOpen className="h-16 w-16 text-gray-400 mx-auto mb-4" />
 
-            <TabsTrigger value="starred">Starred</TabsTrigger>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
 
-          </TabsList>
+                No projects found
 
+              </h3>
 
+              <p className="text-gray-600 mb-4">
 
-          <TabsContent value={activeTab} className="space-y-6">
+                {searchTerm || statusFilter !== 'all' || priorityFilter !== 'all'
 
-            {loading && (
+                  ? 'Try adjusting your filters'
 
-              <div className="flex items-center justify-center py-8">
+                  : 'Create your first project to get started'}
 
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+              </p>
 
-              </div>
+              {canCreateProject() && (
 
-            )}
+                <Button onClick={handleCreateProject} className="modern-button">
 
+                  <Plus className="h-4 w-4 mr-2" />
 
-
-            {error && (
-
-              <div className="flex flex-col items-center justify-center py-8">
-
-                <p className="text-red-500 text-lg mb-4">{error}</p>
-
-                <Button onClick={fetchProjects} variant="outline">
-
-                  <RefreshCw className="h-4 w-4 mr-2" />
-
-                  Retry
+                  Create Project
 
                 </Button>
 
-              </div>
+              )}
 
-            )}
+            </CardContent>
 
+          </Card>
 
-
-            {!loading && !error && (
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-                {filteredProjects.map((project) => (
-
-                  <ProjectCard
-
-                    key={project.id}
-
-                    project={project}
-
-                    isStarred={starredProjects.includes(project.id)}
-
-                    onToggleStarred={toggleStarred}
-
-                    onEditProject={handleEditProject}
-
-                    onDeleteProject={handleDeleteProject}
-
-                    onViewProject={handleViewProject}
-
-                    onViewTasks={handleViewTasks}
-
-                    canEdit={canEditProject(project)}
-
-                  />
-
-                ))}
-
-              </div>
-
-            )}
-
-
-
-            {!loading && !error && filteredProjects.length === 0 && (
-
-              <Card className="modern-card">
-
-                <CardContent className="p-8 text-center">
-
-                  <FolderOpen className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-
-                    No projects found
-
-                  </h3>
-
-                  <p className="text-gray-600 mb-4">
-
-                    {searchTerm || statusFilter !== 'all' || priorityFilter !== 'all'
-
-                      ? 'Try adjusting your filters'
-
-                      : 'Create your first project to get started'}
-
-                  </p>
-
-                  {canCreateProject() && (
-
-                    <Button onClick={handleCreateProject} className="modern-button">
-
-                      <Plus className="h-4 w-4 mr-2" />
-
-                      Create Project
-
-                    </Button>
-
-                  )}
-
-                </CardContent>
-
-              </Card>
-
-            )}
-
-          </TabsContent>
-
-        </Tabs>
+        )}
 
 
 
@@ -2095,7 +1098,7 @@ export default function ProjectsPage() {
 
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
 
-            <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
 
               <h2 className="text-lg font-semibold mb-4">
 
@@ -2103,25 +1106,21 @@ export default function ProjectsPage() {
 
               </h2>
 
-              
+              {formError && (
 
-              <form onSubmit={handleFormSubmit} className="space-y-6">
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
 
-                {formError && (
+                  <p className="text-red-600 text-sm">{formError}</p>
 
-                  <Alert variant="destructive">
+                </div>
 
-                    <AlertDescription>{formError}</AlertDescription>
+              )}
 
-                  </Alert>
-
-                )}
-
-                
+              <form onSubmit={handleFormSubmit} className="space-y-4">
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                  <div className="md:col-span-2">
+                  <div>
 
                     <Label htmlFor="name">Project Name *</Label>
 
@@ -2133,43 +1132,17 @@ export default function ProjectsPage() {
 
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
 
-                      placeholder="Enter project name"
-
                       required
 
                     />
 
                   </div>
 
-                  
-
-                  <div className="md:col-span-2">
-
-                    <Label htmlFor="description">Description</Label>
-
-                    <Textarea
-
-                      id="description"
-
-                      value={formData.description || ''}
-
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-
-                      placeholder="Enter project description"
-
-                      rows={3}
-
-                    />
-
-                  </div>
-
-                  
-
                   <div>
 
                     <Label htmlFor="status">Status</Label>
 
-                    <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value as ProjectStatus })}>
+                    <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
 
                       <SelectTrigger>
 
@@ -2179,45 +1152,15 @@ export default function ProjectsPage() {
 
                       <SelectContent>
 
-                        <SelectItem value={ProjectStatus.PLANNING}>Planning</SelectItem>
+                        <SelectItem value="planning">Planning</SelectItem>
 
-                        <SelectItem value={ProjectStatus.IN_PROGRESS}>In Progress</SelectItem>
+                        <SelectItem value="in_progress">In Progress</SelectItem>
 
-                        <SelectItem value={ProjectStatus.ON_HOLD}>On Hold</SelectItem>
+                        <SelectItem value="on_hold">On Hold</SelectItem>
 
-                        <SelectItem value={ProjectStatus.COMPLETED}>Completed</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
 
-                        <SelectItem value={ProjectStatus.CANCELLED}>Cancelled</SelectItem>
-
-                      </SelectContent>
-
-                    </Select>
-
-                  </div>
-
-                  
-
-                  <div>
-
-                    <Label htmlFor="priority">Priority</Label>
-
-                    <Select value={formData.priority} onValueChange={(value) => setFormData({ ...formData, priority: value as ProjectPriority })}>
-
-                      <SelectTrigger>
-
-                        <SelectValue />
-
-                      </SelectTrigger>
-
-                      <SelectContent>
-
-                        <SelectItem value={ProjectPriority.LOW}>Low</SelectItem>
-
-                        <SelectItem value={ProjectPriority.MEDIUM}>Medium</SelectItem>
-
-                        <SelectItem value={ProjectPriority.HIGH}>High</SelectItem>
-
-                        <SelectItem value={ProjectPriority.CRITICAL}>Critical</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
 
                       </SelectContent>
 
@@ -2277,63 +1220,33 @@ export default function ProjectsPage() {
 
                       type="number"
 
-                      value={formData.budget || ''}
+                      value={formData.budget}
 
-                      onChange={(e) => setFormData({ ...formData, budget: e.target.value ? Number(e.target.value) : undefined })}
-
-                      placeholder="Enter budget amount"
+                      onChange={(e) => setFormData({ ...formData, budget: Number(e.target.value) })}
 
                     />
 
                   </div>
 
-                  
-
                   <div>
 
-                    <Label htmlFor="clientEmail">Client Email</Label>
+                    <Label htmlFor="priority">Priority</Label>
 
-                    <Input
-
-                      id="clientEmail"
-
-                      type="email"
-
-                      value={formData.clientEmail || ''}
-
-                      onChange={(e) => setFormData({ ...formData, clientEmail: e.target.value })}
-
-                      placeholder="Enter client email"
-
-                    />
-
-                  </div>
-
-                  
-
-                  <div>
-
-                    <Label htmlFor="projectManager">Project Manager</Label>
-
-                    <Select value={formData.projectManagerId} onValueChange={(value) => setFormData({ ...formData, projectManagerId: value })}>
+                    <Select value={formData.priority} onValueChange={(value) => setFormData({ ...formData, priority: value })}>
 
                       <SelectTrigger>
 
-                        <SelectValue placeholder="Select project manager" />
+                        <SelectValue />
 
                       </SelectTrigger>
 
                       <SelectContent>
 
-                        {users.map((user) => (
+                        <SelectItem value="low">Low</SelectItem>
 
-                          <SelectItem key={user.id} value={user.id}>
+                        <SelectItem value="medium">Medium</SelectItem>
 
-                            {user.firstName} {user.lastName} ({user.email})
-
-                          </SelectItem>
-
-                        ))}
+                        <SelectItem value="high">High</SelectItem>
 
                       </SelectContent>
 
@@ -2341,65 +1254,135 @@ export default function ProjectsPage() {
 
                   </div>
 
-                  
+                </div>
 
-                  <div className="md:col-span-2">
+                
 
-                    <Label htmlFor="notes">Notes</Label>
+                <div>
 
-                    <Textarea
+                  <Label htmlFor="description">Description</Label>
 
-                      id="notes"
+                  <Textarea
 
-                      value={formData.notes}
+                    id="description"
 
-                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    value={formData.description}
 
-                      placeholder="Additional notes..."
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
 
-                      rows={3}
+                    rows={3}
 
-                    />
+                  />
 
-                  </div>
+                </div>
 
-                  
+                
 
-                  <div className="md:col-span-2">
+                <div>
 
-                    <Label>Team Members</Label>
+                  <Label htmlFor="clientEmail">Client Email</Label>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2 max-h-32 overflow-y-auto border rounded p-2">
+                  <Input
+
+                    id="clientEmail"
+
+                    type="email"
+
+                    value={formData.clientEmail}
+
+                    onChange={(e) => setFormData({ ...formData, clientEmail: e.target.value })}
+
+                  />
+
+                </div>
+
+                
+
+                <div>
+
+                  <Label htmlFor="notes">Notes</Label>
+
+                  <Textarea
+
+                    id="notes"
+
+                    value={formData.notes}
+
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+
+                    rows={2}
+
+                  />
+
+                </div>
+
+                
+
+                <div>
+
+                  <Label htmlFor="projectManager">Project Manager</Label>
+
+                  <Select value={formData.projectManagerId} onValueChange={(value) => setFormData({ ...formData, projectManagerId: value })}>
+
+                    <SelectTrigger>
+
+                      <SelectValue placeholder="Select project manager" />
+
+                    </SelectTrigger>
+
+                    <SelectContent>
 
                       {users.map((user) => (
 
-                        <div key={user.id} className="flex items-center space-x-2">
+                        <SelectItem key={user.id} value={user.id || ''}>
 
-                          <input
+                          {user.firstName} {user.lastName}
 
-                            type="checkbox"
-
-                            id={`member-${user.id}`}
-
-                            checked={formData.teamMemberIds.includes(user.id)}
-
-                            onChange={() => handleTeamMemberToggle(user.id)}
-
-                            className="rounded"
-
-                          />
-
-                          <Label htmlFor={`member-${user.id}`} className="text-sm">
-
-                            {user.firstName} {user.lastName} ({user.email})
-
-                          </Label>
-
-                        </div>
+                        </SelectItem>
 
                       ))}
 
-                    </div>
+                    </SelectContent>
+
+                  </Select>
+
+                </div>
+
+                
+
+                <div>
+
+                  <Label>Team Members</Label>
+
+                  <div className="space-y-2 max-h-32 overflow-y-auto border rounded-md p-2">
+
+                    {users.map((user) => (
+
+                      <div key={user.id} className="flex items-center space-x-2">
+
+                        <input
+
+                          type="checkbox"
+
+                          id={`member-${user.id}`}
+
+                          checked={formData.teamMemberIds.includes(user.id || '')}
+
+                          onChange={() => handleTeamMemberToggle(user.id || '')}
+
+                          className="rounded"
+
+                        />
+
+                        <Label htmlFor={`member-${user.id}`} className="text-sm">
+
+                          {user.firstName} {user.lastName}
+
+                        </Label>
+
+                      </div>
+
+                    ))}
 
                   </div>
 
@@ -2407,72 +1390,40 @@ export default function ProjectsPage() {
 
                 
 
-                <div className="flex gap-2 justify-end">
+                <div className="flex justify-end gap-2 pt-4">
 
-                  <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={formLoading}>
+                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
 
                     Cancel
 
                   </Button>
-
-                  <Button type="submit" className="modern-button" disabled={formLoading}>
-
+                  <Button type="submit" disabled={formLoading} className="modern-button">
                     {formLoading ? 'Saving...' : dialogMode === 'create' ? 'Create Project' : 'Update Project'}
-
                   </Button>
-
                 </div>
-
               </form>
-
             </div>
-
           </div>
-
         )}
-
-
-
         {deleteDialogOpen && (
-
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-
             <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-
               <h2 className="text-lg font-semibold mb-4">Delete Project</h2>
-
               <p className="text-gray-600 mb-4">
-
                 Are you sure you want to delete "{projectToDelete?.name}"? This action cannot be undone.
-
               </p>
-
               <div className="flex gap-2 justify-end">
-
                 <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-
                   Cancel
-
                 </Button>
-
                 <Button onClick={confirmDeleteProject} className="bg-red-600 hover:bg-red-700">
-
                   Delete
-
                 </Button>
-
               </div>
-
             </div>
-
           </div>
-
         )}
-
       </div>
-
     </DashboardLayout>
-
   );
-
 }
