@@ -30,7 +30,15 @@ export default function TimeTrackingPage() {
       ]);
 
       setProjects(projectsResponse.projects || []);
-      setTasks(tasksResponse.tasks || []);
+      
+      // Transform tasks to match the expected structure
+      const transformedTasks = (tasksResponse.tasks || []).map(task => ({
+        id: task.id,
+        name: task.title, // Map title to name
+        projectId: task.projectId
+      }));
+      
+      setTasks(transformedTasks);
     } catch (error) {
       console.error('Failed to fetch projects and tasks:', error);
     } finally {

@@ -208,12 +208,12 @@ export const TaskList: React.FC<TaskListProps> = ({
         // Create new task
         await apiService.createTask(data);
       }
-
       setTaskDialogOpen(false);
       setEditingTask(null);
       setParentTask(null);
       await loadTasks();
     } catch (err: any) {
+      console.error('Task operation failed:', err);
       setDialogError(err.response?.data?.detail || 'Failed to save task');
     } finally {
       setDialogLoading(false);

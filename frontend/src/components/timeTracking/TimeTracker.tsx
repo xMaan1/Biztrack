@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { Label } from '../ui/label';
 import {
@@ -14,10 +13,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
-import { Play, Square, Pause, Clock, Timer } from 'lucide-react';
+import { Play, Square, Pause, Timer } from 'lucide-react';
 import { timeTrackingService } from '../../services/TimeTrackingService';
-import { ActiveTimeSession, TimeEntryCreate } from '../../models/timeTracking';
+import { ActiveTimeSession } from '../../models/timeTracking';
 import { useAuth } from '../../contexts/AuthContext';
+import { toast } from 'sonner';
 
 interface TimeTrackerProps {
   projects?: Array<{ id: string; name: string }>;
@@ -89,8 +89,10 @@ export function TimeTracker({ projects = [], tasks = [], onTimeEntryCreated }: T
       const session = await timeTrackingService.startTimeSession(sessionData);
       setCurrentSession(session);
       setElapsedTime(0);
+      toast.success('Time tracking started');
     } catch (error) {
       console.error('Failed to start time session:', error);
+      toast.error('Failed to start time tracking. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -111,8 +113,10 @@ export function TimeTracker({ projects = [], tasks = [], onTimeEntryCreated }: T
       if (onTimeEntryCreated) {
         onTimeEntryCreated(timeEntry);
       }
+      toast.success('Time tracking stopped');
     } catch (error) {
       console.error('Failed to stop time session:', error);
+      toast.error('Failed to stop time tracking. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -125,8 +129,10 @@ export function TimeTracker({ projects = [], tasks = [], onTimeEntryCreated }: T
     try {
       const session = await timeTrackingService.pauseTimeSession(currentSession.id);
       setCurrentSession(session);
+      toast.success('Time tracking paused');
     } catch (error) {
       console.error('Failed to pause time session:', error);
+      toast.error('Failed to pause time tracking. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -139,8 +145,10 @@ export function TimeTracker({ projects = [], tasks = [], onTimeEntryCreated }: T
     try {
       const session = await timeTrackingService.resumeTimeSession(currentSession.id);
       setCurrentSession(session);
+      toast.success('Time tracking resumed');
     } catch (error) {
       console.error('Failed to resume time session:', error);
+      toast.error('Failed to resume time tracking. Please try again.');
     } finally {
       setIsLoading(false);
     }

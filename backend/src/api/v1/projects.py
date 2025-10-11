@@ -383,7 +383,29 @@ async def get_current_project_time_session(
 ):
     """Get current active time session"""
     try:
-        return {"session": None}
+        tenant_id = tenant_context["tenant_id"] if tenant_context else None
+        
+        # Find active time entry for current user
+        active_entry = db.query(TimeEntry).filter(
+            TimeEntry.employeeId == str(current_user.id),
+            TimeEntry.tenant_id == tenant_id,
+            TimeEntry.status == "active"
+        ).first()
+        
+        if active_entry:
+            return {
+                "session": {
+                    "id": str(active_entry.id),
+                    "employeeId": str(active_entry.employeeId),
+                    "projectId": str(active_entry.projectId) if active_entry.projectId else None,
+                    "taskId": str(active_entry.taskId) if active_entry.taskId else None,
+                    "startTime": active_entry.clockIn,
+                    "description": active_entry.notes,
+                    "isActive": True
+                }
+            }
+        else:
+            return {"session": None}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching current session: {str(e)}")
 
@@ -396,32 +418,46 @@ async def start_project_time_session(
 ):
     """Start a new time tracking session"""
     try:
-        time_entry_data = TimeEntryCreate(
-            employeeId=str(current_user.id),
-            date=datetime.now().date().isoformat(),
-            clockIn=datetime.now().isoformat(),
-            projectId=session_data.get("projectId"),
-            taskId=session_data.get("taskId"),
-            notes=session_data.get("description"),
-            status="active"
-        )
+        tenant_id = tenant_context["tenant_id"] if tenant_context else None
         
-        time_entry = TimeEntry(
-            id=str(uuid.uuid4()),
-            **time_entry_data.dict(),
-            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
-            createdBy=str(current_user.id),
-            createdAt=datetime.now(),
-            updatedAt=datetime.now()
-        )
+        # Check if user already has an active session
+        existing_active = db.query(TimeEntry).filter(
+            TimeEntry.employeeId == str(current_user.id),
+            TimeEntry.tenant_id == tenant_id,
+            TimeEntry.status == "active"
+        ).first()
         
-        db.add(time_entry)
-        db.commit()
-        db.refresh(time_entry)
+        if existing_active:
+            raise HTTPException(status_code=400, detail="User already has an active time session")
         
-        return {"session": {"id": time_entry.id, "isActive": True}}
+        time_entry_data = {
+            "employeeId": str(current_user.id),
+            "date": datetime.now().date().isoformat(),
+            "clockIn": datetime.now().isoformat(),
+            "projectId": session_data.get("projectId"),
+            "taskId": session_data.get("taskId"),
+            "notes": session_data.get("description"),
+            "status": "active",
+            "tenant_id": tenant_id,
+            "createdBy": str(current_user.id),
+            "createdAt": datetime.now(),
+            "updatedAt": datetime.now()
+        }
+        
+        time_entry = create_time_entry(time_entry_data, db)
+        
+        return {
+            "session": {
+                "id": str(time_entry.id),
+                "employeeId": str(time_entry.employeeId),
+                "projectId": str(time_entry.projectId) if time_entry.projectId else None,
+                "taskId": str(time_entry.taskId) if time_entry.taskId else None,
+                "startTime": time_entry.clockIn,
+                "description": time_entry.notes,
+                "isActive": True
+            }
+        }
     except Exception as e:
-        db.rollback()
         raise HTTPException(status_code=500, detail=f"Error starting time session: {str(e)}")
 
 @router.post("/time-tracking/stop/{session_id}")
@@ -434,9 +470,17 @@ async def stop_project_time_session(
 ):
     """Stop a time tracking session"""
     try:
-        time_entry = get_time_entry_by_id(db, session_id, tenant_context["tenant_id"] if tenant_context else None)
+        tenant_id = tenant_context["tenant_id"] if tenant_context else None
+        time_entry = get_time_entry_by_id(session_id, db, tenant_id)
+        
         if not time_entry:
             raise HTTPException(status_code=404, detail="Time entry not found")
+        
+        if time_entry.employeeId != str(current_user.id):
+            raise HTTPException(status_code=403, detail="Not authorized to stop this session")
+        
+        if time_entry.status != "active":
+            raise HTTPException(status_code=400, detail="Session is not active")
         
         time_entry.clockOut = datetime.now().isoformat()
         
@@ -449,6 +493,8 @@ async def stop_project_time_session(
         time_entry.status = "completed"
         if stop_data.get("notes"):
             time_entry.notes = f"{time_entry.notes or ''}\n{stop_data['notes']}"
+        
+        time_entry.updatedAt = datetime.now()
         
         db.commit()
         db.refresh(time_entry)
@@ -467,8 +513,37 @@ async def pause_project_time_session(
 ):
     """Pause a time tracking session"""
     try:
-        return {"session": {"id": session_id, "isActive": False}}
+        tenant_id = tenant_context["tenant_id"] if tenant_context else None
+        time_entry = get_time_entry_by_id(session_id, db, tenant_id)
+        
+        if not time_entry:
+            raise HTTPException(status_code=404, detail="Time entry not found")
+        
+        if time_entry.employeeId != str(current_user.id):
+            raise HTTPException(status_code=403, detail="Not authorized to pause this session")
+        
+        if time_entry.status != "active":
+            raise HTTPException(status_code=400, detail="Session is not active")
+        
+        time_entry.status = "paused"
+        time_entry.updatedAt = datetime.now()
+        
+        db.commit()
+        db.refresh(time_entry)
+        
+        return {
+            "session": {
+                "id": str(time_entry.id),
+                "employeeId": str(time_entry.employeeId),
+                "projectId": str(time_entry.projectId) if time_entry.projectId else None,
+                "taskId": str(time_entry.taskId) if time_entry.taskId else None,
+                "startTime": time_entry.clockIn,
+                "description": time_entry.notes,
+                "isActive": False
+            }
+        }
     except Exception as e:
+        db.rollback()
         raise HTTPException(status_code=500, detail=f"Error pausing time session: {str(e)}")
 
 @router.post("/time-tracking/resume/{session_id}")
@@ -478,10 +553,39 @@ async def resume_project_time_session(
     db: Session = Depends(get_db),
     tenant_context: dict = Depends(get_tenant_context)
 ):
-    """Resume a time tracking session"""
+    """Resume a paused time tracking session"""
     try:
-        return {"session": {"id": session_id, "isActive": True}}
+        tenant_id = tenant_context["tenant_id"] if tenant_context else None
+        time_entry = get_time_entry_by_id(session_id, db, tenant_id)
+        
+        if not time_entry:
+            raise HTTPException(status_code=404, detail="Time entry not found")
+        
+        if time_entry.employeeId != str(current_user.id):
+            raise HTTPException(status_code=403, detail="Not authorized to resume this session")
+        
+        if time_entry.status != "paused":
+            raise HTTPException(status_code=400, detail="Session is not paused")
+        
+        time_entry.status = "active"
+        time_entry.updatedAt = datetime.now()
+        
+        db.commit()
+        db.refresh(time_entry)
+        
+        return {
+            "session": {
+                "id": str(time_entry.id),
+                "employeeId": str(time_entry.employeeId),
+                "projectId": str(time_entry.projectId) if time_entry.projectId else None,
+                "taskId": str(time_entry.taskId) if time_entry.taskId else None,
+                "startTime": time_entry.clockIn,
+                "description": time_entry.notes,
+                "isActive": True
+            }
+        }
     except Exception as e:
+        db.rollback()
         raise HTTPException(status_code=500, detail=f"Error resuming time session: {str(e)}")
 
 @router.get("/{project_id}", response_model=Project)

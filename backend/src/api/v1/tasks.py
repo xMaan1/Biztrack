@@ -56,11 +56,14 @@ def transform_task_to_response(task: DBTask, include_subtasks: bool = True) -> T
     
     return Task(
         id=str(task.id),
+        tenant_id=str(task.tenant_id),
         title=task.title,
         description=task.description,
         status=task.status,
         priority=task.priority,
-        project=str(task.projectId),
+        projectId=str(task.projectId),
+        assignedToId=str(task.assignedToId) if task.assignedToId else None,
+        createdById=str(task.createdById),
         parentTaskId=str(task.parentTaskId) if task.parentTaskId else None,
         assignedTo={
             "id": str(task.assignedTo.id),
@@ -206,7 +209,10 @@ async def create_new_task(
     if tenant_context:
         task_dict['tenant_id'] = tenant_context["tenant_id"]
     
-    db_task = create_task(task_dict, db)
+    try:
+        db_task = create_task(task_dict, db)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating task: {str(e)}")
     
     return transform_task_to_response(db_task, include_subtasks=False)
 

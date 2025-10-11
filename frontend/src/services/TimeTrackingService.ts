@@ -57,7 +57,7 @@ class TimeTrackingService {
   async getCurrentSession(): Promise<ActiveTimeSession | null> {
     try {
       const response = await apiService.get('/projects/time-tracking/current-session');
-      return response.session;
+      return response.session || null;
     } catch (error) {
       return null;
     }

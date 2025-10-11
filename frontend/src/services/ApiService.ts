@@ -422,7 +422,7 @@ export class ApiService {
   }
 
   async createTask(data: any) {
-    return this.post('/tasks', data);
+    return await this.post('/tasks', data);
   }
 
   async updateTask(id: string, data: any) {

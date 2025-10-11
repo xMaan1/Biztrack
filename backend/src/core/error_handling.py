@@ -37,11 +37,12 @@ class ErrorHandler:
         error_details = []
         
         for error in exc.errors():
-            error_details.append({
+            error_detail = {
                 "field": " -> ".join(str(loc) for loc in error["loc"]),
                 "message": error["msg"],
                 "type": error["type"]
-            })
+            }
+            error_details.append(error_detail)
         
         error_response = {
             "error_code": self.error_codes["VALIDATION_ERROR"],

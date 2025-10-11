@@ -156,6 +156,16 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     if (!submitData.actualHours) delete submitData.actualHours;
     if (!submitData.tags?.length) delete submitData.tags;
 
+    // Map frontend field names to backend field names
+    if (submitData.project) {
+      submitData.projectId = submitData.project;
+      delete submitData.project;
+    }
+    if (submitData.assignedTo) {
+      submitData.assignedToId = submitData.assignedTo;
+      delete submitData.assignedTo;
+    }
+
     onSubmit(submitData);
   };
 
