@@ -94,11 +94,14 @@ def create_job_posting(job_data: dict, db: Session) -> JobPosting:
     db.refresh(db_job)
     return db_job
 
-def update_job_posting(job_id: str, update_data: dict, db: Session, tenant_id: str = None) -> Optional[JobPosting]:
+def update_job_posting(db: Session, job_id: str, update_data: dict, tenant_id: str = None) -> Optional[JobPosting]:
     job = get_job_posting_by_id(job_id, db, tenant_id)
     if job:
         for key, value in update_data.items():
             if hasattr(job, key) and value is not None:
+                # Handle empty strings for UUID fields
+                if key in ['hiringManagerId', 'managerId'] and value == '':
+                    value = None
                 setattr(job, key, value)
         job.updatedAt = datetime.utcnow()
         db.commit()

@@ -1,6 +1,6 @@
 export interface User {
-  id: string; // Add this line for compatibility with backend and UI usage
-  userId?: string; // Keep for legacy compatibility if needed
+  id?: string; // Primary ID field
+  userId?: string; // Alternative ID field from backend
   userName: string;
   userRole:
     | 'super_admin'

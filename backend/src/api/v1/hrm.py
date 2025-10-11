@@ -858,6 +858,7 @@ async def create_hrm_time_entry(
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error creating time entry: {str(e)}")
 
+
 # Leave Request endpoints
 @router.get("/leave-requests", response_model=HRMLeaveRequestsResponse)
 async def get_hrm_leave_requests(

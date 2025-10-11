@@ -52,16 +52,16 @@ export interface Project {
 
 export interface ProjectCreate {
   name: string;
-  description: string;
+  description?: string;
   status?: ProjectStatus;
   priority?: ProjectPriority;
-  startDate: string;
-  endDate: string;
+  startDate?: string;
+  endDate?: string;
   budget?: number;
   notes?: string;
+  clientEmail?: string;
   projectManagerId: string;
   teamMemberIds: string[];
-  clientEmail?: string;
 }
 
 export interface ProjectUpdate {

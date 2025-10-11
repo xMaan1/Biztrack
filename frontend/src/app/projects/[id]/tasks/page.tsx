@@ -86,6 +86,18 @@ export default function ProjectTasksPage() {
   }, [loadProject, loadTasks]);
 
   const getTaskStats = () => {
+    if (!tasks || !Array.isArray(tasks)) {
+      return {
+        totalTasks: 0,
+        completedTasks: 0,
+        inProgressTasks: 0,
+        todoTasks: 0,
+        cancelledTasks: 0,
+        totalSubtasks: 0,
+        completedSubtasks: 0,
+      };
+    }
+    
     const totalTasks = tasks.length;
     const completedTasks = tasks.filter(
       (t) => t.status === TaskStatus.COMPLETED,

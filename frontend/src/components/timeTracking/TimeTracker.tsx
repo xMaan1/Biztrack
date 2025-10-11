@@ -1,0 +1,264 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
+import { Input } from '../ui/input';
+import { Textarea } from '../ui/textarea';
+import { Label } from '../ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
+import { Play, Square, Pause, Clock, Timer } from 'lucide-react';
+import { timeTrackingService } from '../../services/TimeTrackingService';
+import { ActiveTimeSession, TimeEntryCreate } from '../../models/timeTracking';
+import { useAuth } from '../../contexts/AuthContext';
+
+interface TimeTrackerProps {
+  projects?: Array<{ id: string; name: string }>;
+  tasks?: Array<{ id: string; name: string; projectId: string }>;
+  onTimeEntryCreated?: (timeEntry: any) => void;
+}
+
+export function TimeTracker({ projects = [], tasks = [], onTimeEntryCreated }: TimeTrackerProps) {
+  const { user } = useAuth();
+  const [currentSession, setCurrentSession] = useState<ActiveTimeSession | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [selectedProject, setSelectedProject] = useState<string>('');
+  const [selectedTask, setSelectedTask] = useState<string>('');
+  const [description, setDescription] = useState('');
+
+  const filteredTasks = selectedProject 
+    ? tasks.filter(task => task.projectId === selectedProject)
+    : tasks;
+
+  useEffect(() => {
+    fetchCurrentSession();
+  }, []);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (currentSession?.isActive) {
+      interval = setInterval(() => {
+        const startTime = new Date(currentSession.startTime).getTime();
+        const now = Date.now();
+        setElapsedTime(Math.floor((now - startTime) / 1000));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [currentSession]);
+
+  const fetchCurrentSession = async () => {
+    try {
+      const session = await timeTrackingService.getCurrentSession();
+      setCurrentSession(session);
+      if (session) {
+        const startTime = new Date(session.startTime).getTime();
+        const now = Date.now();
+        setElapsedTime(Math.floor((now - startTime) / 1000));
+      }
+    } catch (error) {
+      console.error('Failed to fetch current session:', error);
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleStart = async () => {
+    if (!user?.id) return;
+    
+    setIsLoading(true);
+    try {
+      const sessionData = {
+        projectId: selectedProject || undefined,
+        taskId: selectedTask || undefined,
+        description: description || undefined,
+      };
+      
+      const session = await timeTrackingService.startTimeSession(sessionData);
+      setCurrentSession(session);
+      setElapsedTime(0);
+    } catch (error) {
+      console.error('Failed to start time session:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleStop = async () => {
+    if (!currentSession) return;
+    
+    setIsLoading(true);
+    try {
+      const timeEntry = await timeTrackingService.stopTimeSession(currentSession.id, description);
+      setCurrentSession(null);
+      setElapsedTime(0);
+      setDescription('');
+      setSelectedProject('');
+      setSelectedTask('');
+      
+      if (onTimeEntryCreated) {
+        onTimeEntryCreated(timeEntry);
+      }
+    } catch (error) {
+      console.error('Failed to stop time session:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePause = async () => {
+    if (!currentSession) return;
+    
+    setIsLoading(true);
+    try {
+      const session = await timeTrackingService.pauseTimeSession(currentSession.id);
+      setCurrentSession(session);
+    } catch (error) {
+      console.error('Failed to pause time session:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResume = async () => {
+    if (!currentSession) return;
+    
+    setIsLoading(true);
+    try {
+      const session = await timeTrackingService.resumeTimeSession(currentSession.id);
+      setCurrentSession(session);
+    } catch (error) {
+      console.error('Failed to resume time session:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Card className="modern-card">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Timer className="h-5 w-5" />
+          Time Tracker
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="text-center">
+          <div className="text-6xl font-mono font-bold text-gray-900 mb-4">
+            {formatTime(elapsedTime)}
+          </div>
+          
+          {currentSession?.isActive && (
+            <Badge variant="secondary" className="bg-green-100 text-green-800 mb-4">
+              Currently tracking
+            </Badge>
+          )}
+        </div>
+
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="project">Project</Label>
+              <Select value={selectedProject || undefined} onValueChange={setSelectedProject}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select project" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="task">Task</Label>
+              <Select 
+                value={selectedTask || undefined} 
+                onValueChange={setSelectedTask}
+                disabled={!selectedProject}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select task" />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredTasks.map((task) => (
+                    <SelectItem key={task.id} value={task.id}>
+                      {task.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              placeholder="What are you working on?"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-center gap-4">
+          {!currentSession ? (
+            <Button
+              onClick={handleStart}
+              disabled={isLoading}
+              className="modern-button"
+            >
+              <Play className="h-4 w-4 mr-2" />
+              Start Tracking
+            </Button>
+          ) : (
+            <div className="flex gap-2">
+              <Button
+                onClick={currentSession.isActive ? handlePause : handleResume}
+                disabled={isLoading}
+                variant="outline"
+              >
+                {currentSession.isActive ? (
+                  <>
+                    <Pause className="h-4 w-4 mr-2" />
+                    Pause
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4 mr-2" />
+                    Resume
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={handleStop}
+                disabled={isLoading}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                <Square className="h-4 w-4 mr-2" />
+                Stop
+              </Button>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

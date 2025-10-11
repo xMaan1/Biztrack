@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, field_validator
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 from datetime import datetime
 from enum import Enum
 from uuid import UUID
@@ -323,7 +323,7 @@ class RefreshTokenResponse(BaseModel):
     expires_in: int
 
 # Project Models
-class ProjectBase(BaseModel):
+class ProjectCreate(BaseModel):
     name: str
     description: Optional[str] = None
     status: ProjectStatus = ProjectStatus.PLANNING
@@ -334,10 +334,46 @@ class ProjectBase(BaseModel):
     budget: Optional[float] = None
     actualCost: float = 0.0
     notes: Optional[str] = None
-
-class ProjectCreate(ProjectBase):
+    clientEmail: Optional[str] = None
     projectManagerId: str
     teamMemberIds: List[str] = []
+    
+    @field_validator('status', mode='before')
+    @classmethod
+    def validate_status(cls, v):
+        if isinstance(v, str):
+            return ProjectStatus(v)
+        return v
+    
+    @field_validator('priority', mode='before')
+    @classmethod
+    def validate_priority(cls, v):
+        if isinstance(v, str):
+            return ProjectPriority(v)
+        return v
+    
+    @field_validator('description', 'notes', 'clientEmail', 'startDate', 'endDate', mode='before')
+    @classmethod
+    def validate_optional_strings(cls, v):
+        if v == '':
+            return None
+        return v
+    
+    @field_validator('projectManagerId', mode='before')
+    @classmethod
+    def validate_project_manager_id(cls, v):
+        if v == '' or v is None:
+            raise ValueError('Project manager ID cannot be empty')
+        return v
+    
+    @field_validator('teamMemberIds', mode='before')
+    @classmethod
+    def validate_team_member_ids(cls, v):
+        if isinstance(v, list):
+            # Filter out None, empty strings, and invalid values
+            filtered = [member_id for member_id in v if member_id is not None and member_id != '']
+            return filtered
+        return v
 
 class ProjectUpdate(BaseModel):
     name: Optional[str] = None
@@ -350,11 +386,46 @@ class ProjectUpdate(BaseModel):
     budget: Optional[float] = None
     actualCost: Optional[float] = None
     notes: Optional[str] = None
+    clientEmail: Optional[str] = None
     projectManagerId: Optional[str] = None
     teamMemberIds: Optional[List[str]] = None
 
-class Project(ProjectBase):
+    @field_validator('status', mode='before')
+    @classmethod
+    def validate_status(cls, v):
+        if isinstance(v, str):
+            return ProjectStatus(v)
+        return v
+    
+    @field_validator('priority', mode='before')
+    @classmethod
+    def validate_priority(cls, v):
+        if isinstance(v, str):
+            return ProjectPriority(v)
+        return v
+    
+    @field_validator('description', 'notes', 'clientEmail', 'startDate', 'endDate', mode='before')
+    @classmethod
+    def validate_optional_strings(cls, v):
+        if v == '':
+            return None
+        return v
+
+class Project(BaseModel):
     id: str
+    tenant_id: str
+    name: str
+    description: Optional[str] = None
+    status: str
+    priority: str
+    startDate: Optional[str] = None
+    endDate: Optional[str] = None
+    completionPercent: int = 0
+    budget: Optional[float] = None
+    actualCost: float = 0.0
+    notes: Optional[str] = None
+    clientEmail: Optional[str] = None
+    projectManagerId: str
     projectManager: TeamMember
     teamMembers: List[TeamMember] = []
     createdAt: datetime
@@ -365,32 +436,108 @@ class Project(ProjectBase):
         from_attributes = True
 
 # Task Models
-class TaskBase(BaseModel):
+class TaskCreate(BaseModel):
     title: str
     description: Optional[str] = None
     status: TaskStatus = TaskStatus.TODO
     priority: TaskPriority = TaskPriority.MEDIUM
+    projectId: str
+    assignedToId: Optional[str] = None
     dueDate: Optional[str] = None
     estimatedHours: Optional[float] = None
     actualHours: float = 0.0
     tags: List[str] = []
-    parentTaskId: Optional[str] = None  # For subtasks
-
-class TaskCreate(TaskBase):
-    project: str  # project ID
-    assignedTo: Optional[str] = None  # user ID
+    parentTaskId: Optional[str] = None
+    
+    @field_validator('status', mode='before')
+    @classmethod
+    def validate_status(cls, v):
+        if isinstance(v, str):
+            return TaskStatus(v)
+        return v
+    
+    @field_validator('priority', mode='before')
+    @classmethod
+    def validate_priority(cls, v):
+        if isinstance(v, str):
+            return TaskPriority(v)
+        return v
+    
+    @field_validator('description', 'dueDate', mode='before')
+    @classmethod
+    def validate_optional_strings(cls, v):
+        if v == '':
+            return None
+        return v
+    
+    @field_validator('projectId', mode='before')
+    @classmethod
+    def validate_project_id(cls, v):
+        if v == '' or v is None:
+            raise ValueError('Project ID cannot be empty')
+        return v
 
 class TaskUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     status: Optional[TaskStatus] = None
     priority: Optional[TaskPriority] = None
-    assignedTo: Optional[str] = None
+    assignedToId: Optional[str] = None
     dueDate: Optional[str] = None
     estimatedHours: Optional[float] = None
     actualHours: Optional[float] = None
     tags: Optional[List[str]] = None
     parentTaskId: Optional[str] = None
+    
+    @field_validator('status', mode='before')
+    @classmethod
+    def validate_status(cls, v):
+        if isinstance(v, str):
+            return TaskStatus(v)
+        return v
+    
+    @field_validator('priority', mode='before')
+    @classmethod
+    def validate_priority(cls, v):
+        if isinstance(v, str):
+            return TaskPriority(v)
+        return v
+    
+    @field_validator('description', 'dueDate', mode='before')
+    @classmethod
+    def validate_optional_strings(cls, v):
+        if v == '':
+            return None
+        return v
+
+class Task(BaseModel):
+    id: str
+    tenant_id: str
+    title: str
+    description: Optional[str] = None
+    status: str
+    priority: str
+    projectId: str
+    assignedToId: Optional[str] = None
+    createdById: str
+    parentTaskId: Optional[str] = None
+    dueDate: Optional[str] = None
+    estimatedHours: Optional[float] = None
+    actualHours: float = 0.0
+    tags: List[str] = []
+    completedAt: Optional[datetime] = None
+    createdAt: datetime
+    updatedAt: datetime
+    assignedTo: Optional[Dict[str, Any]] = None
+    createdBy: Dict[str, Any]
+
+class ProjectsResponse(BaseModel):
+    projects: List[Project]
+    pagination: Dict[str, Any]
+
+class TasksResponse(BaseModel):
+    tasks: List[Task]
+    pagination: Dict[str, Any]
 
 class SubTask(BaseModel):
     id: str
@@ -411,14 +558,26 @@ class SubTask(BaseModel):
     class Config:
         from_attributes = True
 
-class Task(TaskBase):
+class Task(BaseModel):
     id: str
-    project: str
-    assignedTo: Optional[Dict[str, str]] = None
-    createdBy: Dict[str, str]
+    tenant_id: str
+    title: str
+    description: Optional[str] = None
+    status: str
+    priority: str
+    projectId: str
+    assignedToId: Optional[str] = None
+    createdById: str
+    parentTaskId: Optional[str] = None
+    dueDate: Optional[str] = None
+    estimatedHours: Optional[float] = None
+    actualHours: float = 0.0
+    tags: List[str] = []
     completedAt: Optional[datetime] = None
     createdAt: datetime
     updatedAt: datetime
+    assignedTo: Optional[Dict[str, Any]] = None
+    createdBy: Dict[str, Any]
     subtasks: List[SubTask] = []
     subtaskCount: int = 0
     completedSubtaskCount: int = 0

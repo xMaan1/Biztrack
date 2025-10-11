@@ -165,7 +165,7 @@ async def create_new_task(
     tenant_id = tenant_context["tenant_id"] if tenant_context else None
     
     # Verify project exists
-    project = get_project_by_id(task_data.project, db, tenant_id=tenant_id)
+    project = get_project_by_id(task_data.projectId, db, tenant_id=tenant_id)
     if not project:
         raise HTTPException(status_code=400, detail="Project not found")
     
@@ -178,18 +178,22 @@ async def create_new_task(
             raise HTTPException(status_code=400, detail="Cannot create subtask of a subtask")
     
     # Verify assignee exists if provided
-    if task_data.assignedTo:
-        assignee = get_user_by_id(task_data.assignedTo, db)
+    if task_data.assignedToId:
+        assignee = get_user_by_id(task_data.assignedToId, db)
         if not assignee:
             raise HTTPException(status_code=400, detail="Assignee not found")
         # Check tenant access for assignee
-        if tenant_context and str(assignee.tenant_id) != tenant_context["tenant_id"]:
-            raise HTTPException(status_code=400, detail="Assignee not in tenant")
+        if tenant_context:
+            from ...config.database import TenantUser
+            tenant_user = db.query(TenantUser).filter(
+                TenantUser.userId == assignee.id,
+                TenantUser.tenant_id == tenant_context["tenant_id"]
+            ).first()
+            if not tenant_user:
+                raise HTTPException(status_code=400, detail="Assignee not in tenant")
     
     # Create task
-    task_dict = task_data.dict()
-    task_dict['projectId'] = task_dict.pop('project')
-    task_dict['assignedToId'] = task_dict.pop('assignedTo', None)
+    task_dict = task_data.model_dump()
     task_dict['createdById'] = current_user.id
     task_dict['tags'] = json.dumps(task_dict.get('tags', []))
     

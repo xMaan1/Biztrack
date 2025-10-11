@@ -191,7 +191,7 @@ class ErrorHandler:
                     "method": request.method,
                     "client_ip": request.client.host if request.client else None,
                     "user_agent": request.headers.get("user-agent"),
-                    **details
+                    **(details if isinstance(details, dict) else {})
                 },
                 severity=severity,
                 ip_address=request.client.host if request.client else None,
