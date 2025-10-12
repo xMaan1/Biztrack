@@ -23,7 +23,6 @@ import {
 import {
   Calendar,
   Clock,
-  Edit,
   Trash2,
   Check,
   X,
@@ -35,14 +34,12 @@ import { TimeEntry, TimeEntryFilters } from '../../models/timeTracking';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface TimeEntryListProps {
-  onEdit?: (timeEntry: TimeEntry) => void;
   onDelete?: (timeEntry: TimeEntry) => void;
   projects?: Array<{ id: string; name: string }>;
   tasks?: Array<{ id: string; name: string; projectId: string }>;
 }
 
 export function TimeEntryList({ 
-  onEdit, 
   onDelete, 
   projects = [], 
   tasks = [] 
@@ -289,13 +286,6 @@ export function TimeEntryList({
                             </Button>
                           </>
                         )}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => onEdit?.(entry)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
                         <Button
                           size="sm"
                           variant="outline"

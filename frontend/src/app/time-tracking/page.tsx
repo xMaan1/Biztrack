@@ -5,7 +5,6 @@ import { DashboardLayout } from '../../components/layout';
 import { TimeTracker } from '../../components/timeTracking/TimeTracker';
 import { TimeStats } from '../../components/timeTracking/TimeStats';
 import { TimeEntryList } from '../../components/timeTracking/TimeEntryList';
-import { timeTrackingService } from '../../services/TimeTrackingService';
 import { TimeEntry } from '../../models/timeTracking';
 import { useAuth } from '../../contexts/AuthContext';
 import { apiService } from '../../services/ApiService';
@@ -32,7 +31,7 @@ export default function TimeTrackingPage() {
       setProjects(projectsResponse.projects || []);
       
       // Transform tasks to match the expected structure
-      const transformedTasks = (tasksResponse.tasks || []).map(task => ({
+      const transformedTasks = (tasksResponse.tasks || []).map((task: any) => ({
         id: task.id,
         name: task.title, // Map title to name
         projectId: task.projectId
@@ -48,10 +47,6 @@ export default function TimeTrackingPage() {
 
   const handleTimeEntryCreated = (timeEntry: TimeEntry) => {
     console.log('Time entry created:', timeEntry);
-  };
-
-  const handleEditTimeEntry = (timeEntry: TimeEntry) => {
-    console.log('Edit time entry:', timeEntry);
   };
 
   const handleDeleteTimeEntry = (timeEntry: TimeEntry) => {

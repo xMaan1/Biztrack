@@ -29,6 +29,7 @@ export function TimeTracker({ projects = [], tasks = [], onTimeEntryCreated }: T
   const { user } = useAuth();
   const [currentSession, setCurrentSession] = useState<ActiveTimeSession | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  
   const [elapsedTime, setElapsedTime] = useState(0);
   const [selectedProject, setSelectedProject] = useState<string>('');
   const [selectedTask, setSelectedTask] = useState<string>('');
@@ -48,7 +49,8 @@ export function TimeTracker({ projects = [], tasks = [], onTimeEntryCreated }: T
       interval = setInterval(() => {
         const startTime = new Date(currentSession.startTime).getTime();
         const now = Date.now();
-        setElapsedTime(Math.floor((now - startTime) / 1000));
+        const elapsed = Math.floor((now - startTime) / 1000);
+        setElapsedTime(elapsed);
       }, 1000);
     }
     return () => clearInterval(interval);
@@ -76,7 +78,14 @@ export function TimeTracker({ projects = [], tasks = [], onTimeEntryCreated }: T
   };
 
   const handleStart = async () => {
-    if (!user?.id) return;
+    if (!user) {
+      return;
+    }
+    
+    const userId = user.userId || user.id;
+    if (!userId) {
+      return;
+    }
     
     setIsLoading(true);
     try {
@@ -167,6 +176,7 @@ export function TimeTracker({ projects = [], tasks = [], onTimeEntryCreated }: T
           <div className="text-6xl font-mono font-bold text-gray-900 mb-4">
             {formatTime(elapsedTime)}
           </div>
+          
           
           {currentSession?.isActive && (
             <Badge variant="secondary" className="bg-green-100 text-green-800 mb-4">
