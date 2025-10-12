@@ -88,7 +88,6 @@ export default function TimeTrackingPage() {
         <TimeEntryList
           projects={projects}
           tasks={tasks}
-          onEdit={handleEditTimeEntry}
           onDelete={handleDeleteTimeEntry}
         />
       </div>
