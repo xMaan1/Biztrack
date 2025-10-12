@@ -50,6 +50,7 @@ export interface PurchaseOrder {
   tenantId: string;
   createdBy: string;
   orderNumber: string;
+  batchNumber?: string;
   supplierId: string;
   supplierName: string;
   warehouseId: string;
@@ -64,7 +65,8 @@ export interface PurchaseOrder {
 }
 
 export interface PurchaseOrderCreate {
-  orderNumber: string;
+  orderNumber?: string;
+  batchNumber?: string;
   supplierId: string;
   supplierName: string;
   warehouseId: string;
@@ -76,6 +78,7 @@ export interface PurchaseOrderCreate {
 
 export interface PurchaseOrderUpdate {
   orderNumber?: string;
+  batchNumber?: string;
   supplierId?: string;
   supplierName?: string;
   warehouseId?: string;

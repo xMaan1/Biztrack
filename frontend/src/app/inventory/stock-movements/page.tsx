@@ -293,6 +293,10 @@ export default function StockMovementsPage() {
         variant: 'secondary',
         label: 'Cycle Count',
       },
+      [StockMovementType.INSTOCK]: {
+        variant: 'default',
+        label: 'In Stock',
+      },
     };
 
     const config = typeConfig[type] || typeConfig[StockMovementType.INBOUND];
@@ -387,6 +391,9 @@ export default function StockMovementsPage() {
                   </SelectItem>
                   <SelectItem value={StockMovementType.CYCLE_COUNT}>
                     Cycle Count
+                  </SelectItem>
+                  <SelectItem value={StockMovementType.INSTOCK}>
+                    In Stock
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -572,6 +579,23 @@ export default function StockMovementsPage() {
               <p className="text-xs text-muted-foreground">Internal moves</p>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">In Stock</CardTitle>
+              <Package className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {
+                  stockMovements.filter(
+                    (m) => m.movementType === StockMovementType.INSTOCK,
+                  ).length
+                }
+              </div>
+              <p className="text-xs text-muted-foreground">Stock confirmed</p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Add Stock Movement Modal */}
@@ -620,6 +644,9 @@ export default function StockMovementsPage() {
                       </SelectItem>
                       <SelectItem value={StockMovementType.CYCLE_COUNT}>
                         Cycle Count
+                      </SelectItem>
+                      <SelectItem value={StockMovementType.INSTOCK}>
+                        In Stock
                       </SelectItem>
                     </SelectContent>
                   </Select>
@@ -998,6 +1025,7 @@ export default function StockMovementsPage() {
                       <SelectItem value={StockMovementType.DAMAGE}>Damage</SelectItem>
                       <SelectItem value={StockMovementType.EXPIRY}>Expiry</SelectItem>
                       <SelectItem value={StockMovementType.CYCLE_COUNT}>Cycle Count</SelectItem>
+                      <SelectItem value={StockMovementType.INSTOCK}>In Stock</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

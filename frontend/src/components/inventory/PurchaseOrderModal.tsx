@@ -66,6 +66,7 @@ export default function PurchaseOrderModal({
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [newOrder, setNewOrder] = useState<PurchaseOrderCreate>({
     orderNumber: '',
+    batchNumber: '',
     supplierId: '',
     supplierName: '',
     warehouseId: '',
@@ -166,7 +167,6 @@ export default function PurchaseOrderModal({
 
   const handleCreateOrder = async () => {
     const requiredFields = [
-      !newOrder.orderNumber,
       !newOrder.supplierId,
       !newOrder.warehouseId,
       !newOrder.expectedDeliveryDate,
@@ -214,6 +214,7 @@ export default function PurchaseOrderModal({
   const resetForm = () => {
     setNewOrder({
       orderNumber: '',
+      batchNumber: '',
       supplierId: suppliers.length > 0 ? suppliers[0].id : '',
       supplierName: suppliers.length > 0 ? suppliers[0].name : '',
       warehouseId: warehouses.length > 0 ? warehouses[0].id : '',
@@ -254,17 +255,27 @@ export default function PurchaseOrderModal({
           )}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="orderNumber">Order Number *</Label>
+              <Label htmlFor="orderNumber">Order Number</Label>
               <Input
                 id="orderNumber"
                 value={newOrder.orderNumber}
+                disabled
+                className="bg-muted"
+                placeholder="Auto-generated"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="batchNumber">Batch Number</Label>
+              <Input
+                id="batchNumber"
+                value={newOrder.batchNumber}
                 onChange={(e) =>
                   setNewOrder((prev) => ({
                     ...prev,
-                    orderNumber: e.target.value,
+                    batchNumber: e.target.value,
                   }))
                 }
-                placeholder="Enter PO number"
+                placeholder="Enter batch number"
               />
             </div>
             {showOrderDate && (

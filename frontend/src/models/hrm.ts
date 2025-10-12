@@ -26,6 +26,7 @@ export enum Department {
   CUSTOMER_SUPPORT = 'customer_support',
   LEGAL = 'legal',
   IT = 'it',
+  GENERAL = 'general',
   OTHER = 'other',
 }
 

@@ -27,7 +27,6 @@ import {
   GraduationCap,
   Clock3,
   ChevronDown,
-  PieChart,
   CreditCard,
   FileCheck,
   Banknote,
@@ -413,21 +412,22 @@ const allMenuItems: MenuItem[] = [
         roles: ['*'],
         planTypes: ['*'],
       },
-      {
-        text: 'Reports',
-        icon: PieChart,
-        path: '/reports',
-        roles: ['*'],
-        planTypes: ['*'],
-      },
     ],
+  },
+  {
+    text: 'Reports',
+    icon: BarChart3,
+    path: '/reports',
+    roles: ['*'],
+    planTypes: ['*'],
+    gradient: 'from-purple-500 to-violet-500',
   },
   {
     text: 'Events',
     icon: Calendar,
     path: '/events',
     roles: ['*'],
-    planTypes: ['*'], // Available for all plans
+    planTypes: ['*'], 
     gradient: 'from-indigo-500 to-blue-500',
   },
   // Workshop-specific modules

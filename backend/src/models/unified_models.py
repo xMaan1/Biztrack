@@ -1511,6 +1511,7 @@ class Department(str, Enum):
     CUSTOMER_SUPPORT = "customer_support"
     LEGAL = "legal"
     IT = "it"
+    GENERAL = "general"
     OTHER = "other"
 
 class JobStatus(str, Enum):
@@ -1539,6 +1540,7 @@ class ReviewType(str, Enum):
 
 class ReviewStatus(str, Enum):
     DRAFT = "draft"
+    PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
     APPROVED = "approved"
@@ -2623,6 +2625,7 @@ class StockMovementType(str, Enum):
     DAMAGE = "damage"
     EXPIRY = "expiry"
     CYCLE_COUNT = "cycle_count"
+    INSTOCK = "instock"
 
 class StockMovementStatus(str, Enum):
     PENDING = "pending"
@@ -2862,6 +2865,20 @@ class StockMovement(StockMovementBase):
     class Config:
         from_attributes = True
 
+class StockMovementWithProduct(StockMovementBase):
+    id: str
+    tenant_id: str
+    createdBy: str
+    status: StockMovementStatus
+    createdAt: datetime
+    updatedAt: datetime
+    productName: Optional[str] = None
+    productSku: Optional[str] = None
+    productCategory: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
 # Purchase Order Models
 class PurchaseOrderItemBase(BaseModel):
     productId: str
@@ -2897,6 +2914,7 @@ class PurchaseOrderItem(PurchaseOrderItemBase):
 
 class PurchaseOrderBase(BaseModel):
     orderNumber: str
+    batchNumber: Optional[str] = None
     supplierId: str
     supplierName: str
     warehouseId: str
@@ -2908,7 +2926,8 @@ class PurchaseOrderBase(BaseModel):
     items: List[PurchaseOrderItemCreate]
 
 class PurchaseOrderCreate(BaseModel):
-    orderNumber: str
+    orderNumber: Optional[str] = None
+    batchNumber: Optional[str] = None
     supplierId: str
     supplierName: str
     warehouseId: str
@@ -2919,6 +2938,7 @@ class PurchaseOrderCreate(BaseModel):
 
 class PurchaseOrderUpdate(BaseModel):
     orderNumber: Optional[str] = None
+    batchNumber: Optional[str] = None
     supplierId: Optional[str] = None
     supplierName: Optional[str] = None
     warehouseId: Optional[str] = None
@@ -3176,6 +3196,10 @@ class StockMovementResponse(BaseModel):
 
 class StockMovementsResponse(BaseModel):
     stockMovements: List[StockMovement]
+    total: int
+
+class StockMovementsWithProductResponse(BaseModel):
+    stockMovements: List[StockMovementWithProduct]
     total: int
 
 class PurchaseOrderResponse(BaseModel):

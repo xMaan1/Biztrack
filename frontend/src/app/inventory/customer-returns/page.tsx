@@ -56,9 +56,13 @@ import { DashboardLayout } from '../../../components/layout';
 import { formatCurrency } from '../../../lib/utils';
 import { Textarea } from '../../../components/ui/textarea';
 import { Label } from '../../../components/ui/label';
+import { apiService } from '../../../services/ApiService';
+import { Product } from '../../../models/pos';
+import { useCurrency } from '../../../contexts/CurrencyContext';
 
 export default function CustomerReturnsPage() {
   const { } = useAuth();
+  const { formatCurrency } = useCurrency();
   const router = useRouter();
   const [returns, setReturns] = useState<StockMovement[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,6 +77,7 @@ export default function CustomerReturnsPage() {
   const [returnToDelete, setReturnToDelete] = useState<StockMovement | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editReturn, setEditReturn] = useState<StockMovementCreate>({
     productId: '',
@@ -106,6 +111,7 @@ export default function CustomerReturnsPage() {
   useEffect(() => {
     loadReturns();
     loadWarehouses();
+    loadProducts();
   }, [warehouseFilter, statusFilter]);
 
   const loadWarehouses = async () => {
@@ -117,6 +123,15 @@ export default function CustomerReturnsPage() {
       }
     } catch (error) {
       console.error('Error loading warehouses:', error);
+    }
+  };
+
+  const loadProducts = async () => {
+    try {
+      const response = await apiService.get('/pos/products');
+      setProducts(response.products || []);
+    } catch (error) {
+      console.error('Error loading products:', error);
     }
   };
 
@@ -135,6 +150,8 @@ export default function CustomerReturnsPage() {
 
   const filteredReturns = returns.filter((returnItem) => {
     const matchesSearch = 
+      returnItem.productName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      returnItem.productSku?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       returnItem.productId.toLowerCase().includes(searchTerm.toLowerCase()) ||
       returnItem.notes?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       returnItem.batchNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -398,7 +415,7 @@ export default function CustomerReturnsPage() {
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search by product, notes, batch, or reference..."
+                    placeholder="Search by product name, SKU, notes, batch, or reference..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
@@ -458,7 +475,7 @@ export default function CustomerReturnsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Product ID</TableHead>
+                  <TableHead>Product</TableHead>
                   <TableHead>Quantity</TableHead>
                   <TableHead>Unit Cost</TableHead>
                   <TableHead>Refund Value</TableHead>
@@ -472,7 +489,15 @@ export default function CustomerReturnsPage() {
                 {filteredReturns.map((returnItem) => (
                   <TableRow key={returnItem.id}>
                     <TableCell className="font-medium">
-                      {returnItem.productId}
+                      <div className="flex items-center gap-3">
+                        <Package className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <div className="font-medium">{returnItem.productName || 'Unknown Product'}</div>
+                          <div className="text-sm text-muted-foreground">
+                            SKU: {returnItem.productSku || returnItem.productId}
+                          </div>
+                        </div>
+                      </div>
                     </TableCell>
                     <TableCell>{returnItem.quantity}</TableCell>
                     <TableCell>{formatCurrency(returnItem.unitCost)}</TableCell>
@@ -536,8 +561,13 @@ export default function CustomerReturnsPage() {
               <div className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <label className="text-sm font-medium">Product ID</label>
-                    <p className="text-sm text-muted-foreground">{selectedReturn.productId}</p>
+                    <label className="text-sm font-medium">Product</label>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedReturn.productName || 'Unknown Product'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      SKU: {selectedReturn.productSku || selectedReturn.productId}
+                    </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium">Quantity</label>
@@ -614,13 +644,35 @@ export default function CustomerReturnsPage() {
             <div className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="productId">Product ID *</Label>
-                  <Input
-                    id="productId"
-                    placeholder="Enter product ID"
+                  <Label htmlFor="productId">Product *</Label>
+                  <Select
                     value={newReturn.productId}
-                    onChange={(e) => setNewReturn(prev => ({ ...prev, productId: e.target.value }))}
-                  />
+                    onValueChange={(value) => {
+                      const product = products.find((p) => p.id === value);
+                      setNewReturn(prev => ({
+                        ...prev,
+                        productId: value,
+                        unitCost: product?.costPrice || 0,
+                      }));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select product" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {products.length === 0 ? (
+                        <SelectItem value="no-products" disabled>
+                          No products available
+                        </SelectItem>
+                      ) : (
+                        products.map((product) => (
+                          <SelectItem key={product.id} value={product.id}>
+                            {product.name} ({product.sku})
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="warehouse">Warehouse *</Label>
@@ -723,13 +775,35 @@ export default function CustomerReturnsPage() {
             <div className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-productId">Product ID *</Label>
-                  <Input
-                    id="edit-productId"
-                    placeholder="Enter product ID"
+                  <Label htmlFor="edit-productId">Product *</Label>
+                  <Select
                     value={editReturn.productId}
-                    onChange={(e) => setEditReturn(prev => ({ ...prev, productId: e.target.value }))}
-                  />
+                    onValueChange={(value) => {
+                      const product = products.find((p) => p.id === value);
+                      setEditReturn(prev => ({
+                        ...prev,
+                        productId: value,
+                        unitCost: product?.costPrice || 0,
+                      }));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select product" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {products.length === 0 ? (
+                        <SelectItem value="no-products" disabled>
+                          No products available
+                        </SelectItem>
+                      ) : (
+                        products.map((product) => (
+                          <SelectItem key={product.id} value={product.id}>
+                            {product.name} ({product.sku})
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-warehouse">Warehouse *</Label>

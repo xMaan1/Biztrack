@@ -73,6 +73,7 @@ class PerformanceReview(Base):
     areasForImprovement = Column(Text)
     goals = Column(Text)
     comments = Column(Text)
+    nextReviewDate = Column(DateTime)
     isCompleted = Column(Boolean, default=False)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

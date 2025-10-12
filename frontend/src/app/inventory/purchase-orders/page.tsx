@@ -110,6 +110,7 @@ export default function PurchaseOrdersPage() {
   const isDataLoading = purchaseOrdersLoading || suppliersLoading || warehousesLoading;
   const [editOrder, setEditOrder] = useState<PurchaseOrderUpdate>({
     orderNumber: '',
+    batchNumber: '',
     supplierId: '',
     supplierName: '',
     warehouseId: '',
@@ -178,6 +179,7 @@ export default function PurchaseOrdersPage() {
     setSelectedOrder(order);
     setEditOrder({
       orderNumber: order.orderNumber,
+      batchNumber: order.batchNumber || '',
       supplierId: order.supplierId,
       supplierName: order.supplierName,
       warehouseId: order.warehouseId,
@@ -192,7 +194,6 @@ export default function PurchaseOrdersPage() {
     if (!selectedOrder) return;
 
     if (
-      !editOrder.orderNumber ||
       !editOrder.supplierId ||
       !editOrder.warehouseId ||
       !editOrder.orderDate ||
@@ -336,6 +337,11 @@ export default function PurchaseOrdersPage() {
                     <TableRow key={order.id}>
                       <TableCell>
                         <div className="font-medium">{order.orderNumber}</div>
+                        {order.batchNumber && (
+                          <div className="text-sm text-muted-foreground">
+                            Batch: {order.batchNumber}
+                          </div>
+                        )}
                         {order.notes && (
                           <div className="text-sm text-muted-foreground truncate max-w-32">
                             {order.notes}
@@ -555,17 +561,27 @@ export default function PurchaseOrdersPage() {
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-orderNumber">Order Number *</Label>
+                  <Label htmlFor="edit-orderNumber">Order Number</Label>
                   <Input
                     id="edit-orderNumber"
                     value={editOrder.orderNumber}
+                    disabled
+                    className="bg-muted"
+                    placeholder="Auto-generated"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-batchNumber">Batch Number</Label>
+                  <Input
+                    id="edit-batchNumber"
+                    value={editOrder.batchNumber}
                     onChange={(e) =>
                       setEditOrder((prev) => ({
                         ...prev,
-                        orderNumber: e.target.value,
+                        batchNumber: e.target.value,
                       }))
                     }
-                    placeholder="Enter PO number"
+                    placeholder="Enter batch number"
                   />
                 </div>
                 <div className="space-y-2">

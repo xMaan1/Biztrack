@@ -19,6 +19,8 @@ router = APIRouter(prefix="/reports", tags=["Reports & Analytics"])
 
 @router.get("/dashboard", response_model=ReportsDashboard)
 def get_reports_dashboard(
+    start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
+    end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     tenant_context: dict = Depends(get_tenant_context)
@@ -26,7 +28,14 @@ def get_reports_dashboard(
     """Get comprehensive reports dashboard data"""
     try:
         tenant_id = str(tenant_context["tenant_id"])
-        dashboard_data = get_reports_dashboard_data(db, tenant_id)
+        
+        filters = {}
+        if start_date:
+            filters['start_date'] = datetime.fromisoformat(start_date)
+        if end_date:
+            filters['end_date'] = datetime.fromisoformat(end_date)
+        
+        dashboard_data = get_reports_dashboard_data(db, tenant_id, filters)
         
         return ReportsDashboard(**dashboard_data)
     except Exception as e:

@@ -692,11 +692,38 @@ async def get_hrm_reviews(
                 filtered_reviews.append(review)
             reviews = filtered_reviews
         
+        # Convert SQLAlchemy models to Pydantic models
+        review_list = []
+        for review in reviews:
+            review_list.append(PerformanceReview(
+                id=str(review.id),
+                tenant_id=str(review.tenant_id),
+                employeeId=str(review.employeeId),
+                reviewerId=str(review.reviewerId),
+                reviewType="annual",  # Default value since not in DB
+                reviewDate=review.reviewDate.isoformat() if review.reviewDate else "",
+                reviewPeriod=review.reviewPeriod,
+                status="completed" if review.isCompleted else "pending",
+                overallRating=review.rating,
+                technicalRating=0,  # Not stored in DB
+                communicationRating=0,  # Not stored in DB
+                teamworkRating=0,  # Not stored in DB
+                leadershipRating=0,  # Not stored in DB
+                goals=review.goals.split('\n') if review.goals else [],
+                achievements=review.strengths.split('\n') if review.strengths else [],
+                areasForImprovement=review.areasForImprovement.split('\n') if review.areasForImprovement else [],
+                comments=review.comments,
+                nextReviewDate=None,  # Not stored in DB
+                createdBy="",  # Not stored in DB
+                createdAt=review.createdAt.isoformat() if review.createdAt else "",
+                updatedAt=review.updatedAt.isoformat() if review.updatedAt else ""
+            ))
+        
         # Get total count for pagination
-        total = len(reviews)
+        total = len(review_list)
         
         return HRMReviewsResponse(
-            reviews=reviews,
+            reviews=review_list,
             pagination={
                 "page": page,
                 "limit": limit,
@@ -716,20 +743,51 @@ async def create_hrm_review(
 ):
     """Create a new performance review"""
     try:
-        review = PerformanceReview(
-            id=str(uuid.uuid4()),
-            **review_data.dict(),
-            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
-            createdBy=str(current_user.id),
-            createdAt=datetime.now(),
-            updatedAt=datetime.now()
+        # Create database record with only valid fields
+        db_data = {
+            "id": str(uuid.uuid4()),
+            "tenant_id": tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            "employeeId": review_data.employeeId,
+            "reviewerId": review_data.reviewerId,
+            "reviewDate": datetime.fromisoformat(review_data.reviewDate) if review_data.reviewDate else datetime.utcnow(),
+            "reviewPeriod": review_data.reviewPeriod,
+            "rating": review_data.overallRating or 0,
+            "strengths": "\n".join(review_data.achievements) if review_data.achievements else None,
+            "areasForImprovement": "\n".join(review_data.areasOfImprovement) if review_data.areasOfImprovement else None,
+            "goals": "\n".join(review_data.goals) if review_data.goals else None,
+            "comments": review_data.comments,
+            "nextReviewDate": datetime.fromisoformat(review_data.nextReviewDate) if review_data.nextReviewDate else None,
+            "isCompleted": False,
+            "createdAt": datetime.utcnow(),
+            "updatedAt": datetime.utcnow()
+        }
+        
+        db_review = create_performance_review(db_data, db)
+        
+        # Convert to response format
+        return PerformanceReview(
+            id=str(db_review.id),
+            tenant_id=str(db_review.tenant_id),
+            employeeId=str(db_review.employeeId),
+            reviewerId=str(db_review.reviewerId),
+            reviewType="annual",
+            reviewDate=db_review.reviewDate.isoformat() if db_review.reviewDate else "",
+            reviewPeriod=db_review.reviewPeriod,
+            status="completed" if db_review.isCompleted else "pending",
+            overallRating=db_review.rating,
+            technicalRating=0,
+            communicationRating=0,
+            teamworkRating=0,
+            leadershipRating=0,
+            goals=db_review.goals.split('\n') if db_review.goals else [],
+            achievements=db_review.strengths.split('\n') if db_review.strengths else [],
+            areasForImprovement=db_review.areasForImprovement.split('\n') if db_review.areasForImprovement else [],
+            comments=db_review.comments,
+            nextReviewDate=None,
+            createdBy="",
+            createdAt=db_review.createdAt.isoformat() if db_review.createdAt else "",
+            updatedAt=db_review.updatedAt.isoformat() if db_review.updatedAt else ""
         )
-        
-        db.add(review)
-        db.commit()
-        db.refresh(review)
-        
-        return review
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error creating performance review: {str(e)}")
@@ -759,10 +817,34 @@ async def update_hrm_review(
 ):
     """Update an existing performance review"""
     try:
-        review = update_performance_review(db, review_id, review_data.dict(exclude_unset=True), tenant_context["tenant_id"] if tenant_context else None)
-        if not review:
+        db_review = update_performance_review(review_id, review_data.dict(exclude_unset=True), db, tenant_context["tenant_id"] if tenant_context else None)
+        if not db_review:
             raise HTTPException(status_code=404, detail="Performance review not found")
-        return review
+        
+        # Convert to response format
+        return PerformanceReview(
+            id=str(db_review.id),
+            tenant_id=str(db_review.tenant_id),
+            employeeId=str(db_review.employeeId),
+            reviewerId=str(db_review.reviewerId),
+            reviewType="annual",  # Default value since not in DB
+            reviewDate=db_review.reviewDate.isoformat() if db_review.reviewDate else "",
+            reviewPeriod=db_review.reviewPeriod,
+            status="completed" if db_review.isCompleted else "pending",
+            overallRating=db_review.rating,
+            technicalRating=0,  # Not stored in DB
+            communicationRating=0,  # Not stored in DB
+            teamworkRating=0,  # Not stored in DB
+            leadershipRating=0,  # Not stored in DB
+            goals=db_review.goals.split('\n') if db_review.goals else [],
+            achievements=db_review.strengths.split('\n') if db_review.strengths else [],
+            areasForImprovement=db_review.areasForImprovement.split('\n') if db_review.areasForImprovement else [],
+            comments=db_review.comments,
+            nextReviewDate=db_review.nextReviewDate.isoformat() if db_review.nextReviewDate else None,
+            createdBy="",  # Not stored in DB
+            createdAt=db_review.createdAt.isoformat() if db_review.createdAt else "",
+            updatedAt=db_review.updatedAt.isoformat() if db_review.updatedAt else ""
+        )
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error updating performance review: {str(e)}")
@@ -776,7 +858,7 @@ async def delete_hrm_review(
 ):
     """Delete a performance review"""
     try:
-        success = delete_performance_review(db, review_id, tenant_context["tenant_id"] if tenant_context else None)
+        success = delete_performance_review(review_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not success:
             raise HTTPException(status_code=404, detail="Performance review not found")
         return {"message": "Performance review deleted successfully"}
@@ -897,8 +979,31 @@ async def get_hrm_leave_requests(
         # Get total count for pagination
         total = len(leave_requests)
         
+        # Convert SQLAlchemy models to Pydantic models
+        pydantic_requests = []
+        for request in leave_requests:
+            response_data = {
+                "id": str(request.id),
+                "tenant_id": str(request.tenant_id),
+                "employeeId": str(request.employeeId),
+                "leaveType": request.leaveType,
+                "startDate": request.startDate.isoformat() if request.startDate else "",
+                "endDate": request.endDate.isoformat() if request.endDate else "",
+                "totalDays": float(request.days),
+                "reason": request.reason,
+                "status": request.status,
+                "approvedBy": str(request.approvedBy) if request.approvedBy else None,
+                "approvedAt": request.approvedAt.isoformat() if request.approvedAt else None,
+                "rejectionReason": request.comments,
+                "notes": request.comments,
+                "createdBy": "",  # Not stored in DB
+                "createdAt": request.createdAt.isoformat(),
+                "updatedAt": request.updatedAt.isoformat()
+            }
+            pydantic_requests.append(LeaveRequest(**response_data))
+        
         return HRMLeaveRequestsResponse(
-            leaveRequests=leave_requests,
+            leaveRequests=pydantic_requests,
             pagination={
                 "page": page,
                 "limit": limit,
@@ -918,20 +1023,50 @@ async def create_hrm_leave_request(
 ):
     """Create a new leave request"""
     try:
-        leave_request = LeaveRequest(
-            id=str(uuid.uuid4()),
-            **leave_request_data.dict(),
-            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
-            createdBy=str(current_user.id),
-            createdAt=datetime.now(),
-            updatedAt=datetime.now()
-        )
+        # Map frontend fields to database fields
+        db_data = {
+            "id": str(uuid.uuid4()),
+            "tenant_id": tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            "employeeId": leave_request_data.employeeId,
+            "leaveType": leave_request_data.leaveType,
+            "startDate": datetime.fromisoformat(leave_request_data.startDate).date() if leave_request_data.startDate else None,
+            "endDate": datetime.fromisoformat(leave_request_data.endDate).date() if leave_request_data.endDate else None,
+            "days": int(leave_request_data.totalDays) if leave_request_data.totalDays else 1,
+            "reason": leave_request_data.reason,
+            "status": leave_request_data.status,
+            "approvedBy": leave_request_data.approvedBy,
+            "approvedAt": datetime.fromisoformat(leave_request_data.approvedAt) if leave_request_data.approvedAt else None,
+            "comments": leave_request_data.rejectionReason or leave_request_data.notes,
+            "createdAt": datetime.utcnow(),
+            "updatedAt": datetime.utcnow()
+        }
+        
+        leave_request = LeaveRequest(**db_data)
         
         db.add(leave_request)
         db.commit()
         db.refresh(leave_request)
         
-        return leave_request
+        # Convert to response format
+        response_data = {
+            "id": str(leave_request.id),
+            "tenant_id": str(leave_request.tenant_id),
+            "employeeId": str(leave_request.employeeId),
+            "leaveType": leave_request.leaveType,
+            "startDate": leave_request.startDate.isoformat() if leave_request.startDate else "",
+            "endDate": leave_request.endDate.isoformat() if leave_request.endDate else "",
+            "totalDays": float(leave_request.days),
+            "reason": leave_request.reason,
+            "status": leave_request.status,
+            "approvedBy": str(leave_request.approvedBy) if leave_request.approvedBy else None,
+            "approvedAt": leave_request.approvedAt.isoformat() if leave_request.approvedAt else None,
+            "rejectionReason": leave_request.comments,
+            "notes": leave_request.comments,
+            "createdBy": "",  # Not stored in DB
+            "createdAt": leave_request.createdAt.isoformat(),
+            "updatedAt": leave_request.updatedAt.isoformat()
+        }
+        return LeaveRequest(**response_data)
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error creating leave request: {str(e)}")
@@ -948,7 +1083,27 @@ async def get_hrm_leave_request(
         leave_request = get_leave_request_by_id(db, leave_request_id, tenant_context["tenant_id"] if tenant_context else None)
         if not leave_request:
             raise HTTPException(status_code=404, detail="Leave request not found")
-        return leave_request
+        
+        # Convert to Pydantic model
+        response_data = {
+            "id": str(leave_request.id),
+            "tenant_id": str(leave_request.tenant_id),
+            "employeeId": str(leave_request.employeeId),
+            "leaveType": leave_request.leaveType,
+            "startDate": leave_request.startDate.isoformat() if leave_request.startDate else "",
+            "endDate": leave_request.endDate.isoformat() if leave_request.endDate else "",
+            "totalDays": float(leave_request.days),
+            "reason": leave_request.reason,
+            "status": leave_request.status,
+            "approvedBy": str(leave_request.approvedBy) if leave_request.approvedBy else None,
+            "approvedAt": leave_request.approvedAt.isoformat() if leave_request.approvedAt else None,
+            "rejectionReason": leave_request.comments,
+            "notes": leave_request.comments,
+            "createdBy": "",  # Not stored in DB
+            "createdAt": leave_request.createdAt.isoformat(),
+            "updatedAt": leave_request.updatedAt.isoformat()
+        }
+        return LeaveRequest(**response_data)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching leave request: {str(e)}")
 
@@ -962,15 +1117,53 @@ async def update_hrm_leave_request(
 ):
     """Update a leave request"""
     try:
+        # Map frontend fields to database fields
+        update_data = leave_request_update.dict(exclude_unset=True)
+        db_update_data = {}
+        
+        for key, value in update_data.items():
+            if key == 'totalDays':
+                db_update_data['days'] = int(value) if value else 1
+            elif key == 'rejectionReason' or key == 'notes':
+                db_update_data['comments'] = value
+            elif key == 'startDate' and value:
+                db_update_data['startDate'] = datetime.fromisoformat(value).date()
+            elif key == 'endDate' and value:
+                db_update_data['endDate'] = datetime.fromisoformat(value).date()
+            elif key == 'approvedAt' and value:
+                db_update_data['approvedAt'] = datetime.fromisoformat(value)
+            else:
+                db_update_data[key] = value
+        
         updated_request = update_leave_request(
-            db, 
-            leave_request_id, 
-            leave_request_update.dict(exclude_unset=True),
+            leave_request_id,
+            db_update_data,
+            db,
             tenant_context["tenant_id"] if tenant_context else None
         )
         if not updated_request:
             raise HTTPException(status_code=404, detail="Leave request not found")
-        return updated_request
+        
+        # Convert to Pydantic model
+        response_data = {
+            "id": str(updated_request.id),
+            "tenant_id": str(updated_request.tenant_id),
+            "employeeId": str(updated_request.employeeId),
+            "leaveType": updated_request.leaveType,
+            "startDate": updated_request.startDate.isoformat() if updated_request.startDate else "",
+            "endDate": updated_request.endDate.isoformat() if updated_request.endDate else "",
+            "totalDays": float(updated_request.days),
+            "reason": updated_request.reason,
+            "status": updated_request.status,
+            "approvedBy": str(updated_request.approvedBy) if updated_request.approvedBy else None,
+            "approvedAt": updated_request.approvedAt.isoformat() if updated_request.approvedAt else None,
+            "rejectionReason": updated_request.comments,
+            "notes": updated_request.comments,
+            "createdBy": "",  # Not stored in DB
+            "createdAt": updated_request.createdAt.isoformat(),
+            "updatedAt": updated_request.updatedAt.isoformat()
+        }
+        return LeaveRequest(**response_data)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating leave request: {str(e)}")
 
@@ -983,7 +1176,7 @@ async def delete_hrm_leave_request(
 ):
     """Delete a leave request"""
     try:
-        deleted = delete_leave_request(db, leave_request_id, tenant_context["tenant_id"] if tenant_context else None)
+        deleted = delete_leave_request(leave_request_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not deleted:
             raise HTTPException(status_code=404, detail="Leave request not found")
         return {"message": "Leave request deleted successfully"}
@@ -1028,8 +1221,33 @@ async def get_hrm_payroll(
         # Get total count for pagination
         total = len(payroll_records)
         
+        # Convert SQLAlchemy models to Pydantic models
+        pydantic_payrolls = []
+        for payroll in payroll_records:
+            response_data = {
+                "id": str(payroll.id),
+                "tenant_id": str(payroll.tenant_id),
+                "employeeId": str(payroll.employeeId),
+                "payPeriod": payroll.payPeriod,
+                "startDate": payroll.startDate.isoformat() if payroll.startDate else "",
+                "endDate": payroll.endDate.isoformat() if payroll.endDate else "",
+                "basicSalary": float(payroll.baseSalary),
+                "allowances": 0.0,  # Not stored in DB
+                "deductions": float(payroll.deductions),
+                "overtimePay": float(payroll.overtimeHours * payroll.overtimeRate),
+                "bonus": float(payroll.bonuses),
+                "netPay": float(payroll.netPay),
+                "status": "processed" if payroll.isProcessed else "draft",
+                "paymentDate": payroll.processedAt.isoformat() if payroll.processedAt else None,
+                "notes": "",  # Not stored in DB
+                "createdBy": "",  # Not stored in DB
+                "createdAt": payroll.createdAt.isoformat(),
+                "updatedAt": payroll.updatedAt.isoformat()
+            }
+            pydantic_payrolls.append(Payroll(**response_data))
+        
         return HRMPayrollResponse(
-            payroll=payroll_records,
+            payroll=pydantic_payrolls,
             pagination={
                 "page": page,
                 "limit": limit,
@@ -1049,20 +1267,54 @@ async def create_hrm_payroll(
 ):
     """Create a new payroll record"""
     try:
-        payroll = Payroll(
-            id=str(uuid.uuid4()),
-            **payroll_data.dict(),
-            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
-            createdBy=str(current_user.id),
-            createdAt=datetime.now(),
-            updatedAt=datetime.now()
-        )
+        # Map frontend fields to database fields
+        db_data = {
+            "id": str(uuid.uuid4()),
+            "tenant_id": tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            "employeeId": payroll_data.employeeId,
+            "payPeriod": payroll_data.payPeriod,
+            "startDate": datetime.fromisoformat(payroll_data.startDate).date() if payroll_data.startDate else None,
+            "endDate": datetime.fromisoformat(payroll_data.endDate).date() if payroll_data.endDate else None,
+            "baseSalary": payroll_data.basicSalary,
+            "overtimeHours": 0.0,  # Not provided in frontend
+            "overtimeRate": 0.0,   # Not provided in frontend
+            "bonuses": payroll_data.bonus,
+            "deductions": payroll_data.deductions,
+            "netPay": payroll_data.netPay,
+            "isProcessed": payroll_data.status == "processed",
+            "processedAt": datetime.utcnow() if payroll_data.status == "processed" else None,
+            "createdAt": datetime.utcnow(),
+            "updatedAt": datetime.utcnow()
+        }
+        
+        payroll = Payroll(**db_data)
         
         db.add(payroll)
         db.commit()
         db.refresh(payroll)
         
-        return payroll
+        # Convert to response format
+        response_data = {
+            "id": str(payroll.id),
+            "tenant_id": str(payroll.tenant_id),
+            "employeeId": str(payroll.employeeId),
+            "payPeriod": payroll.payPeriod,
+            "startDate": payroll.startDate.isoformat() if payroll.startDate else "",
+            "endDate": payroll.endDate.isoformat() if payroll.endDate else "",
+            "basicSalary": float(payroll.baseSalary),
+            "allowances": 0.0,  # Not stored in DB
+            "deductions": float(payroll.deductions),
+            "overtimePay": float(payroll.overtimeHours * payroll.overtimeRate),
+            "bonus": float(payroll.bonuses),
+            "netPay": float(payroll.netPay),
+            "status": "processed" if payroll.isProcessed else "draft",
+            "paymentDate": payroll.processedAt.isoformat() if payroll.processedAt else None,
+            "notes": "",  # Not stored in DB
+            "createdBy": "",  # Not stored in DB
+            "createdAt": payroll.createdAt.isoformat(),
+            "updatedAt": payroll.updatedAt.isoformat()
+        }
+        return Payroll(**response_data)
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error creating payroll record: {str(e)}")
@@ -1079,7 +1331,29 @@ async def get_hrm_payroll(
         payroll = get_payroll_by_id(db, payroll_id, tenant_context["tenant_id"] if tenant_context else None)
         if not payroll:
             raise HTTPException(status_code=404, detail="Payroll record not found")
-        return payroll
+        
+        # Convert to Pydantic model
+        response_data = {
+            "id": str(payroll.id),
+            "tenant_id": str(payroll.tenant_id),
+            "employeeId": str(payroll.employeeId),
+            "payPeriod": payroll.payPeriod,
+            "startDate": payroll.startDate.isoformat() if payroll.startDate else "",
+            "endDate": payroll.endDate.isoformat() if payroll.endDate else "",
+            "basicSalary": float(payroll.baseSalary),
+            "allowances": 0.0,  # Not stored in DB
+            "deductions": float(payroll.deductions),
+            "overtimePay": float(payroll.overtimeHours * payroll.overtimeRate),
+            "bonus": float(payroll.bonuses),
+            "netPay": float(payroll.netPay),
+            "status": "processed" if payroll.isProcessed else "draft",
+            "paymentDate": payroll.processedAt.isoformat() if payroll.processedAt else None,
+            "notes": "",  # Not stored in DB
+            "createdBy": "",  # Not stored in DB
+            "createdAt": payroll.createdAt.isoformat(),
+            "updatedAt": payroll.updatedAt.isoformat()
+        }
+        return Payroll(**response_data)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching payroll record: {str(e)}")
 
@@ -1233,8 +1507,33 @@ async def get_hrm_training(
         # Get total count for pagination
         total = len(training_programs)
         
+        # Convert SQLAlchemy models to Pydantic models
+        pydantic_trainings = []
+        for training in training_programs:
+            response_data = {
+                "id": str(training.id),
+                "tenant_id": str(training.tenant_id),
+                "title": training.title,
+                "description": training.description,
+                "trainingType": training.trainingType,
+                "duration": training.duration,
+                "cost": float(training.cost),
+                "provider": training.provider,
+                "startDate": training.startDate.isoformat() if training.startDate else "",
+                "endDate": training.endDate.isoformat() if training.endDate else "",
+                "maxParticipants": training.maxParticipants,
+                "status": training.status,
+                "materials": training.materials or [],
+                "objectives": training.objectives or [],
+                "prerequisites": training.prerequisites or [],
+                "createdBy": str(training.createdBy),
+                "createdAt": training.createdAt.isoformat(),
+                "updatedAt": training.updatedAt.isoformat()
+            }
+            pydantic_trainings.append(Training(**response_data))
+        
         return HRMTrainingResponse(
-            training=training_programs,
+            training=pydantic_trainings,
             pagination={
                 "page": page,
                 "limit": limit,
@@ -1254,20 +1553,56 @@ async def create_hrm_training(
 ):
     """Create a new training program"""
     try:
-        training = Training(
-            id=str(uuid.uuid4()),
-            **training_data.dict(),
-            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
-            createdBy=str(current_user.id),
-            createdAt=datetime.now(),
-            updatedAt=datetime.now()
-        )
+        # Map frontend fields to database fields
+        db_data = {
+            "id": str(uuid.uuid4()),
+            "tenant_id": tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            "title": training_data.title,
+            "description": training_data.description,
+            "trainingType": training_data.trainingType,
+            "duration": training_data.duration,
+            "cost": training_data.cost,
+            "provider": training_data.provider,
+            "startDate": datetime.fromisoformat(training_data.startDate) if training_data.startDate else None,
+            "endDate": datetime.fromisoformat(training_data.endDate) if training_data.endDate else None,
+            "maxParticipants": training_data.maxParticipants,
+            "status": training_data.status,
+            "materials": training_data.materials or [],
+            "objectives": training_data.objectives or [],
+            "prerequisites": training_data.prerequisites or [],
+            "createdBy": str(current_user.id),
+            "createdAt": datetime.utcnow(),
+            "updatedAt": datetime.utcnow()
+        }
+        
+        training = Training(**db_data)
         
         db.add(training)
         db.commit()
         db.refresh(training)
         
-        return training
+        # Convert to response format
+        response_data = {
+            "id": str(training.id),
+            "tenant_id": str(training.tenant_id),
+            "title": training.title,
+            "description": training.description,
+            "trainingType": training.trainingType,
+            "duration": training.duration,
+            "cost": float(training.cost),
+            "provider": training.provider,
+            "startDate": training.startDate.isoformat() if training.startDate else "",
+            "endDate": training.endDate.isoformat() if training.endDate else "",
+            "maxParticipants": training.maxParticipants,
+            "status": training.status,
+            "materials": training.materials or [],
+            "objectives": training.objectives or [],
+            "prerequisites": training.prerequisites or [],
+            "createdBy": str(training.createdBy),
+            "createdAt": training.createdAt.isoformat(),
+            "updatedAt": training.updatedAt.isoformat()
+        }
+        return Training(**response_data)
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error creating training program: {str(e)}")
@@ -1284,7 +1619,29 @@ async def get_hrm_training(
         training = get_training_by_id(db, training_id, tenant_context["tenant_id"] if tenant_context else None)
         if not training:
             raise HTTPException(status_code=404, detail="Training program not found")
-        return training
+        
+        # Convert to Pydantic model
+        response_data = {
+            "id": str(training.id),
+            "tenant_id": str(training.tenant_id),
+            "title": training.title,
+            "description": training.description,
+            "trainingType": training.trainingType,
+            "duration": training.duration,
+            "cost": float(training.cost),
+            "provider": training.provider,
+            "startDate": training.startDate.isoformat() if training.startDate else "",
+            "endDate": training.endDate.isoformat() if training.endDate else "",
+            "maxParticipants": training.maxParticipants,
+            "status": training.status,
+            "materials": training.materials or [],
+            "objectives": training.objectives or [],
+            "prerequisites": training.prerequisites or [],
+            "createdBy": str(training.createdBy),
+            "createdAt": training.createdAt.isoformat(),
+            "updatedAt": training.updatedAt.isoformat()
+        }
+        return Training(**response_data)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching training program: {str(e)}")
 

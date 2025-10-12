@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import and_, func, desc
 from typing import List, Optional
 from datetime import datetime
 import uuid
@@ -12,6 +13,7 @@ from ...models.unified_models import (
     Warehouse, WarehouseCreate, WarehouseUpdate, WarehouseResponse, WarehousesResponse,
     StorageLocation, StorageLocationCreate, StorageLocationUpdate, StorageLocationResponse, StorageLocationsResponse,
     StockMovement, StockMovementCreate, StockMovementUpdate, StockMovementResponse, StockMovementsResponse,
+    StockMovementWithProduct, StockMovementsWithProductResponse,
     PurchaseOrder, PurchaseOrderCreate, PurchaseOrderUpdate, PurchaseOrderResponse, PurchaseOrdersResponse,
     Receiving, ReceivingCreate, ReceivingUpdate, ReceivingResponse, ReceivingsResponse,
     InventoryDashboardStats, StockAlert
@@ -26,6 +28,75 @@ from ...config.database import (
 )
 
 router = APIRouter(prefix="/inventory", tags=["Inventory Management"])
+
+def generate_purchase_order_number(tenant_id: str, db: Session) -> str:
+    """Generate unique purchase order number with proper race condition handling"""
+    year = datetime.now().year
+    month = datetime.now().month
+    
+    # Use a retry mechanism to handle race conditions
+    max_retries = 10
+    for attempt in range(max_retries):
+        # Get the highest purchase order number for this month
+        highest_po = db.query(PurchaseOrder).filter(
+            and_(
+                PurchaseOrder.tenant_id == tenant_id,
+                func.extract('year', PurchaseOrder.createdAt) == year,
+                func.extract('month', PurchaseOrder.createdAt) == month
+            )
+        ).order_by(desc(PurchaseOrder.poNumber)).first()
+        
+        if highest_po:
+            # Extract the number from the highest purchase order
+            try:
+                # Parse the existing purchase order number format: PO-YYYYMM-XXXX
+                parts = highest_po.poNumber.split('-')
+                if len(parts) == 3:
+                    last_number = int(parts[2])
+                    new_number = last_number + 1
+                else:
+                    # Fallback: count all purchase orders for this month
+                    count = db.query(PurchaseOrder).filter(
+                        and_(
+                            PurchaseOrder.tenant_id == tenant_id,
+                            func.extract('year', PurchaseOrder.createdAt) == year,
+                            func.extract('month', PurchaseOrder.createdAt) == month
+                        )
+                    ).count()
+                    new_number = count + 1
+            except (ValueError, IndexError):
+                # Fallback: count all purchase orders for this month
+                count = db.query(PurchaseOrder).filter(
+                    and_(
+                        PurchaseOrder.tenant_id == tenant_id,
+                        func.extract('year', PurchaseOrder.createdAt) == year,
+                        func.extract('month', PurchaseOrder.createdAt) == month
+                    )
+                ).count()
+                new_number = count + 1
+        else:
+            # First purchase order for this month
+            new_number = 1
+        
+        # Format the purchase order number: PO-YYYYMM-XXXX
+        po_number = f"PO-{year:04d}{month:02d}-{new_number:04d}"
+        
+        # Check if this number already exists (race condition check)
+        existing_po = db.query(PurchaseOrder).filter(
+            PurchaseOrder.poNumber == po_number
+        ).first()
+        
+        if not existing_po:
+            return po_number
+        
+        # If we get here, there was a race condition, retry
+        if attempt == max_retries - 1:
+            raise HTTPException(
+                status_code=500,
+                detail="Unable to generate unique purchase order number after multiple attempts"
+            )
+    
+    return po_number
 
 
 
@@ -346,48 +417,6 @@ def read_stock_movements(
     return StockMovementsResponse(stockMovements=response_movements, total=total)
 
 # Customer Returns Endpoints
-@router.get("/customer-returns", response_model=StockMovementsResponse)
-def get_customer_returns(
-    warehouse_id: Optional[str] = Query(None),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=1000),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
-):
-    """Get all customer returns for the current tenant"""
-    movements = get_stock_movements(db, str(tenant_context["tenant_id"]), None, warehouse_id, skip, limit)
-    
-    # Filter only customer return movements
-    customer_returns = [movement for movement in movements if movement.referenceType == "customer_return"]
-    
-    # Convert each movement to response format (convert UUIDs to strings)
-    response_movements = []
-    for movement in customer_returns:
-        response_data = {
-            "id": str(movement.id),
-            "tenant_id": str(movement.tenant_id),
-            "productId": movement.productId,
-            "warehouseId": str(movement.warehouseId),
-            "locationId": movement.locationId,
-            "movementType": movement.movementType,
-            "quantity": movement.quantity,
-            "unitCost": movement.unitCost,
-            "referenceNumber": movement.referenceNumber,
-            "referenceType": movement.referenceType,
-            "notes": movement.notes,
-            "batchNumber": movement.batchNumber,
-            "serialNumber": movement.serialNumber,
-            "expiryDate": movement.expiryDate.isoformat() if movement.expiryDate else None,
-            "status": movement.status,
-            "createdBy": str(movement.createdBy),
-            "createdAt": movement.createdAt,
-            "updatedAt": movement.updatedAt
-        }
-        response_movements.append(response_data)
-    
-    total = len(response_movements)
-    return StockMovementsResponse(stockMovements=response_movements, total=total)
 
 @router.post("/customer-returns", response_model=StockMovementResponse)
 def create_customer_return(
@@ -518,6 +547,9 @@ def update_stock_movement_endpoint(
     movement_update = movement.dict(exclude_unset=True)
     movement_update["updatedAt"] = datetime.utcnow()
     
+    if "expiryDate" in movement_update and movement_update["expiryDate"] == "":
+        movement_update["expiryDate"] = None
+    
     db_movement = update_stock_movement(movement_id, movement_update, db, str(tenant_context["tenant_id"]))
     if not db_movement:
         raise HTTPException(status_code=404, detail="Stock movement not found")
@@ -619,6 +651,7 @@ def read_purchase_order(
         "id": str(order.id),
         "tenant_id": str(order.tenant_id),
         "orderNumber": order.poNumber,
+        "batchNumber": order.batchNumber,
         "supplierId": str(order.supplierId),
         "supplierName": "",  # Not stored in DB, will be empty
         "warehouseId": str(order.warehouseId),
@@ -646,10 +679,17 @@ def create_purchase_order_endpoint(
     # Calculate total amount from items
     total_amount = sum(item.totalCost for item in order.items)
     
+    # Generate purchase order number if not provided
+    if not order.orderNumber:
+        order_number = generate_purchase_order_number(str(tenant_context["tenant_id"]), db)
+    else:
+        order_number = order.orderNumber
+    
     order_data = order.dict()
-    order_data["poNumber"] = order_data.pop("orderNumber")
+    order_data["poNumber"] = order_number
     # Remove fields that don't exist in SQLAlchemy model
     order_data.pop("supplierName", None)
+    order_data.pop("orderNumber", None)
     # Keep items - they are stored as JSON in the database
     
     # Convert date strings to date objects
@@ -675,6 +715,7 @@ def create_purchase_order_endpoint(
         "id": str(db_order.id),
         "tenant_id": str(db_order.tenant_id),
         "orderNumber": db_order.poNumber,
+        "batchNumber": db_order.batchNumber,
         "supplierId": str(db_order.supplierId),
         "supplierName": "",  # Not stored in DB, will be empty
         "warehouseId": str(db_order.warehouseId),
@@ -724,6 +765,7 @@ def update_purchase_order_endpoint(
         "id": str(db_order.id),
         "tenant_id": str(db_order.tenant_id),
         "orderNumber": db_order.poNumber,
+        "batchNumber": db_order.batchNumber,
         "supplierId": str(db_order.supplierId),
         "supplierName": "",  # Not stored in DB, will be empty
         "warehouseId": str(db_order.warehouseId),
@@ -906,7 +948,7 @@ def get_inventory_dashboard(
     return get_inventory_dashboard_stats(db, str(tenant_context["tenant_id"]))
 
 # Dumps Endpoints
-@router.get("/dumps", response_model=StockMovementsResponse)
+@router.get("/dumps", response_model=StockMovementsWithProductResponse)
 def get_dumps(
     warehouse_id: Optional[str] = Query(None),
     skip: int = Query(0, ge=0),
@@ -916,18 +958,63 @@ def get_dumps(
     tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get all damaged items (dumps) for the current tenant"""
-    movements = get_stock_movements(db, str(tenant_context["tenant_id"]), None, warehouse_id, skip, limit)
+    from sqlalchemy.orm import joinedload
     
-    # Filter only DAMAGE type movements
-    damage_movements = [movement for movement in movements if movement.movementType == "damage"]
+    # Query stock movements with product information
+    from ...config.inventory_models import StockMovement, Product
+    query = db.query(StockMovement).filter(
+        StockMovement.tenant_id == tenant_context["tenant_id"],
+        StockMovement.movementType == "damage"
+    )
     
-    # Convert each movement to response format (convert UUIDs to strings)
+    if warehouse_id:
+        query = query.filter(StockMovement.warehouseId == warehouse_id)
+    
+    movements = query.order_by(StockMovement.createdAt.desc()).offset(skip).limit(limit).all()
+    
+    # Convert each movement to response format with product details
     response_movements = []
-    for movement in damage_movements:
+    for movement in movements:
+        # Get product details - convert string productId to UUID for comparison
+        product = None
+        try:
+            from uuid import UUID
+            product_uuid = UUID(movement.productId)
+            
+            # First try with the movement's tenant_id (more reliable)
+            product = db.query(Product).filter(
+                Product.id == product_uuid,
+                Product.tenant_id == movement.tenant_id
+            ).first()
+            
+            # If not found, try with the context tenant_id
+            if not product:
+                product = db.query(Product).filter(
+                    Product.id == product_uuid,
+                    Product.tenant_id == tenant_context["tenant_id"]
+                ).first()
+                    
+        except (ValueError, TypeError):
+            # If productId is not a valid UUID, try to find by SKU
+            product = db.query(Product).filter(
+                Product.sku == movement.productId,
+                Product.tenant_id == movement.tenant_id
+            ).first()
+            
+            # If not found, try with context tenant_id
+            if not product:
+                product = db.query(Product).filter(
+                    Product.sku == movement.productId,
+                    Product.tenant_id == tenant_context["tenant_id"]
+                ).first()
+        
         response_data = {
             "id": str(movement.id),
             "tenant_id": str(movement.tenant_id),
             "productId": movement.productId,
+            "productName": product.name if product else "Unknown Product",
+            "productSku": product.sku if product else "N/A",
+            "productCategory": product.category if product else "N/A",
             "warehouseId": str(movement.warehouseId),
             "locationId": movement.locationId,
             "movementType": movement.movementType,
@@ -944,13 +1031,14 @@ def get_dumps(
             "createdAt": movement.createdAt,
             "updatedAt": movement.updatedAt
         }
+        
         response_movements.append(response_data)
     
     total = len(response_movements)
-    return StockMovementsResponse(stockMovements=response_movements, total=total)
+    return StockMovementsWithProductResponse(stockMovements=response_movements, total=total)
 
 # Customer Returns Endpoints
-@router.get("/customer-returns", response_model=StockMovementsResponse)
+@router.get("/customer-returns", response_model=StockMovementsWithProductResponse)
 def get_customer_returns(
     warehouse_id: Optional[str] = Query(None),
     skip: int = Query(0, ge=0),
@@ -960,18 +1048,61 @@ def get_customer_returns(
     tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get all customer returns for the current tenant"""
-    movements = get_stock_movements(db, str(tenant_context["tenant_id"]), None, warehouse_id, skip, limit)
+    from ...config.inventory_models import StockMovement, Product
     
-    # Filter only customer return movements
-    customer_returns = [movement for movement in movements if movement.referenceType == "customer_return"]
+    query = db.query(StockMovement).filter(
+        StockMovement.tenant_id == tenant_context["tenant_id"],
+        StockMovement.referenceType == "customer_return"
+    )
     
-    # Convert each movement to response format (convert UUIDs to strings)
+    if warehouse_id:
+        query = query.filter(StockMovement.warehouseId == warehouse_id)
+    
+    movements = query.order_by(StockMovement.createdAt.desc()).offset(skip).limit(limit).all()
+    
+    # Convert each movement to response format with product details
     response_movements = []
-    for movement in customer_returns:
+    for movement in movements:
+        # Get product details - convert string productId to UUID for comparison
+        product = None
+        try:
+            from uuid import UUID
+            product_uuid = UUID(movement.productId)
+            
+            # First try with the movement's tenant_id (more reliable)
+            product = db.query(Product).filter(
+                Product.id == product_uuid,
+                Product.tenant_id == movement.tenant_id
+            ).first()
+            
+            # If not found, try with the context tenant_id
+            if not product:
+                product = db.query(Product).filter(
+                    Product.id == product_uuid,
+                    Product.tenant_id == tenant_context["tenant_id"]
+                ).first()
+                    
+        except (ValueError, TypeError):
+            # If productId is not a valid UUID, try to find by SKU
+            product = db.query(Product).filter(
+                Product.sku == movement.productId,
+                Product.tenant_id == movement.tenant_id
+            ).first()
+            
+            # If not found, try with context tenant_id
+            if not product:
+                product = db.query(Product).filter(
+                    Product.sku == movement.productId,
+                    Product.tenant_id == tenant_context["tenant_id"]
+                ).first()
+        
         response_data = {
             "id": str(movement.id),
             "tenant_id": str(movement.tenant_id),
             "productId": movement.productId,
+            "productName": product.name if product else "Unknown Product",
+            "productSku": product.sku if product else "N/A",
+            "productCategory": product.category if product else "N/A",
             "warehouseId": str(movement.warehouseId),
             "locationId": movement.locationId,
             "movementType": movement.movementType,
@@ -991,7 +1122,7 @@ def get_customer_returns(
         response_movements.append(response_data)
     
     total = len(response_movements)
-    return StockMovementsResponse(stockMovements=response_movements, total=total)
+    return StockMovementsWithProductResponse(stockMovements=response_movements, total=total)
 
 @router.post("/customer-returns", response_model=StockMovementResponse)
 def create_customer_return(
@@ -1024,7 +1155,7 @@ def create_customer_return(
     return StockMovementResponse(stockMovement=movement)
 
 # Supplier Returns Endpoints
-@router.get("/supplier-returns", response_model=StockMovementsResponse)
+@router.get("/supplier-returns", response_model=StockMovementsWithProductResponse)
 def get_supplier_returns(
     warehouse_id: Optional[str] = Query(None),
     skip: int = Query(0, ge=0),
@@ -1034,18 +1165,61 @@ def get_supplier_returns(
     tenant_context: dict = Depends(get_tenant_context)
 ):
     """Get all supplier returns for the current tenant"""
-    movements = get_stock_movements(db, str(tenant_context["tenant_id"]), None, warehouse_id, skip, limit)
+    from ...config.inventory_models import StockMovement, Product
     
-    # Filter only supplier return movements
-    supplier_returns = [movement for movement in movements if movement.referenceType == "supplier_return"]
+    query = db.query(StockMovement).filter(
+        StockMovement.tenant_id == tenant_context["tenant_id"],
+        StockMovement.referenceType == "supplier_return"
+    )
     
-    # Convert each movement to response format (convert UUIDs to strings)
+    if warehouse_id:
+        query = query.filter(StockMovement.warehouseId == warehouse_id)
+    
+    movements = query.order_by(StockMovement.createdAt.desc()).offset(skip).limit(limit).all()
+    
+    # Convert each movement to response format with product details
     response_movements = []
-    for movement in supplier_returns:
+    for movement in movements:
+        # Get product details - convert string productId to UUID for comparison
+        product = None
+        try:
+            from uuid import UUID
+            product_uuid = UUID(movement.productId)
+            
+            # First try with the movement's tenant_id (more reliable)
+            product = db.query(Product).filter(
+                Product.id == product_uuid,
+                Product.tenant_id == movement.tenant_id
+            ).first()
+            
+            # If not found, try with the context tenant_id
+            if not product:
+                product = db.query(Product).filter(
+                    Product.id == product_uuid,
+                    Product.tenant_id == tenant_context["tenant_id"]
+                ).first()
+                    
+        except (ValueError, TypeError):
+            # If productId is not a valid UUID, try to find by SKU
+            product = db.query(Product).filter(
+                Product.sku == movement.productId,
+                Product.tenant_id == movement.tenant_id
+            ).first()
+            
+            # If not found, try with context tenant_id
+            if not product:
+                product = db.query(Product).filter(
+                    Product.sku == movement.productId,
+                    Product.tenant_id == tenant_context["tenant_id"]
+                ).first()
+        
         response_data = {
             "id": str(movement.id),
             "tenant_id": str(movement.tenant_id),
             "productId": movement.productId,
+            "productName": product.name if product else "Unknown Product",
+            "productSku": product.sku if product else "N/A",
+            "productCategory": product.category if product else "N/A",
             "warehouseId": str(movement.warehouseId),
             "locationId": movement.locationId,
             "movementType": movement.movementType,
@@ -1065,7 +1239,7 @@ def get_supplier_returns(
         response_movements.append(response_data)
     
     total = len(response_movements)
-    return StockMovementsResponse(stockMovements=response_movements, total=total)
+    return StockMovementsWithProductResponse(stockMovements=response_movements, total=total)
 
 @router.post("/supplier-returns", response_model=StockMovementResponse)
 def create_supplier_return(

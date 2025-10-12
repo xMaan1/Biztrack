@@ -7,6 +7,7 @@ export enum StockMovementType {
   DAMAGE = 'damage',
   EXPIRY = 'expiry',
   CYCLE_COUNT = 'cycle_count',
+  INSTOCK = 'instock',
 }
 
 export enum StockMovementStatus {
@@ -22,6 +23,9 @@ export interface StockMovement {
   tenantId: string;
   createdBy: string;
   productId: string;
+  productName?: string;
+  productSku?: string;
+  productCategory?: string;
   warehouseId: string;
   locationId?: string;
   movementType: StockMovementType;

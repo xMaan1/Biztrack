@@ -8,11 +8,11 @@ from ...config.database import (
     get_user_by_id, create_user, get_all_users
 )
 from ...core.auth import get_password_hash
-from ...api.dependencies import get_current_user, get_tenant_context, require_super_admin
+from ...api.dependencies import get_current_user, get_tenant_context, require_super_admin, require_tenant_admin_or_super_admin
 
 router = APIRouter(prefix="/users", tags=["users"])
 
-@router.get("", response_model=UsersResponse, dependencies=[Depends(require_super_admin)])
+@router.get("", response_model=UsersResponse, dependencies=[Depends(require_tenant_admin_or_super_admin)])
 async def get_users(
     db: Session = Depends(get_db),
     tenant_context: Optional[dict] = Depends(get_tenant_context)
@@ -35,7 +35,7 @@ async def get_users(
     
     return UsersResponse(users=user_list)
 
-@router.get("/{user_id}", response_model=User, dependencies=[Depends(require_super_admin)])
+@router.get("/{user_id}", response_model=User, dependencies=[Depends(require_tenant_admin_or_super_admin)])
 async def get_user(
     user_id: str, 
     db: Session = Depends(get_db),

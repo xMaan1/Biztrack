@@ -764,21 +764,27 @@ export default function HRMPerformanceReviewsPage() {
               </div>
               <div>
                 <Label htmlFor="overallRating">Overall Rating (0-5) *</Label>
-                <Input
-                  id="overallRating"
-                  type="number"
-                  min="0"
-                  max="5"
-                  step="0.1"
-                  value={formData.overallRating}
-                  onChange={(e) =>
+                <Select
+                  value={formData.overallRating?.toString() || '0'}
+                  onValueChange={(value) =>
                     setFormData((prev) => ({
                       ...prev,
-                      overallRating: parseFloat(e.target.value) || 0,
+                      overallRating: parseFloat(value),
                     }))
                   }
-                  placeholder="4.5"
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select rating" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">0 - Poor</SelectItem>
+                    <SelectItem value="1">1 - Below Average</SelectItem>
+                    <SelectItem value="2">2 - Average</SelectItem>
+                    <SelectItem value="3">3 - Good</SelectItem>
+                    <SelectItem value="4">4 - Very Good</SelectItem>
+                    <SelectItem value="5">5 - Excellent</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="col-span-2">
                 <Label htmlFor="goals">Goals & Objectives (one per line)</Label>
@@ -852,79 +858,103 @@ export default function HRMPerformanceReviewsPage() {
               </div>
               <div>
                 <Label htmlFor="technicalRating">Technical Rating (0-5)</Label>
-                <Input
-                  id="technicalRating"
-                  type="number"
-                  min="0"
-                  max="5"
-                  step="0.1"
-                  value={formData.technicalRating}
-                  onChange={(e) =>
+                <Select
+                  value={formData.technicalRating?.toString() || '0'}
+                  onValueChange={(value) =>
                     setFormData((prev) => ({
                       ...prev,
-                      technicalRating: parseFloat(e.target.value) || 0,
+                      technicalRating: parseFloat(value),
                     }))
                   }
-                  placeholder="4.5"
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select rating" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">0 - Poor</SelectItem>
+                    <SelectItem value="1">1 - Below Average</SelectItem>
+                    <SelectItem value="2">2 - Average</SelectItem>
+                    <SelectItem value="3">3 - Good</SelectItem>
+                    <SelectItem value="4">4 - Very Good</SelectItem>
+                    <SelectItem value="5">5 - Excellent</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="communicationRating">
                   Communication Rating (0-5)
                 </Label>
-                <Input
-                  id="communicationRating"
-                  type="number"
-                  min="0"
-                  max="5"
-                  step="0.1"
-                  value={formData.communicationRating}
-                  onChange={(e) =>
+                <Select
+                  value={formData.communicationRating?.toString() || '0'}
+                  onValueChange={(value) =>
                     setFormData((prev) => ({
                       ...prev,
-                      communicationRating: parseFloat(e.target.value) || 0,
+                      communicationRating: parseFloat(value),
                     }))
                   }
-                  placeholder="4.5"
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select rating" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">0 - Poor</SelectItem>
+                    <SelectItem value="1">1 - Below Average</SelectItem>
+                    <SelectItem value="2">2 - Average</SelectItem>
+                    <SelectItem value="3">3 - Good</SelectItem>
+                    <SelectItem value="4">4 - Very Good</SelectItem>
+                    <SelectItem value="5">5 - Excellent</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="teamworkRating">Teamwork Rating (0-5)</Label>
-                <Input
-                  id="teamworkRating"
-                  type="number"
-                  min="0"
-                  max="5"
-                  step="0.1"
-                  value={formData.teamworkRating}
-                  onChange={(e) =>
+                <Select
+                  value={formData.teamworkRating?.toString() || '0'}
+                  onValueChange={(value) =>
                     setFormData((prev) => ({
                       ...prev,
-                      teamworkRating: parseFloat(e.target.value) || 0,
+                      teamworkRating: parseFloat(value),
                     }))
                   }
-                  placeholder="4.5"
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select rating" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">0 - Poor</SelectItem>
+                    <SelectItem value="1">1 - Below Average</SelectItem>
+                    <SelectItem value="2">2 - Average</SelectItem>
+                    <SelectItem value="3">3 - Good</SelectItem>
+                    <SelectItem value="4">4 - Very Good</SelectItem>
+                    <SelectItem value="5">5 - Excellent</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="leadershipRating">
                   Leadership Rating (0-5)
                 </Label>
-                <Input
-                  id="leadershipRating"
-                  type="number"
-                  min="0"
-                  max="5"
-                  step="0.1"
-                  value={formData.leadershipRating}
-                  onChange={(e) =>
+                <Select
+                  value={formData.leadershipRating?.toString() || '0'}
+                  onValueChange={(value) =>
                     setFormData((prev) => ({
                       ...prev,
-                      leadershipRating: parseFloat(e.target.value) || 0,
+                      leadershipRating: parseFloat(value),
                     }))
                   }
-                  placeholder="4.5"
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select rating" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">0 - Poor</SelectItem>
+                    <SelectItem value="1">1 - Below Average</SelectItem>
+                    <SelectItem value="2">2 - Average</SelectItem>
+                    <SelectItem value="3">3 - Good</SelectItem>
+                    <SelectItem value="4">4 - Very Good</SelectItem>
+                    <SelectItem value="5">5 - Excellent</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="nextReviewDate">Next Review Date</Label>

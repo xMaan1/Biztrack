@@ -71,6 +71,7 @@ class PurchaseOrder(Base):
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
     createdBy = Column(String, nullable=False)
     poNumber = Column(String, unique=True, index=True)
+    batchNumber = Column(String, nullable=True)
     supplierId = Column(UUID(as_uuid=True), ForeignKey("suppliers.id"), nullable=False)
     warehouseId = Column(UUID(as_uuid=True), ForeignKey("warehouses.id"), nullable=False)
     orderDate = Column(Date, nullable=False)
@@ -145,7 +146,7 @@ class StockMovement(Base):
     productId = Column(String, nullable=False)
     warehouseId = Column(UUID(as_uuid=True), ForeignKey("warehouses.id"), nullable=False)
     locationId = Column(String, nullable=True)
-    movementType = Column(String, nullable=False)  # inbound, outbound, transfer, adjustment, return, damage, expiry, cycle_count
+    movementType = Column(String, nullable=False)  # inbound, outbound, transfer, adjustment, return, damage, expiry, cycle_count, instock
     quantity = Column(Integer, nullable=False)
     unitCost = Column(Float, nullable=False)
     referenceNumber = Column(String, nullable=True)

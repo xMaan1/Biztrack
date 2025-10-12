@@ -52,12 +52,15 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { inventoryService } from '../../../services/InventoryService';
 import { StockMovement, StockMovementStatus, StockMovementCreate, StockMovementType, Warehouse } from '../../../models/inventory';
 import { DashboardLayout } from '../../../components/layout';
-import { formatCurrency } from '../../../lib/utils';
+import { apiService } from '../../../services/ApiService';
+import { Product } from '../../../models/pos';
 import { Textarea } from '../../../components/ui/textarea';
 import { Label } from '../../../components/ui/label';
+import { useCurrency } from '../../../contexts/CurrencyContext';
 
 export default function DumpsPage() {
   const { } = useAuth();
+  const { formatCurrency } = useCurrency();
   const router = useRouter();
   const [dumps, setDumps] = useState<StockMovement[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,6 +75,7 @@ export default function DumpsPage() {
   const [dumpToDelete, setDumpToDelete] = useState<StockMovement | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editDamage, setEditDamage] = useState<StockMovementCreate>({
     productId: '',
@@ -105,6 +109,7 @@ export default function DumpsPage() {
   useEffect(() => {
     loadDumps();
     loadWarehouses();
+    loadProducts();
   }, [warehouseFilter, statusFilter]);
 
   const loadWarehouses = async () => {
@@ -116,6 +121,15 @@ export default function DumpsPage() {
       }
     } catch (error) {
       console.error('Error loading warehouses:', error);
+    }
+  };
+
+  const loadProducts = async () => {
+    try {
+      const response = await apiService.get('/pos/products');
+      setProducts(response.products || []);
+    } catch (error) {
+      console.error('Error loading products:', error);
     }
   };
 
@@ -134,6 +148,8 @@ export default function DumpsPage() {
 
   const filteredDumps = dumps.filter((dump) => {
     const matchesSearch = 
+      dump.productName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      dump.productSku?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       dump.productId.toLowerCase().includes(searchTerm.toLowerCase()) ||
       dump.notes?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       dump.batchNumber?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -173,7 +189,7 @@ export default function DumpsPage() {
 
   const handleRecordDamage = async () => {
     if (!newDamage.productId || !newDamage.warehouseId || newDamage.quantity <= 0) {
-      alert('Please fill in all required fields (Product ID, Warehouse, and Quantity)');
+      alert('Please fill in all required fields (Product, Warehouse, and Quantity)');
       return;
     }
 
@@ -257,7 +273,7 @@ export default function DumpsPage() {
     if (!selectedDump) return;
     
     if (!editDamage.productId || !editDamage.warehouseId || editDamage.quantity <= 0) {
-      alert('Please fill in all required fields (Product ID, Warehouse, and Quantity)');
+      alert('Please fill in all required fields (Product, Warehouse, and Quantity)');
       return;
     }
 
@@ -458,7 +474,7 @@ export default function DumpsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Product ID</TableHead>
+                  <TableHead>Product</TableHead>
                   <TableHead>Quantity</TableHead>
                   <TableHead>Unit Cost</TableHead>
                   <TableHead>Total Loss</TableHead>
@@ -472,7 +488,15 @@ export default function DumpsPage() {
                 {filteredDumps.map((dump) => (
                   <TableRow key={dump.id}>
                     <TableCell className="font-medium">
-                      {dump.productId}
+                      <div className="flex items-center gap-3">
+                        <Package className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <div className="font-medium">{dump.productName || 'Unknown Product'}</div>
+                          <div className="text-sm text-muted-foreground">
+                            SKU: {dump.productSku || dump.productId}
+                          </div>
+                        </div>
+                      </div>
                     </TableCell>
                     <TableCell>{dump.quantity}</TableCell>
                     <TableCell>{formatCurrency(dump.unitCost)}</TableCell>
@@ -536,8 +560,13 @@ export default function DumpsPage() {
               <div className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <label className="text-sm font-medium">Product ID</label>
-                    <p className="text-sm text-muted-foreground">{selectedDump.productId}</p>
+                    <label className="text-sm font-medium">Product</label>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedDump.productName || 'Unknown Product'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      SKU: {selectedDump.productSku || selectedDump.productId}
+                    </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium">Quantity</label>
@@ -616,13 +645,35 @@ export default function DumpsPage() {
              <div className="space-y-4">
                <div className="grid gap-4 md:grid-cols-2">
                  <div className="space-y-2">
-                   <Label htmlFor="productId">Product ID *</Label>
-                   <Input
-                     id="productId"
-                     placeholder="Enter product ID"
+                   <Label htmlFor="productId">Product *</Label>
+                   <Select
                      value={newDamage.productId}
-                     onChange={(e) => setNewDamage(prev => ({ ...prev, productId: e.target.value }))}
-                   />
+                     onValueChange={(value) => {
+                       const product = products.find((p) => p.id === value);
+                       setNewDamage(prev => ({
+                         ...prev,
+                         productId: value,
+                         unitCost: product?.costPrice || 0,
+                       }));
+                     }}
+                   >
+                     <SelectTrigger>
+                       <SelectValue placeholder="Select product" />
+                     </SelectTrigger>
+                     <SelectContent>
+                       {products.length === 0 ? (
+                         <SelectItem value="no-products" disabled>
+                           No products available
+                         </SelectItem>
+                       ) : (
+                         products.map((product) => (
+                           <SelectItem key={product.id} value={product.id}>
+                             {product.name} ({product.sku})
+                           </SelectItem>
+                         ))
+                       )}
+                     </SelectContent>
+                   </Select>
                  </div>
                  <div className="space-y-2">
                    <Label htmlFor="warehouse">Warehouse *</Label>
@@ -734,13 +785,35 @@ export default function DumpsPage() {
              <div className="space-y-4">
                <div className="grid gap-4 md:grid-cols-2">
                  <div className="space-y-2">
-                   <Label htmlFor="edit-productId">Product ID *</Label>
-                   <Input
-                     id="edit-productId"
-                     placeholder="Enter product ID"
+                   <Label htmlFor="edit-productId">Product *</Label>
+                   <Select
                      value={editDamage.productId}
-                     onChange={(e) => setEditDamage(prev => ({ ...prev, productId: e.target.value }))}
-                   />
+                     onValueChange={(value) => {
+                       const product = products.find((p) => p.id === value);
+                       setEditDamage(prev => ({
+                         ...prev,
+                         productId: value,
+                         unitCost: product?.costPrice || 0,
+                       }));
+                     }}
+                   >
+                     <SelectTrigger>
+                       <SelectValue placeholder="Select product" />
+                     </SelectTrigger>
+                     <SelectContent>
+                       {products.length === 0 ? (
+                         <SelectItem value="no-products" disabled>
+                           No products available
+                         </SelectItem>
+                       ) : (
+                         products.map((product) => (
+                           <SelectItem key={product.id} value={product.id}>
+                             {product.name} ({product.sku})
+                           </SelectItem>
+                         ))
+                       )}
+                     </SelectContent>
+                   </Select>
                  </div>
                  <div className="space-y-2">
                    <Label htmlFor="edit-warehouse">Warehouse *</Label>

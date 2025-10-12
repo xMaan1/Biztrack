@@ -147,7 +147,22 @@ def update_performance_review(review_id: str, update_data: dict, db: Session, te
     if review:
         for key, value in update_data.items():
             if hasattr(review, key) and value is not None:
-                setattr(review, key, value)
+                # Handle special field mappings
+                if key == 'nextReviewDate' and isinstance(value, str):
+                    from datetime import datetime
+                    setattr(review, key, datetime.fromisoformat(value))
+                elif key == 'overallRating':
+                    setattr(review, 'rating', value)
+                elif key == 'achievements':
+                    setattr(review, 'strengths', "\n".join(value) if isinstance(value, list) else value)
+                elif key == 'areasOfImprovement':
+                    setattr(review, 'areasForImprovement', "\n".join(value) if isinstance(value, list) else value)
+                elif key == 'goals':
+                    setattr(review, key, "\n".join(value) if isinstance(value, list) else value)
+                elif key == 'feedback':
+                    setattr(review, 'comments', value)
+                else:
+                    setattr(review, key, value)
         review.updatedAt = datetime.utcnow()
         db.commit()
         db.refresh(review)
