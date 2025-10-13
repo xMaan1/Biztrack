@@ -17,7 +17,6 @@ import {
   TabsTrigger,
 } from '@/src/components/ui/tabs';
 import {
-  BarChart3,
   TrendingUp,
   TrendingDown,
   DollarSign,
@@ -27,7 +26,6 @@ import {
   PieChart,
   Plus,
   Eye,
-  Download,
   X,
 } from 'lucide-react';
 import LedgerService from '@/src/services/ledgerService';
@@ -51,9 +49,8 @@ export default function LedgerDashboard() {
   const { formatCurrency } = useCurrency();
   const { clearCache: clearAllCache } = useCacheManager();
   
-  // Use constants instead of API for chart of accounts
   const chartOfAccounts = DEFAULT_CHART_OF_ACCOUNTS;
-  const accountsLoading = false; // No loading needed for constants
+  const accountsLoading = false;
   
   const { data: recentTransactions, loading: transactionsLoading, refetch: refetchTransactions } = useCachedApi<LedgerTransactionResponse[]>(
     'ledger_recent_transactions',
@@ -90,8 +87,6 @@ export default function LedgerDashboard() {
   const [showNewTransactionModal, setShowNewTransactionModal] = useState(false);
   const [showJournalEntryModal, setShowJournalEntryModal] = useState(false);
   const [showAccountBalanceModal, setShowAccountBalanceModal] = useState(false);
-  const [showFinancialReportModal, setShowFinancialReportModal] =
-    useState(false);
 
   const [transactionForm, setTransactionForm] = useState({
     description: '',
@@ -112,14 +107,8 @@ export default function LedgerDashboard() {
     asOfDate: new Date().toISOString().split('T')[0],
   });
 
-  const [financialReportForm, setFinancialReportForm] = useState({
-    reportType: '',
-    startDate: new Date().toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0],
-  });
 
   React.useEffect(() => {
-    // Calculate totals from constants instead of trial balance
     const assets = getTotalBalanceByType('asset');
     const liabilities = getTotalBalanceByType('liability');
     const equity = getTotalBalanceByType('equity');
@@ -130,7 +119,6 @@ export default function LedgerDashboard() {
   }, []);
 
   React.useEffect(() => {
-    // Calculate revenue and expenses from constants
     const revenue = getTotalBalanceByType('revenue');
     const expenses = getTotalBalanceByType('expense');
     const netIncome = revenue - expenses;
@@ -166,9 +154,6 @@ export default function LedgerDashboard() {
   const handleAccountBalance = () => {
     setShowAccountBalanceModal(true);
   };
-  const handleFinancialReport = () => {
-    setShowFinancialReportModal(true);
-  };
 
   const closeTransactionModal = () => {
     setShowNewTransactionModal(false);
@@ -198,14 +183,6 @@ export default function LedgerDashboard() {
     });
   };
 
-  const closeFinancialReportModal = () => {
-    setShowFinancialReportModal(false);
-    setFinancialReportForm({
-      reportType: '',
-      startDate: new Date().toISOString().split('T')[0],
-      endDate: new Date().toISOString().split('T')[0],
-    });
-  };
 
   const handleTransactionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -286,51 +263,6 @@ export default function LedgerDashboard() {
     }
   };
 
-  const handleFinancialReportSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      if (!financialReportForm.reportType) {
-        alert('Please select a report type');
-        return;
-      }
-
-      let reportData;
-      switch (financialReportForm.reportType) {
-        case 'trial-balance':
-          reportData = await LedgerService.getTrialBalance(
-            financialReportForm.endDate,
-          );
-          alert(
-            `Trial Balance Report\nAs of: ${financialReportForm.endDate}\nTotal Accounts: ${reportData.accounts.length}`,
-          );
-          break;
-        case 'income-statement':
-          reportData = await LedgerService.getIncomeStatement(
-            financialReportForm.startDate,
-            financialReportForm.endDate,
-          );
-          alert(
-            `Income Statement Report\nPeriod: ${financialReportForm.startDate} to ${financialReportForm.endDate}\nNet Income: ${formatCurrency(reportData.net_income)}`,
-          );
-          break;
-        case 'balance-sheet':
-          reportData = await LedgerService.getBalanceSheet(
-            financialReportForm.endDate,
-          );
-          alert(
-            `Balance Sheet Report\nAs of: ${financialReportForm.endDate}\nTotal Assets: ${formatCurrency(reportData.assets.total)}`,
-          );
-          break;
-        default:
-          alert('Please select a valid report type');
-          return;
-      }
-
-      closeFinancialReportModal();
-    } catch (error) {
-      alert('Failed to generate financial report. Please try again.');
-    }
-  };
 
 
 
@@ -388,10 +320,6 @@ export default function LedgerDashboard() {
             </p>
           </div>
           <div className="flex space-x-2">
-            <Button variant="outline" size="sm">
-              <Download className="w-4 h-4 mr-2" />
-              Export Reports
-            </Button>
             <Button size="sm" onClick={handleNewTransaction}>
               <Plus className="w-4 h-4 mr-2" />
               New Transaction
@@ -609,14 +537,6 @@ export default function LedgerDashboard() {
                   >
                     <Calculator className="w-6 h-6 mb-2" />
                     Account Balance
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="h-20 flex-col"
-                    onClick={handleFinancialReport}
-                  >
-                    <BarChart3 className="w-6 h-6 mb-2" />
-                    Financial Report
                   </Button>
                 </div>
 
@@ -1247,102 +1167,6 @@ export default function LedgerDashboard() {
           </div>
         )}
 
-        {/* Financial Report Modal */}
-        {showFinancialReportModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">
-                  Generate Financial Report
-                </h3>
-                <button
-                  onClick={closeFinancialReportModal}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-              <form
-                onSubmit={handleFinancialReportSubmit}
-                className="space-y-4"
-              >
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Report Type
-                  </label>
-                  <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={financialReportForm.reportType}
-                    onChange={(e) =>
-                      setFinancialReportForm({
-                        ...financialReportForm,
-                        reportType: e.target.value,
-                      })
-                    }
-                    required
-                  >
-                    <option value="">Select report type</option>
-                    <option value="trial-balance">Trial Balance</option>
-                    <option value="income-statement">Income Statement</option>
-                    <option value="balance-sheet">Balance Sheet</option>
-                    <option value="cash-flow">Cash Flow Statement</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Start Date
-                  </label>
-                  <input
-                    type="date"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={financialReportForm.startDate}
-                    onChange={(e) =>
-                      setFinancialReportForm({
-                        ...financialReportForm,
-                        startDate: e.target.value,
-                      })
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    End Date
-                  </label>
-                  <input
-                    type="date"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={financialReportForm.endDate}
-                    onChange={(e) =>
-                      setFinancialReportForm({
-                        ...financialReportForm,
-                        endDate: e.target.value,
-                      })
-                    }
-                    required
-                  />
-                </div>
-                <div className="flex space-x-3 pt-4">
-                  <Button
-                    type="button"
-                    onClick={closeFinancialReportModal}
-                    variant="outline"
-                    className="flex-1"
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" className="flex-1">
-                    Generate Report
-                  </Button>
-                  <Button variant="outline" className="flex-1">
-                    <Download className="w-4 h-4 mr-2" />
-                    Export
-                  </Button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
       </div>
     </DashboardLayout>
   );

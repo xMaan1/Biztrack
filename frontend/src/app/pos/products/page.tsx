@@ -40,6 +40,7 @@ import {
   Edit,
   Trash2,
   AlertTriangle,
+  Eye,
 } from 'lucide-react';
 import { DashboardLayout } from '../../../components/layout';
 import { useCurrency } from '../../../contexts/CurrencyContext';
@@ -74,6 +75,7 @@ const POSProducts = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     sku: '',
@@ -179,6 +181,10 @@ const POSProducts = () => {
   const handleDeleteCancel = () => {
     setIsDeleteDialogOpen(false);
     setProductToDelete(null);
+  };
+
+  const handleViewProduct = (product: Product) => {
+    setViewingProduct(product);
   };
 
   const resetForm = () => {
@@ -349,6 +355,13 @@ const POSProducts = () => {
                     </CardDescription>
                   </div>
                   <div className="flex items-center space-x-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleViewProduct(product)}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -645,6 +658,160 @@ const POSProducts = () => {
                 </Button>
               </DialogFooter>
             </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* View Product Modal */}
+        <Dialog open={!!viewingProduct} onOpenChange={() => setViewingProduct(null)}>
+          <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+            <DialogHeader className="flex-shrink-0">
+              <DialogTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5" />
+                Product Details
+              </DialogTitle>
+              <DialogDescription>
+                Complete information about the product
+              </DialogDescription>
+            </DialogHeader>
+
+            {viewingProduct && (
+              <div className="flex-1 overflow-y-auto pr-2">
+                <div className="space-y-6">
+                {/* Basic Information */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-600">Product Name</Label>
+                    <p className="text-lg font-semibold">{viewingProduct.name}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-600">SKU</Label>
+                    <p className="text-lg font-mono">{viewingProduct.sku}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Description</Label>
+                  <p className="text-gray-900 mt-1">{viewingProduct.description || 'No description provided'}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-600">Category</Label>
+                    <Badge variant="outline" className="mt-1">
+                      {viewingProduct.category}
+                    </Badge>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-600">Unit of Measure</Label>
+                    <p className="text-gray-900 mt-1">{viewingProduct.unitOfMeasure || 'piece'}</p>
+                  </div>
+                </div>
+
+                {/* Pricing Information */}
+                <div className="border-t pt-4">
+                  <h4 className="font-medium text-gray-900 mb-3">Pricing Information</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600">Unit Price</Label>
+                      <p className="text-2xl font-bold text-green-600">{formatCurrency(viewingProduct.unitPrice)}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600">Cost Price</Label>
+                      <p className="text-2xl font-bold text-blue-600">{formatCurrency(viewingProduct.costPrice)}</p>
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <Label className="text-sm font-medium text-gray-600">Profit Margin</Label>
+                    <p className="text-lg font-semibold text-purple-600">
+                      {formatCurrency(viewingProduct.unitPrice - viewingProduct.costPrice)} 
+                      ({(((viewingProduct.unitPrice - viewingProduct.costPrice) / viewingProduct.costPrice) * 100).toFixed(1)}%)
+                    </p>
+                  </div>
+                </div>
+
+                {/* Stock Information */}
+                <div className="border-t pt-4">
+                  <h4 className="font-medium text-gray-900 mb-3">Stock Information</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600">Current Stock</Label>
+                      <p className="text-2xl font-bold text-blue-600">{viewingProduct.stockQuantity}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600">Minimum Stock Level</Label>
+                      <p className="text-2xl font-bold text-orange-600">{viewingProduct.minStockLevel}</p>
+                    </div>
+                  </div>
+                  {viewingProduct.stockQuantity <= viewingProduct.minStockLevel && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                        <span className="font-medium text-yellow-800">Low Stock Alert</span>
+                      </div>
+                      <p className="text-sm text-yellow-700">
+                        This product is {viewingProduct.stockQuantity < viewingProduct.minStockLevel ? 'below' : 'at'} the minimum stock level. 
+                        Consider restocking soon.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Additional Information */}
+                <div className="border-t pt-4">
+                  <h4 className="font-medium text-gray-900 mb-3">Additional Information</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600">Barcode</Label>
+                      <p className="text-gray-900 mt-1 font-mono">{viewingProduct.barcode || 'Not set'}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600">Batch Number</Label>
+                      <p className="text-gray-900 mt-1">{viewingProduct.batchNumber || 'Not set'}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 mt-4">
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600">Serial Number</Label>
+                      <p className="text-gray-900 mt-1">{viewingProduct.serialNumber || 'Not set'}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600">Expiry Date</Label>
+                      <p className="text-gray-900 mt-1">{viewingProduct.expiryDate ? formatDate(viewingProduct.expiryDate) : 'Not set'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Product Status */}
+                <div className="border-t pt-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600">Product Status</Label>
+                      <div className="mt-1">
+                        <Badge variant="default">Active</Badge>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <Label className="text-sm font-medium text-gray-600">Created</Label>
+                      <p className="text-gray-900 mt-1">{formatDate(viewingProduct.createdAt)}</p>
+                    </div>
+                  </div>
+                </div>
+                </div>
+              </div>
+            )}
+
+            <DialogFooter className="flex-shrink-0">
+              <Button variant="outline" onClick={() => setViewingProduct(null)}>
+                Close
+              </Button>
+              <Button onClick={() => {
+                setViewingProduct(null);
+                handleEdit(viewingProduct!);
+              }}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit Product
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
 

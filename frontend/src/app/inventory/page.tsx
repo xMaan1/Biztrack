@@ -242,7 +242,7 @@ export default function InventoryDashboardPage() {
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => router.push('/inventory/stock-movements/new')}
+                onClick={() => router.push('/inventory/stock-movements')}
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Record Stock Movement
@@ -250,7 +250,7 @@ export default function InventoryDashboardPage() {
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => router.push('/inventory/purchase-orders/new')}
+                onClick={() => router.push('/inventory/purchase-orders')}
               >
                 <ClipboardList className="mr-2 h-4 w-4" />
                 Create Purchase Order
@@ -258,7 +258,7 @@ export default function InventoryDashboardPage() {
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => router.push('/inventory/receivings/new')}
+                onClick={() => router.push('/inventory/receiving')}
               >
                 <Truck className="mr-2 h-4 w-4" />
                 Process Receiving
@@ -266,7 +266,7 @@ export default function InventoryDashboardPage() {
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => router.push('/inventory/products/new')}
+                onClick={() => router.push('/inventory/products')}
               >
                 <Package className="mr-2 h-4 w-4" />
                 Add New Product

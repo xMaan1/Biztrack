@@ -14,10 +14,11 @@ from ...models.unified_models import (
     StorageLocation, StorageLocationCreate, StorageLocationUpdate, StorageLocationResponse, StorageLocationsResponse,
     StockMovement, StockMovementCreate, StockMovementUpdate, StockMovementResponse, StockMovementsResponse,
     StockMovementWithProduct, StockMovementsWithProductResponse,
-    PurchaseOrder, PurchaseOrderCreate, PurchaseOrderUpdate, PurchaseOrderResponse, PurchaseOrdersResponse,
+    PurchaseOrderCreate, PurchaseOrderUpdate, PurchaseOrderResponse, PurchaseOrdersResponse,
     Receiving, ReceivingCreate, ReceivingUpdate, ReceivingResponse, ReceivingsResponse,
     InventoryDashboardStats, StockAlert
 )
+from ...config.inventory_models import PurchaseOrder as PurchaseOrderDB
 from ...config.database import (
     get_warehouses, get_warehouse_by_id, create_warehouse, update_warehouse, delete_warehouse,
     get_storage_locations, get_storage_locations_by_warehouse, get_storage_location_by_id, create_storage_location, update_storage_location, delete_storage_location,
@@ -38,13 +39,13 @@ def generate_purchase_order_number(tenant_id: str, db: Session) -> str:
     max_retries = 10
     for attempt in range(max_retries):
         # Get the highest purchase order number for this month
-        highest_po = db.query(PurchaseOrder).filter(
+        highest_po = db.query(PurchaseOrderDB).filter(
             and_(
-                PurchaseOrder.tenant_id == tenant_id,
-                func.extract('year', PurchaseOrder.createdAt) == year,
-                func.extract('month', PurchaseOrder.createdAt) == month
+                PurchaseOrderDB.tenant_id == tenant_id,
+                func.extract('year', PurchaseOrderDB.createdAt) == year,
+                func.extract('month', PurchaseOrderDB.createdAt) == month
             )
-        ).order_by(desc(PurchaseOrder.poNumber)).first()
+        ).order_by(desc(PurchaseOrderDB.poNumber)).first()
         
         if highest_po:
             # Extract the number from the highest purchase order
@@ -56,21 +57,21 @@ def generate_purchase_order_number(tenant_id: str, db: Session) -> str:
                     new_number = last_number + 1
                 else:
                     # Fallback: count all purchase orders for this month
-                    count = db.query(PurchaseOrder).filter(
+                    count = db.query(PurchaseOrderDB).filter(
                         and_(
-                            PurchaseOrder.tenant_id == tenant_id,
-                            func.extract('year', PurchaseOrder.createdAt) == year,
-                            func.extract('month', PurchaseOrder.createdAt) == month
+                            PurchaseOrderDB.tenant_id == tenant_id,
+                            func.extract('year', PurchaseOrderDB.createdAt) == year,
+                            func.extract('month', PurchaseOrderDB.createdAt) == month
                         )
                     ).count()
                     new_number = count + 1
             except (ValueError, IndexError):
                 # Fallback: count all purchase orders for this month
-                count = db.query(PurchaseOrder).filter(
+                count = db.query(PurchaseOrderDB).filter(
                     and_(
-                        PurchaseOrder.tenant_id == tenant_id,
-                        func.extract('year', PurchaseOrder.createdAt) == year,
-                        func.extract('month', PurchaseOrder.createdAt) == month
+                        PurchaseOrderDB.tenant_id == tenant_id,
+                        func.extract('year', PurchaseOrderDB.createdAt) == year,
+                        func.extract('month', PurchaseOrderDB.createdAt) == month
                     )
                 ).count()
                 new_number = count + 1
@@ -82,8 +83,8 @@ def generate_purchase_order_number(tenant_id: str, db: Session) -> str:
         po_number = f"PO-{year:04d}{month:02d}-{new_number:04d}"
         
         # Check if this number already exists (race condition check)
-        existing_po = db.query(PurchaseOrder).filter(
-            PurchaseOrder.poNumber == po_number
+        existing_po = db.query(PurchaseOrderDB).filter(
+            PurchaseOrderDB.poNumber == po_number
         ).first()
         
         if not existing_po:

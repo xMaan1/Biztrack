@@ -20,6 +20,7 @@ import {
   ShoppingCart,
   AlertCircle,
   CheckCircle,
+  X,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { inventoryService } from '../../../services/InventoryService';
@@ -27,6 +28,15 @@ import {
   InventoryDashboardStats,
 } from '../../../models/inventory';
 import { DashboardLayout } from '../../../components/layout';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../../../components/ui/dialog';
+import { Label } from '../../../components/ui/label';
 
 export default function AlertsPage() {
   const { } = useAuth();
@@ -35,6 +45,7 @@ export default function AlertsPage() {
     useState<InventoryDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<string>('all');
+  const [viewingAlert, setViewingAlert] = useState<any>(null);
 
   useEffect(() => {
     fetchData();
@@ -64,6 +75,10 @@ export default function AlertsPage() {
       if (filterType === 'all') return true;
       return alert.alertType === filterType;
     }) || [];
+
+  const handleViewAlert = (alert: any) => {
+    setViewingAlert(alert);
+  };
 
 
   const getAlertIcon = (alertType: string) => {
@@ -273,11 +288,7 @@ export default function AlertsPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() =>
-                            router.push(
-                              `/inventory/products/${alert.productId}`,
-                            )
-                          }
+                          onClick={() => handleViewAlert(alert)}
                         >
                           <Eye className="mr-2 h-4 w-4" />
                           View
@@ -342,6 +353,80 @@ export default function AlertsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* View Alert Modal */}
+        <Dialog open={!!viewingAlert} onOpenChange={() => setViewingAlert(null)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                {viewingAlert && getAlertIcon(viewingAlert.alertType)}
+                Stock Alert Details
+              </DialogTitle>
+              <DialogDescription>
+                Detailed information about the stock alert
+              </DialogDescription>
+            </DialogHeader>
+
+            {viewingAlert && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-600">Product Name</Label>
+                    <p className="text-lg font-semibold">{viewingAlert.productName}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-600">SKU</Label>
+                    <p className="text-lg font-mono">{viewingAlert.sku}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Alert Type</Label>
+                  <div className="mt-1">
+                    {getAlertBadge(viewingAlert.alertType)}
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Alert Message</Label>
+                  <p className="text-gray-900 mt-1">{viewingAlert.message}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-600">Current Stock</Label>
+                    <p className="text-2xl font-bold text-red-600">{viewingAlert.currentStock}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-600">Minimum Stock Level</Label>
+                    <p className="text-2xl font-bold text-orange-600">{viewingAlert.minStockLevel}</p>
+                  </div>
+                </div>
+
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                    <span className="font-medium text-yellow-800">Stock Level Warning</span>
+                  </div>
+                  <p className="text-sm text-yellow-700">
+                    This product is {viewingAlert.currentStock < viewingAlert.minStockLevel ? 'below' : 'at'} the minimum stock level. 
+                    Consider placing a new order to replenish inventory.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setViewingAlert(null)}>
+                Close
+              </Button>
+              <Button onClick={() => router.push('/inventory/purchase-orders')}>
+                <ShoppingCart className="h-4 w-4 mr-2" />
+                Create Purchase Order
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
       </div>
     </DashboardLayout>
