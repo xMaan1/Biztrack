@@ -32,7 +32,7 @@ interface HealthcareStats {
 }
 
 interface HealthcareDashboardProps {
-  stats: HealthcareStats;
+  stats?: HealthcareStats;
   onNavigate: (path: string) => void;
 }
 
@@ -41,6 +41,18 @@ export default function HealthcareDashboard({
   onNavigate,
 }: HealthcareDashboardProps) {
   const { getCurrencySymbol } = useCurrency();
+  
+  // Provide default values for undefined stats
+  const safeStats = {
+    totalPatients: stats?.totalPatients ?? 0,
+    appointmentsToday: stats?.appointmentsToday ?? 0,
+    revenueThisMonth: stats?.revenueThisMonth ?? 0,
+    patientSatisfaction: stats?.patientSatisfaction ?? 0,
+    activeProjects: stats?.activeProjects ?? 0,
+    averageProgress: stats?.averageProgress ?? 0,
+    completedProjects: stats?.completedProjects ?? 0,
+    totalTeamMembers: stats?.totalTeamMembers ?? 0,
+  };
   const handleCreateProject = () => onNavigate('/projects/new');
   const handleNewAppointment = () => onNavigate('/appointments/new');
   const handleViewPatients = () => onNavigate('/patients');
@@ -88,7 +100,7 @@ export default function HealthcareDashboard({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {stats.totalPatients}
+              {safeStats.totalPatients}
             </div>
             <p className="text-xs text-muted-foreground">Registered patients</p>
           </CardContent>
@@ -103,7 +115,7 @@ export default function HealthcareDashboard({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {stats.appointmentsToday}
+              {safeStats.appointmentsToday}
             </div>
             <p className="text-xs text-muted-foreground">Scheduled today</p>
           </CardContent>
@@ -118,7 +130,7 @@ export default function HealthcareDashboard({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              {getCurrencySymbol()}{stats.revenueThisMonth.toLocaleString()}
+              {getCurrencySymbol()}{safeStats.revenueThisMonth.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">This month</p>
           </CardContent>
@@ -133,7 +145,7 @@ export default function HealthcareDashboard({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">
-              {stats.patientSatisfaction}%
+              {safeStats.patientSatisfaction}%
             </div>
             <p className="text-xs text-muted-foreground">Rating score</p>
           </CardContent>
@@ -154,21 +166,21 @@ export default function HealthcareDashboard({
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium">Active Cases</span>
               <span className="text-sm text-blue-600">
-                {stats.activeProjects}
+                {safeStats.activeProjects}
               </span>
             </div>
-            <Progress value={stats.averageProgress} className="h-2" />
+            <Progress value={safeStats.averageProgress} className="h-2" />
 
             <div className="grid grid-cols-2 gap-4 mt-4">
               <div className="text-center p-3 bg-blue-50 rounded-lg">
                 <div className="text-2xl font-bold text-blue-600">
-                  {stats.completedProjects}
+                  {safeStats.completedProjects}
                 </div>
                 <div className="text-xs text-gray-600">Completed Cases</div>
               </div>
               <div className="text-center p-3 bg-green-50 rounded-lg">
                 <div className="text-2xl font-bold text-green-600">
-                  {stats.totalTeamMembers}
+                  {safeStats.totalTeamMembers}
                 </div>
                 <div className="text-xs text-gray-600">Medical Staff</div>
               </div>

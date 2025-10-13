@@ -17,21 +17,32 @@ const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined
 export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   const [currency, setCurrencyState] = useState<string>('USD');
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, currentTenant } = useAuth();
 
   useEffect(() => {
-    if (user) {
+    if (user && currentTenant) {
       loadCurrencySettings();
+    } else if (user && !currentTenant) {
+      // User is logged in but no tenant selected yet (e.g., during tenant creation)
+      setLoading(false);
+    } else {
+      // No user logged in
+      setLoading(false);
     }
-  }, [user]);
+  }, [user, currentTenant]);
 
   const loadCurrencySettings = async () => {
     try {
       setLoading(true);
       const customization = await InvoiceCustomizationService.getCustomization();
       setCurrencyState(customization.default_currency || 'USD');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load currency settings:', error);
+      // Check if it's a tenant context error (400) or other error
+      if (error?.response?.status === 400 && error?.response?.data?.detail?.includes('Tenant context required')) {
+        // This is expected during tenant creation, just use default currency
+        console.log('Tenant context not ready yet, using default currency');
+      }
       setCurrencyState('USD'); // fallback to USD
     } finally {
       setLoading(false);
