@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '../ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -13,9 +13,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
-import { Menu, Bell, Settings, LogOut, User } from 'lucide-react';
+import { Menu, Settings, LogOut, User } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { getInitials } from '../../lib/utils';
+import NotificationBell from '../notifications/NotificationBell';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -24,7 +25,6 @@ interface HeaderProps {
 export default function Header({ onMenuClick }: HeaderProps) {
   const { user, currentTenant, logout } = useAuth();
   const router = useRouter();
-  const [notifications] = useState(3); // Mock notification count
 
   const handleLogout = async () => {
     try {
@@ -55,17 +55,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
         {/* Right side - Notifications and User menu */}
         <div className="flex items-center gap-3">
           {/* Notifications */}
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            {notifications > 0 && (
-              <Badge
-                variant="destructive"
-                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
-              >
-                {notifications}
-              </Badge>
-            )}
-          </Button>
+          <NotificationBell />
 
           {/* User Menu */}
           <DropdownMenu>

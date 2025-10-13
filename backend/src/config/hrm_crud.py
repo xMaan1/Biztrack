@@ -143,14 +143,18 @@ def create_performance_review(review_data: dict, db: Session) -> PerformanceRevi
     return db_review
 
 def update_performance_review(review_id: str, update_data: dict, db: Session, tenant_id: str = None) -> Optional[PerformanceReview]:
+    from datetime import datetime
     review = get_performance_review_by_id(review_id, db, tenant_id)
     if review:
         for key, value in update_data.items():
             if hasattr(review, key) and value is not None:
                 # Handle special field mappings
-                if key == 'nextReviewDate' and isinstance(value, str):
-                    from datetime import datetime
-                    setattr(review, key, datetime.fromisoformat(value))
+                if key == 'nextReviewDate':
+                    if isinstance(value, str) and value.strip():
+                        setattr(review, key, datetime.fromisoformat(value))
+                    elif isinstance(value, str) and not value.strip():
+                        # Set to None for empty strings
+                        setattr(review, key, None)
                 elif key == 'overallRating':
                     setattr(review, 'rating', value)
                 elif key == 'achievements':
@@ -383,27 +387,50 @@ def get_payroll(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 
 
 # Placeholder functions for models not yet implemented
 def get_training_by_id(training_id: str, db: Session, tenant_id: str = None) -> Optional[Any]:
-    # Placeholder - Training model not yet implemented
-    return None
+    from .hrm_models import Training
+    query = db.query(Training).filter(Training.id == training_id)
+    if tenant_id:
+        query = query.filter(Training.tenant_id == tenant_id)
+    return query.first()
 
 def get_all_trainings(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Any]:
-    # Placeholder - Training model not yet implemented
-    return []
+    from .hrm_models import Training
+    query = db.query(Training)
+    if tenant_id:
+        query = query.filter(Training.tenant_id == tenant_id)
+    return query.order_by(Training.createdAt.desc()).offset(skip).limit(limit).all()
 
 def get_training(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Any]:
     """Get all trainings (alias for get_all_trainings)"""
     return get_all_trainings(db, tenant_id, skip, limit)
 
 def create_training(training_data: dict, db: Session) -> Any:
-    # Placeholder - Training model not yet implemented
-    return None
+    from .hrm_models import Training
+    db_training = Training(**training_data)
+    db.add(db_training)
+    db.commit()
+    db.refresh(db_training)
+    return db_training
 
 def update_training(training_id: str, update_data: dict, db: Session, tenant_id: str = None) -> Optional[Any]:
-    # Placeholder - Training model not yet implemented
-    return None
+    from .hrm_models import Training
+    training = get_training_by_id(training_id, db, tenant_id)
+    if training:
+        for key, value in update_data.items():
+            if hasattr(training, key) and value is not None:
+                setattr(training, key, value)
+        training.updatedAt = datetime.utcnow()
+        db.commit()
+        db.refresh(training)
+    return training
 
 def delete_training(training_id: str, db: Session, tenant_id: str = None) -> bool:
-    # Placeholder - Training model not yet implemented
+    from .hrm_models import Training
+    training = get_training_by_id(training_id, db, tenant_id)
+    if training:
+        db.delete(training)
+        db.commit()
+        return True
     return False
 
 def get_training_enrollment_by_id(enrollment_id: str, db: Session, tenant_id: str = None) -> Optional[Any]:

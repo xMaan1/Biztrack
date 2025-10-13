@@ -53,8 +53,10 @@ import {
   Employee,
 } from '@/src/models/hrm';
 import { DashboardLayout } from '@/src/components/layout';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 
 export default function HRMPayrollPage() {
+  const { formatCurrency } = useCurrency();
   const [payrolls, setPayrolls] = useState<Payroll[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
@@ -479,10 +481,9 @@ export default function HRMPayrollPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                $
-                {payrolls
-                  .reduce((sum, payroll) => sum + payroll.netPay, 0)
-                  .toLocaleString()}
+                {formatCurrency(
+                  payrolls.reduce((sum, payroll) => sum + payroll.netPay, 0)
+                )}
               </div>
             </CardContent>
           </Card>
@@ -529,11 +530,11 @@ export default function HRMPayrollPage() {
                       </Badge>
                       <Badge variant="outline">
                         <DollarSign className="w-3 h-3 mr-1" />
-                        Net: ${payroll.netPay.toLocaleString()}
+                        Net: {formatCurrency(payroll.netPay)}
                       </Badge>
                       <Badge variant="outline">
                         <Calculator className="w-3 h-3 mr-1" />
-                        Basic: ${payroll.basicSalary.toLocaleString()}
+                        Basic: {formatCurrency(payroll.basicSalary)}
                       </Badge>
                     </div>
                     <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
@@ -566,20 +567,20 @@ export default function HRMPayrollPage() {
                     </div>
                     <div className="grid grid-cols-4 gap-4 mt-2 text-xs">
                       <div>
-                        <span className="font-medium">Allowances:</span> $
-                        {payroll.allowances.toLocaleString()}
+                        <span className="font-medium">Allowances:</span>{' '}
+                        {formatCurrency(payroll.allowances)}
                       </div>
                       <div>
-                        <span className="font-medium">Deductions:</span> $
-                        {payroll.deductions.toLocaleString()}
+                        <span className="font-medium">Deductions:</span>{' '}
+                        {formatCurrency(payroll.deductions)}
                       </div>
                       <div>
-                        <span className="font-medium">Overtime:</span> $
-                        {payroll.overtimePay.toLocaleString()}
+                        <span className="font-medium">Overtime:</span>{' '}
+                        {formatCurrency(payroll.overtimePay)}
                       </div>
                       <div>
-                        <span className="font-medium">Bonus:</span> $
-                        {payroll.bonus.toLocaleString()}
+                        <span className="font-medium">Bonus:</span>{' '}
+                        {formatCurrency(payroll.bonus)}
                       </div>
                     </div>
                     {payroll.notes && (
@@ -929,7 +930,7 @@ export default function HRMPayrollPage() {
                       Basic Salary
                     </Label>
                     <p className="text-gray-900">
-                      ${viewingPayroll.basicSalary.toLocaleString()}
+                      {formatCurrency(viewingPayroll.basicSalary)}
                     </p>
                   </div>
                   <div>
@@ -937,7 +938,7 @@ export default function HRMPayrollPage() {
                       Allowances
                     </Label>
                     <p className="text-gray-900">
-                      ${viewingPayroll.allowances.toLocaleString()}
+                      {formatCurrency(viewingPayroll.allowances)}
                     </p>
                   </div>
                   <div>
@@ -945,7 +946,7 @@ export default function HRMPayrollPage() {
                       Overtime Pay
                     </Label>
                     <p className="text-gray-900">
-                      ${(viewingPayroll.overtimePay || 0).toLocaleString()}
+                      {formatCurrency(viewingPayroll.overtimePay || 0)}
                     </p>
                   </div>
                   <div>
@@ -953,7 +954,7 @@ export default function HRMPayrollPage() {
                       Bonus
                     </Label>
                     <p className="text-gray-900">
-                      ${viewingPayroll.bonus.toLocaleString()}
+                      {formatCurrency(viewingPayroll.bonus)}
                     </p>
                   </div>
                 </div>
@@ -963,7 +964,7 @@ export default function HRMPayrollPage() {
                       Deductions
                     </Label>
                     <p className="text-gray-900">
-                      ${viewingPayroll.deductions.toLocaleString()}
+                      {formatCurrency(viewingPayroll.deductions)}
                     </p>
                   </div>
                   <div>
@@ -971,7 +972,7 @@ export default function HRMPayrollPage() {
                       Net Pay
                     </Label>
                     <p className="text-lg font-bold text-green-600">
-                      ${viewingPayroll.netPay.toLocaleString()}
+                      {formatCurrency(viewingPayroll.netPay)}
                     </p>
                   </div>
                   <div>

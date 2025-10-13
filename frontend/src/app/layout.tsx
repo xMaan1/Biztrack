@@ -4,6 +4,7 @@ import './globals.css';
 import { AuthGuard } from '@/src/components/auth';
 import { AuthProvider } from '@/src/contexts/AuthContext';
 import { CurrencyProvider } from '@/src/contexts/CurrencyContext';
+import { NotificationProvider } from '@/src/contexts/NotificationContext';
 
 const inter = Inter({
   variable: '--font-inter',
@@ -33,7 +34,9 @@ export default function RootLayout({
       >
         <AuthProvider>
           <CurrencyProvider>
-            <AuthGuard>{children}</AuthGuard>
+            <NotificationProvider>
+              <AuthGuard>{children}</AuthGuard>
+            </NotificationProvider>
           </CurrencyProvider>
         </AuthProvider>
       </body>

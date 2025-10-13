@@ -37,6 +37,7 @@ class User(Base):
     created_tasks = relationship("Task", foreign_keys="Task.createdById", back_populates="createdBy")
     team_projects = relationship("Project", secondary=project_team_members, back_populates="teamMembers")
     
+    
     # Custom tenant-specific options relationships
     createdCustomEventTypes = relationship("CustomEventType", back_populates="createdByUser", foreign_keys="CustomEventType.createdByUserId")
     createdCustomDepartments = relationship("CustomDepartment", back_populates="createdByUser", foreign_keys="CustomDepartment.createdByUserId")
@@ -138,6 +139,7 @@ class Tenant(Base):
     projects = relationship("Project", back_populates="tenant")
     subscriptions = relationship("Subscription", back_populates="tenant")
     tenant_users = relationship("TenantUser", back_populates="tenant")
+    
     
     # Sales relationships
     quotes = relationship("Quote", back_populates="tenant")

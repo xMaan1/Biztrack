@@ -28,6 +28,10 @@ from .hrm_models import (
     Training, TrainingEnrollment, Application, Supplier
 )
 
+from .notification_models import (
+    Notification, NotificationPreference
+)
+
 from .inventory_models import (
     Product, Warehouse, PurchaseOrder, Receiving,
     StorageLocation, StockMovement

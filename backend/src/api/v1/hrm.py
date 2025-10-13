@@ -1318,6 +1318,29 @@ async def create_hrm_payroll(
             "createdAt": payroll.createdAt.isoformat(),
             "updatedAt": payroll.updatedAt.isoformat()
         }
+        # Create notification for payroll creation
+        try:
+            from ...services.notification_service import create_hrm_notification
+            from ...config.notification_models import NotificationType
+            
+            # Get employee name for notification
+            employee = get_employee_by_id(payroll_data.employeeId, db, tenant_context["tenant_id"])
+            employee_name = f"{employee.firstName} {employee.lastName}" if employee else "Employee"
+            
+            create_hrm_notification(
+                db,
+                tenant_context["tenant_id"],
+                str(current_user.id),
+                "New Payroll Record Created",
+                f"Payroll record for {employee_name} ({payroll_data.payPeriod}) has been created",
+                NotificationType.INFO,
+                f"/hrm/payroll/{str(payroll.id)}",
+                {"payroll_id": str(payroll.id), "employee_id": payroll_data.employeeId, "pay_period": payroll_data.payPeriod}
+            )
+        except Exception as notification_error:
+            # Don't fail the main operation if notification fails
+            pass
+        
         return Payroll(**response_data)
     except Exception as e:
         db.rollback()
@@ -1332,7 +1355,7 @@ async def get_hrm_payroll(
 ):
     """Get a specific payroll record by ID"""
     try:
-        payroll = get_payroll_by_id(db, payroll_id, tenant_context["tenant_id"] if tenant_context else None)
+        payroll = get_payroll_by_id(payroll_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not payroll:
             raise HTTPException(status_code=404, detail="Payroll record not found")
         
@@ -1372,14 +1395,36 @@ async def update_hrm_payroll(
     """Update a payroll record"""
     try:
         updated_payroll = update_payroll(
-            db, 
-            payroll_id, 
+            payroll_id,
             payroll_update.dict(exclude_unset=True),
+            db,
             tenant_context["tenant_id"] if tenant_context else None
         )
         if not updated_payroll:
             raise HTTPException(status_code=404, detail="Payroll record not found")
-        return updated_payroll
+        
+        # Convert to Pydantic model
+        response_data = {
+            "id": str(updated_payroll.id),
+            "tenant_id": str(updated_payroll.tenant_id),
+            "employeeId": str(updated_payroll.employeeId),
+            "payPeriod": updated_payroll.payPeriod,
+            "startDate": updated_payroll.startDate.isoformat() if updated_payroll.startDate else "",
+            "endDate": updated_payroll.endDate.isoformat() if updated_payroll.endDate else "",
+            "basicSalary": float(updated_payroll.baseSalary),
+            "allowances": 0.0,  # Not stored in DB
+            "deductions": float(updated_payroll.deductions),
+            "overtimePay": float(updated_payroll.overtimeHours * updated_payroll.overtimeRate),
+            "bonus": float(updated_payroll.bonuses),
+            "netPay": float(updated_payroll.netPay),
+            "status": "processed" if updated_payroll.isProcessed else "draft",
+            "paymentDate": updated_payroll.processedAt.isoformat() if updated_payroll.processedAt else None,
+            "notes": "",  # Not stored in DB
+            "createdBy": "",  # Not stored in DB
+            "createdAt": updated_payroll.createdAt.isoformat(),
+            "updatedAt": updated_payroll.updatedAt.isoformat()
+        }
+        return Payroll(**response_data)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating payroll record: {str(e)}")
 
@@ -1392,7 +1437,7 @@ async def delete_hrm_payroll(
 ):
     """Delete a payroll record"""
     try:
-        deleted = delete_payroll(db, payroll_id, tenant_context["tenant_id"] if tenant_context else None)
+        deleted = delete_payroll(payroll_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not deleted:
             raise HTTPException(status_code=404, detail="Payroll record not found")
         return {"message": "Payroll record deleted successfully"}
@@ -1579,12 +1624,7 @@ async def create_hrm_training(
             "updatedAt": datetime.utcnow()
         }
         
-        from ...config.hrm_models import Training as TrainingDB
-        training = TrainingDB(**db_data)
-        
-        db.add(training)
-        db.commit()
-        db.refresh(training)
+        training = create_training(db_data, db)
         
         response_data = {
             "id": str(training.id),
@@ -1606,6 +1646,25 @@ async def create_hrm_training(
             "createdAt": training.createdAt.isoformat(),
             "updatedAt": training.updatedAt.isoformat()
         }
+        # Create notification for training creation
+        try:
+            from ...services.notification_service import create_hrm_notification
+            from ...config.notification_models import NotificationType
+            
+            create_hrm_notification(
+                db,
+                tenant_context["tenant_id"],
+                str(current_user.id),
+                "New Training Program Created",
+                f"Training program '{training_data.title}' has been created",
+                NotificationType.INFO,
+                f"/hrm/training/{str(training.id)}",
+                {"training_id": str(training.id), "title": training_data.title, "provider": training_data.provider}
+            )
+        except Exception as notification_error:
+            # Don't fail the main operation if notification fails
+            pass
+        
         return Training(**response_data)
     except Exception as e:
         db.rollback()
@@ -1620,7 +1679,7 @@ async def get_hrm_training(
 ):
     """Get a specific training program by ID"""
     try:
-        training = get_training_by_id(db, training_id, tenant_context["tenant_id"] if tenant_context else None)
+        training = get_training_by_id(training_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not training:
             raise HTTPException(status_code=404, detail="Training program not found")
         
@@ -1660,14 +1719,36 @@ async def update_hrm_training(
     """Update a training program"""
     try:
         updated_training = update_training(
-            db, 
-            training_id, 
+            training_id,
             training_update.dict(exclude_unset=True),
+            db,
             tenant_context["tenant_id"] if tenant_context else None
         )
         if not updated_training:
             raise HTTPException(status_code=404, detail="Training program not found")
-        return updated_training
+        
+        # Convert to Pydantic model
+        response_data = {
+            "id": str(updated_training.id),
+            "tenant_id": str(updated_training.tenant_id),
+            "title": updated_training.title,
+            "description": updated_training.description,
+            "trainingType": updated_training.trainingType,
+            "duration": updated_training.duration,
+            "cost": float(updated_training.cost),
+            "provider": updated_training.provider,
+            "startDate": updated_training.startDate.isoformat() if updated_training.startDate else "",
+            "endDate": updated_training.endDate.isoformat() if updated_training.endDate else "",
+            "maxParticipants": updated_training.maxParticipants,
+            "status": updated_training.status,
+            "materials": updated_training.materials or [],
+            "objectives": updated_training.objectives or [],
+            "prerequisites": updated_training.prerequisites or [],
+            "createdBy": str(updated_training.createdBy),
+            "createdAt": updated_training.createdAt.isoformat(),
+            "updatedAt": updated_training.updatedAt.isoformat()
+        }
+        return Training(**response_data)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating training program: {str(e)}")
 
@@ -1680,7 +1761,7 @@ async def delete_hrm_training(
 ):
     """Delete a training program"""
     try:
-        deleted = delete_training(db, training_id, tenant_context["tenant_id"] if tenant_context else None)
+        deleted = delete_training(training_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not deleted:
             raise HTTPException(status_code=404, detail="Training program not found")
         return {"message": "Training program deleted successfully"}
