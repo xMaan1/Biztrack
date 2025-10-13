@@ -146,6 +146,26 @@ def update_task(task_id: str, update_data: dict, db: Session, tenant_id: str = N
 def delete_task(task_id: str, db: Session, tenant_id: str = None) -> bool:
     task = get_task_by_id(task_id, db, tenant_id)
     if task:
+        # First, delete or update related time entries
+        from ..config.hrm_models import TimeEntry
+        time_entries = db.query(TimeEntry).filter(
+            TimeEntry.taskId == task_id,
+            TimeEntry.tenant_id == tenant_id
+        ).all()
+        
+        for time_entry in time_entries:
+            time_entry.taskId = None  # Set to NULL instead of deleting
+        
+        # Delete subtasks first (if any)
+        subtasks = db.query(Task).filter(
+            Task.parentTaskId == task_id,
+            Task.tenant_id == tenant_id
+        ).all()
+        
+        for subtask in subtasks:
+            subtask.parentTaskId = None  # Remove parent reference
+        
+        # Now delete the task
         db.delete(task)
         db.commit()
         return True

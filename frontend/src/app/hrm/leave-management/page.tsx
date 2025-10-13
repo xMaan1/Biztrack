@@ -205,9 +205,9 @@ export default function HRMLeaveManagementPage() {
       setShowCreateDialog(false);
       resetForm();
       loadLeaveRequests();
-    } catch (err) {
+    } catch (err: any) {
       setError('Failed to save leave request. Please try again.');
-      } finally {
+    } finally {
       setSubmitting(false);
     }
   };

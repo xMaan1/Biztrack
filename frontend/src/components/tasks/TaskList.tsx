@@ -14,6 +14,14 @@ import {
 import { TaskCard } from './TaskCard';
 import { TaskDialog } from './TaskDialog';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../ui/dialog';
+import {
   Plus,
   Search,
   RefreshCw,
@@ -23,6 +31,7 @@ import {
   Clock,
   PlayCircle,
   XCircle,
+  Trash2,
 } from 'lucide-react';
 import {
   Task,
@@ -57,6 +66,12 @@ export const TaskList: React.FC<TaskListProps> = ({
   const [parentTask, setParentTask] = useState<Task | null>(null);
   const [dialogLoading, setDialogLoading] = useState(false);
   const [dialogError, setDialogError] = useState<string | null>(null);
+
+  // Delete modal states
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+  const [subtaskToDelete, setSubtaskToDelete] = useState<SubTask | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -220,26 +235,42 @@ export const TaskList: React.FC<TaskListProps> = ({
     }
   };
 
-  const handleDeleteTask = async (taskId: string) => {
-    if (!confirm('Are you sure you want to delete this task?')) return;
+  const handleDeleteTask = (task: Task) => {
+    setTaskToDelete(task);
+    setSubtaskToDelete(null);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteSubtask = (subtask: SubTask) => {
+    setSubtaskToDelete(subtask);
+    setTaskToDelete(null);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!taskToDelete && !subtaskToDelete) return;
 
     try {
-      await apiService.deleteTask(taskId);
-      await loadTasks();
+      setDeleteLoading(true);
+      const taskId = taskToDelete?.id || subtaskToDelete?.id;
+      if (taskId) {
+        await apiService.deleteTask(taskId);
+        await loadTasks();
+      }
+      setDeleteModalOpen(false);
+      setTaskToDelete(null);
+      setSubtaskToDelete(null);
     } catch (err) {
-      setError('Failed to delete task');
+      setError(taskToDelete ? 'Failed to delete task' : 'Failed to delete subtask');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
-  const handleDeleteSubtask = async (subtaskId: string) => {
-    if (!confirm('Are you sure you want to delete this subtask?')) return;
-
-    try {
-      await apiService.deleteTask(subtaskId);
-      await loadTasks();
-    } catch (err) {
-      setError('Failed to delete subtask');
-    }
+  const cancelDelete = () => {
+    setDeleteModalOpen(false);
+    setTaskToDelete(null);
+    setSubtaskToDelete(null);
   };
 
   const handleStatusChange = async (taskId: string, status: TaskStatus) => {
@@ -618,6 +649,51 @@ export const TaskList: React.FC<TaskListProps> = ({
         error={dialogError ?? undefined}
         defaultProjectId={projectId}
       />
+
+      {/* Delete Confirmation Modal */}
+      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-red-600" />
+              Delete {taskToDelete ? 'Task' : 'Subtask'}
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete{' '}
+              <strong>
+                {taskToDelete?.title || subtaskToDelete?.title}
+              </strong>
+              ? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={cancelDelete}
+              disabled={deleteLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmDelete}
+              disabled={deleteLoading}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deleteLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

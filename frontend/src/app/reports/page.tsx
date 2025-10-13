@@ -13,7 +13,6 @@ import {
   DollarSign,
   Target,
   Download,
-  Filter,
   Wrench,
   Calendar,
 } from 'lucide-react';
@@ -235,10 +234,6 @@ export default function ReportsPage() {
                 clearButtonTitle="Clear date range"
               />
             </div>
-            <Button variant="outline" className="flex items-center gap-2">
-              <Filter className="h-4 w-4" />
-              Filters
-            </Button>
             <Button 
               className="flex items-center gap-2"
               onClick={handleExport}

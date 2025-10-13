@@ -1041,7 +1041,9 @@ async def create_hrm_leave_request(
             "updatedAt": datetime.utcnow()
         }
         
-        leave_request = LeaveRequest(**db_data)
+        # Create SQLAlchemy model (not Pydantic)
+        from ...config.hrm_models import LeaveRequest as LeaveRequestDB
+        leave_request = LeaveRequestDB(**db_data)
         
         db.add(leave_request)
         db.commit()
@@ -1066,6 +1068,7 @@ async def create_hrm_leave_request(
             "createdAt": leave_request.createdAt.isoformat(),
             "updatedAt": leave_request.updatedAt.isoformat()
         }
+        
         return LeaveRequest(**response_data)
     except Exception as e:
         db.rollback()
@@ -1287,7 +1290,8 @@ async def create_hrm_payroll(
             "updatedAt": datetime.utcnow()
         }
         
-        payroll = Payroll(**db_data)
+        from ...config.hrm_models import Payroll as PayrollDB
+        payroll = PayrollDB(**db_data)
         
         db.add(payroll)
         db.commit()
@@ -1575,13 +1579,13 @@ async def create_hrm_training(
             "updatedAt": datetime.utcnow()
         }
         
-        training = Training(**db_data)
+        from ...config.hrm_models import Training as TrainingDB
+        training = TrainingDB(**db_data)
         
         db.add(training)
         db.commit()
         db.refresh(training)
         
-        # Convert to response format
         response_data = {
             "id": str(training.id),
             "tenant_id": str(training.tenant_id),
