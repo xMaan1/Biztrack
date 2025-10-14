@@ -102,7 +102,13 @@ def generate_invoice_number(tenant_id: str, db: Session) -> str:
 
 def calculate_invoice_totals(items: List, tax_rate: float, discount: float) -> dict:
     """Calculate invoice totals"""
-    subtotal = sum(item.quantity * item.unitPrice for item in items)
+    subtotal = 0
+    for item in items:
+        if isinstance(item, dict):
+            subtotal += item.get('quantity', 0) * item.get('unitPrice', 0)
+        else:
+            subtotal += item.quantity * item.unitPrice
+    
     discount_amount = subtotal * (discount / 100) if discount > 0 else 0
     taxable_amount = subtotal - discount_amount
     tax_amount = taxable_amount * (tax_rate / 100) if tax_rate > 0 else 0
@@ -218,7 +224,7 @@ def create_invoice(
             
             if item_data.productId:
                 try:
-                    from ...config.pos_models import Product
+                    from ...config.inventory_models import Product
                     product = db.query(Product).filter(
                         Product.id == item_data.productId,
                         Product.tenant_id == tenant_id
@@ -458,35 +464,55 @@ def update_invoice(
                 # Convert InvoiceItemCreate objects to JSON data
                 converted_items = []
                 for item_data in value:
+                    # Handle both Pydantic objects and dictionaries
+                    if isinstance(item_data, dict):
+                        description = item_data.get('description', '')
+                        quantity = item_data.get('quantity', 0)
+                        unit_price = item_data.get('unitPrice', 0)
+                        discount = item_data.get('discount', 0)
+                        tax_rate = item_data.get('taxRate', 0)
+                        product_id = item_data.get('productId')
+                        project_id = item_data.get('projectId')
+                        task_id = item_data.get('taskId')
+                    else:
+                        description = item_data.description
+                        quantity = item_data.quantity
+                        unit_price = item_data.unitPrice
+                        discount = item_data.discount
+                        tax_rate = item_data.taxRate
+                        product_id = item_data.productId
+                        project_id = item_data.projectId
+                        task_id = item_data.taskId
+                    
                     # Validate item data
-                    if not item_data.description:
+                    if not description:
                         raise HTTPException(status_code=400, detail="Item description is required")
                     
-                    if item_data.quantity <= 0:
+                    if quantity <= 0:
                         raise HTTPException(status_code=400, detail="Item quantity must be greater than 0")
                     
-                    if item_data.unitPrice < 0:
+                    if unit_price < 0:
                         raise HTTPException(status_code=400, detail="Item unit price cannot be negative")
                     
                     # Calculate item total
-                    item_subtotal = item_data.quantity * item_data.unitPrice
-                    item_discount = item_subtotal * (item_data.discount / 100) if item_data.discount > 0 else 0
-                    item_tax = (item_subtotal - item_discount) * (item_data.taxRate / 100) if item_data.taxRate > 0 else 0
+                    item_subtotal = quantity * unit_price
+                    item_discount = item_subtotal * (discount / 100) if discount > 0 else 0
+                    item_tax = (item_subtotal - item_discount) * (tax_rate / 100) if tax_rate > 0 else 0
                     item_total = item_subtotal - item_discount + item_tax
                     
                     # Create item as dict with all required fields
                     converted_item = {
                         "id": str(uuid.uuid4()),
-                        "description": item_data.description,
-                        "quantity": float(item_data.quantity),
-                        "unitPrice": float(item_data.unitPrice),
-                        "discount": float(item_data.discount or 0),
-                        "taxRate": float(item_data.taxRate or 0),
+                        "description": description,
+                        "quantity": float(quantity),
+                        "unitPrice": float(unit_price),
+                        "discount": float(discount or 0),
+                        "taxRate": float(tax_rate or 0),
                         "taxAmount": round(item_tax, 2),
                         "total": round(item_total, 2),
-                        "productId": item_data.productId,
-                        "projectId": item_data.projectId,
-                        "taskId": item_data.taskId
+                        "productId": product_id,
+                        "projectId": project_id,
+                        "taskId": task_id
                     }
                     converted_items.append(converted_item)
                 

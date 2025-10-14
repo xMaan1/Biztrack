@@ -2272,6 +2272,21 @@ class InvoiceBase(BaseModel):
     terms: Optional[str] = None
     status: InvoiceStatus = InvoiceStatus.DRAFT
     items: List[InvoiceItem] = []
+    
+    # Vehicle details for workshop invoices
+    vehicleMake: Optional[str] = None
+    vehicleModel: Optional[str] = None
+    vehicleYear: Optional[str] = None
+    vehicleColor: Optional[str] = None
+    vehicleVin: Optional[str] = None
+    vehicleReg: Optional[str] = None
+    vehicleMileage: Optional[str] = None
+    
+    # Workshop specific fields
+    jobDescription: Optional[str] = None
+    partsDescription: Optional[str] = None
+    labourTotal: Optional[float] = 0.0
+    partsTotal: Optional[float] = 0.0
 
 class InvoiceCreate(BaseModel):
     customerId: str
