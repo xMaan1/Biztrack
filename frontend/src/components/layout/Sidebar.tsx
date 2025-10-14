@@ -49,6 +49,7 @@ import {
   Trash2,
   ArrowLeft,
   ArrowRight,
+  Bell,
 } from 'lucide-react';
 
 interface SubMenuItem {
@@ -548,10 +549,32 @@ const allMenuItems: MenuItem[] = [
   {
     text: 'Settings',
     icon: Settings,
-    path: '/settings',
     roles: ['*'],
     planTypes: ['*'], // Available for all plans
     gradient: 'from-gray-500 to-slate-500',
+    subItems: [
+      {
+        text: 'General Settings',
+        icon: Settings,
+        path: '/settings',
+        roles: ['*'],
+        planTypes: ['*'],
+      },
+      {
+        text: 'Notifications',
+        icon: Bell,
+        path: '/notifications',
+        roles: ['*'],
+        planTypes: ['*'],
+      },
+      {
+        text: 'Notification Settings',
+        icon: Settings,
+        path: '/notifications/settings',
+        roles: ['*'],
+        planTypes: ['*'],
+      },
+    ],
   },
 ];
 

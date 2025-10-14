@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import InvoiceCustomizationService from '@/src/services/InvoiceCustomizationService';
+import { useNotifications } from '@/src/contexts/NotificationContext';
+import { Bell } from 'lucide-react';
 
 const CURRENCIES = [
   { code: 'USD', name: 'US Dollar', symbol: '$' },
@@ -32,6 +34,7 @@ const CURRENCIES = [
 export default function SettingsPage() {
   const { } = useAuth();
   const { currency, setCurrency, formatCurrency, loading: currencyLoading } = useCurrency();
+  const { preferences, unreadCount } = useNotifications();
   const [selectedCurrency, setSelectedCurrency] = useState(currency);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -180,6 +183,70 @@ export default function SettingsPage() {
                   )}
                   {saving ? 'Saving...' : 'Save Changes'}
                 </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Notification Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5" />
+                Notification Settings
+              </CardTitle>
+              <CardDescription>
+                Manage your notification preferences and channels
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Bell className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium">Notification Preferences</h3>
+                    <p className="text-sm text-gray-600">
+                      Configure how you receive notifications
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {unreadCount > 0 && (
+                    <Badge variant="destructive" className="mr-2">
+                      {unreadCount} unread
+                    </Badge>
+                  )}
+                  <Button
+                    variant="outline"
+                    onClick={() => window.location.href = '/notifications/settings'}
+                    className="gap-2"
+                  >
+                    <Settings className="h-4 w-4" />
+                    Manage Preferences
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center p-3 border rounded-lg">
+                  <h4 className="font-medium text-sm mb-1">Email</h4>
+                  <p className="text-xs text-gray-600">
+                    {preferences.filter(p => p.email_enabled).length} categories enabled
+                  </p>
+                </div>
+                <div className="text-center p-3 border rounded-lg">
+                  <h4 className="font-medium text-sm mb-1">Push</h4>
+                  <p className="text-xs text-gray-600">
+                    {preferences.filter(p => p.push_enabled).length} categories enabled
+                  </p>
+                </div>
+                <div className="text-center p-3 border rounded-lg">
+                  <h4 className="font-medium text-sm mb-1">In-App</h4>
+                  <p className="text-xs text-gray-600">
+                    {preferences.filter(p => p.in_app_enabled).length} categories enabled
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
