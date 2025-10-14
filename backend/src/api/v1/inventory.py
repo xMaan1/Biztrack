@@ -30,6 +30,24 @@ from ...config.database import (
 
 router = APIRouter(prefix="/inventory", tags=["Inventory Management"])
 
+def calculate_purchase_order_totals(items: List, vat_rate: float) -> dict:
+    """Calculate purchase order totals including VAT"""
+    subtotal = 0
+    for item in items:
+        if isinstance(item, dict):
+            subtotal += item.get('quantity', 0) * item.get('unitCost', 0)
+        else:
+            subtotal += item.quantity * item.unitCost
+    
+    vat_amount = subtotal * (vat_rate / 100) if vat_rate > 0 else 0
+    total = subtotal + vat_amount
+    
+    return {
+        "subtotal": round(subtotal, 2),
+        "vatAmount": round(vat_amount, 2),
+        "total": round(total, 2)
+    }
+
 def generate_purchase_order_number(tenant_id: str, db: Session) -> str:
     """Generate unique purchase order number with proper race condition handling"""
     year = datetime.now().year
@@ -624,6 +642,9 @@ def read_purchase_orders(
             "orderDate": order.orderDate.isoformat() if order.orderDate else None,
             "expectedDeliveryDate": order.expectedDeliveryDate.isoformat() if order.expectedDeliveryDate else None,
             "status": order.status,
+            "subtotal": order.subtotal,
+            "vatRate": order.vatRate,
+            "vatAmount": order.vatAmount,
             "totalAmount": order.totalAmount,
             "notes": order.notes,
             "items": order.items if order.items else [],
@@ -659,6 +680,9 @@ def read_purchase_order(
         "orderDate": order.orderDate.isoformat() if order.orderDate else None,
         "expectedDeliveryDate": order.expectedDeliveryDate.isoformat() if order.expectedDeliveryDate else None,
         "status": order.status,
+        "subtotal": order.subtotal,
+        "vatRate": order.vatRate,
+        "vatAmount": order.vatAmount,
         "totalAmount": order.totalAmount,
         "notes": order.notes,
         "items": order.items if order.items else [],
@@ -677,8 +701,8 @@ def create_purchase_order_endpoint(
     tenant_context: dict = Depends(get_tenant_context)
 ):
     """Create a new purchase order"""
-    # Calculate total amount from items
-    total_amount = sum(item.totalCost for item in order.items)
+    # Calculate totals including VAT
+    totals = calculate_purchase_order_totals(order.items, order.vatRate)
     
     # Generate purchase order number if not provided
     if not order.orderNumber:
@@ -704,7 +728,9 @@ def create_purchase_order_endpoint(
         "tenant_id": str(tenant_context["tenant_id"]),
         "createdBy": str(current_user.id),
         "status": "draft",
-        "totalAmount": total_amount,
+        "subtotal": totals["subtotal"],
+        "vatAmount": totals["vatAmount"],
+        "totalAmount": totals["total"],
         "createdAt": datetime.utcnow(),
         "updatedAt": datetime.utcnow()
     })
@@ -723,6 +749,9 @@ def create_purchase_order_endpoint(
         "orderDate": db_order.orderDate.isoformat() if db_order.orderDate else None,
         "expectedDeliveryDate": db_order.expectedDeliveryDate.isoformat() if db_order.expectedDeliveryDate else None,
         "status": db_order.status,
+        "subtotal": db_order.subtotal,
+        "vatRate": db_order.vatRate,
+        "vatAmount": db_order.vatAmount,
         "totalAmount": db_order.totalAmount,
         "notes": db_order.notes,
         "items": db_order.items if db_order.items else [],
@@ -742,12 +771,28 @@ def update_purchase_order_endpoint(
     tenant_context: dict = Depends(get_tenant_context)
 ):
     """Update an existing purchase order"""
+    # Get the existing order to access items for VAT calculation
+    existing_order = get_purchase_order_by_id(order_id, db, str(tenant_context["tenant_id"]))
+    if not existing_order:
+        raise HTTPException(status_code=404, detail="Purchase order not found")
+    
     order_update = order.dict(exclude_unset=True)
     if "orderNumber" in order_update:
         order_update["poNumber"] = order_update.pop("orderNumber")
     
     # Remove fields that don't exist in SQLAlchemy model
     order_update.pop("supplierName", None)
+    
+    # If VAT rate is being updated, recalculate totals
+    if "vatRate" in order_update:
+        vat_rate = order_update["vatRate"]
+        items = existing_order.items if existing_order.items else []
+        totals = calculate_purchase_order_totals(items, vat_rate)
+        order_update.update({
+            "subtotal": totals["subtotal"],
+            "vatAmount": totals["vatAmount"],
+            "totalAmount": totals["total"]
+        })
     
     # Convert date strings to date objects
     if order_update.get("orderDate"):
@@ -758,8 +803,6 @@ def update_purchase_order_endpoint(
     order_update["updatedAt"] = datetime.utcnow()
     
     db_order = update_purchase_order(order_id, order_update, db, str(tenant_context["tenant_id"]))
-    if not db_order:
-        raise HTTPException(status_code=404, detail="Purchase order not found")
     
     # Convert to response format
     response_data = {
@@ -773,6 +816,9 @@ def update_purchase_order_endpoint(
         "orderDate": db_order.orderDate.isoformat() if db_order.orderDate else None,
         "expectedDeliveryDate": db_order.expectedDeliveryDate.isoformat() if db_order.expectedDeliveryDate else None,
         "status": db_order.status,
+        "subtotal": db_order.subtotal,
+        "vatRate": db_order.vatRate,
+        "vatAmount": db_order.vatAmount,
         "totalAmount": db_order.totalAmount,
         "notes": db_order.notes,
         "items": db_order.items if db_order.items else [],

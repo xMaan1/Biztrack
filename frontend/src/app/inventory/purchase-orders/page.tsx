@@ -185,6 +185,7 @@ export default function PurchaseOrdersPage() {
       warehouseId: order.warehouseId,
       orderDate: order.orderDate ? order.orderDate.split('T')[0] : '',
       expectedDeliveryDate: order.expectedDeliveryDate ? order.expectedDeliveryDate.split('T')[0] : '',
+      vatRate: order.vatRate || 0,
       notes: order.notes || '',
     });
     setIsEditModalOpen(true);
@@ -692,6 +693,46 @@ export default function PurchaseOrdersPage() {
                   </Button>
                 </div>
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-vatRate">VAT Rate (%)</Label>
+                <Input
+                  id="edit-vatRate"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  value={editOrder.vatRate}
+                  onChange={(e) =>
+                    setEditOrder((prev) => ({
+                      ...prev,
+                      vatRate: parseFloat(e.target.value) || 0,
+                    }))
+                  }
+                  placeholder="0.00"
+                />
+              </div>
+
+              {/* VAT Summary */}
+              {selectedOrder && (
+                <div className="space-y-2 p-4 bg-muted rounded-lg">
+                  <Label className="text-sm font-medium">Current VAT Summary</Label>
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Subtotal:</span>
+                      <div className="font-medium">{formatCurrency(selectedOrder.subtotal || 0)}</div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">VAT ({selectedOrder.vatRate || 0}%):</span>
+                      <div className="font-medium">{formatCurrency(selectedOrder.vatAmount || 0)}</div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Total:</span>
+                      <div className="font-medium">{formatCurrency(selectedOrder.totalAmount || 0)}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="edit-notes">Notes</Label>

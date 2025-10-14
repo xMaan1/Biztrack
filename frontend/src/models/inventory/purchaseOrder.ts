@@ -57,6 +57,9 @@ export interface PurchaseOrder {
   orderDate: string;
   expectedDeliveryDate: string;
   status: PurchaseOrderStatus;
+  subtotal: number;
+  vatRate: number;
+  vatAmount: number;
   totalAmount: number;
   notes?: string;
   items: PurchaseOrderItemCreate[];
@@ -72,6 +75,7 @@ export interface PurchaseOrderCreate {
   warehouseId: string;
   orderDate: string;
   expectedDeliveryDate: string;
+  vatRate?: number;
   notes?: string;
   items: PurchaseOrderItemCreate[];
 }
@@ -85,6 +89,9 @@ export interface PurchaseOrderUpdate {
   orderDate?: string;
   expectedDeliveryDate?: string;
   status?: PurchaseOrderStatus;
+  vatRate?: number;
+  subtotal?: number;
+  vatAmount?: number;
   totalAmount?: number;
   notes?: string;
 }

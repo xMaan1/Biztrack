@@ -2936,6 +2936,9 @@ class PurchaseOrderBase(BaseModel):
     orderDate: str
     expectedDeliveryDate: str
     status: PurchaseOrderStatus
+    subtotal: float = 0.0
+    vatRate: float = 0.0
+    vatAmount: float = 0.0
     totalAmount: float
     notes: Optional[str] = None
     items: List[PurchaseOrderItemCreate]
@@ -2948,6 +2951,7 @@ class PurchaseOrderCreate(BaseModel):
     warehouseId: str
     orderDate: str
     expectedDeliveryDate: str
+    vatRate: float = 0.0
     notes: Optional[str] = None
     items: List[PurchaseOrderItemCreate]
 
@@ -2960,6 +2964,9 @@ class PurchaseOrderUpdate(BaseModel):
     orderDate: Optional[str] = None
     expectedDeliveryDate: Optional[str] = None
     status: Optional[PurchaseOrderStatus] = None
+    vatRate: Optional[float] = None
+    subtotal: Optional[float] = None
+    vatAmount: Optional[float] = None
     totalAmount: Optional[float] = None
     notes: Optional[str] = None
 

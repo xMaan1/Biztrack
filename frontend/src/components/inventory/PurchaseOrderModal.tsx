@@ -72,6 +72,7 @@ export default function PurchaseOrderModal({
     warehouseId: '',
     orderDate: new Date().toISOString().split('T')[0],
     expectedDeliveryDate: '',
+    vatRate: 0,
     notes: '',
     items: [],
     ...initialData,
@@ -91,6 +92,23 @@ export default function PurchaseOrderModal({
       fetchData();
     }
   }, [isOpen]);
+
+  const calculateTotals = () => {
+    const subtotal = newOrder.items.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
+    const vatAmount = subtotal * (newOrder.vatRate / 100);
+    const total = subtotal + vatAmount;
+    
+    return {
+      subtotal: Math.round(subtotal * 100) / 100,
+      vatAmount: Math.round(vatAmount * 100) / 100,
+      total: Math.round(total * 100) / 100,
+    };
+  };
+
+  const handleVatRateChange = (value: string) => {
+    const vatRate = parseFloat(value) || 0;
+    setNewOrder(prev => ({ ...prev, vatRate }));
+  };
 
   const fetchData = async () => {
     try {
@@ -220,6 +238,7 @@ export default function PurchaseOrderModal({
       warehouseId: warehouses.length > 0 ? warehouses[0].id : '',
       orderDate: new Date().toISOString().split('T')[0],
       expectedDeliveryDate: '',
+      vatRate: 0,
       notes: '',
       items: [],
       ...initialData,
@@ -392,6 +411,20 @@ export default function PurchaseOrderModal({
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="vatRate">VAT Rate (%)</Label>
+            <Input
+              id="vatRate"
+              type="number"
+              step="0.01"
+              min="0"
+              max="100"
+              value={newOrder.vatRate}
+              onChange={(e) => handleVatRateChange(e.target.value)}
+              placeholder="0.00"
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="notes">Notes</Label>
             <Textarea
               id="notes"
@@ -525,14 +558,18 @@ export default function PurchaseOrderModal({
                     </div>
                   ))}
                 </div>
-                <div className="text-right font-medium">
-                  Total:{' '}
-                  {formatCurrency(
-                    newOrder.items.reduce(
-                      (sum, item) => sum + item.totalCost,
-                      0,
-                    ),
+                <div className="text-right space-y-1">
+                  <div className="text-sm">
+                    Subtotal: {formatCurrency(calculateTotals().subtotal)}
+                  </div>
+                  {newOrder.vatRate > 0 && (
+                    <div className="text-sm">
+                      VAT ({newOrder.vatRate}%): {formatCurrency(calculateTotals().vatAmount)}
+                    </div>
                   )}
+                  <div className="font-medium text-lg">
+                    Total: {formatCurrency(calculateTotals().total)}
+                  </div>
                 </div>
               </div>
             )}

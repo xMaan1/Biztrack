@@ -77,7 +77,10 @@ class PurchaseOrder(Base):
     orderDate = Column(Date, nullable=False)
     expectedDeliveryDate = Column(Date)
     status = Column(String, default="draft")  # draft, submitted, approved, ordered, received, cancelled
-    totalAmount = Column(Float, default=0.0)
+    subtotal = Column(Float, default=0.0)  # Subtotal before VAT
+    vatRate = Column(Float, default=0.0)  # VAT rate percentage
+    vatAmount = Column(Float, default=0.0)  # VAT amount
+    totalAmount = Column(Float, default=0.0)  # Total amount including VAT
     notes = Column(Text)
     items = Column(JSON, default=[])  # Store purchase order items as JSON
     approvedBy = Column(UUID(as_uuid=True), ForeignKey("users.id"))
