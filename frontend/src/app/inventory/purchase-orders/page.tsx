@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
 import { useCachedApi } from '../../../hooks/useCachedApi';
 import {
   Card,
@@ -60,11 +59,11 @@ import { Label } from '../../../components/ui/label';
 import { Textarea } from '../../../components/ui/textarea';
 import { toast } from 'sonner';
 import PurchaseOrderModal from '../../../components/inventory/PurchaseOrderModal';
+import PurchaseOrderViewModal from '../../../components/inventory/PurchaseOrderViewModal';
 
 export default function PurchaseOrdersPage() {
   const { } = useAuth();
   const { formatCurrency } = useCurrency();
-  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
@@ -80,9 +79,11 @@ export default function PurchaseOrdersPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
+  const [viewingOrder, setViewingOrder] = useState<PurchaseOrder | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Use cached API calls with longer TTL for static data
@@ -133,6 +134,16 @@ export default function PurchaseOrdersPage() {
       return matchesSearch && matchesStatus;
     });
   }, [purchaseOrders, debouncedSearchTerm, statusFilter]);
+
+  const openViewModal = (order: PurchaseOrder) => {
+    setViewingOrder(order);
+    setIsViewModalOpen(true);
+  };
+
+  const closeViewModal = () => {
+    setIsViewModalOpen(false);
+    setViewingOrder(null);
+  };
 
   const openDeleteModal = (order: PurchaseOrder) => {
     setSelectedOrder(order);
@@ -381,11 +392,7 @@ export default function PurchaseOrdersPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() =>
-                              router.push(
-                                `/inventory/purchase-orders/${order.id}`,
-                              )
-                            }
+                            onClick={() => openViewModal(order)}
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
@@ -522,6 +529,13 @@ export default function PurchaseOrdersPage() {
           showSupplierCount={true}
           showAddSupplierButton={true}
           useToastNotifications={true}
+        />
+
+        {/* View Purchase Order Modal */}
+        <PurchaseOrderViewModal
+          isOpen={isViewModalOpen}
+          onClose={closeViewModal}
+          purchaseOrder={viewingOrder}
         />
 
         {/* Delete Purchase Order Modal */}
@@ -684,7 +698,7 @@ export default function PurchaseOrdersPage() {
                     size="sm"
                     onClick={() => {
                       setIsEditModalOpen(false);
-                      router.push('/hrm/suppliers/new');
+                      window.open('/hrm/suppliers/new', '_blank');
                     }}
                     className="whitespace-nowrap"
                   >
