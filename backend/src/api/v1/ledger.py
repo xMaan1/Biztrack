@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import List, Optional
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 from ...api.dependencies import get_current_user, get_tenant_context
 from ...config.database import get_db
@@ -237,6 +238,22 @@ async def create_ledger_transaction_endpoint(
         transaction_data["tenant_id"] = tenant_context["tenant_id"]
         transaction_data["created_by"] = current_user.id
         
+        # Transform field names to match SQLAlchemy model
+        if "account_id" in transaction_data:
+            transaction_data["debit_account_id"] = transaction_data.pop("account_id")
+        if "contra_account_id" in transaction_data:
+            transaction_data["credit_account_id"] = transaction_data.pop("contra_account_id")
+        
+        # Handle meta_data fields
+        if "meta_data" in transaction_data and transaction_data["meta_data"]:
+            meta_data = transaction_data.pop("meta_data")
+            if "currency" in meta_data:
+                transaction_data["currency"] = meta_data["currency"]
+            if "notes" in meta_data:
+                transaction_data["notes"] = meta_data["notes"]
+            if "tags" in meta_data:
+                transaction_data["tags"] = meta_data["tags"]
+        
         db_transaction = create_ledger_transaction(transaction_data, db)
         
         return LedgerTransactionResponse(
@@ -246,20 +263,22 @@ async def create_ledger_transaction_endpoint(
             transaction_date=db_transaction.transaction_date,
             transaction_type=db_transaction.transaction_type.value,
             status=db_transaction.status.value,
-            debit_account_id=str(db_transaction.debit_account_id),
-            credit_account_id=str(db_transaction.credit_account_id),
+            account_id=str(db_transaction.debit_account_id),
+            contra_account_id=str(db_transaction.credit_account_id),
             amount=db_transaction.amount,
-            currency=db_transaction.currency,
-            reference_type=db_transaction.reference_type,
-            reference_id=db_transaction.reference_id,
-            reference_number=db_transaction.reference_number,
             description=db_transaction.description,
-            notes=db_transaction.notes,
-            tags=db_transaction.tags,
-            attachments=db_transaction.attachments,
+            reference_number=db_transaction.reference_number,
+            meta_data={
+                "currency": db_transaction.currency,
+                "notes": db_transaction.notes,
+                "tags": db_transaction.tags,
+                "reference_type": db_transaction.reference_type,
+                "reference_id": db_transaction.reference_id,
+                "attachments": db_transaction.attachments,
+                "approved_by_id": str(db_transaction.approved_by) if db_transaction.approved_by else None,
+                "journal_entry_id": str(db_transaction.journal_entry_id) if db_transaction.journal_entry_id else None,
+            },
             created_by_id=str(db_transaction.created_by),
-            approved_by_id=str(db_transaction.approved_by) if db_transaction.approved_by else None,
-            journal_entry_id=str(db_transaction.journal_entry_id) if db_transaction.journal_entry_id else None,
             created_at=db_transaction.created_at,
             updated_at=db_transaction.updated_at
         )
@@ -299,20 +318,22 @@ async def get_ledger_transactions_endpoint(
                 transaction_date=txn.transaction_date,
                 transaction_type=txn.transaction_type.value,
                 status=txn.status.value,
-                debit_account_id=str(txn.debit_account_id),
-                credit_account_id=str(txn.credit_account_id),
+                account_id=str(txn.debit_account_id),
+                contra_account_id=str(txn.credit_account_id),
                 amount=txn.amount,
-                currency=txn.currency,
-                reference_type=txn.reference_type,
-                reference_id=txn.reference_id,
-                reference_number=txn.reference_number,
                 description=txn.description,
-                notes=txn.notes,
-                tags=txn.tags,
-                attachments=txn.attachments,
+                reference_number=txn.reference_number,
+                meta_data={
+                    "currency": txn.currency,
+                    "notes": txn.notes,
+                    "tags": txn.tags,
+                    "reference_type": txn.reference_type,
+                    "reference_id": txn.reference_id,
+                    "attachments": txn.attachments,
+                    "approved_by_id": str(txn.approved_by) if txn.approved_by else None,
+                    "journal_entry_id": str(txn.journal_entry_id) if txn.journal_entry_id else None,
+                },
                 created_by_id=str(txn.created_by),
-                approved_by_id=str(txn.approved_by) if txn.approved_by else None,
-                journal_entry_id=str(txn.journal_entry_id) if txn.journal_entry_id else None,
                 created_at=txn.created_at,
                 updated_at=txn.updated_at
             ) for txn in transactions
@@ -340,20 +361,22 @@ async def get_ledger_transaction_by_id_endpoint(
             transaction_date=transaction.transaction_date,
             transaction_type=transaction.transaction_type.value,
             status=transaction.status.value,
-            debit_account_id=str(transaction.debit_account_id),
-            credit_account_id=str(transaction.credit_account_id),
+            account_id=str(transaction.debit_account_id),
+            contra_account_id=str(transaction.credit_account_id),
             amount=transaction.amount,
-            currency=transaction.currency,
-            reference_type=transaction.reference_type,
-            reference_id=transaction.reference_id,
-            reference_number=transaction.reference_number,
             description=transaction.description,
-            notes=transaction.notes,
-            tags=transaction.tags,
-            attachments=transaction.attachments,
+            reference_number=transaction.reference_number,
+            meta_data={
+                "currency": transaction.currency,
+                "notes": transaction.notes,
+                "tags": transaction.tags,
+                "reference_type": transaction.reference_type,
+                "reference_id": transaction.reference_id,
+                "attachments": transaction.attachments,
+                "approved_by_id": str(transaction.approved_by) if transaction.approved_by else None,
+                "journal_entry_id": str(transaction.journal_entry_id) if transaction.journal_entry_id else None,
+            },
             created_by_id=str(transaction.created_by),
-            approved_by_id=str(transaction.approved_by) if transaction.approved_by else None,
-            journal_entry_id=str(transaction.journal_entry_id) if transaction.journal_entry_id else None,
             created_at=transaction.created_at,
             updated_at=transaction.updated_at
         )
@@ -668,6 +691,197 @@ async def get_account_balance_endpoint(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch account balance: {str(e)}")
+
+# Profit/Loss Dashboard Endpoint
+@router.get("/profit-loss-dashboard")
+async def get_profit_loss_dashboard(
+    period: str = Query("month", regex="^(day|week|month|year)$"),
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context = Depends(get_tenant_context)
+):
+    """Get comprehensive profit/loss dashboard data"""
+    try:
+        from ...config.invoice_models import Invoice, Payment
+        from ...config.inventory_models import PurchaseOrder, StockMovement, Product
+        from ...config.sales_models import Quote, Contract
+        
+        tenant_id = tenant_context["tenant_id"]
+        
+        # Calculate date range based on period
+        today = datetime.utcnow().date()
+        if period == "day":
+            start_dt = today
+            end_dt = today
+        elif period == "week":
+            start_dt = today - timedelta(days=today.weekday())
+            end_dt = start_dt + timedelta(days=6)
+        elif period == "month":
+            start_dt = today.replace(day=1)
+            if start_dt.month == 12:
+                end_dt = start_dt.replace(year=start_dt.year + 1, month=1) - timedelta(days=1)
+            else:
+                end_dt = start_dt.replace(month=start_dt.month + 1) - timedelta(days=1)
+        elif period == "year":
+            start_dt = today.replace(month=1, day=1)
+            end_dt = today.replace(month=12, day=31)
+        
+        # Override with provided dates if available
+        if start_date:
+            start_dt = start_date
+        if end_date:
+            end_dt = end_date
+        
+        # Convert to datetime for database queries
+        start_datetime = datetime.combine(start_dt, datetime.min.time())
+        end_datetime = datetime.combine(end_dt, datetime.max.time())
+        
+        # Sales/Revenue Data
+        invoices_query = db.query(Invoice).filter(
+            Invoice.tenant_id == tenant_id,
+            Invoice.createdAt >= start_datetime,
+            Invoice.createdAt <= end_datetime
+        )
+        
+        total_invoices = invoices_query.count()
+        total_sales = invoices_query.with_entities(func.sum(Invoice.total)).scalar() or 0
+        paid_invoices = invoices_query.filter(Invoice.status == "paid").count()
+        pending_invoices = invoices_query.filter(Invoice.status.in_(["draft", "sent", "viewed"])).count()
+        overdue_invoices = invoices_query.filter(Invoice.status == "overdue").count()
+        
+        # Payments received
+        payments_query = db.query(Payment).join(Invoice).filter(
+            Invoice.tenant_id == tenant_id,
+            Payment.createdAt >= start_datetime,
+            Payment.createdAt <= end_datetime
+        )
+        total_payments_received = payments_query.with_entities(func.sum(Payment.amount)).scalar() or 0
+        
+        # Purchase/Expense Data
+        purchase_orders_query = db.query(PurchaseOrder).filter(
+            PurchaseOrder.tenant_id == tenant_id,
+            PurchaseOrder.createdAt >= start_datetime,
+            PurchaseOrder.createdAt <= end_datetime
+        )
+        
+        total_purchase_orders = purchase_orders_query.count()
+        total_purchases = purchase_orders_query.with_entities(func.sum(PurchaseOrder.totalAmount)).scalar() or 0
+        completed_purchases = purchase_orders_query.filter(PurchaseOrder.status == "received").count()
+        pending_purchases = purchase_orders_query.filter(PurchaseOrder.status.in_(["draft", "submitted", "approved", "ordered"])).count()
+        
+        # Inventory Value
+        inventory_query = db.query(Product).filter(
+            Product.tenant_id == tenant_id,
+            Product.isActive == True
+        )
+        total_inventory_value = inventory_query.with_entities(
+            func.sum(Product.stockQuantity * Product.costPrice)
+        ).scalar() or 0
+        total_products = inventory_query.count()
+        
+        # Stock Movements
+        stock_movements_query = db.query(StockMovement).filter(
+            StockMovement.tenant_id == tenant_id,
+            StockMovement.createdAt >= start_datetime,
+            StockMovement.createdAt <= end_datetime
+        )
+        
+        inbound_movements = stock_movements_query.filter(StockMovement.movementType == "inbound").count()
+        outbound_movements = stock_movements_query.filter(StockMovement.movementType == "outbound").count()
+        
+        # Calculate Profit/Loss
+        gross_profit = total_sales - total_purchases
+        net_profit = total_payments_received - total_purchases
+        
+        # Quotes/Contracts
+        quotes_query = db.query(Quote).filter(
+            Quote.tenant_id == tenant_id,
+            Quote.createdAt >= start_datetime,
+            Quote.createdAt <= end_datetime
+        )
+        total_quotes = quotes_query.count()
+        quotes_value = quotes_query.with_entities(func.sum(Quote.total)).scalar() or 0
+        
+        contracts_query = db.query(Contract).filter(
+            Contract.tenant_id == tenant_id,
+            Contract.createdAt >= start_datetime,
+            Contract.createdAt <= end_datetime
+        )
+        total_contracts = contracts_query.count()
+        contracts_value = contracts_query.with_entities(func.sum(Contract.value)).scalar() or 0
+        
+        # Daily breakdown for charts
+        daily_data = []
+        current_date = start_dt
+        while current_date <= end_dt:
+            day_start = datetime.combine(current_date, datetime.min.time())
+            day_end = datetime.combine(current_date, datetime.max.time())
+            
+            day_sales = db.query(Invoice).filter(
+                Invoice.tenant_id == tenant_id,
+                Invoice.createdAt >= day_start,
+                Invoice.createdAt <= day_end
+            ).with_entities(func.sum(Invoice.total)).scalar() or 0
+            
+            day_purchases = db.query(PurchaseOrder).filter(
+                PurchaseOrder.tenant_id == tenant_id,
+                PurchaseOrder.createdAt >= day_start,
+                PurchaseOrder.createdAt <= day_end
+            ).with_entities(func.sum(PurchaseOrder.totalAmount)).scalar() or 0
+            
+            daily_data.append({
+                "date": current_date.isoformat(),
+                "sales": day_sales,
+                "purchases": day_purchases,
+                "profit": day_sales - day_purchases
+            })
+            
+            current_date += timedelta(days=1)
+        
+        return {
+            "period": period,
+            "start_date": start_dt.isoformat(),
+            "end_date": end_dt.isoformat(),
+            "summary": {
+                "total_sales": total_sales,
+                "total_purchases": total_purchases,
+                "gross_profit": gross_profit,
+                "net_profit": net_profit,
+                "total_payments_received": total_payments_received,
+                "inventory_value": total_inventory_value
+            },
+            "sales": {
+                "total_invoices": total_invoices,
+                "paid_invoices": paid_invoices,
+                "pending_invoices": pending_invoices,
+                "overdue_invoices": overdue_invoices,
+                "total_sales": total_sales,
+                "total_payments_received": total_payments_received
+            },
+            "purchases": {
+                "total_purchase_orders": total_purchase_orders,
+                "completed_purchases": completed_purchases,
+                "pending_purchases": pending_purchases,
+                "total_purchases": total_purchases
+            },
+            "inventory": {
+                "total_products": total_products,
+                "total_inventory_value": total_inventory_value,
+                "inbound_movements": inbound_movements,
+                "outbound_movements": outbound_movements
+            },
+            "quotes_contracts": {
+                "total_quotes": total_quotes,
+                "quotes_value": quotes_value,
+                "total_contracts": total_contracts,
+                "contracts_value": contracts_value
+            },
+            "daily_breakdown": daily_data
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch profit/loss dashboard: {str(e)}")
 
 # Test endpoint to verify API is working
 @router.get("/test")

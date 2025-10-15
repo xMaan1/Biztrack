@@ -24,6 +24,7 @@ import {
   TransactionType,
   AccountType,
   AccountCategory,
+  ProfitLossDashboard,
 } from '../models/ledger';
 
 export class LedgerService {
@@ -418,15 +419,20 @@ export class LedgerService {
     }
   }
 
-  // Manual Account Seeding
-  static async seedDefaultAccounts(): Promise<any> {
-    try {
-      const response = await apiService.post('/ledger/seed-accounts');
-      return response;
-    } catch (error: any) {
-      throw error;
-    }
+  // Profit/Loss Dashboard
+  static async getProfitLossDashboard(
+    period: string = 'month',
+    startDate?: string,
+    endDate?: string,
+  ): Promise<ProfitLossDashboard> {
+    const params = new URLSearchParams();
+    params.append('period', period);
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+
+    const response = await apiService.get(
+      `/ledger/profit-loss-dashboard?${params.toString()}`,
+    );
+    return response;
   }
 }
-
-export default LedgerService;

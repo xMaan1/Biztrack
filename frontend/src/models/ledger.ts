@@ -88,35 +88,34 @@ export interface LedgerTransaction {
 
 export interface LedgerTransactionCreate {
   transaction_date: string;
-  transaction_type: TransactionType;
-  debit_account_id: string;
-  credit_account_id: string;
+  transaction_type: string;
+  account_id: string;
+  contra_account_id: string;
   amount: number;
-  currency?: string;
-  reference_type?: string;
-  reference_id?: string;
-  reference_number?: string;
   description: string;
-  notes?: string;
-  tags?: string[];
-  attachments?: string[];
+  reference_number?: string;
+  status?: string;
+  meta_data?: {
+    currency?: string;
+    notes?: string;
+    tags?: string[];
+  };
 }
 
 export interface LedgerTransactionUpdate {
   transaction_date?: string;
-  transaction_type?: TransactionType;
-  debit_account_id?: string;
-  credit_account_id?: string;
+  transaction_type?: string;
+  account_id?: string;
+  contra_account_id?: string;
   amount?: number;
-  currency?: string;
-  reference_type?: string;
-  reference_id?: string;
-  reference_number?: string;
   description?: string;
-  notes?: string;
-  tags?: string[];
-  attachments?: string[];
-  status?: TransactionStatus;
+  reference_number?: string;
+  status?: string;
+  meta_data?: {
+    currency?: string;
+    notes?: string;
+    tags?: string[];
+  };
 }
 
 export interface LedgerTransactionResponse {
@@ -126,20 +125,22 @@ export interface LedgerTransactionResponse {
   transaction_date: string;
   transaction_type: string;
   status: string;
-  debit_account_id: string;
-  credit_account_id: string;
+  account_id: string;
+  contra_account_id: string;
   amount: number;
-  currency: string;
-  reference_type?: string;
-  reference_id?: string;
-  reference_number?: string;
   description: string;
-  notes?: string;
-  tags: string[];
-  attachments: string[];
+  reference_number?: string;
+  meta_data?: {
+    currency?: string;
+    notes?: string;
+    tags?: string[];
+    reference_type?: string;
+    reference_id?: string;
+    attachments?: string[];
+    approved_by_id?: string;
+    journal_entry_id?: string;
+  };
   created_by_id: string;
-  approved_by_id?: string;
-  journal_entry_id?: string;
   created_at: string;
   updated_at: string;
 }
@@ -563,13 +564,78 @@ export const getAccountTypeColor = (type: AccountType): string => {
   return colors[type] || 'text-gray-600';
 };
 
-export const getTransactionTypeColor = (type: TransactionType): string => {
-  const colors: Record<TransactionType, string> = {
-    [TransactionType.INCOME]: 'text-green-600',
-    [TransactionType.EXPENSE]: 'text-red-600',
-    [TransactionType.TRANSFER]: 'text-blue-600',
-    [TransactionType.ADJUSTMENT]: 'text-yellow-600',
-    [TransactionType.REFUND]: 'text-purple-600',
+// Profit/Loss Dashboard Models
+export interface ProfitLossSummary {
+  total_sales: number;
+  total_purchases: number;
+  gross_profit: number;
+  net_profit: number;
+  total_payments_received: number;
+  inventory_value: number;
+}
+
+export interface ProfitLossSales {
+  total_invoices: number;
+  paid_invoices: number;
+  pending_invoices: number;
+  overdue_invoices: number;
+  total_sales: number;
+  total_payments_received: number;
+}
+
+export interface ProfitLossPurchases {
+  total_purchase_orders: number;
+  completed_purchases: number;
+  pending_purchases: number;
+  total_purchases: number;
+}
+
+export interface ProfitLossInventory {
+  total_products: number;
+  total_inventory_value: number;
+  inbound_movements: number;
+  outbound_movements: number;
+}
+
+export interface ProfitLossQuotesContracts {
+  total_quotes: number;
+  quotes_value: number;
+  total_contracts: number;
+  contracts_value: number;
+}
+
+export interface DailyBreakdown {
+  date: string;
+  sales: number;
+  purchases: number;
+  profit: number;
+}
+
+export interface ProfitLossDashboard {
+  period: string;
+  start_date: string;
+  end_date: string;
+  summary: ProfitLossSummary;
+  sales: ProfitLossSales;
+  purchases: ProfitLossPurchases;
+  inventory: ProfitLossInventory;
+  quotes_contracts: ProfitLossQuotesContracts;
+  daily_breakdown: DailyBreakdown[];
+}
+
+export enum ProfitLossPeriod {
+  DAY = 'day',
+  WEEK = 'week',
+  MONTH = 'month',
+  YEAR = 'year'
+}
+
+export const getProfitLossPeriodLabel = (period: ProfitLossPeriod): string => {
+  const labels: Record<ProfitLossPeriod, string> = {
+    [ProfitLossPeriod.DAY]: 'Today',
+    [ProfitLossPeriod.WEEK]: 'This Week',
+    [ProfitLossPeriod.MONTH]: 'This Month',
+    [ProfitLossPeriod.YEAR]: 'This Year',
   };
-  return colors[type] || 'text-gray-600';
+  return labels[period] || period;
 };

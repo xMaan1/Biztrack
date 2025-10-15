@@ -27,8 +27,9 @@ import {
   Plus,
   Eye,
   X,
+  BarChart3,
 } from 'lucide-react';
-import LedgerService from '@/src/services/ledgerService';
+import { LedgerService } from '@/src/services/ledgerService';
 import DashboardLayout from '@/src/components/layout/DashboardLayout';
 import {
   LedgerTransactionResponse,
@@ -405,6 +406,7 @@ export default function LedgerDashboard() {
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="accounts">Chart of Accounts</TabsTrigger>
             <TabsTrigger value="transactions">Transactions</TabsTrigger>
+            <TabsTrigger value="profit-loss">Profit & Loss</TabsTrigger>
             <TabsTrigger value="reports">Financial Reports</TabsTrigger>
             <TabsTrigger value="budgets">Budgets</TabsTrigger>
           </TabsList>
@@ -681,6 +683,23 @@ export default function LedgerDashboard() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Profit & Loss Tab */}
+          <TabsContent value="profit-loss" className="space-y-6">
+            <div className="text-center py-8">
+              <BarChart3 className="h-16 w-16 mx-auto text-blue-600 mb-4" />
+              <h3 className="text-xl font-semibold mb-2">Profit & Loss Dashboard</h3>
+              <p className="text-muted-foreground mb-4">
+                Comprehensive financial overview with sales, purchases, and inventory data
+              </p>
+              <Button 
+                onClick={() => window.open('/ledger/profit-loss', '_blank')}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                Open Profit & Loss Dashboard
+              </Button>
+            </div>
           </TabsContent>
 
           {/* Financial Reports Tab */}

@@ -563,6 +563,13 @@ const allMenuItems: MenuItem[] = [
         planTypes: ['*'],
       },
       {
+        text: 'Profit & Loss',
+        icon: TrendingUp,
+        path: '/ledger/profit-loss',
+        roles: ['*'],
+        planTypes: ['*'],
+      },
+      {
         text: 'Investments',
         icon: DollarSign,
         path: '/investments',

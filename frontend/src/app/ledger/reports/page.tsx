@@ -18,7 +18,7 @@ import {
   Filter,
   Printer,
 } from 'lucide-react';
-import LedgerService from '../../../services/ledgerService';
+import { LedgerService } from '../../../services/ledgerService';
 import {
   TrialBalanceResponse,
   IncomeStatementResponse,
