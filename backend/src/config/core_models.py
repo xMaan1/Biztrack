@@ -202,7 +202,6 @@ class Tenant(Base):
     # Banking relationships
     bank_accounts = relationship("BankAccount", back_populates="tenant")
     bank_transactions = relationship("BankTransaction", back_populates="tenant")
-    online_transactions = relationship("OnlineTransaction", back_populates="tenant")
     cash_positions = relationship("CashPosition", back_populates="tenant")
     
     customDepartments = relationship("CustomDepartment", back_populates="tenant")

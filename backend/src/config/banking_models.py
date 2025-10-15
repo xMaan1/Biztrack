@@ -1,6 +1,6 @@
 """
 Bank Transaction Models for ERP System
-Handles bank payments, online transactions, and cash position tracking
+Handles bank payments and cash position tracking
 """
 
 import uuid
@@ -131,11 +131,6 @@ class BankTransaction(Base):
     counterparty_account = Column(String, nullable=True)
     counterparty_bank = Column(String, nullable=True)
     
-    # Online Transaction Specific
-    is_online_transaction = Column(Boolean, default=False)
-    online_transaction_id = Column(String, nullable=True)
-    processing_fee = Column(Float, default=0.0)
-    
     # Reconciliation
     is_reconciled = Column(Boolean, default=False)
     reconciled_date = Column(DateTime, nullable=True)
@@ -174,67 +169,7 @@ class BankTransaction(Base):
         Index("idx_bank_transactions_date", "transaction_date"),
         Index("idx_bank_transactions_type", "transaction_type"),
         Index("idx_bank_transactions_status", "status"),
-        Index("idx_bank_transactions_online", "is_online_transaction"),
         Index("idx_bank_transactions_reconciled", "is_reconciled"),
-    )
-
-class OnlineTransaction(Base):
-    __tablename__ = "online_transactions"
-    
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
-    bank_account_id = Column(UUID(as_uuid=True), ForeignKey("bank_accounts.id"), nullable=False)
-    bank_transaction_id = Column(UUID(as_uuid=True), ForeignKey("bank_transactions.id"), nullable=True)
-    
-    # Online Transaction Details
-    online_transaction_id = Column(String, unique=True, index=True)  # External system ID
-    platform = Column(String, nullable=False)  # PayPal, Stripe, Square, etc.
-    gateway = Column(String, nullable=True)  # Payment gateway used
-    
-    # Transaction Information
-    transaction_type = Column(String, nullable=False)  # payment, refund, chargeback, etc.
-    amount = Column(Float, nullable=False)
-    currency = Column(String, default="USD")
-    processing_fee = Column(Float, default=0.0)
-    net_amount = Column(Float, nullable=False)  # Amount after fees
-    
-    # Status and Processing
-    status = Column(String, nullable=False)  # pending, completed, failed, refunded
-    processing_status = Column(String, nullable=True)  # processing, settled, disputed
-    settlement_date = Column(DateTime, nullable=True)
-    
-    # Customer Information
-    customer_email = Column(String, nullable=True)
-    customer_name = Column(String, nullable=True)
-    customer_id = Column(String, nullable=True)
-    
-    # Payment Details
-    payment_method = Column(String, nullable=True)  # card, bank, wallet, etc.
-    card_last_four = Column(String, nullable=True)
-    card_brand = Column(String, nullable=True)
-    
-    # Reference Information
-    order_id = Column(String, nullable=True)
-    invoice_id = Column(String, nullable=True)
-    description = Column(Text, nullable=True)
-    
-    # Metadata
-    raw_data = Column(JSON, nullable=True)  # Raw response from payment processor
-    webhook_data = Column(JSON, nullable=True)  # Webhook payload
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # Relationships
-    tenant = relationship("Tenant", back_populates="online_transactions")
-    bank_account = relationship("BankAccount")
-    bank_transaction = relationship("BankTransaction")
-    
-    __table_args__ = (
-        Index("idx_online_transactions_tenant", "tenant_id"),
-        Index("idx_online_transactions_account", "bank_account_id"),
-        Index("idx_online_transactions_platform", "platform"),
-        Index("idx_online_transactions_status", "status"),
-        Index("idx_online_transactions_date", "created_at"),
     )
 
 class CashPosition(Base):
@@ -253,7 +188,6 @@ class CashPosition(Base):
     
     # Transaction Counts
     total_transactions = Column(Integer, default=0)
-    online_transactions_count = Column(Integer, default=0)
     pending_transactions_count = Column(Integer, default=0)
     
     # Cash Flow

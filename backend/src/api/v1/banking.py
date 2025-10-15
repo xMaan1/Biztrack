@@ -5,7 +5,10 @@ Banking API Endpoints
 import uuid
 from typing import List, Optional
 from datetime import datetime, date
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+import logging
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
+from fastapi.exceptions import RequestValidationError
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_
 
@@ -15,7 +18,6 @@ from ...config.core_models import User
 from ...models.banking_models import (
     BankAccount, BankAccountCreate, BankAccountUpdate, BankAccountResponse, BankAccountsResponse,
     BankTransaction, BankTransactionCreate, BankTransactionUpdate, BankTransactionResponse, BankTransactionsResponse,
-    OnlineTransaction, OnlineTransactionCreate, OnlineTransactionUpdate, OnlineTransactionResponse, OnlineTransactionsResponse,
     CashPosition, CashPositionCreate, CashPositionUpdate, CashPositionResponse, CashPositionsResponse,
     BankingDashboard, ReconciliationSummary, TransactionReconciliation,
     BankAccountType, TransactionType, TransactionStatus, PaymentMethod
@@ -28,11 +30,7 @@ from ...config.banking_crud import (
     # Bank Transaction CRUD
     create_bank_transaction, get_bank_transaction_by_id, get_all_bank_transactions,
     get_transactions_by_account, get_unreconciled_transactions, update_bank_transaction,
-    reconcile_transaction,
-    
-    # Online Transaction CRUD
-    create_online_transaction, get_online_transaction_by_id, get_online_transaction_by_external_id,
-    get_all_online_transactions, update_online_transaction,
+    delete_bank_transaction, reconcile_transaction,
     
     # Cash Position CRUD
     create_cash_position, get_cash_position_by_date, get_latest_cash_position,
@@ -41,6 +39,9 @@ from ...config.banking_crud import (
     # Analytics
     calculate_account_balance, get_banking_dashboard_data
 )
+
+# Create logger
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/banking", tags=["Banking"])
 
@@ -85,7 +86,8 @@ def get_bank_accounts_endpoint(
         else:
             accounts = get_all_bank_accounts(db, str(tenant_context["tenant_id"]), skip, limit)
         
-        return BankAccountsResponse(bank_accounts=accounts, total=len(accounts))
+        response = BankAccountsResponse(bank_accounts=accounts, total=len(accounts))
+        return response
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch bank accounts: {str(e)}")
@@ -234,6 +236,26 @@ def update_bank_transaction_endpoint(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to update bank transaction: {str(e)}")
 
+@router.delete("/transactions/{transaction_id}")
+def delete_bank_transaction_endpoint(
+    transaction_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
+):
+    """Delete a bank transaction"""
+    try:
+        success = delete_bank_transaction(transaction_id, db, str(tenant_context["tenant_id"]))
+        if not success:
+            raise HTTPException(status_code=404, detail="Bank transaction not found")
+        
+        return {"message": "Bank transaction deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete bank transaction: {str(e)}")
+
 @router.post("/transactions/{transaction_id}/reconcile")
 def reconcile_transaction_endpoint(
     transaction_id: str,
@@ -244,68 +266,31 @@ def reconcile_transaction_endpoint(
 ):
     """Reconcile a bank transaction"""
     try:
+        # Add detailed logging
+        logger.info(f"Reconciliation request received:")
+        logger.info(f"  Transaction ID: {transaction_id}")
+        logger.info(f"  Reconciliation data: {reconciliation}")
+        logger.info(f"  User ID: {current_user.id}")
+        logger.info(f"  Tenant ID: {tenant_context['tenant_id']}")
+        
         db_transaction = reconcile_transaction(
             transaction_id, str(current_user.id), reconciliation.notes,
             db, str(tenant_context["tenant_id"])
         )
         
         if not db_transaction:
+            logger.error(f"Transaction not found: {transaction_id}")
             raise HTTPException(status_code=404, detail="Bank transaction not found")
         
+        logger.info(f"Transaction reconciled successfully: {transaction_id}")
         return {"message": "Transaction reconciled successfully"}
         
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Failed to reconcile transaction {transaction_id}: {str(e)}")
+        logger.error(f"Exception type: {type(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to reconcile transaction: {str(e)}")
-
-# Online Transaction Endpoints
-@router.post("/online-transactions", response_model=OnlineTransactionResponse, status_code=status.HTTP_201_CREATED)
-def create_online_transaction_endpoint(
-    transaction: OnlineTransactionCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
-):
-    """Create a new online transaction"""
-    try:
-        transaction_data = transaction.dict()
-        transaction_data.update({
-            "id": str(uuid.uuid4()),
-            "tenant_id": str(tenant_context["tenant_id"]),
-            "created_at": datetime.utcnow(),
-            "updated_at": datetime.utcnow()
-        })
-        
-        db_transaction = create_online_transaction(transaction_data, db)
-        return OnlineTransactionResponse(online_transaction=db_transaction)
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to create online transaction: {str(e)}")
-
-@router.get("/online-transactions", response_model=OnlineTransactionsResponse)
-def get_online_transactions_endpoint(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=1000),
-    platform: Optional[str] = Query(None),
-    status: Optional[str] = Query(None),
-    start_date: Optional[datetime] = Query(None),
-    end_date: Optional[datetime] = Query(None),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
-):
-    """Get online transactions with optional filters"""
-    try:
-        transactions = get_all_online_transactions(
-            db, str(tenant_context["tenant_id"]), skip, limit,
-            platform, status, start_date, end_date
-        )
-        
-        return OnlineTransactionsResponse(online_transactions=transactions, total=len(transactions))
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch online transactions: {str(e)}")
 
 # Cash Position Endpoints
 @router.get("/cash-position", response_model=CashPositionResponse)

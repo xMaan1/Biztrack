@@ -7,7 +7,7 @@ from datetime import datetime, date
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func, desc, asc
 from .banking_models import (
-    BankAccount, BankTransaction, OnlineTransaction, CashPosition,
+    BankAccount, BankTransaction, CashPosition,
     BankAccountType, TransactionType, TransactionStatus, PaymentMethod
 )
 
@@ -162,6 +162,16 @@ def update_bank_transaction(transaction_id: str, transaction_data: Dict[str, Any
     db.refresh(db_transaction)
     return db_transaction
 
+def delete_bank_transaction(transaction_id: str, db: Session, tenant_id: str) -> bool:
+    """Delete bank transaction"""
+    db_transaction = get_bank_transaction_by_id(transaction_id, db, tenant_id)
+    if not db_transaction:
+        return False
+    
+    db.delete(db_transaction)
+    db.commit()
+    return True
+
 def reconcile_transaction(transaction_id: str, reconciled_by: str, notes: Optional[str], db: Session, tenant_id: str) -> Optional[BankTransaction]:
     """Reconcile a transaction"""
     db_transaction = get_bank_transaction_by_id(transaction_id, db, tenant_id)
@@ -173,75 +183,6 @@ def reconcile_transaction(transaction_id: str, reconciled_by: str, notes: Option
     db_transaction.reconciled_by = reconciled_by
     if notes:
         db_transaction.notes = notes
-    
-    db_transaction.updated_at = datetime.utcnow()
-    db.commit()
-    db.refresh(db_transaction)
-    return db_transaction
-
-# Online Transaction CRUD Operations
-def create_online_transaction(transaction_data: Dict[str, Any], db: Session) -> OnlineTransaction:
-    """Create a new online transaction"""
-    db_transaction = OnlineTransaction(**transaction_data)
-    db.add(db_transaction)
-    db.commit()
-    db.refresh(db_transaction)
-    return db_transaction
-
-def get_online_transaction_by_id(transaction_id: str, db: Session, tenant_id: str) -> Optional[OnlineTransaction]:
-    """Get online transaction by ID"""
-    return db.query(OnlineTransaction).filter(
-        and_(
-            OnlineTransaction.id == transaction_id,
-            OnlineTransaction.tenant_id == tenant_id
-        )
-    ).first()
-
-def get_online_transaction_by_external_id(external_id: str, db: Session, tenant_id: str) -> Optional[OnlineTransaction]:
-    """Get online transaction by external ID"""
-    return db.query(OnlineTransaction).filter(
-        and_(
-            OnlineTransaction.online_transaction_id == external_id,
-            OnlineTransaction.tenant_id == tenant_id
-        )
-    ).first()
-
-def get_all_online_transactions(
-    db: Session, 
-    tenant_id: str, 
-    skip: int = 0, 
-    limit: int = 100,
-    platform: Optional[str] = None,
-    status: Optional[str] = None,
-    start_date: Optional[datetime] = None,
-    end_date: Optional[datetime] = None
-) -> List[OnlineTransaction]:
-    """Get all online transactions with optional filters"""
-    query = db.query(OnlineTransaction).filter(OnlineTransaction.tenant_id == tenant_id)
-    
-    if platform:
-        query = query.filter(OnlineTransaction.platform == platform)
-    
-    if status:
-        query = query.filter(OnlineTransaction.status == status)
-    
-    if start_date:
-        query = query.filter(OnlineTransaction.created_at >= start_date)
-    
-    if end_date:
-        query = query.filter(OnlineTransaction.created_at <= end_date)
-    
-    return query.order_by(desc(OnlineTransaction.created_at)).offset(skip).limit(limit).all()
-
-def update_online_transaction(transaction_id: str, transaction_data: Dict[str, Any], db: Session, tenant_id: str) -> Optional[OnlineTransaction]:
-    """Update online transaction"""
-    db_transaction = get_online_transaction_by_id(transaction_id, db, tenant_id)
-    if not db_transaction:
-        return None
-    
-    for key, value in transaction_data.items():
-        if hasattr(db_transaction, key):
-            setattr(db_transaction, key, value)
     
     db_transaction.updated_at = datetime.utcnow()
     db.commit()
@@ -371,6 +312,13 @@ def get_banking_dashboard_data(db: Session, tenant_id: str) -> Dict[str, Any]:
     
     for account in accounts:
         balance_data = calculate_account_balance(account.id, db, tenant_id)
+        
+        # If no transactions exist, use stored account balances
+        if balance_data["current_balance"] == 0.0 and account.current_balance != 0.0:
+            balance_data["current_balance"] = account.current_balance
+            balance_data["available_balance"] = account.available_balance
+            balance_data["pending_balance"] = account.pending_balance
+        
         total_bank_balance += balance_data["current_balance"]
         total_available_balance += balance_data["available_balance"]
         total_pending_balance += balance_data["pending_balance"]
@@ -390,9 +338,7 @@ def get_banking_dashboard_data(db: Session, tenant_id: str) -> Dict[str, Any]:
         BankTransaction.tenant_id == tenant_id
     ).scalar() or 0
     
-    online_transactions_count = db.query(func.count(OnlineTransaction.id)).filter(
-        OnlineTransaction.tenant_id == tenant_id
-    ).scalar() or 0
+    online_transactions_count = 0
     
     pending_transactions_count = db.query(func.count(BankTransaction.id)).filter(
         and_(
@@ -436,7 +382,7 @@ def get_banking_dashboard_data(db: Session, tenant_id: str) -> Dict[str, Any]:
         "total_bank_balance": total_bank_balance,
         "total_available_balance": total_available_balance,
         "total_pending_balance": total_pending_balance,
-        "total_online_transactions": online_transactions_count,
+        "total_transactions": total_transactions,
         "pending_transactions_count": pending_transactions_count,
         "daily_inflow": daily_inflow,
         "daily_outflow": daily_outflow,

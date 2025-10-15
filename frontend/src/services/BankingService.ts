@@ -3,18 +3,11 @@ import {
   BankAccount,
   BankAccountCreate,
   BankAccountUpdate,
-  BankAccountResponse,
-  BankAccountsResponse,
   BankTransaction,
   BankTransactionCreate,
   BankTransactionUpdate,
   BankTransactionResponse,
   BankTransactionsResponse,
-  OnlineTransaction,
-  OnlineTransactionCreate,
-  OnlineTransactionUpdate,
-  OnlineTransactionResponse,
-  OnlineTransactionsResponse,
   CashPosition,
   CashPositionResponse,
   BankingDashboard,
@@ -30,65 +23,45 @@ class BankingService {
 
   // Bank Account Methods
   async createBankAccount(account: BankAccountCreate): Promise<BankAccount> {
-    // Convert camelCase to snake_case for backend
-    const backendData = {
-      account_name: account.accountName,
-      account_number: account.accountNumber,
-      routing_number: account.routingNumber,
-      bank_name: account.bankName,
-      bank_code: account.bankCode,
-      account_type: account.accountType,
-      currency: account.currency || 'USD',
-      current_balance: account.currentBalance || 0,
-      available_balance: account.availableBalance || 0,
-      pending_balance: account.pendingBalance || 0,
-      is_active: account.isActive !== false,
-      is_primary: account.isPrimary || false,
-      supports_online_banking: account.supportsOnlineBanking || false,
-      description: account.description,
-      tags: account.tags || [],
-    };
+    console.log('[BANKING DEBUG] Creating bank account with data:', account);
     
-    const response = await apiService.post<any>(`${this.baseUrl}/accounts`, backendData);
-    // Backend returns bank_account (snake_case), frontend expects bankAccount (camelCase)
-    return response.bank_account || response.bankAccount;
+    const response = await apiService.post<any>(`${this.baseUrl}/accounts`, account);
+    console.log('[BANKING DEBUG] Backend response:', response);
+    
+    const result = response.bankAccount;
+    console.log('[BANKING DEBUG] Returning account:', result);
+    return result;
   }
 
   async getBankAccounts(activeOnly: boolean = false): Promise<BankAccount[]> {
+    console.log('[BANKING DEBUG] Getting bank accounts, activeOnly:', activeOnly);
+    
     const params = activeOnly ? '?active_only=true' : '';
     const response = await apiService.get<any>(`${this.baseUrl}/accounts${params}`);
-    // Backend returns bank_accounts (snake_case), frontend expects bankAccounts (camelCase)
-    return response?.bank_accounts || response?.bankAccounts || [];
+    
+    console.log('[BANKING DEBUG] Raw backend response:', response);
+    console.log('[BANKING DEBUG] Response keys:', Object.keys(response || {}));
+    
+    const accounts = response?.bankAccounts || [];
+    console.log('[BANKING DEBUG] Extracted accounts:', accounts);
+    console.log('[BANKING DEBUG] Number of accounts:', accounts.length);
+    
+    if (accounts.length > 0) {
+      console.log('[BANKING DEBUG] First account structure:', accounts[0]);
+      console.log('[BANKING DEBUG] First account keys:', Object.keys(accounts[0] || {}));
+    }
+    
+    return accounts;
   }
 
   async getBankAccount(accountId: string): Promise<BankAccount> {
     const response = await apiService.get<any>(`${this.baseUrl}/accounts/${accountId}`);
-    // Backend returns bank_account (snake_case), frontend expects bankAccount (camelCase)
-    return response.bank_account || response.bankAccount;
+    return response.bankAccount;
   }
 
   async updateBankAccount(accountId: string, account: BankAccountUpdate): Promise<BankAccount> {
-    // Convert camelCase to snake_case for backend
-    const backendData: any = {};
-    
-    if (account.accountName !== undefined) backendData.account_name = account.accountName;
-    if (account.routingNumber !== undefined) backendData.routing_number = account.routingNumber;
-    if (account.bankName !== undefined) backendData.bank_name = account.bankName;
-    if (account.bankCode !== undefined) backendData.bank_code = account.bankCode;
-    if (account.accountType !== undefined) backendData.account_type = account.accountType;
-    if (account.currency !== undefined) backendData.currency = account.currency;
-    if (account.currentBalance !== undefined) backendData.current_balance = account.currentBalance;
-    if (account.availableBalance !== undefined) backendData.available_balance = account.availableBalance;
-    if (account.pendingBalance !== undefined) backendData.pending_balance = account.pendingBalance;
-    if (account.isActive !== undefined) backendData.is_active = account.isActive;
-    if (account.isPrimary !== undefined) backendData.is_primary = account.isPrimary;
-    if (account.supportsOnlineBanking !== undefined) backendData.supports_online_banking = account.supportsOnlineBanking;
-    if (account.description !== undefined) backendData.description = account.description;
-    if (account.tags !== undefined) backendData.tags = account.tags;
-    
-    const response = await apiService.put<any>(`${this.baseUrl}/accounts/${accountId}`, backendData);
-    // Backend returns bank_account (snake_case), frontend expects bankAccount (camelCase)
-    return response.bank_account || response.bankAccount;
+    const response = await apiService.put<any>(`${this.baseUrl}/accounts/${accountId}`, account);
+    return response.bankAccount;
   }
 
   async deleteBankAccount(accountId: string): Promise<void> {
@@ -142,48 +115,30 @@ class BankingService {
     return response.bankTransaction;
   }
 
+  async deleteBankTransaction(transactionId: string): Promise<void> {
+    await apiService.delete(`${this.baseUrl}/transactions/${transactionId}`);
+  }
+
   async reconcileTransaction(transactionId: string, reconciliation: TransactionReconciliation): Promise<void> {
     await apiService.post(`${this.baseUrl}/transactions/${transactionId}/reconcile`, reconciliation);
   }
 
-  // Online Transaction Methods
-  async createOnlineTransaction(transaction: OnlineTransactionCreate): Promise<OnlineTransaction> {
-    const response = await apiService.post<OnlineTransactionResponse>(`${this.baseUrl}/online-transactions`, transaction);
-    return response.onlineTransaction;
+  async reconcileTransactionSimple(transactionId: string, notes?: string): Promise<void> {
+    const reconciliation: TransactionReconciliation = {
+      bank_transaction_id: transactionId,
+      is_reconciled: true,
+      notes: notes || 'Reconciled'
+    };
+    await this.reconcileTransaction(transactionId, reconciliation);
   }
 
-  async getOnlineTransactions(params?: {
-    skip?: number;
-    limit?: number;
-    platform?: string;
-    status?: string;
-    startDate?: string;
-    endDate?: string;
-  }): Promise<OnlineTransaction[]> {
-    const queryParams = new URLSearchParams();
-    
-    if (params?.skip !== undefined) queryParams.append('skip', params.skip.toString());
-    if (params?.limit !== undefined) queryParams.append('limit', params.limit.toString());
-    if (params?.platform) queryParams.append('platform', params.platform);
-    if (params?.status) queryParams.append('status', params.status);
-    if (params?.startDate) queryParams.append('start_date', params.startDate);
-    if (params?.endDate) queryParams.append('end_date', params.endDate);
-
-    const queryString = queryParams.toString();
-    const url = `${this.baseUrl}/online-transactions${queryString ? `?${queryString}` : ''}`;
-    
-    const response = await apiService.get<OnlineTransactionsResponse>(url);
-    return response.onlineTransactions;
-  }
-
-  async getOnlineTransaction(transactionId: string): Promise<OnlineTransaction> {
-    const response = await apiService.get<OnlineTransactionResponse>(`${this.baseUrl}/online-transactions/${transactionId}`);
-    return response.onlineTransaction;
-  }
-
-  async updateOnlineTransaction(transactionId: string, transaction: OnlineTransactionUpdate): Promise<OnlineTransaction> {
-    const response = await apiService.put<OnlineTransactionResponse>(`${this.baseUrl}/online-transactions/${transactionId}`, transaction);
-    return response.onlineTransaction;
+  async unreconcileTransaction(transactionId: string): Promise<void> {
+    const reconciliation: TransactionReconciliation = {
+      bank_transaction_id: transactionId,
+      is_reconciled: false,
+      notes: 'Unreconciled'
+    };
+    await this.reconcileTransaction(transactionId, reconciliation);
   }
 
   // Cash Position Methods
@@ -204,7 +159,6 @@ class BankingService {
       totalBankBalance: 0,
       totalAvailableBalance: 0,
       totalPendingBalance: 0,
-      totalOnlineTransactions: 0,
       pendingTransactionsCount: 0,
       dailyInflow: 0,
       dailyOutflow: 0,
@@ -216,12 +170,10 @@ class BankingService {
     };
   }
 
-  // Reconciliation Methods
   async getReconciliationSummary(): Promise<ReconciliationSummary> {
     return await apiService.get<ReconciliationSummary>(`${this.baseUrl}/reconciliation/summary`);
   }
 
-  // Utility Methods
   async getTransactionsByAccount(accountId: string): Promise<BankTransaction[]> {
     return this.getBankTransactions({ accountId });
   }
@@ -240,14 +192,6 @@ class BankingService {
 
   async getTransactionsByDateRange(startDate: string, endDate: string): Promise<BankTransaction[]> {
     return this.getBankTransactions({ startDate, endDate });
-  }
-
-  async getOnlineTransactionsByPlatform(platform: string): Promise<OnlineTransaction[]> {
-    return this.getOnlineTransactions({ platform });
-  }
-
-  async getOnlineTransactionsByStatus(status: string): Promise<OnlineTransaction[]> {
-    return this.getOnlineTransactions({ status });
   }
 }
 

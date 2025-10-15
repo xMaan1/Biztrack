@@ -539,13 +539,6 @@ const allMenuItems: MenuItem[] = [
         planTypes: ['*'],
       },
       {
-        text: 'Online Transactions',
-        icon: Smartphone,
-        path: '/banking/online-transactions',
-        roles: ['*'],
-        planTypes: ['*'],
-      },
-      {
         text: 'Reconciliation',
         icon: CheckCircle,
         path: '/banking/reconciliation',

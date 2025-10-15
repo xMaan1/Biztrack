@@ -119,9 +119,6 @@ export interface BankTransaction {
   counterpartyName?: string;
   counterpartyAccount?: string;
   counterpartyBank?: string;
-  isOnlineTransaction: boolean;
-  onlineTransactionId?: string;
-  processingFee: number;
   isReconciled: boolean;
   reconciledDate?: string;
   reconciledBy?: string;
@@ -158,9 +155,6 @@ export interface BankTransactionCreate {
   counterpartyName?: string;
   counterpartyAccount?: string;
   counterpartyBank?: string;
-  isOnlineTransaction?: boolean;
-  onlineTransactionId?: string;
-  processingFee?: number;
   isReconciled?: boolean;
   reconciledDate?: string;
   relatedInvoiceId?: string;
@@ -190,9 +184,6 @@ export interface BankTransactionUpdate {
   counterpartyName?: string;
   counterpartyAccount?: string;
   counterpartyBank?: string;
-  isOnlineTransaction?: boolean;
-  onlineTransactionId?: string;
-  processingFee?: number;
   isReconciled?: boolean;
   reconciledDate?: string;
   relatedInvoiceId?: string;
@@ -201,88 +192,6 @@ export interface BankTransactionUpdate {
   tags?: string[];
   attachments?: any[];
   notes?: string;
-}
-
-// Online Transaction Models
-export interface OnlineTransaction {
-  id: string;
-  tenantId: string;
-  bankAccountId: string;
-  bankTransactionId?: string;
-  onlineTransactionId: string;
-  platform: string;
-  gateway?: string;
-  transactionType: string;
-  amount: number;
-  currency: string;
-  processingFee: number;
-  netAmount: number;
-  status: string;
-  processingStatus?: string;
-  settlementDate?: string;
-  customerEmail?: string;
-  customerName?: string;
-  customerId?: string;
-  paymentMethod?: string;
-  cardLastFour?: string;
-  cardBrand?: string;
-  orderId?: string;
-  invoiceId?: string;
-  description?: string;
-  rawData?: any;
-  webhookData?: any;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface OnlineTransactionCreate {
-  bankAccountId: string;
-  onlineTransactionId: string;
-  platform: string;
-  gateway?: string;
-  transactionType: string;
-  amount: number;
-  currency?: string;
-  processingFee?: number;
-  netAmount: number;
-  status: string;
-  processingStatus?: string;
-  settlementDate?: string;
-  customerEmail?: string;
-  customerName?: string;
-  customerId?: string;
-  paymentMethod?: string;
-  cardLastFour?: string;
-  cardBrand?: string;
-  orderId?: string;
-  invoiceId?: string;
-  description?: string;
-  rawData?: any;
-  webhookData?: any;
-}
-
-export interface OnlineTransactionUpdate {
-  platform?: string;
-  gateway?: string;
-  transactionType?: string;
-  amount?: number;
-  currency?: string;
-  processingFee?: number;
-  netAmount?: number;
-  status?: string;
-  processingStatus?: string;
-  settlementDate?: string;
-  customerEmail?: string;
-  customerName?: string;
-  customerId?: string;
-  paymentMethod?: string;
-  cardLastFour?: string;
-  cardBrand?: string;
-  orderId?: string;
-  invoiceId?: string;
-  description?: string;
-  rawData?: any;
-  webhookData?: any;
 }
 
 // Cash Position Models
@@ -294,7 +203,6 @@ export interface CashPosition {
   totalAvailableBalance: number;
   totalPendingBalance: number;
   totalTransactions: number;
-  onlineTransactionsCount: number;
   pendingTransactionsCount: number;
   dailyInflow: number;
   dailyOutflow: number;
@@ -311,7 +219,6 @@ export interface CashPositionCreate {
   totalAvailableBalance?: number;
   totalPendingBalance?: number;
   totalTransactions?: number;
-  onlineTransactionsCount?: number;
   pendingTransactionsCount?: number;
   dailyInflow?: number;
   dailyOutflow?: number;
@@ -326,7 +233,6 @@ export interface CashPositionUpdate {
   totalAvailableBalance?: number;
   totalPendingBalance?: number;
   totalTransactions?: number;
-  onlineTransactionsCount?: number;
   pendingTransactionsCount?: number;
   dailyInflow?: number;
   dailyOutflow?: number;
@@ -354,15 +260,6 @@ export interface BankTransactionsResponse {
   total: number;
 }
 
-export interface OnlineTransactionResponse {
-  onlineTransaction: OnlineTransaction;
-}
-
-export interface OnlineTransactionsResponse {
-  onlineTransactions: OnlineTransaction[];
-  total: number;
-}
-
 export interface CashPositionResponse {
   cashPosition: CashPosition;
 }
@@ -377,7 +274,6 @@ export interface BankingDashboard {
   totalBankBalance: number;
   totalAvailableBalance: number;
   totalPendingBalance: number;
-  totalOnlineTransactions: number;
   pendingTransactionsCount: number;
   dailyInflow: number;
   dailyOutflow: number;
@@ -408,10 +304,10 @@ export interface ReconciliationSummary {
 }
 
 export interface TransactionReconciliation {
-  bankTransactionId: string;
-  isReconciled: boolean;
-  reconciledDate?: string;
-  reconciledBy?: string;
+  bank_transaction_id?: string;
+  is_reconciled: boolean;
+  reconciled_date?: string;
+  reconciled_by?: string;
   notes?: string;
 }
 

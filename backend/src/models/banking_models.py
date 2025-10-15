@@ -48,44 +48,50 @@ class PaymentMethod(str, Enum):
 
 # Bank Account Models
 class BankAccountBase(BaseModel):
-    account_name: str
-    account_number: str
-    routing_number: Optional[str] = None
-    bank_name: str
-    bank_code: Optional[str] = None
-    account_type: BankAccountType
-    currency: str = "USD"
-    current_balance: float = 0.0
-    available_balance: float = 0.0
-    pending_balance: float = 0.0
-    is_active: bool = True
-    is_primary: bool = False
-    supports_online_banking: bool = False
-    description: Optional[str] = None
-    tags: List[str] = []
+    account_name: str = Field(alias="accountName")
+    account_number: str = Field(alias="accountNumber")
+    routing_number: Optional[str] = Field(alias="routingNumber", default=None)
+    bank_name: str = Field(alias="bankName")
+    bank_code: Optional[str] = Field(alias="bankCode", default=None)
+    account_type: BankAccountType = Field(alias="accountType")
+    currency: str = Field(default="USD")
+    current_balance: float = Field(alias="currentBalance", default=0.0)
+    available_balance: float = Field(alias="availableBalance", default=0.0)
+    pending_balance: float = Field(alias="pendingBalance", default=0.0)
+    is_active: bool = Field(alias="isActive", default=True)
+    is_primary: bool = Field(alias="isPrimary", default=False)
+    supports_online_banking: bool = Field(alias="supportsOnlineBanking", default=False)
+    description: Optional[str] = Field(default=None)
+    tags: List[str] = Field(default=[])
+
+    class Config:
+        populate_by_name = True
 
 class BankAccountCreate(BankAccountBase):
     pass
 
 class BankAccountUpdate(BaseModel):
-    account_name: Optional[str] = None
-    routing_number: Optional[str] = None
-    bank_name: Optional[str] = None
-    bank_code: Optional[str] = None
-    account_type: Optional[BankAccountType] = None
-    currency: Optional[str] = None
-    is_active: Optional[bool] = None
-    is_primary: Optional[bool] = None
-    supports_online_banking: Optional[bool] = None
-    description: Optional[str] = None
-    tags: Optional[List[str]] = None
+    account_name: Optional[str] = Field(alias="accountName", default=None)
+    routing_number: Optional[str] = Field(alias="routingNumber", default=None)
+    bank_name: Optional[str] = Field(alias="bankName", default=None)
+    bank_code: Optional[str] = Field(alias="bankCode", default=None)
+    account_type: Optional[BankAccountType] = Field(alias="accountType", default=None)
+    currency: Optional[str] = Field(default=None)
+    is_active: Optional[bool] = Field(alias="isActive", default=None)
+    is_primary: Optional[bool] = Field(alias="isPrimary", default=None)
+    supports_online_banking: Optional[bool] = Field(alias="supportsOnlineBanking", default=None)
+    description: Optional[str] = Field(default=None)
+    tags: Optional[List[str]] = Field(default=None)
+
+    class Config:
+        populate_by_name = True
 
 class BankAccount(BankAccountBase):
     id: str
-    tenant_id: str
-    created_by: str
-    created_at: datetime
-    updated_at: datetime
+    tenant_id: str = Field(alias="tenantId")
+    created_by: str = Field(alias="createdBy")
+    created_at: datetime = Field(alias="createdAt")
+    updated_at: datetime = Field(alias="updatedAt")
 
     @field_validator('id', 'tenant_id', 'created_by', mode='before')
     @classmethod
@@ -96,86 +102,87 @@ class BankAccount(BankAccountBase):
 
     class Config:
         from_attributes = True
+        populate_by_name = True
 
 # Bank Transaction Models
 class BankTransactionBase(BaseModel):
-    bank_account_id: str
-    transaction_date: datetime
-    value_date: Optional[datetime] = None
-    transaction_type: TransactionType
-    status: TransactionStatus = TransactionStatus.PENDING
-    amount: float
-    currency: str = "USD"
-    exchange_rate: float = 1.0
-    base_amount: float
-    payment_method: Optional[PaymentMethod] = None
-    reference_number: Optional[str] = None
-    external_reference: Optional[str] = None
-    check_number: Optional[str] = None
-    description: str
-    memo: Optional[str] = None
-    category: Optional[str] = None
-    counterparty_name: Optional[str] = None
-    counterparty_account: Optional[str] = None
-    counterparty_bank: Optional[str] = None
-    is_online_transaction: bool = False
-    online_transaction_id: Optional[str] = None
-    processing_fee: float = 0.0
-    is_reconciled: bool = False
-    reconciled_date: Optional[datetime] = None
-    related_invoice_id: Optional[str] = None
-    related_purchase_order_id: Optional[str] = None
-    related_expense_id: Optional[str] = None
-    tags: List[str] = []
-    attachments: List[Dict[str, Any]] = []
-    notes: Optional[str] = None
+    bank_account_id: str = Field(alias="bankAccountId")
+    transaction_date: datetime = Field(alias="transactionDate")
+    value_date: Optional[datetime] = Field(alias="valueDate", default=None)
+    transaction_type: TransactionType = Field(alias="transactionType")
+    status: TransactionStatus = Field(alias="status", default=TransactionStatus.PENDING)
+    amount: float = Field(alias="amount")
+    currency: str = Field(alias="currency", default="USD")
+    exchange_rate: float = Field(alias="exchangeRate", default=1.0)
+    base_amount: float = Field(alias="baseAmount")
+    payment_method: Optional[PaymentMethod] = Field(alias="paymentMethod", default=None)
+    reference_number: Optional[str] = Field(alias="referenceNumber", default=None)
+    external_reference: Optional[str] = Field(alias="externalReference", default=None)
+    check_number: Optional[str] = Field(alias="checkNumber", default=None)
+    description: str = Field(alias="description")
+    memo: Optional[str] = Field(alias="memo", default=None)
+    category: Optional[str] = Field(alias="category", default=None)
+    counterparty_name: Optional[str] = Field(alias="counterpartyName", default=None)
+    counterparty_account: Optional[str] = Field(alias="counterpartyAccount", default=None)
+    counterparty_bank: Optional[str] = Field(alias="counterpartyBank", default=None)
+    is_reconciled: bool = Field(alias="isReconciled", default=False)
+    reconciled_date: Optional[datetime] = Field(alias="reconciledDate", default=None)
+    related_invoice_id: Optional[str] = Field(alias="relatedInvoiceId", default=None)
+    related_purchase_order_id: Optional[str] = Field(alias="relatedPurchaseOrderId", default=None)
+    related_expense_id: Optional[str] = Field(alias="relatedExpenseId", default=None)
+    tags: List[str] = Field(alias="tags", default=[])
+    attachments: List[Dict[str, Any]] = Field(alias="attachments", default=[])
+    notes: Optional[str] = Field(alias="notes", default=None)
+
+    class Config:
+        populate_by_name = True
 
 class BankTransactionCreate(BankTransactionBase):
     pass
 
 class BankTransactionUpdate(BaseModel):
-    transaction_date: Optional[datetime] = None
-    value_date: Optional[datetime] = None
-    transaction_type: Optional[TransactionType] = None
-    status: Optional[TransactionStatus] = None
-    amount: Optional[float] = None
-    currency: Optional[str] = None
-    exchange_rate: Optional[float] = None
-    base_amount: Optional[float] = None
-    payment_method: Optional[PaymentMethod] = None
-    reference_number: Optional[str] = None
-    external_reference: Optional[str] = None
-    check_number: Optional[str] = None
-    description: Optional[str] = None
-    memo: Optional[str] = None
-    category: Optional[str] = None
-    counterparty_name: Optional[str] = None
-    counterparty_account: Optional[str] = None
-    counterparty_bank: Optional[str] = None
-    is_online_transaction: Optional[bool] = None
-    online_transaction_id: Optional[str] = None
-    processing_fee: Optional[float] = None
-    is_reconciled: Optional[bool] = None
-    reconciled_date: Optional[datetime] = None
-    related_invoice_id: Optional[str] = None
-    related_purchase_order_id: Optional[str] = None
-    related_expense_id: Optional[str] = None
-    tags: Optional[List[str]] = None
-    attachments: Optional[List[Dict[str, Any]]] = None
-    notes: Optional[str] = None
+    transaction_date: Optional[datetime] = Field(alias="transactionDate", default=None)
+    value_date: Optional[datetime] = Field(alias="valueDate", default=None)
+    transaction_type: Optional[TransactionType] = Field(alias="transactionType", default=None)
+    status: Optional[TransactionStatus] = Field(alias="status", default=None)
+    amount: Optional[float] = Field(alias="amount", default=None)
+    currency: Optional[str] = Field(alias="currency", default=None)
+    exchange_rate: Optional[float] = Field(alias="exchangeRate", default=None)
+    base_amount: Optional[float] = Field(alias="baseAmount", default=None)
+    payment_method: Optional[PaymentMethod] = Field(alias="paymentMethod", default=None)
+    reference_number: Optional[str] = Field(alias="referenceNumber", default=None)
+    external_reference: Optional[str] = Field(alias="externalReference", default=None)
+    check_number: Optional[str] = Field(alias="checkNumber", default=None)
+    description: Optional[str] = Field(alias="description", default=None)
+    memo: Optional[str] = Field(alias="memo", default=None)
+    category: Optional[str] = Field(alias="category", default=None)
+    counterparty_name: Optional[str] = Field(alias="counterpartyName", default=None)
+    counterparty_account: Optional[str] = Field(alias="counterpartyAccount", default=None)
+    counterparty_bank: Optional[str] = Field(alias="counterpartyBank", default=None)
+    is_reconciled: Optional[bool] = Field(alias="isReconciled", default=None)
+    reconciled_date: Optional[datetime] = Field(alias="reconciledDate", default=None)
+    related_invoice_id: Optional[str] = Field(alias="relatedInvoiceId", default=None)
+    related_purchase_order_id: Optional[str] = Field(alias="relatedPurchaseOrderId", default=None)
+    related_expense_id: Optional[str] = Field(alias="relatedExpenseId", default=None)
+    tags: Optional[List[str]] = Field(alias="tags", default=None)
+    attachments: Optional[List[Dict[str, Any]]] = Field(alias="attachments", default=None)
+    notes: Optional[str] = Field(alias="notes", default=None)
+
+    class Config:
+        populate_by_name = True
 
 class BankTransaction(BankTransactionBase):
-    id: str
-    tenant_id: str
-    transaction_number: str
-    created_by: str
-    approved_by: Optional[str] = None
-    reconciled_by: Optional[str] = None
-    ledger_transaction_id: Optional[str] = None
-    created_at: datetime
-    updated_at: datetime
+    id: str = Field(alias="id")
+    tenant_id: str = Field(alias="tenantId")
+    transaction_number: str = Field(alias="transactionNumber")
+    created_by: str = Field(alias="createdBy")
+    approved_by: Optional[str] = Field(alias="approvedBy", default=None)
+    reconciled_by: Optional[str] = Field(alias="reconciledBy", default=None)
+    ledger_transaction_id: Optional[str] = Field(alias="ledgerTransactionId", default=None)
+    created_at: datetime = Field(alias="createdAt")
+    updated_at: datetime = Field(alias="updatedAt")
 
-    @field_validator('id', 'tenant_id', 'created_by', 'approved_by', 'reconciled_by', 'ledger_transaction_id', mode='before')
+    @field_validator('id', 'tenant_id', 'bank_account_id', 'created_by', 'approved_by', 'reconciled_by', 'related_invoice_id', 'related_purchase_order_id', 'ledger_transaction_id', mode='before')
     @classmethod
     def convert_uuid_to_str(cls, v):
         if isinstance(v, uuid.UUID):
@@ -184,75 +191,7 @@ class BankTransaction(BankTransactionBase):
 
     class Config:
         from_attributes = True
-
-# Online Transaction Models
-class OnlineTransactionBase(BaseModel):
-    bank_account_id: str
-    online_transaction_id: str
-    platform: str
-    gateway: Optional[str] = None
-    transaction_type: str
-    amount: float
-    currency: str = "USD"
-    processing_fee: float = 0.0
-    net_amount: float
-    status: str
-    processing_status: Optional[str] = None
-    settlement_date: Optional[datetime] = None
-    customer_email: Optional[str] = None
-    customer_name: Optional[str] = None
-    customer_id: Optional[str] = None
-    payment_method: Optional[str] = None
-    card_last_four: Optional[str] = None
-    card_brand: Optional[str] = None
-    order_id: Optional[str] = None
-    invoice_id: Optional[str] = None
-    description: Optional[str] = None
-    raw_data: Optional[Dict[str, Any]] = None
-    webhook_data: Optional[Dict[str, Any]] = None
-
-class OnlineTransactionCreate(OnlineTransactionBase):
-    pass
-
-class OnlineTransactionUpdate(BaseModel):
-    platform: Optional[str] = None
-    gateway: Optional[str] = None
-    transaction_type: Optional[str] = None
-    amount: Optional[float] = None
-    currency: Optional[str] = None
-    processing_fee: Optional[float] = None
-    net_amount: Optional[float] = None
-    status: Optional[str] = None
-    processing_status: Optional[str] = None
-    settlement_date: Optional[datetime] = None
-    customer_email: Optional[str] = None
-    customer_name: Optional[str] = None
-    customer_id: Optional[str] = None
-    payment_method: Optional[str] = None
-    card_last_four: Optional[str] = None
-    card_brand: Optional[str] = None
-    order_id: Optional[str] = None
-    invoice_id: Optional[str] = None
-    description: Optional[str] = None
-    raw_data: Optional[Dict[str, Any]] = None
-    webhook_data: Optional[Dict[str, Any]] = None
-
-class OnlineTransaction(OnlineTransactionBase):
-    id: str
-    tenant_id: str
-    bank_transaction_id: Optional[str] = None
-    created_at: datetime
-    updated_at: datetime
-
-    @field_validator('id', 'tenant_id', 'bank_transaction_id', mode='before')
-    @classmethod
-    def convert_uuid_to_str(cls, v):
-        if isinstance(v, uuid.UUID):
-            return str(v)
-        return v
-
-    class Config:
-        from_attributes = True
+        populate_by_name = True
 
 # Cash Position Models
 class CashPositionBase(BaseModel):
@@ -261,7 +200,6 @@ class CashPositionBase(BaseModel):
     total_available_balance: float = 0.0
     total_pending_balance: float = 0.0
     total_transactions: int = 0
-    online_transactions_count: int = 0
     pending_transactions_count: int = 0
     daily_inflow: float = 0.0
     daily_outflow: float = 0.0
@@ -278,7 +216,6 @@ class CashPositionUpdate(BaseModel):
     total_available_balance: Optional[float] = None
     total_pending_balance: Optional[float] = None
     total_transactions: Optional[int] = None
-    online_transactions_count: Optional[int] = None
     pending_transactions_count: Optional[int] = None
     daily_inflow: Optional[float] = None
     daily_outflow: Optional[float] = None
@@ -304,47 +241,60 @@ class CashPosition(CashPositionBase):
 
 # Response Models
 class BankAccountResponse(BaseModel):
-    bank_account: BankAccount
+    bank_account: BankAccount = Field(alias="bankAccount")
+
+    class Config:
+        populate_by_name = True
 
 class BankAccountsResponse(BaseModel):
-    bank_accounts: List[BankAccount]
+    bank_accounts: List[BankAccount] = Field(alias="bankAccounts")
     total: int
+
+    class Config:
+        populate_by_name = True
 
 class BankTransactionResponse(BaseModel):
-    bank_transaction: BankTransaction
+    bank_transaction: BankTransaction = Field(alias="bankTransaction")
+
+    class Config:
+        populate_by_name = True
 
 class BankTransactionsResponse(BaseModel):
-    bank_transactions: List[BankTransaction]
-    total: int
+    bank_transactions: List[BankTransaction] = Field(alias="bankTransactions")
+    total: int = Field(alias="total")
 
-class OnlineTransactionResponse(BaseModel):
-    online_transaction: OnlineTransaction
-
-class OnlineTransactionsResponse(BaseModel):
-    online_transactions: List[OnlineTransaction]
-    total: int
+    class Config:
+        populate_by_name = True
 
 class CashPositionResponse(BaseModel):
-    cash_position: CashPosition
+    cash_position: CashPosition = Field(alias="cashPosition")
+
+    class Config:
+        populate_by_name = True
 
 class CashPositionsResponse(BaseModel):
-    cash_positions: List[CashPosition]
-    total: int
+    cash_positions: List[CashPosition] = Field(alias="cashPositions")
+    total: int = Field(alias="total")
+
+    class Config:
+        populate_by_name = True
 
 # Dashboard Models
 class BankingDashboard(BaseModel):
-    total_bank_balance: float
-    total_available_balance: float
-    total_pending_balance: float
-    total_online_transactions: int
-    pending_transactions_count: int
-    daily_inflow: float
-    daily_outflow: float
-    net_cash_flow: float
-    outstanding_receivables: float
-    outstanding_payables: float
-    recent_transactions: List[BankTransaction]
-    bank_accounts_summary: List[Dict[str, Any]]
+    total_bank_balance: float = Field(alias="totalBankBalance")
+    total_available_balance: float = Field(alias="totalAvailableBalance")
+    total_pending_balance: float = Field(alias="totalPendingBalance")
+    pending_transactions_count: int = Field(alias="pendingTransactionsCount")
+    daily_inflow: float = Field(alias="dailyInflow")
+    daily_outflow: float = Field(alias="dailyOutflow")
+    net_cash_flow: float = Field(alias="netCashFlow")
+    outstanding_receivables: float = Field(alias="outstandingReceivables")
+    outstanding_payables: float = Field(alias="outstandingPayables")
+    recent_transactions: List[BankTransaction] = Field(alias="recentTransactions")
+    bank_accounts_summary: List[Dict[str, Any]] = Field(alias="bankAccountsSummary")
+
+    class Config:
+        populate_by_name = True
 
 # Reconciliation Models
 class ReconciliationSummary(BaseModel):
@@ -355,8 +305,8 @@ class ReconciliationSummary(BaseModel):
     last_reconciliation_date: Optional[datetime]
 
 class TransactionReconciliation(BaseModel):
-    bank_transaction_id: str
+    bank_transaction_id: Optional[str] = None
     is_reconciled: bool
-    reconciled_date: Optional[datetime]
-    reconciled_by: Optional[str]
-    notes: Optional[str]
+    reconciled_date: Optional[datetime] = None
+    reconciled_by: Optional[str] = None
+    notes: Optional[str] = None

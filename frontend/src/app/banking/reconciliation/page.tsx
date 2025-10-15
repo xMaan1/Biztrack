@@ -84,8 +84,8 @@ const ReconciliationPage = () => {
       const params = new URLSearchParams({
         skip: ((currentPage - 1) * 20).toString(),
         limit: '20',
-        ...(accountFilter && { account_id: accountFilter }),
-        ...(statusFilter && { status: statusFilter }),
+        ...(accountFilter && accountFilter !== 'all' && { account_id: accountFilter }),
+        ...(statusFilter && statusFilter !== 'all' && { status: statusFilter }),
         ...(dateFrom && { start_date: dateFrom.toISOString() }),
         ...(dateTo && { end_date: dateTo.toISOString() }),
       });
@@ -120,7 +120,6 @@ const ReconciliationPage = () => {
       const response = await apiService.post(`/banking/transactions/${transactionId}/reconcile`, {
         bank_transaction_id: transactionId,
         is_reconciled: true,
-        reconciled_date: new Date().toISOString(),
         notes: reconciliationNotes,
       });
 
@@ -133,6 +132,23 @@ const ReconciliationPage = () => {
       }
     } catch (error) {
       console.error('Error reconciling transaction:', error);
+    }
+  };
+
+  const handleUnreconcile = async (transactionId: string) => {
+    try {
+      const response = await apiService.post(`/banking/transactions/${transactionId}/reconcile`, {
+        bank_transaction_id: transactionId,
+        is_reconciled: false,
+        notes: 'Unreconciled',
+      });
+
+      if (response.success) {
+        fetchTransactions();
+        fetchSummary();
+      }
+    } catch (error) {
+      console.error('Error unreconciling transaction:', error);
     }
   };
 
@@ -295,7 +311,7 @@ const ReconciliationPage = () => {
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All statuses</SelectItem>
+                  <SelectItem value="all">All statuses</SelectItem>
                   {statuses.map((status) => (
                     <SelectItem key={status} value={status}>
                       {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -332,7 +348,7 @@ const ReconciliationPage = () => {
                   <SelectValue placeholder="All transactions" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All transactions</SelectItem>
+                  <SelectItem value="all">All transactions</SelectItem>
                   <SelectItem value="unreconciled">Unreconciled only</SelectItem>
                   <SelectItem value="reconciled">Reconciled only</SelectItem>
                 </SelectContent>
@@ -480,8 +496,14 @@ const ReconciliationPage = () => {
                             </DialogContent>
                           </Dialog>
                         ) : (
-                          <Button variant="outline" size="sm" disabled>
-                            Reconciled
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleUnreconcile(transaction.id)}
+                            className="text-orange-600 hover:text-orange-700"
+                          >
+                            <Clock className="h-4 w-4 mr-1" />
+                            Unreconcile
                           </Button>
                         )}
                       </TableCell>

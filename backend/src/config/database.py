@@ -59,7 +59,7 @@ from .ledger_models import (
 )
 
 from .banking_models import (
-    BankAccount, BankTransaction, OnlineTransaction, CashPosition
+    BankAccount, BankTransaction, CashPosition
 )
 
 from .investment_models import (
