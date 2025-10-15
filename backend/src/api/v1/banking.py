@@ -5,10 +5,7 @@ Banking API Endpoints
 import uuid
 from typing import List, Optional
 from datetime import datetime, date
-import logging
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
-from fastapi.exceptions import RequestValidationError
-from pydantic import ValidationError
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_
 
@@ -39,9 +36,6 @@ from ...config.banking_crud import (
     # Analytics
     calculate_account_balance, get_banking_dashboard_data
 )
-
-# Create logger
-logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/banking", tags=["Banking"])
 
@@ -266,30 +260,19 @@ def reconcile_transaction_endpoint(
 ):
     """Reconcile a bank transaction"""
     try:
-        # Add detailed logging
-        logger.info(f"Reconciliation request received:")
-        logger.info(f"  Transaction ID: {transaction_id}")
-        logger.info(f"  Reconciliation data: {reconciliation}")
-        logger.info(f"  User ID: {current_user.id}")
-        logger.info(f"  Tenant ID: {tenant_context['tenant_id']}")
-        
         db_transaction = reconcile_transaction(
             transaction_id, str(current_user.id), reconciliation.notes,
             db, str(tenant_context["tenant_id"])
         )
         
         if not db_transaction:
-            logger.error(f"Transaction not found: {transaction_id}")
             raise HTTPException(status_code=404, detail="Bank transaction not found")
         
-        logger.info(f"Transaction reconciled successfully: {transaction_id}")
         return {"message": "Transaction reconciled successfully"}
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to reconcile transaction {transaction_id}: {str(e)}")
-        logger.error(f"Exception type: {type(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to reconcile transaction: {str(e)}")
 
 # Cash Position Endpoints
