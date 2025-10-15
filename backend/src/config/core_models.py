@@ -199,6 +199,12 @@ class Tenant(Base):
     financial_periods = relationship("FinancialPeriod", back_populates="tenant")
     budgets = relationship("Budget", back_populates="tenant")
     
+    # Banking relationships
+    bank_accounts = relationship("BankAccount", back_populates="tenant")
+    bank_transactions = relationship("BankTransaction", back_populates="tenant")
+    online_transactions = relationship("OnlineTransaction", back_populates="tenant")
+    cash_positions = relationship("CashPosition", back_populates="tenant")
+    
     customDepartments = relationship("CustomDepartment", back_populates="tenant")
     customLeaveTypes = relationship("CustomLeaveType", back_populates="tenant")
     customLeadSources = relationship("CustomLeadSource", back_populates="tenant")

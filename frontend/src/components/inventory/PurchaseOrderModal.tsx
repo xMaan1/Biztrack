@@ -95,7 +95,7 @@ export default function PurchaseOrderModal({
 
   const calculateTotals = () => {
     const subtotal = newOrder.items.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
-    const vatAmount = subtotal * (newOrder.vatRate / 100);
+    const vatAmount = subtotal * ((newOrder.vatRate || 0) / 100);
     const total = subtotal + vatAmount;
     
     return {
@@ -562,7 +562,7 @@ export default function PurchaseOrderModal({
                   <div className="text-sm">
                     Subtotal: {formatCurrency(calculateTotals().subtotal)}
                   </div>
-                  {newOrder.vatRate > 0 && (
+                  {(newOrder.vatRate || 0) > 0 && (
                     <div className="text-sm">
                       VAT ({newOrder.vatRate}%): {formatCurrency(calculateTotals().vatAmount)}
                     </div>

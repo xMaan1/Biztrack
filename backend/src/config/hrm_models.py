@@ -11,7 +11,7 @@ class Employee(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
     userId = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    employeeId = Column(String, unique=True, index=True)  # Company employee ID
+    employeeId = Column(String, unique=True, index=True)
     department = Column(String)
     position = Column(String)
     hireDate = Column(Date, nullable=False)
@@ -21,6 +21,15 @@ class Employee(Base):
     notes = Column(Text)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    phone = Column(String, nullable=True)
+    dateOfBirth = Column("dateofbirth", Date, nullable=True)
+    address = Column(Text, nullable=True)
+    emergencyContact = Column("emergencycontact", String, nullable=True)
+    emergencyPhone = Column("emergencyphone", String, nullable=True)
+    skills = Column(JSON, default=[])
+    certifications = Column(JSON, default=[])
+    employeeType = Column("employeetype", String, default="full_time")
+    employmentStatus = Column("employmentstatus", String, default="active")
     
     # Relationships
     tenant = relationship("Tenant", back_populates="employees")
@@ -66,15 +75,21 @@ class PerformanceReview(Base):
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
     employeeId = Column(UUID(as_uuid=True), ForeignKey("employees.id"), nullable=False)
     reviewerId = Column(UUID(as_uuid=True), ForeignKey("employees.id"), nullable=False)
+    reviewType = Column("reviewtype", String, default="annual")  # annual, quarterly, monthly, probation
     reviewDate = Column(DateTime, nullable=False)
-    reviewPeriod = Column(String)  # Q1, Q2, Q3, Q4, Annual
-    rating = Column(Integer)  # 1-5 scale
+    reviewPeriod = Column(String)
+    rating = Column(Integer)
+    technicalRating = Column("technicalrating", Integer, default=0)
+    communicationRating = Column("communicationrating", Integer, default=0)
+    teamworkRating = Column("teamworkrating", Integer, default=0)
+    leadershipRating = Column("leadershiprating", Integer, default=0)
     strengths = Column(Text)
     areasForImprovement = Column(Text)
     goals = Column(Text)
     comments = Column(Text)
     nextReviewDate = Column(DateTime)
     isCompleted = Column(Boolean, default=False)
+    createdBy = Column("createdby", UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -115,17 +130,19 @@ class LeaveRequest(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
     employeeId = Column(UUID(as_uuid=True), ForeignKey("employees.id"), nullable=False)
-    leaveType = Column(String, nullable=False)  # vacation, sick, personal, maternity, paternity
+    leaveType = Column(String, nullable=False)
     startDate = Column(Date, nullable=False)
     endDate = Column(Date, nullable=False)
     days = Column(Integer, nullable=False)
     reason = Column(Text)
-    status = Column(String, default="pending")  # pending, approved, rejected, cancelled
+    status = Column(String, default="pending")
     approvedBy = Column(UUID(as_uuid=True), ForeignKey("employees.id"))
     approvedAt = Column(DateTime)
     comments = Column(Text)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    rejectionReason = Column("rejectionreason", Text, nullable=True)
+    createdBy = Column("createdby", UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     
     # Relationships
     tenant = relationship("Tenant", back_populates="leave_requests")
@@ -138,7 +155,7 @@ class Payroll(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
     employeeId = Column(UUID(as_uuid=True), ForeignKey("employees.id"), nullable=False)
-    payPeriod = Column(String, nullable=False)  # weekly, bi_weekly, monthly
+    payPeriod = Column(String, nullable=False)
     startDate = Column(Date, nullable=False)
     endDate = Column(Date, nullable=False)
     baseSalary = Column(Float, nullable=False)
@@ -151,6 +168,9 @@ class Payroll(Base):
     processedAt = Column(DateTime)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    allowances = Column(Float, default=0.0)
+    notes = Column(Text, nullable=True)
+    createdBy = Column("createdby", UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     
     # Relationships
     tenant = relationship("Tenant", back_populates="payroll")
@@ -163,7 +183,7 @@ class Benefits(Base):
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
     name = Column(String, nullable=False)
     description = Column(Text)
-    type = Column(String, nullable=False)  # health, dental, vision, retirement, other
+    type = Column(String, nullable=False)
     cost = Column(Float)
     employeeContribution = Column(Float, default=0.0)
     employerContribution = Column(Float, default=0.0)
@@ -181,14 +201,14 @@ class Training(Base):
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
     title = Column(String, nullable=False)
     description = Column(Text, nullable=False)
-    trainingType = Column(String, default="onboarding")  # onboarding, skill_development, compliance, leadership, technical, soft_skills, certification
+    trainingType = Column(String, default="onboarding")
     duration = Column(String, nullable=False)
     cost = Column(Float, default=0.0)
     provider = Column(String, nullable=False)
     startDate = Column(DateTime, nullable=False)
     endDate = Column(DateTime, nullable=False)
     maxParticipants = Column(Integer, nullable=True)
-    status = Column(String, default="not_started")  # not_started, in_progress, completed, expired
+    status = Column(String, default="not_started")
     materials = Column(JSON, default=[])
     objectives = Column(JSON, default=[])
     prerequisites = Column(JSON, default=[])
@@ -210,7 +230,7 @@ class TrainingEnrollment(Base):
     employeeId = Column(UUID(as_uuid=True), ForeignKey("employees.id"), nullable=False)
     enrollmentDate = Column(DateTime, nullable=False)
     completionDate = Column(DateTime, nullable=True)
-    status = Column(String, default="not_started")  # not_started, in_progress, completed, expired
+    status = Column(String, default="not_started")
     score = Column(Integer, nullable=True)
     certificate = Column(String, nullable=True)
     feedback = Column(Text, nullable=True)
@@ -218,7 +238,6 @@ class TrainingEnrollment(Base):
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow)
     
-    # Relationships
     tenant = relationship("Tenant", back_populates="training_enrollments")
     training = relationship("Training", back_populates="enrollments")
     employee = relationship("Employee", back_populates="training_enrollments")
@@ -239,7 +258,7 @@ class Application(Base):
     experience = Column(Text, nullable=True)
     education = Column(Text, nullable=True)
     skills = Column(JSON, default=[])
-    status = Column(String, default="applied")  # applied, screening, interview, technical_test, reference_check, offer, hired, rejected, withdrawn
+    status = Column(String, default="applied")
     assignedTo = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     notes = Column(Text, nullable=True)
     interviewDate = Column(DateTime, nullable=True)
@@ -248,7 +267,6 @@ class Application(Base):
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow)
     
-    # Relationships
     tenant = relationship("Tenant", back_populates="applications")
     jobPosting = relationship("JobPosting", back_populates="applications")
     assignee = relationship("User", foreign_keys=[assignedTo], back_populates="assigned_applications")
@@ -281,9 +299,8 @@ class Supplier(Base):
     tenant = relationship("Tenant", back_populates="suppliers")
     creator = relationship("User", back_populates="created_suppliers")
     
-    # Indexes for performance optimization
     __table_args__ = (
         Index("idx_suppliers_tenant_id", "tenant_id"),
         Index("idx_suppliers_code", "code"),
-        Index("idx_suppliers_tenant_code", "tenant_id", "code", unique=True),  # Unique code per tenant
+        Index("idx_suppliers_tenant_code", "tenant_id", "code", unique=True),
     )

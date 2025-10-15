@@ -48,6 +48,8 @@ import {
   Settings,
   Trash2,
   ArrowLeft,
+  Smartphone,
+  CheckCircle,
   ArrowRight,
   Bell,
 } from 'lucide-react';
@@ -507,6 +509,51 @@ const allMenuItems: MenuItem[] = [
       },
     ],
   },
+  // Banking - Available for all plan types
+  {
+    text: 'Banking',
+    icon: Banknote,
+    roles: ['*'],
+    planTypes: ['*'], // Available for all plans
+    gradient: 'from-blue-500 to-indigo-500',
+    subItems: [
+      {
+        text: 'Dashboard',
+        icon: LayoutDashboard,
+        path: '/banking',
+        roles: ['*'],
+        planTypes: ['*'],
+      },
+      {
+        text: 'Bank Accounts',
+        icon: CreditCard,
+        path: '/banking/accounts',
+        roles: ['*'],
+        planTypes: ['*'],
+      },
+      {
+        text: 'Transactions',
+        icon: Receipt,
+        path: '/banking/transactions',
+        roles: ['*'],
+        planTypes: ['*'],
+      },
+      {
+        text: 'Online Transactions',
+        icon: Smartphone,
+        path: '/banking/online-transactions',
+        roles: ['*'],
+        planTypes: ['*'],
+      },
+      {
+        text: 'Reconciliation',
+        icon: CheckCircle,
+        path: '/banking/reconciliation',
+        roles: ['*'],
+        planTypes: ['*'],
+      },
+    ],
+  },
   // Ledger - Available for all plan types
   {
     text: 'Financial Ledger',
@@ -602,7 +649,7 @@ export default function Sidebar() {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const pathname = usePathname();
-  const { planInfo } = usePlanInfo();
+  const { planInfo, loading: planLoading } = usePlanInfo();
   const { user } = useAuth();
 
   const toggleExpanded = (itemText: string) => {
@@ -629,8 +676,8 @@ export default function Sidebar() {
       });
     }
 
-    // For regular users, use the existing plan-based filtering
-    if (!planInfo) return allMenuItems;
+    // If plan info is still loading, return empty array to prevent showing all items
+    if (planLoading || !planInfo) return [];
 
     const currentPlanType = planInfo.planType;
 
@@ -668,7 +715,7 @@ export default function Sidebar() {
 
       return true;
     });
-  }, [searchQuery, planInfo, user]);
+  }, [searchQuery, planInfo, planLoading, user]);
 
   // Handle auto-expanding items when searching
   useEffect(() => {
@@ -699,7 +746,7 @@ export default function Sidebar() {
     });
 
     setExpandedItems(newExpanded);
-  }, [searchQuery, filteredItems, planInfo, user]);
+  }, [searchQuery, filteredItems, planInfo, planLoading, user]);
 
   const isActive = (path: string) => {
     if (path === '/') {
@@ -775,18 +822,30 @@ export default function Sidebar() {
       </div>
 
       <nav className="p-4 space-y-3 flex-1 overflow-y-auto">
-        {filteredItems.map((item) => {
-          const isExpanded = expandedItems.has(item.text);
-          const hasSubItems = item.subItems && item.subItems.length > 0;
-          const isMainItemActive = item.path && isActive(item.path);
-          const hasActiveSubItem =
-            hasSubItems &&
-            item.subItems!.some((subItem) => isActive(subItem.path));
+        {planLoading ? (
+          <div className="space-y-3">
+            {[...Array(6)].map((_, index) => (
+              <div key={index} className="animate-pulse">
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl">
+                  <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
+                  <div className="h-4 bg-gray-200 rounded w-24"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          filteredItems.map((item) => {
+            const isExpanded = expandedItems.has(item.text);
+            const hasSubItems = item.subItems && item.subItems.length > 0;
+            const isMainItemActive = item.path && isActive(item.path);
+            const hasActiveSubItem =
+              hasSubItems &&
+              item.subItems!.some((subItem) => isActive(subItem.path));
 
-          return (
-            <div key={item.text} className="space-y-1">
-              {item.path ? (
-                <Link
+            return (
+              <div key={item.text} className="space-y-1">
+                {item.path ? (
+                  <Link
                   href={item.path}
                   className={cn(
                     'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group cursor-pointer',
@@ -936,7 +995,8 @@ export default function Sidebar() {
               )}
             </div>
           );
-        })}
+        }))}
+        
 
         {filteredItems.length === 0 && searchQuery && (
           <div className="text-center py-8 text-gray-500">

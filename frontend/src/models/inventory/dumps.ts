@@ -1,4 +1,4 @@
-import { StockMovement, StockMovementType } from './stockMovement';
+import { StockMovement } from './stockMovement';
 
 export interface DumpItem extends StockMovement {
   productName?: string;

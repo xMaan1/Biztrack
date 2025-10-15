@@ -1,4 +1,4 @@
-import { StockMovement, StockMovementType } from './stockMovement';
+import { StockMovement } from './stockMovement';
 
 export interface CustomerReturn extends StockMovement {
   customerId?: string;

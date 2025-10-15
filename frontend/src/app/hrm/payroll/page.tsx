@@ -94,6 +94,7 @@ export default function HRMPayrollPage() {
   const loadPayrolls = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await HRMService.getPayroll(filters, 1, 100);
       setPayrolls(response.payroll);
     } catch (err) {
@@ -144,6 +145,7 @@ export default function HRMPayrollPage() {
     });
     setEditingPayroll(null);
     setError(null);
+    setSuccessMessage(null);
   };
 
   const calculateNetPay = () => {
@@ -175,7 +177,18 @@ export default function HRMPayrollPage() {
       calculateNetPay();
 
       if (editingPayroll) {
-        await HRMService.updatePayroll(editingPayroll.id, formData);
+        const updateData = {
+          basicSalary: formData.basicSalary,
+          allowances: formData.allowances,
+          deductions: formData.deductions,
+          overtimePay: formData.overtimePay,
+          bonus: formData.bonus,
+          netPay: formData.netPay,
+          status: formData.status,
+          paymentDate: formData.paymentDate,
+          notes: formData.notes,
+        };
+        await HRMService.updatePayroll(editingPayroll.id, updateData);
         setSuccessMessage('Payroll record updated successfully!');
       } else {
         await HRMService.createPayroll(formData);
@@ -183,8 +196,12 @@ export default function HRMPayrollPage() {
       }
 
       setShowCreateDialog(false);
+      setEditingPayroll(null);
       resetForm();
-      loadPayrolls();
+      // Add a small delay to ensure backend has processed the update
+      setTimeout(async () => {
+        await loadPayrolls();
+      }, 100);
     } catch (err) {
       setError('Failed to save payroll record. Please try again.');
       } finally {

@@ -104,7 +104,10 @@ export default function HRMPerformanceReviewsPage() {
   const loadPerformanceReviews = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
+      console.log('Loading performance reviews...');
       const response = await HRMService.getPerformanceReviews(filters, 1, 100);
+      console.log('Performance reviews loaded:', response.reviews);
       setPerformanceReviews(response.reviews);
     } catch (err) {
       setError('Failed to load performance reviews');
@@ -151,6 +154,7 @@ export default function HRMPerformanceReviewsPage() {
     });
     setEditingReview(null);
     setError(null);
+    setSuccessMessage(null);
   };
 
   const handleSubmit = async () => {
@@ -171,7 +175,24 @@ export default function HRMPerformanceReviewsPage() {
       }
 
       if (editingReview) {
-        await HRMService.updatePerformanceReview(editingReview.id, formData);
+        const updateData = {
+          reviewerId: formData.reviewerId,
+          reviewType: formData.reviewType,
+          reviewPeriod: formData.reviewPeriod,
+          reviewDate: formData.reviewDate,
+          status: formData.status,
+          goals: formData.goals,
+          achievements: formData.achievements,
+          areasOfImprovement: formData.areasOfImprovement,
+          overallRating: formData.overallRating,
+          technicalRating: formData.technicalRating,
+          communicationRating: formData.communicationRating,
+          teamworkRating: formData.teamworkRating,
+          leadershipRating: formData.leadershipRating,
+          comments: formData.comments,
+          nextReviewDate: formData.nextReviewDate,
+        };
+        await HRMService.updatePerformanceReview(editingReview.id, updateData);
         setSuccessMessage('Performance review updated successfully!');
       } else {
         await HRMService.createPerformanceReview(formData);
@@ -179,8 +200,14 @@ export default function HRMPerformanceReviewsPage() {
       }
 
       setShowCreateDialog(false);
+      setEditingReview(null);
       resetForm();
-      loadPerformanceReviews();
+      // Add a small delay to ensure backend has processed the update
+      setTimeout(async () => {
+        console.log('Refreshing performance reviews after update...');
+        await loadPerformanceReviews();
+        console.log('Performance reviews refreshed');
+      }, 100);
     } catch (err) {
       setError('Failed to save performance review. Please try again.');
       } finally {

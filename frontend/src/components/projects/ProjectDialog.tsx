@@ -177,7 +177,7 @@ export default function ProjectDialog({
 
   useEffect(() => {
     const selected = teamMembers.filter((member) =>
-      watchedTeamMemberIds?.includes(member.id),
+      watchedTeamMemberIds?.includes(member.id || member.userId),
     );
     setSelectedTeamMembers(selected);
   }, [watchedTeamMemberIds, teamMembers]);
@@ -424,7 +424,7 @@ export default function ProjectDialog({
                     </SelectTrigger>
                     <SelectContent>
                       {projectManagers.map((user) => (
-                        <SelectItem key={user.id} value={user.id}>
+                        <SelectItem key={user.id || user.userId} value={user.id || user.userId || ''}>
                           {user.firstName || user.userName} ({user.email})
                         </SelectItem>
                       ))}
@@ -455,7 +455,7 @@ export default function ProjectDialog({
                       <div
                         key={user.id}
                         className="flex items-center justify-between p-2 hover:bg-gray-50 rounded cursor-pointer"
-                        onClick={() => handleTeamMemberToggle(user.id)}
+                        onClick={() => handleTeamMemberToggle(user.id || user.userId || '')}
                       >
                         <div>
                           <p className="font-medium">
@@ -468,7 +468,7 @@ export default function ProjectDialog({
                           checked={
                             watchedTeamMemberIds?.includes(user.id) || false
                           }
-                          onChange={() => handleTeamMemberToggle(user.id)}
+                          onChange={() => handleTeamMemberToggle(user.id || user.userId || '')}
                           className="rounded"
                         />
                       </div>
@@ -480,14 +480,14 @@ export default function ProjectDialog({
                 <div className="flex flex-wrap gap-2 mt-2">
                   {selectedTeamMembers.map((member) => (
                     <Badge
-                      key={member.id}
+                      key={member.id || member.userId}
                       variant="secondary"
                       className="text-xs"
                     >
                       {member.firstName || member.userName}
                       <button
                         type="button"
-                        onClick={() => handleTeamMemberToggle(member.id)}
+                        onClick={() => handleTeamMemberToggle(member.id || member.userId || '')}
                         className="ml-1 hover:text-red-600"
                       >
                         <X className="h-3 w-3" />

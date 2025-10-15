@@ -21,17 +21,14 @@ import {
   TableRow,
 } from '../ui/table';
 import {
-  Calendar,
   Clock,
   Trash2,
   Check,
   X,
-  Filter,
   Search,
 } from 'lucide-react';
 import { timeTrackingService } from '../../services/TimeTrackingService';
 import { TimeEntry, TimeEntryFilters } from '../../models/timeTracking';
-import { useAuth } from '../../contexts/AuthContext';
 
 interface TimeEntryListProps {
   onDelete?: (timeEntry: TimeEntry) => void;
@@ -44,7 +41,6 @@ export function TimeEntryList({
   projects = [], 
   tasks = [] 
 }: TimeEntryListProps) {
-  const { user } = useAuth();
   const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');

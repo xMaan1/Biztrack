@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/src/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
 import { Button } from '@/src/components/ui/button';
-import { Label } from '@/src/components/ui/label';
 import { Switch } from '@/src/components/ui/switch';
 import { Separator } from '@/src/components/ui/separator';
 import { Badge } from '@/src/components/ui/badge';
@@ -29,16 +28,13 @@ import {
 } from '@/src/models/notifications';
 
 const NOTIFICATION_CATEGORIES: NotificationCategory[] = [
-  'system',
-  'inventory',
-  'sales',
-  'crm',
-  'projects',
-  'hrm',
-  'maintenance',
-  'quality_control',
-  'financial',
-  'security',
+  NotificationCategory.SYSTEM,
+  NotificationCategory.INVENTORY,
+  NotificationCategory.CRM,
+  NotificationCategory.HRM,
+  NotificationCategory.MAINTENANCE,
+  NotificationCategory.QUALITY,
+  NotificationCategory.LEDGER,
 ];
 
 const NOTIFICATION_CHANNELS = [
@@ -63,7 +59,7 @@ const NOTIFICATION_CHANNELS = [
 ];
 
 export default function NotificationSettingsPage() {
-  const { preferences, loading, updatePreference, loadPreferences } = useNotifications();
+  const { preferences, loading, updatePreference } = useNotifications();
   const [localPreferences, setLocalPreferences] = useState<NotificationPreference[]>([]);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);

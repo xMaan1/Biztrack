@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -1105,7 +1105,7 @@ export default function HRMJobPostingsPage() {
           optionName="Department"
           placeholder="e.g., Data Science, DevOps"
           onSubmit={handleCreateCustomDepartment}
-          loading={customOptionsLoading.department}
+          loading={customOptionsLoading}
         />
       </div>
     </DashboardLayout>

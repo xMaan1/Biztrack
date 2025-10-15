@@ -20,7 +20,6 @@ import {
   ShoppingCart,
   AlertCircle,
   CheckCircle,
-  X,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { inventoryService } from '../../../services/InventoryService';

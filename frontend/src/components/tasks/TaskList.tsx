@@ -584,11 +584,14 @@ export const TaskList: React.FC<TaskListProps> = ({
                   key={task.id}
                   task={task}
                   onEdit={handleEditTask}
-                  onDelete={handleDeleteTask}
+                  onDelete={(taskId) => handleDeleteTask(tasks.find(t => t.id === taskId)!)}
                   onStatusChange={handleStatusChange}
                   onAddSubtask={handleAddSubtask}
                   onEditSubtask={handleEditSubtask}
-                  onDeleteSubtask={handleDeleteSubtask}
+                  onDeleteSubtask={(subtaskId) => {
+                    const subtask = tasks.flatMap(t => t.subtasks || []).find(s => s.id === subtaskId);
+                    if (subtask) handleDeleteSubtask(subtask);
+                  }}
                   onSubtaskStatusChange={handleStatusChange}
                 />
               ))}

@@ -147,7 +147,7 @@ def update_performance_review(review_id: str, update_data: dict, db: Session, te
     review = get_performance_review_by_id(review_id, db, tenant_id)
     if review:
         for key, value in update_data.items():
-            if hasattr(review, key) and value is not None:
+            if value is not None:
                 # Handle special field mappings
                 if key == 'nextReviewDate':
                     if isinstance(value, str) and value.strip():
@@ -156,6 +156,7 @@ def update_performance_review(review_id: str, update_data: dict, db: Session, te
                         # Set to None for empty strings
                         setattr(review, key, None)
                 elif key == 'overallRating':
+                    print(f"Updating overallRating from {review.rating} to {value}")
                     setattr(review, 'rating', value)
                 elif key == 'achievements':
                     setattr(review, 'strengths', "\n".join(value) if isinstance(value, list) else value)
@@ -165,7 +166,19 @@ def update_performance_review(review_id: str, update_data: dict, db: Session, te
                     setattr(review, key, "\n".join(value) if isinstance(value, list) else value)
                 elif key == 'feedback':
                     setattr(review, 'comments', value)
-                else:
+                elif key == 'reviewType':
+                    setattr(review, 'reviewType', value.value if hasattr(value, 'value') else value)
+                elif key == 'technicalRating':
+                    setattr(review, 'technicalRating', value)
+                elif key == 'communicationRating':
+                    setattr(review, 'communicationRating', value)
+                elif key == 'teamworkRating':
+                    setattr(review, 'teamworkRating', value)
+                elif key == 'leadershipRating':
+                    setattr(review, 'leadershipRating', value)
+                elif key == 'status':
+                    setattr(review, 'isCompleted', value == 'completed')
+                elif hasattr(review, key):
                     setattr(review, key, value)
         review.updatedAt = datetime.utcnow()
         db.commit()
@@ -299,9 +312,48 @@ def create_payroll(payroll_data: dict, db: Session) -> Payroll:
 def update_payroll(payroll_id: str, update_data: dict, db: Session, tenant_id: str = None) -> Optional[Payroll]:
     payroll = get_payroll_by_id(payroll_id, db, tenant_id)
     if payroll:
+        # Map frontend field names to database field names
+        field_mapping = {
+            'basicSalary': 'baseSalary',
+            'allowances': 'allowances',  # Now stored in DB
+            'deductions': 'deductions',
+            'overtimePay': 'overtimePay',  # Store as direct value
+            'bonus': 'bonuses',
+            'netPay': 'netPay',
+            'status': 'isProcessed',  # Convert status to boolean
+            'paymentDate': 'processedAt',
+            'notes': 'notes'  # Not stored in DB, but keep for compatibility
+        }
+        
         for key, value in update_data.items():
-            if hasattr(payroll, key) and value is not None:
-                setattr(payroll, key, value)
+            if key in field_mapping:
+                db_field = field_mapping[key]
+                if db_field == 'isProcessed':
+                    # Convert status string to boolean
+                    payroll.isProcessed = value == 'processed'
+                    if payroll.isProcessed and not payroll.processedAt:
+                        payroll.processedAt = datetime.utcnow()
+                elif db_field == 'processedAt' and value:
+                    # Convert date string to datetime
+                    payroll.processedAt = datetime.fromisoformat(value) if isinstance(value, str) else value
+                elif db_field == 'baseSalary':
+                    payroll.baseSalary = value
+                elif db_field == 'allowances':
+                    payroll.allowances = value
+                elif db_field == 'deductions':
+                    payroll.deductions = value
+                elif db_field == 'bonuses':
+                    payroll.bonuses = value
+                elif db_field == 'netPay':
+                    payroll.netPay = value
+                elif db_field == 'overtimePay':
+                    # Store overtimePay directly and update overtimeHours/overtimeRate
+                    # For simplicity, we'll store it as overtimeHours with rate=1
+                    payroll.overtimeHours = value
+                    payroll.overtimeRate = 1.0
+                elif hasattr(payroll, db_field):
+                    setattr(payroll, db_field, value)
+        
         payroll.updatedAt = datetime.utcnow()
         db.commit()
         db.refresh(payroll)

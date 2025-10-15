@@ -53,7 +53,6 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { inventoryService } from '../../../services/InventoryService';
 import { StockMovement, StockMovementStatus, StockMovementCreate, StockMovementType, Warehouse } from '../../../models/inventory';
 import { DashboardLayout } from '../../../components/layout';
-import { formatCurrency } from '../../../lib/utils';
 import { Textarea } from '../../../components/ui/textarea';
 import { Label } from '../../../components/ui/label';
 import { apiService } from '../../../services/ApiService';

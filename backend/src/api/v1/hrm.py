@@ -695,26 +695,27 @@ async def get_hrm_reviews(
         # Convert SQLAlchemy models to Pydantic models
         review_list = []
         for review in reviews:
+            print(f"GET review {review.id} - overallRating: {review.rating}")
             review_list.append(PerformanceReview(
                 id=str(review.id),
                 tenant_id=str(review.tenant_id),
                 employeeId=str(review.employeeId),
                 reviewerId=str(review.reviewerId),
-                reviewType="annual",  # Default value since not in DB
+                reviewType=review.reviewType or "annual",
                 reviewDate=review.reviewDate.isoformat() if review.reviewDate else "",
                 reviewPeriod=review.reviewPeriod,
                 status="completed" if review.isCompleted else "pending",
                 overallRating=review.rating,
-                technicalRating=0,  # Not stored in DB
-                communicationRating=0,  # Not stored in DB
-                teamworkRating=0,  # Not stored in DB
-                leadershipRating=0,  # Not stored in DB
+                technicalRating=review.technicalRating or 0,
+                communicationRating=review.communicationRating or 0,
+                teamworkRating=review.teamworkRating or 0,
+                leadershipRating=review.leadershipRating or 0,
                 goals=review.goals.split('\n') if review.goals else [],
                 achievements=review.strengths.split('\n') if review.strengths else [],
                 areasForImprovement=review.areasForImprovement.split('\n') if review.areasForImprovement else [],
                 comments=review.comments,
-                nextReviewDate=None,  # Not stored in DB
-                createdBy="",  # Not stored in DB
+                nextReviewDate=review.nextReviewDate.isoformat() if review.nextReviewDate else None,
+                createdBy=str(review.createdBy) if review.createdBy else "",
                 createdAt=review.createdAt.isoformat() if review.createdAt else "",
                 updatedAt=review.updatedAt.isoformat() if review.updatedAt else ""
             ))
@@ -749,15 +750,21 @@ async def create_hrm_review(
             "tenant_id": tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             "employeeId": review_data.employeeId,
             "reviewerId": review_data.reviewerId,
+            "reviewType": review_data.reviewType.value if review_data.reviewType else "annual",
             "reviewDate": datetime.fromisoformat(review_data.reviewDate) if review_data.reviewDate else datetime.utcnow(),
             "reviewPeriod": review_data.reviewPeriod,
             "rating": review_data.overallRating or 0,
+            "technicalRating": review_data.technicalRating or 0,
+            "communicationRating": review_data.communicationRating or 0,
+            "teamworkRating": review_data.teamworkRating or 0,
+            "leadershipRating": review_data.leadershipRating or 0,
             "strengths": "\n".join(review_data.achievements) if review_data.achievements else None,
             "areasForImprovement": "\n".join(review_data.areasOfImprovement) if review_data.areasOfImprovement else None,
             "goals": "\n".join(review_data.goals) if review_data.goals else None,
             "comments": review_data.comments,
             "nextReviewDate": datetime.fromisoformat(review_data.nextReviewDate) if review_data.nextReviewDate else None,
-            "isCompleted": False,
+            "isCompleted": review_data.status == "completed" if review_data.status else False,
+            "createdBy": str(current_user.id),
             "createdAt": datetime.utcnow(),
             "updatedAt": datetime.utcnow()
         }
@@ -770,21 +777,21 @@ async def create_hrm_review(
             tenant_id=str(db_review.tenant_id),
             employeeId=str(db_review.employeeId),
             reviewerId=str(db_review.reviewerId),
-            reviewType="annual",
+            reviewType=db_review.reviewType or "annual",
             reviewDate=db_review.reviewDate.isoformat() if db_review.reviewDate else "",
             reviewPeriod=db_review.reviewPeriod,
             status="completed" if db_review.isCompleted else "pending",
             overallRating=db_review.rating,
-            technicalRating=0,
-            communicationRating=0,
-            teamworkRating=0,
-            leadershipRating=0,
+            technicalRating=db_review.technicalRating or 0,
+            communicationRating=db_review.communicationRating or 0,
+            teamworkRating=db_review.teamworkRating or 0,
+            leadershipRating=db_review.leadershipRating or 0,
             goals=db_review.goals.split('\n') if db_review.goals else [],
             achievements=db_review.strengths.split('\n') if db_review.strengths else [],
             areasForImprovement=db_review.areasForImprovement.split('\n') if db_review.areasForImprovement else [],
             comments=db_review.comments,
-            nextReviewDate=None,
-            createdBy="",
+            nextReviewDate=db_review.nextReviewDate.isoformat() if db_review.nextReviewDate else None,
+            createdBy=str(db_review.createdBy) if db_review.createdBy else "",
             createdAt=db_review.createdAt.isoformat() if db_review.createdAt else "",
             updatedAt=db_review.updatedAt.isoformat() if db_review.updatedAt else ""
         )
@@ -821,27 +828,29 @@ async def update_hrm_review(
         if not db_review:
             raise HTTPException(status_code=404, detail="Performance review not found")
         
+        print(f"Updated performance review - overallRating: {db_review.rating}")
+        
         # Convert to response format
         return PerformanceReview(
             id=str(db_review.id),
             tenant_id=str(db_review.tenant_id),
             employeeId=str(db_review.employeeId),
             reviewerId=str(db_review.reviewerId),
-            reviewType="annual",  # Default value since not in DB
+            reviewType=db_review.reviewType or "annual",
             reviewDate=db_review.reviewDate.isoformat() if db_review.reviewDate else "",
             reviewPeriod=db_review.reviewPeriod,
             status="completed" if db_review.isCompleted else "pending",
             overallRating=db_review.rating,
-            technicalRating=0,  # Not stored in DB
-            communicationRating=0,  # Not stored in DB
-            teamworkRating=0,  # Not stored in DB
-            leadershipRating=0,  # Not stored in DB
+            technicalRating=db_review.technicalRating or 0,
+            communicationRating=db_review.communicationRating or 0,
+            teamworkRating=db_review.teamworkRating or 0,
+            leadershipRating=db_review.leadershipRating or 0,
             goals=db_review.goals.split('\n') if db_review.goals else [],
             achievements=db_review.strengths.split('\n') if db_review.strengths else [],
             areasForImprovement=db_review.areasForImprovement.split('\n') if db_review.areasForImprovement else [],
             comments=db_review.comments,
             nextReviewDate=db_review.nextReviewDate.isoformat() if db_review.nextReviewDate else None,
-            createdBy="",  # Not stored in DB
+            createdBy=str(db_review.createdBy) if db_review.createdBy else "",
             createdAt=db_review.createdAt.isoformat() if db_review.createdAt else "",
             updatedAt=db_review.updatedAt.isoformat() if db_review.updatedAt else ""
         )
@@ -1235,15 +1244,15 @@ async def get_hrm_payroll(
                 "startDate": payroll.startDate.isoformat() if payroll.startDate else "",
                 "endDate": payroll.endDate.isoformat() if payroll.endDate else "",
                 "basicSalary": float(payroll.baseSalary),
-                "allowances": 0.0,  # Not stored in DB
+                "allowances": float(payroll.allowances),
                 "deductions": float(payroll.deductions),
-                "overtimePay": float(payroll.overtimeHours * payroll.overtimeRate),
+                "overtimePay": float(payroll.overtimeHours),
                 "bonus": float(payroll.bonuses),
                 "netPay": float(payroll.netPay),
                 "status": "processed" if payroll.isProcessed else "draft",
                 "paymentDate": payroll.processedAt.isoformat() if payroll.processedAt else None,
-                "notes": "",  # Not stored in DB
-                "createdBy": "",  # Not stored in DB
+                "notes": payroll.notes or "",
+                "createdBy": str(payroll.createdBy) if payroll.createdBy else "",
                 "createdAt": payroll.createdAt.isoformat(),
                 "updatedAt": payroll.updatedAt.isoformat()
             }
@@ -1279,13 +1288,16 @@ async def create_hrm_payroll(
             "startDate": datetime.fromisoformat(payroll_data.startDate).date() if payroll_data.startDate else None,
             "endDate": datetime.fromisoformat(payroll_data.endDate).date() if payroll_data.endDate else None,
             "baseSalary": payroll_data.basicSalary,
-            "overtimeHours": 0.0,  # Not provided in frontend
-            "overtimeRate": 0.0,   # Not provided in frontend
+            "allowances": payroll_data.allowances or 0.0,
+            "overtimeHours": payroll_data.overtimePay or 0.0,
+            "overtimeRate": 1.0,   # Store overtimePay directly in overtimeHours
             "bonuses": payroll_data.bonus,
             "deductions": payroll_data.deductions,
             "netPay": payroll_data.netPay,
             "isProcessed": payroll_data.status == "processed",
             "processedAt": datetime.utcnow() if payroll_data.status == "processed" else None,
+            "notes": payroll_data.notes,
+            "createdBy": str(current_user.id),
             "createdAt": datetime.utcnow(),
             "updatedAt": datetime.utcnow()
         }
@@ -1306,15 +1318,15 @@ async def create_hrm_payroll(
             "startDate": payroll.startDate.isoformat() if payroll.startDate else "",
             "endDate": payroll.endDate.isoformat() if payroll.endDate else "",
             "basicSalary": float(payroll.baseSalary),
-            "allowances": 0.0,  # Not stored in DB
+            "allowances": float(payroll.allowances),
             "deductions": float(payroll.deductions),
-            "overtimePay": float(payroll.overtimeHours * payroll.overtimeRate),
+            "overtimePay": float(payroll.overtimeHours),
             "bonus": float(payroll.bonuses),
             "netPay": float(payroll.netPay),
             "status": "processed" if payroll.isProcessed else "draft",
             "paymentDate": payroll.processedAt.isoformat() if payroll.processedAt else None,
-            "notes": "",  # Not stored in DB
-            "createdBy": "",  # Not stored in DB
+            "notes": payroll.notes or "",
+            "createdBy": str(payroll.createdBy) if payroll.createdBy else "",
             "createdAt": payroll.createdAt.isoformat(),
             "updatedAt": payroll.updatedAt.isoformat()
         }
@@ -1368,15 +1380,15 @@ async def get_hrm_payroll(
             "startDate": payroll.startDate.isoformat() if payroll.startDate else "",
             "endDate": payroll.endDate.isoformat() if payroll.endDate else "",
             "basicSalary": float(payroll.baseSalary),
-            "allowances": 0.0,  # Not stored in DB
+            "allowances": float(payroll.allowances),
             "deductions": float(payroll.deductions),
-            "overtimePay": float(payroll.overtimeHours * payroll.overtimeRate),
+            "overtimePay": float(payroll.overtimeHours),
             "bonus": float(payroll.bonuses),
             "netPay": float(payroll.netPay),
             "status": "processed" if payroll.isProcessed else "draft",
             "paymentDate": payroll.processedAt.isoformat() if payroll.processedAt else None,
-            "notes": "",  # Not stored in DB
-            "createdBy": "",  # Not stored in DB
+            "notes": payroll.notes or "",
+            "createdBy": str(payroll.createdBy) if payroll.createdBy else "",
             "createdAt": payroll.createdAt.isoformat(),
             "updatedAt": payroll.updatedAt.isoformat()
         }
@@ -1412,15 +1424,15 @@ async def update_hrm_payroll(
             "startDate": updated_payroll.startDate.isoformat() if updated_payroll.startDate else "",
             "endDate": updated_payroll.endDate.isoformat() if updated_payroll.endDate else "",
             "basicSalary": float(updated_payroll.baseSalary),
-            "allowances": 0.0,  # Not stored in DB
+            "allowances": float(updated_payroll.allowances),
             "deductions": float(updated_payroll.deductions),
-            "overtimePay": float(updated_payroll.overtimeHours * updated_payroll.overtimeRate),
+            "overtimePay": float(updated_payroll.overtimeHours),
             "bonus": float(updated_payroll.bonuses),
             "netPay": float(updated_payroll.netPay),
             "status": "processed" if updated_payroll.isProcessed else "draft",
             "paymentDate": updated_payroll.processedAt.isoformat() if updated_payroll.processedAt else None,
-            "notes": "",  # Not stored in DB
-            "createdBy": "",  # Not stored in DB
+            "notes": updated_payroll.notes or "",
+            "createdBy": str(updated_payroll.createdBy) if updated_payroll.createdBy else "",
             "createdAt": updated_payroll.createdAt.isoformat(),
             "updatedAt": updated_payroll.updatedAt.isoformat()
         }
