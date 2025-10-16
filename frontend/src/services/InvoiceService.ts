@@ -69,6 +69,23 @@ class InvoiceService {
     await apiService.post(`${this.baseUrl}/${invoiceId}/mark-as-paid`);
   }
 
+  // Bulk operations
+  async bulkSendInvoices(invoiceIds: string[]): Promise<void> {
+    await apiService.post(`${this.baseUrl}/bulk/send`, { invoiceIds });
+  }
+
+  async bulkMarkAsPaid(invoiceIds: string[]): Promise<void> {
+    await apiService.post(`${this.baseUrl}/bulk/mark-as-paid`, { invoiceIds });
+  }
+
+  async bulkMarkAsUnpaid(invoiceIds: string[]): Promise<void> {
+    await apiService.post(`${this.baseUrl}/bulk/mark-as-unpaid`, { invoiceIds });
+  }
+
+  async bulkDeleteInvoices(invoiceIds: string[]): Promise<void> {
+    await apiService.post(`${this.baseUrl}/bulk/delete`, { invoiceIds });
+  }
+
   async downloadInvoice(invoiceId: string): Promise<Blob> {
     const response = await apiService.get(`${this.baseUrl}/${invoiceId}/download`, {
       responseType: 'blob',

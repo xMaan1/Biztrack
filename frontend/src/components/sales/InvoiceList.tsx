@@ -11,6 +11,7 @@ import {
 } from '../ui/table';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
+import { Checkbox } from '../ui/checkbox';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +29,8 @@ import {
   Download,
   Calendar,
   FileText,
+  Send,
+  XCircle,
 } from 'lucide-react';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { Invoice } from '../../models/sales';
@@ -41,6 +44,10 @@ interface InvoiceListProps {
   onDelete: (invoice: Invoice) => void;
   onSend: (invoiceId: string) => void;
   onMarkAsPaid: (invoiceId: string) => void;
+  onBulkSend?: (invoiceIds: string[]) => void;
+  onBulkMarkAsPaid?: (invoiceIds: string[]) => void;
+  onBulkMarkAsUnpaid?: (invoiceIds: string[]) => void;
+  onBulkDelete?: (invoiceIds: string[]) => void;
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
@@ -53,12 +60,18 @@ export function InvoiceList({
   onDelete,
   onSend,
   onMarkAsPaid,
+  onBulkSend,
+  onBulkMarkAsPaid,
+  onBulkMarkAsUnpaid,
+  onBulkDelete,
   currentPage,
   totalPages,
   onPageChange,
 }: InvoiceListProps) {
   const { formatCurrency } = useCurrency();
   const [downloading, setDownloading] = useState<string | null>(null);
+  const [selectedInvoices, setSelectedInvoices] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState<string | null>(null);
 
   const handleDownload = async (invoiceId: string) => {
     try {
@@ -103,6 +116,92 @@ export function InvoiceList({
       setDownloading(null);
     }
   };
+
+  // Bulk operation handlers
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedInvoices(new Set(invoices.map(invoice => invoice.id)));
+    } else {
+      setSelectedInvoices(new Set());
+    }
+  };
+
+  const handleSelectInvoice = (invoiceId: string, checked: boolean) => {
+    const newSelected = new Set(selectedInvoices);
+    if (checked) {
+      newSelected.add(invoiceId);
+    } else {
+      newSelected.delete(invoiceId);
+    }
+    setSelectedInvoices(newSelected);
+  };
+
+  const handleBulkSend = async () => {
+    if (!onBulkSend || selectedInvoices.size === 0) return;
+    
+    setBulkLoading('send');
+    try {
+      await onBulkSend(Array.from(selectedInvoices));
+      setSelectedInvoices(new Set());
+      toast.success(`${selectedInvoices.size} invoices sent successfully!`);
+    } catch (error) {
+      toast.error('Failed to send invoices');
+    } finally {
+      setBulkLoading(null);
+    }
+  };
+
+  const handleBulkMarkAsPaid = async () => {
+    if (!onBulkMarkAsPaid || selectedInvoices.size === 0) return;
+    
+    setBulkLoading('paid');
+    try {
+      await onBulkMarkAsPaid(Array.from(selectedInvoices));
+      setSelectedInvoices(new Set());
+      toast.success(`${selectedInvoices.size} invoices marked as paid!`);
+    } catch (error) {
+      toast.error('Failed to mark invoices as paid');
+    } finally {
+      setBulkLoading(null);
+    }
+  };
+
+  const handleBulkMarkAsUnpaid = async () => {
+    if (!onBulkMarkAsUnpaid || selectedInvoices.size === 0) return;
+    
+    setBulkLoading('unpaid');
+    try {
+      await onBulkMarkAsUnpaid(Array.from(selectedInvoices));
+      setSelectedInvoices(new Set());
+      toast.success(`${selectedInvoices.size} invoices marked as unpaid!`);
+    } catch (error) {
+      toast.error('Failed to mark invoices as unpaid');
+    } finally {
+      setBulkLoading(null);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!onBulkDelete || selectedInvoices.size === 0) return;
+    
+    if (!confirm(`Are you sure you want to delete ${selectedInvoices.size} invoices? This action cannot be undone.`)) {
+      return;
+    }
+    
+    setBulkLoading('delete');
+    try {
+      await onBulkDelete(Array.from(selectedInvoices));
+      setSelectedInvoices(new Set());
+      toast.success(`${selectedInvoices.size} invoices deleted successfully!`);
+    } catch (error) {
+      toast.error('Failed to delete invoices');
+    } finally {
+      setBulkLoading(null);
+    }
+  };
+
+  const isAllSelected = invoices.length > 0 && selectedInvoices.size === invoices.length;
+  const isIndeterminate = selectedInvoices.size > 0 && selectedInvoices.size < invoices.length;
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -122,11 +221,99 @@ export function InvoiceList({
 
   return (
     <div className="space-y-4">
+      {/* Bulk Actions Bar */}
+      {selectedInvoices.size > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-medium text-blue-800">
+                {selectedInvoices.size} invoice{selectedInvoices.size !== 1 ? 's' : ''} selected
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleBulkSend}
+                  disabled={bulkLoading === 'send'}
+                  className="text-blue-600 border-blue-300 hover:bg-blue-100"
+                >
+                  {bulkLoading === 'send' ? (
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-300 border-t-blue-600" />
+                  ) : (
+                    <Send className="mr-2 h-4 w-4" />
+                  )}
+                  Send All
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleBulkMarkAsPaid}
+                  disabled={bulkLoading === 'paid'}
+                  className="text-green-600 border-green-300 hover:bg-green-100"
+                >
+                  {bulkLoading === 'paid' ? (
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-green-300 border-t-green-600" />
+                  ) : (
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                  )}
+                  Mark as Paid
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleBulkMarkAsUnpaid}
+                  disabled={bulkLoading === 'unpaid'}
+                  className="text-orange-600 border-orange-300 hover:bg-orange-100"
+                >
+                  {bulkLoading === 'unpaid' ? (
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-orange-300 border-t-orange-600" />
+                  ) : (
+                    <XCircle className="mr-2 h-4 w-4" />
+                  )}
+                  Mark as Unpaid
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleBulkDelete}
+                  disabled={bulkLoading === 'delete'}
+                  className="text-red-600 border-red-300 hover:bg-red-100"
+                >
+                  {bulkLoading === 'delete' ? (
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-red-300 border-t-red-600" />
+                  ) : (
+                    <Trash2 className="mr-2 h-4 w-4" />
+                  )}
+                  Delete All
+                </Button>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setSelectedInvoices(new Set())}
+              className="text-blue-600 hover:bg-blue-100"
+            >
+              Clear Selection
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Invoices Table */}
       <div className="border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">
+                <Checkbox
+                  checked={isAllSelected}
+                  onCheckedChange={handleSelectAll}
+                  ref={(el) => {
+                    if (el) el.indeterminate = isIndeterminate;
+                  }}
+                />
+              </TableHead>
               <TableHead>Invoice #</TableHead>
               <TableHead>Order #</TableHead>
               <TableHead>Customer</TableHead>
@@ -140,7 +327,13 @@ export function InvoiceList({
           </TableHeader>
           <TableBody>
             {invoices.map((invoice) => (
-              <TableRow key={invoice.id}>
+              <TableRow key={invoice.id} className={selectedInvoices.has(invoice.id) ? 'bg-blue-50' : ''}>
+                <TableCell>
+                  <Checkbox
+                    checked={selectedInvoices.has(invoice.id)}
+                    onCheckedChange={(checked) => handleSelectInvoice(invoice.id, checked as boolean)}
+                  />
+                </TableCell>
                 <TableCell className="font-medium">
                   {invoice.invoiceNumber}
                 </TableCell>

@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import uuid
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func, desc, text
+from pydantic import BaseModel
 
 from ...config.database import get_db
 from ...api.dependencies import get_current_user, get_tenant_context
@@ -23,8 +24,19 @@ from ...config.crm_crud import (
     get_customer_stats, search_customers
 )
 from ...services.inventory_sync_service import InventorySyncService
+from ...services.email_service import EmailService
 
 router = APIRouter(prefix="/invoices", tags=["Invoices"])
+
+# Bulk operation models
+class BulkOperationRequest(BaseModel):
+    invoiceIds: List[str]
+
+class BulkOperationResponse(BaseModel):
+    message: str
+    processed_count: int
+    failed_count: int
+    errors: List[str] = []
 
 def generate_invoice_number(tenant_id: str, db: Session) -> str:
     """Generate unique invoice number with proper race condition handling"""
@@ -122,6 +134,347 @@ def calculate_invoice_totals(items: List, tax_rate: float, discount: float) -> d
     }
 
 
+
+# Bulk operation endpoints (must be before individual invoice endpoints to avoid routing conflicts)
+@router.post("/bulk/send", response_model=BulkOperationResponse)
+def bulk_send_invoices(
+    request: BulkOperationRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
+):
+    """Send multiple invoices at once via email"""
+    try:
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+            
+        tenant_id = tenant_context["tenant_id"]
+        processed_count = 0
+        failed_count = 0
+        errors = []
+        
+        # Initialize email service
+        email_service = EmailService()
+        
+        # Prepare invoices for email sending
+        invoices_to_send = []
+        
+        for invoice_id in request.invoiceIds:
+            try:
+                invoice = db.query(Invoice).filter(
+                    and_(
+                        Invoice.id == invoice_id,
+                        Invoice.tenant_id == tenant_id
+                    )
+                ).first()
+                
+                if not invoice:
+                    failed_count += 1
+                    errors.append(f"Invoice {invoice_id} not found")
+                    continue
+                
+                if invoice.status != InvoiceStatus.DRAFT:
+                    failed_count += 1
+                    errors.append(f"Invoice {invoice.invoiceNumber} is not in draft status")
+                    continue
+                
+                # Prepare invoice data for email
+                invoice_data = {
+                    'customer_email': invoice.customerEmail,
+                    'customer_name': invoice.customerName,
+                    'invoice_number': invoice.invoiceNumber,
+                    'total': invoice.total,
+                    'currency': invoice.currency,
+                    'due_date': invoice.dueDate.strftime('%Y-%m-%d') if invoice.dueDate else None,
+                    'pdf_path': None  # Could be generated if needed
+                }
+                invoices_to_send.append(invoice_data)
+                
+            except Exception as e:
+                failed_count += 1
+                errors.append(f"Failed to prepare invoice {invoice_id}: {str(e)}")
+        
+        # Send emails
+        if invoices_to_send:
+            email_results = email_service.send_bulk_invoice_emails(invoices_to_send)
+            
+            # Update invoice statuses based on email results
+            for i, invoice_id in enumerate(request.invoiceIds):
+                try:
+                    invoice = db.query(Invoice).filter(
+                        and_(
+                            Invoice.id == invoice_id,
+                            Invoice.tenant_id == tenant_id
+                        )
+                    ).first()
+                    
+                    if invoice and invoice.status == InvoiceStatus.DRAFT:
+                        invoice.status = InvoiceStatus.SENT
+                        invoice.sentAt = datetime.utcnow()
+                        invoice.updatedAt = datetime.utcnow()
+                        processed_count += 1
+                        
+                except Exception as e:
+                    failed_count += 1
+                    errors.append(f"Failed to update invoice {invoice_id}: {str(e)}")
+            
+            # Add email errors to the error list
+            errors.extend(email_results['errors'])
+            
+            # Update counts based on email results
+            processed_count = email_results['sent']
+            failed_count += email_results['failed']
+        
+        db.commit()
+        
+        return BulkOperationResponse(
+            message=f"Bulk send completed. {processed_count} invoices sent successfully via email.",
+            processed_count=processed_count,
+            failed_count=failed_count,
+            errors=errors
+        )
+        
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to bulk send invoices: {str(e)}")
+
+@router.post("/bulk/mark-as-paid", response_model=BulkOperationResponse)
+def bulk_mark_invoices_as_paid(
+    request: BulkOperationRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
+):
+    """Mark multiple invoices as paid at once"""
+    try:
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+            
+        tenant_id = tenant_context["tenant_id"]
+        processed_count = 0
+        failed_count = 0
+        errors = []
+        
+        for invoice_id in request.invoiceIds:
+            try:
+                invoice = db.query(Invoice).filter(
+                    and_(
+                        Invoice.id == invoice_id,
+                        Invoice.tenant_id == tenant_id
+                    )
+                ).first()
+                
+                if not invoice:
+                    failed_count += 1
+                    errors.append(f"Invoice {invoice_id} not found")
+                    continue
+                
+                # Mark invoice as paid
+                invoice.status = InvoiceStatus.PAID
+                invoice.paidAt = datetime.utcnow()
+                invoice.updatedAt = datetime.utcnow()
+                processed_count += 1
+                
+                # Sync with inventory management
+                try:
+                    sync_service = InventorySyncService(db)
+                    sync_result = sync_service.sync_invoice_with_inventory(
+                        invoice_id=invoice_id,
+                        tenant_id=tenant_id,
+                        user_id=str(current_user.id)
+                    )
+                    
+                    if not sync_result["success"]:
+                        errors.append(f"Inventory sync failed for invoice {invoice.invoiceNumber}: {sync_result.get('error', 'Unknown error')}")
+                        
+                except Exception as sync_error:
+                    errors.append(f"Inventory sync error for invoice {invoice.invoiceNumber}: {str(sync_error)}")
+                
+            except Exception as e:
+                failed_count += 1
+                errors.append(f"Failed to mark invoice {invoice_id} as paid: {str(e)}")
+        
+        db.commit()
+        
+        return BulkOperationResponse(
+            message=f"Bulk mark as paid completed. {processed_count} invoices marked as paid.",
+            processed_count=processed_count,
+            failed_count=failed_count,
+            errors=errors
+        )
+        
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to bulk mark invoices as paid: {str(e)}")
+
+@router.post("/bulk/mark-as-unpaid", response_model=BulkOperationResponse)
+def bulk_mark_invoices_as_unpaid(
+    request: BulkOperationRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
+):
+    """Mark multiple invoices as unpaid at once"""
+    try:
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+            
+        tenant_id = tenant_context["tenant_id"]
+        processed_count = 0
+        failed_count = 0
+        errors = []
+        
+        for invoice_id in request.invoiceIds:
+            try:
+                invoice = db.query(Invoice).filter(
+                    and_(
+                        Invoice.id == invoice_id,
+                        Invoice.tenant_id == tenant_id
+                    )
+                ).first()
+                
+                if not invoice:
+                    failed_count += 1
+                    errors.append(f"Invoice {invoice_id} not found")
+                    continue
+                
+                # Mark invoice as unpaid (revert to sent status)
+                invoice.status = InvoiceStatus.SENT
+                invoice.paidAt = None
+                invoice.updatedAt = datetime.utcnow()
+                processed_count += 1
+                
+            except Exception as e:
+                failed_count += 1
+                errors.append(f"Failed to mark invoice {invoice_id} as unpaid: {str(e)}")
+        
+        db.commit()
+        
+        return BulkOperationResponse(
+            message=f"Bulk mark as unpaid completed. {processed_count} invoices marked as unpaid.",
+            processed_count=processed_count,
+            failed_count=failed_count,
+            errors=errors
+        )
+        
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to bulk mark invoices as unpaid: {str(e)}")
+
+@router.post("/bulk/delete", response_model=BulkOperationResponse)
+def bulk_delete_invoices(
+    request: BulkOperationRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
+):
+    """Delete multiple invoices at once"""
+    try:
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+            
+        tenant_id = tenant_context["tenant_id"]
+        processed_count = 0
+        failed_count = 0
+        errors = []
+        
+        for invoice_id in request.invoiceIds:
+            try:
+                invoice = db.query(Invoice).filter(
+                    and_(
+                        Invoice.id == invoice_id,
+                        Invoice.tenant_id == tenant_id
+                    )
+                ).first()
+                
+                if not invoice:
+                    failed_count += 1
+                    errors.append(f"Invoice {invoice_id} not found")
+                    continue
+                
+                # Handle foreign key constraint by deleting related invoice_items first
+                try:
+                    check_items_query = text("""
+                        SELECT COUNT(*) FROM information_schema.tables 
+                        WHERE table_name = 'invoice_items'
+                    """)
+                    result = db.execute(check_items_query)
+                    items_table_exists = result.fetchone()[0] > 0
+                    
+                    if items_table_exists:
+                        delete_items_query = text("""
+                            DELETE FROM invoice_items 
+                            WHERE "invoiceId" = :invoice_id
+                        """)
+                        db.execute(delete_items_query, {"invoice_id": invoice_id})
+                
+                except Exception as items_error:
+                    errors.append(f"Could not delete invoice items for {invoice.invoiceNumber}: {str(items_error)}")
+                
+                # Delete the invoice
+                db.delete(invoice)
+                processed_count += 1
+                
+            except Exception as e:
+                failed_count += 1
+                errors.append(f"Failed to delete invoice {invoice_id}: {str(e)}")
+        
+        db.commit()
+        
+        return BulkOperationResponse(
+            message=f"Bulk delete completed. {processed_count} invoices deleted successfully.",
+            processed_count=processed_count,
+            failed_count=failed_count,
+            errors=errors
+        )
+        
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to bulk delete invoices: {str(e)}")
+
+@router.post("/test-email")
+def test_email_configuration(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
+):
+    """Test email configuration"""
+    try:
+        email_service = EmailService()
+        is_configured = email_service.test_email_connection()
+        
+        if is_configured:
+            return {
+                "message": "Email configuration is working correctly",
+                "status": "success",
+                "smtp_server": email_service.smtp_server,
+                "smtp_port": email_service.smtp_port,
+                "from_email": email_service.from_email
+            }
+        else:
+            return {
+                "message": "Email configuration is not working. Please check your SMTP settings.",
+                "status": "error",
+                "smtp_server": email_service.smtp_server,
+                "smtp_port": email_service.smtp_port,
+                "from_email": email_service.from_email,
+                "note": "Set SMTP_USERNAME, SMTP_PASSWORD, and FROM_EMAIL environment variables"
+            }
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to test email configuration: {str(e)}")
 
 @router.post("/", response_model=InvoiceResponse)
 def create_invoice(
@@ -627,7 +980,7 @@ def send_invoice(
     current_user: User = Depends(get_current_user),
     tenant_context: dict = Depends(get_tenant_context)
 ):
-    """Mark invoice as sent"""
+    """Send invoice via email"""
     try:
         if not tenant_context:
             raise HTTPException(status_code=400, detail="Tenant context required")
@@ -647,13 +1000,25 @@ def send_invoice(
         if invoice.status != InvoiceStatus.DRAFT:
             raise HTTPException(status_code=400, detail="Only draft invoices can be sent")
         
-        invoice.status = InvoiceStatus.SENT
-        invoice.sentAt = datetime.utcnow()
-        invoice.updatedAt = datetime.utcnow()
+        # Send email
+        email_service = EmailService()
+        email_sent = email_service.send_invoice_email(
+            to_email=invoice.customerEmail,
+            customer_name=invoice.customerName,
+            invoice_number=invoice.invoiceNumber,
+            invoice_total=invoice.total,
+            currency=invoice.currency,
+            due_date=invoice.dueDate.strftime('%Y-%m-%d') if invoice.dueDate else None
+        )
         
-        db.commit()
-        
-        return {"message": "Invoice sent successfully"}
+        if email_sent:
+            invoice.status = InvoiceStatus.SENT
+            invoice.sentAt = datetime.utcnow()
+            invoice.updatedAt = datetime.utcnow()
+            db.commit()
+            return {"message": "Invoice sent successfully via email"}
+        else:
+            return {"message": "Invoice prepared but email could not be sent. Please check email configuration."}
         
     except HTTPException:
         raise

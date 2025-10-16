@@ -163,6 +163,43 @@ export default function InvoicesPage() {
     }
   };
 
+  // Bulk operations
+  const handleBulkSend = async (invoiceIds: string[]) => {
+    try {
+      await InvoiceService.bulkSendInvoices(invoiceIds);
+      loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send invoices');
+    }
+  };
+
+  const handleBulkMarkAsPaid = async (invoiceIds: string[]) => {
+    try {
+      await InvoiceService.bulkMarkAsPaid(invoiceIds);
+      loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to mark invoices as paid');
+    }
+  };
+
+  const handleBulkMarkAsUnpaid = async (invoiceIds: string[]) => {
+    try {
+      await InvoiceService.bulkMarkAsUnpaid(invoiceIds);
+      loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to mark invoices as unpaid');
+    }
+  };
+
+  const handleBulkDelete = async (invoiceIds: string[]) => {
+    try {
+      await InvoiceService.bulkDeleteInvoices(invoiceIds);
+      loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete invoices');
+    }
+  };
+
   const handleEdit = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
     setShowEditDialog(true);
@@ -349,6 +386,10 @@ export default function InvoicesPage() {
               onDelete={handleDelete}
               onSend={handleSendInvoice}
               onMarkAsPaid={handleMarkAsPaid}
+              onBulkSend={handleBulkSend}
+              onBulkMarkAsPaid={handleBulkMarkAsPaid}
+              onBulkMarkAsUnpaid={handleBulkMarkAsUnpaid}
+              onBulkDelete={handleBulkDelete}
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={setCurrentPage}
