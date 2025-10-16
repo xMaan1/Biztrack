@@ -363,29 +363,39 @@ def get_reconciliation_summary_endpoint(
 ):
     """Get reconciliation summary"""
     try:
-        unreconciled_transactions = get_unreconciled_transactions(db, str(tenant_context["tenant_id"]))
+        tenant_id = str(tenant_context["tenant_id"])
+
+        # Get total transactions count
         total_transactions = db.query(func.count(BankTransaction.id)).filter(
-            BankTransaction.tenant_id == str(tenant_context["tenant_id"])
+            BankTransaction.tenant_id == tenant_id
         ).scalar() or 0
-        
-        reconciled_count = total_transactions - len(unreconciled_transactions)
+
+        # Get unreconciled transactions count
+        unreconciled_count = db.query(func.count(BankTransaction.id)).filter(
+            and_(
+                BankTransaction.tenant_id == tenant_id,
+                BankTransaction.is_reconciled == False
+            )
+        ).scalar() or 0
+
+        reconciled_count = total_transactions - unreconciled_count
         reconciliation_percentage = (reconciled_count / total_transactions * 100) if total_transactions > 0 else 0
-        
+
         # Get last reconciliation date
         last_reconciliation = db.query(func.max(BankTransaction.reconciled_date)).filter(
             and_(
-                BankTransaction.tenant_id == str(tenant_context["tenant_id"]),
+                BankTransaction.tenant_id == tenant_id,
                 BankTransaction.is_reconciled == True
             )
         ).scalar()
-        
+
         return ReconciliationSummary(
             total_transactions=total_transactions,
             reconciled_transactions=reconciled_count,
-            unreconciled_transactions=len(unreconciled_transactions),
-            reconciliation_percentage=reconciliation_percentage,
+            unreconciled_transactions=unreconciled_count,
+            reconciliation_percentage=round(reconciliation_percentage, 2),
             last_reconciliation_date=last_reconciliation
         )
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch reconciliation summary: {str(e)}")
