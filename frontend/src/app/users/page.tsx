@@ -12,13 +12,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar'
 import { 
   Users, 
   UserPlus, 
-  Shield, 
+  Shield,
   Settings,
   MoreHorizontal,
   Edit,
   Trash2,
-  UserCheck,
-  UserX
+  UserCheck
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -32,7 +31,7 @@ import { RoleManagementModal } from '@/src/components/users/RoleManagementModal'
 
 export default function UserManagementPage() {
   const { tenantUsers, roles, loading, refreshData, removeTenantUser } = useRBAC();
-  const { canManageUsers, isOwner } = usePermissions();
+  const { canManageUsers } = usePermissions();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showRoleModal, setShowRoleModal] = useState(false);

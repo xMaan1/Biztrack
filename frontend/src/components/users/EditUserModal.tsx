@@ -31,7 +31,7 @@ interface EditUserModalProps {
 }
 
 export function EditUserModal({ open, onOpenChange, user, onSuccess }: EditUserModalProps) {
-  const { updateTenantUser, roles, loading } = useRBAC();
+  const { updateTenantUser, roles } = useRBAC();
   const [formData, setFormData] = useState<UpdateTenantUserData>({
     role_id: '',
     custom_permissions: [],

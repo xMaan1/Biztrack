@@ -208,11 +208,13 @@ function LedgerDashboardContent() {
       const transactionData = {
         description: transactionForm.description,
         amount: parseFloat(transactionForm.amount),
-        debit_account_id: transactionForm.debitAccountId,
-        credit_account_id: transactionForm.creditAccountId,
+        account_id: transactionForm.debitAccountId,
+        contra_account_id: transactionForm.creditAccountId,
         transaction_date: transactionForm.transactionDate,
         transaction_type: 'GENERAL' as TransactionType,
-        currency: 'USD',
+        meta_data: {
+          currency: 'USD',
+        },
       };
 
       await LedgerService.createLedgerTransaction(transactionData);

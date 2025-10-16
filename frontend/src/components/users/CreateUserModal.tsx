@@ -30,7 +30,7 @@ interface CreateUserModalProps {
 }
 
 export function CreateUserModal({ open, onOpenChange, onSuccess }: CreateUserModalProps) {
-  const { createUser, roles, loading } = useRBAC();
+  const { createUser, roles } = useRBAC();
   const [formData, setFormData] = useState<CreateUserData>({
     userName: '',
     email: '',

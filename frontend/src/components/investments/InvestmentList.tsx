@@ -38,7 +38,6 @@ import { investmentService, Investment, InvestmentDashboardStats } from '../../s
 import InvestmentForm from './InvestmentForm';
 import InvestmentDetails from './InvestmentDetails';
 import {
-  TrendingUp,
   Plus, 
   Search, 
   Calendar,

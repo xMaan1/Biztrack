@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ModuleGuard } from '../../../../components/guards/PermissionGuard';
 import { DashboardLayout } from '../../../../components/layout';
 import InvestmentForm from '../../../../components/investments/InvestmentForm';
-import { Button } from '../../../components/ui/button';
+import { Button } from '@/src/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
 export default function NewInvestmentPage() {

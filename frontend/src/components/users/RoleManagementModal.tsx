@@ -16,7 +16,7 @@ import { Label } from '@/src/components/ui/label';
 import { Textarea } from '@/src/components/ui/textarea';
 import { Badge } from '@/src/components/ui/badge';
 import { Alert, AlertDescription } from '@/src/components/ui/alert';
-import { Loader2, Plus, Trash2, Edit } from 'lucide-react';
+import { Loader2, Plus, Edit } from 'lucide-react';
 import { Checkbox } from '@/src/components/ui/checkbox';
 
 interface RoleManagementModalProps {
@@ -39,7 +39,7 @@ const MODULE_PERMISSIONS = [
 ];
 
 export function RoleManagementModal({ open, onOpenChange, onSuccess }: RoleManagementModalProps) {
-  const { roles, createRole, updateRole, loading } = useRBAC();
+  const { roles, createRole, updateRole } = useRBAC();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingRole, setEditingRole] = useState<any>(null);
   const [formData, setFormData] = useState<CreateRoleData>({
@@ -144,14 +144,11 @@ export function RoleManagementModal({ open, onOpenChange, onSuccess }: RoleManag
       // Add all permissions for this module
       setFormData(prev => ({
         ...prev,
-        permissions: [...new Set([...prev.permissions, ...modulePermissions])]
+        permissions: Array.from(new Set([...prev.permissions, ...modulePermissions]))
       }));
     }
   };
 
-  const getRoleDisplayName = (roleName: string) => {
-    return roleName.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

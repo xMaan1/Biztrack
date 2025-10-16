@@ -310,7 +310,9 @@ export function InvoiceList({
                   checked={isAllSelected}
                   onCheckedChange={handleSelectAll}
                   ref={(el) => {
-                    if (el) el.indeterminate = isIndeterminate;
+                    if (el && 'indeterminate' in el) {
+                      (el as HTMLInputElement).indeterminate = isIndeterminate;
+                    }
                   }}
                 />
               </TableHead>
