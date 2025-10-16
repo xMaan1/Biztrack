@@ -41,7 +41,6 @@ import {
   Eye,
   Calendar,
   MapPin,
-  Briefcase,
   Users,
   Building,
 } from 'lucide-react';

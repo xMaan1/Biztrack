@@ -69,8 +69,6 @@ import {
 
   Calendar,
 
-  FolderOpen,
-
   Eye,
 
   Edit,
@@ -480,7 +478,7 @@ ProjectCard.displayName = 'ProjectCard';
 export default function ProjectsPage() {
 
   const { user } = useAuth();
-  const { canManageProjects, isOwner } = usePermissions();
+  const { canManageProjects } = usePermissions();
 
   const router = useRouter();
 
