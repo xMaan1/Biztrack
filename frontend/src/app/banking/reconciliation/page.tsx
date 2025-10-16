@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
@@ -55,7 +56,15 @@ interface ReconciliationSummary {
   last_reconciliation_date?: string;
 }
 
-const ReconciliationPage = () => {
+export default function ReconciliationPage() {
+  return (
+    <ModuleGuard module="banking" fallback={<div>You don't have access to Banking module</div>}>
+      <ReconciliationContent />
+    </ModuleGuard>
+  );
+}
+
+const ReconciliationContent = () => {
   const [transactions, setTransactions] = useState<BankTransaction[]>([]);
   const [summary, setSummary] = useState<ReconciliationSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -553,5 +562,3 @@ const ReconciliationPage = () => {
     </DashboardLayout>
   );
 };
-
-export default ReconciliationPage;

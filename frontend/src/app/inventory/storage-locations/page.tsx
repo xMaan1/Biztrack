@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -57,6 +58,14 @@ import { Label } from '../../../components/ui/label';
 import { Textarea } from '../../../components/ui/textarea';
 
 export default function StorageLocationsPage() {
+  return (
+    <ModuleGuard module="inventory" fallback={<div>You don't have access to Inventory module</div>}>
+      <StorageLocationsContent />
+    </ModuleGuard>
+  );
+}
+
+function StorageLocationsContent() {
   const { } = useAuth();
   const router = useRouter();
   const [storageLocations, setStorageLocations] = useState<StorageLocation[]>(

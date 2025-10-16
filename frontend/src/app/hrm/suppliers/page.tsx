@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -48,6 +49,14 @@ import { formatDate } from '../../../lib/utils';
 import { toast } from 'sonner';
 
 export default function SuppliersPage() {
+  return (
+    <ModuleGuard module="hrm" fallback={<div>You don't have access to HRM module</div>}>
+      <SuppliersContent />
+    </ModuleGuard>
+  );
+}
+
+function SuppliersContent() {
   const { } = useAuth();
   const router = useRouter();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);

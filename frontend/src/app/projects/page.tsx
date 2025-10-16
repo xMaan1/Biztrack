@@ -51,6 +51,7 @@ import {
 import { DashboardLayout } from '../../components/layout';
 
 import { useAuth } from '../../contexts/AuthContext';
+import { usePermissions } from '../../hooks/usePermissions';
 
 import { apiService } from '../../services/ApiService';
 
@@ -479,6 +480,7 @@ ProjectCard.displayName = 'ProjectCard';
 export default function ProjectsPage() {
 
   const { user } = useAuth();
+  const { canManageProjects, isOwner } = usePermissions();
 
   const router = useRouter();
 
@@ -617,20 +619,15 @@ export default function ProjectsPage() {
 
 
   const canCreateProject = useCallback(() => {
-
-    return user?.userRole === 'admin' || user?.userRole === 'super_admin';
-
-  }, [user]);
+    return canManageProjects() || user?.userRole === 'super_admin';
+  }, [canManageProjects, user]);
 
 
 
   const canEditProject = useCallback((project: Project) => {
-
-    return user?.userRole === 'admin' || user?.userRole === 'super_admin' || 
-
+    return canManageProjects() || user?.userRole === 'super_admin' || 
            project.projectManager.id === user?.id;
-
-  }, [user]);
+  }, [canManageProjects, user]);
 
 
 

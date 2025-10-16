@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useAuth } from '@/src/contexts/AuthContext';
+import { SuperAdminGuard } from '@/src/components/guards/PermissionGuard';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { apiService } from '@/src/services/ApiService';
 import { DashboardLayout } from '../../../../components/layout';
@@ -115,9 +115,16 @@ interface TenantDetails {
 }
 
 export default function TenantDetailsPage() {
+  return (
+    <SuperAdminGuard>
+      <TenantDetailsContent />
+    </SuperAdminGuard>
+  );
+}
+
+function TenantDetailsContent() {
   const params = useParams();
   const router = useRouter();
-  const { user } = useAuth();
   const { getCurrencySymbol, formatCurrency } = useCurrency();
   const tenantId = params.tenantId as string;
 
@@ -134,24 +141,6 @@ export default function TenantDetailsPage() {
   // Delete tenant modal state
   const [showDeleteTenantModal, setShowDeleteTenantModal] = useState(false);
   const [deleteAllData, setDeleteAllData] = useState(false);
-
-  // Check if user is super admin
-  if (user?.userRole !== 'super_admin') {
-    return (
-      <DashboardLayout>
-        <div className="container mx-auto px-6 py-8">
-          <Card className="w-96 mx-auto">
-            <CardHeader>
-              <CardTitle className="text-center text-red-600">Access Denied</CardTitle>
-              <CardDescription className="text-center">
-                You need super admin privileges to access this page.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        </div>
-      </DashboardLayout>
-    );
-  }
 
   useEffect(() => {
     if (tenantId) {

@@ -15,6 +15,7 @@ import {
 } from '../ui/dropdown-menu';
 import { Menu, Settings, LogOut, User } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { useRBAC } from '../../contexts/RBACContext';
 import { getInitials } from '../../lib/utils';
 import NotificationBell from '../notifications/NotificationBell';
 
@@ -23,7 +24,8 @@ interface HeaderProps {
 }
 
 export default function Header({ onMenuClick }: HeaderProps) {
-  const { user, currentTenant, logout } = useAuth();
+  const { user, logout } = useAuth();
+  const { isOwner, userPermissions } = useRBAC();
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -88,9 +90,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                     {user?.email}
                   </p>
                   <Badge variant="secondary" className="w-fit text-xs mt-1">
-                    {currentTenant?.role?.toUpperCase() ||
-                      user?.userRole?.replace('_', ' ').toUpperCase() ||
-                      'MEMBER'}
+                    {user && userPermissions ? (isOwner() ? 'OWNER' : 'MEMBER') : 'LOADING...'}
                   </Badge>
                 </div>
               </DropdownMenuLabel>

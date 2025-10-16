@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { ModuleGuard } from '../../components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -67,6 +68,14 @@ import {
 } from '../../lib/utils';
 
 export default function ProductionPage() {
+  return (
+    <ModuleGuard module="production" fallback={<div>You don't have access to Production module</div>}>
+      <ProductionContent />
+    </ModuleGuard>
+  );
+}
+
+function ProductionContent() {
   const router = useRouter();
   const [productionPlans, setProductionPlans] = useState<ProductionPlan[]>([]);
   const [filteredPlans, setFilteredPlans] = useState<ProductionPlan[]>([]);

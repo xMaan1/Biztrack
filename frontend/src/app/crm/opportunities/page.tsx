@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -51,6 +52,14 @@ import { DashboardLayout } from '../../../components/layout';
 import { useCurrency } from '../../../contexts/CurrencyContext';
 
 export default function CRMOpportunitiesPage() {
+  return (
+    <ModuleGuard module="crm" fallback={<div>You don't have access to CRM module</div>}>
+      <CRMOpportunitiesContent />
+    </ModuleGuard>
+  );
+}
+
+function CRMOpportunitiesContent() {
   const { formatCurrency } = useCurrency();
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);

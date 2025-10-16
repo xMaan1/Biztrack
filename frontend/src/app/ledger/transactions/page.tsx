@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -69,6 +70,14 @@ import { toast } from 'sonner';
 import { useCachedApi } from '@/src/hooks/useCachedApi';
 
 export default function LedgerTransactionsPage() {
+  return (
+    <ModuleGuard module="finance" fallback={<div>You don't have access to Finance module</div>}>
+      <LedgerTransactionsContent />
+    </ModuleGuard>
+  );
+}
+
+function LedgerTransactionsContent() {
   const { } = useAuth();
   const { formatCurrency } = useCurrency();
   

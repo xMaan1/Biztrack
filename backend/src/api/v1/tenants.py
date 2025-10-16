@@ -27,6 +27,7 @@ from ...models.unified_models import (
 from ...services.ledger_seeding import create_default_chart_of_accounts
 
 from ...api.dependencies import get_current_user, require_super_admin, require_tenant_admin_or_super_admin
+from ...services.rbac_service import RBACService
 
 @router.get("/plans", response_model=PlansResponse)
 async def get_available_plans(db: Session = Depends(get_db)):
@@ -80,12 +81,24 @@ async def subscribe_to_plan(
     
     subscription = create_subscription(subscription_data, db)
     
-    # Add user as owner
+    # Add user as owner with new RBAC system
+    # First create default roles for the tenant
+    default_roles = RBACService.create_default_roles(db, str(tenant.id))
+    
+    # Find the owner role
+    owner_role = next((role for role in default_roles if role.name == "owner"), None)
+    if not owner_role:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create owner role"
+        )
+    
+    # Create tenant user with owner role
     tenant_user_data = {
         "tenant_id": tenant.id,
         "userId": current_user.id,
-        "role": TenantRole.OWNER.value,
-        "permissions": ["*"],  # Full permissions for owner
+        "role_id": str(owner_role.id),
+        "custom_permissions": [],
         "isActive": True
     }
     
@@ -173,12 +186,24 @@ async def create_tenant_from_landing(
     
     subscription = create_subscription(subscription_data, db)
     
-    # Add user as owner
+    # Add user as owner with new RBAC system
+    # First create default roles for the tenant
+    default_roles = RBACService.create_default_roles(db, str(tenant.id))
+    
+    # Find the owner role
+    owner_role = next((role for role in default_roles if role.name == "owner"), None)
+    if not owner_role:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create owner role"
+        )
+    
+    # Create tenant user with owner role
     tenant_user_data = {
         "tenant_id": tenant.id,
         "userId": current_user.id,
-        "role": TenantRole.OWNER.value,
-        "permissions": ["*"],  # Full permissions for owner
+        "role_id": str(owner_role.id),
+        "custom_permissions": [],
         "isActive": True
     }
     

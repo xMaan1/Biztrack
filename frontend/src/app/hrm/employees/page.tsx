@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -42,6 +43,14 @@ import { Textarea } from '@/src/components/ui/textarea';
 import { toast } from 'sonner';
 
 export default function HRMEmployeesPage() {
+  return (
+    <ModuleGuard module="hrm" fallback={<div>You don't have access to HRM module</div>}>
+      <HRMEmployeesContent />
+    </ModuleGuard>
+  );
+}
+
+function HRMEmployeesContent() {
   const { getCurrencySymbol } = useCurrency();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);

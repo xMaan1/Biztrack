@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { ModuleGuard } from '@/src/components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -39,6 +40,14 @@ import { useCachedApi } from '../../hooks/useCachedApi';
 import { useCurrency } from '../../contexts/CurrencyContext';
 
 export default function CRMDashboardPage() {
+  return (
+    <ModuleGuard module="crm" fallback={<div>You don't have access to CRM module</div>}>
+      <CRMDashboardContent />
+    </ModuleGuard>
+  );
+}
+
+function CRMDashboardContent() {
   const { formatCurrency } = useCurrency();
   const { data: dashboard, loading, error, refetch } = useCachedApi<CRMDashboard>(
     'crm_dashboard',

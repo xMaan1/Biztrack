@@ -63,7 +63,7 @@ async def login(credentials: LoginCredentials, db: Session = Depends(get_db)):
                 id=str(tenant_user.tenant.id),
                 name=tenant_user.tenant.name,
                 domain=tenant_user.tenant.domain,
-                role=tenant_user.role,
+                role=tenant_user.role.name if tenant_user.role else "member",
                 isActive=tenant_user.tenant.isActive
             ))
     
@@ -162,7 +162,7 @@ async def get_my_tenants(
                 id=str(tenant_user.tenant.id),
                 name=tenant_user.tenant.name,
                 domain=tenant_user.tenant.domain,
-                role=tenant_user.role,
+                role=tenant_user.role.name if tenant_user.role else "member",
                 isActive=tenant_user.tenant.isActive
             ))
     

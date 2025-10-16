@@ -60,6 +60,7 @@ import {
 import { Task } from '../../../models/task';
 import { apiService } from '../../../services/ApiService';
 import { useAuth } from '../../../hooks/useAuth';
+import { usePermissions } from '../../../hooks/usePermissions';
 import { DashboardLayout } from '../../../components/layout';
 import { ProjectDialog } from '../../../components/projects';
 import { TaskCard } from '../../../components/tasks';
@@ -68,6 +69,7 @@ export default function ProjectDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
+  const { canManageProjects } = usePermissions();
   const { getCurrencySymbol } = useCurrency();
   const projectId = params.id as string;
 
@@ -210,9 +212,9 @@ export default function ProjectDetailsPage() {
 
   const canEditProject = () => {
     return (
+      canManageProjects() ||
       user?.userRole === 'super_admin' ||
-      (user?.userRole === 'project_manager' &&
-        project?.projectManager.id === user.userId)
+      (project?.projectManager.id === user?.userId)
     );
   };
 

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ModuleGuard } from '../../../../components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -40,6 +41,14 @@ import {
 import { toast } from 'sonner';
 
 export default function NewEmployeePage() {
+  return (
+    <ModuleGuard module="hrm" fallback={<div>You don't have access to HRM module</div>}>
+      <NewEmployeeContent />
+    </ModuleGuard>
+  );
+}
+
+function NewEmployeeContent() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);

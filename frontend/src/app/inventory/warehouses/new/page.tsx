@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ModuleGuard } from '../../../../components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -26,6 +27,14 @@ import { inventoryService } from '../../../../services/InventoryService';
 import { DashboardLayout } from '../../../../components/layout';
 
 export default function NewWarehousePage() {
+  return (
+    <ModuleGuard module="inventory" fallback={<div>You don't have access to Inventory module</div>}>
+      <NewWarehouseContent />
+    </ModuleGuard>
+  );
+}
+
+function NewWarehouseContent() {
   const { } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);

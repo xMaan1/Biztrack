@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { ModuleGuard } from '../../components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -59,6 +60,14 @@ import { useCachedApi } from '../../hooks/useCachedApi';
 import { useCurrency } from '../../contexts/CurrencyContext';
 
 export default function SalesPage() {
+  return (
+    <ModuleGuard module="commerce" fallback={<div>You don't have access to Commerce module</div>}>
+      <SalesContent />
+    </ModuleGuard>
+  );
+}
+
+function SalesContent() {
   const apiService = useApiService();
   const { formatCurrency } = useCurrency();
   const { data: dashboard, loading: dashboardLoading, error: dashboardError, refetch: refetchDashboard } = useCachedApi<SalesDashboard>(

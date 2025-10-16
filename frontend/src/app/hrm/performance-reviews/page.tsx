@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -56,6 +57,14 @@ import {
 import { DashboardLayout } from '@/src/components/layout';
 
 export default function HRMPerformanceReviewsPage() {
+  return (
+    <ModuleGuard module="hrm" fallback={<div>You don't have access to HRM module</div>}>
+      <HRMPerformanceReviewsContent />
+    </ModuleGuard>
+  );
+}
+
+function HRMPerformanceReviewsContent() {
   const [performanceReviews, setPerformanceReviews] = useState<
     PerformanceReview[]
   >([]);

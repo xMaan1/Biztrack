@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -56,6 +57,14 @@ import { DashboardLayout } from '@/src/components/layout';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 
 export default function HRMPayrollPage() {
+  return (
+    <ModuleGuard module="hrm" fallback={<div>You don't have access to HRM module</div>}>
+      <HRMPayrollContent />
+    </ModuleGuard>
+  );
+}
+
+function HRMPayrollContent() {
   const { formatCurrency } = useCurrency();
   const [payrolls, setPayrolls] = useState<Payroll[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);

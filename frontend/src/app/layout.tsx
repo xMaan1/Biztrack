@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { AuthGuard } from '@/src/components/auth';
 import { AuthProvider } from '@/src/contexts/AuthContext';
+import { RBACProvider } from '@/src/contexts/RBACContext';
 import { CurrencyProvider } from '@/src/contexts/CurrencyContext';
 import { NotificationProvider } from '@/src/contexts/NotificationContext';
 
@@ -33,11 +34,13 @@ export default function RootLayout({
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
         <AuthProvider>
-          <CurrencyProvider>
-            <NotificationProvider>
-              <AuthGuard>{children}</AuthGuard>
-            </NotificationProvider>
-          </CurrencyProvider>
+          <RBACProvider>
+            <CurrencyProvider>
+              <NotificationProvider>
+                <AuthGuard>{children}</AuthGuard>
+              </NotificationProvider>
+            </CurrencyProvider>
+          </RBACProvider>
         </AuthProvider>
       </body>
     </html>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -63,6 +64,14 @@ import { useCustomOptions } from '@/src/hooks/useCustomOptions';
 import { CustomOptionDialog } from '@/src/components/common/CustomOptionDialog';
 
 export default function HRMLeaveManagementPage() {
+  return (
+    <ModuleGuard module="hrm" fallback={<div>You don't have access to HRM module</div>}>
+      <HRMLeaveManagementContent />
+    </ModuleGuard>
+  );
+}
+
+function HRMLeaveManagementContent() {
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { ModuleGuard } from '@/src/components/guards/PermissionGuard';
 import { useRouter } from 'next/navigation';
 import {
   Card,
@@ -30,6 +31,14 @@ import { DashboardLayout } from '../../components/layout';
 import { useCurrency } from '../../contexts/CurrencyContext';
 
 export default function InventoryDashboardPage() {
+  return (
+    <ModuleGuard module="inventory" fallback={<div>You don't have access to Inventory module</div>}>
+      <InventoryDashboardContent />
+    </ModuleGuard>
+  );
+}
+
+function InventoryDashboardContent() {
   const { } = useAuth();
   const { formatCurrency } = useCurrency();
   const router = useRouter();

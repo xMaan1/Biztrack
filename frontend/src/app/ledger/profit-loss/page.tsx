@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -38,6 +39,14 @@ import { useCachedApi } from '@/src/hooks/useCachedApi';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 export default function ProfitLossDashboardPage() {
+  return (
+    <ModuleGuard module="finance" fallback={<div>You don't have access to Finance module</div>}>
+      <ProfitLossDashboardContent />
+    </ModuleGuard>
+  );
+}
+
+function ProfitLossDashboardContent() {
   const { formatCurrency, loading: currencyLoading } = useCurrency();
   const [selectedPeriod, setSelectedPeriod] = useState<ProfitLossPeriod>(ProfitLossPeriod.MONTH);
   const [customDateRange, setCustomDateRange] = useState<{ start: string; end: string } | null>(null);

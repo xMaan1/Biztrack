@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { ModuleGuard } from '@/src/components/guards/PermissionGuard';
 import { useRouter } from 'next/navigation';
 import {
   Card,
@@ -66,6 +67,14 @@ import { DashboardLayout } from '@/src/components/layout';
 import { toast } from 'sonner';
 
 export default function BankingDashboard() {
+  return (
+    <ModuleGuard module="banking" fallback={<div>You don't have access to Banking module</div>}>
+      <BankingDashboardContent />
+    </ModuleGuard>
+  );
+}
+
+function BankingDashboardContent() {
   const { } = useAuth();
   const { formatCurrency } = useCurrency();
   const router = useRouter();

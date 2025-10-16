@@ -47,7 +47,7 @@ export default function CommerceDashboard({
   const handleNewSale = () => onNavigate('/pos/sale');
   const handleViewSales = () => onNavigate('/sales');
   const handleViewInventory = () => onNavigate('/inventory');
-  const handleAddInvestment = () => onNavigate('/investments/new');
+  const handleAddInvestment = () => onNavigate('/ledger/investments/new');
 
   return (
     <div className="space-y-8">

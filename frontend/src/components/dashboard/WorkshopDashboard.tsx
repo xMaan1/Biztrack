@@ -50,7 +50,7 @@ export default function WorkshopDashboard({
   const handleCreateWorkOrder = () => onNavigate('/work-orders/new');
   const handleViewProduction = () => onNavigate('/production');
   const handleViewMaintenance = () => onNavigate('/maintenance');
-  const handleAddInvestment = () => onNavigate('/investments/new');
+  const handleAddInvestment = () => onNavigate('/ledger/investments/new');
 
   return (
     <div className="space-y-8">

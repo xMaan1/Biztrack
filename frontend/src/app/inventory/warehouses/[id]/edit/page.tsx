@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { ModuleGuard } from '../../../../../components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -27,6 +28,14 @@ import { DashboardLayout } from '../../../../../components/layout';
 import { toast } from 'sonner';
 
 export default function EditWarehousePage() {
+  return (
+    <ModuleGuard module="inventory" fallback={<div>You don't have access to Inventory module</div>}>
+      <EditWarehouseContent />
+    </ModuleGuard>
+  );
+}
+
+function EditWarehouseContent() {
   const { } = useAuth();
   const router = useRouter();
   const params = useParams();

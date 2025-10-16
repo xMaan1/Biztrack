@@ -48,7 +48,6 @@ import {
   Settings,
   Trash2,
   ArrowLeft,
-  Smartphone,
   CheckCircle,
   ArrowRight,
   Bell,
@@ -330,6 +329,13 @@ const allMenuItems: MenuItem[] = [
     gradient: 'from-purple-500 to-pink-500',
     subItems: [
       {
+        text: 'Dashboard',
+        icon: LayoutDashboard,
+        path: '/hrm',
+        roles: ['*'],
+        planTypes: ['*'],
+      },
+      {
         text: 'Employees',
         icon: Users,
         path: '/hrm/employees',
@@ -572,7 +578,7 @@ const allMenuItems: MenuItem[] = [
       {
         text: 'Investments',
         icon: DollarSign,
-        path: '/investments',
+        path: '/ledger/investments',
         roles: ['*'],
         planTypes: ['*'],
       },
@@ -622,6 +628,14 @@ const allMenuItems: MenuItem[] = [
         planTypes: ['*'],
       },
     ],
+  },
+  {
+    text: 'User Management',
+    icon: UserCheck,
+    path: '/users',
+    roles: ['owner', 'admin'],
+    planTypes: ['*'],
+    gradient: 'from-purple-500 to-violet-500',
   },
 ];
 

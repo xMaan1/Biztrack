@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { ModuleGuard } from '@/src/components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -47,6 +48,14 @@ import { useCachedApi, useCacheManager } from '../../hooks/useCachedApi';
 import { DEFAULT_CHART_OF_ACCOUNTS, getAccountTypeCount as getAccountTypeCountFromConstants, getTotalBalanceByType } from '../../constants/chartOfAccounts';
 
 export default function LedgerDashboard() {
+  return (
+    <ModuleGuard module="finance" fallback={<div>You don't have access to Finance module</div>}>
+      <LedgerDashboardContent />
+    </ModuleGuard>
+  );
+}
+
+function LedgerDashboardContent() {
   const { formatCurrency } = useCurrency();
   const { clearCache: clearAllCache } = useCacheManager();
   

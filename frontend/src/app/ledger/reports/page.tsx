@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import { DashboardLayout } from '../../../components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
@@ -32,6 +33,14 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
 export default function FinancialReportsPage() {
+  return (
+    <ModuleGuard module="finance" fallback={<div>You don't have access to Finance module</div>}>
+      <FinancialReportsContent />
+    </ModuleGuard>
+  );
+}
+
+function FinancialReportsContent() {
   const { formatCurrency } = useCurrency();
   const [dateRange, setDateRange] = useState<{ startDate: Date | null; endDate: Date | null }>({
     startDate: null,

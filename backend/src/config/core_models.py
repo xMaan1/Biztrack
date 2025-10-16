@@ -32,6 +32,7 @@ class User(Base):
     
     # Relationships
     tenant = relationship("Tenant", back_populates="users")
+    tenant_users = relationship("TenantUser", back_populates="user")
     managed_projects = relationship("Project", foreign_keys="Project.projectManagerId", back_populates="projectManager")
     assigned_tasks = relationship("Task", foreign_keys="Task.assignedToId", back_populates="assignedTo")
     created_tasks = relationship("Task", foreign_keys="Task.createdById", back_populates="createdBy")
@@ -139,6 +140,7 @@ class Tenant(Base):
     projects = relationship("Project", back_populates="tenant")
     subscriptions = relationship("Subscription", back_populates="tenant")
     tenant_users = relationship("TenantUser", back_populates="tenant")
+    roles = relationship("Role", back_populates="tenant")
     
     
     # Sales relationships
@@ -272,14 +274,31 @@ class Subscription(Base):
     tenant = relationship("Tenant", back_populates="subscriptions")
     plan = relationship("Plan", back_populates="subscriptions")
 
+class Role(Base):
+    __tablename__ = "roles"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
+    name = Column(String, nullable=False)  # owner, crm_manager, hrm_manager, etc.
+    display_name = Column(String, nullable=False)
+    description = Column(Text)
+    permissions = Column(JSON, default=[])  # List of module permissions
+    isActive = Column(Boolean, default=True)
+    createdAt = Column(DateTime, default=datetime.utcnow)
+    updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    tenant = relationship("Tenant", back_populates="roles")
+    tenant_users = relationship("TenantUser", back_populates="role")
+
 class TenantUser(Base):
     __tablename__ = "tenant_users"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
     userId = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    role = Column(String, nullable=False)  # owner, admin, manager, member, viewer
-    permissions = Column(JSON, default=[])
+    role_id = Column(UUID(as_uuid=True), ForeignKey("roles.id"), nullable=False)
+    custom_permissions = Column(JSON, default=[])  # Additional permissions beyond role
     isActive = Column(Boolean, default=True)
     invitedBy = Column(UUID(as_uuid=True))
     joinedAt = Column(DateTime, default=datetime.utcnow)
@@ -288,6 +307,8 @@ class TenantUser(Base):
     
     # Relationships
     tenant = relationship("Tenant", back_populates="tenant_users")
+    user = relationship("User", back_populates="tenant_users")
+    role = relationship("Role", back_populates="tenant_users")
 
 class PasswordResetToken(Base):
     __tablename__ = "password_reset_tokens"

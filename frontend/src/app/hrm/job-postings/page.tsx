@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -59,6 +60,14 @@ import { useCachedApi } from '@/src/hooks/useCachedApi';
 import { CustomOptionDialog } from '@/src/components/common/CustomOptionDialog';
 
 export default function HRMJobPostingsPage() {
+  return (
+    <ModuleGuard module="hrm" fallback={<div>You don't have access to HRM module</div>}>
+      <HRMJobPostingsContent />
+    </ModuleGuard>
+  );
+}
+
+function HRMJobPostingsContent() {
   const { getCurrencySymbol } = useCurrency();
   const [filters, setFilters] = useState<HRMJobFilters>({});
   const [search, setSearch] = useState('');

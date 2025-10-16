@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -70,6 +71,14 @@ import { toast } from 'sonner';
 import CustomerImportDialog from '../../../components/crm/CustomerImportDialog';
 
 export default function CustomersPage() {
+  return (
+    <ModuleGuard module="crm" fallback={<div>You don't have access to CRM module</div>}>
+      <CustomersContent />
+    </ModuleGuard>
+  );
+}
+
+function CustomersContent() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [stats, setStats] = useState<CustomerStats | null>(null);
   const [loading, setLoading] = useState(true);

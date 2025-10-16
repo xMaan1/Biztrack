@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { ModuleGuard } from '@/src/components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -66,6 +67,14 @@ import { Textarea } from '@/src/components/ui/textarea';
 import { toast } from 'sonner';
 
 export default function BankTransactionsPage() {
+  return (
+    <ModuleGuard module="banking" fallback={<div>You don't have access to Banking module</div>}>
+      <BankTransactionsContent />
+    </ModuleGuard>
+  );
+}
+
+function BankTransactionsContent() {
   const { } = useAuth();
   const { formatCurrency } = useCurrency();
   

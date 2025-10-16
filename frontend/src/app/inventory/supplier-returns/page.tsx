@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -60,6 +61,14 @@ import { Product } from '../../../models/pos';
 import { useCurrency } from '../../../contexts/CurrencyContext';
 
 export default function SupplierReturnsPage() {
+  return (
+    <ModuleGuard module="inventory" fallback={<div>You don't have access to Inventory module</div>}>
+      <SupplierReturnsContent />
+    </ModuleGuard>
+  );
+}
+
+function SupplierReturnsContent() {
   const { } = useAuth();
   const { formatCurrency } = useCurrency();
   const router = useRouter();

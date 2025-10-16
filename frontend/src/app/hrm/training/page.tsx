@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -60,6 +61,14 @@ import {
 import { DashboardLayout } from '@/src/components/layout';
 
 export default function HRMTrainingPage() {
+  return (
+    <ModuleGuard module="hrm" fallback={<div>You don't have access to HRM module</div>}>
+      <HRMTrainingContent />
+    </ModuleGuard>
+  );
+}
+
+function HRMTrainingContent() {
   const { getCurrencySymbol } = useCurrency();
   const [trainings, setTrainings] = useState<Training[]>([]);
   const [loading, setLoading] = useState(true);

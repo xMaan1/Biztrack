@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ModuleGuard } from '../../../../components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -19,6 +20,14 @@ import { DashboardLayout } from '../../../../components/layout';
 import { toast } from 'sonner';
 
 export default function NewSupplierPage() {
+  return (
+    <ModuleGuard module="hrm" fallback={<div>You don't have access to HRM module</div>}>
+      <NewSupplierContent />
+    </ModuleGuard>
+  );
+}
+
+function NewSupplierContent() {
   const { } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);

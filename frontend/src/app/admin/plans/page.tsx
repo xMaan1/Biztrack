@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/src/contexts/AuthContext';
+import { SuperAdminGuard } from '@/src/components/guards/PermissionGuard';
 import { apiService } from '@/src/services/ApiService';
 import { DashboardLayout } from '../../../components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
@@ -50,7 +50,14 @@ interface PlanStats {
 }
 
 export default function AdminPlansPage() {
-  const { user } = useAuth();
+  return (
+    <SuperAdminGuard>
+      <AdminPlansContent />
+    </SuperAdminGuard>
+  );
+}
+
+function AdminPlansContent() {
   const { getCurrencySymbol } = useCurrency();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [planStats, setPlanStats] = useState<PlanStats | null>(null);
@@ -60,24 +67,6 @@ export default function AdminPlansPage() {
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-
-  // Check if user is super admin
-  if (user?.userRole !== 'super_admin') {
-    return (
-      <DashboardLayout>
-        <div className="container mx-auto px-6 py-8">
-          <Card className="w-96 mx-auto">
-            <CardHeader>
-              <CardTitle className="text-center text-red-600">Access Denied</CardTitle>
-              <CardDescription className="text-center">
-                You need super admin privileges to access this page.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        </div>
-      </DashboardLayout>
-    );
-  }
 
   useEffect(() => {
     fetchPlans();

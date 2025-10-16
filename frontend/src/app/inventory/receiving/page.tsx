@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -62,6 +63,14 @@ import { Textarea } from '../../../components/ui/textarea';
 import { toast } from 'sonner';
 
 export default function ReceivingPage() {
+  return (
+    <ModuleGuard module="inventory" fallback={<div>You don't have access to Inventory module</div>}>
+      <ReceivingContent />
+    </ModuleGuard>
+  );
+}
+
+function ReceivingContent() {
   const { } = useAuth();
   const router = useRouter();
   const [receivings, setReceivings] = useState<Receiving[]>([]);

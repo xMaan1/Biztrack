@@ -9,7 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 from .config.database import create_tables, get_plans
-from .api.v1 import auth, users, projects, tasks, tenants, plans, sales, crm, hrm, custom_options, invoices, invoice_customization, pos, inventory, subscriptions, work_orders, production, quality_control, maintenance, ledger, admin, file_upload, deduct_stock, customer_import, dashboard, investments, reports, notifications, banking
+from .api.v1 import auth, users, projects, tasks, tenants, plans, sales, crm, hrm, custom_options, invoices, invoice_customization, pos, inventory, subscriptions, work_orders, production, quality_control, maintenance, ledger, admin, file_upload, deduct_stock, customer_import, dashboard, investments, reports, notifications, banking, rbac_users
 from .core.security import security_middleware
 from .core.tenant_middleware import tenant_middleware
 from .core.audit import audit_logger
@@ -157,6 +157,7 @@ async def audit_middleware(request: Request, call_next):
 # Include all routes
 app.include_router(auth.router)
 app.include_router(users.router)
+app.include_router(rbac_users.router)
 app.include_router(projects.router)
 app.include_router(tasks.router)
 app.include_router(tenants.router)

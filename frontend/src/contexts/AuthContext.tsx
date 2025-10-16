@@ -60,7 +60,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const session = sessionManager.getSession();
 
           if (session && session.token && session.user) {
-            setUser(session.user);
+            // Ensure user has both id and userId properties
+            const userWithId = {
+              ...session.user,
+              id: session.user.userId || session.user.id
+            };
+            setUser(userWithId);
 
             sessionManager.startProactiveRefresh();
 
@@ -102,7 +107,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await apiService.login(credentials);
 
       if (response.success && response.user) {
-        setUser(response.user);
+        // Ensure user has both id and userId properties
+        const userWithId = {
+          ...response.user,
+          id: response.user.userId || response.user.id
+        };
+        setUser(userWithId);
 
         const sessionManager = new SessionManager();
         sessionManager.startProactiveRefresh();

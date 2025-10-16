@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { ModuleGuard } from '@/src/components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -35,6 +36,14 @@ import { DashboardLayout } from '../../components/layout';
 import { useCachedApi } from '../../hooks/useCachedApi';
 
 export default function HRMDashboardPage() {
+  return (
+    <ModuleGuard module="hrm" fallback={<div>You don't have access to HRM module</div>}>
+      <HRMDashboardContent />
+    </ModuleGuard>
+  );
+}
+
+function HRMDashboardContent() {
   const { getCurrencySymbol } = useCurrency();
   const { data: dashboard, loading, error, refetch } = useCachedApi<HRMDashboard>(
     'hrm_dashboard',

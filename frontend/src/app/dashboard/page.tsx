@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
 import { DashboardLayout } from '../../components/layout';
+import { PermissionGuard } from '../../components/guards/PermissionGuard';
 import PlanAwareDashboard from '../../components/dashboard/PlanAwareDashboard';
 import { usePlanInfo } from '../../hooks/usePlanInfo';
 import { useDashboard } from '../../hooks/useDashboard';
@@ -22,17 +22,17 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  return (
+    <PermissionGuard fallback={<div>Please log in to access the dashboard</div>}>
+      <DashboardContent />
+    </PermissionGuard>
+  );
+}
+
+function DashboardContent() {
   const router = useRouter();
   const { planInfo, loading: planLoading } = usePlanInfo();
   const { data: dashboardData, loading: dashboardLoading, error: dashboardError } = useDashboard();
-
-  // Redirect unauthenticated users to root route
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push('/');
-    }
-  }, [isAuthenticated, authLoading, router]);
 
   // Transform dashboard data to match existing stats interface
   const stats: DashboardStats = dashboardData ? {
@@ -65,8 +65,8 @@ export default function DashboardPage() {
     router.push(path);
   };
 
-  // Show loading while checking authentication or fetching data
-  if (authLoading || planLoading || dashboardLoading) {
+  // Show loading while fetching data
+  if (planLoading || dashboardLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
@@ -76,17 +76,6 @@ export default function DashboardPage() {
     );
   }
 
-  // Show loading screen for unauthenticated users (while redirecting)
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-muted-foreground">Redirecting to login...</p>
-        </div>
-      </div>
-    );
-  }
 
   // Show error if dashboard data failed to load
   if (dashboardError) {

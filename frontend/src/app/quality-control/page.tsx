@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { ModuleGuard } from '../../components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -67,6 +68,14 @@ import { DashboardLayout } from '../../components/layout';
 import { formatDate } from '../../lib/utils';
 
 export default function QualityControlPage() {
+  return (
+    <ModuleGuard module="quality" fallback={<div>You don't have access to Quality Control module</div>}>
+      <QualityControlContent />
+    </ModuleGuard>
+  );
+}
+
+function QualityControlContent() {
   const { getCurrencySymbol } = useCurrency();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('dashboard');

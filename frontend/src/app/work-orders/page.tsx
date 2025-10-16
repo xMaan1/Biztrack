@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { ModuleGuard } from '../../components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -77,6 +78,14 @@ interface WorkOrder {
 }
 
 export default function WorkOrdersPage() {
+  return (
+    <ModuleGuard module="production" fallback={<div>You don't have access to Production module</div>}>
+      <WorkOrdersContent />
+    </ModuleGuard>
+  );
+}
+
+function WorkOrdersContent() {
   const router = useRouter();
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [filteredWorkOrders, setFilteredWorkOrders] = useState<WorkOrder[]>([]);

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { useCachedApi } from '../../../hooks/useCachedApi';
+import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -62,6 +63,14 @@ import PurchaseOrderModal from '../../../components/inventory/PurchaseOrderModal
 import PurchaseOrderViewModal from '../../../components/inventory/PurchaseOrderViewModal';
 
 export default function PurchaseOrdersPage() {
+  return (
+    <ModuleGuard module="inventory" fallback={<div>You don't have access to Inventory module</div>}>
+      <PurchaseOrdersContent />
+    </ModuleGuard>
+  );
+}
+
+function PurchaseOrdersContent() {
   const { } = useAuth();
   const { formatCurrency } = useCurrency();
   const [searchTerm, setSearchTerm] = useState('');

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -53,6 +54,14 @@ import { useCustomOptions } from '../../../hooks/useCustomOptions';
 import { CustomOptionDialog } from '../../../components/common/CustomOptionDialog';
 
 export default function CRMCompaniesPage() {
+  return (
+    <ModuleGuard module="crm" fallback={<div>You don't have access to CRM module</div>}>
+      <CRMCompaniesContent />
+    </ModuleGuard>
+  );
+}
+
+function CRMCompaniesContent() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<CRMCompanyFilters>({});

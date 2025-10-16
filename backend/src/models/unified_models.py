@@ -22,6 +22,88 @@ class UserRole(str, Enum):
     SALES_MANAGER = "sales_manager"
     SALES_REPRESENTATIVE = "sales_representative"
 
+class TenantRole(str, Enum):
+    OWNER = "owner"
+    CRM_MANAGER = "crm_manager"
+    HRM_MANAGER = "hrm_manager"
+    INVENTORY_MANAGER = "inventory_manager"
+    FINANCE_MANAGER = "finance_manager"
+    PROJECT_MANAGER = "project_manager"
+    PRODUCTION_MANAGER = "production_manager"
+    QUALITY_MANAGER = "quality_manager"
+    MAINTENANCE_MANAGER = "maintenance_manager"
+
+class ModulePermission(str, Enum):
+    # CRM Module
+    CRM_VIEW = "crm:view"
+    CRM_CREATE = "crm:create"
+    CRM_UPDATE = "crm:update"
+    CRM_DELETE = "crm:delete"
+    
+    # HRM Module
+    HRM_VIEW = "hrm:view"
+    HRM_CREATE = "hrm:create"
+    HRM_UPDATE = "hrm:update"
+    HRM_DELETE = "hrm:delete"
+    
+    # Inventory Module
+    INVENTORY_VIEW = "inventory:view"
+    INVENTORY_CREATE = "inventory:create"
+    INVENTORY_UPDATE = "inventory:update"
+    INVENTORY_DELETE = "inventory:delete"
+    
+    # Finance Module
+    FINANCE_VIEW = "finance:view"
+    FINANCE_CREATE = "finance:create"
+    FINANCE_UPDATE = "finance:update"
+    FINANCE_DELETE = "finance:delete"
+    
+    # Projects Module
+    PROJECTS_VIEW = "projects:view"
+    PROJECTS_CREATE = "projects:create"
+    PROJECTS_UPDATE = "projects:update"
+    PROJECTS_DELETE = "projects:delete"
+    
+    # Production Module
+    PRODUCTION_VIEW = "production:view"
+    PRODUCTION_CREATE = "production:create"
+    PRODUCTION_UPDATE = "production:update"
+    PRODUCTION_DELETE = "production:delete"
+    
+    # Quality Control Module
+    QUALITY_VIEW = "quality:view"
+    QUALITY_CREATE = "quality:create"
+    QUALITY_UPDATE = "quality:update"
+    QUALITY_DELETE = "quality:delete"
+    
+    # Maintenance Module
+    MAINTENANCE_VIEW = "maintenance:view"
+    MAINTENANCE_CREATE = "maintenance:create"
+    MAINTENANCE_UPDATE = "maintenance:update"
+    MAINTENANCE_DELETE = "maintenance:delete"
+
+    # Banking Module
+    BANKING_VIEW = "banking:view"
+    BANKING_CREATE = "banking:create"
+    BANKING_UPDATE = "banking:update"
+    BANKING_DELETE = "banking:delete"
+
+    # Events Module
+    EVENTS_VIEW = "events:view"
+    EVENTS_CREATE = "events:create"
+    EVENTS_UPDATE = "events:update"
+    EVENTS_DELETE = "events:delete"
+
+    # User Management
+    USERS_VIEW = "users:view"
+    USERS_CREATE = "users:create"
+    USERS_UPDATE = "users:update"
+    USERS_DELETE = "users:delete"
+    
+    # Reports
+    REPORTS_VIEW = "reports:view"
+    REPORTS_EXPORT = "reports:export"
+
 class ProjectStatus(str, Enum):
     PLANNING = "planning"
     IN_PROGRESS = "in_progress"
@@ -215,13 +297,6 @@ class SubscriptionStatus(str, Enum):
     CANCELLED = "cancelled"
     EXPIRED = "expired"
     TRIAL = "trial"
-
-class TenantRole(str, Enum):
-    OWNER = "owner"
-    ADMIN = "admin"
-    MANAGER = "manager"
-    MEMBER = "member"
-    VIEWER = "viewer"
 
 class Permission(BaseModel):
     code: str  # e.g. 'manage_projects', 'view_reports'
@@ -729,16 +804,47 @@ class Subscription(SubscriptionBase):
     class Config:
         from_attributes = True
 
+# Role Models
+class RoleBase(BaseModel):
+    name: str
+    display_name: str
+    description: Optional[str] = None
+    permissions: List[str] = []
+    isActive: bool = True
+
+class RoleCreate(RoleBase):
+    pass
+
+class RoleUpdate(BaseModel):
+    display_name: Optional[str] = None
+    description: Optional[str] = None
+    permissions: Optional[List[str]] = None
+    isActive: Optional[bool] = None
+
+class Role(RoleBase):
+    id: str
+    tenant_id: str
+    createdAt: datetime
+    updatedAt: datetime
+
+    class Config:
+        from_attributes = True
+
 # Tenant User Models
 class TenantUserBase(BaseModel):
     tenant_id: str
     userId: str
-    role: TenantRole
-    permissions: Optional[List[str]] = []
+    role_id: str
+    custom_permissions: Optional[List[str]] = []
     isActive: bool = True
 
 class TenantUserCreate(TenantUserBase):
     pass
+
+class TenantUserUpdate(BaseModel):
+    role_id: Optional[str] = None
+    custom_permissions: Optional[List[str]] = None
+    isActive: Optional[bool] = None
 
 class TenantUser(TenantUserBase):
     id: str
@@ -746,6 +852,8 @@ class TenantUser(TenantUserBase):
     joinedAt: datetime
     createdAt: datetime
     updatedAt: datetime
+    role: Optional[Role] = None
+    user: Optional[User] = None
 
     class Config:
         from_attributes = True
@@ -772,6 +880,25 @@ class TenantsResponse(BaseModel):
 class TenantUsersResponse(BaseModel):
     users: List[TenantUser]
     pagination: dict
+
+class RolesResponse(BaseModel):
+    roles: List[Role]
+    pagination: dict
+
+class UserWithPermissions(BaseModel):
+    id: str
+    userName: str
+    email: str
+    firstName: Optional[str] = None
+    lastName: Optional[str] = None
+    avatar: Optional[str] = None
+    isActive: bool
+    role: Optional[Role] = None
+    permissions: List[str] = []
+    joinedAt: datetime
+
+    class Config:
+        from_attributes = True
 
 class SubscribeRequest(BaseModel):
     planId: str
