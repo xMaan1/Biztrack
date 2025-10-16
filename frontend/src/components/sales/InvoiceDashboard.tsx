@@ -11,7 +11,6 @@ import {
 import { Badge } from '../ui/badge';
 import {
   TrendingUp,
-  DollarSign,
   FileText,
   AlertTriangle,
   CheckCircle,
@@ -128,7 +127,7 @@ export function InvoiceDashboard({ dashboard }: InvoiceDashboardProps) {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-orange-600" />
+              <FileText className="h-5 w-5 text-orange-600" />
               Outstanding Amount
             </CardTitle>
           </CardHeader>

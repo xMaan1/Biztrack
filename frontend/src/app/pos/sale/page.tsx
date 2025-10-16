@@ -33,7 +33,6 @@ import {
   Minus,
   Search,
   Receipt,
-  DollarSign,
   Package,
 } from 'lucide-react';
 import { DashboardLayout } from '../../../components/layout';
@@ -383,7 +382,7 @@ const POSSale = () => {
                         <SelectItem key={method} value={method}>
                           <div className="flex items-center space-x-2">
                             {method === POSPaymentMethod.CASH ? (
-                              <DollarSign className="h-4 w-4" />
+                              <ShoppingCart className="h-4 w-4" />
                             ) : (
                               <Package className="h-4 w-4" />
                             )}

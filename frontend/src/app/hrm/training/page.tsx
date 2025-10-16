@@ -47,7 +47,7 @@ import {
   GraduationCap,
   BookOpen,
   Target,
-  DollarSign,
+  TrendingUp,
   MapPin,
   UserCheck,
 } from 'lucide-react';
@@ -572,7 +572,7 @@ function HRMTrainingContent() {
                           {training.duration}
                         </Badge>
                         <Badge variant="outline">
-                          <DollarSign className="w-3 h-3 mr-1" />$
+                          <TrendingUp className="w-3 h-3 mr-1" />
                           {training.cost}
                         </Badge>
                       </div>

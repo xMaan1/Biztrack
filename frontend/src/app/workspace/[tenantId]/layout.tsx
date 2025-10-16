@@ -32,7 +32,7 @@ import {
   Settings,
   UserCheck,
   Package,
-  DollarSign,
+  PieChart,
   BarChart3,
   Cog,
   Shield,
@@ -185,7 +185,7 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
             href={'/ledger'}
             className="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
           >
-            <DollarSign className="h-5 w-5" />
+            <PieChart className="h-5 w-5" />
             <span className="text-sm font-medium">Finance</span>
           </Link>
         )}

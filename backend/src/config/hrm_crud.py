@@ -314,6 +314,9 @@ def update_payroll(payroll_id: str, update_data: dict, db: Session, tenant_id: s
     if payroll:
         # Map frontend field names to database field names
         field_mapping = {
+            'payPeriod': 'payPeriod',
+            'startDate': 'startDate',
+            'endDate': 'endDate',
             'basicSalary': 'baseSalary',
             'allowances': 'allowances',  # Now stored in DB
             'deductions': 'deductions',
@@ -336,6 +339,12 @@ def update_payroll(payroll_id: str, update_data: dict, db: Session, tenant_id: s
                 elif db_field == 'processedAt' and value:
                     # Convert date string to datetime
                     payroll.processedAt = datetime.fromisoformat(value) if isinstance(value, str) else value
+                elif db_field == 'startDate' and value:
+                    # Convert date string to date
+                    payroll.startDate = datetime.fromisoformat(value).date() if isinstance(value, str) else value
+                elif db_field == 'endDate' and value:
+                    # Convert date string to date
+                    payroll.endDate = datetime.fromisoformat(value).date() if isinstance(value, str) else value
                 elif db_field == 'baseSalary':
                     payroll.baseSalary = value
                 elif db_field == 'allowances':

@@ -42,7 +42,6 @@ import {
   CheckSquare,
   Star,
   Calendar,
-  DollarSign,
   Users,
   Package2,
   Eye,
@@ -363,7 +362,7 @@ export default function ProductionPlanDetailPage() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <DollarSign className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                    <Package className="h-8 w-8 text-blue-600 mx-auto mb-2" />
                     <div className="text-2xl font-bold text-blue-600">
                       {getCurrencySymbol()}{productionPlan.estimated_material_cost}
                     </div>
@@ -377,7 +376,7 @@ export default function ProductionPlanDetailPage() {
                     <div className="text-sm text-gray-600">Labor Cost</div>
                   </div>
                   <div className="text-center p-4 bg-purple-50 rounded-lg">
-                    <DollarSign className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+                    <Package className="h-8 w-8 text-purple-600 mx-auto mb-2" />
                     <div className="text-2xl font-bold text-purple-600">
                       {formatCurrency(
                         productionPlan.estimated_material_cost +

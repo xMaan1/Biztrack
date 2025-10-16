@@ -38,7 +38,6 @@ import {
   Edit,
   Trash2,
   Eye,
-  DollarSign,
   Calendar,
 } from 'lucide-react';
 import CRMService from '@/src/services/CRMService';
@@ -357,7 +356,7 @@ function CRMOpportunitiesContent() {
                       </div>
                       {opportunity.amount && (
                         <div className="flex items-center space-x-1 text-sm text-gray-500">
-                          <DollarSign className="w-4 h-4" />
+                          <Target className="w-4 h-4" />
                           <span className="font-medium">
                             {formatCurrency(opportunity.amount)}
                           </span>

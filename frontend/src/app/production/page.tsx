@@ -525,7 +525,6 @@ function ProductionContent() {
                         <div className="text-sm">
                           <span className="text-gray-500">Cost:</span>
                           <div className="font-medium">
-                            $
                             {plan.estimated_material_cost +
                               plan.estimated_labor_cost}
                           </div>

@@ -10,7 +10,7 @@ import {
   Stethoscope,
   Users,
   Calendar,
-  DollarSign,
+  Activity,
   Package,
   BarChart3,
   Plus,
@@ -126,7 +126,7 @@ export default function HealthcareDashboard({
             <CardTitle className="text-sm font-medium">
               Monthly Revenue
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-purple-600" />
+            <Activity className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">

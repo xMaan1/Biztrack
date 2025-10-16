@@ -8,13 +8,12 @@ import { Progress } from '../ui/progress';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import {
   ShoppingCart,
-  DollarSign,
+  BarChart3,
   Users,
   Package,
   TrendingUp,
   CreditCard,
   Store,
-  BarChart3,
   Plus,
   ArrowRight,
   ShoppingBag,
@@ -82,7 +81,7 @@ export default function CommerceDashboard({
             variant="outline"
             className="border-blue-600 text-blue-600 hover:bg-blue-50"
           >
-            <DollarSign className="mr-2 h-4 w-4" />
+            <BarChart3 className="mr-2 h-4 w-4" />
             Add Investment
           </Button>
         </div>
@@ -93,7 +92,7 @@ export default function CommerceDashboard({
         <Card className="border-l-4 border-l-green-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
-            <DollarSign className="h-4 w-4 text-green-600" />
+            <TrendingUp className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">

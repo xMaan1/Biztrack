@@ -39,7 +39,7 @@ import {
   Eye,
   Clock,
   Calendar,
-  DollarSign,
+  TrendingUp,
   Loader2,
   Wrench,
   Package,
@@ -444,7 +444,7 @@ function WorkOrdersContent() {
                         )}
                         {workOrder.estimated_cost > 0 && (
                           <span className="flex items-center gap-1">
-                            <DollarSign className="h-4 w-4" />$
+                            <TrendingUp className="h-4 w-4" />
                             {workOrder.estimated_cost}
                           </span>
                         )}

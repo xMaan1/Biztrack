@@ -19,7 +19,6 @@ import {
 } from '@/src/components/ui/select';
 import {
   TrendingUp,
-  DollarSign,
   Calculator,
   ShoppingCart,
   RefreshCw,
@@ -261,7 +260,7 @@ Generated on: ${new Date().toLocaleDateString()}`;
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Net Profit</CardTitle>
-                  <DollarSign className="h-4 w-4 text-emerald-600" />
+                  <Calculator className="h-4 w-4 text-emerald-600" />
                 </CardHeader>
                 <CardContent>
                   <div className={`text-2xl font-bold ${dashboardData.summary.net_profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>

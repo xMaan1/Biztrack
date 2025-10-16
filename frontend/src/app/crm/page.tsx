@@ -27,7 +27,6 @@ import {
   Phone,
   Mail,
   Plus,
-  DollarSign,
   BarChart3,
 } from 'lucide-react';
 import CRMService from '@/src/services/CRMService';
@@ -143,7 +142,7 @@ function CRMDashboardContent() {
               <CardTitle className="text-sm font-medium">
                 Total Revenue
               </CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">

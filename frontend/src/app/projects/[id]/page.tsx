@@ -41,11 +41,10 @@ import {
   Trash2,
   Users,
   Calendar,
-  DollarSign,
+  TrendingUp,
   Flag,
   MoreVertical,
   Clock,
-  TrendingUp,
   FileText,
   ArrowLeft,
   CheckSquare,
@@ -380,7 +379,7 @@ export default function ProjectDetailsPage() {
               </Card>
 
               <Card className="text-center p-4 bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200">
-                <DollarSign className="h-10 w-10 text-yellow-600 mx-auto mb-2" />
+                <TrendingUp className="h-10 w-10 text-yellow-600 mx-auto mb-2" />
                 <div className="text-3xl font-bold text-yellow-600 mb-1">
                   {getCurrencySymbol()}{project.budget?.toLocaleString() || '0'}
                 </div>

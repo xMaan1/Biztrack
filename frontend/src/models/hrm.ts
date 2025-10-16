@@ -479,6 +479,9 @@ export interface PayrollCreate {
 }
 
 export interface PayrollUpdate {
+  payPeriod?: string;
+  startDate?: string;
+  endDate?: string;
   basicSalary?: number;
   allowances?: number;
   deductions?: number;

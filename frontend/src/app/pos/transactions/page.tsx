@@ -39,7 +39,7 @@ import {
   Filter,
   Eye,
   Calendar,
-  DollarSign,
+  ShoppingCart,
   Package,
 } from 'lucide-react';
 import { DashboardLayout } from '../../../components/layout';
@@ -129,7 +129,7 @@ const POSTransactions = () => {
   const getPaymentMethodIcon = (method: POSPaymentMethod) => {
     switch (method) {
       case POSPaymentMethod.CASH:
-        return <DollarSign className="h-4 w-4" />;
+        return <ShoppingCart className="h-4 w-4" />;
       case POSPaymentMethod.CREDIT_CARD:
       case POSPaymentMethod.DEBIT_CARD:
         return <Package className="h-4 w-4" />;

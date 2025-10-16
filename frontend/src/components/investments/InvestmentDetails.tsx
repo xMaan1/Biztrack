@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { Investment } from '../../services/InvestmentService';
 import { 
-  DollarSign, 
+  TrendingUp, 
   Calendar, 
   FileText, 
   Tag, 
@@ -73,7 +73,7 @@ export default function InvestmentDetails({ investment, isOpen, onClose }: Inves
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'cash_investment':
-        return <DollarSign className="h-4 w-4 text-green-600" />;
+        return <TrendingUp className="h-4 w-4 text-green-600" />;
       case 'card_transfer':
         return <CreditCard className="h-4 w-4 text-blue-600" />;
       case 'bank_transfer':
@@ -81,7 +81,7 @@ export default function InvestmentDetails({ investment, isOpen, onClose }: Inves
       case 'equipment_purchase':
         return <Package className="h-4 w-4 text-orange-600" />;
       default:
-        return <DollarSign className="h-4 w-4 text-gray-600" />;
+        return <TrendingUp className="h-4 w-4 text-gray-600" />;
     }
   };
 
@@ -152,7 +152,7 @@ export default function InvestmentDetails({ investment, isOpen, onClose }: Inves
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <p className="text-sm font-medium">Amount</p>
                     <p className="text-sm text-muted-foreground">

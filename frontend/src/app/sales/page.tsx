@@ -38,7 +38,7 @@ import {
   Users,
   Target,
   TrendingUp,
-  DollarSign,
+  ShoppingCart,
   Calendar,
   Phone,
   Mail,
@@ -320,7 +320,7 @@ function SalesContent() {
                 <CardTitle className="text-sm font-medium">
                   Total Revenue
                 </CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <ShoppingCart className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">

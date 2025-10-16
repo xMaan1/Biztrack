@@ -35,13 +35,12 @@ import {
   SelectValue,
 } from '@/src/components/ui/select';
 import {
-  DollarSign,
+  TrendingUp,
   Plus,
   Search,
   Edit,
   Eye,
   RefreshCw,
-  TrendingUp,
   TrendingDown,
   Clock,
   CheckCircle,
@@ -436,7 +435,7 @@ function BankTransactionsContent() {
       case TransactionType.FEE:
         return <TrendingDown className="h-4 w-4 text-red-600" />;
       default:
-        return <DollarSign className="h-4 w-4 text-gray-600" />;
+        return <TrendingUp className="h-4 w-4 text-gray-600" />;
     }
   };
 

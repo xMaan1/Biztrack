@@ -42,7 +42,6 @@ import {
   Users,
   CheckCircle,
   FileText,
-  DollarSign,
   Calculator,
   CreditCard,
 } from 'lucide-react';
@@ -187,6 +186,9 @@ function HRMPayrollContent() {
 
       if (editingPayroll) {
         const updateData = {
+          payPeriod: formData.payPeriod,
+          startDate: formData.startDate,
+          endDate: formData.endDate,
           basicSalary: formData.basicSalary,
           allowances: formData.allowances,
           deductions: formData.deductions,
@@ -500,10 +502,10 @@ function HRMPayrollContent() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Net Pay
-              </CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+               <CardTitle className="text-sm font-medium">
+                 Total Net Pay
+               </CardTitle>
+               <Calculator className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
@@ -554,10 +556,10 @@ function HRMPayrollContent() {
                         {payroll.status.charAt(0).toUpperCase() +
                           payroll.status.slice(1)}
                       </Badge>
-                      <Badge variant="outline">
-                        <DollarSign className="w-3 h-3 mr-1" />
-                        Net: {formatCurrency(payroll.netPay)}
-                      </Badge>
+                       <Badge variant="outline">
+                         <Calculator className="w-3 h-3 mr-1" />
+                         Net: {formatCurrency(payroll.netPay)}
+                       </Badge>
                       <Badge variant="outline">
                         <Calculator className="w-3 h-3 mr-1" />
                         Basic: {formatCurrency(payroll.basicSalary)}

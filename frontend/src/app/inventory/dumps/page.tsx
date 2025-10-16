@@ -45,7 +45,6 @@ import {
   Eye,
   Edit,
   Package,
-  DollarSign,
   TrendingDown,
   Loader2,
 } from 'lucide-react';
@@ -360,7 +359,7 @@ function DumpsContent() {
               <CardTitle className="text-sm font-medium">
                 Total Loss Value
               </CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <TrendingDown className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-red-600">

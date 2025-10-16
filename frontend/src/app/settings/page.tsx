@@ -12,7 +12,6 @@ import { Separator } from '@/src/components/ui/separator';
 import { Badge } from '@/src/components/ui/badge';
 import {
   Settings,
-  DollarSign,
   Save,
   AlertCircle,
   Loader2,
@@ -104,7 +103,7 @@ export default function SettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5" />
+                <Settings className="h-5 w-5" />
                 Currency Settings
               </CardTitle>
               <CardDescription>

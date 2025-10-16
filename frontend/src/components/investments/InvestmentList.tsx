@@ -37,8 +37,8 @@ import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { investmentService, Investment, InvestmentDashboardStats } from '../../services/InvestmentService';
 import InvestmentForm from './InvestmentForm';
 import InvestmentDetails from './InvestmentDetails';
-import { 
-  DollarSign, 
+import {
+  TrendingUp,
   Plus, 
   Search, 
   Calendar,
@@ -148,7 +148,7 @@ export default function InvestmentList() {
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'cash_investment':
-        return <DollarSign className="h-4 w-4 text-green-600" />;
+        return <TrendingUp className="h-4 w-4 text-green-600" />;
       case 'card_transfer':
         return <CreditCard className="h-4 w-4 text-blue-600" />;
       case 'bank_transfer':
@@ -156,7 +156,7 @@ export default function InvestmentList() {
       case 'equipment_purchase':
         return <Package className="h-4 w-4 text-orange-600" />;
       default:
-        return <DollarSign className="h-4 w-4 text-gray-600" />;
+        return <TrendingUp className="h-4 w-4 text-gray-600" />;
     }
   };
 
@@ -252,7 +252,7 @@ export default function InvestmentList() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Investments</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.total_investments}</div>
@@ -479,7 +479,7 @@ export default function InvestmentList() {
           
           {filteredInvestments.length === 0 && (
             <div className="text-center py-8">
-              <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-medium mb-2">No investments found</h3>
               <p className="text-muted-foreground mb-4">
                 {searchTerm || statusFilter !== 'all' || typeFilter !== 'all'

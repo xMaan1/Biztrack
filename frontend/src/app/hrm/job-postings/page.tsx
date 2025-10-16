@@ -41,7 +41,7 @@ import {
   Eye,
   Calendar,
   MapPin,
-  DollarSign,
+  Briefcase,
   Users,
   Building,
 } from 'lucide-react';
@@ -545,7 +545,7 @@ function HRMJobPostingsContent() {
                       </Badge>
                       {jobPosting.salaryRange && (
                         <Badge variant="outline">
-                          <DollarSign className="w-3 h-3 mr-1" />
+                          <Briefcase className="w-3 h-3 mr-1" />
                           {jobPosting.salaryRange}
                         </Badge>
                       )}

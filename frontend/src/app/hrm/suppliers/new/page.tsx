@@ -195,7 +195,7 @@ function NewSupplierContent() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="creditLimit">Credit Limit ($)</Label>
+                  <Label htmlFor="creditLimit">Credit Limit</Label>
                   <Input
                     id="creditLimit"
                     type="number"

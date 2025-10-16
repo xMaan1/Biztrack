@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
-import { Calendar, Loader2, AlertCircle, DollarSign } from 'lucide-react';
+import { Calendar, Loader2, AlertCircle, TrendingUp } from 'lucide-react';
 import {
   Project,
   ProjectCreate,
@@ -316,7 +316,7 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
                   step="0.01"
                   className="pl-10"
                 />
-                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <TrendingUp className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               </div>
             </div>
 

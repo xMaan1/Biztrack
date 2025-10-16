@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from '../ui/select';
 import { Badge } from '../ui/badge';
-import { Loader2, DollarSign, X } from 'lucide-react';
+import { Loader2, TrendingUp, X } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -374,7 +374,7 @@ export default function ProjectDialog({
             <div className="space-y-2">
               <Label htmlFor="budget">Budget</Label>
               <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <TrendingUp className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Controller
                   name="budget"
                   control={control}

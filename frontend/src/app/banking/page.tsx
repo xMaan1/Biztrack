@@ -46,7 +46,6 @@ import {
   Plus,
   Eye,
   RefreshCw,
-  DollarSign,
 } from 'lucide-react';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { bankingService } from '@/src/services/BankingService';
@@ -217,7 +216,7 @@ function BankingDashboardContent() {
       case TransactionType.FEE:
         return <TrendingDown className="h-4 w-4 text-red-600" />;
       default:
-        return <DollarSign className="h-4 w-4 text-gray-600" />;
+        return <TrendingUp className="h-4 w-4 text-gray-600" />;
     }
   };
 

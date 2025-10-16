@@ -16,7 +16,6 @@ import {
   BarChart3,
   Plus,
   ArrowRight,
-  DollarSign,
 } from 'lucide-react';
 
 interface WorkshopStats {
@@ -85,7 +84,7 @@ export default function WorkshopDashboard({
             variant="outline"
             className="border-green-600 text-green-600 hover:bg-green-50"
           >
-            <DollarSign className="mr-2 h-4 w-4" />
+            <TrendingUp className="mr-2 h-4 w-4" />
             Add Investment
           </Button>
         </div>

@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import {
   CreditCard,
-  DollarSign,
+  TrendingUp,
   Users,
   FolderOpen,
   CheckCircle,
@@ -155,7 +155,7 @@ function AdminPlansContent() {
       case 'enterprise':
         return <Package className="h-5 w-5 text-purple-500" />;
       case 'commerce':
-        return <DollarSign className="h-5 w-5 text-green-600" />;
+        return <TrendingUp className="h-5 w-5 text-green-600" />;
       case 'workshop':
         return <Settings className="h-5 w-5 text-orange-500" />;
       case 'healthcare':

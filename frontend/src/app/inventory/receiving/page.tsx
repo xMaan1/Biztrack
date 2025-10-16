@@ -616,7 +616,7 @@ function ReceivingContent() {
                             </div>
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            Unit Cost: ${item.unitCost}
+                            Unit Cost: {item.unitCost}
                           </div>
                         </div>
 
@@ -648,7 +648,6 @@ function ReceivingContent() {
                           <div className="space-y-2">
                             <Label className="text-sm">Total Value</Label>
                             <div className="text-sm font-medium">
-                              $
                               {(item.receivedQuantity * item.unitCost).toFixed(
                                 2,
                               )}

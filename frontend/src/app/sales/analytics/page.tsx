@@ -24,7 +24,6 @@ import { Contact, ContactType } from '../../../models/crm';
 import { Company, Industry } from '../../../models/crm';
 import { DashboardLayout } from '../../../components/layout';
 import {
-  DollarSign,
   TrendingUp,
   Users,
   Building,
@@ -237,7 +236,7 @@ export default function SalesAnalyticsPage() {
               <CardTitle className="text-sm font-medium">
                 Total Pipeline
               </CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
@@ -284,7 +283,7 @@ export default function SalesAnalyticsPage() {
               <CardTitle className="text-sm font-medium">
                 Total Revenue
               </CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">

@@ -45,7 +45,6 @@ import {
   Eye,
   Edit,
   Package,
-  DollarSign,
   TrendingUp,
   Loader2,
   Trash2,
@@ -356,7 +355,7 @@ function CustomerReturnsContent() {
               <CardTitle className="text-sm font-medium">
                 Total Refund Value
               </CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">

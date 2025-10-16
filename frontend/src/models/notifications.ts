@@ -166,7 +166,7 @@ export const getCategoryIcon = (category: NotificationCategory): string => {
     case NotificationCategory.MAINTENANCE:
       return 'Wrench';
     case NotificationCategory.LEDGER:
-      return 'DollarSign';
+      return 'Calculator';
     case NotificationCategory.SYSTEM:
       return 'Settings';
     default:
