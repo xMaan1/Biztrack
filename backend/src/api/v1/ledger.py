@@ -385,6 +385,92 @@ async def get_ledger_transaction_by_id_endpoint(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch ledger transaction: {str(e)}")
 
+@router.put("/transactions/{transaction_id}", response_model=LedgerTransactionResponse)
+async def update_ledger_transaction_endpoint(
+    transaction_id: str,
+    transaction_update: LedgerTransactionUpdate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context = Depends(get_tenant_context)
+):
+    """Update a ledger transaction"""
+    try:
+        update_data = {k: v for k, v in transaction_update.model_dump(exclude_unset=True).items() if v is not None}
+        
+        # Transform field names to match SQLAlchemy model
+        if "account_id" in update_data:
+            update_data["debit_account_id"] = update_data.pop("account_id")
+        if "contra_account_id" in update_data:
+            update_data["credit_account_id"] = update_data.pop("contra_account_id")
+        
+        # Handle meta_data fields
+        if "meta_data" in update_data and update_data["meta_data"]:
+            meta_data = update_data.pop("meta_data")
+            if "currency" in meta_data:
+                update_data["currency"] = meta_data["currency"]
+            if "notes" in meta_data:
+                update_data["notes"] = meta_data["notes"]
+            if "tags" in meta_data:
+                update_data["tags"] = meta_data["tags"]
+        
+        # Add updated_at timestamp
+        update_data["updated_at"] = datetime.utcnow()
+        
+        updated_transaction = update_ledger_transaction(transaction_id, update_data, db, tenant_context["tenant_id"])
+        
+        if not updated_transaction:
+            raise HTTPException(status_code=404, detail="Ledger transaction not found")
+        
+        return LedgerTransactionResponse(
+            id=str(updated_transaction.id),
+            tenant_id=str(updated_transaction.tenant_id),
+            transaction_number=updated_transaction.transaction_number,
+            transaction_date=updated_transaction.transaction_date,
+            transaction_type=updated_transaction.transaction_type.value,
+            status=updated_transaction.status.value,
+            account_id=str(updated_transaction.debit_account_id),
+            contra_account_id=str(updated_transaction.credit_account_id),
+            amount=updated_transaction.amount,
+            description=updated_transaction.description,
+            reference_number=updated_transaction.reference_number,
+            meta_data={
+                "currency": updated_transaction.currency,
+                "notes": updated_transaction.notes,
+                "tags": updated_transaction.tags,
+                "reference_type": updated_transaction.reference_type,
+                "reference_id": updated_transaction.reference_id,
+                "attachments": updated_transaction.attachments,
+                "approved_by_id": str(updated_transaction.approved_by) if updated_transaction.approved_by else None,
+                "journal_entry_id": str(updated_transaction.journal_entry_id) if updated_transaction.journal_entry_id else None,
+            },
+            created_by_id=str(updated_transaction.created_by),
+            created_at=updated_transaction.created_at,
+            updated_at=updated_transaction.updated_at
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update ledger transaction: {str(e)}")
+
+@router.delete("/transactions/{transaction_id}")
+async def delete_ledger_transaction_endpoint(
+    transaction_id: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context = Depends(get_tenant_context)
+):
+    """Delete a ledger transaction"""
+    try:
+        success = delete_ledger_transaction(transaction_id, db, tenant_context["tenant_id"])
+        if not success:
+            raise HTTPException(status_code=404, detail="Ledger transaction not found")
+        
+        return {"message": "Ledger transaction deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete ledger transaction: {str(e)}")
+
 # Journal Entry Endpoints
 @router.post("/journal-entries", response_model=JournalEntryResponse, status_code=status.HTTP_201_CREATED)
 async def create_journal_entry_endpoint(

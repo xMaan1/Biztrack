@@ -39,7 +39,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 export default function ProfitLossDashboardPage() {
   return (
-    <ModuleGuard module="finance" fallback={<div>You don't have access to Finance module</div>}>
+    <ModuleGuard module="ledger" fallback={<div>You don't have access to Ledger module</div>}>
       <ProfitLossDashboardContent />
     </ModuleGuard>
   );

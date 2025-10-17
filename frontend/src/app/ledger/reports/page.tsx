@@ -33,7 +33,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 
 export default function FinancialReportsPage() {
   return (
-    <ModuleGuard module="finance" fallback={<div>You don't have access to Finance module</div>}>
+    <ModuleGuard module="ledger" fallback={<div>You don't have access to Ledger module</div>}>
       <FinancialReportsContent />
     </ModuleGuard>
   );

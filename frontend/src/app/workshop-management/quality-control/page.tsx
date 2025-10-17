@@ -2,16 +2,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ModuleGuard } from '../../components/guards/PermissionGuard';
+import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Badge } from '../../components/ui/badge';
+} from '../../../components/ui/card';
+import { Button } from '../../../components/ui/button';
+import { Input } from '../../../components/ui/input';
+import { Badge } from '../../../components/ui/badge';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import {
   Select,
@@ -19,20 +19,28 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../components/ui/select';
+} from '../../../components/ui/select';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from '../../components/ui/dropdown-menu';
+} from '../../../components/ui/dropdown-menu';
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '../../components/ui/tabs';
+} from '../../../components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../../../components/ui/dialog';
 import {
   Plus,
   MoreVertical,
@@ -60,12 +68,227 @@ import {
   QualityCheckResponse as QualityCheck,
   QualityStatus,
   QualityPriority,
+  QualityStandard,
+  InspectionType,
   getQualityStatusColor,
   getQualityPriorityColor,
-} from '../../models/qualityControl';
-import QualityControlService from '../../services/QualityControlService';
-import { DashboardLayout } from '../../components/layout';
-import { formatDate } from '../../lib/utils';
+} from '../../../models/qualityControl';
+import QualityControlService from '../../../services/QualityControlService';
+import { DashboardLayout } from '../../../components/layout';
+import { formatDate } from '../../../lib/utils';
+
+interface QualityCheckDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  mode: 'create' | 'edit';
+  check: QualityCheck | null;
+  onSuccess: () => void;
+}
+
+function QualityCheckDialog({ open, onOpenChange, mode, check, onSuccess }: QualityCheckDialogProps) {
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    inspection_type: InspectionType.VISUAL as InspectionType,
+    priority: QualityPriority.MEDIUM as QualityPriority,
+    quality_standard: QualityStandard.CUSTOM as QualityStandard,
+    criteria: [''],
+    acceptance_criteria: {},
+    tolerance_limits: {},
+    required_equipment: [''],
+    required_skills: [''],
+    estimated_duration_minutes: 60,
+    scheduled_date: '',
+    tags: [''],
+  });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (check && mode === 'edit') {
+      setFormData({
+        title: check.title || '',
+        description: check.description || '',
+        inspection_type: check.inspection_type || InspectionType.VISUAL,
+        priority: check.priority || QualityPriority.MEDIUM,
+        quality_standard: check.quality_standard || QualityStandard.CUSTOM,
+        criteria: check.criteria || [''],
+        acceptance_criteria: check.acceptance_criteria || {},
+        tolerance_limits: check.tolerance_limits || {},
+        required_equipment: check.required_equipment || [''],
+        required_skills: check.required_skills || [''],
+        estimated_duration_minutes: check.estimated_duration_minutes || 60,
+        scheduled_date: check.scheduled_date ? check.scheduled_date.split('T')[0] : '',
+        tags: check.tags || [''],
+      });
+    } else {
+      setFormData({
+        title: '',
+        description: '',
+        inspection_type: InspectionType.VISUAL,
+        priority: QualityPriority.MEDIUM,
+        quality_standard: QualityStandard.CUSTOM,
+        criteria: [''],
+        acceptance_criteria: {},
+        tolerance_limits: {},
+        required_equipment: [''],
+        required_skills: [''],
+        estimated_duration_minutes: 60,
+        scheduled_date: '',
+        tags: [''],
+      });
+    }
+  }, [check, mode, open]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const service = new QualityControlService();
+      
+      if (mode === 'create') {
+        await service.createQualityCheck(formData);
+      } else if (check) {
+        await service.updateQualityCheck(check.id, formData);
+      }
+      
+      onSuccess();
+    } catch (error) {
+      console.error('Error saving quality check:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>
+            {mode === 'create' ? 'Create Quality Check' : 'Edit Quality Check'}
+          </DialogTitle>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium">Title</label>
+              <Input
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder="Quality check title"
+                required
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Inspection Type</label>
+              <Select
+                value={formData.inspection_type}
+                onValueChange={(value) => setFormData({ ...formData, inspection_type: value as InspectionType })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={InspectionType.VISUAL}>Visual Inspection</SelectItem>
+                  <SelectItem value={InspectionType.DIMENSIONAL}>Dimensional Check</SelectItem>
+                  <SelectItem value={InspectionType.FUNCTIONAL}>Functional Test</SelectItem>
+                  <SelectItem value={InspectionType.MATERIAL}>Material Test</SelectItem>
+                  <SelectItem value={InspectionType.SAFETY}>Safety Check</SelectItem>
+                  <SelectItem value={InspectionType.ENVIRONMENTAL}>Environmental Test</SelectItem>
+                  <SelectItem value={InspectionType.DOCUMENTATION}>Documentation Review</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">Description</label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Quality check description"
+              className="w-full p-2 border rounded-md"
+              rows={3}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium">Priority</label>
+              <Select
+                value={formData.priority}
+                onValueChange={(value) => setFormData({ ...formData, priority: value as QualityPriority })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={QualityPriority.LOW}>Low</SelectItem>
+                  <SelectItem value={QualityPriority.MEDIUM}>Medium</SelectItem>
+                  <SelectItem value={QualityPriority.HIGH}>High</SelectItem>
+                  <SelectItem value={QualityPriority.CRITICAL}>Critical</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Quality Standard</label>
+              <Select
+                value={formData.quality_standard}
+                onValueChange={(value) => setFormData({ ...formData, quality_standard: value as QualityStandard })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={QualityStandard.ISO_9001}>ISO 9001</SelectItem>
+                  <SelectItem value={QualityStandard.ISO_14001}>ISO 14001</SelectItem>
+                  <SelectItem value={QualityStandard.ISO_45001}>ISO 45001</SelectItem>
+                  <SelectItem value={QualityStandard.FDA}>FDA</SelectItem>
+                  <SelectItem value={QualityStandard.CE}>CE</SelectItem>
+                  <SelectItem value={QualityStandard.CUSTOM}>Custom</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium">Estimated Duration (minutes)</label>
+              <Input
+                type="number"
+                value={formData.estimated_duration_minutes}
+                onChange={(e) => setFormData({ ...formData, estimated_duration_minutes: parseInt(e.target.value) || 60 })}
+                min="1"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Scheduled Date</label>
+              <Input
+                type="date"
+                value={formData.scheduled_date}
+                onChange={(e) => setFormData({ ...formData, scheduled_date: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Saving...' : mode === 'create' ? 'Create' : 'Update'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export default function QualityControlPage() {
   return (
@@ -93,6 +316,13 @@ function QualityControlContent() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
+  
+  // Modal states
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedCheck, setSelectedCheck] = useState<QualityCheck | null>(null);
+  const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [checkToDelete, setCheckToDelete] = useState<QualityCheck | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -158,23 +388,66 @@ function QualityControlContent() {
     }
   };
 
+  // Modal handlers
+  const handleCreateCheck = () => {
+    setSelectedCheck(null);
+    setDialogMode('create');
+    setDialogOpen(true);
+  };
+
+  const handleEditCheck = (check: QualityCheck) => {
+    setSelectedCheck(check);
+    setDialogMode('edit');
+    setDialogOpen(true);
+  };
+
+  const handleDeleteCheck = (check: QualityCheck) => {
+    setCheckToDelete(check);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteCheck = async () => {
+    if (!checkToDelete) return;
+
+    try {
+      const service = new QualityControlService();
+      await service.deleteQualityCheck(checkToDelete.id);
+      setQualityChecks(
+        qualityChecks.filter((check) => check.id !== checkToDelete.id),
+      );
+      setDeleteDialogOpen(false);
+      setCheckToDelete(null);
+      // Refresh dashboard data
+      loadDashboardData();
+    } catch (error) {
+      console.error('Error deleting quality check:', error);
+    }
+  };
+
+  const handleCheckSuccess = () => {
+    setDialogOpen(false);
+    setSelectedCheck(null);
+    loadQualityChecks();
+    loadDashboardData();
+  };
+
   if (!mounted) return null;
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="container mx-auto px-6 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">
+            <h1 className="text-3xl font-bold text-gray-900">
               Quality Control
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-gray-600 mt-2">
               Manage quality checks, inspections, defects, and reports
             </p>
           </div>
           <div className="flex items-center space-x-2">
-            <Button onClick={() => router.push('/quality-control/checks/new')}>
+            <Button onClick={handleCreateCheck}>
               <Plus className="mr-2 h-4 w-4" />
               New Quality Check
             </Button>
@@ -452,9 +725,7 @@ function QualityControlContent() {
                       <SelectItem value="critical">Critical</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button
-                    onClick={() => router.push('/quality-control/checks/new')}
-                  >
+                  <Button onClick={handleCreateCheck}>
                     <Plus className="mr-2 h-4 w-4" />
                     New Check
                   </Button>
@@ -526,17 +797,16 @@ function QualityControlContent() {
                                 View Details
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                onClick={() =>
-                                  router.push(
-                                    `/quality-control/checks/${check.id}/edit`,
-                                  )
-                                }
+                                onClick={() => handleEditCheck(check)}
                               >
                                 <Edit className="mr-2 h-4 w-4" />
                                 Edit
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-red-600">
+                              <DropdownMenuItem 
+                                onClick={() => handleDeleteCheck(check)}
+                                className="text-red-600"
+                              >
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Delete
                               </DropdownMenuItem>
@@ -640,6 +910,41 @@ function QualityControlContent() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Quality Check Dialog */}
+        <QualityCheckDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          mode={dialogMode}
+          check={selectedCheck}
+          onSuccess={handleCheckSuccess}
+        />
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Quality Check</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete "{checkToDelete?.title}"? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setDeleteDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmDeleteCheck}
+              >
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

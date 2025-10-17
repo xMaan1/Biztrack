@@ -29,7 +29,7 @@ const protectedRoutes = [
   '/workspace',
   '/reports',
   '/hrm',
-  '/production',
+  '/workshop-management',
 ];
 
 export function middleware(request: NextRequest) {

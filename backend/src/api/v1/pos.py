@@ -230,9 +230,48 @@ async def update_pos_product(
 ):
     """Update an existing product"""
     try:
+        # Map Pydantic model fields to database model fields
+        product_dict = product_data.dict(exclude_unset=True)
+        
+        # Map fields that exist in both models
+        mapped_data = {}
+        if 'name' in product_dict:
+            mapped_data['name'] = product_dict['name']
+        if 'sku' in product_dict:
+            mapped_data['sku'] = product_dict['sku']
+        if 'description' in product_dict:
+            mapped_data['description'] = product_dict['description']
+        if 'category' in product_dict:
+            mapped_data['category'] = product_dict['category']
+        if 'costPrice' in product_dict:
+            mapped_data['costPrice'] = product_dict['costPrice']
+        if 'unitPrice' in product_dict:
+            mapped_data['unitPrice'] = product_dict['unitPrice']
+        if 'stockQuantity' in product_dict:
+            mapped_data['stockQuantity'] = product_dict['stockQuantity']
+        if 'minStockLevel' in product_dict:
+            mapped_data['minStockLevel'] = product_dict['minStockLevel']
+        if 'maxStockLevel' in product_dict:
+            mapped_data['maxStockLevel'] = product_dict['maxStockLevel']
+        if 'unitOfMeasure' in product_dict:
+            mapped_data['unit'] = product_dict['unitOfMeasure']  # Map unitOfMeasure to unit
+        if 'barcode' in product_dict:
+            mapped_data['barcode'] = product_dict['barcode']
+        if 'expiryDate' in product_dict:
+            mapped_data['expiryDate'] = product_dict['expiryDate']
+        if 'batchNumber' in product_dict:
+            mapped_data['batchNumber'] = product_dict['batchNumber']
+        if 'serialNumber' in product_dict:
+            mapped_data['serialNumber'] = product_dict['serialNumber']
+        if 'isActive' in product_dict:
+            mapped_data['isActive'] = product_dict['isActive']
+        
+        # Add updated timestamp
+        mapped_data['updatedAt'] = datetime.now()
+        
         db_product = update_product(
             product_id,
-            product_data.dict(exclude_unset=True),
+            mapped_data,
             db,
             tenant_context["tenant_id"] if tenant_context else None
         )

@@ -2,34 +2,34 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ModuleGuard } from '../../components/guards/PermissionGuard';
+import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
-} from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Badge } from '../../components/ui/badge';
-import { Progress } from '../../components/ui/progress';
+} from '../../../components/ui/card';
+import { Button } from '../../../components/ui/button';
+import { Input } from '../../../components/ui/input';
+import { Badge } from '../../../components/ui/badge';
+import { Progress } from '../../../components/ui/progress';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../components/ui/select';
+} from '../../../components/ui/select';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from '../../components/ui/dropdown-menu';
+} from '../../../components/ui/dropdown-menu';
 import {
   Tabs,
   TabsList,
   TabsTrigger,
-} from '../../components/ui/tabs';
+} from '../../../components/ui/tabs';
 import {
   Plus,
   Search,
@@ -44,16 +44,16 @@ import {
   Wrench,
   Package,
 } from 'lucide-react';
-import { apiService } from '../../services/ApiService';
-import { DashboardLayout } from '../../components/layout';
-import WorkOrderDialog from '../../components/work-orders/WorkOrderDialog';
+import { apiService } from '../../../services/ApiService';
+import { DashboardLayout } from '../../../components/layout';
+import WorkOrderDialog from '../../../components/work-orders/WorkOrderDialog';
 import {
   getStatusColor,
   getPriorityColor,
   getStatusIcon,
   getTypeIcon,
   formatDate,
-} from '../../lib/utils';
+} from '../../../lib/utils';
 
 interface WorkOrder {
   id: string;

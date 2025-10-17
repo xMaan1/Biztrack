@@ -46,9 +46,9 @@ export default function WorkshopDashboard({
   const productionEfficiency = stats.productionEfficiency || 0;
 
   const handleCreateProject = () => onNavigate('/projects/new');
-  const handleCreateWorkOrder = () => onNavigate('/work-orders/new');
-  const handleViewProduction = () => onNavigate('/production');
-  const handleViewMaintenance = () => onNavigate('/maintenance');
+  const handleCreateWorkOrder = () => onNavigate('/workshop-management/work-orders/new');
+  const handleViewProduction = () => onNavigate('/workshop-management/production');
+  const handleViewMaintenance = () => onNavigate('/workshop-management/maintenance');
   const handleAddInvestment = () => onNavigate('/ledger/investments/new');
 
   return (
@@ -253,7 +253,7 @@ export default function WorkshopDashboard({
             </Button>
 
             <Button
-              onClick={() => onNavigate('/quality-control')}
+              onClick={() => onNavigate('/workshop-management/quality-control')}
               variant="outline"
               className="h-20 flex-col gap-2"
             >

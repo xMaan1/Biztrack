@@ -32,6 +32,7 @@ import { apiService } from '@/src/services/ApiService';
 import {
   Product,
   ProductCategory,
+  UnitOfMeasure,
 } from '@/src/models/pos';
 import {
   Package,
@@ -54,7 +55,7 @@ interface ProductFormData {
   costPrice: number;
   stockQuantity: number;
   minStockLevel: number;
-  unitOfMeasure: string;
+  unitOfMeasure: UnitOfMeasure;
   barcode: string;
   expiryDate: string;
   batchNumber: string;
@@ -85,7 +86,7 @@ const POSProducts = () => {
     costPrice: 0,
     stockQuantity: 0,
     minStockLevel: 5,
-    unitOfMeasure: 'piece',
+    unitOfMeasure: UnitOfMeasure.PIECE,
     barcode: '',
     expiryDate: '',
     batchNumber: '',
@@ -103,7 +104,8 @@ const POSProducts = () => {
       const response = await apiService.get('/pos/products');
       setProducts(response.products || []);
     } catch (error) {
-      } finally {
+      console.error('Error fetching products:', error);
+    } finally {
       setLoading(false);
     }
   };
@@ -120,6 +122,8 @@ const POSProducts = () => {
         await apiService.post('/pos/products', formData);
       }
 
+      // Close dialog and reset state
+      setIsDialogOpen(false);
       setEditingProduct(null);
       setFormData({
         name: '',
@@ -130,7 +134,7 @@ const POSProducts = () => {
         costPrice: 0,
         stockQuantity: 0,
         minStockLevel: 5,
-        unitOfMeasure: 'piece',
+        unitOfMeasure: UnitOfMeasure.PIECE,
         barcode: '',
         expiryDate: '',
         batchNumber: '',
@@ -138,7 +142,8 @@ const POSProducts = () => {
       });
       fetchProducts();
     } catch (error) {
-      }
+      console.error('Error submitting product:', error);
+    }
   };
 
   const handleEdit = (product: Product) => {
@@ -152,7 +157,7 @@ const POSProducts = () => {
       costPrice: product.costPrice,
       stockQuantity: product.stockQuantity,
       minStockLevel: product.minStockLevel,
-      unitOfMeasure: product.unitOfMeasure || 'piece',
+      unitOfMeasure: product.unitOfMeasure || UnitOfMeasure.PIECE,
       barcode: product.barcode || '',
       expiryDate: product.expiryDate || '',
       batchNumber: product.batchNumber || '',
@@ -197,12 +202,21 @@ const POSProducts = () => {
       costPrice: 0,
       stockQuantity: 0,
       minStockLevel: 5,
-      unitOfMeasure: 'piece',
+      unitOfMeasure: UnitOfMeasure.PIECE,
       barcode: '',
       expiryDate: '',
       batchNumber: '',
       serialNumber: '',
     });
+  };
+
+  const handleDialogClose = (open: boolean) => {
+    if (!open) {
+      // Dialog is being closed, reset editing state
+      setEditingProduct(null);
+      resetForm();
+    }
+    setIsDialogOpen(open);
   };
 
   const openNewProductDialog = () => {
@@ -393,7 +407,7 @@ const POSProducts = () => {
                   <div className="flex items-center space-x-2">
                     <span className="font-medium">{product.stockQuantity}</span>
                     <span className="text-xs text-muted-foreground">
-                      pieces
+                      {product.unitOfMeasure || UnitOfMeasure.PIECE}
                     </span>
                   </div>
                 </div>
@@ -442,7 +456,7 @@ const POSProducts = () => {
         )}
 
         {/* Add/Edit Product Dialog */}
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
@@ -520,7 +534,7 @@ const POSProducts = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="unitPrice">Price *</Label>
                   <Input
@@ -556,7 +570,9 @@ const POSProducts = () => {
                     required
                   />
                 </div>
+              </div>
 
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="stockQuantity">Stock Quantity *</Label>
                   <Input
@@ -572,6 +588,30 @@ const POSProducts = () => {
                     }
                     required
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="unitOfMeasure">Unit of Measure *</Label>
+                  <Select
+                    value={formData.unitOfMeasure}
+                    onValueChange={(value: string) =>
+                      setFormData({
+                        ...formData,
+                        unitOfMeasure: value as UnitOfMeasure,
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select unit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.values(UnitOfMeasure).map((unit) => (
+                        <SelectItem key={unit} value={unit}>
+                          {unit}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -649,7 +689,7 @@ const POSProducts = () => {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
+                  onClick={() => handleDialogClose(false)}
                 >
                   Cancel
                 </Button>
@@ -703,7 +743,7 @@ const POSProducts = () => {
                   </div>
                   <div>
                     <Label className="text-sm font-medium text-gray-600">Unit of Measure</Label>
-                    <p className="text-gray-900 mt-1">{viewingProduct.unitOfMeasure || 'piece'}</p>
+                    <p className="text-gray-900 mt-1">{viewingProduct.unitOfMeasure || UnitOfMeasure.PIECE}</p>
                   </div>
                 </div>
 
@@ -735,11 +775,15 @@ const POSProducts = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="text-sm font-medium text-gray-600">Current Stock</Label>
-                      <p className="text-2xl font-bold text-blue-600">{viewingProduct.stockQuantity}</p>
+                      <p className="text-2xl font-bold text-blue-600">
+                        {viewingProduct.stockQuantity} {viewingProduct.unitOfMeasure || UnitOfMeasure.PIECE}
+                      </p>
                     </div>
                     <div>
                       <Label className="text-sm font-medium text-gray-600">Minimum Stock Level</Label>
-                      <p className="text-2xl font-bold text-orange-600">{viewingProduct.minStockLevel}</p>
+                      <p className="text-2xl font-bold text-orange-600">
+                        {viewingProduct.minStockLevel} {viewingProduct.unitOfMeasure || UnitOfMeasure.PIECE}
+                      </p>
                     </div>
                   </div>
                   {viewingProduct.stockQuantity <= viewingProduct.minStockLevel && (

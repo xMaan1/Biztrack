@@ -10,7 +10,7 @@ import { ArrowLeft } from 'lucide-react';
 
 export default function NewInvestmentPage() {
   return (
-    <ModuleGuard module="finance" fallback={<div>You don't have access to Finance module</div>}>
+    <ModuleGuard module="ledger" fallback={<div>You don't have access to Ledger module</div>}>
       <NewInvestmentContent />
     </ModuleGuard>
   );

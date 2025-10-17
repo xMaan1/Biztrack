@@ -43,7 +43,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { DashboardLayout } from '../../../components/layout';
 import { useCurrency } from '../../../contexts/CurrencyContext';
 import { apiService } from '../../../services/ApiService';
-import { Product } from '../../../models/pos';
+import { Product, UnitOfMeasure } from '../../../models/pos';
 
 export default function ProductsPage() {
   return (
@@ -218,7 +218,7 @@ function ProductsContent() {
                             <div className="flex items-center gap-2">
                               {stockStatus.icon}
                               <span className="font-medium">
-                                {product.stockQuantity}
+                                {product.stockQuantity} {product.unitOfMeasure || UnitOfMeasure.PIECE}
                               </span>
                               <span className="text-sm text-muted-foreground">
                                 / {product.minStockLevel || 0} min
@@ -426,7 +426,7 @@ function ProductsContent() {
                   </div>
                   <div>
                     <Label className="text-sm font-medium text-gray-600">Unit of Measure</Label>
-                    <p className="text-gray-900 mt-1">{viewingProduct.unitOfMeasure || 'piece'}</p>
+                    <p className="text-gray-900 mt-1">{viewingProduct.unitOfMeasure || UnitOfMeasure.PIECE}</p>
                   </div>
                 </div>
 
@@ -458,11 +458,15 @@ function ProductsContent() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="text-sm font-medium text-gray-600">Current Stock</Label>
-                      <p className="text-2xl font-bold text-blue-600">{viewingProduct.stockQuantity}</p>
+                      <p className="text-2xl font-bold text-blue-600">
+                        {viewingProduct.stockQuantity} {viewingProduct.unitOfMeasure || UnitOfMeasure.PIECE}
+                      </p>
                     </div>
                     <div>
                       <Label className="text-sm font-medium text-gray-600">Minimum Stock Level</Label>
-                      <p className="text-2xl font-bold text-orange-600">{viewingProduct.minStockLevel || 0}</p>
+                      <p className="text-2xl font-bold text-orange-600">
+                        {viewingProduct.minStockLevel || 0} {viewingProduct.unitOfMeasure || UnitOfMeasure.PIECE}
+                      </p>
                     </div>
                   </div>
                   {viewingProduct.stockQuantity <= (viewingProduct.minStockLevel || 0) && (

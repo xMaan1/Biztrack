@@ -42,7 +42,7 @@ async def create_schedule(
         db_schedule = create_maintenance_schedule(
             db=db,
             schedule_data=schedule_data,
-            tenant_id=tenant_context.tenant_id,
+            tenant_id=tenant_context["tenant_id"],
             created_by_id=current_user.id
         )
         return MaintenanceScheduleResponse(
@@ -82,7 +82,7 @@ async def get_schedules(
 ):
     """Get all maintenance schedules for the tenant"""
     try:
-        schedules = get_all_maintenance_schedules(db, tenant_context.tenant_id, skip, limit)
+        schedules = get_all_maintenance_schedules(db, tenant_context["tenant_id"], skip, limit)
         return [
             MaintenanceScheduleResponse(
                 id=str(schedule.id),
@@ -121,7 +121,7 @@ async def get_schedule(
 ):
     """Get a specific maintenance schedule by ID"""
     try:
-        schedule = get_maintenance_schedule_by_id(db, schedule_id, tenant_context.tenant_id)
+        schedule = get_maintenance_schedule_by_id(db, schedule_id, tenant_context["tenant_id"])
         if not schedule:
             raise HTTPException(status_code=404, detail="Maintenance schedule not found")
         
@@ -166,7 +166,7 @@ async def update_schedule(
     try:
         update_data = {k: v for k, v in schedule_update.dict().items() if v is not None}
         updated_schedule = update_maintenance_schedule(
-            db, schedule_id, update_data, tenant_context.tenant_id, current_user.id
+            db, schedule_id, update_data, tenant_context["tenant_id"], current_user.id
         )
         if not updated_schedule:
             raise HTTPException(status_code=404, detail="Maintenance schedule not found")
@@ -209,7 +209,7 @@ async def delete_schedule(
 ):
     """Delete a maintenance schedule"""
     try:
-        success = delete_maintenance_schedule(db, schedule_id, tenant_context.tenant_id)
+        success = delete_maintenance_schedule(db, schedule_id, tenant_context["tenant_id"])
         if not success:
             raise HTTPException(status_code=404, detail="Maintenance schedule not found")
     except HTTPException:
@@ -231,7 +231,7 @@ async def create_work_order(
         db_work_order = create_maintenance_work_order(
             db=db,
             work_order_data=work_order_data,
-            tenant_id=tenant_context.tenant_id,
+            tenant_id=tenant_context["tenant_id"],
             created_by_id=current_user.id
         )
         return MaintenanceWorkOrderResponse(
@@ -272,7 +272,7 @@ async def get_work_orders(
 ):
     """Get all maintenance work orders for the tenant"""
     try:
-        work_orders = get_all_maintenance_work_orders(db, tenant_context.tenant_id, skip, limit)
+        work_orders = get_all_maintenance_work_orders(db, tenant_context["tenant_id"], skip, limit)
         return [
             MaintenanceWorkOrderResponse(
                 id=str(wo.id),
@@ -312,7 +312,7 @@ async def get_work_order(
 ):
     """Get a specific maintenance work order by ID"""
     try:
-        work_order = get_maintenance_work_order_by_id(db, work_order_id, tenant_context.tenant_id)
+        work_order = get_maintenance_work_order_by_id(db, work_order_id, tenant_context["tenant_id"])
         if not work_order:
             raise HTTPException(status_code=404, detail="Maintenance work order not found")
         
@@ -358,7 +358,7 @@ async def update_work_order(
     try:
         update_data = {k: v for k, v in work_order_update.dict().items() if v is not None}
         updated_work_order = update_maintenance_work_order(
-            db, work_order_id, update_data, tenant_context.tenant_id, current_user.id
+            db, work_order_id, update_data, tenant_context["tenant_id"], current_user.id
         )
         if not updated_work_order:
             raise HTTPException(status_code=404, detail="Maintenance work order not found")
@@ -402,7 +402,7 @@ async def delete_work_order(
 ):
     """Delete a maintenance work order"""
     try:
-        success = delete_maintenance_work_order(db, work_order_id, tenant_context.tenant_id)
+        success = delete_maintenance_work_order(db, work_order_id, tenant_context["tenant_id"])
         if not success:
             raise HTTPException(status_code=404, detail="Maintenance work order not found")
     except HTTPException:
@@ -424,7 +424,7 @@ async def create_equipment_endpoint(
         db_equipment = create_equipment(
             db=db,
             equipment_data=equipment_data,
-            tenant_id=tenant_context.tenant_id,
+            tenant_id=tenant_context["tenant_id"],
             created_by_id=current_user.id
         )
         return EquipmentResponse(
@@ -468,7 +468,7 @@ async def get_equipment_list(
 ):
     """Get all equipment for the tenant"""
     try:
-        equipment_list = get_all_equipment(db, tenant_context.tenant_id, skip, limit)
+        equipment_list = get_all_equipment(db, tenant_context["tenant_id"], skip, limit)
         return [
             EquipmentResponse(
                 id=str(eq.id),
@@ -511,7 +511,7 @@ async def get_equipment(
 ):
     """Get a specific equipment by ID"""
     try:
-        equipment = get_equipment_by_id(db, equipment_id, tenant_context.tenant_id)
+        equipment = get_equipment_by_id(db, equipment_id, tenant_context["tenant_id"])
         if not equipment:
             raise HTTPException(status_code=404, detail="Equipment not found")
         
@@ -560,7 +560,7 @@ async def update_equipment_endpoint(
     try:
         update_data = {k: v for k, v in equipment_update.dict().items() if v is not None}
         updated_equipment = update_equipment(
-            db, equipment_id, update_data, tenant_context.tenant_id, current_user.id
+            db, equipment_id, update_data, tenant_context["tenant_id"], current_user.id
         )
         if not updated_equipment:
             raise HTTPException(status_code=404, detail="Equipment not found")
@@ -607,7 +607,7 @@ async def delete_equipment_endpoint(
 ):
     """Delete equipment"""
     try:
-        success = delete_equipment(db, equipment_id, tenant_context.tenant_id)
+        success = delete_equipment(db, equipment_id, tenant_context["tenant_id"])
         if not success:
             raise HTTPException(status_code=404, detail="Equipment not found")
     except HTTPException:
@@ -629,7 +629,7 @@ async def create_report(
         db_report = create_maintenance_report(
             db=db,
             report_data=report_data,
-            tenant_id=tenant_context.tenant_id,
+            tenant_id=tenant_context["tenant_id"],
             created_by_id=current_user.id
         )
         return MaintenanceReportResponse(
@@ -675,7 +675,7 @@ async def get_reports(
 ):
     """Get all maintenance reports for the tenant"""
     try:
-        reports = get_all_maintenance_reports(db, tenant_context.tenant_id, skip, limit)
+        reports = get_all_maintenance_reports(db, tenant_context["tenant_id"], skip, limit)
         return [
             MaintenanceReportResponse(
                 id=str(report.id),
@@ -720,7 +720,7 @@ async def get_report(
 ):
     """Get a specific maintenance report by ID"""
     try:
-        report = get_maintenance_report_by_id(db, report_id, tenant_context.tenant_id)
+        report = get_maintenance_report_by_id(db, report_id, tenant_context["tenant_id"])
         if not report:
             raise HTTPException(status_code=404, detail="Maintenance report not found")
         
@@ -771,7 +771,7 @@ async def update_report(
     try:
         update_data = {k: v for k, v in report_update.dict().items() if v is not None}
         updated_report = update_maintenance_report(
-            db, report_id, update_data, tenant_context.tenant_id, current_user.id
+            db, report_id, update_data, tenant_context["tenant_id"], current_user.id
         )
         if not updated_report:
             raise HTTPException(status_code=404, detail="Maintenance report not found")
@@ -820,7 +820,7 @@ async def delete_report(
 ):
     """Delete a maintenance report"""
     try:
-        success = delete_maintenance_report(db, report_id, tenant_context.tenant_id)
+        success = delete_maintenance_report(db, report_id, tenant_context["tenant_id"])
         if not success:
             raise HTTPException(status_code=404, detail="Maintenance report not found")
     except HTTPException:
@@ -837,7 +837,7 @@ async def get_maintenance_dashboard(
 ):
     """Get maintenance dashboard statistics"""
     try:
-        stats = get_maintenance_dashboard_stats(db, tenant_context.tenant_id)
+        stats = get_maintenance_dashboard_stats(db, tenant_context["tenant_id"])
         return MaintenanceDashboardStats(**stats)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch maintenance dashboard stats: {str(e)}")
@@ -851,7 +851,7 @@ async def get_recent_schedules(
 ):
     """Get recent maintenance schedules"""
     try:
-        schedules = get_recent_maintenance_schedules(db, tenant_context.tenant_id, limit)
+        schedules = get_recent_maintenance_schedules(db, tenant_context["tenant_id"], limit)
         return schedules
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch recent maintenance schedules: {str(e)}")
@@ -865,7 +865,7 @@ async def get_upcoming_maintenance_endpoint(
 ):
     """Get upcoming maintenance schedules"""
     try:
-        schedules = get_upcoming_maintenance(db, tenant_context.tenant_id, limit)
+        schedules = get_upcoming_maintenance(db, tenant_context["tenant_id"], limit)
         return schedules
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch upcoming maintenance: {str(e)}")
@@ -879,7 +879,7 @@ async def get_critical_maintenance_endpoint(
 ):
     """Get critical priority maintenance schedules"""
     try:
-        schedules = get_critical_maintenance(db, tenant_context.tenant_id, limit)
+        schedules = get_critical_maintenance(db, tenant_context["tenant_id"], limit)
         return schedules
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch critical maintenance: {str(e)}")

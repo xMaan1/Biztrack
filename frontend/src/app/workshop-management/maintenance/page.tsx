@@ -25,6 +25,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/src/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/src/components/ui/dropdown-menu';
 import { Progress } from '@/src/components/ui/progress';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import {
@@ -35,6 +42,10 @@ import {
   Settings,
   FileText,
   HardDrive,
+  MoreVertical,
+  Edit,
+  Trash2,
+  Eye,
 } from 'lucide-react';
 import { maintenanceService } from '@/src/services/MaintenanceService';
 import {
@@ -67,6 +78,9 @@ export default function MaintenancePage() {
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEquipmentDialog, setShowEquipmentDialog] = useState(false);
+  const [deletingSchedule, setDeletingSchedule] = useState<MaintenanceScheduleResponse | null>(null);
+  const [deletingEquipment, setDeletingEquipment] = useState<EquipmentResponse | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   // Fetch data on component mount
   useEffect(() => {
@@ -135,6 +149,43 @@ export default function MaintenancePage() {
     fetchDashboardData();
   };
 
+  const handleEditSchedule = (schedule: MaintenanceScheduleResponse) => {
+    // TODO: Implement edit functionality
+    console.log('Edit schedule:', schedule);
+  };
+
+  const handleEditEquipment = (equipment: EquipmentResponse) => {
+    // TODO: Implement edit functionality
+    console.log('Edit equipment:', equipment);
+  };
+
+  const handleDeleteSchedule = (schedule: MaintenanceScheduleResponse) => {
+    setDeletingSchedule(schedule);
+    setShowDeleteDialog(true);
+  };
+
+  const handleDeleteEquipment = (equipment: EquipmentResponse) => {
+    setDeletingEquipment(equipment);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      if (deletingSchedule) {
+        await maintenanceService.deleteMaintenanceSchedule(deletingSchedule.id);
+        setMaintenanceSchedules(maintenanceSchedules.filter(s => s.id !== deletingSchedule.id));
+      } else if (deletingEquipment) {
+        await maintenanceService.deleteEquipment(deletingEquipment.id);
+        setEquipment(equipment.filter(e => e.id !== deletingEquipment.id));
+      }
+      setShowDeleteDialog(false);
+      setDeletingSchedule(null);
+      setDeletingEquipment(null);
+    } catch (error) {
+      console.error('Failed to delete:', error);
+    }
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -152,14 +203,14 @@ export default function MaintenancePage() {
 
   return (
     <DashboardLayout>
-      <div className="container mx-auto p-6 space-y-6">
+      <div className="container mx-auto px-6 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">
+            <h1 className="text-3xl font-bold text-gray-900">
               Equipment Maintenance
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-gray-600 mt-2">
               Manage equipment maintenance schedules, work orders, and reports
             </p>
           </div>
@@ -441,9 +492,33 @@ export default function MaintenancePage() {
                           {schedule.priority}
                         </Badge>
                         <Badge variant="outline">{schedule.category}</Badge>
-                        <Button variant="outline" size="sm">
-                          View
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>
+                              <Eye className="h-4 w-4 mr-2" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleEditSchedule(schedule)}
+                            >
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteSchedule(schedule)}
+                              className="text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
                   ))}
@@ -530,9 +605,33 @@ export default function MaintenancePage() {
                             {eq.status}
                           </Badge>
                           <Badge variant="outline">{eq.category}</Badge>
-                          <Button variant="outline" size="sm">
-                            View
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>
+                                <Eye className="h-4 w-4 mr-2" />
+                                View Details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleEditEquipment(eq)}
+                              >
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteEquipment(eq)}
+                                className="text-red-600"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </div>
                     ))}
@@ -575,6 +674,38 @@ export default function MaintenancePage() {
         onOpenChange={setShowEquipmentDialog}
         onEquipmentCreated={handleEquipmentCreated}
       />
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete{' '}
+              {deletingSchedule ? `"${deletingSchedule.title}"` : `"${deletingEquipment?.name}"`}?
+              This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowDeleteDialog(false);
+                  setDeletingSchedule(null);
+                  setDeletingEquipment(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmDelete}
+              >
+                Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

@@ -7,10 +7,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import { Badge } from '../../../components/ui/badge';
-import { Progress } from '../../../components/ui/progress';
+} from '../../../../components/ui/card';
+import { Button } from '../../../../components/ui/button';
+import { Badge } from '../../../../components/ui/badge';
+import { Progress } from '../../../../components/ui/progress';
 import {
   Factory,
   Clock,
@@ -24,17 +24,17 @@ import {
 } from 'lucide-react';
 import {
   ProductionDashboard,
-} from '../../../models/production';
-import ProductionService from '../../../services/ProductionService';
-import { useAuth } from '../../../hooks/useAuth';
-import { DashboardLayout } from '../../../components/layout';
+} from '../../../../models/production';
+import ProductionService from '../../../../services/ProductionService';
+import { useAuth } from '../../../../hooks/useAuth';
+import { DashboardLayout } from '../../../../components/layout';
 import { useRouter } from 'next/navigation';
 import {
   cn,
   getStatusColor,
   getPriorityColor,
   formatDate,
-} from '../../../lib/utils';
+} from '../../../../lib/utils';
 
 export default function ProductionDashboardPage() {
   const { } = useAuth();

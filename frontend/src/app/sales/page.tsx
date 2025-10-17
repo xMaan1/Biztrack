@@ -61,7 +61,7 @@ import { useCurrency } from '../../contexts/CurrencyContext';
 
 export default function SalesPage() {
   return (
-    <ModuleGuard module="commerce" fallback={<div>You don't have access to Commerce module</div>}>
+    <ModuleGuard module="sales" fallback={<div>You don't have access to Sales module</div>}>
       <SalesContent />
     </ModuleGuard>
   );

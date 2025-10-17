@@ -35,6 +35,25 @@ export enum ProductCategory {
   OTHER = 'other',
 }
 
+export enum UnitOfMeasure {
+  PIECE = 'piece',
+  KILOGRAM = 'kilogram',
+  GRAM = 'gram',
+  LITER = 'litre',
+  MILLILITER = 'millilitre',
+  METER = 'meter',
+  CENTIMETER = 'centimeter',
+  SQUARE_METER = 'square meter',
+  CUBIC_METER = 'cubic meter',
+  BOX = 'box',
+  PACK = 'pack',
+  ROLL = 'roll',
+  SET = 'set',
+  PAIR = 'pair',
+  DOZEN = 'dozen',
+  OTHER = 'other',
+}
+
 // Product Types
 export interface Product {
   id: string;
@@ -46,7 +65,7 @@ export interface Product {
   stockQuantity: number;
   minStockLevel: number;
   category: ProductCategory;
-  unitOfMeasure?: string;
+  unitOfMeasure: UnitOfMeasure;
   barcode?: string;
   expiryDate?: string;
   batchNumber?: string;
@@ -66,7 +85,7 @@ export interface ProductCreate {
   stockQuantity: number;
   minStockLevel: number;
   category: ProductCategory;
-  unitOfMeasure?: string;
+  unitOfMeasure: UnitOfMeasure;
   barcode?: string;
   expiryDate?: string;
   batchNumber?: string;
@@ -82,7 +101,7 @@ export interface ProductUpdate {
   stockQuantity?: number;
   minStockLevel?: number;
   category?: ProductCategory;
-  unitOfMeasure?: string;
+  unitOfMeasure?: UnitOfMeasure;
   barcode?: string;
   expiryDate?: string;
   batchNumber?: string;

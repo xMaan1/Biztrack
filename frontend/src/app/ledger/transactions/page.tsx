@@ -71,7 +71,7 @@ import { useCachedApi } from '@/src/hooks/useCachedApi';
 
 export default function LedgerTransactionsPage() {
   return (
-    <ModuleGuard module="finance" fallback={<div>You don't have access to Finance module</div>}>
+    <ModuleGuard module="ledger" fallback={<div>You don't have access to Ledger module</div>}>
       <LedgerTransactionsContent />
     </ModuleGuard>
   );
@@ -261,11 +261,35 @@ function LedgerTransactionsContent() {
     
     try {
       setIsSubmitting(true);
-      toast.error('Transaction editing is not yet implemented in the backend.');
+      console.log('[LEDGER DEBUG] Updating transaction:', editingTransaction.id, 'with data:', editFormData);
+      
+      // Prepare the update data
+      const updateData = {
+        transaction_date: editFormData.transaction_date,
+        transaction_type: editFormData.transaction_type,
+        account_id: editFormData.debit_account_id,
+        contra_account_id: editFormData.credit_account_id,
+        amount: editFormData.amount,
+        description: editFormData.description,
+        reference_number: editFormData.reference_number,
+        meta_data: {
+          currency: editFormData.currency,
+          notes: editFormData.notes,
+          tags: editFormData.tags,
+        }
+      };
+      
+      await LedgerService.updateLedgerTransaction(editingTransaction.id, updateData);
+      console.log('[LEDGER DEBUG] Successfully updated transaction');
+      
+      // Refresh the transaction list
+      refetch();
+      
+      toast.success('Transaction updated successfully');
       setIsEditModalOpen(false);
       setEditingTransaction(null);
     } catch (error) {
-      console.error('Transaction update error:', error);
+      console.error('[LEDGER DEBUG] Error updating transaction:', error);
       toast.error('Failed to update transaction. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -277,10 +301,18 @@ function LedgerTransactionsContent() {
     
     try {
       setIsDeleting(true);
-      toast.error('Transaction deletion is not yet implemented in the backend.');
+      console.log('[LEDGER DEBUG] Deleting transaction:', deletingTransaction.id);
+      await LedgerService.deleteLedgerTransaction(deletingTransaction.id);
+      console.log('[LEDGER DEBUG] Successfully deleted transaction');
+      
+      // Remove the transaction from the local state
+      refetch();
+      
+      toast.success('Transaction deleted successfully');
       setIsDeleteModalOpen(false);
       setDeletingTransaction(null);
     } catch (error) {
+      console.error('[LEDGER DEBUG] Error deleting transaction:', error);
       toast.error('Failed to delete transaction. Please try again.');
     } finally {
       setIsDeleting(false);
@@ -289,8 +321,16 @@ function LedgerTransactionsContent() {
 
   const openEditModal = (transaction: LedgerTransactionResponse) => {
     setEditingTransaction(transaction);
+    
+    // Format the date properly for the input field without timezone issues
+    const formatDateForInput = (dateString: string) => {
+      if (!dateString) return '';
+      // Extract just the date part (YYYY-MM-DD) without time conversion
+      return dateString.split('T')[0];
+    };
+    
     setEditFormData({
-      transaction_date: transaction.transaction_date,
+      transaction_date: formatDateForInput(transaction.transaction_date),
       transaction_type: transaction.transaction_type as TransactionType,
       debit_account_id: transaction.account_id,
       credit_account_id: transaction.contra_account_id,

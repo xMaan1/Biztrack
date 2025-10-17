@@ -7,17 +7,17 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import { Badge } from '../../../components/ui/badge';
-import { Progress } from '../../../components/ui/progress';
+} from '../../../../components/ui/card';
+import { Button } from '../../../../components/ui/button';
+import { Badge } from '../../../../components/ui/badge';
+import { Progress } from '../../../../components/ui/progress';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '../../../components/ui/tabs';
+} from '../../../../components/ui/tabs';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -25,7 +25,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from '../../../components/ui/breadcrumb';
+} from '../../../../components/ui/breadcrumb';
 import {
   ArrowLeft,
   Edit,
@@ -50,16 +50,16 @@ import {
   ProductionPlanResponse as ProductionPlan,
   ProductionStatus,
   ProductionType,
-} from '../../../models/production';
-import ProductionService from '../../../services/ProductionService';
-import { useAuth } from '../../../hooks/useAuth';
-import { DashboardLayout } from '../../../components/layout';
+} from '../../../../models/production';
+import ProductionService from '../../../../services/ProductionService';
+import { useAuth } from '../../../../hooks/useAuth';
+import { DashboardLayout } from '../../../../components/layout';
 import {
   cn,
   getStatusColor,
   getPriorityColor,
   formatDate,
-} from '../../../lib/utils';
+} from '../../../../lib/utils';
 
 export default function ProductionPlanDetailPage() {
   const params = useParams();

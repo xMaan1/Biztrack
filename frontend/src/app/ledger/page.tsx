@@ -48,7 +48,7 @@ import { DEFAULT_CHART_OF_ACCOUNTS, getAccountTypeCount as getAccountTypeCountFr
 
 export default function LedgerDashboard() {
   return (
-    <ModuleGuard module="finance" fallback={<div>You don't have access to Finance module</div>}>
+    <ModuleGuard module="ledger" fallback={<div>You don't have access to Ledger module</div>}>
       <LedgerDashboardContent />
     </ModuleGuard>
   );

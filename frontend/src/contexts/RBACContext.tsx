@@ -271,7 +271,12 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
 
   const hasModuleAccess = (module: string): boolean => {
     if (!userPermissions) return false;
-    return userPermissions.accessible_modules.includes(module);
+    console.log('[RBAC DEBUG] Checking module access for:', module);
+    console.log('[RBAC DEBUG] Available modules:', userPermissions.accessible_modules);
+    console.log('[RBAC DEBUG] Is owner:', userPermissions.is_owner);
+    const hasAccess = userPermissions.accessible_modules.includes(module);
+    console.log('[RBAC DEBUG] Has access:', hasAccess);
+    return hasAccess;
   };
 
   const isOwner = (): boolean => {

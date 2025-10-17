@@ -2,35 +2,35 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ModuleGuard } from '../../components/guards/PermissionGuard';
+import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
-} from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Badge } from '../../components/ui/badge';
-import { Progress } from '../../components/ui/progress';
+} from '../../../components/ui/card';
+import { Button } from '../../../components/ui/button';
+import { Input } from '../../../components/ui/input';
+import { Badge } from '../../../components/ui/badge';
+import { Progress } from '../../../components/ui/progress';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../components/ui/select';
+} from '../../../components/ui/select';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from '../../components/ui/dropdown-menu';
+} from '../../../components/ui/dropdown-menu';
 import {
   Tabs,
   TabsList,
   TabsTrigger,
-} from '../../components/ui/tabs';
-import { Alert, AlertDescription } from '../../components/ui/alert';
+} from '../../../components/ui/tabs';
+import { Alert, AlertDescription } from '../../../components/ui/alert';
 import {
   Plus,
   Search,
@@ -56,16 +56,16 @@ import {
   ProductionStatus,
   ProductionPriority,
   ProductionType,
-} from '../../models/production';
-import ProductionService from '../../services/ProductionService';
-import { DashboardLayout } from '../../components/layout';
-import ProductionPlanDialog from '../../components/production/ProductionPlanDialog';
+} from '../../../models/production';
+import ProductionService from '../../../services/ProductionService';
+import { DashboardLayout } from '../../../components/layout';
+import ProductionPlanDialog from '../../../components/production/ProductionPlanDialog';
 import {
   getStatusColor,
   getPriorityColor,
   formatDate,
   cn,
-} from '../../lib/utils';
+} from '../../../lib/utils';
 
 export default function ProductionPage() {
   return (

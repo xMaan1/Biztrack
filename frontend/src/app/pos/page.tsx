@@ -40,7 +40,7 @@ import { useCurrency } from '../../contexts/CurrencyContext';
 
 export default function POSDashboard() {
   return (
-    <ModuleGuard module="commerce" fallback={<div>You don't have access to Commerce module</div>}>
+    <ModuleGuard module="pos" fallback={<div>You don't have access to POS module</div>}>
       <POSDashboardContent />
     </ModuleGuard>
   );

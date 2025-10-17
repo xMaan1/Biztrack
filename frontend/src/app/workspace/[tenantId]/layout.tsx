@@ -192,7 +192,7 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
         
         {canViewProduction() && (
           <Link
-            href={'/production'}
+            href={'/workshop-management/production'}
             className="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
           >
             <Cog className="h-5 w-5" />
@@ -202,7 +202,7 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
         
         {canViewQuality() && (
           <Link
-            href={'/quality-control'}
+            href={'/workshop-management/quality-control'}
             className="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
           >
             <Shield className="h-5 w-5" />
