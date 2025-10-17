@@ -178,6 +178,51 @@ class ProductionPlanResponse(ProductionPlanBase):
 
     class Config:
         from_attributes = True
+        
+    @classmethod
+    def from_orm(cls, obj):
+        data = {
+            'id': str(obj.id),
+            'tenant_id': str(obj.tenant_id),
+            'plan_number': obj.plan_number,
+            'title': obj.title,
+            'description': obj.description,
+            'production_type': obj.production_type,
+            'status': obj.status,
+            'priority': obj.priority,
+            'planned_start_date': obj.planned_start_date,
+            'planned_end_date': obj.planned_end_date,
+            'actual_start_date': obj.actual_start_date,
+            'actual_end_date': obj.actual_end_date,
+            'target_quantity': obj.target_quantity,
+            'actual_quantity': obj.actual_quantity,
+            'unit_of_measure': obj.unit_of_measure,
+            'production_line': obj.production_line,
+            'equipment_required': obj.equipment_required or [],
+            'materials_required': obj.materials_required or [],
+            'labor_requirements': obj.labor_requirements or [],
+            'estimated_material_cost': obj.estimated_material_cost,
+            'estimated_labor_cost': obj.estimated_labor_cost,
+            'actual_material_cost': obj.actual_material_cost,
+            'actual_labor_cost': obj.actual_labor_cost,
+            'quality_standards': obj.quality_standards,
+            'inspection_points': obj.inspection_points or [],
+            'tolerance_specs': obj.tolerance_specs or [],
+            'project_id': str(obj.project_id) if obj.project_id else None,
+            'work_order_id': str(obj.work_order_id) if obj.work_order_id else None,
+            'assigned_to_id': str(obj.assigned_to_id) if obj.assigned_to_id else None,
+            'estimated_duration_hours': obj.estimated_duration_hours,
+            'actual_duration_hours': obj.actual_duration_hours,
+            'completion_percentage': obj.completion_percentage,
+            'current_step': obj.current_step,
+            'notes': obj.notes or [],
+            'tags': obj.tags or [],
+            'created_at': obj.created_at,
+            'updated_at': obj.updated_at,
+            'production_steps': [],
+            'production_schedules': []
+        }
+        return cls(**data)
 
 # List Response Models
 class ProductionPlansResponse(BaseModel):

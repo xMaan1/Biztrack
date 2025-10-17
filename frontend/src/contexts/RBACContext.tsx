@@ -99,25 +99,26 @@ interface RBACContextType {
   tenantUsers: UserWithPermissions[];
   userPermissions: UserPermissions | null;
   loading: boolean;
-  
+
   // Role management
   fetchRoles: () => Promise<void>;
   createRole: (roleData: CreateRoleData) => Promise<Role>;
   updateRole: (roleId: string, roleData: UpdateRoleData) => Promise<Role>;
-  
+
   // User management
   fetchTenantUsers: () => Promise<void>;
   createUser: (userData: CreateUserData, roleId: string) => Promise<any>;
   createTenantUser: (userData: CreateTenantUserData) => Promise<TenantUser>;
   updateTenantUser: (userId: string, userData: UpdateTenantUserData) => Promise<TenantUser>;
   removeTenantUser: (userId: string) => Promise<void>;
-  
+
   // Permission checking
   fetchUserPermissions: () => Promise<void>;
+  refreshPermissions: () => Promise<void>;
   hasPermission: (permission: string) => boolean;
   hasModuleAccess: (module: string) => boolean;
   isOwner: () => boolean;
-  
+
   // Utility
   refreshData: () => Promise<void>;
 }
@@ -245,7 +246,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
   const fetchUserPermissions = async () => {
     try {
       const response = await apiService.get('/rbac/permissions');
-      
+
       // Handle direct response format (no success/data wrapper)
       if (response.permissions && response.accessible_modules !== undefined) {
         setUserPermissions(response);
@@ -255,6 +256,12 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Failed to fetch user permissions:', error);
     }
+  };
+
+  const refreshPermissions = async () => {
+    // Force refresh by clearing current permissions first, then fetching new ones
+    setUserPermissions(null);
+    await fetchUserPermissions();
   };
 
   const hasPermission = (permission: string): boolean => {
@@ -299,6 +306,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     updateTenantUser,
     removeTenantUser,
     fetchUserPermissions,
+    refreshPermissions,
     hasPermission,
     hasModuleAccess,
     isOwner,

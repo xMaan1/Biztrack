@@ -1978,6 +1978,9 @@ class PayrollCreate(PayrollBase):
     pass
 
 class PayrollUpdate(BaseModel):
+    payPeriod: Optional[str] = None
+    startDate: Optional[str] = None
+    endDate: Optional[str] = None
     basicSalary: Optional[float] = None
     allowances: Optional[float] = None
     deductions: Optional[float] = None

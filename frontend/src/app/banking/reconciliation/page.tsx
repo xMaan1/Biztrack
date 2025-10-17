@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
@@ -10,14 +9,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { Textarea } from '../../../components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../../components/ui/dialog';
-import { 
-  Search, 
-  Filter, 
-  Download, 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  AlertTriangle, 
+import {
+  Search,
+  Filter,
+  Download,
+  CheckCircle,
+  XCircle,
+  Clock,
+  AlertTriangle,
   Receipt,
   Banknote,
   TrendingUp,
@@ -28,6 +27,7 @@ import { format } from 'date-fns';
 import { cn } from '../../../lib/utils';
 import { apiService } from '../../../services/ApiService';
 import { DashboardLayout } from '../../../components/layout';
+import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 
 interface BankTransaction {
   id: string;

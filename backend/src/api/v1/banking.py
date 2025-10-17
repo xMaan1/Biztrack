@@ -14,11 +14,12 @@ from ...api.dependencies import get_current_user, get_tenant_context
 from ...config.core_models import User
 from ...models.banking_models import (
     BankAccount, BankAccountCreate, BankAccountUpdate, BankAccountResponse, BankAccountsResponse,
-    BankTransaction, BankTransactionCreate, BankTransactionUpdate, BankTransactionResponse, BankTransactionsResponse,
+    BankTransaction as BankTransactionModel, BankTransactionCreate, BankTransactionUpdate, BankTransactionResponse, BankTransactionsResponse,
     CashPosition, CashPositionCreate, CashPositionUpdate, CashPositionResponse, CashPositionsResponse,
     BankingDashboard, ReconciliationSummary, TransactionReconciliation,
     BankAccountType, TransactionType, TransactionStatus, PaymentMethod
 )
+from ...config.banking_models import BankTransaction
 from ...config.banking_crud import (
     # Bank Account CRUD
     create_bank_account, get_bank_account_by_id, get_all_bank_accounts, get_active_bank_accounts,

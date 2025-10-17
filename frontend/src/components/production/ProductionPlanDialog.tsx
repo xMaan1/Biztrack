@@ -151,20 +151,26 @@ export default function ProductionPlanDialog({
 
     try {
       setLoading(true);
+      console.log('[PRODUCTION DEBUG] Creating production plan with data:', formData);
+      
       if (mode === 'create') {
         const service = new ProductionService();
-        await service.createProductionPlan(formData as ProductionPlanCreate);
+        const result = await service.createProductionPlan(formData as ProductionPlanCreate);
+        console.log('[PRODUCTION DEBUG] Created production plan:', result);
       } else if (plan) {
+        console.log('[PRODUCTION DEBUG] Updating production plan with data:', formData);
         const service = new ProductionService();
-        await service.updateProductionPlan(
+        const result = await service.updateProductionPlan(
           plan.id,
           formData as ProductionPlanUpdate,
         );
+        console.log('[PRODUCTION DEBUG] Updated production plan:', result);
       }
       onSuccess();
       resetForm();
     } catch (error) {
-      } finally {
+      console.error('[PRODUCTION DEBUG] Error creating production plan:', error);
+    } finally {
       setLoading(false);
     }
   };

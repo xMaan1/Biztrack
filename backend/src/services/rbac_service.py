@@ -93,16 +93,16 @@ class RBACService:
                 TenantUser.isActive == True
             )
         ).first()
-        
+
         if not tenant_user:
             return []
-        
+
         # Get role permissions
         role_permissions = tenant_user.role.permissions if tenant_user.role else []
-        
+
         # Add custom permissions
         custom_permissions = tenant_user.custom_permissions or []
-        
+
         # Combine and deduplicate
         all_permissions = list(set(role_permissions + custom_permissions))
         return all_permissions
@@ -130,7 +130,7 @@ class RBACService:
                 TenantUser.isActive == True
             )
         ).first()
-        
+
         return tenant_user.role if tenant_user else None
     
     @staticmethod
@@ -150,15 +150,21 @@ class RBACService:
     @staticmethod
     def get_accessible_modules(db: Session, user_id: str, tenant_id: str) -> List[str]:
         """Get list of modules user has access to"""
+        # Owners have access to all modules
+        if RBACService.is_owner(db, user_id, tenant_id):
+            all_modules = ['crm', 'sales', 'pos', 'inventory', 'hrm', 'projects', 'reports', 'events', 'work-orders', 'production', 'quality-control', 'maintenance', 'banking', 'ledger', 'settings', 'notifications', 'users']
+            return all_modules
+
         user_permissions = RBACService.get_user_permissions(db, user_id, tenant_id)
         modules = set()
-        
+
         for permission in user_permissions:
             if ':' in permission:
                 module = permission.split(':')[0]
                 modules.add(module)
-        
-        return list(modules)
+
+        accessible_modules = list(modules)
+        return accessible_modules
     
     @staticmethod
     def validate_email_uniqueness(db: Session, email: str, tenant_id: str, exclude_user_id: Optional[str] = None) -> bool:

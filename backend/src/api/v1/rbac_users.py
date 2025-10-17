@@ -410,11 +410,12 @@ async def get_user_permissions(
     """Get current user's permissions"""
     permissions = RBACService.get_user_permissions(db, str(current_user.id), tenant_context["tenant_id"])
     accessible_modules = RBACService.get_accessible_modules(db, str(current_user.id), tenant_context["tenant_id"])
-    
+    is_owner = RBACService.is_owner(db, str(current_user.id), tenant_context["tenant_id"])
+
     return {
         "permissions": permissions,
         "accessible_modules": accessible_modules,
-        "is_owner": RBACService.is_owner(db, str(current_user.id), tenant_context["tenant_id"])
+        "is_owner": is_owner
     }
 
 @router.get("/check-permission/{permission}")

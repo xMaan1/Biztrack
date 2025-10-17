@@ -117,10 +117,13 @@ function ProductionContent() {
   const fetchProductionPlans = async () => {
     try {
       setLoading(true);
+      console.log('[PRODUCTION DEBUG] Fetching production plans...');
       const service = new ProductionService();
       const response = await service.getProductionPlans();
+      console.log('[PRODUCTION DEBUG] Fetched production plans:', response);
       setProductionPlans(response.production_plans);
     } catch (error) {
+      console.error('[PRODUCTION DEBUG] Error fetching production plans:', error);
       setProductionPlans([]);
     } finally {
       setLoading(false);
@@ -218,15 +221,18 @@ function ProductionContent() {
     if (!planToDelete) return;
 
     try {
+      console.log('[PRODUCTION DEBUG] Deleting production plan:', planToDelete.id);
       const service = new ProductionService();
       await service.deleteProductionPlan(planToDelete.id);
+      console.log('[PRODUCTION DEBUG] Successfully deleted production plan');
       setProductionPlans(
         productionPlans.filter((plan) => plan.id !== planToDelete.id),
       );
       setDeleteDialogOpen(false);
       setPlanToDelete(null);
     } catch (error) {
-      }
+      console.error('[PRODUCTION DEBUG] Error deleting production plan:', error);
+    }
   };
 
   const handleViewPlan = (plan: ProductionPlan) => {

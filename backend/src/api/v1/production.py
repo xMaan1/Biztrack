@@ -71,7 +71,7 @@ async def get_production_plans(
                    search_lower in plan.plan_number.lower()
             ]
         
-        return production_plans
+        return [ProductionPlanResponse.from_orm(plan) for plan in production_plans]
     except Exception as e:
         logger.error(f"Error getting production plans: {str(e)}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get production plans")
@@ -166,7 +166,7 @@ async def get_production_plan(
         production_plan = get_production_plan_by_id(production_plan_id, db, tenant_id)
         if not production_plan:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Production plan not found")
-        return production_plan
+        return ProductionPlanResponse.from_orm(production_plan)
     except HTTPException:
         raise
     except Exception as e:
@@ -199,7 +199,7 @@ async def create_new_production_plan(
         })
         
         production_plan = create_production_plan(plan_dict, db)
-        return production_plan
+        return ProductionPlanResponse.from_orm(production_plan)
     except HTTPException:
         raise
     except Exception as e:
@@ -207,7 +207,7 @@ async def create_new_production_plan(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create production plan")
 
 @router.put("/{production_plan_id}", response_model=ProductionPlanResponse)
-async def update_production_plan(
+async def update_production_plan_endpoint(
     production_plan_id: str,
     production_plan_data: ProductionPlanUpdate,
     current_user = Depends(get_current_user),
@@ -220,7 +220,7 @@ async def update_production_plan(
         production_plan = update_production_plan(production_plan_id, production_plan_data.dict(exclude_unset=True), db, tenant_id)
         if not production_plan:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Production plan not found")
-        return production_plan
+        return ProductionPlanResponse.from_orm(production_plan)
     except HTTPException:
         raise
     except Exception as e:
@@ -228,7 +228,7 @@ async def update_production_plan(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to update production plan")
 
 @router.delete("/{production_plan_id}")
-async def delete_production_plan(
+async def delete_production_plan_endpoint(
     production_plan_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
