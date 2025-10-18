@@ -24,11 +24,13 @@ import {
 } from 'lucide-react';
 import {
   ProductionDashboard,
+  ProductionPlanResponse as ProductionPlan,
 } from '../../../../models/production';
 import ProductionService from '../../../../services/ProductionService';
 import { useAuth } from '../../../../hooks/useAuth';
 import { DashboardLayout } from '../../../../components/layout';
 import { useRouter } from 'next/navigation';
+import ProductionPlanDialog from '../../../../components/production/ProductionPlanDialog';
 import {
   cn,
   getStatusColor,
@@ -41,6 +43,9 @@ export default function ProductionDashboardPage() {
   const router = useRouter();
   const [dashboard, setDashboard] = useState<ProductionDashboard | null>(null);
   const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<ProductionPlan | null>(null);
+  const [dialogMode, setDialogMode] = useState<'view'>('view');
 
   useEffect(() => {
     fetchDashboard();
@@ -53,9 +58,16 @@ export default function ProductionDashboardPage() {
       const data = await service.getProductionDashboard();
       setDashboard(data);
     } catch (error) {
-      } finally {
+      console.error('Error fetching production dashboard:', error);
+    } finally {
       setLoading(false);
     }
+  };
+
+  const handleViewPlan = (plan: ProductionPlan) => {
+    setSelectedPlan(plan);
+    setDialogMode('view');
+    setDialogOpen(true);
   };
 
   const getStatusIcon = (status: string) => {
@@ -324,7 +336,7 @@ export default function ProductionDashboardPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => router.push(`/production/${plan.id}`)}
+                      onClick={() => handleViewPlan(plan)}
                     >
                       View Details
                     </Button>
@@ -382,7 +394,7 @@ export default function ProductionDashboardPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => router.push(`/production/${plan.id}`)}
+                      onClick={() => handleViewPlan(plan)}
                     >
                       View Details
                     </Button>
@@ -440,7 +452,7 @@ export default function ProductionDashboardPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => router.push(`/production/${plan.id}`)}
+                      onClick={() => handleViewPlan(plan)}
                     >
                       View Details
                     </Button>
@@ -450,6 +462,17 @@ export default function ProductionDashboardPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Production Plan Dialog */}
+        <ProductionPlanDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          mode={dialogMode}
+          plan={selectedPlan}
+          onSuccess={() => {
+            setDialogOpen(false);
+          }}
+        />
       </div>
     </DashboardLayout>
   );

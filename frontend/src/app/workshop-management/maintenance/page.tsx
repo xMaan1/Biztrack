@@ -18,6 +18,7 @@ import {
   TabsTrigger,
 } from '@/src/components/ui/tabs';
 import { Input } from '@/src/components/ui/input';
+import { Textarea } from '@/src/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -32,6 +33,14 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/src/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/src/components/ui/dialog';
+import { Label } from '@/src/components/ui/label';
 import { Progress } from '@/src/components/ui/progress';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import {
@@ -81,6 +90,25 @@ export default function MaintenancePage() {
   const [deletingSchedule, setDeletingSchedule] = useState<MaintenanceScheduleResponse | null>(null);
   const [deletingEquipment, setDeletingEquipment] = useState<EquipmentResponse | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedEquipment, setSelectedEquipment] = useState<EquipmentResponse | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    model: '',
+    serial_number: '',
+    manufacturer: '',
+    category: 'machinery' as any,
+    location: '',
+    status: 'operational' as any,
+    installation_date: '',
+    warranty_expiry: '',
+    maintenance_interval_hours: 0,
+    operating_hours: 0,
+    operating_instructions: '',
+    tags: [] as string[],
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch data on component mount
   useEffect(() => {
@@ -154,9 +182,57 @@ export default function MaintenancePage() {
     console.log('Edit schedule:', schedule);
   };
 
+  const openViewModal = (equipment: EquipmentResponse) => {
+    setSelectedEquipment(equipment);
+    setIsViewModalOpen(true);
+  };
+
+  const openEditModal = (equipment: EquipmentResponse) => {
+    setSelectedEquipment(equipment);
+    setEditFormData({
+      name: equipment.name || '',
+      model: equipment.model || '',
+      serial_number: equipment.serial_number || '',
+      manufacturer: equipment.manufacturer || '',
+      category: equipment.category || 'machinery',
+      location: equipment.location || '',
+      status: equipment.status || 'operational',
+      installation_date: equipment.installation_date ? equipment.installation_date.split('T')[0] : '',
+      warranty_expiry: equipment.warranty_expiry ? equipment.warranty_expiry.split('T')[0] : '',
+      maintenance_interval_hours: equipment.maintenance_interval_hours || 0,
+      operating_hours: equipment.operating_hours || 0,
+      operating_instructions: equipment.operating_instructions || '',
+      tags: equipment.tags || [],
+    });
+    setIsEditModalOpen(true);
+  };
+
   const handleEditEquipment = (equipment: EquipmentResponse) => {
-    // TODO: Implement edit functionality
-    console.log('Edit equipment:', equipment);
+    openEditModal(equipment);
+  };
+
+  const handleEditFormChange = (field: string, value: any) => {
+    setEditFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedEquipment) return;
+
+    try {
+      setIsSubmitting(true);
+      await maintenanceService.updateEquipment(selectedEquipment.id, editFormData);
+      setIsEditModalOpen(false);
+      fetchDashboardData();
+    } catch (error) {
+      console.error('Error updating equipment:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleDeleteSchedule = (schedule: MaintenanceScheduleResponse) => {
@@ -612,7 +688,7 @@ export default function MaintenancePage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => openViewModal(eq)}>
                                 <Eye className="h-4 w-4 mr-2" />
                                 View Details
                               </DropdownMenuItem>
@@ -706,6 +782,297 @@ export default function MaintenancePage() {
           </div>
         </div>
       )}
+
+      {/* View Equipment Modal */}
+      <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Equipment Details</DialogTitle>
+            <DialogDescription>
+              View complete information for {selectedEquipment?.name}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedEquipment && (
+            <div className="space-y-6 py-4">
+              {/* Basic Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Basic Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Equipment Name</Label>
+                    <p className="text-sm">{selectedEquipment.name}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Equipment ID</Label>
+                    <p className="text-sm">{selectedEquipment.id}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Category</Label>
+                    <p className="text-sm">{selectedEquipment.category}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Status</Label>
+                    <Badge className={getEquipmentStatusColor(selectedEquipment.status as any)}>
+                      {selectedEquipment.status}
+                    </Badge>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Location</Label>
+                    <p className="text-sm">{selectedEquipment.location || 'Not specified'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Manufacturer</Label>
+                    <p className="text-sm">{selectedEquipment.manufacturer || 'Not specified'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Technical Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Technical Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Model</Label>
+                    <p className="text-sm">{selectedEquipment.model || 'Not specified'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Serial Number</Label>
+                    <p className="text-sm">{selectedEquipment.serialNumber || 'Not specified'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Purchase Date</Label>
+                    <p className="text-sm">{selectedEquipment.purchaseDate || 'Not specified'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Warranty Expiry</Label>
+                    <p className="text-sm">{selectedEquipment.warrantyExpiry || 'Not specified'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Maintenance Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Maintenance Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Last Maintenance</Label>
+                    <p className="text-sm">{selectedEquipment.lastMaintenanceDate || 'Never'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Next Maintenance</Label>
+                    <p className="text-sm">{selectedEquipment.nextMaintenanceDate || 'Not scheduled'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Maintenance Interval</Label>
+                    <p className="text-sm">{selectedEquipment.maintenanceInterval || 'Not set'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Total Maintenance Cost</Label>
+                    <p className="text-sm">
+                      {selectedEquipment.totalMaintenanceCost 
+                        ? `${getCurrencySymbol()}${selectedEquipment.totalMaintenanceCost.toLocaleString()}`
+                        : 'No maintenance costs recorded'
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Additional Information</h3>
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Description</Label>
+                    <p className="text-sm">{selectedEquipment.description || 'No description provided'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-500">Notes</Label>
+                    <p className="text-sm">{selectedEquipment.notes || 'No notes'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Equipment Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Equipment</DialogTitle>
+            <DialogDescription>
+              Update information for {selectedEquipment?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit} className="space-y-6 py-4">
+            {/* Basic Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Basic Information</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-name">Equipment Name *</Label>
+                  <Input
+                    id="edit-name"
+                    value={editFormData.name}
+                    onChange={(e) => handleEditFormChange('name', e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-model">Model</Label>
+                  <Input
+                    id="edit-model"
+                    value={editFormData.model}
+                    onChange={(e) => handleEditFormChange('model', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-serial">Serial Number</Label>
+                  <Input
+                    id="edit-serial"
+                    value={editFormData.serial_number}
+                    onChange={(e) => handleEditFormChange('serial_number', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-manufacturer">Manufacturer</Label>
+                  <Input
+                    id="edit-manufacturer"
+                    value={editFormData.manufacturer}
+                    onChange={(e) => handleEditFormChange('manufacturer', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-category">Category *</Label>
+                  <Select
+                    value={editFormData.category}
+                    onValueChange={(value) => handleEditFormChange('category', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="machinery">Machinery</SelectItem>
+                      <SelectItem value="vehicle">Vehicle</SelectItem>
+                      <SelectItem value="tool">Tool</SelectItem>
+                      <SelectItem value="equipment">Equipment</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-location">Location</Label>
+                  <Input
+                    id="edit-location"
+                    value={editFormData.location}
+                    onChange={(e) => handleEditFormChange('location', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-status">Status *</Label>
+                  <Select
+                    value={editFormData.status}
+                    onValueChange={(value) => handleEditFormChange('status', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="operational">Operational</SelectItem>
+                      <SelectItem value="maintenance">Under Maintenance</SelectItem>
+                      <SelectItem value="out_of_order">Out of Order</SelectItem>
+                      <SelectItem value="retired">Retired</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            {/* Dates and Maintenance */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Dates & Maintenance</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-installation-date">Installation Date</Label>
+                  <Input
+                    id="edit-installation-date"
+                    type="date"
+                    value={editFormData.installation_date}
+                    onChange={(e) => handleEditFormChange('installation_date', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-warranty-expiry">Warranty Expiry</Label>
+                  <Input
+                    id="edit-warranty-expiry"
+                    type="date"
+                    value={editFormData.warranty_expiry}
+                    onChange={(e) => handleEditFormChange('warranty_expiry', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-maintenance-interval">Maintenance Interval (Hours)</Label>
+                  <Input
+                    id="edit-maintenance-interval"
+                    type="number"
+                    min="0"
+                    value={editFormData.maintenance_interval_hours}
+                    onChange={(e) => handleEditFormChange('maintenance_interval_hours', parseInt(e.target.value) || 0)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-operating-hours">Operating Hours</Label>
+                  <Input
+                    id="edit-operating-hours"
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    value={editFormData.operating_hours}
+                    onChange={(e) => handleEditFormChange('operating_hours', parseFloat(e.target.value) || 0)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Additional Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Additional Information</h3>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-operating-instructions">Operating Instructions</Label>
+                  <Textarea
+                    id="edit-operating-instructions"
+                    value={editFormData.operating_instructions}
+                    onChange={(e) => handleEditFormChange('operating_instructions', e.target.value)}
+                    rows={4}
+                    placeholder="Enter operating instructions..."
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Form Actions */}
+            <div className="flex justify-end space-x-3 pt-6 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsEditModalOpen(false)}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Updating...' : 'Update Equipment'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

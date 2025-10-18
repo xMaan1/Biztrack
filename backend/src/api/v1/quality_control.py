@@ -38,7 +38,7 @@ router = APIRouter(prefix="/quality-control", tags=["Quality Control"])
 async def get_quality_checks(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    status: Optional[str] = Query(None),
+    status_filter: Optional[str] = Query(None),
     priority: Optional[str] = Query(None),
     inspection_type: Optional[str] = Query(None),
     production_plan_id: Optional[str] = Query(None),
@@ -56,8 +56,8 @@ async def get_quality_checks(
     try:
         tenant_id = tenant_context["tenant_id"] if tenant_context else None
         
-        if status:
-            quality_checks = get_quality_checks_by_status(status, db, tenant_id, skip, limit)
+        if status_filter:
+            quality_checks = get_quality_checks_by_status(status_filter, db, tenant_id, skip, limit)
         elif priority:
             quality_checks = get_quality_checks_by_priority(priority, db, tenant_id, skip, limit)
         elif inspection_type:
@@ -77,7 +77,38 @@ async def get_quality_checks(
                    search_lower in check.check_number.lower()
             ]
         
-        return quality_checks
+        return [
+            QualityCheckResponse(
+                id=str(check.id),
+                tenant_id=str(check.tenant_id),
+                title=check.title,
+                description=check.description,
+                inspection_type=check.inspection_type,
+                priority=check.priority,
+                quality_standard=check.quality_standard,
+                criteria=check.criteria or [],
+                acceptance_criteria=check.acceptance_criteria or {},
+                tolerance_limits=check.tolerance_limits or {},
+                required_equipment=check.required_equipment or [],
+                required_skills=check.required_skills or [],
+                estimated_duration_minutes=check.estimated_duration_minutes or 0,
+                production_plan_id=check.production_plan_id,
+                work_order_id=check.work_order_id,
+                project_id=check.project_id,
+                assigned_to_id=check.assigned_to_id,
+                scheduled_date=check.scheduled_date,
+                tags=check.tags or [],
+                created_by_id=str(check.created_by_id),
+                created_at=check.created_at,
+                updated_at=check.updated_at,
+                status=check.status,
+                completion_percentage=check.completion_percentage or 0.0,
+                total_inspections=0,
+                passed_inspections=0,
+                failed_inspections=0,
+                pending_inspections=0
+            ) for check in quality_checks
+        ]
     except Exception as e:
         logger.error(f"Error getting quality checks: {str(e)}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get quality checks")
@@ -99,7 +130,36 @@ async def get_quality_check(
         if not quality_check:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quality check not found")
         
-        return quality_check
+        return QualityCheckResponse(
+            id=str(quality_check.id),
+            tenant_id=str(quality_check.tenant_id),
+            title=quality_check.title,
+            description=quality_check.description,
+            inspection_type=quality_check.inspection_type,
+            priority=quality_check.priority,
+            quality_standard=quality_check.quality_standard,
+            criteria=quality_check.criteria or [],
+            acceptance_criteria=quality_check.acceptance_criteria or {},
+            tolerance_limits=quality_check.tolerance_limits or {},
+            required_equipment=quality_check.required_equipment or [],
+            required_skills=quality_check.required_skills or [],
+            estimated_duration_minutes=quality_check.estimated_duration_minutes or 0,
+            production_plan_id=quality_check.production_plan_id,
+            work_order_id=quality_check.work_order_id,
+            project_id=quality_check.project_id,
+            assigned_to_id=quality_check.assigned_to_id,
+            scheduled_date=quality_check.scheduled_date,
+            tags=quality_check.tags or [],
+            created_by_id=str(quality_check.created_by_id),
+            created_at=quality_check.created_at,
+            updated_at=quality_check.updated_at,
+            status=quality_check.status,
+            completion_percentage=quality_check.completion_percentage or 0.0,
+            total_inspections=0,
+            passed_inspections=0,
+            failed_inspections=0,
+            pending_inspections=0
+        )
     except HTTPException:
         raise
     except Exception as e:
@@ -123,7 +183,36 @@ async def create_quality_check_endpoint(
         check_dict = check_data.dict()
         
         quality_check = create_quality_check(db, check_dict, tenant_id, current_user.id)
-        return quality_check
+        return QualityCheckResponse(
+            id=str(quality_check.id),
+            tenant_id=str(quality_check.tenant_id),
+            title=quality_check.title,
+            description=quality_check.description,
+            inspection_type=quality_check.inspection_type,
+            priority=quality_check.priority,
+            quality_standard=quality_check.quality_standard,
+            criteria=quality_check.criteria or [],
+            acceptance_criteria=quality_check.acceptance_criteria or {},
+            tolerance_limits=quality_check.tolerance_limits or {},
+            required_equipment=quality_check.required_equipment or [],
+            required_skills=quality_check.required_skills or [],
+            estimated_duration_minutes=quality_check.estimated_duration_minutes or 0,
+            production_plan_id=quality_check.production_plan_id,
+            work_order_id=quality_check.work_order_id,
+            project_id=quality_check.project_id,
+            assigned_to_id=quality_check.assigned_to_id,
+            scheduled_date=quality_check.scheduled_date,
+            tags=quality_check.tags or [],
+            created_by_id=str(quality_check.created_by_id),
+            created_at=quality_check.created_at,
+            updated_at=quality_check.updated_at,
+            status=quality_check.status,
+            completion_percentage=quality_check.completion_percentage or 0.0,
+            total_inspections=0,
+            passed_inspections=0,
+            failed_inspections=0,
+            pending_inspections=0
+        )
     except HTTPException:
         raise
     except Exception as e:
@@ -151,7 +240,36 @@ async def update_quality_check_endpoint(
         if not quality_check:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quality check not found")
         
-        return quality_check
+        return QualityCheckResponse(
+            id=str(quality_check.id),
+            tenant_id=str(quality_check.tenant_id),
+            title=quality_check.title,
+            description=quality_check.description,
+            inspection_type=quality_check.inspection_type,
+            priority=quality_check.priority,
+            quality_standard=quality_check.quality_standard,
+            criteria=quality_check.criteria or [],
+            acceptance_criteria=quality_check.acceptance_criteria or {},
+            tolerance_limits=quality_check.tolerance_limits or {},
+            required_equipment=quality_check.required_equipment or [],
+            required_skills=quality_check.required_skills or [],
+            estimated_duration_minutes=quality_check.estimated_duration_minutes or 0,
+            production_plan_id=quality_check.production_plan_id,
+            work_order_id=quality_check.work_order_id,
+            project_id=quality_check.project_id,
+            assigned_to_id=quality_check.assigned_to_id,
+            scheduled_date=quality_check.scheduled_date,
+            tags=quality_check.tags or [],
+            created_by_id=str(quality_check.created_by_id),
+            created_at=quality_check.created_at,
+            updated_at=quality_check.updated_at,
+            status=quality_check.status,
+            completion_percentage=quality_check.completion_percentage or 0.0,
+            total_inspections=0,
+            passed_inspections=0,
+            failed_inspections=0,
+            pending_inspections=0
+        )
     except HTTPException:
         raise
     except Exception as e:
@@ -187,7 +305,7 @@ async def delete_quality_check_endpoint(
 async def get_quality_inspections(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    status: Optional[str] = Query(None),
+    status_filter: Optional[str] = Query(None),
     inspector_id: Optional[str] = Query(None),
     quality_check_id: Optional[str] = Query(None),
     inspection_date_from: Optional[datetime] = Query(None),
@@ -323,7 +441,7 @@ async def get_quality_defects(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     severity: Optional[str] = Query(None),
-    status: Optional[str] = Query(None),
+    status_filter: Optional[str] = Query(None),
     priority: Optional[str] = Query(None),
     category: Optional[str] = Query(None),
     assigned_to_id: Optional[str] = Query(None),
@@ -342,8 +460,8 @@ async def get_quality_defects(
         
         if severity:
             defects = get_quality_defects_by_severity(severity, db, tenant_id, skip, limit)
-        elif status:
-            defects = get_quality_defects_by_status(status, db, tenant_id, skip, limit)
+        elif status_filter:
+            defects = get_quality_defects_by_status(status_filter, db, tenant_id, skip, limit)
         else:
             # Get all defects and apply filters
             defects = []

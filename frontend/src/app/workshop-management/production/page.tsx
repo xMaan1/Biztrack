@@ -86,7 +86,7 @@ function ProductionContent() {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<ProductionPlan | null>(null);
-  const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
+  const [dialogMode, setDialogMode] = useState<'create' | 'edit' | 'view'>('create');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [planToDelete, setPlanToDelete] = useState<ProductionPlan | null>(null);
   const [sortBy, setSortBy] = useState<string>('newest');
@@ -236,7 +236,9 @@ function ProductionContent() {
   };
 
   const handleViewPlan = (plan: ProductionPlan) => {
-    router.push(`/production/${plan.id}`);
+    setSelectedPlan(plan);
+    setDialogMode('view');
+    setDialogOpen(true);
   };
 
   const getStatusIcon = (status: ProductionStatus) => {

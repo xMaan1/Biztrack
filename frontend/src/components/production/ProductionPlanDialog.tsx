@@ -48,7 +48,7 @@ import { useAuth } from '../../hooks/useAuth';
 interface ProductionPlanDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  mode: 'create' | 'edit';
+  mode: 'create' | 'edit' | 'view';
   plan: ProductionPlan | null;
   onSuccess: () => void;
 }
@@ -98,7 +98,7 @@ export default function ProductionPlanDialog({
   const [newTag, setNewTag] = useState('');
 
   useEffect(() => {
-    if (plan && mode === 'edit') {
+    if (plan && (mode === 'edit' || mode === 'view')) {
       setFormData({
         title: plan.title,
         description: plan.description,
@@ -301,7 +301,9 @@ export default function ProductionPlanDialog({
             <Factory className="h-5 w-5" />
             {mode === 'create'
               ? 'Create Production Plan'
-              : 'Edit Production Plan'}
+              : mode === 'edit'
+                ? 'Edit Production Plan'
+                : 'View Production Plan'}
           </DialogTitle>
         </DialogHeader>
 
@@ -318,6 +320,7 @@ export default function ProductionPlanDialog({
                 }
                 placeholder="Production plan title"
                 required
+                readOnly={mode === 'view'}
               />
             </div>
             <div className="space-y-2">
@@ -330,6 +333,7 @@ export default function ProductionPlanDialog({
                     production_type: value as ProductionType,
                   })
                 }
+                disabled={mode === 'view'}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -378,6 +382,7 @@ export default function ProductionPlanDialog({
                     priority: value as ProductionPriority,
                   })
                 }
+                disabled={mode === 'view'}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -424,6 +429,7 @@ export default function ProductionPlanDialog({
                 }
                 placeholder="0"
                 required
+                readOnly={mode === 'view'}
               />
             </div>
             <div className="space-y-2">
@@ -435,6 +441,7 @@ export default function ProductionPlanDialog({
                   setFormData({ ...formData, unit_of_measure: e.target.value })
                 }
                 placeholder="pieces"
+                readOnly={mode === 'view'}
               />
             </div>
             <div className="space-y-2">
@@ -446,6 +453,7 @@ export default function ProductionPlanDialog({
                   setFormData({ ...formData, production_line: e.target.value })
                 }
                 placeholder="Production line identifier"
+                readOnly={mode === 'view'}
               />
             </div>
           </div>
@@ -460,6 +468,7 @@ export default function ProductionPlanDialog({
               }
               placeholder="Production plan description"
               rows={3}
+              readOnly={mode === 'view'}
             />
           </div>
 
@@ -477,6 +486,7 @@ export default function ProductionPlanDialog({
                     planned_start_date: e.target.value,
                   })
                 }
+                readOnly={mode === 'view'}
               />
             </div>
             <div className="space-y-2">
@@ -488,6 +498,7 @@ export default function ProductionPlanDialog({
                 onChange={(e) =>
                   setFormData({ ...formData, planned_end_date: e.target.value })
                 }
+                readOnly={mode === 'view'}
               />
             </div>
           </div>
@@ -496,18 +507,21 @@ export default function ProductionPlanDialog({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <Label>Materials Required</Label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addMaterial}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Material
-              </Button>
+              {mode !== 'view' && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addMaterial}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Material
+                </Button>
+              )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+            {mode !== 'view' && (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
               <Input
                 placeholder="Material name"
                 value={newMaterial.material_name || ''}
@@ -549,6 +563,7 @@ export default function ProductionPlanDialog({
                 }
               />
             </div>
+            )}
 
             {formData.materials_required &&
               formData.materials_required.length > 0 && (
@@ -565,14 +580,16 @@ export default function ProductionPlanDialog({
                       <span className="text-sm font-medium">
                         {getCurrencySymbol()}{material.total_cost}
                       </span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeMaterial(index)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+                      {mode !== 'view' && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeMaterial(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   ))}
                   <div className="text-sm text-gray-500">
@@ -586,18 +603,21 @@ export default function ProductionPlanDialog({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <Label>Labor Requirements</Label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addLabor}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Labor
-              </Button>
+              {mode !== 'view' && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addLabor}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Labor
+                </Button>
+              )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            {mode !== 'view' && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
               <Input
                 placeholder="Role"
                 value={newLabor.role || ''}
@@ -629,6 +649,7 @@ export default function ProductionPlanDialog({
                 }
               />
             </div>
+            )}
 
             {formData.labor_requirements &&
               formData.labor_requirements.length > 0 && (
@@ -645,14 +666,16 @@ export default function ProductionPlanDialog({
                       <span className="text-sm font-medium">
                         {getCurrencySymbol()}{labor.total_cost}
                       </span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeLabor(index)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+                      {mode !== 'view' && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeLabor(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   ))}
                   <div className="text-sm text-gray-500">
@@ -673,6 +696,7 @@ export default function ProductionPlanDialog({
               }
               placeholder="Quality standards and requirements"
               rows={3}
+              readOnly={mode === 'view'}
             />
           </div>
 
@@ -680,22 +704,24 @@ export default function ProductionPlanDialog({
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Label>Tags</Label>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Add tag"
-                  value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
-                  className="w-32"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addTag}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
+              {mode !== 'view' && (
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Add tag"
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    className="w-32"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addTag}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
             </div>
 
             {formData.tags && formData.tags.length > 0 && (
@@ -707,15 +733,17 @@ export default function ProductionPlanDialog({
                     className="flex items-center gap-1"
                   >
                     {tag}
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-4 w-4 p-0 hover:bg-transparent"
-                      onClick={() => removeTag(tag)}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
+                    {mode !== 'view' && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-4 w-4 p-0 hover:bg-transparent"
+                        onClick={() => removeTag(tag)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    )}
                   </Badge>
                 ))}
               </div>
@@ -728,15 +756,17 @@ export default function ProductionPlanDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {mode === 'view' ? 'Close' : 'Cancel'}
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading
-                ? 'Saving...'
-                : mode === 'create'
-                  ? 'Create Plan'
-                  : 'Update Plan'}
-            </Button>
+            {mode !== 'view' && (
+              <Button type="submit" disabled={loading}>
+                {loading
+                  ? 'Saving...'
+                  : mode === 'create'
+                    ? 'Create Plan'
+                    : 'Update Plan'}
+              </Button>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>

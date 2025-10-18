@@ -324,12 +324,6 @@ function QualityControlContent() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [checkToDelete, setCheckToDelete] = useState<QualityCheck | null>(null);
 
-  useEffect(() => {
-    setMounted(true);
-    loadDashboardData();
-    loadQualityChecks();
-  }, []);
-
   const loadDashboardData = async () => {
     try {
       setLoading(true);
@@ -340,7 +334,8 @@ function QualityControlContent() {
       setUpcomingChecks(dashboard.upcoming_checks || []);
       setCriticalDefects(dashboard.critical_defects || []);
     } catch (error) {
-      } finally {
+      console.error('Error loading dashboard data:', error);
+    } finally {
       setLoading(false);
     }
   };
@@ -348,11 +343,36 @@ function QualityControlContent() {
   const loadQualityChecks = async () => {
     try {
       const service = new QualityControlService();
-      const response = await service.getQualityChecks();
-      setQualityChecks(response.quality_checks);
+      const response = await service.getQualityChecks({}, 1, 100);
+      setQualityChecks(response.quality_checks || []);
     } catch (error) {
-      }
+      console.error('Error loading quality checks:', error);
+      setQualityChecks([]);
+    }
   };
+
+  useEffect(() => {
+    setMounted(true);
+    loadDashboardData();
+    loadQualityChecks();
+  }, []);
+
+  // Filter quality checks based on search and filters
+  const filteredQualityChecks = qualityChecks.filter((check) => {
+    const matchesSearch = searchTerm === '' || 
+      check.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      check.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      check.id.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus = statusFilter === 'all' || 
+      check.status.toLowerCase() === statusFilter.toLowerCase();
+
+    const matchesPriority = priorityFilter === 'all' || 
+      check.priority.toLowerCase() === priorityFilter.toLowerCase();
+
+    return matchesSearch && matchesStatus && matchesPriority;
+  });
+
 
   const getStatusIcon = (status: QualityStatus) => {
     switch (status) {
@@ -725,6 +745,16 @@ function QualityControlContent() {
                       <SelectItem value="critical">Critical</SelectItem>
                     </SelectContent>
                   </Select>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      loadQualityChecks();
+                      loadDashboardData();
+                    }}
+                  >
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Refresh
+                  </Button>
                   <Button onClick={handleCreateCheck}>
                     <Plus className="mr-2 h-4 w-4" />
                     New Check
@@ -733,8 +763,8 @@ function QualityControlContent() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {qualityChecks.length > 0 ? (
-                    qualityChecks.map((check) => (
+                  {filteredQualityChecks.length > 0 ? (
+                    filteredQualityChecks.map((check) => (
                       <div
                         key={check.id}
                         className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
@@ -819,16 +849,17 @@ function QualityControlContent() {
                     <div className="text-center py-8">
                       <CheckSquare className="mx-auto h-12 w-12 text-gray-400" />
                       <h3 className="mt-2 text-sm font-medium text-gray-900">
-                        No quality checks
+                        {qualityChecks.length === 0 ? 'No quality checks' : 'No matching quality checks'}
                       </h3>
                       <p className="mt-1 text-sm text-gray-500">
-                        Get started by creating your first quality check.
+                        {qualityChecks.length === 0 
+                          ? 'Get started by creating your first quality check.'
+                          : 'Try adjusting your search or filter criteria.'
+                        }
                       </p>
                       <div className="mt-6">
                         <Button
-                          onClick={() =>
-                            router.push('/quality-control/checks/new')
-                          }
+                          onClick={handleCreateCheck}
                         >
                           <Plus className="mr-2 h-4 w-4" />
                           New Quality Check

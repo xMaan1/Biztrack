@@ -79,6 +79,7 @@ const ReconciliationContent = () => {
   const [selectedTransaction, setSelectedTransaction] = useState<BankTransaction | null>(null);
   const [reconciliationNotes, setReconciliationNotes] = useState('');
   const [reconcileDialogOpen, setReconcileDialogOpen] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const statuses = ['pending', 'processing', 'completed', 'failed', 'cancelled', 'reversed'];
 
@@ -121,6 +122,17 @@ const ReconciliationContent = () => {
       }
     } catch (error) {
       console.error('Error fetching reconciliation summary:', error);
+    }
+  };
+
+  const handleRefresh = async () => {
+    try {
+      setRefreshing(true);
+      await Promise.all([fetchTransactions(), fetchSummary()]);
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -232,9 +244,13 @@ const ReconciliationContent = () => {
           <h1 className="text-3xl font-bold text-gray-900">Bank Reconciliation</h1>
           <p className="text-gray-600 mt-1">Reconcile bank transactions with your records</p>
         </div>
-        <Button className="flex items-center gap-2">
-          <RefreshCw className="h-4 w-4" />
-          Refresh Data
+        <Button 
+          className="flex items-center gap-2" 
+          onClick={handleRefresh}
+          disabled={refreshing}
+        >
+          <RefreshCw className={cn("h-4 w-4", refreshing && "animate-spin")} />
+          {refreshing ? "Refreshing..." : "Refresh Data"}
         </Button>
       </div>
 
