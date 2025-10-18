@@ -9,7 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 from .config.database import create_tables, get_plans
-from .api.v1 import auth, users, projects, tasks, tenants, plans, sales, crm, hrm, custom_options, invoices, invoice_customization, pos, inventory, subscriptions, work_orders, production, quality_control, maintenance, ledger, admin, file_upload, deduct_stock, customer_import, dashboard, investments, reports, notifications, banking, rbac_users
+from .api.v1 import auth, users, projects, tasks, tenants, plans, sales, crm, hrm, custom_options, invoices, invoice_customization, pos, inventory, subscriptions, work_orders, production, quality_control, maintenance, ledger, admin, file_upload, deduct_stock, customer_import, dashboard, investments, reports, notifications, banking, rbac_users, events
 from .core.security import security_middleware
 from .core.tenant_middleware import tenant_middleware
 from .core.audit import audit_logger
@@ -163,7 +163,7 @@ app.include_router(tasks.router)
 app.include_router(tenants.router)
 app.include_router(plans.router)
 app.include_router(dashboard.router)
-# app.include_router(events.router)  # Temporarily disabled - Event models not implemented
+app.include_router(events.router)
 app.include_router(sales.router)
 app.include_router(crm.router)
 app.include_router(customer_import.router)

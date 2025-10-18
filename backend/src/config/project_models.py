@@ -59,6 +59,7 @@ class Project(Base):
     tasks = relationship("Task", back_populates="project")
     work_orders = relationship("WorkOrder", back_populates="project")
     production_plans = relationship("ProductionPlan", back_populates="project")
+    events = relationship("Event", back_populates="project")
     
     # Quality Control relationships
     quality_checks = relationship("QualityCheck", back_populates="project")

@@ -76,16 +76,24 @@ async def create_new_event(
         if 'status' in event_data and hasattr(event_data['status'], 'value'):
             event_data['status'] = event_data['status'].value
         
-        # Create Google Meet event if online
+        # Create Google Meet event if online and credentials are available
         if event_data.get('isOnline', True):
-            google_meet_service = GoogleMeetService()
-            meet_result = google_meet_service.create_meeting(event_data)
-            if meet_result['success']:
-                event_data['googleMeetLink'] = meet_result.get('meet_link')
-                event_data['googleCalendarEventId'] = meet_result.get('event_id')
-            else:
-                # Log the error but continue with event creation
-                print(f"Google Meet creation failed: {meet_result.get('error')}")
+            try:
+                google_meet_service = GoogleMeetService()
+                meet_result = google_meet_service.create_meeting(event_data)
+                if meet_result['success']:
+                    event_data['googleMeetLink'] = meet_result.get('meet_link')
+                    event_data['googleCalendarEventId'] = meet_result.get('event_id')
+                else:
+                    # Log the error but continue with event creation
+                    print(f"Google Meet creation failed: {meet_result.get('error')}")
+            except Exception as e:
+                # Google API not configured or failed - continue without meet link
+                print(f"Google Meet integration not available: {str(e)}")
+                # Set isOnline to False if Google Meet is required but not available
+                if event_data.get('isOnline', True):
+                    event_data['isOnline'] = False
+                    event_data['googleMeetLink'] = None
         
         # Create event in database
         db_event = create_event(event_data, db)
@@ -218,15 +226,19 @@ async def update_existing_event(
         update_data = event_update.dict(exclude_unset=True)
         update_data['updatedAt'] = datetime.utcnow()
         
-        # Update Google Calendar event if it exists
+        # Update Google Calendar event if it exists and credentials are available
         if existing_event.googleCalendarEventId and update_data:
-            google_meet_service = GoogleMeetService()
-            meet_result = google_meet_service.update_meeting(
-                existing_event.googleCalendarEventId,
-                update_data
-            )
-            if not meet_result['success']:
-                print(f"Google Calendar update failed: {meet_result.get('error')}")
+            try:
+                google_meet_service = GoogleMeetService()
+                meet_result = google_meet_service.update_meeting(
+                    existing_event.googleCalendarEventId,
+                    update_data
+                )
+                if not meet_result['success']:
+                    print(f"Google Calendar update failed: {meet_result.get('error')}")
+            except Exception as e:
+                # Google API not configured or failed - continue without updating calendar
+                print(f"Google Calendar integration not available: {str(e)}")
         
         # Update event in database
         updated_event = update_event(event_id, update_data, db, str(tenant_context['tenant_id']))
@@ -265,12 +277,16 @@ async def delete_existing_event(
                 detail="Event not found"
             )
         
-        # Delete from Google Calendar if it exists
+        # Delete from Google Calendar if it exists and credentials are available
         if existing_event.googleCalendarEventId:
-            google_meet_service = GoogleMeetService()
-            meet_result = google_meet_service.delete_meeting(existing_event.googleCalendarEventId)
-            if not meet_result['success']:
-                print(f"Google Calendar deletion failed: {meet_result.get('error')}")
+            try:
+                google_meet_service = GoogleMeetService()
+                meet_result = google_meet_service.delete_meeting(existing_event.googleCalendarEventId)
+                if not meet_result['success']:
+                    print(f"Google Calendar deletion failed: {meet_result.get('error')}")
+            except Exception as e:
+                # Google API not configured or failed - continue without deleting from calendar
+                print(f"Google Calendar integration not available: {str(e)}")
         
         # Delete event from database
         success = delete_event(event_id, db, str(tenant_context['tenant_id']))
@@ -315,27 +331,35 @@ async def regenerate_meet_link(
                 detail="Cannot generate meet link for offline events"
             )
         
-        # Generate new Google Meet link
-        google_meet_service = GoogleMeetService()
-        meet_result = google_meet_service.create_meeting({
-            'id': str(existing_event.id),
-            'title': existing_event.title,
-            'startDate': existing_event.startDate,
-            'endDate': existing_event.endDate
-        })
-        
-        if not meet_result['success']:
+        # Generate new Google Meet link if credentials are available
+        try:
+            google_meet_service = GoogleMeetService()
+            meet_result = google_meet_service.create_meeting({
+                'id': str(existing_event.id),
+                'title': existing_event.title,
+                'startDate': existing_event.startDate,
+                'endDate': existing_event.endDate
+            })
+            
+            if not meet_result['success']:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Failed to generate meet link: {meet_result.get('error')}"
+                )
+            
+            # Update event with new meet link
+            update_data = {
+                'googleMeetLink': meet_result.get('meet_link'),
+                'googleCalendarEventId': meet_result.get('event_id'),
+                'updatedAt': datetime.utcnow()
+            }
+            
+        except Exception as e:
+            # Google API not configured or failed
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to generate meet link: {meet_result.get('error')}"
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"Google Meet integration not available: {str(e)}"
             )
-        
-        # Update event with new meet link
-        update_data = {
-            'googleMeetLink': meet_result.get('meet_link'),
-            'googleCalendarEventId': meet_result.get('event_id'),
-            'updatedAt': datetime.utcnow()
-        }
         
         updated_event = update_event(event_id, update_data, db, str(tenant_context['tenant_id']))
         

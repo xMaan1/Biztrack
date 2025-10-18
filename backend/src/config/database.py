@@ -79,6 +79,10 @@ from .audit_models import (
     AuditLog, Permission, CustomRole
 )
 
+from .event_models import (
+    Event, EventType, EventStatus, RecurrenceType
+)
+
 # Import all CRUD functions
 from .core_crud import (
     # User functions
@@ -324,6 +328,13 @@ from .audit_crud import (
     get_audit_statistics
 )
 
+from .event_crud import (
+    # Event functions
+    get_event_by_id, get_all_events, get_events_by_project, get_events_by_user,
+    get_upcoming_events, create_event, update_event, delete_event,
+    get_events_by_status, get_events_by_type, search_events
+)
+
 # Export all models and functions for backward compatibility
 __all__ = [
     # Database configuration
@@ -345,6 +356,7 @@ __all__ = [
     'CustomEventType', 'CustomDepartment', 'CustomLeaveType', 'CustomLeadSource',
     'CustomContactSource', 'CustomCompanyIndustry', 'CustomContactType', 'CustomIndustry',
     'AuditLog', 'Permission', 'CustomRole',
+    'Event', 'EventType', 'EventStatus', 'RecurrenceType',
     'ChartOfAccounts', 'LedgerTransaction', 'JournalEntry', 
     'FinancialPeriod', 'Budget', 'BudgetItem',
     'Investment', 'EquipmentInvestment', 'InvestmentTransaction',

@@ -49,6 +49,9 @@ class User(Base):
     createdCustomContactTypes = relationship("CustomContactType", back_populates="createdByUser", foreign_keys="CustomContactType.createdByUserId")
     createdCustomIndustries = relationship("CustomIndustry", back_populates="createdByUser", foreign_keys="CustomIndustry.createdByUserId")
     
+    # Event relationships
+    created_events = relationship("Event", back_populates="createdBy", foreign_keys="Event.createdById")
+    
     # Sales relationships
     created_quotes = relationship("Quote", back_populates="creator", foreign_keys="Quote.createdBy")
     created_contracts = relationship("Contract", back_populates="creator", foreign_keys="Contract.createdBy")
@@ -186,6 +189,7 @@ class Tenant(Base):
     
     # Custom tenant-specific options relationships
     customEventTypes = relationship("CustomEventType", back_populates="tenant")
+    events = relationship("Event", back_populates="tenant")
     
     # Work Order relationships
     work_orders = relationship("WorkOrder", back_populates="tenant")

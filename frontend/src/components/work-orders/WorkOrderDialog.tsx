@@ -22,6 +22,7 @@ import {
 } from '../ui/select';
 import { Badge } from '../ui/badge';
 import { Loader2, X } from 'lucide-react';
+import { Alert, AlertDescription } from '../ui/alert';
 import { apiService } from '../../services/ApiService';
 
 interface WorkOrderDialogProps {
@@ -58,6 +59,7 @@ export default function WorkOrderDialog({
   onSuccess,
 }: WorkOrderDialogProps) {
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [formData, setFormData] = useState<WorkOrderFormData>({
     title: '',
     description: '',
@@ -103,6 +105,7 @@ export default function WorkOrderDialog({
         tags: workOrder.tags || [],
       });
     }
+    setErrorMessage('');
   }, [workOrder, mode]);
 
   const isFormValid = () => {
@@ -118,7 +121,10 @@ export default function WorkOrderDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    setErrorMessage('');
+    
     if (!isFormValid()) {
+      setErrorMessage('Please fill in all required fields');
       return;
     }
     
@@ -135,7 +141,8 @@ export default function WorkOrderDialog({
       onOpenChange(false);
       resetForm();
     } catch (error) {
-      } finally {
+      setErrorMessage('Failed to save work order. Please try again.');
+    } finally {
       setLoading(false);
     }
   };
@@ -158,6 +165,7 @@ export default function WorkOrderDialog({
       estimated_cost: 0,
       tags: [],
     });
+    setErrorMessage('');
   };
 
   const addMaterial = () => {
@@ -217,6 +225,12 @@ export default function WorkOrderDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {errorMessage && (
+            <Alert variant="destructive">
+              <AlertDescription>{errorMessage}</AlertDescription>
+            </Alert>
+          )}
+          
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -229,7 +243,6 @@ export default function WorkOrderDialog({
                 }
                 placeholder="Enter work order title"
                 required
-                className={formData.title.trim() === '' ? 'border-red-500' : ''}
               />
             </div>
 
@@ -308,7 +321,6 @@ export default function WorkOrderDialog({
               }
               placeholder="Describe the work to be performed"
               rows={3}
-              className={formData.description.trim() === '' ? 'border-red-500' : ''}
             />
           </div>
 
@@ -326,7 +338,6 @@ export default function WorkOrderDialog({
                     planned_start_date: e.target.value,
                   })
                 }
-                className={formData.planned_start_date === '' ? 'border-red-500' : ''}
               />
             </div>
 
@@ -339,7 +350,6 @@ export default function WorkOrderDialog({
                 onChange={(e) =>
                   setFormData({ ...formData, planned_end_date: e.target.value })
                 }
-                className={formData.planned_end_date === '' ? 'border-red-500' : ''}
               />
             </div>
 
@@ -358,7 +368,6 @@ export default function WorkOrderDialog({
                   })
                 }
                 placeholder="0.0"
-                className={formData.estimated_hours <= 0 ? 'border-red-500' : ''}
               />
             </div>
           </div>
