@@ -45,6 +45,34 @@ def update_project(project_id: str, update_data: dict, db: Session, tenant_id: s
 def delete_project(project_id: str, db: Session, tenant_id: str = None) -> bool:
     project = get_project_by_id(project_id, db, tenant_id)
     if project:
+        from ..config.hrm_models import TimeEntry
+        time_entries = db.query(TimeEntry).filter(
+            TimeEntry.projectId == project_id,
+            TimeEntry.tenant_id == tenant_id
+        ).all()
+        
+        for time_entry in time_entries:
+            time_entry.projectId = None
+        
+        tasks = db.query(Task).filter(
+            Task.projectId == project_id,
+            Task.tenant_id == tenant_id
+        ).all()
+        
+        for task in tasks:
+            task_time_entries = db.query(TimeEntry).filter(
+                TimeEntry.taskId == str(task.id),
+                TimeEntry.tenant_id == tenant_id
+            ).all()
+            
+            for time_entry in task_time_entries:
+                time_entry.taskId = None
+            
+            db.delete(task)
+        
+        from ..config.core_models import project_team_members
+        db.execute(project_team_members.delete().where(project_team_members.c.project_id == project_id))
+        
         db.delete(project)
         db.commit()
         return True

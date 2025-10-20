@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
   Card,
@@ -86,7 +85,6 @@ export default function WorkOrdersPage() {
 }
 
 function WorkOrdersContent() {
-  const router = useRouter();
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [filteredWorkOrders, setFilteredWorkOrders] = useState<WorkOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -98,7 +96,7 @@ function WorkOrdersContent() {
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(
     null,
   );
-  const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
+  const [dialogMode, setDialogMode] = useState<'create' | 'edit' | 'view'>('create');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [workOrderToDelete, setWorkOrderToDelete] = useState<WorkOrder | null>(
     null,
@@ -214,6 +212,12 @@ function WorkOrdersContent() {
   const handleEditWorkOrder = (workOrder: WorkOrder) => {
     setSelectedWorkOrder(workOrder);
     setDialogMode('edit');
+    setDialogOpen(true);
+  };
+
+  const handleViewWorkOrder = (workOrder: WorkOrder) => {
+    setSelectedWorkOrder(workOrder);
+    setDialogMode('view');
     setDialogOpen(true);
   };
 
@@ -471,9 +475,7 @@ function WorkOrdersContent() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem
-                          onClick={() =>
-                            router.push(`/work-orders/${workOrder.id}`)
-                          }
+                          onClick={() => handleViewWorkOrder(workOrder)}
                         >
                           <Eye className="h-4 w-4 mr-2" />
                           View Details

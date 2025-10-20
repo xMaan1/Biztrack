@@ -3,7 +3,7 @@
 import { useRBAC } from '@/src/contexts/RBACContext';
 
 export function usePermissions() {
-  const { userPermissions, hasPermission, hasModuleAccess, isOwner } = useRBAC();
+  const { userPermissions, hasPermission, hasModuleAccess, isOwner, loading } = useRBAC();
 
   return {
     permissions: userPermissions?.permissions || [],
@@ -11,6 +11,8 @@ export function usePermissions() {
     isOwner: isOwner,
     hasPermission,
     hasModuleAccess,
+    userPermissions,
+    loading,
     
     // Convenience methods for common permissions
     canManageUsers: () => hasPermission('users:create') || isOwner(),

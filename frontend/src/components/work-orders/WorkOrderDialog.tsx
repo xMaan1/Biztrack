@@ -28,7 +28,7 @@ import { apiService } from '../../services/ApiService';
 interface WorkOrderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  mode: 'create' | 'edit';
+  mode: 'create' | 'edit' | 'view';
   workOrder?: any;
   onSuccess: () => void;
 }
@@ -82,7 +82,7 @@ export default function WorkOrderDialog({
   const [newTag, setNewTag] = useState('');
 
   useEffect(() => {
-    if (workOrder && mode === 'edit') {
+    if (workOrder && (mode === 'edit' || mode === 'view')) {
       setFormData({
         title: workOrder.title || '',
         description: workOrder.description || '',
@@ -215,12 +215,16 @@ export default function WorkOrderDialog({
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {mode === 'create' ? 'Create New Work Order' : 'Edit Work Order'}
+            {mode === 'create' ? 'Create New Work Order' : 
+             mode === 'edit' ? 'Edit Work Order' : 
+             'Work Order Details'}
           </DialogTitle>
           <DialogDescription>
             {mode === 'create'
               ? 'Fill in the details to create a new work order'
-              : 'Update the work order information'}
+              : mode === 'edit'
+              ? 'Update the work order information'
+              : 'View work order details'}
           </DialogDescription>
         </DialogHeader>
 
@@ -242,7 +246,8 @@ export default function WorkOrderDialog({
                   setFormData({ ...formData, title: e.target.value })
                 }
                 placeholder="Enter work order title"
-                required
+                required={mode !== 'view'}
+                disabled={mode === 'view'}
               />
             </div>
 
@@ -253,6 +258,7 @@ export default function WorkOrderDialog({
                 onValueChange={(value) =>
                   setFormData({ ...formData, work_order_type: value })
                 }
+                disabled={mode === 'view'}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select type" />
@@ -274,6 +280,7 @@ export default function WorkOrderDialog({
                 onValueChange={(value) =>
                   setFormData({ ...formData, status: value })
                 }
+                disabled={mode === 'view'}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select status" />
@@ -296,6 +303,7 @@ export default function WorkOrderDialog({
                 onValueChange={(value) =>
                   setFormData({ ...formData, priority: value })
                 }
+                disabled={mode === 'view'}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select priority" />
@@ -321,6 +329,7 @@ export default function WorkOrderDialog({
               }
               placeholder="Describe the work to be performed"
               rows={3}
+              disabled={mode === 'view'}
             />
           </div>
 
@@ -338,6 +347,7 @@ export default function WorkOrderDialog({
                     planned_start_date: e.target.value,
                   })
                 }
+                disabled={mode === 'view'}
               />
             </div>
 
@@ -350,6 +360,7 @@ export default function WorkOrderDialog({
                 onChange={(e) =>
                   setFormData({ ...formData, planned_end_date: e.target.value })
                 }
+                disabled={mode === 'view'}
               />
             </div>
 
@@ -368,6 +379,7 @@ export default function WorkOrderDialog({
                   })
                 }
                 placeholder="0.0"
+                disabled={mode === 'view'}
               />
             </div>
           </div>
@@ -383,6 +395,7 @@ export default function WorkOrderDialog({
                   setFormData({ ...formData, location: e.target.value })
                 }
                 placeholder="e.g., Workshop A, Machine 1"
+                disabled={mode === 'view'}
               />
             </div>
 
@@ -401,6 +414,7 @@ export default function WorkOrderDialog({
                   })
                 }
                 placeholder="0.00"
+                disabled={mode === 'view'}
               />
             </div>
           </div>
@@ -416,6 +430,7 @@ export default function WorkOrderDialog({
               }
               placeholder="Step-by-step instructions for the work"
               rows={4}
+              disabled={mode === 'view'}
             />
           </div>
 
@@ -431,6 +446,7 @@ export default function WorkOrderDialog({
                 }
                 placeholder="Safety precautions and requirements"
                 rows={3}
+                disabled={mode === 'view'}
               />
             </div>
 
@@ -447,6 +463,7 @@ export default function WorkOrderDialog({
                 }
                 placeholder="Quality standards and inspection criteria"
                 rows={3}
+                disabled={mode === 'view'}
               />
             </div>
           </div>
@@ -454,19 +471,21 @@ export default function WorkOrderDialog({
           {/* Materials Required */}
           <div className="space-y-2">
             <Label>Materials Required</Label>
-            <div className="flex gap-2">
-              <Input
-                value={newMaterial}
-                onChange={(e) => setNewMaterial(e.target.value)}
-                placeholder="Add material"
-                onKeyPress={(e) =>
-                  e.key === 'Enter' && (e.preventDefault(), addMaterial())
-                }
-              />
-              <Button type="button" onClick={addMaterial} variant="outline">
-                Add
-              </Button>
-            </div>
+            {mode !== 'view' && (
+              <div className="flex gap-2">
+                <Input
+                  value={newMaterial}
+                  onChange={(e) => setNewMaterial(e.target.value)}
+                  placeholder="Add material"
+                  onKeyPress={(e) =>
+                    e.key === 'Enter' && (e.preventDefault(), addMaterial())
+                  }
+                />
+                <Button type="button" onClick={addMaterial} variant="outline">
+                  Add
+                </Button>
+              </div>
+            )}
             {formData.materials_required.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {formData.materials_required.map((material, index) => (
@@ -480,6 +499,7 @@ export default function WorkOrderDialog({
                       type="button"
                       onClick={() => removeMaterial(material)}
                       className="ml-1 hover:text-red-500"
+                      disabled={mode === 'view'}
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -492,19 +512,21 @@ export default function WorkOrderDialog({
           {/* Tags */}
           <div className="space-y-2">
             <Label>Tags</Label>
-            <div className="flex gap-2">
-              <Input
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                placeholder="Add tag"
-                onKeyPress={(e) =>
-                  e.key === 'Enter' && (e.preventDefault(), addTag())
-                }
-              />
-              <Button type="button" onClick={addTag} variant="outline">
-                Add
-              </Button>
-            </div>
+            {mode !== 'view' && (
+              <div className="flex gap-2">
+                <Input
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  placeholder="Add tag"
+                  onKeyPress={(e) =>
+                    e.key === 'Enter' && (e.preventDefault(), addTag())
+                  }
+                />
+                <Button type="button" onClick={addTag} variant="outline">
+                  Add
+                </Button>
+              </div>
+            )}
             {formData.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {formData.tags.map((tag, index) => (
@@ -518,6 +540,7 @@ export default function WorkOrderDialog({
                       type="button"
                       onClick={() => removeTag(tag)}
                       className="ml-1 hover:text-red-500"
+                      disabled={mode === 'view'}
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -533,12 +556,14 @@ export default function WorkOrderDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {mode === 'view' ? 'Close' : 'Cancel'}
             </Button>
-            <Button type="submit" disabled={loading || !isFormValid()}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {mode === 'create' ? 'Create Work Order' : 'Update Work Order'}
-            </Button>
+            {mode !== 'view' && (
+              <Button type="submit" disabled={loading || !isFormValid()}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {mode === 'create' ? 'Create Work Order' : 'Update Work Order'}
+              </Button>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>
