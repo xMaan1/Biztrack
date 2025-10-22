@@ -22,7 +22,6 @@ import {
   Calculator,
   ShoppingCart,
   RefreshCw,
-  Mail,
   MessageCircle,
   Download,
 } from 'lucide-react';
@@ -99,39 +98,6 @@ function ProfitLossDashboardContent() {
     window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
   };
 
-  const handleShareEmail = () => {
-    if (!dashboardData) return;
-    
-    const subject = `Profit/Loss Report - ${getProfitLossPeriodLabel(selectedPeriod)}`;
-    const body = `Profit/Loss Report - ${getProfitLossPeriodLabel(selectedPeriod)}
-
-SUMMARY:
-• Total Sales: ${formatCurrency(dashboardData.summary.total_sales)}
-• Total Purchases: ${formatCurrency(dashboardData.summary.total_purchases)}
-• Gross Profit: ${formatCurrency(dashboardData.summary.gross_profit)}
-• Net Profit: ${formatCurrency(dashboardData.summary.net_profit)}
-
-SALES:
-• Total Invoices: ${dashboardData.sales.total_invoices}
-• Paid Invoices: ${dashboardData.sales.paid_invoices}
-• Pending Invoices: ${dashboardData.sales.pending_invoices}
-• Overdue Invoices: ${dashboardData.sales.overdue_invoices}
-
-PURCHASES:
-• Total Purchase Orders: ${dashboardData.purchases.total_purchase_orders}
-• Completed Purchases: ${dashboardData.purchases.completed_purchases}
-• Pending Purchases: ${dashboardData.purchases.pending_purchases}
-
-INVENTORY:
-• Total Products: ${dashboardData.inventory.total_products}
-• Inventory Value: ${formatCurrency(dashboardData.inventory.total_inventory_value)}
-
-Generated on: ${new Date().toLocaleDateString()}`;
-
-    const encodedSubject = encodeURIComponent(subject);
-    const encodedBody = encodeURIComponent(body);
-    window.open(`mailto:?subject=${encodedSubject}&body=${encodedBody}`, '_blank');
-  };
 
   const handleDownloadReport = () => {
     if (!dashboardData) return;
@@ -476,10 +442,6 @@ Generated on: ${new Date().toLocaleDateString()}`;
                   <Button onClick={handleShareWhatsApp} variant="outline">
                     <MessageCircle className="h-4 w-4 mr-2" />
                     Share on WhatsApp
-                  </Button>
-                  <Button onClick={handleShareEmail} variant="outline">
-                    <Mail className="h-4 w-4 mr-2" />
-                    Share via Email
                   </Button>
                   <Button onClick={handleDownloadReport} variant="outline">
                     <Download className="h-4 w-4 mr-2" />

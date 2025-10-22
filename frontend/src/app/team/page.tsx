@@ -40,6 +40,7 @@ import { apiService } from '../../services/ApiService';
 import { User } from '../../models/auth';
 import { DashboardLayout } from '../../components/layout';
 import { cn, getInitials } from '../../lib/utils';
+import AddMemberModal from '../../components/team/AddMemberModal';
 
 export default function TeamPage() {
   const [teamMembers, setTeamMembers] = useState<User[]>([]);
@@ -47,6 +48,7 @@ export default function TeamPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
 
   useEffect(() => {
     fetchTeamMembers();
@@ -161,6 +163,58 @@ export default function TeamPage() {
 
   const stats = getTeamStats();
 
+  const handleAddMemberSuccess = () => {
+    fetchTeamMembers();
+  };
+
+  const getCurrentTenantId = () => {
+    let tenantId = null;
+    const selectedTenant = localStorage.getItem('selectedTenant');
+    if (selectedTenant) {
+      try {
+        const parsed = JSON.parse(selectedTenant);
+        tenantId = parsed.id || parsed.tenantId;
+      } catch (e) {
+        // ignore
+      }
+    }
+    if (!tenantId) {
+      tenantId = localStorage.getItem('currentTenantId');
+    }
+    return tenantId;
+  };
+
+  const handleRemoveMember = async (memberId: string, memberName: string) => {
+    if (!confirm(`Are you sure you want to remove ${memberName} from the team?`)) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const tenantId = getCurrentTenantId();
+      
+      if (!tenantId) {
+        setError('No tenant selected');
+        return;
+      }
+
+      // Call the remove user API
+      await apiService.delete(`/rbac/remove-user/${memberId}`);
+      
+      // Refresh the team members list
+      await fetchTeamMembers();
+      
+      // Show success message (you could add a toast notification here)
+      console.log(`${memberName} has been removed from the team`);
+      
+    } catch (err: any) {
+      console.error('Error removing member:', err);
+      setError(err.response?.data?.detail || 'Failed to remove team member');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="container mx-auto px-6 py-8 space-y-8">
@@ -183,9 +237,9 @@ export default function TeamPage() {
             >
               <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
             </Button>
-            <Button className="modern-button">
+            <Button className="modern-button" onClick={() => setShowAddMemberModal(true)}>
               <UserPlus className="h-4 w-4 mr-2" />
-              Invite Member
+              Add Team Member
             </Button>
           </div>
         </div>
@@ -336,7 +390,20 @@ export default function TeamPage() {
                           Edit Member
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-600 focus:text-red-600">
+                        <DropdownMenuItem 
+                          className="text-red-600 focus:text-red-600"
+                          onClick={() => {
+                            const memberId = member.userId || member.id;
+                            if (memberId) {
+                              handleRemoveMember(
+                                memberId, 
+                                member.firstName && member.lastName 
+                                  ? `${member.firstName} ${member.lastName}` 
+                                  : member.userName
+                              );
+                            }
+                          }}
+                        >
                           <Trash2 className="h-4 w-4 mr-2" />
                           Remove Member
                         </DropdownMenuItem>
@@ -397,13 +464,21 @@ export default function TeamPage() {
                   ? 'Try adjusting your search terms'
                   : 'Get started by inviting your first team member'}
               </p>
-              <Button className="modern-button">
+              <Button className="modern-button" onClick={() => setShowAddMemberModal(true)}>
                 <UserPlus className="h-4 w-4 mr-2" />
-                Invite Member
+                Add Team Member
               </Button>
             </CardContent>
           </Card>
         )}
+
+        {/* Add Member Modal */}
+        <AddMemberModal
+          open={showAddMemberModal}
+          onClose={() => setShowAddMemberModal(false)}
+          onSuccess={handleAddMemberSuccess}
+          tenantId={getCurrentTenantId() || ''}
+        />
       </div>
     </DashboardLayout>
   );

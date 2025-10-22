@@ -293,7 +293,7 @@ class Role(Base):
     
     # Relationships
     tenant = relationship("Tenant", back_populates="roles")
-    tenant_users = relationship("TenantUser", back_populates="role")
+    tenant_users = relationship("TenantUser", back_populates="role_obj")
 
 class TenantUser(Base):
     __tablename__ = "tenant_users"
@@ -302,6 +302,7 @@ class TenantUser(Base):
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
     userId = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     role_id = Column(UUID(as_uuid=True), ForeignKey("roles.id"), nullable=False)
+    role = Column(String(50), nullable=False)  # Role name for quick access
     custom_permissions = Column(JSON, default=[])  # Additional permissions beyond role
     isActive = Column(Boolean, default=True)
     invitedBy = Column(UUID(as_uuid=True))
@@ -312,7 +313,7 @@ class TenantUser(Base):
     # Relationships
     tenant = relationship("Tenant", back_populates="tenant_users")
     user = relationship("User", back_populates="tenant_users")
-    role = relationship("Role", back_populates="tenant_users")
+    role_obj = relationship("Role", back_populates="tenant_users")
 
 class PasswordResetToken(Base):
     __tablename__ = "password_reset_tokens"

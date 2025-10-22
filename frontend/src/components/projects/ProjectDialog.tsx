@@ -105,14 +105,24 @@ export default function ProjectDialog({
         const result = await apiService.getTenantUsers(tenantId);
         let users = result?.users || result || [];
         users = users.map((u: any) => ({ ...u, id: u.id || u.userId }));
+        
+        // Remove duplicates based on id/userId
+        const uniqueUsers = users.reduce((acc: any[], user: any) => {
+          const existingUser = acc.find(u => u.id === user.id || u.userId === user.id);
+          if (!existingUser) {
+            acc.push(user);
+          }
+          return acc;
+        }, []);
+        
         setProjectManagers(
-          users.filter(
+          uniqueUsers.filter(
             (u: User) =>
               u.userRole === 'project_manager' || u.userRole === 'admin',
           ),
         );
         setTeamMembers(
-          users.filter(
+          uniqueUsers.filter(
             (u: User) =>
               u.userRole === 'team_member' ||
               u.userRole === 'project_manager' ||

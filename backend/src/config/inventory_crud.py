@@ -119,12 +119,53 @@ def update_warehouse(warehouse_id: str, update_data: dict, db: Session, tenant_i
     return warehouse
 
 def delete_warehouse(warehouse_id: str, db: Session, tenant_id: str = None) -> bool:
-    warehouse = get_warehouse_by_id(warehouse_id, db, tenant_id)
-    if warehouse:
+    """Delete warehouse and all related records"""
+    try:
+        warehouse = get_warehouse_by_id(warehouse_id, db, tenant_id)
+        if not warehouse:
+            return False
+        
+        # Delete related stock movements first
+        from .inventory_models import StockMovement
+        stock_movements = db.query(StockMovement).filter(
+            StockMovement.warehouseId == warehouse_id
+        ).all()
+        for movement in stock_movements:
+            db.delete(movement)
+        
+        # Delete related storage locations
+        from .inventory_models import StorageLocation
+        storage_locations = db.query(StorageLocation).filter(
+            StorageLocation.warehouseId == warehouse_id
+        ).all()
+        for location in storage_locations:
+            db.delete(location)
+        
+        # Delete related purchase orders
+        from .inventory_models import PurchaseOrder
+        purchase_orders = db.query(PurchaseOrder).filter(
+            PurchaseOrder.warehouseId == warehouse_id
+        ).all()
+        for po in purchase_orders:
+            db.delete(po)
+        
+        # Delete related receivings
+        from .inventory_models import Receiving
+        receivings = db.query(Receiving).filter(
+            Receiving.warehouseId == warehouse_id
+        ).all()
+        for receiving in receivings:
+            db.delete(receiving)
+        
+        # Finally delete the warehouse
         db.delete(warehouse)
         db.commit()
         return True
-    return False
+        
+    except Exception as e:
+        db.rollback()
+        print(f"Error deleting warehouse: {str(e)}")
+        return False
 
 # PurchaseOrder functions
 def get_purchase_order_by_id(po_id: str, db: Session, tenant_id: str = None) -> Optional[PurchaseOrder]:

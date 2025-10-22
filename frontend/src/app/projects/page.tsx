@@ -585,10 +585,35 @@ export default function ProjectsPage() {
   const fetchUsers = useCallback(async () => {
 
     try {
+      // Get tenant-specific users instead of all users
+      let tenantId = null;
+      const selectedTenant = localStorage.getItem('selectedTenant');
+      if (selectedTenant) {
+        try {
+          const parsed = JSON.parse(selectedTenant);
+          tenantId = parsed.id || parsed.tenantId;
+        } catch (e) {
+          // ignore
+        }
+      }
+      if (!tenantId) {
+        tenantId = localStorage.getItem('currentTenantId');
+      }
 
-      const response = await apiService.get('/users');
-
-      setUsers(response.users || []);
+      if (tenantId) {
+        const response = await apiService.getTenantUsers(tenantId);
+        // Remove duplicates based on userId
+        const uniqueUsers = (response.users || []).reduce((acc: any[], user: any) => {
+          const existingUser = acc.find(u => u.userId === user.userId || u.id === user.userId);
+          if (!existingUser) {
+            acc.push(user);
+          }
+          return acc;
+        }, []);
+        setUsers(uniqueUsers);
+      } else {
+        setUsers([]);
+      }
 
     } catch (error) {
 
@@ -655,7 +680,7 @@ export default function ProjectsPage() {
 
       clientEmail: '',
 
-      projectManagerId: users.length > 0 ? users[0].id || '' : '',
+      projectManagerId: '',
 
       teamMemberIds: [],
 
@@ -762,7 +787,12 @@ export default function ProjectsPage() {
       
 
       if (dialogMode === 'create') {
-
+        // Validate required fields
+        if (!formData.projectManagerId || formData.projectManagerId === '') {
+          setFormError('Please select a project manager');
+          return;
+        }
+        
         await apiService.createProject(formData);
 
       } else if (selectedProject) {
@@ -1329,7 +1359,7 @@ export default function ProjectsPage() {
 
                       {users.map((user) => (
 
-                        <SelectItem key={user.id} value={user.id || ''}>
+                        <SelectItem key={user.id} value={user.id || user.userId || ''}>
 
                           {user.firstName} {user.lastName}
 

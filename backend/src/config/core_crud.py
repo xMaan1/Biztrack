@@ -11,7 +11,13 @@ def get_user_by_username(username: str, db: Session) -> Optional[User]:
     return db.query(User).filter(User.userName == username).first()
 
 def get_user_by_id(user_id: str, db: Session) -> Optional[User]:
-    return db.query(User).filter(User.id == user_id).first()
+    # Validate UUID format before querying
+    try:
+        from uuid import UUID
+        UUID(user_id)  # This will raise ValueError if not a valid UUID
+        return db.query(User).filter(User.id == user_id).first()
+    except (ValueError, TypeError):
+        return None
 
 def get_all_users(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[User]:
     query = db.query(User)

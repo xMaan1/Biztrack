@@ -21,6 +21,7 @@ import {
 } from '../ui/select';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Loader2, UserPlus, Mail } from 'lucide-react';
+import { apiService } from '../../services/ApiService';
 
 interface AddMemberModalProps {
   open: boolean;
@@ -43,6 +44,34 @@ const roles = [
   { value: 'client', label: 'Client' },
   { value: 'viewer', label: 'Viewer' },
 ];
+
+const getRoleId = async (roleName: string) => {
+  try {
+    const response = await apiService.get('/rbac/roles');
+    const roles = response.roles || [];
+    
+    console.log('Available roles:', roles);
+    
+    const role = roles.find((r: any) => r.name === roleName);
+    if (role) {
+      console.log(`Found role ${roleName} with ID:`, role.id);
+      return role.id;
+    }
+    
+    console.log(`Role ${roleName} not found, trying team_member`);
+    const defaultRole = roles.find((r: any) => r.name === 'team_member');
+    if (defaultRole) {
+      console.log('Using team_member role with ID:', defaultRole.id);
+      return defaultRole.id;
+    }
+    
+    console.log('No roles found at all');
+    return null;
+  } catch (error) {
+    console.error('Failed to fetch roles:', error);
+    return null;
+  }
+};
 
 export default function AddMemberModal({
   open,
@@ -78,14 +107,43 @@ export default function AddMemberModal({
       setLoading(true);
       setError(null);
 
-      // In a real implementation, this would send an invitation
-      // For now, we'll simulate the API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      console.log('Creating team member with data:', formData);
+
+      // Generate unique username to avoid conflicts
+      const baseUsername = formData.email.split('@')[0];
+      const timestamp = Date.now().toString().slice(-4); // Last 4 digits of timestamp
+      const uniqueUsername = `${baseUsername}_${timestamp}`;
+      
+      console.log('Generated unique username:', uniqueUsername);
+
+      const userData = {
+        userName: uniqueUsername,
+        email: formData.email,
+        firstName: formData.firstName || '',
+        lastName: formData.lastName || '',
+        password: 'TempPassword123!',
+        userRole: formData.role
+      };
+
+      console.log('User data to send:', userData);
+
+      const roleId = await getRoleId(formData.role);
+      
+      if (!roleId) {
+        setError('Failed to find role. Please try again.');
+        return;
+      }
+      
+      console.log('Using role ID:', roleId);
+      
+      const response = await apiService.post(`/rbac/create-user?role_id=${roleId}`, userData);
+      console.log('User creation response:', response);
 
       onSuccess();
       onClose();
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to send invitation');
+      console.error('Error creating team member:', err);
+      setError(err.response?.data?.detail || err.message || 'Failed to create team member');
     } finally {
       setLoading(false);
     }
@@ -101,10 +159,10 @@ export default function AddMemberModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="h-5 w-5" />
-            Invite Team Member
+            Add Team Member
           </DialogTitle>
           <DialogDescription>
-            Send an invitation to add a new member to your team.
+            Create a new team member and add them to your workspace.
           </DialogDescription>
         </DialogHeader>
 
@@ -181,12 +239,12 @@ export default function AddMemberModal({
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending...
+                  Creating...
                 </>
               ) : (
                 <>
-                  <Mail className="mr-2 h-4 w-4" />
-                  Send Invitation
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Create Member
                 </>
               )}
             </Button>

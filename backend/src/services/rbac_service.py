@@ -98,7 +98,7 @@ class RBACService:
             return []
 
         # Get role permissions
-        role_permissions = tenant_user.role.permissions if tenant_user.role else []
+        role_permissions = tenant_user.role_obj.permissions if tenant_user.role_obj else []
 
         # Add custom permissions
         custom_permissions = tenant_user.custom_permissions or []
@@ -131,7 +131,7 @@ class RBACService:
             )
         ).first()
 
-        return tenant_user.role if tenant_user else None
+        return tenant_user.role_obj if tenant_user else None
     
     @staticmethod
     def is_owner(db: Session, user_id: str, tenant_id: str) -> bool:

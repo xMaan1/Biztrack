@@ -702,6 +702,10 @@ async def create_new_project(
         tenant_id = tenant_context["tenant_id"] if tenant_context else None
         created_by = str(current_user.id)
         
+        # Validate project manager ID
+        if not project_data.projectManagerId or project_data.projectManagerId.strip() == '':
+            raise HTTPException(status_code=400, detail="Project manager is required")
+        
         # Verify project manager exists
         project_manager = get_user_by_id(project_data.projectManagerId, db)
         if not project_manager:
@@ -720,6 +724,10 @@ async def create_new_project(
         # Verify team members exist
         team_members = []
         for member_id in project_data.teamMemberIds:
+            # Skip empty or invalid IDs
+            if not member_id or member_id.strip() == '':
+                continue
+                
             member = get_user_by_id(member_id, db)
             if not member:
                 raise HTTPException(status_code=400, detail=f"Team member {member_id} not found")

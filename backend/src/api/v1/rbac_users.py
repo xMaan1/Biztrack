@@ -157,16 +157,16 @@ async def get_tenant_users(
             avatar=tenant_user.user.avatar,
             isActive=tenant_user.isActive,
             role=Role(
-                id=str(tenant_user.role.id),
-                tenant_id=str(tenant_user.role.tenant_id),
-                name=tenant_user.role.name,
-                display_name=tenant_user.role.display_name,
-                description=tenant_user.role.description,
-                permissions=tenant_user.role.permissions,
-                isActive=tenant_user.role.isActive,
-                createdAt=tenant_user.role.createdAt,
-                updatedAt=tenant_user.role.updatedAt
-            ) if tenant_user.role else None,
+                id=str(tenant_user.role_obj.id),
+                tenant_id=str(tenant_user.role_obj.tenant_id),
+                name=tenant_user.role_obj.name,
+                display_name=tenant_user.role_obj.display_name,
+                description=tenant_user.role_obj.description,
+                permissions=tenant_user.role_obj.permissions,
+                isActive=tenant_user.role_obj.isActive,
+                createdAt=tenant_user.role_obj.createdAt,
+                updatedAt=tenant_user.role_obj.updatedAt
+            ) if tenant_user.role_obj else None,
             permissions=user_permissions,
             joinedAt=tenant_user.joinedAt
         ))
@@ -233,6 +233,7 @@ async def create_tenant_user(
         tenant_id=tenant_context["tenant_id"],
         userId=user_data.userId,
         role_id=user_data.role_id,
+        role=role.name,  # Populate the role name field
         custom_permissions=user_data.custom_permissions,
         isActive=user_data.isActive,
         invitedBy=str(current_user.id)
@@ -338,6 +339,34 @@ async def remove_tenant_user(
     
     return {"message": "User removed from tenant successfully"}
 
+@router.delete("/remove-user/{user_id}")
+async def remove_user_from_tenant(
+    user_id: str,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    current_user = Depends(require_permission(ModulePermission.USERS_DELETE.value))
+):
+    """Remove a user from tenant by user ID"""
+    tenant_user = db.query(TenantUserModel).filter(
+        and_(
+            TenantUserModel.userId == user_id,
+            TenantUserModel.tenant_id == tenant_context["tenant_id"]
+        )
+    ).first()
+    
+    if not tenant_user:
+        raise HTTPException(status_code=404, detail="User not found in this tenant")
+    
+    # Don't allow removing self
+    if str(tenant_user.userId) == str(current_user.id):
+        raise HTTPException(status_code=400, detail="Cannot remove yourself from tenant")
+    
+    # Soft delete - set isActive to False
+    tenant_user.isActive = False
+    db.commit()
+    
+    return {"message": "User removed from tenant successfully"}
+
 # User Creation Endpoint (for tenant owners)
 @router.post("/create-user", response_model=User)
 async def create_user_for_tenant(
@@ -372,18 +401,19 @@ async def create_user_for_tenant(
     user_dict = user_data.dict()
     user_dict.pop('password')
     user_dict['hashedPassword'] = hashed_password
-    user_dict['tenant_id'] = tenant_context["tenant_id"]
+    user_dict['tenant_id'] = UUID(tenant_context["tenant_id"])
     
     db_user = create_user(user_dict, db)
     
     # Add user to tenant
     tenant_user = TenantUserModel(
-        tenant_id=tenant_context["tenant_id"],
-        userId=str(db_user.id),
-        role_id=role_id,
+        tenant_id=UUID(tenant_context["tenant_id"]),
+        userId=UUID(str(db_user.id)),
+        role_id=UUID(role_id),
+        role=role.name,  # Populate the role name field
         custom_permissions=[],
         isActive=True,
-        invitedBy=str(current_user.id)
+        invitedBy=UUID(str(current_user.id))
     )
     
     db.add(tenant_user)
