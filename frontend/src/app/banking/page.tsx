@@ -113,23 +113,18 @@ function BankingDashboardContent() {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      console.log('[BANKING DEBUG] Loading dashboard data...');
       
       const [dashboard, accounts] = await Promise.all([
         bankingService.getBankingDashboard(),
         bankingService.getBankAccounts(true)
       ]);
       
-      console.log('[BANKING DEBUG] Dashboard data:', dashboard);
-      console.log('[BANKING DEBUG] Bank accounts:', accounts);
-      
       setDashboardData(dashboard);
       setBankAccounts(accounts || []);
       setRecentTransactions(dashboard?.recentTransactions || []);
     } catch (error) {
-      console.error('[BANKING DEBUG] Failed to load banking dashboard:', error);
+      console.error('Failed to load banking dashboard:', error);
       toast.error('Failed to load banking dashboard');
-      // Set default values on error
       setBankAccounts([]);
       setRecentTransactions([]);
     } finally {
@@ -840,3 +835,845 @@ function BankingDashboardContent() {
     </DashboardLayout>
   );
 }
+
+                  <TableHead>Description</TableHead>
+
+                  <TableHead>Amount</TableHead>
+
+                  <TableHead>Status</TableHead>
+
+                  <TableHead>Actions</TableHead>
+
+                </TableRow>
+
+              </TableHeader>
+
+              <TableBody>
+
+                {(recentTransactions || []).map((transaction) => (
+
+                  <TableRow key={transaction.id}>
+
+                    <TableCell>
+
+                      {formatDate(transaction.transactionDate)}
+
+                    </TableCell>
+
+                    <TableCell>
+
+                      <div className="flex items-center space-x-2">
+
+                        {getTransactionIcon(transaction.transactionType)}
+
+                        <span>{getTransactionTypeLabel(transaction.transactionType)}</span>
+
+                      </div>
+
+                    </TableCell>
+
+                    <TableCell>
+
+                      <div className="max-w-xs truncate">
+
+                        {transaction.description}
+
+                      </div>
+
+                      {transaction.counterpartyName && (
+
+                        <div className="text-sm text-muted-foreground">
+
+                          {transaction.counterpartyName}
+
+                        </div>
+
+                      )}
+
+                    </TableCell>
+
+                    <TableCell>
+
+                      <div className={`font-medium ${
+
+                        transaction.transactionType === TransactionType.DEPOSIT ||
+
+                        transaction.transactionType === TransactionType.TRANSFER_IN ||
+
+                        transaction.transactionType === TransactionType.REFUND ||
+
+                        transaction.transactionType === TransactionType.INTEREST
+
+                          ? 'text-green-600'
+
+                          : 'text-red-600'
+
+                      }`}>
+
+                        {transaction.transactionType === TransactionType.DEPOSIT ||
+
+                         transaction.transactionType === TransactionType.TRANSFER_IN ||
+
+                         transaction.transactionType === TransactionType.REFUND ||
+
+                         transaction.transactionType === TransactionType.INTEREST
+
+                          ? '+'
+
+                          : '-'
+
+                        }{formatCurrency(transaction.baseAmount)}
+
+                      </div>
+
+                    </TableCell>
+
+                    <TableCell>
+
+                      {getStatusBadge(transaction.status)}
+
+                    </TableCell>
+
+                    <TableCell>
+
+                      <Button
+
+                        variant="outline"
+
+                        size="sm"
+
+                        onClick={() => router.push(`/banking/transactions/${transaction.id}`)}
+
+                      >
+
+                      </Button>
+
+                    </TableCell>
+
+                  </TableRow>
+
+                ))}
+
+              </TableBody>
+
+            </Table>
+
+          </CardContent>
+
+        </Card>
+
+
+
+        {/* Create Bank Account Modal */}
+
+        <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+
+          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+
+            <DialogHeader>
+
+              <DialogTitle>Add Bank Account</DialogTitle>
+
+              <DialogDescription>
+
+                Create a new bank account to track your finances.
+
+              </DialogDescription>
+
+            </DialogHeader>
+
+
+
+            <div className="grid gap-4 py-4">
+
+              <div className="grid grid-cols-2 gap-4">
+
+                <div className="space-y-2">
+
+                  <Label htmlFor="accountName">Account Name *</Label>
+
+                  <Input
+
+                    id="accountName"
+
+                    value={formData.accountName}
+
+                    onChange={(e) => setFormData(prev => ({ ...prev, accountName: e.target.value }))}
+
+                    placeholder="e.g., Main Business Account"
+
+                  />
+
+                </div>
+
+                <div className="space-y-2">
+
+                  <Label htmlFor="accountNumber">Account Number *</Label>
+
+                  <Input
+
+                    id="accountNumber"
+
+                    value={formData.accountNumber}
+
+                    onChange={(e) => setFormData(prev => ({ ...prev, accountNumber: e.target.value }))}
+
+                    placeholder="Account number"
+
+                  />
+
+                </div>
+
+              </div>
+
+
+
+              <div className="grid grid-cols-2 gap-4">
+
+                <div className="space-y-2">
+
+                  <Label htmlFor="bankName">Bank Name *</Label>
+
+                  <Input
+
+                    id="bankName"
+
+                    value={formData.bankName}
+
+                    onChange={(e) => setFormData(prev => ({ ...prev, bankName: e.target.value }))}
+
+                    placeholder="e.g., Chase Bank"
+
+                  />
+
+                </div>
+
+                <div className="space-y-2">
+
+                  <Label htmlFor="routingNumber">Routing Number</Label>
+
+                  <Input
+
+                    id="routingNumber"
+
+                    value={formData.routingNumber}
+
+                    onChange={(e) => setFormData(prev => ({ ...prev, routingNumber: e.target.value }))}
+
+                    placeholder="9-digit routing number"
+
+                  />
+
+                </div>
+
+              </div>
+
+
+
+              <div className="grid grid-cols-2 gap-4">
+
+                <div className="space-y-2">
+
+                  <Label htmlFor="accountType">Account Type *</Label>
+
+                  <Select
+
+                    value={formData.accountType}
+
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, accountType: value as BankAccountType }))}
+
+                  >
+
+                    <SelectTrigger>
+
+                      <SelectValue />
+
+                    </SelectTrigger>
+
+                    <SelectContent>
+
+                      <SelectItem value={BankAccountType.CHECKING}>Checking</SelectItem>
+
+                      <SelectItem value={BankAccountType.SAVINGS}>Savings</SelectItem>
+
+                      <SelectItem value={BankAccountType.BUSINESS}>Business</SelectItem>
+
+                      <SelectItem value={BankAccountType.CREDIT_LINE}>Credit Line</SelectItem>
+
+                      <SelectItem value={BankAccountType.MONEY_MARKET}>Money Market</SelectItem>
+
+                    </SelectContent>
+
+                  </Select>
+
+                </div>
+
+                <div className="space-y-2">
+
+                  <Label htmlFor="currency">Currency</Label>
+
+                  <Select
+
+                    value={formData.currency}
+
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}
+
+                  >
+
+                    <SelectTrigger>
+
+                      <SelectValue />
+
+                    </SelectTrigger>
+
+                    <SelectContent>
+
+                      <SelectItem value="USD">USD</SelectItem>
+
+                      <SelectItem value="EUR">EUR</SelectItem>
+
+                      <SelectItem value="GBP">GBP</SelectItem>
+
+                      <SelectItem value="CAD">CAD</SelectItem>
+
+                    </SelectContent>
+
+                  </Select>
+
+                </div>
+
+              </div>
+
+
+
+              <div className="grid grid-cols-3 gap-4">
+
+                <div className="space-y-2">
+
+                  <Label htmlFor="currentBalance">Current Balance</Label>
+
+                  <Input
+
+                    id="currentBalance"
+
+                    type="number"
+
+                    step="0.01"
+
+                    value={formData.currentBalance}
+
+                    onChange={(e) => setFormData(prev => ({ ...prev, currentBalance: parseFloat(e.target.value) || 0 }))}
+
+                    placeholder="0.00"
+
+                  />
+
+                </div>
+
+                <div className="space-y-2">
+
+                  <Label htmlFor="availableBalance">Available Balance</Label>
+
+                  <Input
+
+                    id="availableBalance"
+
+                    type="number"
+
+                    step="0.01"
+
+                    value={formData.availableBalance}
+
+                    onChange={(e) => setFormData(prev => ({ ...prev, availableBalance: parseFloat(e.target.value) || 0 }))}
+
+                    placeholder="0.00"
+
+                  />
+
+                </div>
+
+                <div className="space-y-2">
+
+                  <Label htmlFor="pendingBalance">Pending Balance</Label>
+
+                  <Input
+
+                    id="pendingBalance"
+
+                    type="number"
+
+                    step="0.01"
+
+                    value={formData.pendingBalance}
+
+                    onChange={(e) => setFormData(prev => ({ ...prev, pendingBalance: parseFloat(e.target.value) || 0 }))}
+
+                    placeholder="0.00"
+
+                  />
+
+                </div>
+
+              </div>
+
+
+
+              <div className="space-y-2">
+
+                <Label htmlFor="description">Description</Label>
+
+                <Textarea
+
+                  id="description"
+
+                  value={formData.description}
+
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+
+                  placeholder="Additional notes about this account"
+
+                  rows={3}
+
+                />
+
+              </div>
+
+
+
+              <div className="flex items-center space-x-4">
+
+                <div className="flex items-center space-x-2">
+
+                  <input
+
+                    type="checkbox"
+
+                    id="isPrimary"
+
+                    checked={formData.isPrimary}
+
+                    onChange={(e) => setFormData(prev => ({ ...prev, isPrimary: e.target.checked }))}
+
+                    className="rounded"
+
+                  />
+
+                  <Label htmlFor="isPrimary">Primary Account</Label>
+
+                </div>
+
+                <div className="flex items-center space-x-2">
+
+                  <input
+
+                    type="checkbox"
+
+                    id="supportsOnlineBanking"
+
+                    checked={formData.supportsOnlineBanking}
+
+                    onChange={(e) => setFormData(prev => ({ ...prev, supportsOnlineBanking: e.target.checked }))}
+
+                    className="rounded"
+
+                  />
+
+                  <Label htmlFor="supportsOnlineBanking">Supports Online Banking</Label>
+
+                </div>
+
+              </div>
+
+            </div>
+
+
+
+            <DialogFooter>
+
+              <Button
+
+                variant="outline"
+
+                onClick={() => setShowCreateModal(false)}
+
+                disabled={submitting}
+
+              >
+
+                Cancel
+
+              </Button>
+
+              <Button onClick={handleCreateAccount} disabled={submitting}>
+
+                {submitting ? 'Creating...' : 'Create Account'}
+
+              </Button>
+
+            </DialogFooter>
+
+          </DialogContent>
+
+        </Dialog>
+
+
+
+        {/* View Bank Account Modal */}
+
+        <Dialog open={!!viewingAccount} onOpenChange={() => setViewingAccount(null)}>
+
+          <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+
+            <DialogHeader className="flex-shrink-0">
+
+              <DialogTitle className="flex items-center gap-2">
+
+                <Banknote className="h-5 w-5" />
+
+                Bank Account Details
+
+              </DialogTitle>
+
+              <DialogDescription>
+
+                Complete information about the bank account
+
+              </DialogDescription>
+
+            </DialogHeader>
+
+
+
+            {viewingAccount && (
+
+              <div className="flex-1 overflow-y-auto pr-2">
+
+                <div className="space-y-6">
+
+                  {/* Basic Information */}
+
+                  <div className="grid grid-cols-2 gap-4">
+
+                    <div>
+
+                      <Label className="text-sm font-medium text-gray-600">Account Name</Label>
+
+                      <p className="text-lg font-semibold">{viewingAccount.accountName || 'Unnamed Account'}</p>
+
+                    </div>
+
+                    <div>
+
+                      <Label className="text-sm font-medium text-gray-600">Bank Name</Label>
+
+                      <p className="text-lg font-semibold">{viewingAccount.bankName || 'Unknown Bank'}</p>
+
+                    </div>
+
+                  </div>
+
+
+
+                  <div className="grid grid-cols-2 gap-4">
+
+                    <div>
+
+                      <Label className="text-sm font-medium text-gray-600">Account Number</Label>
+
+                      <p className="text-lg font-mono">****{viewingAccount.accountNumber?.slice(-4) || 'N/A'}</p>
+
+                    </div>
+
+                    <div>
+
+                      <Label className="text-sm font-medium text-gray-600">Account Type</Label>
+
+                      <div className="mt-1">
+
+                        <Badge variant="outline">{getAccountTypeLabel(viewingAccount.accountType)}</Badge>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+
+
+                  {viewingAccount.routingNumber && (
+
+                    <div>
+
+                      <Label className="text-sm font-medium text-gray-600">Routing Number</Label>
+
+                      <p className="text-lg font-mono">{viewingAccount.routingNumber}</p>
+
+                    </div>
+
+                  )}
+
+
+
+                  {viewingAccount.bankCode && (
+
+                    <div>
+
+                      <Label className="text-sm font-medium text-gray-600">Bank Code</Label>
+
+                      <p className="text-lg font-mono">{viewingAccount.bankCode}</p>
+
+                    </div>
+
+                  )}
+
+
+
+                  {/* Balance Information */}
+
+                  <div className="border-t pt-4">
+
+                    <h3 className="text-lg font-semibold mb-4">Balance Information</h3>
+
+                    <div className="grid grid-cols-3 gap-4">
+
+                      <div>
+
+                        <Label className="text-sm font-medium text-gray-600">Current Balance</Label>
+
+                        <p className="text-xl font-bold text-green-600">
+
+                          {formatCurrency(viewingAccount.currentBalance || 0)}
+
+                        </p>
+
+                      </div>
+
+                      <div>
+
+                        <Label className="text-sm font-medium text-gray-600">Available Balance</Label>
+
+                        <p className="text-xl font-bold text-blue-600">
+
+                          {formatCurrency(viewingAccount.availableBalance || 0)}
+
+                        </p>
+
+                      </div>
+
+                      <div>
+
+                        <Label className="text-sm font-medium text-gray-600">Pending Balance</Label>
+
+                        <p className="text-xl font-bold text-orange-600">
+
+                          {formatCurrency(viewingAccount.pendingBalance || 0)}
+
+                        </p>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+
+
+                  {/* Account Settings */}
+
+                  <div className="border-t pt-4">
+
+                    <h3 className="text-lg font-semibold mb-4">Account Settings</h3>
+
+                    <div className="grid grid-cols-2 gap-4">
+
+                      <div>
+
+                        <Label className="text-sm font-medium text-gray-600">Currency</Label>
+
+                        <p className="text-lg">{viewingAccount.currency || 'USD'}</p>
+
+                      </div>
+
+                      <div>
+
+                        <Label className="text-sm font-medium text-gray-600">Status</Label>
+
+                        <div className="mt-1">
+
+                          <Badge variant={viewingAccount.isActive ? "default" : "secondary"}>
+
+                            {viewingAccount.isActive ? 'Active' : 'Inactive'}
+
+                          </Badge>
+
+                        </div>
+
+                      </div>
+
+                    </div>
+
+
+
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+
+                      <div>
+
+                        <Label className="text-sm font-medium text-gray-600">Primary Account</Label>
+
+                        <div className="mt-1">
+
+                          <Badge variant={viewingAccount.isPrimary ? "default" : "outline"}>
+
+                            {viewingAccount.isPrimary ? 'Yes' : 'No'}
+
+                          </Badge>
+
+                        </div>
+
+                      </div>
+
+                      <div>
+
+                        <Label className="text-sm font-medium text-gray-600">Online Banking</Label>
+
+                        <div className="mt-1">
+
+                          <Badge variant={viewingAccount.supportsOnlineBanking ? "default" : "outline"}>
+
+                            {viewingAccount.supportsOnlineBanking ? 'Supported' : 'Not Supported'}
+
+                          </Badge>
+
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+
+
+                  {/* Description */}
+
+                  {viewingAccount.description && (
+
+                    <div className="border-t pt-4">
+
+                      <Label className="text-sm font-medium text-gray-600">Description</Label>
+
+                      <p className="text-gray-900 mt-1">{viewingAccount.description}</p>
+
+                    </div>
+
+                  )}
+
+
+
+                  {/* Tags */}
+
+                  {viewingAccount.tags && viewingAccount.tags.length > 0 && (
+
+                    <div className="border-t pt-4">
+
+                      <Label className="text-sm font-medium text-gray-600">Tags</Label>
+
+                      <div className="flex flex-wrap gap-2 mt-2">
+
+                        {viewingAccount.tags.map((tag, index) => (
+
+                          <Badge key={index} variant="outline">{tag}</Badge>
+
+                        ))}
+
+                      </div>
+
+                    </div>
+
+                  )}
+
+
+
+                  {/* Metadata */}
+
+                  <div className="border-t pt-4">
+
+                    <h3 className="text-lg font-semibold mb-4">Account Information</h3>
+
+                    <div className="grid grid-cols-2 gap-4">
+
+                      <div>
+
+                        <Label className="text-sm font-medium text-gray-600">Account ID</Label>
+
+                        <p className="text-sm font-mono text-gray-500">{viewingAccount.id}</p>
+
+                      </div>
+
+                      <div>
+
+                        <Label className="text-sm font-medium text-gray-600">Created</Label>
+
+                        <p className="text-sm text-gray-500">{formatDate(viewingAccount.createdAt)}</p>
+
+                      </div>
+
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+
+                      <div>
+
+                        <Label className="text-sm font-medium text-gray-600">Last Updated</Label>
+
+                        <p className="text-sm text-gray-500">{formatDate(viewingAccount.updatedAt)}</p>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            )}
+
+
+
+            <DialogFooter className="flex-shrink-0">
+
+              <Button variant="outline" onClick={() => setViewingAccount(null)}>
+
+                Close
+
+              </Button>
+
+              <Button onClick={() => {
+
+                setViewingAccount(null);
+
+                router.push('/banking/accounts');
+
+              }}>
+
+                Manage Account
+
+              </Button>
+
+            </DialogFooter>
+
+          </DialogContent>
+
+        </Dialog>
+
+      </div>
+
+    </DashboardLayout>
+
+  );
+
+}
+
+

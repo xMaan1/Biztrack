@@ -107,12 +107,10 @@ function BankAccountsContent() {
   const loadBankAccounts = async () => {
     try {
       setLoading(true);
-      console.log('[BANKING DEBUG] Loading bank accounts...');
-      const accounts = await bankingService.getBankAccounts();
-      console.log('[BANKING DEBUG] Loaded accounts:', accounts);
+      const accounts = await bankingService.getBankAccounts(true);
       setBankAccounts(accounts);
     } catch (error) {
-      console.error('[BANKING DEBUG] Failed to load bank accounts:', error);
+      console.error('Failed to load bank accounts:', error);
       toast.error('Failed to load bank accounts');
     } finally {
       setLoading(false);
@@ -122,17 +120,13 @@ function BankAccountsContent() {
   const handleCreateAccount = async () => {
     try {
       setIsSubmitting(true);
-      console.log('[BANKING DEBUG] Creating account with form data:', formData);
-      
       const createdAccount = await bankingService.createBankAccount(formData);
-      console.log('[BANKING DEBUG] Created account:', createdAccount);
-      
       toast.success('Bank account created successfully');
       setIsCreateModalOpen(false);
       resetForm();
       loadBankAccounts();
     } catch (error) {
-      console.error('[BANKING DEBUG] Failed to create bank account:', error);
+      console.error('Failed to create bank account:', error);
       toast.error('Failed to create bank account');
     } finally {
       setIsSubmitting(false);

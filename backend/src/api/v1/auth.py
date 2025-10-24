@@ -10,16 +10,16 @@ from typing import Optional
 import os
 
 from ...models.unified_models import (
-    LoginCredentials, AuthResponse, User, UserCreate, RefreshTokenRequest, 
+    LoginCredentials, AuthResponse, User, UserCreate, UserUpdate, RefreshTokenRequest, 
     RefreshTokenResponse, TenantSelectionRequest, TenantSelectionResponse, TenantInfo
 )
-from ...config.database import get_db, get_user_by_email, get_user_by_username, create_user, get_user_tenants
+from ...config.database import get_db, get_user_by_email, get_user_by_username, create_user, get_user_tenants, get_user_by_id, update_user
 from ...config.core_models import PasswordResetToken
 from ...core.auth import (
     verify_password, get_password_hash, create_access_token, create_refresh_token,
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
-from ...api.dependencies import get_current_user
+from ...api.dependencies import get_current_user, get_tenant_context
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -242,6 +242,82 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
         lastName=db_user.lastName,
         userRole=db_user.userRole,
         avatar=db_user.avatar,
+        permissions=[]
+    )
+
+@router.put("/users/{user_id}", response_model=User)
+async def update_user_info(
+    user_id: str,
+    user_data: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context)
+):
+    """Update user information"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info(f"Update user request - User ID: {user_id}, Current User ID: {current_user.id}, Current User Role: {current_user.userRole}, Tenant Context: {tenant_context['tenant_id'] if tenant_context else 'None'}")
+    
+    # Check if user exists
+    user = get_user_by_id(user_id, db)
+    if not user:
+        logger.error(f"User not found: {user_id}")
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    logger.info(f"Target user found - User ID: {user.id}, User Role: {user.userRole}")
+    
+    # Check if user is trying to update themselves or has appropriate permissions
+    if str(current_user.id) != user_id:
+        logger.info(f"User is updating someone else - checking permissions")
+        
+        # If tenant context is available, check if target user belongs to the same tenant
+        if tenant_context:
+            from ...config.database import get_user_tenants
+            user_tenants = get_user_tenants(str(user.id), db)
+            user_tenant_ids = [str(tu.tenant_id) for tu in user_tenants]
+            
+            if tenant_context['tenant_id'] not in user_tenant_ids:
+                logger.error(f"Tenant mismatch - Current tenant: {tenant_context['tenant_id']}, Target user tenants: {user_tenant_ids}")
+                raise HTTPException(status_code=403, detail="Not authorized to update this user")
+            
+            logger.info(f"Same tenant confirmed - allowing update")
+        else:
+            # Fallback to old logic if no tenant context
+            if current_user.tenant_id != user.tenant_id:
+                logger.error(f"Tenant mismatch - Current user tenant: {current_user.tenant_id}, Target user tenant: {user.tenant_id}")
+                raise HTTPException(status_code=403, detail="Not authorized to update this user")
+            
+            logger.info(f"Same tenant confirmed - allowing update")
+    else:
+        logger.info(f"User is updating themselves - allowing update")
+    
+    # Check if email is unique (if being updated)
+    if user_data.email and user_data.email != user.email:
+        existing_user = get_user_by_email(user_data.email, db)
+        if existing_user and str(existing_user.id) != user_id:
+            raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Check if username is unique (if being updated)
+    if user_data.userName and user_data.userName != user.userName:
+        existing_user = get_user_by_username(user_data.userName, db)
+        if existing_user and str(existing_user.id) != user_id:
+            raise HTTPException(status_code=400, detail="Username already taken")
+    
+    # Update user
+    update_dict = user_data.dict(exclude_unset=True)
+    logger.info(f"Updating user with data: {update_dict}")
+    updated_user = update_user(user_id, update_dict, db)
+    logger.info(f"User updated successfully: {updated_user.id}")
+    
+    return User(
+        userId=str(updated_user.id),
+        userName=updated_user.userName,
+        email=updated_user.email,
+        firstName=updated_user.firstName,
+        lastName=updated_user.lastName,
+        userRole=updated_user.userRole,
+        avatar=updated_user.avatar,
         permissions=[]
     )
 

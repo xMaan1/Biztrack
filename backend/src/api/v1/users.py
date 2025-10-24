@@ -105,51 +105,6 @@ async def create_new_user(
         permissions=[]
     )
 
-@router.put("/{user_id}", response_model=User, dependencies=[Depends(require_super_admin)])
-async def update_user(
-    user_id: str,
-    user_data: UserUpdate,
-    current_user = Depends(get_current_user),
-    db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
-):
-    """Update a user"""
-    # Check if user exists
-    user = get_user_by_id(user_id, db)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    # Check tenant access if tenant context is provided
-    if tenant_context and str(user.tenant_id) != tenant_context["tenant_id"]:
-        raise HTTPException(status_code=403, detail="Access denied to this user")
-    
-    # Check permissions (admin or self)
-    if current_user.userRole != "super_admin" and str(current_user.id) != user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You can only update your own profile"
-        )
-    
-    # Update user
-    update_dict = user_data.dict(exclude_unset=True)
-    for key, value in update_dict.items():
-        if hasattr(user, key) and value is not None:
-            setattr(user, key, value)
-    
-    db.commit()
-    db.refresh(user)
-    
-    return User(
-        userId=str(user.id),
-        userName=user.userName,
-        email=user.email,
-        firstName=user.firstName,
-        lastName=user.lastName,
-        userRole=user.userRole,
-        avatar=user.avatar,
-        permissions=[]
-    )
-
 @router.delete("/{user_id}", dependencies=[Depends(require_super_admin)])
 async def delete_user(
     user_id: str,

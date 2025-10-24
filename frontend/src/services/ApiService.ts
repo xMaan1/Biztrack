@@ -315,7 +315,7 @@ export class ApiService {
   }
 
   async updateUser(id: string, data: any) {
-    return this.put(`/users/${id}`, data);
+    return this.put(`/auth/users/${id}`, data);
   }
 
   async deleteUser(id: string) {

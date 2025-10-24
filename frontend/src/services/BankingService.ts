@@ -23,34 +23,15 @@ class BankingService {
 
   // Bank Account Methods
   async createBankAccount(account: BankAccountCreate): Promise<BankAccount> {
-    console.log('[BANKING DEBUG] Creating bank account with data:', account);
-    
     const response = await apiService.post<any>(`${this.baseUrl}/accounts`, account);
-    console.log('[BANKING DEBUG] Backend response:', response);
-    
     const result = response.bankAccount;
-    console.log('[BANKING DEBUG] Returning account:', result);
     return result;
   }
 
   async getBankAccounts(activeOnly: boolean = false): Promise<BankAccount[]> {
-    console.log('[BANKING DEBUG] Getting bank accounts, activeOnly:', activeOnly);
-    
     const params = activeOnly ? '?active_only=true' : '';
     const response = await apiService.get<any>(`${this.baseUrl}/accounts${params}`);
-    
-    console.log('[BANKING DEBUG] Raw backend response:', response);
-    console.log('[BANKING DEBUG] Response keys:', Object.keys(response || {}));
-    
     const accounts = response?.bankAccounts || [];
-    console.log('[BANKING DEBUG] Extracted accounts:', accounts);
-    console.log('[BANKING DEBUG] Number of accounts:', accounts.length);
-    
-    if (accounts.length > 0) {
-      console.log('[BANKING DEBUG] First account structure:', accounts[0]);
-      console.log('[BANKING DEBUG] First account keys:', Object.keys(accounts[0] || {}));
-    }
-    
     return accounts;
   }
 

@@ -22,7 +22,22 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '../../components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '../../components/ui/dialog';
+import { Label } from '../../components/ui/label';
 import { Alert, AlertDescription } from '../../components/ui/alert';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select';
 import {
   Search,
   MoreVertical,
@@ -49,6 +64,15 @@ export default function TeamPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<User | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    userName: '',
+    userRole: '',
+  });
 
   useEffect(() => {
     fetchTeamMembers();
@@ -165,6 +189,49 @@ export default function TeamPage() {
 
   const handleAddMemberSuccess = () => {
     fetchTeamMembers();
+  };
+
+  const openEditDialog = (member: User) => {
+    setSelectedMember(member);
+    setEditFormData({
+      firstName: member.firstName || '',
+      lastName: member.lastName || '',
+      email: member.email || '',
+      userName: member.userName || '',
+      userRole: member.userRole || '',
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedMember) return;
+
+    try {
+      setLoading(true);
+      const memberId = selectedMember.userId || selectedMember.id;
+      
+      if (!memberId) {
+        setError('Member ID not found');
+        return;
+      }
+
+      await apiService.updateUser(memberId, editFormData);
+      setIsEditDialogOpen(false);
+      setSelectedMember(null);
+      fetchTeamMembers();
+    } catch (err) {
+      setError('Failed to update member');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditInputChange = (field: string, value: string) => {
+    setEditFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   const getCurrentTenantId = () => {
@@ -385,7 +452,7 @@ export default function TeamPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openEditDialog(member)}>
                           <Edit className="h-4 w-4 mr-2" />
                           Edit Member
                         </DropdownMenuItem>
@@ -471,6 +538,95 @@ export default function TeamPage() {
             </CardContent>
           </Card>
         )}
+
+        {/* Edit Member Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Team Member</DialogTitle>
+              <DialogDescription>
+                Update information for {selectedMember?.firstName} {selectedMember?.lastName}
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleEditSubmit} className="space-y-6 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-firstName">First Name *</Label>
+                  <Input
+                    id="edit-firstName"
+                    value={editFormData.firstName}
+                    onChange={(e) => handleEditInputChange('firstName', e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-lastName">Last Name *</Label>
+                  <Input
+                    id="edit-lastName"
+                    value={editFormData.lastName}
+                    onChange={(e) => handleEditInputChange('lastName', e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-email">Email *</Label>
+                  <Input
+                    id="edit-email"
+                    type="email"
+                    value={editFormData.email}
+                    onChange={(e) => handleEditInputChange('email', e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-userName">Username *</Label>
+                  <Input
+                    id="edit-userName"
+                    value={editFormData.userName}
+                    onChange={(e) => handleEditInputChange('userName', e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-userRole">Role *</Label>
+                  <Select
+                    value={editFormData.userRole}
+                    onValueChange={(value) => handleEditInputChange('userRole', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="team_member">Team Member</SelectItem>
+                      <SelectItem value="project_manager">Project Manager</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="super_admin">Super Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={loading}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    'Update Member'
+                  )}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
 
         {/* Add Member Modal */}
         <AddMemberModal
