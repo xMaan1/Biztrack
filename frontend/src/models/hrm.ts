@@ -128,6 +128,8 @@ export interface Employee {
   skills: string[];
   certifications: string[];
   notes?: string;
+  resume_url?: string;
+  attachments?: string[];
   tenantId: string;
   createdBy: string;
   createdAt: string;
@@ -154,6 +156,8 @@ export interface EmployeeCreate {
   skills?: string[];
   certifications?: string[];
   notes?: string;
+  resume_url?: string;
+  attachments?: string[];
 }
 
 export interface EmployeeUpdate {
@@ -176,6 +180,8 @@ export interface EmployeeUpdate {
   skills?: string[];
   certifications?: string[];
   notes?: string;
+  resume_url?: string;
+  attachments?: string[];
 }
 
 export interface JobPosting {

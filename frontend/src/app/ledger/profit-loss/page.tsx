@@ -76,8 +76,9 @@ function ProfitLossDashboardContent() {
 💰 *Summary:*
 • Total Sales: ${formatCurrency(dashboardData.summary.total_sales)}
 • Total Purchases: ${formatCurrency(dashboardData.summary.total_purchases)}
-• Gross Profit: ${formatCurrency(dashboardData.summary.gross_profit)}
+• Total Investments: ${formatCurrency(dashboardData.summary.total_investments)}
 • Net Profit: ${formatCurrency(dashboardData.summary.net_profit)}
+• Profit After Investment: ${formatCurrency(dashboardData.summary.profit_after_investment)}
 
 📈 *Sales:*
 • Invoices: ${dashboardData.sales.total_invoices}
@@ -177,7 +178,7 @@ function ProfitLossDashboardContent() {
 
         {dashboardData && (
           <>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
@@ -210,15 +211,15 @@ function ProfitLossDashboardContent() {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Gross Profit</CardTitle>
-                  <Calculator className="h-4 w-4 text-blue-600" />
+                  <CardTitle className="text-sm font-medium">Total Investments</CardTitle>
+                  <Calculator className="h-4 w-4 text-purple-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-2xl font-bold ${dashboardData.summary.gross_profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {formatCurrency(dashboardData.summary.gross_profit)}
+                  <div className="text-2xl font-bold text-purple-600">
+                    {formatCurrency(dashboardData.summary.total_investments)}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Sales - Purchases
+                    Capital invested
                   </p>
                 </CardContent>
               </Card>
@@ -226,14 +227,29 @@ function ProfitLossDashboardContent() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Net Profit</CardTitle>
-                  <Calculator className="h-4 w-4 text-emerald-600" />
+                  <Calculator className="h-4 w-4 text-blue-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-2xl font-bold ${dashboardData.summary.net_profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <div className={`text-2xl font-bold ${dashboardData.summary.net_profit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
                     {formatCurrency(dashboardData.summary.net_profit)}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Payments - Purchases
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Profit After Investment</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-emerald-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className={`text-2xl font-bold ${dashboardData.summary.profit_after_investment >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {formatCurrency(dashboardData.summary.profit_after_investment)}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Net Profit - Investments
                   </p>
                 </CardContent>
               </Card>

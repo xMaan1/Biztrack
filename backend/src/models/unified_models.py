@@ -1730,6 +1730,8 @@ class EmployeeBase(BaseModel):
     skills: List[str] = []
     certifications: List[str] = []
     notes: Optional[str] = None
+    resume_url: Optional[str] = None
+    attachments: List[str] = []
 
 class EmployeeCreate(EmployeeBase):
     pass
@@ -1754,6 +1756,8 @@ class EmployeeUpdate(BaseModel):
     skills: Optional[List[str]] = None
     certifications: Optional[List[str]] = None
     notes: Optional[str] = None
+    resume_url: Optional[str] = None
+    attachments: Optional[List[str]] = None
 
 class Employee(EmployeeBase):
     id: str

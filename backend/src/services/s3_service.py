@@ -120,6 +120,61 @@ class S3Service:
             logger.error(f"Error listing logos: {str(e)}")
             return []
 
+    def upload_file(self, file_content: bytes, tenant_id: str, folder: str, original_filename: str) -> dict:
+        """Upload any file to S3 and return file info"""
+        try:
+            file_extension = Path(original_filename).suffix.lower() if original_filename else ""
+            unique_filename = f"{uuid.uuid4().hex}{file_extension}"
+            
+            s3_key = f"{folder}/{tenant_id}/{unique_filename}"
+            
+            content_type = self._get_content_type_for_all_files(file_extension)
+            
+            self.s3_client.put_object(
+                Bucket=self.bucket_name,
+                Key=s3_key,
+                Body=file_content,
+                ContentType=content_type,
+                ACL='public-read'
+            )
+            
+            public_url = f"{self.public_url_base}/{s3_key}"
+            
+            logger.info(f"File uploaded successfully: {s3_key}")
+            
+            return {
+                "success": True,
+                "file_url": public_url,
+                "filename": unique_filename,
+                "s3_key": s3_key,
+                "original_filename": original_filename,
+                "content_type": content_type
+            }
+            
+        except ClientError as e:
+            logger.error(f"AWS S3 error uploading file: {str(e)}")
+            raise Exception(f"Failed to upload file: {str(e)}")
+        except Exception as e:
+            logger.error(f"Error uploading file: {str(e)}")
+            raise Exception(f"Failed to upload file: {str(e)}")
+    
+    def delete_file(self, s3_key: str) -> bool:
+        """Delete any file from S3"""
+        try:
+            self.s3_client.delete_object(
+                Bucket=self.bucket_name,
+                Key=s3_key
+            )
+            logger.info(f"File deleted successfully: {s3_key}")
+            return True
+            
+        except ClientError as e:
+            logger.error(f"AWS S3 error deleting file: {str(e)}")
+            return False
+        except Exception as e:
+            logger.error(f"Error deleting file: {str(e)}")
+            return False
+    
     def _get_content_type(self, file_extension: str) -> str:
         """Get content type based on file extension"""
         content_types = {
@@ -128,6 +183,24 @@ class S3Service:
             '.png': 'image/png',
             '.gif': 'image/gif',
             '.webp': 'image/webp'
+        }
+        return content_types.get(file_extension.lower(), 'application/octet-stream')
+    
+    def _get_content_type_for_all_files(self, file_extension: str) -> str:
+        """Get content type for all file types"""
+        content_types = {
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.png': 'image/png',
+            '.gif': 'image/gif',
+            '.webp': 'image/webp',
+            '.pdf': 'application/pdf',
+            '.doc': 'application/msword',
+            '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            '.xls': 'application/vnd.ms-excel',
+            '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            '.txt': 'text/plain',
+            '.csv': 'text/csv',
         }
         return content_types.get(file_extension.lower(), 'application/octet-stream')
 

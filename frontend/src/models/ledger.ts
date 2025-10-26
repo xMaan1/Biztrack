@@ -572,6 +572,8 @@ export interface ProfitLossSummary {
   net_profit: number;
   total_payments_received: number;
   inventory_value: number;
+  total_investments: number;
+  profit_after_investment: number;
 }
 
 export interface ProfitLossSales {

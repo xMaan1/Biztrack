@@ -23,7 +23,6 @@ import {
   Eye,
   Edit,
   Trash2,
-  Mail,
   CheckCircle,
   MoreVertical,
   Download,
@@ -31,6 +30,7 @@ import {
   FileText,
   Send,
   XCircle,
+  MessageCircle,
 } from 'lucide-react';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { Invoice } from '../../models/sales';
@@ -42,7 +42,6 @@ interface InvoiceListProps {
   loading: boolean;
   onEdit: (invoice: Invoice) => void;
   onDelete: (invoice: Invoice) => void;
-  onSend: (invoiceId: string) => void;
   onMarkAsPaid: (invoiceId: string) => void;
   onBulkSend?: (invoiceIds: string[]) => void;
   onBulkMarkAsPaid?: (invoiceIds: string[]) => void;
@@ -58,7 +57,6 @@ export function InvoiceList({
   loading,
   onEdit,
   onDelete,
-  onSend,
   onMarkAsPaid,
   onBulkSend,
   onBulkMarkAsPaid,
@@ -72,6 +70,23 @@ export function InvoiceList({
   const [downloading, setDownloading] = useState<string | null>(null);
   const [selectedInvoices, setSelectedInvoices] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState<string | null>(null);
+
+  const handleSendWhatsApp = (invoice: Invoice) => {
+    const invoiceMessage = `📄 *Invoice Details*
+
+*Invoice Number:* ${invoice.invoiceNumber}
+*Customer:* ${invoice.customerName}
+*Amount:* ${formatCurrency(invoice.total)}
+*Due Date:* ${InvoiceService.formatDate(invoice.dueDate)}
+*Status:* ${InvoiceService.getStatusLabel(invoice.status)}
+
+Please find the attached invoice for your review and payment.`;
+
+    const encodedMessage = encodeURIComponent(invoiceMessage);
+    const whatsappUrl = `https://web.whatsapp.com/send?text=${encodedMessage}`;
+    
+    window.open(whatsappUrl, '_blank');
+  };
 
   const handleDownload = async (invoiceId: string) => {
     try {
@@ -88,11 +103,9 @@ export function InvoiceList({
       document.body.removeChild(a);
       toast.success('Invoice downloaded successfully!');
     } catch (error: any) {
-      // Check if it's a customization error
       if (error.response?.status === 400) {
         let errorMessage = 'Error downloading invoice';
 
-        // Try to extract error message from different possible formats
         if (error.response?.data?.detail) {
           errorMessage = error.response.data.detail;
         } else if (error.response?.data?.message) {
@@ -101,7 +114,6 @@ export function InvoiceList({
           errorMessage = error.response.data;
         }
 
-        // Check if it's specifically a customization error
         if (errorMessage.includes('customization is required')) {
           toast.error('Please customize your invoice template first using the \'Customize Invoice\' button.', {
             duration: 5000,
@@ -418,18 +430,24 @@ export function InvoiceList({
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       {invoice.status === 'draft' && (
-                        <DropdownMenuItem onClick={() => onSend(invoice.id)}>
-                          <Mail className="h-4 w-4 mr-2" />
-                          Send Invoice
+                        <DropdownMenuItem onClick={() => handleSendWhatsApp(invoice)}>
+                          <MessageCircle className="h-4 w-4 mr-2" />
+                          Send via WhatsApp
                         </DropdownMenuItem>
                       )}
                       {invoice.status === 'sent' && (
-                        <DropdownMenuItem
-                          onClick={() => onMarkAsPaid(invoice.id)}
-                        >
-                          <CheckCircle className="h-4 w-4 mr-2" />
-                          Mark as Paid
-                        </DropdownMenuItem>
+                        <>
+                          <DropdownMenuItem
+                            onClick={() => onMarkAsPaid(invoice.id)}
+                          >
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Mark as Paid
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleSendWhatsApp(invoice)}>
+                            <MessageCircle className="h-4 w-4 mr-2" />
+                            Send Reminder via WhatsApp
+                          </DropdownMenuItem>
+                        </>
                       )}
                       <DropdownMenuItem
                         onClick={() => handleDownload(invoice.id)}

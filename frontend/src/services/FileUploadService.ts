@@ -98,6 +98,34 @@ class FileUploadService {
     return await response.json();
   }
 
+  async uploadEmployeeFile(file: File, category: 'resume' | 'attachment'): Promise<FileUploadResponse> {
+    const token = localStorage.getItem('auth_token');
+    const tenantId = localStorage.getItem('currentTenantId');
+
+    if (!token || !tenantId) {
+      throw new Error('Authentication required');
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_BASE_URL}file-upload/employee/${category}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'X-Tenant-ID': tenantId,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || `Failed to upload ${category}`);
+    }
+
+    return await response.json();
+  }
+
   getLogoUrl(fileUrl: string): string {
     // If it's already a full URL (S3), return as is
     if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {

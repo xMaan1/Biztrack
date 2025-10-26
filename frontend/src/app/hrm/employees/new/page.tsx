@@ -32,6 +32,7 @@ import { ArrowLeft, Save, X } from 'lucide-react';
 import Link from 'next/link';
 import { DashboardLayout } from '@/src/components/layout';
 import HRMService from '@/src/services/HRMService';
+import FileUploadService from '@/src/services/FileUploadService';
 import {
   EmployeeCreate,
   Department,
@@ -76,6 +77,8 @@ function NewEmployeeContent() {
 
   const [skillsInput, setSkillsInput] = useState('');
   const [certificationsInput, setCertificationsInput] = useState('');
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [attachments, setAttachments] = useState<File[]>([]);
 
   const handleInputChange = (field: keyof EmployeeCreate, value: string | number) => {
     setFormData(prev => ({
@@ -128,7 +131,37 @@ function NewEmployeeContent() {
 
     try {
       setLoading(true);
-      await HRMService.createEmployee(formData);
+      
+      let resumeUrl = '';
+      const attachmentUrls: string[] = [];
+      
+      if (resumeFile) {
+        toast.info('Uploading resume...');
+        const resumeResponse = await FileUploadService.uploadEmployeeFile(resumeFile, 'resume');
+        resumeUrl = resumeResponse.file_url;
+        toast.success('Resume uploaded successfully');
+      }
+      
+      if (attachments.length > 0) {
+        toast.info(`Uploading ${attachments.length} attachment(s)...`);
+        for (const attachment of attachments) {
+          try {
+            const attachmentResponse = await FileUploadService.uploadEmployeeFile(attachment, 'attachment');
+            attachmentUrls.push(attachmentResponse.file_url);
+          } catch (error) {
+            toast.error(`Failed to upload ${attachment.name}`);
+          }
+        }
+        toast.success('Attachments uploaded successfully');
+      }
+      
+      const employeeData = {
+        ...formData,
+        resume_url: resumeUrl || undefined,
+        attachments: attachmentUrls,
+      };
+      
+      await HRMService.createEmployee(employeeData);
       toast.success('Employee created successfully');
       router.push('/hrm/employees');
     } catch (error: any) {
@@ -137,6 +170,33 @@ function NewEmployeeContent() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleResumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('File size must be less than 10MB');
+        return;
+      }
+      setResumeFile(file);
+    }
+  };
+
+  const handleAttachmentsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const newAttachments = Array.from(files);
+      const validFiles = newAttachments.filter(file => file.size <= 10 * 1024 * 1024);
+      if (validFiles.length !== newAttachments.length) {
+        toast.error('Some files exceed 10MB limit');
+      }
+      setAttachments(prev => [...prev, ...validFiles]);
+    }
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleCancel = () => {
@@ -466,6 +526,70 @@ function NewEmployeeContent() {
                   placeholder="Enter any additional notes"
                   rows={4}
                 />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Resume and Attachments */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Documents</CardTitle>
+              <CardDescription>Upload resume and additional attachments</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="resume">Resume (Optional)</Label>
+                <Input
+                  id="resume"
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  onChange={handleResumeChange}
+                  disabled={loading}
+                />
+                {resumeFile && (
+                  <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
+                    <span>Selected: {resumeFile.name}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setResumeFile(null)}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
+                <p className="text-xs text-gray-500">PDF, DOC, or DOCX files up to 10MB</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="attachments">Additional Attachments (Optional)</Label>
+                <Input
+                  id="attachments"
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  multiple
+                  onChange={handleAttachmentsChange}
+                  disabled={loading}
+                />
+                {attachments.length > 0 && (
+                  <div className="mt-2 space-y-2">
+                    {attachments.map((file, index) => (
+                      <div key={index} className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                        <span>{file.name}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeAttachment(index)}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <p className="text-xs text-gray-500">PDF, DOC, or DOCX files up to 10MB each</p>
               </div>
             </CardContent>
           </Card>

@@ -30,6 +30,8 @@ class Employee(Base):
     certifications = Column(JSON, default=[])
     employeeType = Column("employeetype", String, default="full_time")
     employmentStatus = Column("employmentstatus", String, default="active")
+    resume_url = Column(String, nullable=True)
+    attachments = Column(JSON, default=[])
     
     # Relationships
     tenant = relationship("Tenant", back_populates="employees")

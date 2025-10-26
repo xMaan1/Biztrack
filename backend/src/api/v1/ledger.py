@@ -19,6 +19,7 @@ from ...models.unified_models import (
 from ...config.ledger_models import (
     TransactionType, TransactionStatus, AccountType, AccountCategory, ChartOfAccounts
 )
+from ...config.investment_models import Investment, InvestmentStatus
 from ...config.ledger_crud import (
     # Chart of Accounts
     create_chart_of_accounts, get_chart_of_accounts_by_id, get_all_chart_of_accounts,
@@ -881,6 +882,16 @@ async def get_profit_loss_dashboard(
         gross_profit = total_sales - total_purchases
         net_profit = total_payments_received - total_purchases
         
+        # Total Investments
+        total_investments_query = db.query(Investment).filter(
+            Investment.tenant_id == tenant_id,
+            Investment.status == InvestmentStatus.COMPLETED
+        )
+        total_investments = total_investments_query.with_entities(func.sum(Investment.amount)).scalar() or 0
+        
+        # Real Profit After Investment
+        real_profit = net_profit - total_investments
+        
         # Quotes/Contracts
         quotes_query = db.query(Quote).filter(
             Quote.tenant_id == tenant_id,
@@ -936,7 +947,9 @@ async def get_profit_loss_dashboard(
                 "gross_profit": gross_profit,
                 "net_profit": net_profit,
                 "total_payments_received": total_payments_received,
-                "inventory_value": total_inventory_value
+                "inventory_value": total_inventory_value,
+                "total_investments": total_investments,
+                "profit_after_investment": real_profit
             },
             "sales": {
                 "total_invoices": total_invoices,

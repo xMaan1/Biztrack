@@ -110,6 +110,8 @@ async def get_hrm_employees(
                 skills=[],  # Not stored in current DB model
                 certifications=[],  # Not stored in current DB model
                 notes=db_employee.notes,
+                resume_url=db_employee.resume_url,
+                attachments=db_employee.attachments if db_employee.attachments else [],
                 tenant_id=str(db_employee.tenant_id),
                 createdBy="",  # Not stored in current DB model
                 createdAt=db_employee.createdAt.isoformat() if db_employee.createdAt else "",
@@ -150,7 +152,9 @@ async def create_hrm_employee(
             hireDate=datetime.strptime(employee_data.hireDate, "%Y-%m-%d").date(),
             salary=employee_data.salary,
             managerId=uuid.UUID(employee_data.managerId) if employee_data.managerId else None,
-            notes=employee_data.notes
+            notes=employee_data.notes,
+            resume_url=employee_data.resume_url,
+            attachments=employee_data.attachments if employee_data.attachments else []
         )
         
         db.add(db_employee)
@@ -179,6 +183,8 @@ async def create_hrm_employee(
             skills=employee_data.skills,
             certifications=employee_data.certifications,
             notes=employee_data.notes,
+            resume_url=employee_data.resume_url,
+            attachments=employee_data.attachments,
             tenant_id=str(db_employee.tenant_id),
             createdBy=str(current_user.id),
             createdAt=db_employee.createdAt.isoformat() if db_employee.createdAt else None,
@@ -248,6 +254,8 @@ async def update_hrm_employee(
             skills=[],  # Not stored in current DB model
             certifications=[],  # Not stored in current DB model
             notes=db_employee.notes,
+            resume_url=db_employee.resume_url,
+            attachments=db_employee.attachments if db_employee.attachments else [],
             tenant_id=str(db_employee.tenant_id),
             createdBy="",  # Not stored in current DB model
             createdAt=db_employee.createdAt.isoformat() if db_employee.createdAt else "",
