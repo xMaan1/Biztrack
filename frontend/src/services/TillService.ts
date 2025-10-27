@@ -1,4 +1,4 @@
-import { apiService } from './apiService';
+import { apiService } from './ApiService';
 import type {
   Till,
   TillCreate,
