@@ -120,7 +120,7 @@ function BankAccountsContent() {
   const handleCreateAccount = async () => {
     try {
       setIsSubmitting(true);
-      const createdAccount = await bankingService.createBankAccount(formData);
+      await bankingService.createBankAccount(formData);
       toast.success('Bank account created successfully');
       setIsCreateModalOpen(false);
       resetForm();

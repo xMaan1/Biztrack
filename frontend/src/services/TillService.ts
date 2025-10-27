@@ -4,7 +4,6 @@ import type {
   TillCreate,
   TillUpdate,
   TillResponse,
-  TillsResponse,
   TillTransaction,
   TillTransactionCreate,
   TillTransactionUpdate,

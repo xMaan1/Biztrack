@@ -42,6 +42,7 @@ interface InvoiceListProps {
   loading: boolean;
   onEdit: (invoice: Invoice) => void;
   onDelete: (invoice: Invoice) => void;
+  onSend?: (invoiceId: string) => Promise<void>;
   onMarkAsPaid: (invoiceId: string) => void;
   onBulkSend?: (invoiceIds: string[]) => void;
   onBulkMarkAsPaid?: (invoiceIds: string[]) => void;

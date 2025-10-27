@@ -35,6 +35,7 @@ import {
   LedgerTransactionResponse,
   BudgetResponse,
   TrialBalanceResponse,
+  TrialBalanceAccount,
   IncomeStatementResponse,
   AccountType,
   TransactionType,
@@ -485,7 +486,7 @@ function LedgerDashboardContent() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {Object.values(AccountType).map((type) => {
+                    {Object.values(AccountType).map((type: AccountType) => {
                       const count = getAccountTypeCount(type);
                       const total = chartOfAccounts?.length || 0;
                       const percentage =
@@ -493,7 +494,7 @@ function LedgerDashboardContent() {
 
                       return (
                         <div
-                          key={type}
+                          key={String(type)}
                           className="flex items-center justify-between"
                         >
                           <div className="flex items-center">
@@ -735,7 +736,7 @@ function LedgerDashboardContent() {
                         {formatCurrency(
                           Array.isArray(trialBalance.accounts)
                             ? trialBalance.accounts.reduce(
-                                (sum, acc) => sum + (acc.debit_balance || 0),
+                                (sum: number, acc: TrialBalanceAccount) => sum + (acc.debit_balance || 0),
                                 0,
                               )
                             : 0,
@@ -746,7 +747,7 @@ function LedgerDashboardContent() {
                         {formatCurrency(
                           Array.isArray(trialBalance.accounts)
                             ? trialBalance.accounts.reduce(
-                                (sum, acc) => sum + (acc.credit_balance || 0),
+                                (sum: number, acc: TrialBalanceAccount) => sum + (acc.credit_balance || 0),
                                 0,
                               )
                             : 0,

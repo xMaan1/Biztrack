@@ -10,7 +10,7 @@ import { Textarea } from '@/src/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/src/components/ui/select';
 import { Badge } from '@/src/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/src/components/ui/table';
-import { Plus, Eye, Edit, Trash2, DollarSign, Minus, TrendingUp } from 'lucide-react';
+import { Plus, Eye } from 'lucide-react';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { toast } from 'sonner';
 import { tillService } from '@/src/services/TillService';

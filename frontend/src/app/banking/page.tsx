@@ -62,7 +62,6 @@ import {
   TransactionStatus,
   BankAccountType,
   Till,
-  TillTransaction,
   getTransactionTypeLabel,
   getAccountTypeLabel,
 } from '@/src/models/banking';

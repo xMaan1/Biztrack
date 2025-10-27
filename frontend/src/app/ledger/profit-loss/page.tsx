@@ -74,26 +74,26 @@ function ProfitLossDashboardContent() {
     const message = `📊 *Profit/Loss Report - ${getProfitLossPeriodLabel(selectedPeriod)}*
     
 💰 *Summary:*
-• Total Sales: ${formatCurrency(dashboardData.summary.total_sales)}
-• Total Purchases: ${formatCurrency(dashboardData.summary.total_purchases)}
-• Total Investments: ${formatCurrency(dashboardData.summary.total_investments)}
-• Net Profit: ${formatCurrency(dashboardData.summary.net_profit)}
-• Profit After Investment: ${formatCurrency(dashboardData.summary.profit_after_investment)}
+• Total Sales: ${formatCurrency(dashboardData.summary?.total_sales || 0)}
+• Total Purchases: ${formatCurrency(dashboardData.summary?.total_purchases || 0)}
+• Total Investments: ${formatCurrency(dashboardData.summary?.total_investments || 0)}
+• Net Profit: ${formatCurrency(dashboardData.summary?.net_profit || 0)}
+• Profit After Investment: ${formatCurrency(dashboardData.summary?.profit_after_investment || 0)}
 
 📈 *Sales:*
-• Invoices: ${dashboardData.sales.total_invoices}
-• Paid: ${dashboardData.sales.paid_invoices}
-• Pending: ${dashboardData.sales.pending_invoices}
-• Overdue: ${dashboardData.sales.overdue_invoices}
+• Invoices: ${dashboardData.sales?.total_invoices || 0}
+• Paid: ${dashboardData.sales?.paid_invoices || 0}
+• Pending: ${dashboardData.sales?.pending_invoices || 0}
+• Overdue: ${dashboardData.sales?.overdue_invoices || 0}
 
 📦 *Purchases:*
-• Orders: ${dashboardData.purchases.total_purchase_orders}
-• Completed: ${dashboardData.purchases.completed_purchases}
-• Pending: ${dashboardData.purchases.pending_purchases}
+• Orders: ${dashboardData.purchases?.total_purchase_orders || 0}
+• Completed: ${dashboardData.purchases?.completed_purchases || 0}
+• Pending: ${dashboardData.purchases?.pending_purchases || 0}
 
 📊 *Inventory:*
-• Products: ${dashboardData.inventory.total_products}
-• Value: ${formatCurrency(dashboardData.inventory.total_inventory_value)}`;
+• Products: ${dashboardData.inventory?.total_products || 0}
+• Value: ${formatCurrency(dashboardData.inventory?.total_inventory_value || 0)}`;
 
     const encodedMessage = encodeURIComponent(message);
     window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
@@ -105,7 +105,7 @@ function ProfitLossDashboardContent() {
     
     const reportData = {
       reportPeriod: getProfitLossPeriodLabel(selectedPeriod),
-      dateRange: `${dashboardData.start_date} to ${dashboardData.end_date}`,
+      dateRange: `${dashboardData.start_date || 'N/A'} to ${dashboardData.end_date || 'N/A'}`,
       generatedAt: new Date().toISOString(),
       ...dashboardData
     };
@@ -120,17 +120,17 @@ function ProfitLossDashboardContent() {
     URL.revokeObjectURL(url);
   };
 
-  const chartData = dashboardData?.daily_breakdown.map(item => ({
+  const chartData = dashboardData?.daily_breakdown?.map((item: { date: string; revenue: number; expenses: number; net_income: number }) => ({
     date: new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-    sales: item.sales,
-    purchases: item.purchases,
-    profit: item.profit
+    sales: item.revenue,
+    purchases: item.expenses,
+    profit: item.net_income
   })) || [];
 
   const pieData = dashboardData ? [
-    { name: 'Sales', value: dashboardData.summary.total_sales, color: '#10b981' },
-    { name: 'Purchases', value: dashboardData.summary.total_purchases, color: '#ef4444' },
-    { name: 'Inventory', value: dashboardData.summary.inventory_value, color: '#3b82f6' }
+    { name: 'Sales', value: dashboardData.summary?.total_sales || 0, color: '#10b981' },
+    { name: 'Purchases', value: dashboardData.summary?.total_purchases || 0, color: '#ef4444' },
+    { name: 'Inventory', value: dashboardData.summary?.inventory_value || 0, color: '#3b82f6' }
   ] : [];
 
   if (loading || currencyLoading) {
@@ -186,10 +186,10 @@ function ProfitLossDashboardContent() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-green-600">
-                    {formatCurrency(dashboardData.summary.total_sales)}
+                    {formatCurrency(dashboardData.summary?.total_sales || 0)}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {dashboardData.sales.total_invoices} invoices
+                    {dashboardData.sales?.total_invoices || 0} invoices
                   </p>
                 </CardContent>
               </Card>
@@ -201,10 +201,10 @@ function ProfitLossDashboardContent() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-red-600">
-                    {formatCurrency(dashboardData.summary.total_purchases)}
+                    {formatCurrency(dashboardData.summary?.total_purchases || 0)}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {dashboardData.purchases.total_purchase_orders} orders
+                    {dashboardData.purchases?.total_purchase_orders || 0} orders
                   </p>
                 </CardContent>
               </Card>
@@ -216,7 +216,7 @@ function ProfitLossDashboardContent() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-purple-600">
-                    {formatCurrency(dashboardData.summary.total_investments)}
+                    {formatCurrency(dashboardData.summary?.total_investments || 0)}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Capital invested
@@ -230,8 +230,8 @@ function ProfitLossDashboardContent() {
                   <Calculator className="h-4 w-4 text-blue-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-2xl font-bold ${dashboardData.summary.net_profit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                    {formatCurrency(dashboardData.summary.net_profit)}
+                  <div className={`text-2xl font-bold ${(dashboardData.summary?.net_profit || 0) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                    {formatCurrency(dashboardData.summary?.net_profit || 0)}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Payments - Purchases
@@ -245,8 +245,8 @@ function ProfitLossDashboardContent() {
                   <TrendingUp className="h-4 w-4 text-emerald-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-2xl font-bold ${dashboardData.summary.profit_after_investment >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {formatCurrency(dashboardData.summary.profit_after_investment)}
+                  <div className={`text-2xl font-bold ${(dashboardData.summary?.profit_after_investment || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {formatCurrency(dashboardData.summary?.profit_after_investment || 0)}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Net Profit - Investments
@@ -265,25 +265,25 @@ function ProfitLossDashboardContent() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-green-600">
-                        {dashboardData.sales.paid_invoices}
+                        {dashboardData.sales?.paid_invoices || 0}
                       </div>
                       <div className="text-sm text-muted-foreground">Paid Invoices</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-yellow-600">
-                        {dashboardData.sales.pending_invoices}
+                        {dashboardData.sales?.pending_invoices || 0}
                       </div>
                       <div className="text-sm text-muted-foreground">Pending Invoices</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-red-600">
-                        {dashboardData.sales.overdue_invoices}
+                        {dashboardData.sales?.overdue_invoices || 0}
                       </div>
                       <div className="text-sm text-muted-foreground">Overdue Invoices</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-blue-600">
-                        {formatCurrency(dashboardData.sales.total_payments_received)}
+                        {formatCurrency(dashboardData.sales?.total_payments_received || 0)}
                       </div>
                       <div className="text-sm text-muted-foreground">Payments Received</div>
                     </div>
@@ -300,25 +300,25 @@ function ProfitLossDashboardContent() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-green-600">
-                        {dashboardData.purchases.completed_purchases}
+                        {dashboardData.purchases?.completed_purchases || 0}
                       </div>
                       <div className="text-sm text-muted-foreground">Completed</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-yellow-600">
-                        {dashboardData.purchases.pending_purchases}
+                        {dashboardData.purchases?.pending_purchases || 0}
                       </div>
                       <div className="text-sm text-muted-foreground">Pending</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-blue-600">
-                        {dashboardData.purchases.total_purchase_orders}
+                        {dashboardData.purchases?.total_purchase_orders || 0}
                       </div>
                       <div className="text-sm text-muted-foreground">Total Orders</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-purple-600">
-                        {formatCurrency(dashboardData.purchases.total_purchases)}
+                        {formatCurrency(dashboardData.purchases?.total_purchases || 0)}
                       </div>
                       <div className="text-sm text-muted-foreground">Total Value</div>
                     </div>
@@ -337,25 +337,25 @@ function ProfitLossDashboardContent() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-blue-600">
-                        {dashboardData.inventory.total_products}
+                        {dashboardData.inventory?.total_products || 0}
                       </div>
                       <div className="text-sm text-muted-foreground">Total Products</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-emerald-600">
-                        {formatCurrency(dashboardData.inventory.total_inventory_value)}
+                        {formatCurrency(dashboardData.inventory?.total_inventory_value || 0)}
                       </div>
                       <div className="text-sm text-muted-foreground">Inventory Value</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-green-600">
-                        {dashboardData.inventory.inbound_movements}
+                        {dashboardData.inventory?.inbound_movements || 0}
                       </div>
                       <div className="text-sm text-muted-foreground">Inbound Movements</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-red-600">
-                        {dashboardData.inventory.outbound_movements}
+                        {dashboardData.inventory?.outbound_movements || 0}
                       </div>
                       <div className="text-sm text-muted-foreground">Outbound Movements</div>
                     </div>
@@ -372,25 +372,25 @@ function ProfitLossDashboardContent() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-blue-600">
-                        {dashboardData.quotes_contracts.total_quotes}
+                        {dashboardData.quotes_contracts?.total_quotes || 0}
                       </div>
                       <div className="text-sm text-muted-foreground">Total Quotes</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-purple-600">
-                        {formatCurrency(dashboardData.quotes_contracts.quotes_value)}
+                        {formatCurrency(dashboardData.quotes_contracts?.quotes_value || 0)}
                       </div>
                       <div className="text-sm text-muted-foreground">Quotes Value</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-green-600">
-                        {dashboardData.quotes_contracts.total_contracts}
+                        {dashboardData.quotes_contracts?.total_contracts || 0}
                       </div>
                       <div className="text-sm text-muted-foreground">Total Contracts</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-emerald-600">
-                        {formatCurrency(dashboardData.quotes_contracts.contracts_value)}
+                        {formatCurrency(dashboardData.quotes_contracts?.contracts_value || 0)}
                       </div>
                       <div className="text-sm text-muted-foreground">Contracts Value</div>
                     </div>

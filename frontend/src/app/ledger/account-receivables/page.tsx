@@ -4,10 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/src/components/layout';
 import { ModuleGuard } from '@/src/components/guards/PermissionGuard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
 import { Badge } from '@/src/components/ui/badge';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
 import {
   Table,
   TableBody,
@@ -25,13 +22,9 @@ import {
 } from '@/src/components/ui/select';
 import {
   AlertCircle,
-  DollarSign,
   TrendingUp,
   TrendingDown,
   FileText,
-  Mail,
-  Phone,
-  Calendar,
 } from 'lucide-react';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { accountReceivableService } from '@/src/services/AccountReceivableService';

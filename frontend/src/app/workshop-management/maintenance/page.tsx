@@ -837,15 +837,15 @@ export default function MaintenancePage() {
                   </div>
                   <div>
                     <Label className="text-sm font-medium text-gray-500">Serial Number</Label>
-                    <p className="text-sm">{selectedEquipment.serialNumber || 'Not specified'}</p>
+                    <p className="text-sm">{selectedEquipment.serial_number || 'Not specified'}</p>
                   </div>
                   <div>
                     <Label className="text-sm font-medium text-gray-500">Purchase Date</Label>
-                    <p className="text-sm">{selectedEquipment.purchaseDate || 'Not specified'}</p>
+                    <p className="text-sm">{selectedEquipment.installation_date || 'Not specified'}</p>
                   </div>
                   <div>
                     <Label className="text-sm font-medium text-gray-500">Warranty Expiry</Label>
-                    <p className="text-sm">{selectedEquipment.warrantyExpiry || 'Not specified'}</p>
+                    <p className="text-sm">{selectedEquipment.warranty_expiry || 'Not specified'}</p>
                   </div>
                 </div>
               </div>
@@ -856,24 +856,19 @@ export default function MaintenancePage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-sm font-medium text-gray-500">Last Maintenance</Label>
-                    <p className="text-sm">{selectedEquipment.lastMaintenanceDate || 'Never'}</p>
+                    <p className="text-sm">{selectedEquipment.last_maintenance_date || 'Never'}</p>
                   </div>
                   <div>
                     <Label className="text-sm font-medium text-gray-500">Next Maintenance</Label>
-                    <p className="text-sm">{selectedEquipment.nextMaintenanceDate || 'Not scheduled'}</p>
+                    <p className="text-sm">{selectedEquipment.next_maintenance_date || 'Not scheduled'}</p>
                   </div>
                   <div>
                     <Label className="text-sm font-medium text-gray-500">Maintenance Interval</Label>
-                    <p className="text-sm">{selectedEquipment.maintenanceInterval || 'Not set'}</p>
+                    <p className="text-sm">{selectedEquipment.maintenance_interval_hours ? `${selectedEquipment.maintenance_interval_hours} hours` : 'Not set'}</p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-gray-500">Total Maintenance Cost</Label>
-                    <p className="text-sm">
-                      {selectedEquipment.totalMaintenanceCost 
-                        ? `${getCurrencySymbol()}${selectedEquipment.totalMaintenanceCost.toLocaleString()}`
-                        : 'No maintenance costs recorded'
-                      }
-                    </p>
+                    <Label className="text-sm font-medium text-gray-500">Operating Hours</Label>
+                    <p className="text-sm">{selectedEquipment.operating_hours || 0} hours</p>
                   </div>
                 </div>
               </div>
@@ -884,11 +879,11 @@ export default function MaintenancePage() {
                 <div className="space-y-4">
                   <div>
                     <Label className="text-sm font-medium text-gray-500">Description</Label>
-                    <p className="text-sm">{selectedEquipment.description || 'No description provided'}</p>
+                    <p className="text-sm">{selectedEquipment.specifications?.description || 'No description provided'}</p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-gray-500">Notes</Label>
-                    <p className="text-sm">{selectedEquipment.notes || 'No notes'}</p>
+                    <Label className="text-sm font-medium text-gray-500">Location</Label>
+                    <p className="text-sm">{selectedEquipment.location || 'No location specified'}</p>
                   </div>
                 </div>
               </div>

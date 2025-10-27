@@ -21,6 +21,7 @@ import {
 import { LedgerService } from '../../../services/ledgerService';
 import {
   TrialBalanceResponse,
+  TrialBalanceAccount,
   IncomeStatementResponse,
   AccountType,
   getAccountTypeLabel,
@@ -331,13 +332,13 @@ function FinancialReportsContent() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {Object.values(AccountType).map((type) => {
+                  {Object.values(AccountType).map((type: AccountType) => {
                     const count = getAccountTypeCount(type);
                     const total = chartOfAccounts.length;
                     const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : '0';
 
                     return (
-                      <div key={type} className="text-center">
+                      <div key={String(type)} className="text-center">
                         <div className="text-2xl font-bold mb-2">
                           {count}
                         </div>
@@ -386,14 +387,14 @@ function FinancialReportsContent() {
                     <div>
                       Total Debits: {formatCurrency(
                         Array.isArray(trialBalance.accounts)
-                          ? trialBalance.accounts.reduce((sum, acc) => sum + (acc.debit_balance || 0), 0)
+                          ? trialBalance.accounts.reduce((sum: number, acc: TrialBalanceAccount) => sum + (acc.debit_balance || 0), 0)
                           : 0
                       )}
                     </div>
                     <div>
                       Total Credits: {formatCurrency(
                         Array.isArray(trialBalance.accounts)
-                          ? trialBalance.accounts.reduce((sum, acc) => sum + (acc.credit_balance || 0), 0)
+                          ? trialBalance.accounts.reduce((sum: number, acc: TrialBalanceAccount) => sum + (acc.credit_balance || 0), 0)
                           : 0
                       )}
                     </div>

@@ -224,7 +224,7 @@ function LedgerTransactionsContent() {
         reference_number: formData.reference_number || undefined,
         account_id: formData.debit_account_id,
         contra_account_id: formData.credit_account_id,
-        status: 'pending',
+        status: TransactionStatus.PENDING,
         meta_data: {
           currency: formData.currency,
           notes: formData.notes,
@@ -873,7 +873,7 @@ function LedgerTransactionsContent() {
                   <div>
                     <Label className="text-sm font-medium">Tags</Label>
                     <div className="flex flex-wrap gap-1 mt-1">
-                      {viewingTransaction.meta_data.tags.map((tag, index) => (
+                      {viewingTransaction.meta_data.tags.map((tag: string, index: number) => (
                         <Badge key={index} variant="outline" className="text-xs">
                           {tag}
                         </Badge>

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
   Card,
@@ -76,7 +75,6 @@ export default function ProductionPage() {
 }
 
 function ProductionContent() {
-  const router = useRouter();
   const [productionPlans, setProductionPlans] = useState<ProductionPlan[]>([]);
   const [filteredPlans, setFilteredPlans] = useState<ProductionPlan[]>([]);
   const [loading, setLoading] = useState(true);
