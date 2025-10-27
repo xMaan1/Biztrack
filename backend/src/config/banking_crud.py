@@ -7,8 +7,8 @@ from datetime import datetime, date
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func, desc, asc
 from .banking_models import (
-    BankAccount, BankTransaction, CashPosition,
-    BankAccountType, TransactionType, TransactionStatus, PaymentMethod
+    BankAccount, BankTransaction, CashPosition, Till, TillTransaction,
+    BankAccountType, TransactionType, TransactionStatus, PaymentMethod, TillTransactionType
 )
 
 # Bank Account CRUD Operations
@@ -368,13 +368,14 @@ def get_banking_dashboard_data(db: Session, tenant_id: str) -> Dict[str, Any]:
     
     net_cash_flow = daily_inflow - daily_outflow
     
-    # Get recent transactions
     recent_transactions = db.query(BankTransaction).filter(
         BankTransaction.tenant_id == tenant_id
     ).order_by(desc(BankTransaction.transaction_date)).limit(10).all()
     
-    # Calculate outstanding receivables and payables
-    # For now, we'll set these to 0 as they would typically come from invoice/expense modules
+    for transaction in recent_transactions:
+        if transaction.running_balance is None:
+            transaction.running_balance = 0.0
+    
     outstanding_receivables = 0.0
     outstanding_payables = 0.0
     
@@ -392,3 +393,161 @@ def get_banking_dashboard_data(db: Session, tenant_id: str) -> Dict[str, Any]:
         "recent_transactions": recent_transactions,
         "bank_accounts_summary": accounts_summary
     }
+
+# Till CRUD Operations
+def create_till(till_data: Dict[str, Any], db: Session) -> Till:
+    """Create a new till"""
+    db_till = Till(**till_data)
+    db_till.current_balance = db_till.initial_balance
+    db.add(db_till)
+    db.commit()
+    db.refresh(db_till)
+    return db_till
+
+def get_till_by_id(till_id: str, db: Session, tenant_id: str) -> Optional[Till]:
+    """Get till by ID"""
+    return db.query(Till).filter(
+        and_(
+            Till.id == till_id,
+            Till.tenant_id == tenant_id
+        )
+    ).first()
+
+def get_all_tills(db: Session, tenant_id: str, skip: int = 0, limit: int = 100) -> List[Till]:
+    """Get all tills for a tenant"""
+    return db.query(Till).filter(
+        Till.tenant_id == tenant_id
+    ).offset(skip).limit(limit).all()
+
+def update_till(till_id: str, till_data: Dict[str, Any], db: Session, tenant_id: str) -> Optional[Till]:
+    """Update till"""
+    db_till = get_till_by_id(till_id, db, tenant_id)
+    if not db_till:
+        return None
+    
+    for key, value in till_data.items():
+        if hasattr(db_till, key):
+            setattr(db_till, key, value)
+    
+    db_till.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(db_till)
+    return db_till
+
+def delete_till(till_id: str, db: Session, tenant_id: str) -> bool:
+    """Delete till (soft delete by setting is_active to False)"""
+    db_till = get_till_by_id(till_id, db, tenant_id)
+    if not db_till:
+        return False
+    
+    db_till.is_active = False
+    db_till.updated_at = datetime.utcnow()
+    db.commit()
+    return True
+
+# Till Transaction CRUD Operations
+def calculate_till_balance(till_id: str, db: Session, tenant_id: str) -> float:
+    """Calculate current balance for a till"""
+    last_transaction = db.query(TillTransaction).filter(
+        and_(
+            TillTransaction.till_id == till_id,
+            TillTransaction.tenant_id == tenant_id
+        )
+    ).order_by(TillTransaction.transaction_date.desc()).first()
+    
+    if last_transaction:
+        return last_transaction.running_balance
+    else:
+        till = get_till_by_id(till_id, db, tenant_id)
+        return till.initial_balance if till else 0.0
+
+def create_till_transaction(transaction_data: Dict[str, Any], db: Session) -> TillTransaction:
+    """Create a new till transaction with running balance calculation"""
+    till_id = transaction_data.get("till_id")
+    tenant_id = transaction_data.get("tenant_id")
+    transaction_type = transaction_data.get("transaction_type")
+    amount = transaction_data.get("amount")
+    
+    current_balance = calculate_till_balance(till_id, db, tenant_id)
+    
+    if transaction_type == TillTransactionType.DEPOSIT:
+        new_balance = current_balance + amount
+    elif transaction_type == TillTransactionType.WITHDRAWAL:
+        new_balance = current_balance - amount
+    else:
+        new_balance = current_balance + amount
+    
+    transaction_data["running_balance"] = new_balance
+    
+    db_transaction = TillTransaction(**transaction_data)
+    db.add(db_transaction)
+    db.commit()
+    db.refresh(db_transaction)
+    
+    till = get_till_by_id(till_id, db, tenant_id)
+    till.current_balance = new_balance
+    till.updated_at = datetime.utcnow()
+    db.commit()
+    
+    return db_transaction
+
+def get_till_transaction_by_id(transaction_id: str, db: Session, tenant_id: str) -> Optional[TillTransaction]:
+    """Get till transaction by ID"""
+    return db.query(TillTransaction).filter(
+        and_(
+            TillTransaction.id == transaction_id,
+            TillTransaction.tenant_id == tenant_id
+        )
+    ).first()
+
+def get_all_till_transactions(db: Session, tenant_id: str, till_id: Optional[str] = None, 
+                             skip: int = 0, limit: int = 100) -> List[TillTransaction]:
+    """Get all till transactions"""
+    query = db.query(TillTransaction).filter(
+        TillTransaction.tenant_id == tenant_id
+    )
+    
+    if till_id:
+        query = query.filter(TillTransaction.till_id == till_id)
+    
+    return query.order_by(TillTransaction.transaction_date.desc()).offset(skip).limit(limit).all()
+
+def update_till_transaction(transaction_id: str, transaction_data: Dict[str, Any], 
+                           db: Session, tenant_id: str) -> Optional[TillTransaction]:
+    """Update till transaction"""
+    db_transaction = get_till_transaction_by_id(transaction_id, db, tenant_id)
+    if not db_transaction:
+        return None
+    
+    for key, value in transaction_data.items():
+        if hasattr(db_transaction, key):
+            setattr(db_transaction, key, value)
+    
+    db.commit()
+    db.refresh(db_transaction)
+    
+    till = get_till_by_id(str(db_transaction.till_id), db, tenant_id)
+    current_balance = calculate_till_balance(str(db_transaction.till_id), db, tenant_id)
+    till.current_balance = current_balance
+    till.updated_at = datetime.utcnow()
+    db.commit()
+    
+    return db_transaction
+
+def delete_till_transaction(transaction_id: str, db: Session, tenant_id: str) -> bool:
+    """Delete till transaction"""
+    db_transaction = get_till_transaction_by_id(transaction_id, db, tenant_id)
+    if not db_transaction:
+        return False
+    
+    till_id = str(db_transaction.till_id)
+    db.delete(db_transaction)
+    db.commit()
+    
+    till = get_till_by_id(till_id, db, tenant_id)
+    current_balance = calculate_till_balance(till_id, db, tenant_id)
+    till.current_balance = current_balance
+    till.updated_at = datetime.utcnow()
+    db.commit()
+    
+    return True

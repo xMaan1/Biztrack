@@ -112,6 +112,7 @@ class BankTransactionBase(BaseModel):
     transaction_type: TransactionType = Field(alias="transactionType")
     status: TransactionStatus = Field(alias="status", default=TransactionStatus.PENDING)
     amount: float = Field(alias="amount")
+    running_balance: float = Field(alias="runningBalance")
     currency: str = Field(alias="currency", default="USD")
     exchange_rate: float = Field(alias="exchangeRate", default=1.0)
     base_amount: float = Field(alias="baseAmount")
@@ -146,6 +147,7 @@ class BankTransactionUpdate(BaseModel):
     transaction_type: Optional[TransactionType] = Field(alias="transactionType", default=None)
     status: Optional[TransactionStatus] = Field(alias="status", default=None)
     amount: Optional[float] = Field(alias="amount", default=None)
+    running_balance: Optional[float] = Field(alias="runningBalance", default=None)
     currency: Optional[str] = Field(alias="currency", default=None)
     exchange_rate: Optional[float] = Field(alias="exchangeRate", default=None)
     base_amount: Optional[float] = Field(alias="baseAmount", default=None)
@@ -176,6 +178,7 @@ class BankTransaction(BankTransactionBase):
     tenant_id: str = Field(alias="tenantId")
     transaction_number: str = Field(alias="transactionNumber")
     created_by: str = Field(alias="createdBy")
+    running_balance: float = Field(alias="runningBalance")
     approved_by: Optional[str] = Field(alias="approvedBy", default=None)
     reconciled_by: Optional[str] = Field(alias="reconciledBy", default=None)
     ledger_transaction_id: Optional[str] = Field(alias="ledgerTransactionId", default=None)
@@ -310,3 +313,130 @@ class TransactionReconciliation(BaseModel):
     reconciled_date: Optional[datetime] = None
     reconciled_by: Optional[str] = None
     notes: Optional[str] = None
+
+# Till Models
+class TillTransactionType(str, Enum):
+    DEPOSIT = "deposit"
+    WITHDRAWAL = "withdrawal"
+    ADJUSTMENT = "adjustment"
+
+class TillBase(BaseModel):
+    name: str
+    location: Optional[str] = None
+    initial_balance: float = Field(alias="initialBalance", default=0.0)
+    currency: str = Field(default="USD")
+    description: Optional[str] = Field(default=None)
+
+    class Config:
+        populate_by_name = True
+
+class TillCreate(TillBase):
+    pass
+
+class TillUpdate(BaseModel):
+    name: Optional[str] = None
+    location: Optional[str] = None
+    initial_balance: Optional[float] = Field(alias="initialBalance", default=None)
+    is_active: Optional[bool] = Field(alias="isActive", default=None)
+    description: Optional[str] = None
+
+    class Config:
+        populate_by_name = True
+
+class Till(TillBase):
+    id: str
+    tenant_id: str = Field(alias="tenantId")
+    current_balance: float = Field(alias="currentBalance")
+    is_active: bool = Field(alias="isActive")
+    created_by: str = Field(alias="createdBy")
+    created_at: datetime = Field(alias="createdAt")
+    updated_at: datetime = Field(alias="updatedAt")
+
+    @field_validator('id', 'tenant_id', 'created_by', mode='before')
+    @classmethod
+    def convert_uuid_to_str(cls, v):
+        if isinstance(v, uuid.UUID):
+            return str(v)
+        return v
+
+    class Config:
+        from_attributes = True
+        populate_by_name = True
+
+# Till Transaction Models
+class TillTransactionBase(BaseModel):
+    till_id: str = Field(alias="tillId")
+    transaction_date: datetime = Field(alias="transactionDate")
+    transaction_type: TillTransactionType = Field(alias="transactionType")
+    amount: float
+    currency: str = Field(default="USD")
+    description: str
+    reason: Optional[str] = None
+    reference_number: Optional[str] = Field(alias="referenceNumber", default=None)
+    notes: Optional[str] = None
+
+    class Config:
+        populate_by_name = True
+
+class TillTransactionCreate(TillTransactionBase):
+    pass
+
+class TillTransactionUpdate(BaseModel):
+    transaction_date: Optional[datetime] = Field(alias="transactionDate", default=None)
+    transaction_type: Optional[TillTransactionType] = Field(alias="transactionType", default=None)
+    amount: Optional[float] = None
+    description: Optional[str] = None
+    reason: Optional[str] = None
+    reference_number: Optional[str] = Field(alias="referenceNumber", default=None)
+    notes: Optional[str] = None
+
+    class Config:
+        populate_by_name = True
+
+class TillTransaction(TillTransactionBase):
+    id: str
+    tenant_id: str = Field(alias="tenantId")
+    transaction_number: str = Field(alias="transactionNumber")
+    running_balance: float = Field(alias="runningBalance")
+    performed_by: str = Field(alias="performedBy")
+    approved_by: Optional[str] = Field(alias="approvedBy", default=None)
+    created_at: datetime = Field(alias="createdAt")
+    updated_at: datetime = Field(alias="updatedAt")
+
+    @field_validator('id', 'tenant_id', 'till_id', 'performed_by', 'approved_by', mode='before')
+    @classmethod
+    def convert_uuid_to_str(cls, v):
+        if isinstance(v, uuid.UUID):
+            return str(v)
+        return v
+
+    class Config:
+        from_attributes = True
+        populate_by_name = True
+
+# Till Response Models
+class TillResponse(BaseModel):
+    till: Till = Field(alias="till")
+
+    class Config:
+        populate_by_name = True
+
+class TillsResponse(BaseModel):
+    tills: List[Till] = Field(alias="tills")
+    total: int
+
+    class Config:
+        populate_by_name = True
+
+class TillTransactionResponse(BaseModel):
+    till_transaction: TillTransaction = Field(alias="tillTransaction")
+
+    class Config:
+        populate_by_name = True
+
+class TillTransactionsResponse(BaseModel):
+    till_transactions: List[TillTransaction] = Field(alias="tillTransactions")
+    total: int
+
+    class Config:
+        populate_by_name = True

@@ -88,6 +88,30 @@ Please find the attached invoice for your review and payment.`;
     window.open(whatsappUrl, '_blank');
   };
 
+  const handleBulkSendWhatsApp = () => {
+    if (selectedInvoices.size === 0) return;
+    
+    const selectedInvoiceData = invoices.filter(inv => selectedInvoices.has(inv.id));
+    
+    if (selectedInvoiceData.length === 0) return;
+    
+    const invoiceNumbers = selectedInvoiceData.map(inv => inv.invoiceNumber).join(', ');
+    const totalAmount = selectedInvoiceData.reduce((sum, inv) => sum + inv.total, 0);
+    
+    const message = `📄 *Multiple Invoice Details*
+
+*Invoice Numbers:* ${invoiceNumbers}
+*Total Amount:* ${formatCurrency(totalAmount)}
+*Count:* ${selectedInvoiceData.length} invoice${selectedInvoiceData.length !== 1 ? 's' : ''}
+
+Please find the attached invoices for your review and payment.`;
+
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://web.whatsapp.com/send?text=${encodedMessage}`;
+    
+    window.open(whatsappUrl, '_blank');
+  };
+
   const handleDownload = async (invoiceId: string) => {
     try {
       setDownloading(invoiceId);
@@ -255,6 +279,15 @@ Please find the attached invoice for your review and payment.`;
                     <Send className="mr-2 h-4 w-4" />
                   )}
                   Send All
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleBulkSendWhatsApp}
+                  className="text-green-600 border-green-300 hover:bg-green-100"
+                >
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  Send via WhatsApp
                 </Button>
                 <Button
                   size="sm"

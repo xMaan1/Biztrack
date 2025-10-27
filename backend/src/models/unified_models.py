@@ -3884,3 +3884,70 @@ class ReportsFilters(BaseModel):
     department: Optional[str] = None
     project_id: Optional[str] = None
     user_id: Optional[str] = None
+
+class AccountReceivableStatus(str, Enum):
+    PENDING = "pending"
+    PARTIALLY_PAID = "partially_paid"
+    PAID = "paid"
+    OVERDUE = "overdue"
+    WRITTEN_OFF = "written_off"
+
+class AccountReceivableBase(BaseModel):
+    invoice_id: str
+    invoice_number: str
+    customer_id: str
+    customer_name: str
+    customer_email: str
+    customer_phone: Optional[str] = None
+    due_date: datetime
+    invoice_date: datetime
+    invoice_amount: float
+    amount_paid: float
+    outstanding_balance: float
+    currency: str = "USD"
+    status: AccountReceivableStatus = AccountReceivableStatus.PENDING
+    payment_terms: Optional[str] = None
+    notes: Optional[str] = None
+    days_overdue: int = 0
+
+class AccountReceivableCreate(AccountReceivableBase):
+    pass
+
+class AccountReceivableUpdate(BaseModel):
+    invoice_id: Optional[str] = None
+    customer_name: Optional[str] = None
+    customer_email: Optional[str] = None
+    customer_phone: Optional[str] = None
+    due_date: Optional[datetime] = None
+    amount_paid: Optional[float] = None
+    outstanding_balance: Optional[float] = None
+    status: Optional[AccountReceivableStatus] = None
+    payment_terms: Optional[str] = None
+    notes: Optional[str] = None
+    days_overdue: Optional[int] = None
+
+class AccountReceivable(AccountReceivableBase):
+    id: str
+    tenant_id: str
+    created_by_id: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class AccountReceivableResponse(AccountReceivableBase):
+    id: str
+    tenant_id: str
+    created_by_id: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class AccountReceivablesListResponse(BaseModel):
+    account_receivables: List[AccountReceivableResponse]
+    total: int
+    total_outstanding: float
+    total_overdue: float

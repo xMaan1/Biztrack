@@ -55,7 +55,7 @@ from .invoice_customization_models import (
 
 from .ledger_models import (
     ChartOfAccounts, LedgerTransaction, JournalEntry, 
-    FinancialPeriod, Budget, BudgetItem
+    FinancialPeriod, Budget, BudgetItem, AccountReceivable
 )
 
 from .banking_models import (

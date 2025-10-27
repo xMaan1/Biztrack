@@ -14,10 +14,12 @@ from ...models.unified_models import (
     BudgetCreate, BudgetUpdate, BudgetResponse,
     BudgetItemCreate, BudgetItemUpdate, BudgetItemResponse,
     TrialBalanceResponse, TrialBalanceAccount, IncomeStatementResponse, IncomeStatementPeriod, 
-    BalanceSheetResponse, BalanceSheetSection, BalanceSheetAccount
+    BalanceSheetResponse, BalanceSheetSection, BalanceSheetAccount,
+    AccountReceivableCreate, AccountReceivableUpdate, AccountReceivableResponse, AccountReceivablesListResponse
 )
 from ...config.ledger_models import (
-    TransactionType, TransactionStatus, AccountType, AccountCategory, ChartOfAccounts
+    TransactionType, TransactionStatus, AccountType, AccountCategory, ChartOfAccounts,
+    AccountReceivable, AccountReceivableStatus
 )
 from ...config.investment_models import Investment, InvestmentStatus
 from ...config.ledger_crud import (
@@ -982,10 +984,143 @@ async def get_profit_loss_dashboard(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch profit/loss dashboard: {str(e)}")
 
-# Test endpoint to verify API is working
+@router.post("/account-receivables", response_model=AccountReceivableResponse, status_code=status.HTTP_201_CREATED)
+async def create_account_receivable_endpoint(
+    ar_data: AccountReceivableCreate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context = Depends(get_tenant_context)
+):
+    try:
+        db_ar = AccountReceivable(
+            tenant_id=tenant_context["tenant_id"],
+            invoice_id=ar_data.invoice_id,
+            invoice_number=ar_data.invoice_number,
+            customer_id=ar_data.customer_id,
+            customer_name=ar_data.customer_name,
+            customer_email=ar_data.customer_email,
+            customer_phone=ar_data.customer_phone,
+            invoice_date=ar_data.invoice_date,
+            due_date=ar_data.due_date,
+            invoice_amount=ar_data.invoice_amount,
+            amount_paid=ar_data.amount_paid,
+            outstanding_balance=ar_data.outstanding_balance,
+            currency=ar_data.currency,
+            status=ar_data.status,
+            payment_terms=ar_data.payment_terms,
+            notes=ar_data.notes,
+            days_overdue=ar_data.days_overdue,
+            created_by=current_user.id
+        )
+        db.add(db_ar)
+        db.commit()
+        db.refresh(db_ar)
+        return db_ar
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create account receivable: {str(e)}")
+
+@router.get("/account-receivables", response_model=AccountReceivablesListResponse)
+async def get_account_receivables_endpoint(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    status: Optional[AccountReceivableStatus] = Query(None),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context = Depends(get_tenant_context)
+):
+    try:
+        query = db.query(AccountReceivable).filter(AccountReceivable.tenant_id == tenant_context["tenant_id"])
+        if status:
+            query = query.filter(AccountReceivable.status == status)
+        
+        total = query.count()
+        ars = query.offset(skip).limit(limit).all()
+        
+        total_outstanding = sum(ar.outstanding_balance for ar in ars if ar.status in [AccountReceivableStatus.PENDING, AccountReceivableStatus.PARTIALLY_PAID])
+        total_overdue = sum(ar.outstanding_balance for ar in ars if ar.status == AccountReceivableStatus.OVERDUE)
+        
+        return AccountReceivablesListResponse(
+            account_receivables=ars,
+            total=total,
+            total_outstanding=total_outstanding,
+            total_overdue=total_overdue
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch account receivables: {str(e)}")
+
+@router.get("/account-receivables/{ar_id}", response_model=AccountReceivableResponse)
+async def get_account_receivable_endpoint(
+    ar_id: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context = Depends(get_tenant_context)
+):
+    try:
+        ar = db.query(AccountReceivable).filter(
+            AccountReceivable.id == ar_id,
+            AccountReceivable.tenant_id == tenant_context["tenant_id"]
+        ).first()
+        if not ar:
+            raise HTTPException(status_code=404, detail="Account receivable not found")
+        return ar
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch account receivable: {str(e)}")
+
+@router.put("/account-receivables/{ar_id}", response_model=AccountReceivableResponse)
+async def update_account_receivable_endpoint(
+    ar_id: str,
+    ar_data: AccountReceivableUpdate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context = Depends(get_tenant_context)
+):
+    try:
+        ar = db.query(AccountReceivable).filter(
+            AccountReceivable.id == ar_id,
+            AccountReceivable.tenant_id == tenant_context["tenant_id"]
+        ).first()
+        if not ar:
+            raise HTTPException(status_code=404, detail="Account receivable not found")
+        
+        update_data = ar_data.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(ar, key, value)
+        
+        db.commit()
+        db.refresh(ar)
+        return ar
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update account receivable: {str(e)}")
+
+@router.delete("/account-receivables/{ar_id}")
+async def delete_account_receivable_endpoint(
+    ar_id: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context = Depends(get_tenant_context)
+):
+    try:
+        ar = db.query(AccountReceivable).filter(
+            AccountReceivable.id == ar_id,
+            AccountReceivable.tenant_id == tenant_context["tenant_id"]
+        ).first()
+        if not ar:
+            raise HTTPException(status_code=404, detail="Account receivable not found")
+        
+        db.delete(ar)
+        db.commit()
+        return {"message": "Account receivable deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete account receivable: {str(e)}")
+
 @router.get("/test")
 async def test_endpoint():
-    """Test endpoint to verify API is working"""
     return {"message": "Ledger API is working", "timestamp": datetime.utcnow()}
 
 # Simple seeding endpoint without tenant context for testing

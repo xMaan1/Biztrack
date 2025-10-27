@@ -255,3 +255,51 @@ class BudgetItem(Base):
     # Relationships
     budget = relationship("Budget", back_populates="budget_items")
     account = relationship("ChartOfAccounts")
+
+class AccountReceivableStatus(str, enum.Enum):
+    PENDING = "pending"
+    PARTIALLY_PAID = "partially_paid"
+    PAID = "paid"
+    OVERDUE = "overdue"
+    WRITTEN_OFF = "written_off"
+
+class AccountReceivable(Base):
+    __tablename__ = "account_receivables"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
+    
+    # Invoice reference
+    invoice_id = Column(String, nullable=False, index=True)
+    invoice_number = Column(String, nullable=False)
+    
+    # Customer information
+    customer_id = Column(String, nullable=False)
+    customer_name = Column(String, nullable=False)
+    customer_email = Column(String, nullable=False)
+    customer_phone = Column(String, nullable=True)
+    
+    # Dates
+    invoice_date = Column(DateTime, nullable=False)
+    due_date = Column(DateTime, nullable=False)
+    
+    # Amounts
+    invoice_amount = Column(Float, nullable=False)
+    amount_paid = Column(Float, default=0.0)
+    outstanding_balance = Column(Float, nullable=False)
+    currency = Column(String, default="USD")
+    
+    # Status
+    status = Column(Enum(AccountReceivableStatus), default=AccountReceivableStatus.PENDING)
+    days_overdue = Column(Integer, default=0)
+    
+    # Metadata
+    payment_terms = Column(Text, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    tenant = relationship("Tenant", back_populates="account_receivables")
+    created_by_user = relationship("User", foreign_keys=[created_by])

@@ -17,7 +17,10 @@ from ...models.banking_models import (
     BankTransaction as BankTransactionModel, BankTransactionCreate, BankTransactionUpdate, BankTransactionResponse, BankTransactionsResponse,
     CashPosition, CashPositionCreate, CashPositionUpdate, CashPositionResponse, CashPositionsResponse,
     BankingDashboard, ReconciliationSummary, TransactionReconciliation,
-    BankAccountType, TransactionType, TransactionStatus, PaymentMethod
+    BankAccountType, TransactionType, TransactionStatus, PaymentMethod,
+    Till, TillCreate, TillUpdate, TillResponse, TillsResponse,
+    TillTransaction as TillTransactionModel, TillTransactionCreate, TillTransactionUpdate, TillTransactionResponse, TillTransactionsResponse,
+    TillTransactionType
 )
 from ...config.banking_models import BankTransaction
 from ...config.banking_crud import (
@@ -35,7 +38,14 @@ from ...config.banking_crud import (
     get_cash_positions_by_date_range, update_cash_position,
     
     # Analytics
-    calculate_account_balance, get_banking_dashboard_data
+    calculate_account_balance, get_banking_dashboard_data,
+    
+    # Till CRUD
+    create_till, get_till_by_id, get_all_tills, update_till, delete_till,
+    
+    # Till Transaction CRUD
+    create_till_transaction, get_till_transaction_by_id, get_all_till_transactions,
+    update_till_transaction, delete_till_transaction
 )
 
 router = APIRouter(prefix="/banking", tags=["Banking"])
@@ -400,3 +410,212 @@ def get_reconciliation_summary_endpoint(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch reconciliation summary: {str(e)}")
+
+# ========================================
+# Till Endpoints
+# ========================================
+
+@router.post("/tills", response_model=TillResponse, status_code=status.HTTP_201_CREATED)
+def create_till_endpoint(
+    till: TillCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
+):
+    """Create a new till"""
+    try:
+        till_data = till.dict()
+        till_data["tenant_id"] = tenant_context["tenant_id"]
+        till_data["created_by"] = current_user.id
+        till_data["id"] = str(uuid.uuid4())
+        
+        db_till = create_till(till_data, db)
+        return TillResponse(till=db_till)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create till: {str(e)}")
+
+@router.get("/tills", response_model=TillsResponse)
+def get_tills_endpoint(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
+):
+    """Get all tills"""
+    try:
+        tills = get_all_tills(db, str(tenant_context["tenant_id"]), skip, limit)
+        return TillsResponse(tills=tills, total=len(tills))
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch tills: {str(e)}")
+
+@router.get("/tills/{till_id}", response_model=TillResponse)
+def get_till_endpoint(
+    till_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
+):
+    """Get till by ID"""
+    try:
+        till = get_till_by_id(till_id, db, str(tenant_context["tenant_id"]))
+        if not till:
+            raise HTTPException(status_code=404, detail="Till not found")
+        
+        return TillResponse(till=till)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch till: {str(e)}")
+
+@router.put("/tills/{till_id}", response_model=TillResponse)
+def update_till_endpoint(
+    till_id: str,
+    till_update: TillUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
+):
+    """Update till"""
+    try:
+        update_data = {k: v for k, v in till_update.dict().items() if v is not None}
+        till = update_till(till_id, update_data, db, str(tenant_context["tenant_id"]))
+        
+        if not till:
+            raise HTTPException(status_code=404, detail="Till not found")
+        
+        return TillResponse(till=till)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update till: {str(e)}")
+
+@router.delete("/tills/{till_id}")
+def delete_till_endpoint(
+    till_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
+):
+    """Delete till"""
+    try:
+        success = delete_till(till_id, db, str(tenant_context["tenant_id"]))
+        if not success:
+            raise HTTPException(status_code=404, detail="Till not found")
+        
+        return {"message": "Till deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete till: {str(e)}")
+
+# ========================================
+# Till Transaction Endpoints
+# ========================================
+
+@router.post("/till-transactions", response_model=TillTransactionResponse, status_code=status.HTTP_201_CREATED)
+def create_till_transaction_endpoint(
+    transaction: TillTransactionCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
+):
+    """Create a new till transaction"""
+    try:
+        transaction_data = transaction.dict()
+        transaction_data["tenant_id"] = tenant_context["tenant_id"]
+        transaction_data["performed_by"] = current_user.id
+        transaction_data["id"] = str(uuid.uuid4())
+        transaction_data["transaction_number"] = f"TILL-{uuid.uuid4().hex[:8].upper()}"
+        transaction_data["transaction_date"] = datetime.utcnow()
+        
+        db_transaction = create_till_transaction(transaction_data, db)
+        return TillTransactionResponse(till_transaction=db_transaction)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create till transaction: {str(e)}")
+
+@router.get("/till-transactions", response_model=TillTransactionsResponse)
+def get_till_transactions_endpoint(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    till_id: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
+):
+    """Get all till transactions"""
+    try:
+        transactions = get_all_till_transactions(db, str(tenant_context["tenant_id"]), till_id, skip, limit)
+        return TillTransactionsResponse(till_transactions=transactions, total=len(transactions))
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch till transactions: {str(e)}")
+
+@router.get("/till-transactions/{transaction_id}", response_model=TillTransactionResponse)
+def get_till_transaction_endpoint(
+    transaction_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
+):
+    """Get till transaction by ID"""
+    try:
+        transaction = get_till_transaction_by_id(transaction_id, db, str(tenant_context["tenant_id"]))
+        if not transaction:
+            raise HTTPException(status_code=404, detail="Till transaction not found")
+        
+        return TillTransactionResponse(till_transaction=transaction)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch till transaction: {str(e)}")
+
+@router.put("/till-transactions/{transaction_id}", response_model=TillTransactionResponse)
+def update_till_transaction_endpoint(
+    transaction_id: str,
+    transaction_update: TillTransactionUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
+):
+    """Update till transaction"""
+    try:
+        update_data = {k: v for k, v in transaction_update.dict().items() if v is not None}
+        transaction = update_till_transaction(transaction_id, update_data, db, str(tenant_context["tenant_id"]))
+        
+        if not transaction:
+            raise HTTPException(status_code=404, detail="Till transaction not found")
+        
+        return TillTransactionResponse(till_transaction=transaction)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update till transaction: {str(e)}")
+
+@router.delete("/till-transactions/{transaction_id}")
+def delete_till_transaction_endpoint(
+    transaction_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
+):
+    """Delete till transaction"""
+    try:
+        success = delete_till_transaction(transaction_id, db, str(tenant_context["tenant_id"]))
+        if not success:
+            raise HTTPException(status_code=404, detail="Till transaction not found")
+        
+        return {"message": "Till transaction deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete till transaction: {str(e)}")

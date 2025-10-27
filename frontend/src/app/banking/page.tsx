@@ -37,6 +37,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/src/components/ui/table';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/src/components/ui/tabs';
 import {
   Banknote,
   TrendingUp,
@@ -46,6 +47,7 @@ import {
   Plus,
   Eye,
   RefreshCw,
+  Wallet,
 } from 'lucide-react';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { bankingService } from '@/src/services/BankingService';
@@ -59,10 +61,14 @@ import {
   TransactionType,
   TransactionStatus,
   BankAccountType,
+  Till,
+  TillTransaction,
   getTransactionTypeLabel,
   getAccountTypeLabel,
 } from '@/src/models/banking';
 import { DashboardLayout } from '@/src/components/layout';
+import { TillManagement } from '@/src/components/banking/TillManagement';
+import { tillService } from '@/src/services/TillService';
 import { toast } from 'sonner';
 
 export default function BankingDashboard() {
@@ -81,8 +87,10 @@ function BankingDashboardContent() {
   const [dashboardData, setDashboardData] = useState<BankingDashboardType | null>(null);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [recentTransactions, setRecentTransactions] = useState<BankTransaction[]>([]);
+  const [tills, setTills] = useState<Till[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState('banks');
   
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -114,19 +122,22 @@ function BankingDashboardContent() {
     try {
       setLoading(true);
       
-      const [dashboard, accounts] = await Promise.all([
+      const [dashboard, accounts, allTills] = await Promise.all([
         bankingService.getBankingDashboard(),
-        bankingService.getBankAccounts(true)
+        bankingService.getBankAccounts(true),
+        tillService.getTills(true)
       ]);
       
       setDashboardData(dashboard);
       setBankAccounts(accounts || []);
       setRecentTransactions(dashboard?.recentTransactions || []);
+      setTills(allTills || []);
     } catch (error) {
       console.error('Failed to load banking dashboard:', error);
       toast.error('Failed to load banking dashboard');
       setBankAccounts([]);
       setRecentTransactions([]);
+      setTills([]);
     } finally {
       setLoading(false);
     }
@@ -246,15 +257,31 @@ function BankingDashboardContent() {
               <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
-            <Button onClick={() => {
-              resetForm();
-              setShowCreateModal(true);
-            }}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Bank Account
-            </Button>
+            {activeTab === 'banks' && (
+              <Button onClick={() => {
+                resetForm();
+                setShowCreateModal(true);
+              }}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Bank Account
+              </Button>
+            )}
           </div>
         </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="banks" className="flex items-center gap-2">
+              <Banknote className="h-4 w-4" />
+              Bank Accounts
+            </TabsTrigger>
+            <TabsTrigger value="tills" className="flex items-center gap-2">
+              <Wallet className="h-4 w-4" />
+              Till Management
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="banks" className="space-y-6">
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -417,6 +444,7 @@ function BankingDashboardContent() {
                   <TableHead>Type</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Amount</TableHead>
+                  <TableHead>Running Balance</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -462,6 +490,9 @@ function BankingDashboardContent() {
                       </div>
                     </TableCell>
                     <TableCell>
+                      <span className="font-medium">{formatCurrency(transaction.runningBalance || 0)}</span>
+                    </TableCell>
+                    <TableCell>
                       {getStatusBadge(transaction.status)}
                     </TableCell>
                     <TableCell>
@@ -478,6 +509,13 @@ function BankingDashboardContent() {
             </Table>
           </CardContent>
         </Card>
+
+          </TabsContent>
+
+          <TabsContent value="tills" className="space-y-6">
+            <TillManagement tills={tills} onRefresh={loadDashboardData} />
+          </TabsContent>
+        </Tabs>
 
         {/* Create Bank Account Modal */}
         <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>

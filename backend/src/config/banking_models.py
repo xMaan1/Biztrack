@@ -111,6 +111,7 @@ class BankTransaction(Base):
     
     # Amount Information
     amount = Column(Float, nullable=False)
+    running_balance = Column(Float, nullable=False)  # Running balance after this transaction
     currency = Column(String, default="USD")
     exchange_rate = Column(Float, default=1.0)  # For multi-currency support
     base_amount = Column(Float, nullable=False)  # Amount in base currency
@@ -210,4 +211,75 @@ class CashPosition(Base):
         Index("idx_cash_positions_tenant", "tenant_id"),
         Index("idx_cash_positions_date", "position_date"),
         Index("idx_cash_positions_tenant_date", "tenant_id", "position_date", unique=True),
+    )
+
+class TillTransactionType(str, Enum):
+    DEPOSIT = "deposit"
+    WITHDRAWAL = "withdrawal"
+    ADJUSTMENT = "adjustment"
+
+class Till(Base):
+    __tablename__ = "tills"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
+    
+    name = Column(String, nullable=False)
+    location = Column(String, nullable=True)
+    initial_balance = Column(Float, default=0.0)
+    current_balance = Column(Float, default=0.0)
+    currency = Column(String, default="USD")
+    
+    is_active = Column(Boolean, default=True)
+    description = Column(Text, nullable=True)
+    
+    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    transactions = relationship("TillTransaction", back_populates="till", cascade="all, delete-orphan")
+    tenant = relationship("Tenant", back_populates="tills")
+    created_by_user = relationship("User", foreign_keys=[created_by])
+    
+    __table_args__ = (
+        Index("idx_tills_tenant", "tenant_id"),
+        Index("idx_tills_active", "is_active"),
+    )
+
+class TillTransaction(Base):
+    __tablename__ = "till_transactions"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
+    till_id = Column(UUID(as_uuid=True), ForeignKey("tills.id"), nullable=False)
+    
+    transaction_number = Column(String, unique=True, index=True)
+    transaction_date = Column(DateTime, nullable=False, index=True)
+    transaction_type = Column(SQLEnum(TillTransactionType), nullable=False)
+    
+    amount = Column(Float, nullable=False)
+    running_balance = Column(Float, nullable=False)
+    currency = Column(String, default="USD")
+    
+    description = Column(Text, nullable=False)
+    reason = Column(String, nullable=True)
+    reference_number = Column(String, nullable=True)
+    
+    performed_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    approved_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    tenant = relationship("Tenant", back_populates="till_transactions")
+    till = relationship("Till", back_populates="transactions")
+    performed_by_user = relationship("User", foreign_keys=[performed_by])
+    approved_by_user = relationship("User", foreign_keys=[approved_by])
+    
+    __table_args__ = (
+        Index("idx_till_transactions_tenant", "tenant_id"),
+        Index("idx_till_transactions_till", "till_id"),
+        Index("idx_till_transactions_date", "transaction_date"),
+        Index("idx_till_transactions_type", "transaction_type"),
     )

@@ -209,6 +209,8 @@ class Tenant(Base):
     bank_accounts = relationship("BankAccount", back_populates="tenant")
     bank_transactions = relationship("BankTransaction", back_populates="tenant")
     cash_positions = relationship("CashPosition", back_populates="tenant")
+    tills = relationship("Till", back_populates="tenant")
+    till_transactions = relationship("TillTransaction", back_populates="tenant")
     
     customDepartments = relationship("CustomDepartment", back_populates="tenant")
     customLeaveTypes = relationship("CustomLeaveType", back_populates="tenant")
@@ -239,6 +241,9 @@ class Tenant(Base):
     investments = relationship("Investment", back_populates="tenant")
     equipment_investments = relationship("EquipmentInvestment", back_populates="tenant")
     investment_transactions = relationship("InvestmentTransaction", back_populates="tenant")
+    
+    # Account Receivable relationships
+    account_receivables = relationship("AccountReceivable", back_populates="tenant")
 
 class Plan(Base):
     __tablename__ = "plans"

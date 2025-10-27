@@ -16,6 +16,7 @@ export enum PaymentMethod {
   CHECK = 'check',
   PAYPAL = 'paypal',
   STRIPE = 'stripe',
+  CREDIT = 'credit',
   OTHER = 'other',
 }
 

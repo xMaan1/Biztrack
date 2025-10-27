@@ -106,6 +106,7 @@ export interface BankTransaction {
   transactionType: TransactionType;
   status: TransactionStatus;
   amount: number;
+  runningBalance: number;
   currency: string;
   exchangeRate: number;
   baseAmount: number;
@@ -142,6 +143,7 @@ export interface BankTransactionCreate {
   transactionType: TransactionType;
   status?: TransactionStatus;
   amount: number;
+  runningBalance?: number;
   currency?: string;
   exchangeRate?: number;
   baseAmount: number;
@@ -370,4 +372,120 @@ export const getPaymentMethodLabel = (method: PaymentMethod): string => {
     [PaymentMethod.CRYPTOCURRENCY]: 'Cryptocurrency',
   };
   return labels[method] || method;
+};
+
+// Till Models
+export enum TillTransactionType {
+  DEPOSIT = 'deposit',
+  WITHDRAWAL = 'withdrawal',
+  ADJUSTMENT = 'adjustment',
+}
+
+export interface Till {
+  id: string;
+  tenantId: string;
+  name: string;
+  location?: string;
+  initialBalance: number;
+  currentBalance: number;
+  currency: string;
+  isActive: boolean;
+  description?: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TillCreate {
+  name: string;
+  location?: string;
+  initialBalance?: number;
+  currency?: string;
+  description?: string;
+}
+
+export interface TillUpdate {
+  name?: string;
+  location?: string;
+  initialBalance?: number;
+  isActive?: boolean;
+  description?: string;
+}
+
+export interface TillTransaction {
+  id: string;
+  tenantId: string;
+  tillId: string;
+  transactionNumber: string;
+  transactionDate: string;
+  transactionType: TillTransactionType;
+  amount: number;
+  runningBalance: number;
+  currency: string;
+  description: string;
+  reason?: string;
+  referenceNumber?: string;
+  performedBy: string;
+  approvedBy?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TillTransactionCreate {
+  tillId: string;
+  transactionDate: string;
+  transactionType: TillTransactionType;
+  amount: number;
+  currency?: string;
+  description: string;
+  reason?: string;
+  referenceNumber?: string;
+  notes?: string;
+}
+
+export interface TillTransactionUpdate {
+  transactionDate?: string;
+  transactionType?: TillTransactionType;
+  amount?: number;
+  description?: string;
+  reason?: string;
+  referenceNumber?: string;
+  notes?: string;
+}
+
+export interface TillResponse {
+  till: Till;
+}
+
+export interface TillsResponse {
+  tills: Till[];
+  total: number;
+}
+
+export interface TillTransactionResponse {
+  tillTransaction: TillTransaction;
+}
+
+export interface TillTransactionsResponse {
+  tillTransactions: TillTransaction[];
+  total: number;
+}
+
+export const getTillTransactionTypeLabel = (type: TillTransactionType): string => {
+  const labels = {
+    [TillTransactionType.DEPOSIT]: 'Deposit',
+    [TillTransactionType.WITHDRAWAL]: 'Withdrawal',
+    [TillTransactionType.ADJUSTMENT]: 'Adjustment',
+  };
+  return labels[type] || type;
+};
+
+export const getTillTransactionTypeColor = (type: TillTransactionType): string => {
+  const colors = {
+    [TillTransactionType.DEPOSIT]: 'text-green-600',
+    [TillTransactionType.WITHDRAWAL]: 'text-red-600',
+    [TillTransactionType.ADJUSTMENT]: 'text-blue-600',
+  };
+  return colors[type] || '';
 };

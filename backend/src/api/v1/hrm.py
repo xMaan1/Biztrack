@@ -110,7 +110,7 @@ async def get_hrm_employees(
                 skills=[],  # Not stored in current DB model
                 certifications=[],  # Not stored in current DB model
                 notes=db_employee.notes,
-                resume_url=db_employee.resume_url,
+                resume_url=db_employee.resume_url if hasattr(db_employee, 'resume_url') else None,
                 attachments=db_employee.attachments if db_employee.attachments else [],
                 tenant_id=str(db_employee.tenant_id),
                 createdBy="",  # Not stored in current DB model
@@ -254,7 +254,7 @@ async def update_hrm_employee(
             skills=[],  # Not stored in current DB model
             certifications=[],  # Not stored in current DB model
             notes=db_employee.notes,
-            resume_url=db_employee.resume_url,
+            resume_url=db_employee.resume_url if hasattr(db_employee, 'resume_url') else None,
             attachments=db_employee.attachments if db_employee.attachments else [],
             tenant_id=str(db_employee.tenant_id),
             createdBy="",  # Not stored in current DB model

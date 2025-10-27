@@ -590,6 +590,13 @@ const allMenuItems: MenuItem[] = [
         planTypes: ['*'],
       },
       {
+        text: 'Credit book (Account Receivable)',
+        icon: FileText,
+        path: '/ledger/account-receivables',
+        roles: ['*'],
+        planTypes: ['*'],
+      },
+      {
         text: 'Reports',
         icon: BarChart3,
         path: '/ledger/reports',
