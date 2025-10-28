@@ -1,7 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { apiService } from '@/src/services/ApiService';
+import { useAuth } from './AuthContext';
 
 export interface Role {
   id: string;
@@ -99,6 +100,7 @@ interface RBACContextType {
   tenantUsers: UserWithPermissions[];
   userPermissions: UserPermissions | null;
   loading: boolean;
+  initializing: boolean;
 
   // Role management
   fetchRoles: () => Promise<void>;
@@ -126,16 +128,20 @@ interface RBACContextType {
 const RBACContext = createContext<RBACContextType | undefined>(undefined);
 
 export function RBACProvider({ children }: { children: React.ReactNode }) {
+  const { user, isAuthenticated } = useAuth();
   const [roles, setRoles] = useState<Role[]>([]);
   const [tenantUsers, setTenantUsers] = useState<UserWithPermissions[]>([]);
   const [userPermissions, setUserPermissions] = useState<UserPermissions | null>(null);
   const [loading, setLoading] = useState(false);
+  const [initializing, setInitializing] = useState(true);
 
   const fetchRoles = async () => {
     try {
       setLoading(true);
       const response = await apiService.get('/rbac/roles');
-      if (response.success) {
+      if (response.roles) {
+        setRoles(response.roles);
+      } else if (response.success && response.data?.roles) {
         setRoles(response.data.roles);
       }
     } catch (error) {
@@ -177,7 +183,9 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true);
       const response = await apiService.get('/rbac/tenant-users');
-      if (response.success) {
+      if (Array.isArray(response)) {
+        setTenantUsers(response);
+      } else if (response.success && Array.isArray(response.data)) {
         setTenantUsers(response.data);
       }
     } catch (error) {
@@ -245,9 +253,9 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUserPermissions = async () => {
     try {
+      setLoading(true);
       const response = await apiService.get('/rbac/permissions');
 
-      // Handle direct response format (no success/data wrapper)
       if (response.permissions && response.accessible_modules !== undefined) {
         setUserPermissions(response);
       } else if (response.success) {
@@ -255,6 +263,8 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Failed to fetch user permissions:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -279,24 +289,36 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     return userPermissions.is_owner;
   };
 
-  const refreshData = async () => {
-    await Promise.all([
-      fetchRoles(),
-      fetchTenantUsers(),
-      fetchUserPermissions()
-    ]);
-  };
-
-  // Initialize data when context mounts
-  useEffect(() => {
-    refreshData();
+  const refreshData = useCallback(async () => {
+    setInitializing(true);
+    try {
+      await Promise.all([
+        fetchRoles(),
+        fetchTenantUsers(),
+        fetchUserPermissions()
+      ]);
+    } finally {
+      setInitializing(false);
+    }
   }, []);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      refreshData();
+    } else {
+      setUserPermissions(null);
+      setRoles([]);
+      setTenantUsers([]);
+      setInitializing(false);
+    }
+  }, [isAuthenticated, user, refreshData]);
 
   const value: RBACContextType = {
     roles,
     tenantUsers,
     userPermissions,
     loading,
+    initializing,
     fetchRoles,
     createRole,
     updateRole,

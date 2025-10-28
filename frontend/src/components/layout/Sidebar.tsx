@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '../../lib/utils';
 import { usePlanInfo } from '../../hooks/usePlanInfo';
 import { useAuth } from '../../contexts/AuthContext';
+import { usePermissions } from '../../hooks/usePermissions';
 import {
   LayoutDashboard,
   FolderOpen,
@@ -672,6 +673,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { planInfo, loading: planLoading } = usePlanInfo();
   const { user } = useAuth();
+  const { accessibleModules, hasModuleAccess, isOwner } = usePermissions();
 
   const toggleExpanded = (itemText: string) => {
     const newExpanded = new Set(expandedItems);
@@ -681,6 +683,56 @@ export default function Sidebar() {
       newExpanded.add(itemText);
     }
     setExpandedItems(newExpanded);
+  };
+
+  // Map menu items to modules
+  const getModuleForMenuItem = (item: MenuItem): string | null => {
+    const moduleMap: Record<string, string> = {
+      'CRM': 'crm',
+      'Customers': 'crm',
+      'Sales': 'sales',
+      'Invoicing': 'sales',
+      'HRM': 'hrm',
+      'HRM Management': 'hrm',
+      'Inventory': 'inventory',
+      'Finance': 'finance',
+      'Banking': 'banking',
+      'Ledger': 'ledger',
+      'POS': 'pos',
+      'Projects': 'projects',
+      'Project Management': 'projects',
+      'Production': 'production',
+      'Workshop Management': 'production',
+      'Quality Control': 'quality',
+      'Maintenance': 'maintenance',
+      'Events': 'events',
+      'Reports': 'reports',
+      'Dashboard': 'dashboard',
+    };
+    return moduleMap[item.text] || null;
+  };
+
+  // Map sub-item text to module name for permission checking
+  const getModuleForSubItem = (itemText: string): string | null => {
+    const subItemModuleMap: Record<string, string | undefined> = {
+      'Dashboard': undefined,
+      'Customers': 'crm',
+      'Companies': 'crm',
+      'Contacts': 'crm',
+      'Leads': 'crm',
+      'Opportunities': 'crm',
+      'Quotes': 'sales',
+      'Invoices': 'sales',
+      'Payment Receipts': 'sales',
+      'Products': 'inventory',
+      'Orders': 'inventory',
+      'Categories': 'inventory',
+      'Projects': 'projects',
+      'Tasks': 'projects',
+      'Team Members': 'projects',
+      'Time Tracking': 'projects',
+    };
+    return subItemModuleMap[itemText] || null;
   };
 
   // Filter menu items based on user role and plan type
@@ -710,6 +762,14 @@ export default function Sidebar() {
 
       if (!isAvailableForPlan) return false;
 
+      // Check user permissions - owners see everything
+      if (!isOwner()) {
+        const module = getModuleForMenuItem(item);
+        if (module && !hasModuleAccess(module)) {
+          return false;
+        }
+      }
+
       // If searching, check if main item or sub-items match
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
@@ -736,7 +796,7 @@ export default function Sidebar() {
 
       return true;
     });
-  }, [searchQuery, planInfo, planLoading, user]);
+  }, [searchQuery, planInfo, planLoading, user, accessibleModules, hasModuleAccess, isOwner]);
 
   // Handle auto-expanding items when searching
   useEffect(() => {
@@ -969,6 +1029,11 @@ export default function Sidebar() {
                         subItem.planTypes.includes(planInfo.planType));
 
                     if (!subItemAvailable) return null;
+
+                    const subItemModule = getModuleForSubItem(subItem.text);
+                    if (!isOwner() && subItemModule && !hasModuleAccess(subItemModule)) {
+                      return null;
+                    }
 
                     return (
                       <Link

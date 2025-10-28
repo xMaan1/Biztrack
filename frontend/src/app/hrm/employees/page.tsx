@@ -19,9 +19,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/src/components/ui/select';
-import { UserPlus, Filter, Eye, Edit, Save, Trash2 } from 'lucide-react';
+import { UserPlus, Filter, Eye, Edit, Save, Trash2, X } from 'lucide-react';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import HRMService from '@/src/services/HRMService';
+import FileUploadService from '@/src/services/FileUploadService';
 import {
   Employee,
   Department,
@@ -70,6 +71,8 @@ function HRMEmployeesContent() {
   const [editFormData, setEditFormData] = useState<EmployeeUpdate>({});
   const [editLoading, setEditLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [newResumeFile, setNewResumeFile] = useState<File | null>(null);
+  const [newAttachments, setNewAttachments] = useState<File[]>([]);
 
   useEffect(() => {
     loadEmployees();
@@ -131,6 +134,8 @@ function HRMEmployeesContent() {
     setIsEditModalOpen(false);
     setSelectedEmployee(null);
     setEditFormData({});
+    setNewResumeFile(null);
+    setNewAttachments([]);
   };
 
   const handleEditInputChange = (field: keyof EmployeeUpdate, value: string | number) => {
@@ -146,7 +151,38 @@ function HRMEmployeesContent() {
 
     try {
       setEditLoading(true);
-      await HRMService.updateEmployee(selectedEmployee.id, editFormData);
+
+      let resumeUrl = selectedEmployee.resume_url;
+      const attachmentUrls: string[] = [...(selectedEmployee.attachments || [])];
+
+      if (newResumeFile) {
+        toast.info('Uploading new resume...');
+        
+        const resumeResponse = await FileUploadService.uploadEmployeeFile(newResumeFile, 'resume');
+        resumeUrl = resumeResponse.file_url;
+        toast.success('Resume updated successfully');
+      }
+
+      if (newAttachments.length > 0) {
+        toast.info(`Uploading ${newAttachments.length} attachment(s)...`);
+        for (const attachment of newAttachments) {
+          try {
+            const attachmentResponse = await FileUploadService.uploadEmployeeFile(attachment, 'attachment');
+            attachmentUrls.push(attachmentResponse.file_url);
+          } catch (error) {
+            toast.error(`Failed to upload ${attachment.name}`);
+          }
+        }
+        toast.success('Attachments uploaded successfully');
+      }
+
+      const updateData = {
+        ...editFormData,
+        resume_url: resumeUrl,
+        attachments: attachmentUrls,
+      };
+
+      await HRMService.updateEmployee(selectedEmployee.id, updateData);
       toast.success('Employee updated successfully');
       loadEmployees();
       closeEditModal();
@@ -524,6 +560,64 @@ function HRMEmployeesContent() {
                     </div>
                   </div>
                 </div>
+
+                {/* Documents */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Documents</h3>
+                  <div className="space-y-4">
+                    {selectedEmployee.resume_url ? (
+                      <div className="border rounded-lg p-4">
+                        <Label className="text-sm font-medium text-gray-500">Resume</Label>
+                        <div className="mt-2">
+                          <a 
+                            href={selectedEmployee.resume_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 text-sm underline flex items-center gap-2"
+                          >
+                            View Resume
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                          </a>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="border rounded-lg p-4">
+                        <Label className="text-sm font-medium text-gray-500">Resume</Label>
+                        <p className="text-sm text-gray-500 mt-2">No resume uploaded</p>
+                      </div>
+                    )}
+
+                    {selectedEmployee.attachments && selectedEmployee.attachments.length > 0 ? (
+                      <div className="border rounded-lg p-4">
+                        <Label className="text-sm font-medium text-gray-500">Additional Attachments ({selectedEmployee.attachments.length})</Label>
+                        <div className="mt-2 space-y-2">
+                          {selectedEmployee.attachments.map((url, index) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <a 
+                                href={url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 text-sm underline flex items-center gap-2"
+                              >
+                                Attachment {index + 1}
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                              </a>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="border rounded-lg p-4">
+                        <Label className="text-sm font-medium text-gray-500">Attachments</Label>
+                        <p className="text-sm text-gray-500 mt-2">No attachments</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
           </DialogContent>
@@ -731,6 +825,105 @@ function HRMEmployeesContent() {
                   </div>
                 </div>
               </div>
+
+              {/* Documents */}
+              {selectedEmployee && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Documents</h3>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Current Resume</Label>
+                      {selectedEmployee?.resume_url ? (
+                        <div className="flex items-center gap-2">
+                        <a 
+                          href={selectedEmployee?.resume_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 text-sm underline"
+                        >
+                          View Current Resume
+                        </a>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-500">No resume uploaded</p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-resume">Upload New Resume (Optional)</Label>
+                      <Input
+                        id="edit-resume"
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={(e) => setNewResumeFile(e.target.files?.[0] || null)}
+                        disabled={editLoading}
+                      />
+                      {newResumeFile && (
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <span>New: {newResumeFile.name}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setNewResumeFile(null)}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Current Attachments</Label>
+                      {selectedEmployee?.attachments && selectedEmployee?.attachments.length > 0 ? (
+                        <div className="space-y-1">
+                          {selectedEmployee?.attachments.map((url, index) => (
+                            <div key={index} className="text-sm">
+                              <a 
+                                href={url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 underline"
+                              >
+                                Attachment {index + 1}
+                              </a>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-500">No attachments</p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-attachments">Add More Attachments (Optional)</Label>
+                      <Input
+                        id="edit-attachments"
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        multiple
+                        onChange={(e) => setNewAttachments(Array.from(e.target.files || []))}
+                        disabled={editLoading}
+                      />
+                      {newAttachments.length > 0 && (
+                        <div className="space-y-1">
+                          {newAttachments.map((file, index) => (
+                            <div key={index} className="flex items-center gap-2 text-sm text-gray-600">
+                              <span>{file.name}</span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setNewAttachments(newAttachments.filter((_, i) => i !== index))}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Actions */}
               <div className="flex justify-end gap-4 pt-4">

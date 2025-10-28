@@ -58,6 +58,12 @@ class ModulePermission(str, Enum):
     FINANCE_UPDATE = "finance:update"
     FINANCE_DELETE = "finance:delete"
     
+    # Sales Module
+    SALES_VIEW = "sales:view"
+    SALES_CREATE = "sales:create"
+    SALES_UPDATE = "sales:update"
+    SALES_DELETE = "sales:delete"
+    
     # Projects Module
     PROJECTS_VIEW = "projects:view"
     PROJECTS_CREATE = "projects:create"

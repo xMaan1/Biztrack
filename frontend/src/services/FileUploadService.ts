@@ -33,7 +33,7 @@ class FileUploadService {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetch(`${API_BASE_URL}file-upload/logo`, {
+    const response = await fetch(`${API_BASE_URL}/file-upload/logo`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -58,7 +58,7 @@ class FileUploadService {
       throw new Error('Authentication required');
     }
 
-    const response = await fetch(`${API_BASE_URL}file-upload/logo/${filename}`, {
+    const response = await fetch(`${API_BASE_URL}/file-upload/logo/${filename}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -82,7 +82,7 @@ class FileUploadService {
       throw new Error('Authentication required');
     }
 
-    const response = await fetch(`${API_BASE_URL}file-upload/logo`, {
+    const response = await fetch(`${API_BASE_URL}/file-upload/logo`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -109,7 +109,7 @@ class FileUploadService {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetch(`${API_BASE_URL}file-upload/employee/${category}`, {
+    const response = await fetch(`${API_BASE_URL}/file-upload/employee/${category}`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -124,6 +124,28 @@ class FileUploadService {
     }
 
     return await response.json();
+  }
+
+  async deleteFile(s3Key: string): Promise<void> {
+    const token = localStorage.getItem('auth_token');
+    const tenantId = localStorage.getItem('currentTenantId');
+
+    if (!token || !tenantId) {
+      throw new Error('Authentication required');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/file-upload/delete/${s3Key}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'X-Tenant-ID': tenantId,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to delete file');
+    }
   }
 
   getLogoUrl(fileUrl: string): string {

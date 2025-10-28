@@ -7,7 +7,8 @@ from sqlalchemy import and_, or_, func, desc, text
 from pydantic import BaseModel
 
 from ...config.database import get_db
-from ...api.dependencies import get_current_user, get_tenant_context
+from ...api.dependencies import get_current_user, get_tenant_context, require_permission
+from ...models.unified_models import ModulePermission
 from ...models.unified_models import (
     InvoiceCreate, InvoiceUpdate, InvoiceStatus,
     PaymentCreate, PaymentUpdate, PaymentStatus,
@@ -714,7 +715,8 @@ def get_invoices(
     search: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_VIEW.value))
 ):
     """Get invoices with filtering and pagination"""
     try:

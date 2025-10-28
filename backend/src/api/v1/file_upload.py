@@ -303,3 +303,33 @@ async def upload_employee_file(
     except Exception as e:
         logger.error(f"Error uploading employee file: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to upload {category}: {str(e)}")
+
+@router.delete("/delete/{s3_key:path}")
+async def delete_file(
+    s3_key: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
+):
+    """Delete a file from S3"""
+    try:
+        logger.info(f"File delete request: {s3_key}")
+        
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+        
+        success = s3_service.delete_file(s3_key)
+        
+        if success:
+            return JSONResponse({
+                "success": True,
+                "message": "File deleted successfully"
+            })
+        else:
+            raise HTTPException(status_code=500, detail="Failed to delete file")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting file: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete file: {str(e)}")

@@ -22,7 +22,7 @@ export function PermissionGuard({
   fallback = <div>Access Denied</div>,
   redirectTo = '/dashboard'
 }: PermissionGuardProps) {
-  const { hasPermission, hasModuleAccess, isOwner, userPermissions, loading } = usePermissions();
+  const { hasPermission, hasModuleAccess, isOwner, userPermissions, loading, initializing } = usePermissions();
   const router = useRouter();
 
   // Check if user has required access
@@ -35,13 +35,12 @@ export function PermissionGuard({
 
   // Redirect if no access and redirectTo is specified
   React.useEffect(() => {
-    if (!loading && userPermissions && !hasAccess && redirectTo) {
+    if (!loading && !initializing && userPermissions && !hasAccess && redirectTo) {
       router.push(redirectTo);
     }
-  }, [hasAccess, redirectTo, router, loading, userPermissions]);
+  }, [hasAccess, redirectTo, router, loading, initializing, userPermissions]);
 
-  // Show loading state while permissions are being fetched
-  if (loading || !userPermissions) {
+  if (loading || initializing || !userPermissions) {
     return <div className="flex items-center justify-center p-8">
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
     </div>;

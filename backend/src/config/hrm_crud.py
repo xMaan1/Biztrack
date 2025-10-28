@@ -1,8 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 import uuid
-from .hrm_models import Employee, JobPosting, PerformanceReview, TimeEntry, LeaveRequest, Payroll, Benefits, Supplier
+from .hrm_models import Employee, JobPosting, PerformanceReview, TimeEntry, LeaveRequest, Payroll, Benefits, Supplier, Training, Application, TrainingEnrollment
 
 # Employee functions
 def get_employee_by_id(employee_id: str, db: Session, tenant_id: str = None) -> Optional[Employee]:
@@ -545,47 +546,99 @@ def delete_application(application_id: str, db: Session, tenant_id: str = None) 
 # HRM Dashboard functions
 def get_hrm_dashboard_data(db: Session, tenant_id: str) -> Dict[str, Any]:
     """Get HRM dashboard statistics"""
+    
     total_employees = db.query(Employee).filter(Employee.tenant_id == tenant_id).count()
     active_employees = db.query(Employee).filter(
         Employee.tenant_id == tenant_id,
         Employee.employmentStatus == "active"
     ).count()
     
-    total_job_postings = db.query(JobPosting).filter(JobPosting.tenant_id == tenant_id).count()
-    active_job_postings = db.query(JobPosting).filter(
+    recent_hires = db.query(Employee).filter(
+        Employee.tenant_id == tenant_id
+    ).order_by(Employee.hireDate.desc()).limit(5).all()
+    
+    job_postings = db.query(JobPosting).filter(
         JobPosting.tenant_id == tenant_id,
         JobPosting.isActive == True
-    ).count()
+    ).all()
     
-    total_leave_requests = db.query(LeaveRequest).filter(LeaveRequest.tenant_id == tenant_id).count()
+    upcoming_reviews = db.query(PerformanceReview).filter(
+        PerformanceReview.tenant_id == tenant_id,
+        PerformanceReview.reviewDate >= datetime.now()
+    ).order_by(PerformanceReview.reviewDate.asc()).limit(5).all()
+    
     pending_leave_requests = db.query(LeaveRequest).filter(
         LeaveRequest.tenant_id == tenant_id,
         LeaveRequest.status == "pending"
+    ).all()
+    
+    applications = db.query(Application).filter(
+        Application.tenant_id == tenant_id
+    ).order_by(Application.createdAt.desc()).limit(5).all()
+    
+    training_programs = db.query(Training).filter(
+        Training.tenant_id == tenant_id
+    ).order_by(Training.createdAt.desc()).limit(5).all()
+    
+    department_count = db.query(
+        Employee.department,
+        func.count(Employee.id)
+    ).filter(
+        Employee.tenant_id == tenant_id
+    ).group_by(Employee.department).all()
+    
+    department_distribution = {dept: count for dept, count in department_count}
+    
+    thirty_days_ago = datetime.now() - timedelta(days=30)
+    new_hires = db.query(Employee).filter(
+        Employee.tenant_id == tenant_id,
+        Employee.hireDate >= thirty_days_ago
     ).count()
     
-    total_performance_reviews = db.query(PerformanceReview).filter(PerformanceReview.tenant_id == tenant_id).count()
-    recent_reviews = db.query(PerformanceReview).filter(
-        PerformanceReview.tenant_id == tenant_id
-    ).order_by(PerformanceReview.reviewDate.desc()).limit(5).all()
+    turnover_rate = 0.0
+    if total_employees > 0:
+        terminated = db.query(Employee).filter(
+            Employee.tenant_id == tenant_id,
+            Employee.employmentStatus == "terminated"
+        ).count()
+        turnover_rate = (terminated / total_employees) * 100
+    
+    avg_salary = db.query(func.avg(Employee.salary)).filter(
+        Employee.tenant_id == tenant_id,
+        Employee.employmentStatus == "active"
+    ).scalar() or 0.0
+    
+    pending_applications = db.query(Application).filter(
+        Application.tenant_id == tenant_id,
+        Application.status == "applied"
+    ).count()
+    
+    total_completed_training = 0
+    total_enrollments = 0
+    training_completion_rate = 0.0
+    if total_enrollments > 0:
+        training_completion_rate = (total_completed_training / total_enrollments) * 100
     
     return {
-        "employees": {
-            "total": total_employees,
-            "active": active_employees,
-            "inactive": total_employees - active_employees
+        "metrics": {
+            "totalEmployees": total_employees,
+            "activeEmployees": active_employees,
+            "newHires": new_hires,
+            "turnoverRate": round(turnover_rate, 2),
+            "averageSalary": round(avg_salary, 2),
+            "openPositions": len(job_postings),
+            "pendingApplications": pending_applications,
+            "upcomingReviews": len(upcoming_reviews),
+            "pendingLeaveRequests": len(pending_leave_requests),
+            "trainingCompletionRate": round(training_completion_rate, 2)
         },
-        "job_postings": {
-            "total": total_job_postings,
-            "active": active_job_postings
-        },
-        "leave_requests": {
-            "total": total_leave_requests,
-            "pending": pending_leave_requests
-        },
-        "performance_reviews": {
-            "total": total_performance_reviews,
-            "recent": len(recent_reviews)
-        }
+        "recentHires": [],
+        "upcomingReviews": [],
+        "pendingLeaveRequests": [],
+        "openJobPostings": [],
+        "recentApplications": [],
+        "departmentDistribution": department_distribution or {},
+        "trainingPrograms": []
     }
 
 # Supplier functions

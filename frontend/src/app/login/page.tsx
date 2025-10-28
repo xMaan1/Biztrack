@@ -10,8 +10,7 @@ export default function LoginPage() {
   const router = useRouter();
 
   const handleLoginSuccess = () => {
-    // Use router.push for smoother navigation
-    router.push('/');
+    router.push('/dashboard');
   };
 
   return (

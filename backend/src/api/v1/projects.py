@@ -243,7 +243,7 @@ async def delete_project_time_entry(
 ):
     """Delete a time entry"""
     try:
-        success = delete_time_entry(db, entry_id, tenant_context["tenant_id"] if tenant_context else None)
+        success = delete_time_entry(entry_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not success:
             raise HTTPException(status_code=404, detail="Time entry not found")
         return {"message": "Time entry deleted successfully"}
@@ -259,7 +259,7 @@ async def approve_project_time_entry(
 ):
     """Approve a time entry"""
     try:
-        time_entry = get_time_entry_by_id(db, entry_id, tenant_context["tenant_id"] if tenant_context else None)
+        time_entry = get_time_entry_by_id(entry_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not time_entry:
             raise HTTPException(status_code=404, detail="Time entry not found")
         
@@ -286,7 +286,7 @@ async def reject_project_time_entry(
 ):
     """Reject a time entry"""
     try:
-        time_entry = get_time_entry_by_id(db, entry_id, tenant_context["tenant_id"] if tenant_context else None)
+        time_entry = get_time_entry_by_id(entry_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not time_entry:
             raise HTTPException(status_code=404, detail="Time entry not found")
         

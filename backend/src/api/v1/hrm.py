@@ -22,6 +22,7 @@ from ...models.unified_models import (
     Supplier, SupplierCreate, SupplierUpdate, SupplierResponse, SuppliersResponse
 )
 from ...config.hrm_models import Employee as DBEmployee
+from ...services.s3_service import s3_service
 from ...config.database import (
     get_db, get_user_by_id,
     get_employees, get_employee_by_id, create_employee, update_employee, delete_employee,
@@ -142,19 +143,27 @@ async def create_hrm_employee(
         if not tenant_context:
             raise HTTPException(status_code=400, detail="Tenant context required")
         
-        # Create database employee record
         db_employee = DBEmployee(
             tenant_id=tenant_context["tenant_id"],
             userId=current_user.id,
             employeeId=employee_data.employeeId,
-            department=employee_data.department.value,
+            department=employee_data.department.value if hasattr(employee_data.department, 'value') else employee_data.department,
             position=employee_data.position,
-            hireDate=datetime.strptime(employee_data.hireDate, "%Y-%m-%d").date(),
+            hireDate=datetime.strptime(employee_data.hireDate, "%Y-%m-%d").date() if employee_data.hireDate else datetime.now().date(),
             salary=employee_data.salary,
             managerId=uuid.UUID(employee_data.managerId) if employee_data.managerId else None,
             notes=employee_data.notes,
             resume_url=employee_data.resume_url,
-            attachments=employee_data.attachments if employee_data.attachments else []
+            attachments=employee_data.attachments if employee_data.attachments else [],
+            phone=employee_data.phone,
+            dateOfBirth=datetime.strptime(employee_data.dateOfBirth, "%Y-%m-%d").date() if employee_data.dateOfBirth else None,
+            address=employee_data.address,
+            emergencyContact=employee_data.emergencyContact,
+            emergencyPhone=employee_data.emergencyPhone,
+            skills=employee_data.skills if employee_data.skills else [],
+            certifications=employee_data.certifications if employee_data.certifications else [],
+            employeeType=employee_data.employeeType.value if hasattr(employee_data.employeeType, 'value') else employee_data.employeeType,
+            employmentStatus=employee_data.employmentStatus.value if hasattr(employee_data.employmentStatus, 'value') else employee_data.employmentStatus
         )
         
         db.add(db_employee)
@@ -273,11 +282,37 @@ async def delete_hrm_employee(
 ):
     """Delete employee"""
     try:
+        employee = get_employee_by_id(db, employee_id, tenant_context["tenant_id"] if tenant_context else None)
+        if not employee:
+            raise HTTPException(status_code=404, detail="Employee not found")
+        
+        resume_url = employee.resume_url
+        attachments = employee.attachments if employee.attachments else []
+        
+        if resume_url:
+            try:
+                s3_key = resume_url.split('.amazonaws.com/')[1] if '.amazonaws.com/' in resume_url else None
+                if s3_key:
+                    s3_service.delete_file(s3_key)
+            except Exception as e:
+                print(f"Error deleting resume from S3: {str(e)}")
+        
+        for attachment_url in attachments:
+            try:
+                s3_key = attachment_url.split('.amazonaws.com/')[1] if '.amazonaws.com/' in attachment_url else None
+                if s3_key:
+                    s3_service.delete_file(s3_key)
+            except Exception as e:
+                print(f"Error deleting attachment from S3: {str(e)}")
+        
         success = delete_employee(employee_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not success:
             raise HTTPException(status_code=404, detail="Employee not found")
         return {"message": "Employee deleted successfully"}
+    except HTTPException:
+        raise
     except Exception as e:
+        db.rollback()
         raise HTTPException(status_code=500, detail=f"Error deleting employee: {str(e)}")
 
 # Job Posting endpoints

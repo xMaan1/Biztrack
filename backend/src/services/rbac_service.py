@@ -152,8 +152,7 @@ class RBACService:
         """Get list of modules user has access to"""
         # Owners have access to all modules
         if RBACService.is_owner(db, user_id, tenant_id):
-            all_modules = ['crm', 'sales', 'pos', 'inventory', 'hrm', 'projects', 'reports', 'events', 'work-orders', 'production', 'quality', 'maintenance', 'banking', 'ledger', 'settings', 'notifications', 'users']
-            print(f"[RBAC DEBUG] Owner accessible modules: {all_modules}")
+            all_modules = ['crm', 'sales', 'pos', 'inventory', 'hrm', 'projects', 'reports', 'events', 'work-orders', 'production', 'quality', 'maintenance', 'banking', 'ledger', 'finance', 'settings', 'notifications', 'users', 'dashboard']
             return all_modules
 
         user_permissions = RBACService.get_user_permissions(db, user_id, tenant_id)
@@ -165,8 +164,8 @@ class RBACService:
                 modules.add(module)
 
         accessible_modules = list(modules)
-        print(f"[RBAC DEBUG] Non-owner accessible modules: {accessible_modules}")
-        print(f"[RBAC DEBUG] User permissions: {user_permissions}")
+        logger.info(f"[RBAC DEBUG] Non-owner accessible modules: {accessible_modules}")
+        logger.info(f"[RBAC DEBUG] User permissions: {user_permissions}")
         return accessible_modules
     
     @staticmethod
