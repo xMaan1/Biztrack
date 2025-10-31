@@ -416,6 +416,7 @@ export interface TillTransaction {
   id: string;
   tenantId: string;
   tillId: string;
+  bankAccountId?: string;
   transactionNumber: string;
   transactionDate: string;
   transactionType: TillTransactionType;
@@ -430,10 +431,12 @@ export interface TillTransaction {
   notes?: string;
   createdAt: string;
   updatedAt: string;
+  bankAccount?: BankAccount;
 }
 
 export interface TillTransactionCreate {
   tillId: string;
+  bankAccountId?: string;
   transactionDate: string;
   transactionType: TillTransactionType;
   amount: number;

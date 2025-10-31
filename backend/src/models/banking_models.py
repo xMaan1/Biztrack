@@ -366,6 +366,7 @@ class Till(TillBase):
 # Till Transaction Models
 class TillTransactionBase(BaseModel):
     till_id: str = Field(alias="tillId")
+    bank_account_id: Optional[str] = Field(alias="bankAccountId", default=None)
     transaction_date: datetime = Field(alias="transactionDate")
     transaction_type: TillTransactionType = Field(alias="transactionType")
     amount: float
@@ -382,6 +383,7 @@ class TillTransactionCreate(TillTransactionBase):
     pass
 
 class TillTransactionUpdate(BaseModel):
+    bank_account_id: Optional[str] = Field(alias="bankAccountId", default=None)
     transaction_date: Optional[datetime] = Field(alias="transactionDate", default=None)
     transaction_type: Optional[TillTransactionType] = Field(alias="transactionType", default=None)
     amount: Optional[float] = None
@@ -402,8 +404,9 @@ class TillTransaction(TillTransactionBase):
     approved_by: Optional[str] = Field(alias="approvedBy", default=None)
     created_at: datetime = Field(alias="createdAt")
     updated_at: datetime = Field(alias="updatedAt")
+    bank_account: Optional["BankAccount"] = Field(alias="bankAccount", default=None)
 
-    @field_validator('id', 'tenant_id', 'till_id', 'performed_by', 'approved_by', mode='before')
+    @field_validator('id', 'tenant_id', 'till_id', 'bank_account_id', 'performed_by', 'approved_by', mode='before')
     @classmethod
     def convert_uuid_to_str(cls, v):
         if isinstance(v, uuid.UUID):

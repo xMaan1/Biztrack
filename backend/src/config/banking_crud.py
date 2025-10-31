@@ -4,7 +4,7 @@ Banking CRUD Operations
 
 from typing import List, Optional, Dict, Any
 from datetime import datetime, date
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy import and_, or_, func, desc, asc
 from .banking_models import (
     BankAccount, BankTransaction, CashPosition, Till, TillTransaction,
@@ -493,7 +493,9 @@ def create_till_transaction(transaction_data: Dict[str, Any], db: Session) -> Ti
 
 def get_till_transaction_by_id(transaction_id: str, db: Session, tenant_id: str) -> Optional[TillTransaction]:
     """Get till transaction by ID"""
-    return db.query(TillTransaction).filter(
+    return db.query(TillTransaction).options(
+        selectinload(TillTransaction.bank_account)
+    ).filter(
         and_(
             TillTransaction.id == transaction_id,
             TillTransaction.tenant_id == tenant_id
@@ -503,7 +505,9 @@ def get_till_transaction_by_id(transaction_id: str, db: Session, tenant_id: str)
 def get_all_till_transactions(db: Session, tenant_id: str, till_id: Optional[str] = None, 
                              skip: int = 0, limit: int = 100) -> List[TillTransaction]:
     """Get all till transactions"""
-    query = db.query(TillTransaction).filter(
+    query = db.query(TillTransaction).options(
+        selectinload(TillTransaction.bank_account)
+    ).filter(
         TillTransaction.tenant_id == tenant_id
     )
     

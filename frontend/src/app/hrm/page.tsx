@@ -88,7 +88,7 @@ function HRMDashboardContent() {
               </Link>
             </Button>
             <Button asChild>
-              <Link href="/hrm/jobs/new">
+              <Link href="/hrm/job-postings">
                 <Briefcase className="w-4 h-4 mr-2" />
                 Post Job
               </Link>
@@ -581,7 +581,7 @@ function HRMDashboardContent() {
                 </Link>
               </Button>
               <Button asChild variant="outline" className="h-20 flex-col">
-                <Link href="/hrm/jobs/new">
+                <Link href="/hrm/job-postings">
                   <Briefcase className="h-6 w-6 mb-2" />
                   <span className="text-sm">Post Job</span>
                 </Link>

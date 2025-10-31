@@ -308,6 +308,11 @@ async def update_user_info(
     update_dict = user_data.dict(exclude_unset=True)
     logger.info(f"Updating user with data: {update_dict}")
     updated_user = update_user(user_id, update_dict, db)
+    
+    if not updated_user:
+        logger.error(f"Failed to update user: {user_id}")
+        raise HTTPException(status_code=404, detail="User not found or could not be updated")
+    
     logger.info(f"User updated successfully: {updated_user.id}")
     
     return User(

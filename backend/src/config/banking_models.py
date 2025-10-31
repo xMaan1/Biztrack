@@ -252,6 +252,7 @@ class TillTransaction(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
     till_id = Column(UUID(as_uuid=True), ForeignKey("tills.id"), nullable=False)
+    bank_account_id = Column(UUID(as_uuid=True), ForeignKey("bank_accounts.id"), nullable=True)
     
     transaction_number = Column(String, unique=True, index=True)
     transaction_date = Column(DateTime, nullable=False, index=True)
@@ -274,6 +275,7 @@ class TillTransaction(Base):
     
     tenant = relationship("Tenant", back_populates="till_transactions")
     till = relationship("Till", back_populates="transactions")
+    bank_account = relationship("BankAccount", foreign_keys=[bank_account_id])
     performed_by_user = relationship("User", foreign_keys=[performed_by])
     approved_by_user = relationship("User", foreign_keys=[approved_by])
     

@@ -44,6 +44,15 @@ export function TimeTracker({ projects = [], tasks = [], onTimeEntryCreated }: T
   }, []);
 
   useEffect(() => {
+    if (selectedProject && selectedTask) {
+      const task = tasks.find(t => t.id === selectedTask);
+      if (task && task.projectId !== selectedProject) {
+        setSelectedTask('');
+      }
+    }
+  }, [selectedProject, selectedTask, tasks]);
+
+  useEffect(() => {
     let interval: NodeJS.Timeout;
     if (currentSession?.isActive) {
       interval = setInterval(() => {
@@ -208,7 +217,7 @@ export function TimeTracker({ projects = [], tasks = [], onTimeEntryCreated }: T
               <Select 
                 value={selectedTask || undefined} 
                 onValueChange={setSelectedTask}
-                disabled={!selectedProject}
+                disabled={filteredTasks.length === 0}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select task" />

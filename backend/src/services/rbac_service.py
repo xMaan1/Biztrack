@@ -17,6 +17,7 @@ class RBACService:
             ModulePermission.HRM_VIEW, ModulePermission.HRM_CREATE, ModulePermission.HRM_UPDATE, ModulePermission.HRM_DELETE,
             ModulePermission.INVENTORY_VIEW, ModulePermission.INVENTORY_CREATE, ModulePermission.INVENTORY_UPDATE, ModulePermission.INVENTORY_DELETE,
             ModulePermission.FINANCE_VIEW, ModulePermission.FINANCE_CREATE, ModulePermission.FINANCE_UPDATE, ModulePermission.FINANCE_DELETE,
+            ModulePermission.SALES_VIEW, ModulePermission.SALES_CREATE, ModulePermission.SALES_UPDATE, ModulePermission.SALES_DELETE,
             ModulePermission.PROJECTS_VIEW, ModulePermission.PROJECTS_CREATE, ModulePermission.PROJECTS_UPDATE, ModulePermission.PROJECTS_DELETE,
             ModulePermission.PRODUCTION_VIEW, ModulePermission.PRODUCTION_CREATE, ModulePermission.PRODUCTION_UPDATE, ModulePermission.PRODUCTION_DELETE,
             ModulePermission.QUALITY_VIEW, ModulePermission.QUALITY_CREATE, ModulePermission.QUALITY_UPDATE, ModulePermission.QUALITY_DELETE,
@@ -110,6 +111,9 @@ class RBACService:
     @staticmethod
     def has_permission(db: Session, user_id: str, tenant_id: str, permission: str) -> bool:
         """Check if user has specific permission"""
+        if RBACService.is_owner(db, user_id, tenant_id):
+            return True
+        
         user_permissions = RBACService.get_user_permissions(db, user_id, tenant_id)
         return permission in user_permissions
     

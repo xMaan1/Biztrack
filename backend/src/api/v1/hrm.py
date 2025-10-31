@@ -282,7 +282,8 @@ async def delete_hrm_employee(
 ):
     """Delete employee"""
     try:
-        employee = get_employee_by_id(db, employee_id, tenant_context["tenant_id"] if tenant_context else None)
+        tenant_id = str(tenant_context["tenant_id"]) if tenant_context else None
+        employee = get_employee_by_id(employee_id, db, tenant_id)
         if not employee:
             raise HTTPException(status_code=404, detail="Employee not found")
         
@@ -305,7 +306,7 @@ async def delete_hrm_employee(
             except Exception as e:
                 print(f"Error deleting attachment from S3: {str(e)}")
         
-        success = delete_employee(employee_id, db, tenant_context["tenant_id"] if tenant_context else None)
+        success = delete_employee(employee_id, db, tenant_id)
         if not success:
             raise HTTPException(status_code=404, detail="Employee not found")
         return {"message": "Employee deleted successfully"}

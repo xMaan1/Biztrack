@@ -14,7 +14,8 @@ import { Plus, Eye } from 'lucide-react';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { toast } from 'sonner';
 import { tillService } from '@/src/services/TillService';
-import type { Till, TillCreate, TillTransaction, TillTransactionCreate, TillTransactionType } from '@/src/models/banking';
+import { bankingService } from '@/src/services/BankingService';
+import type { Till, TillCreate, TillTransaction, TillTransactionCreate, TillTransactionType, BankAccount } from '@/src/models/banking';
 import { getTillTransactionTypeLabel, getTillTransactionTypeColor } from '@/src/models/banking';
 import { formatDate } from '@/src/lib/utils';
 
@@ -27,9 +28,23 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
   const { formatCurrency } = useCurrency();
   const [selectedTill, setSelectedTill] = useState<Till | null>(null);
   const [transactions, setTransactions] = useState<TillTransaction[]>([]);
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [showCreateTillModal, setShowCreateTillModal] = useState(false);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  
+  React.useEffect(() => {
+    loadBankAccounts();
+  }, []);
+  
+  const loadBankAccounts = async () => {
+    try {
+      const accounts = await bankingService.getBankAccounts(true);
+      setBankAccounts(accounts);
+    } catch (error) {
+      console.error('Failed to load bank accounts:', error);
+    }
+  };
   
   const [tillFormData, setTillFormData] = useState<TillCreate>({
     name: '',
@@ -41,6 +56,7 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
 
   const [transactionFormData, setTransactionFormData] = useState<TillTransactionCreate>({
     tillId: '',
+    bankAccountId: undefined,
     transactionDate: new Date().toISOString().split('T')[0],
     transactionType: 'deposit' as TillTransactionType,
     amount: 0,
@@ -98,6 +114,7 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
       setShowTransactionModal(false);
       setTransactionFormData({
         tillId: selectedTill.id,
+        bankAccountId: undefined,
         transactionDate: new Date().toISOString().split('T')[0],
         transactionType: 'deposit' as TillTransactionType,
         amount: 0,
@@ -242,7 +259,9 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
                     <TableHead>Date</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Amount</TableHead>
-                    <TableHead>Balance</TableHead>
+                    <TableHead>Running Balance</TableHead>
+                    <TableHead>Bank Account</TableHead>
+                    <TableHead>Bank Balance</TableHead>
                     <TableHead>Description</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -259,6 +278,20 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
                         {t.transactionType === 'deposit' ? '+' : '-'}{formatCurrency(t.amount)}
                       </TableCell>
                       <TableCell className="font-medium">{formatCurrency(t.runningBalance)}</TableCell>
+                      <TableCell>
+                        {t.bankAccount ? (
+                          <span className="text-sm">{t.bankAccount.accountName || t.bankAccount.bankName}</span>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {t.bankAccount ? (
+                          <span className="font-medium text-blue-600">{formatCurrency(t.bankAccount.currentBalance || 0)}</span>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
                       <TableCell>{t.description}</TableCell>
                     </TableRow>
                   ))}
@@ -289,6 +322,25 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
                   <SelectItem value="deposit">Deposit</SelectItem>
                   <SelectItem value="withdrawal">Withdrawal</SelectItem>
                   <SelectItem value="adjustment">Adjustment</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="bankAccountId">Bank Account (Optional)</Label>
+              <Select
+                value={transactionFormData.bankAccountId || undefined}
+                onValueChange={(value) => setTransactionFormData({ ...transactionFormData, bankAccountId: value === 'none' ? undefined : value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select bank account (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {bankAccounts.map((account) => (
+                    <SelectItem key={account.id} value={account.id}>
+                      {account.accountName} ({account.bankName}) - {formatCurrency(account.currentBalance || 0)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

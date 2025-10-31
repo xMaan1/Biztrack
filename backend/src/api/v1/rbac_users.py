@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_
 from typing import List, Optional
 from uuid import UUID
+from datetime import datetime
 
 from ...models.unified_models import (
     User, UserCreate, UserUpdate, UsersResponse,
@@ -265,22 +266,46 @@ async def update_tenant_user(
     current_user = Depends(require_permission(ModulePermission.USERS_UPDATE.value))
 ):
     """Update a tenant user"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info(f"Updating tenant user: {tenant_user_id}, tenant: {tenant_context['tenant_id']}")
+    
+    try:
+        tenant_user_uuid = UUID(tenant_user_id)
+        tenant_id_uuid = UUID(tenant_context["tenant_id"])
+    except (ValueError, TypeError) as e:
+        logger.error(f"Invalid UUID format: {e}")
+        raise HTTPException(status_code=400, detail="Invalid ID format")
+    
     tenant_user = db.query(TenantUserModel).filter(
         and_(
-            TenantUserModel.id == tenant_user_id,
-            TenantUserModel.tenant_id == tenant_context["tenant_id"]
+            TenantUserModel.id == tenant_user_uuid,
+            TenantUserModel.tenant_id == tenant_id_uuid
         )
     ).first()
     
     if not tenant_user:
+        logger.error(f"Tenant user not found: {tenant_user_id} for tenant {tenant_context['tenant_id']}")
+        
+        all_tenant_users = db.query(TenantUserModel).filter(
+            TenantUserModel.tenant_id == tenant_id_uuid
+        ).all()
+        logger.info(f"Available tenant users for tenant {tenant_context['tenant_id']}: {[str(tu.id) for tu in all_tenant_users]}")
+        
         raise HTTPException(status_code=404, detail="Tenant user not found")
     
     # Verify role exists if updating role
     if user_data.role_id:
+        try:
+            role_uuid = UUID(user_data.role_id)
+        except (ValueError, TypeError):
+            raise HTTPException(status_code=400, detail="Invalid role ID format")
+        
         role = db.query(RoleModel).filter(
             and_(
-                RoleModel.id == user_data.role_id,
-                RoleModel.tenant_id == tenant_context["tenant_id"]
+                RoleModel.id == role_uuid,
+                RoleModel.tenant_id == tenant_id_uuid
             )
         ).first()
         
@@ -288,10 +313,19 @@ async def update_tenant_user(
             raise HTTPException(status_code=404, detail="Role not found")
     
     update_dict = user_data.dict(exclude_unset=True)
+    logger.info(f"Update data: {update_dict}")
+    
+    if 'role_id' in update_dict and update_dict['role_id']:
+        try:
+            update_dict['role_id'] = UUID(update_dict['role_id'])
+        except (ValueError, TypeError):
+            raise HTTPException(status_code=400, detail="Invalid role ID format")
+    
     for key, value in update_dict.items():
         if hasattr(tenant_user, key) and value is not None:
             setattr(tenant_user, key, value)
     
+    tenant_user.updatedAt = datetime.utcnow()
     db.commit()
     db.refresh(tenant_user)
     
