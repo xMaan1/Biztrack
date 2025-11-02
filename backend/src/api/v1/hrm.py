@@ -3,7 +3,10 @@ from sqlalchemy.orm import Session
 from typing import Optional, List
 import json
 import uuid
+import logging
 from datetime import datetime, timedelta
+
+logger = logging.getLogger(__name__)
 
 from ...models.unified_models import (
     User, Employee, EmployeeCreate, EmployeeUpdate, HRMEmployeesResponse,
@@ -37,6 +40,9 @@ from ...config.database import (
     get_training_enrollments, get_training_enrollment_by_id, create_training_enrollment, update_training_enrollment, delete_training_enrollment,
     get_hrm_dashboard_data,
     get_suppliers, get_supplier_by_id, get_supplier_by_code, create_supplier, update_supplier, delete_supplier
+)
+from ...config.core_crud import (
+    update_user,
 )
 from ...api.dependencies import get_current_user, get_tenant_context, require_tenant_admin_or_super_admin
 
@@ -233,44 +239,59 @@ async def update_hrm_employee(
 ):
     """Update employee"""
     try:
-        update_data = {k: v for k, v in employee_update.dict().items() if v is not None}
-        db_employee = update_employee(employee_id, update_data, db, tenant_context["tenant_id"] if tenant_context else None)
+        update_data = employee_update.dict(exclude_unset=True)
+        
+        user_fields = ['firstName', 'lastName', 'email']
+        user_update_data = {k: v for k, v in update_data.items() if k in user_fields}
+        employee_update_data = {k: v for k, v in update_data.items() if k not in user_fields}
+        
+        db_employee_before = get_employee_by_id(employee_id, db, tenant_context["tenant_id"] if tenant_context else None)
+        if not db_employee_before:
+            raise HTTPException(status_code=404, detail="Employee not found")
+        
+        if user_update_data and db_employee_before.userId:
+            update_user(str(db_employee_before.userId), user_update_data, db)
+        
+        db_employee = update_employee(employee_id, employee_update_data, db, tenant_context["tenant_id"] if tenant_context else None)
         if not db_employee:
             raise HTTPException(status_code=404, detail="Employee not found")
         
-        # Get user data for this employee
         user = get_user_by_id(str(db_employee.userId), db) if db_employee.userId else None
         
-        # Convert to response model
-        return Employee(
+        response_employee = Employee(
             id=str(db_employee.id),
             firstName=user.firstName if user else "",
             lastName=user.lastName if user else "",
             email=user.email if user else "",
-            phone=None,  # Not stored in User model
-            dateOfBirth=None,  # Not stored in current DB model
+            phone=db_employee.phone,
+            dateOfBirth=db_employee.dateOfBirth.isoformat() if db_employee.dateOfBirth else None,
             hireDate=db_employee.hireDate.isoformat() if db_employee.hireDate else "",
             employeeId=db_employee.employeeId,
             department=Department(db_employee.department) if db_employee.department else Department.OTHER,
             position=db_employee.position,
-            employeeType=EmployeeType.FULL_TIME,  # Default since not in DB model
-            employmentStatus=EmploymentStatus.ACTIVE,  # Default since not in DB model
+            employeeType=EmployeeType(db_employee.employeeType) if db_employee.employeeType else EmployeeType.FULL_TIME,
+            employmentStatus=EmploymentStatus(db_employee.employmentStatus) if db_employee.employmentStatus else EmploymentStatus.ACTIVE,
             managerId=str(db_employee.managerId) if db_employee.managerId else None,
             salary=db_employee.salary,
-            address=None,  # Not stored in current DB model
-            emergencyContact=None,  # Not stored in current DB model
-            emergencyPhone=None,  # Not stored in current DB model
-            skills=[],  # Not stored in current DB model
-            certifications=[],  # Not stored in current DB model
+            address=db_employee.address,
+            emergencyContact=db_employee.emergencyContact,
+            emergencyPhone=db_employee.emergencyPhone,
+            skills=db_employee.skills if db_employee.skills else [],
+            certifications=db_employee.certifications if db_employee.certifications else [],
             notes=db_employee.notes,
             resume_url=db_employee.resume_url if hasattr(db_employee, 'resume_url') else None,
             attachments=db_employee.attachments if db_employee.attachments else [],
             tenant_id=str(db_employee.tenant_id),
-            createdBy="",  # Not stored in current DB model
+            createdBy="",
             createdAt=db_employee.createdAt.isoformat() if db_employee.createdAt else "",
             updatedAt=db_employee.updatedAt.isoformat() if db_employee.updatedAt else ""
         )
+        
+        return response_employee
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.error(f"Error updating employee: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error updating employee: {str(e)}")
 
 @router.delete("/employees/{employee_id}")
@@ -290,25 +311,49 @@ async def delete_hrm_employee(
         resume_url = employee.resume_url
         attachments = employee.attachments if employee.attachments else []
         
+        s3_deletion_errors = []
+        
         if resume_url:
             try:
                 s3_key = resume_url.split('.amazonaws.com/')[1] if '.amazonaws.com/' in resume_url else None
                 if s3_key:
-                    s3_service.delete_file(s3_key)
+                    logger.info(f"[DELETE EMPLOYEE] Attempting to delete resume from S3: {s3_key}")
+                    success = s3_service.delete_file(s3_key)
+                    if not success:
+                        s3_deletion_errors.append(f"Failed to delete resume: {s3_key}")
+                        logger.warning(f"[DELETE EMPLOYEE] Resume deletion failed (employee will still be deleted): {s3_key}")
             except Exception as e:
-                print(f"Error deleting resume from S3: {str(e)}")
+                error_msg = f"Error deleting resume from S3: {str(e)}"
+                s3_deletion_errors.append(error_msg)
+                logger.error(f"[DELETE EMPLOYEE] {error_msg}", exc_info=True)
         
         for attachment_url in attachments:
             try:
                 s3_key = attachment_url.split('.amazonaws.com/')[1] if '.amazonaws.com/' in attachment_url else None
                 if s3_key:
-                    s3_service.delete_file(s3_key)
+                    logger.info(f"[DELETE EMPLOYEE] Attempting to delete attachment from S3: {s3_key}")
+                    success = s3_service.delete_file(s3_key)
+                    if not success:
+                        s3_deletion_errors.append(f"Failed to delete attachment: {s3_key}")
+                        logger.warning(f"[DELETE EMPLOYEE] Attachment deletion failed (employee will still be deleted): {s3_key}")
             except Exception as e:
-                print(f"Error deleting attachment from S3: {str(e)}")
+                error_msg = f"Error deleting attachment from S3: {str(e)}"
+                s3_deletion_errors.append(error_msg)
+                logger.error(f"[DELETE EMPLOYEE] {error_msg}", exc_info=True)
         
         success = delete_employee(employee_id, db, tenant_id)
         if not success:
             raise HTTPException(status_code=404, detail="Employee not found")
+        
+        if s3_deletion_errors:
+            logger.warning(f"[DELETE EMPLOYEE] Employee deleted but S3 files could not be deleted: {s3_deletion_errors}")
+            return {
+                "message": "Employee deleted successfully",
+                "warning": "Some files could not be deleted from S3 (check AWS IAM permissions)",
+                "errors": s3_deletion_errors
+            }
+        
+        logger.info(f"[DELETE EMPLOYEE] Employee and all associated files deleted successfully")
         return {"message": "Employee deleted successfully"}
     except HTTPException:
         raise

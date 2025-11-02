@@ -3,7 +3,10 @@ from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 import uuid
+import logging
 from .hrm_models import Employee, JobPosting, PerformanceReview, TimeEntry, LeaveRequest, Payroll, Benefits, Supplier, Training, Application, TrainingEnrollment
+
+logger = logging.getLogger(__name__)
 
 # Employee functions
 def get_employee_by_id(employee_id: str, db: Session, tenant_id: str = None) -> Optional[Employee]:
@@ -39,21 +42,44 @@ def create_employee(employee_data: dict, db: Session) -> Employee:
 
 def update_employee(employee_id: str, update_data: dict, db: Session, tenant_id: str = None) -> Optional[Employee]:
     employee = get_employee_by_id(employee_id, db, tenant_id)
-    if employee:
-        for key, value in update_data.items():
-            if hasattr(employee, key) and value is not None:
-                # Handle special field mappings
-                if key == 'department' and hasattr(value, 'value'):
+    if not employee:
+        return None
+    
+    for key, value in update_data.items():
+        if hasattr(employee, key) and value is not None:
+            if key == 'department' and hasattr(value, 'value'):
+                setattr(employee, key, value.value)
+            elif key == 'hireDate' and isinstance(value, str):
+                setattr(employee, key, datetime.strptime(value, "%Y-%m-%d").date())
+            elif key == 'managerId' and value:
+                setattr(employee, key, uuid.UUID(value))
+            elif key == 'employeeType':
+                if hasattr(value, 'value'):
                     setattr(employee, key, value.value)
-                elif key == 'hireDate' and isinstance(value, str):
-                    setattr(employee, key, datetime.strptime(value, "%Y-%m-%d").date())
-                elif key == 'managerId' and value:
-                    setattr(employee, key, uuid.UUID(value))
-                else:
+                elif isinstance(value, str):
                     setattr(employee, key, value)
-        employee.updatedAt = datetime.utcnow()
+                else:
+                    setattr(employee, key, str(value))
+            elif key == 'employmentStatus':
+                if hasattr(value, 'value'):
+                    setattr(employee, key, value.value)
+                elif isinstance(value, str):
+                    setattr(employee, key, value)
+                else:
+                    setattr(employee, key, str(value))
+            else:
+                setattr(employee, key, value)
+    
+    employee.updatedAt = datetime.utcnow()
+    
+    try:
         db.commit()
         db.refresh(employee)
+    except Exception as e:
+        logger.error(f"Error committing employee update to database: {str(e)}", exc_info=True)
+        db.rollback()
+        raise
+    
     return employee
 
 def delete_employee(employee_id: str, db: Session, tenant_id: str = None) -> bool:

@@ -8,14 +8,15 @@ import { Input } from '@/src/components/ui/input';
 import { Label } from '@/src/components/ui/label';
 import { Textarea } from '@/src/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/src/components/ui/select';
+import { Switch } from '@/src/components/ui/switch';
 import { Badge } from '@/src/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/src/components/ui/table';
-import { Plus, Eye } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2 } from 'lucide-react';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { toast } from 'sonner';
 import { tillService } from '@/src/services/TillService';
 import { bankingService } from '@/src/services/BankingService';
-import type { Till, TillCreate, TillTransaction, TillTransactionCreate, TillTransactionType, BankAccount } from '@/src/models/banking';
+import type { Till, TillCreate, TillUpdate, TillTransaction, TillTransactionCreate, TillTransactionType, BankAccount } from '@/src/models/banking';
 import { getTillTransactionTypeLabel, getTillTransactionTypeColor } from '@/src/models/banking';
 import { formatDate } from '@/src/lib/utils';
 
@@ -31,7 +32,12 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [showCreateTillModal, setShowCreateTillModal] = useState(false);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [showEditTillModal, setShowEditTillModal] = useState(false);
+  const [showDeleteTillModal, setShowDeleteTillModal] = useState(false);
+  const [tillToEdit, setTillToEdit] = useState<Till | null>(null);
+  const [tillToDelete, setTillToDelete] = useState<Till | null>(null);
   const [loading, setLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   
   React.useEffect(() => {
     loadBankAccounts();
@@ -51,6 +57,14 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
     location: '',
     initialBalance: 0,
     currency: 'USD',
+    description: '',
+  });
+
+  const [editTillFormData, setEditTillFormData] = useState<TillUpdate>({
+    name: '',
+    location: '',
+    initialBalance: 0,
+    isActive: true,
     description: '',
   });
 
@@ -85,6 +99,72 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
       toast.error('Failed to create till');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const openEditModal = (till: Till) => {
+    setTillToEdit(till);
+    setEditTillFormData({
+      name: till.name,
+      location: till.location || '',
+      initialBalance: till.initialBalance || 0,
+      isActive: till.isActive,
+      description: till.description || '',
+    });
+    setShowEditTillModal(true);
+  };
+
+  const closeEditModal = () => {
+    setShowEditTillModal(false);
+    setTillToEdit(null);
+    setEditTillFormData({
+      name: '',
+      location: '',
+      initialBalance: 0,
+      isActive: true,
+      description: '',
+    });
+  };
+
+  const handleUpdateTill = async () => {
+    if (!tillToEdit) return;
+
+    try {
+      setLoading(true);
+      await tillService.updateTill(tillToEdit.id, editTillFormData);
+      toast.success('Till updated successfully');
+      closeEditModal();
+      onRefresh();
+    } catch (error) {
+      toast.error('Failed to update till');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openDeleteModal = (till: Till) => {
+    setTillToDelete(till);
+    setShowDeleteTillModal(true);
+  };
+
+  const closeDeleteModal = () => {
+    setShowDeleteTillModal(false);
+    setTillToDelete(null);
+  };
+
+  const handleDeleteTill = async () => {
+    if (!tillToDelete) return;
+
+    try {
+      setDeleteLoading(true);
+      await tillService.deleteTill(tillToDelete.id);
+      toast.success('Till deleted successfully');
+      closeDeleteModal();
+      onRefresh();
+    } catch (error) {
+      toast.error('Failed to delete till');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -171,14 +251,30 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
                     <span className="text-sm">{till.location}</span>
                   </div>
                 )}
-                <Button
-                  variant="outline"
-                  className="w-full mt-4"
-                  onClick={() => handleViewTransactions(till)}
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  View Transactions
-                </Button>
+                <div className="flex items-center gap-2 mt-4">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => handleViewTransactions(till)}
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    View Transactions
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => openEditModal(till)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => openDeleteModal(till)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -397,6 +493,96 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
               Add Transaction
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showEditTillModal} onOpenChange={setShowEditTillModal}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Till</DialogTitle>
+            <DialogDescription>Update till information</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="edit-name">Till Name *</Label>
+              <Input
+                id="edit-name"
+                value={editTillFormData.name}
+                onChange={(e) => setEditTillFormData({ ...editTillFormData, name: e.target.value })}
+                placeholder="e.g., Main Office Drawer"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-location">Location</Label>
+              <Input
+                id="edit-location"
+                value={editTillFormData.location}
+                onChange={(e) => setEditTillFormData({ ...editTillFormData, location: e.target.value })}
+                placeholder="e.g., Office Reception"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-initialBalance">Initial Balance</Label>
+              <Input
+                id="edit-initialBalance"
+                type="number"
+                step="0.01"
+                value={editTillFormData.initialBalance}
+                onChange={(e) => setEditTillFormData({ ...editTillFormData, initialBalance: parseFloat(e.target.value) || 0 })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                value={editTillFormData.description}
+                onChange={(e) => setEditTillFormData({ ...editTillFormData, description: e.target.value })}
+                placeholder="Add any notes about this till"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="edit-isActive"
+                checked={editTillFormData.isActive}
+                onCheckedChange={(checked) => setEditTillFormData({ ...editTillFormData, isActive: checked })}
+              />
+              <Label htmlFor="edit-isActive">Active</Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeEditModal}>Cancel</Button>
+            <Button onClick={handleUpdateTill} disabled={loading || !editTillFormData.name}>
+              {loading ? 'Updating...' : 'Update Till'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showDeleteTillModal} onOpenChange={setShowDeleteTillModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Till</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete the till "{tillToDelete?.name}"? 
+              This action will deactivate the till and cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end space-x-2 mt-4">
+            <Button
+              variant="outline"
+              onClick={closeDeleteModal}
+              disabled={deleteLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDeleteTill}
+              disabled={deleteLoading}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deleteLoading ? 'Deleting...' : 'Delete'}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

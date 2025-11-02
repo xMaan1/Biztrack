@@ -481,7 +481,7 @@ def update_till_endpoint(
 ):
     """Update till"""
     try:
-        update_data = {k: v for k, v in till_update.dict().items() if v is not None}
+        update_data = till_update.dict(exclude_unset=True)
         till = update_till(till_id, update_data, db, str(tenant_context["tenant_id"]))
         
         if not till:
