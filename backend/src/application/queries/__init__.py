@@ -7,6 +7,10 @@ from .projects import (
     GetProjectByIdQuery, GetProjectByIdHandler,
     GetAllProjectsQuery, GetAllProjectsHandler,
 )
+from .tasks import (
+    GetTaskByIdQuery, GetTaskByIdHandler,
+    GetAllTasksQuery, GetAllTasksHandler,
+)
 from .banking import (
     GetBankAccountByIdQuery, GetBankAccountByIdHandler,
     GetAllBankAccountsQuery, GetAllBankAccountsHandler,
@@ -172,6 +176,8 @@ __all__ = [
     'GetUserByEmailQuery', 'GetUserByEmailHandler',
     'GetProjectByIdQuery', 'GetProjectByIdHandler',
     'GetAllProjectsQuery', 'GetAllProjectsHandler',
+    'GetTaskByIdQuery', 'GetTaskByIdHandler',
+    'GetAllTasksQuery', 'GetAllTasksHandler',
     'GetBankAccountByIdQuery', 'GetBankAccountByIdHandler',
     'GetAllBankAccountsQuery', 'GetAllBankAccountsHandler',
     'GetBankTransactionByIdQuery', 'GetBankTransactionByIdHandler',
