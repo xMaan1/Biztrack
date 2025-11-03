@@ -1,0 +1,67 @@
+import enum
+
+class TransactionType(str, enum.Enum):
+    INCOME = "income"
+    EXPENSE = "expense"
+    TRANSFER = "transfer"
+    ADJUSTMENT = "adjustment"
+    REFUND = "refund"
+
+class TransactionStatus(str, enum.Enum):
+    PENDING = "pending"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+    FAILED = "failed"
+
+class AccountType(str, enum.Enum):
+    ASSET = "asset"
+    LIABILITY = "liability"
+    EQUITY = "equity"
+    REVENUE = "revenue"
+    EXPENSE = "expense"
+
+class AccountCategory(str, enum.Enum):
+    CASH = "cash"
+    BANK_ACCOUNT = "bank_account"
+    ACCOUNTS_RECEIVABLE = "accounts_receivable"
+    INVENTORY = "inventory"
+    EQUIPMENT = "equipment"
+    BUILDINGS = "buildings"
+    VEHICLES = "vehicles"
+    PREPAID_EXPENSES = "prepaid_expenses"
+    ACCOUNTS_PAYABLE = "accounts_payable"
+    LOANS_PAYABLE = "loans_payable"
+    CREDIT_CARDS = "credit_cards"
+    TAXES_PAYABLE = "taxes_payable"
+    WAGES_PAYABLE = "wages_payable"
+    OWNER_EQUITY = "owner_equity"
+    RETAINED_EARNINGS = "retained_earnings"
+    COMMON_STOCK = "common_stock"
+    SALES_REVENUE = "sales_revenue"
+    SERVICE_REVENUE = "service_revenue"
+    INTEREST_INCOME = "interest_income"
+    OTHER_INCOME = "other_income"
+    COST_OF_GOODS_SOLD = "cost_of_goods_sold"
+    SALARIES_WAGES = "salaries_wages"
+    RENT_EXPENSE = "rent_expense"
+    UTILITIES = "utilities"
+    INSURANCE = "insurance"
+    MAINTENANCE = "maintenance"
+    MARKETING = "marketing"
+    OFFICE_SUPPLIES = "office_supplies"
+    TRAVEL = "travel"
+    PROFESSIONAL_FEES = "professional_fees"
+    DEPRECIATION = "depreciation"
+    AMORTIZATION = "amortization"
+    INTEREST_EXPENSE = "interest_expense"
+    OTHER_EXPENSES = "other_expenses"
+
+class AccountReceivableStatus(str, enum.Enum):
+    PENDING = "pending"
+    PARTIAL = "partial"
+    PARTIALLY_PAID = "partially_paid"
+    PAID = "paid"
+    OVERDUE = "overdue"
+    CANCELLED = "cancelled"
+    WRITTEN_OFF = "written_off"
+
