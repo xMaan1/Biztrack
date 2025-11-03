@@ -2,4 +2,3 @@
 *.pem
 *.ppk
 frontend/.env
-*.md
