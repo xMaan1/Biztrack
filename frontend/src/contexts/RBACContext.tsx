@@ -40,6 +40,7 @@ export interface TenantUser {
 
 export interface UserWithPermissions {
   id: string;
+  tenant_user_id?: string;
   userName: string;
   email: string;
   firstName?: string;
@@ -47,6 +48,8 @@ export interface UserWithPermissions {
   avatar?: string;
   isActive: boolean;
   role?: Role;
+  role_id?: string;
+  custom_permissions?: string[];
   permissions: string[];
   joinedAt: string;
 }

@@ -893,6 +893,7 @@ class RolesResponse(BaseModel):
 
 class UserWithPermissions(BaseModel):
     id: str
+    tenant_user_id: Optional[str] = None
     userName: str
     email: str
     firstName: Optional[str] = None
@@ -900,6 +901,8 @@ class UserWithPermissions(BaseModel):
     avatar: Optional[str] = None
     isActive: bool
     role: Optional[Role] = None
+    role_id: Optional[str] = None
+    custom_permissions: Optional[List[str]] = []
     permissions: List[str] = []
     joinedAt: datetime
 

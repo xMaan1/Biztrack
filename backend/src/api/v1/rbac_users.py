@@ -151,6 +151,7 @@ async def get_tenant_users(
         
         user_list.append(UserWithPermissions(
             id=str(tenant_user.userId),
+            tenant_user_id=str(tenant_user.id),
             userName=tenant_user.user.userName,
             email=tenant_user.user.email,
             firstName=tenant_user.user.firstName,
@@ -168,6 +169,8 @@ async def get_tenant_users(
                 createdAt=tenant_user.role_obj.createdAt,
                 updatedAt=tenant_user.role_obj.updatedAt
             ) if tenant_user.role_obj else None,
+            role_id=str(tenant_user.role_id),
+            custom_permissions=tenant_user.custom_permissions or [],
             permissions=user_permissions,
             joinedAt=tenant_user.joinedAt
         ))

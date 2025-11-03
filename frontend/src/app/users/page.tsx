@@ -17,7 +17,8 @@ import {
   MoreHorizontal,
   Edit,
   Trash2,
-  UserCheck
+  UserCheck,
+  Loader2
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -25,6 +26,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/src/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/src/components/ui/dialog';
 import { CreateUserModal } from '@/src/components/users/CreateUserModal';
 import { EditUserModal } from '@/src/components/users/EditUserModal';
 import { RoleManagementModal } from '@/src/components/users/RoleManagementModal';
@@ -35,21 +44,35 @@ export default function UserManagementPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showRoleModal, setShowRoleModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [userToDelete, setUserToDelete] = useState<any>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleEditUser = (user: any) => {
     setSelectedUser(user);
     setShowEditModal(true);
   };
 
-  const handleRemoveUser = async (userId: string) => {
-    if (confirm('Are you sure you want to remove this user from the tenant?')) {
-      try {
-        await removeTenantUser(userId);
-        await refreshData();
-      } catch (error) {
-        console.error('Failed to remove user:', error);
-      }
+  const handleRemoveUser = (user: any) => {
+    setUserToDelete(user);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      const userId = userToDelete.tenant_user_id || userToDelete.id;
+      await removeTenantUser(userId);
+      await refreshData();
+      setShowDeleteModal(false);
+      setUserToDelete(null);
+    } catch (error) {
+      console.error('Failed to remove user:', error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -204,7 +227,7 @@ export default function UserManagementPage() {
                               Edit User
                             </DropdownMenuItem>
                             <DropdownMenuItem 
-                              onClick={() => handleRemoveUser(user.id)}
+                              onClick={() => handleRemoveUser(user)}
                               className="text-destructive"
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
@@ -255,6 +278,68 @@ export default function UserManagementPage() {
             refreshData();
           }}
         />
+
+        <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Trash2 className="h-5 w-5 text-destructive" />
+                Remove User
+              </DialogTitle>
+              <DialogDescription>
+                Are you sure you want to remove{' '}
+                <strong>
+                  {userToDelete?.firstName && userToDelete?.lastName
+                    ? `${userToDelete.firstName} ${userToDelete.lastName}`
+                    : userToDelete?.userName}
+                </strong>{' '}
+                from the tenant? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            {userToDelete && (
+              <div className="py-4">
+                <div className="bg-muted p-4 rounded-lg">
+                  <p className="font-medium">{userToDelete.userName}</p>
+                  <p className="text-sm text-muted-foreground">{userToDelete.email}</p>
+                  {userToDelete.role && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Role: {getRoleDisplayName(userToDelete.role.name)}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setUserToDelete(null);
+                }}
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmDeleteUser}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Removing...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Remove User
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         </OwnerGuard>
       </div>
     </DashboardLayout>
