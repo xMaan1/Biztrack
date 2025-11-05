@@ -30,6 +30,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../../components/ui/dialog';
+import { Alert, AlertDescription } from '../../../components/ui/alert';
 import {
   Plus,
   Filter,
@@ -69,6 +70,8 @@ export default function InvoicesPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showCustomizeDialog, setShowCustomizeDialog] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [updateError, setUpdateError] = useState<string | null>(null);
 
   // Filter states
   const [filters, setFilters] = useState<InvoiceFilters>({});
@@ -144,23 +147,31 @@ export default function InvoicesPage() {
     invoiceData: Partial<InvoiceCreate>,
   ) => {
     try {
+      setUpdateError(null);
       await InvoiceService.updateInvoice(invoiceId, invoiceData);
       setShowEditDialog(false);
       setSelectedInvoice(null);
+      setUpdateError(null);
       loadData();
     } catch (err) {
-      setError(extractErrorMessage(err, 'Failed to update invoice'));
+      const errorMessage = extractErrorMessage(err, 'Failed to update invoice');
+      setUpdateError(errorMessage);
+      setError(errorMessage);
     }
   };
 
   const handleDeleteInvoice = async (invoiceId: string) => {
     try {
+      setDeleteError(null);
       await InvoiceService.deleteInvoice(invoiceId);
       setShowDeleteDialog(false);
       setSelectedInvoice(null);
+      setDeleteError(null);
       loadData();
     } catch (err) {
-      setError(extractErrorMessage(err, 'Failed to delete invoice'));
+      const errorMessage = extractErrorMessage(err, 'Failed to delete invoice');
+      setDeleteError(errorMessage);
+      setError(errorMessage);
     }
   };
 
@@ -221,11 +232,13 @@ export default function InvoicesPage() {
 
   const handleEdit = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
+    setUpdateError(null);
     setShowEditDialog(true);
   };
 
   const handleDelete = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
+    setDeleteError(null);
     setShowDeleteDialog(true);
   };
 
@@ -494,16 +507,27 @@ export default function InvoicesPage() {
         {/* Edit Invoice Dialog */}
         <InvoiceDialog
           open={showEditDialog}
-          onOpenChange={setShowEditDialog}
+          onOpenChange={(open) => {
+            setShowEditDialog(open);
+            if (!open) {
+              setUpdateError(null);
+            }
+          }}
           onSubmit={(data) =>
             selectedInvoice && handleUpdateInvoice(selectedInvoice.id, data)
           }
           mode="edit"
           invoice={selectedInvoice}
+          error={updateError}
         />
 
         {/* Delete Confirmation Dialog */}
-        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <Dialog open={showDeleteDialog} onOpenChange={(open) => {
+          setShowDeleteDialog(open);
+          if (!open) {
+            setDeleteError(null);
+          }
+        }}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Delete Invoice</DialogTitle>
@@ -514,11 +538,19 @@ export default function InvoicesPage() {
                 <strong>{selectedInvoice?.invoiceNumber}</strong>? This action
                 cannot be undone.
               </p>
+              {deleteError && (
+                <Alert variant="destructive" className="mt-4">
+                  <AlertDescription>{deleteError}</AlertDescription>
+                </Alert>
+              )}
             </div>
             <div className="flex justify-end space-x-2">
               <Button
                 variant="outline"
-                onClick={() => setShowDeleteDialog(false)}
+                onClick={() => {
+                  setShowDeleteDialog(false);
+                  setDeleteError(null);
+                }}
               >
                 Cancel
               </Button>

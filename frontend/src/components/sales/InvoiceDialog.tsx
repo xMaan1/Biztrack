@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Alert, AlertDescription } from '../ui/alert';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -40,6 +41,7 @@ interface InvoiceDialogProps {
   onSubmit: (data: InvoiceCreate) => void;
   mode: 'create' | 'edit';
   invoice?: Invoice | null;
+  error?: string | null;
 }
 
 export function InvoiceDialog({
@@ -48,6 +50,7 @@ export function InvoiceDialog({
   onSubmit,
   mode,
   invoice,
+  error,
 }: InvoiceDialogProps) {
   const { currency, formatCurrency } = useCurrency();
   const [formData, setFormData] = useState<InvoiceCreate>({
@@ -950,6 +953,12 @@ export function InvoiceDialog({
               </div>
             </CardContent>
           </Card>
+
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
           {/* Form Actions */}
           <div className="flex justify-end space-x-2">
