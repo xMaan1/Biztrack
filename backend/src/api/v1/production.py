@@ -5,7 +5,8 @@ from datetime import datetime, timedelta
 import logging
 
 from ...config.database import get_db
-from ...api.dependencies import get_current_user, get_tenant_context
+from ...api.dependencies import get_current_user, get_tenant_context, require_permission
+from ...models.unified_models import ModulePermission
 from ...config.production_crud import (
     get_production_plan_by_id, get_all_production_plans, get_production_plans_by_status,
     get_production_plans_by_priority, get_production_plans_by_project, get_production_plans_by_work_order,
@@ -40,7 +41,8 @@ async def get_production_plans(
     search: Optional[str] = Query(None),
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PRODUCTION_VIEW.value))
 ):
     """Get all production plans with optional filtering"""
     try:
@@ -80,7 +82,8 @@ async def get_production_plans(
 async def get_production_statistics(
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PRODUCTION_VIEW.value))
 ):
     """Get production planning statistics"""
     try:
@@ -98,7 +101,8 @@ async def get_production_statistics(
 async def get_production_dashboard(
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PRODUCTION_VIEW.value))
 ):
     """Get production planning dashboard data"""
     try:
@@ -158,7 +162,8 @@ async def get_production_plan(
     production_plan_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PRODUCTION_VIEW.value))
 ):
     """Get a specific production plan by ID"""
     try:
@@ -178,7 +183,8 @@ async def create_new_production_plan(
     production_plan_data: ProductionPlanCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PRODUCTION_CREATE.value))
 ):
     """Create a new production plan"""
     try:
@@ -212,7 +218,8 @@ async def update_production_plan_endpoint(
     production_plan_data: ProductionPlanUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PRODUCTION_UPDATE.value))
 ):
     """Update a production plan"""
     try:
@@ -232,7 +239,8 @@ async def delete_production_plan_endpoint(
     production_plan_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PRODUCTION_DELETE.value))
 ):
     """Delete a production plan"""
     try:
@@ -253,7 +261,8 @@ async def get_production_steps(
     production_plan_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PRODUCTION_VIEW.value))
 ):
     """Get all steps for a production plan"""
     try:
@@ -270,7 +279,8 @@ async def create_production_step(
     production_step_data: ProductionStepCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PRODUCTION_CREATE.value))
 ):
     """Create a new production step"""
     try:
@@ -300,7 +310,8 @@ async def update_production_step(
     production_step_data: ProductionStepUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PRODUCTION_UPDATE.value))
 ):
     """Update a production step"""
     try:
@@ -320,7 +331,8 @@ async def delete_production_step(
     step_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PRODUCTION_DELETE.value))
 ):
     """Delete a production step"""
     try:
@@ -341,7 +353,8 @@ async def get_production_schedules(
     production_plan_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PRODUCTION_VIEW.value))
 ):
     """Get all schedules for a production plan"""
     try:
@@ -358,7 +371,8 @@ async def create_production_schedule(
     production_schedule_data: ProductionScheduleCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PRODUCTION_CREATE.value))
 ):
     """Create a new production schedule"""
     try:
@@ -389,7 +403,8 @@ async def update_production_schedule(
     production_schedule_data: ProductionScheduleUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PRODUCTION_UPDATE.value))
 ):
     """Update a production schedule"""
     try:
@@ -409,7 +424,8 @@ async def delete_production_schedule(
     schedule_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PRODUCTION_DELETE.value))
 ):
     """Delete a production schedule"""
     try:

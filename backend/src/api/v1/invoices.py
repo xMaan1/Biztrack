@@ -142,7 +142,8 @@ def bulk_send_invoices(
     request: BulkOperationRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_UPDATE.value))
 ):
     """Send multiple invoices at once via email"""
     try:
@@ -247,7 +248,8 @@ def bulk_mark_invoices_as_paid(
     request: BulkOperationRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_UPDATE.value))
 ):
     """Mark multiple invoices as paid at once"""
     try:
@@ -319,7 +321,8 @@ def bulk_mark_invoices_as_unpaid(
     request: BulkOperationRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_UPDATE.value))
 ):
     """Mark multiple invoices as unpaid at once"""
     try:
@@ -450,7 +453,8 @@ def bulk_delete_invoices(
 def test_email_configuration(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_VIEW.value))
 ):
     """Test email configuration"""
     try:
@@ -780,7 +784,8 @@ def get_invoice(
     invoice_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_VIEW.value))
 ):
     """Get a specific invoice by ID"""
     try:
@@ -1026,7 +1031,8 @@ def send_invoice(
     invoice_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_UPDATE.value))
 ):
     """Send invoice via email"""
     try:
@@ -1124,7 +1130,8 @@ def mark_invoice_as_paid(
     invoice_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_UPDATE.value))
 ):
     """Mark invoice as paid and sync with inventory"""
     try:
@@ -1221,7 +1228,8 @@ def mark_invoice_as_paid(
 def get_invoice_dashboard(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_VIEW.value))
 ):
     """Get invoice dashboard overview"""
     try:
@@ -1345,7 +1353,8 @@ def create_payment(
     payment_data: PaymentCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_UPDATE.value))
 ):
     """Create a payment for an invoice"""
     try:
@@ -1439,7 +1448,8 @@ def get_invoice_payments(
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_VIEW.value))
 ):
     """Get payments for a specific invoice"""
     try:
@@ -1499,7 +1509,8 @@ def get_payments(
     search: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_VIEW.value))
 ):
     """Get all payments with filtering and pagination"""
     try:
@@ -1551,7 +1562,8 @@ def download_invoice_pdf(
     invoice_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_VIEW.value))
 ):
     """Download invoice as PDF"""
     try:
@@ -1606,7 +1618,8 @@ async def create_customer_endpoint(
     customer_data: CustomerCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_CREATE.value))
 ):
     """Create a new customer - delegates to CRM module"""
     try:
@@ -1631,7 +1644,8 @@ async def get_customers_endpoint(
     customer_type: Optional[str] = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
     """Get customers with optional filtering and search - delegates to CRM module"""
     if not tenant_context:
@@ -1651,7 +1665,8 @@ async def get_customers_endpoint(
 async def get_customer_stats_endpoint(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
     """Get customer statistics - delegates to CRM module"""
     if not tenant_context:
@@ -1665,7 +1680,8 @@ async def search_customers_endpoint(
     limit: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
     """Search customers by name, ID, CNIC, phone, or email - delegates to CRM module"""
     if not tenant_context:
@@ -1678,7 +1694,8 @@ async def get_customer_endpoint(
     customer_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
     """Get customer by ID - delegates to CRM module"""
     if not tenant_context:
@@ -1694,7 +1711,8 @@ async def update_customer_endpoint(
     customer_data: CustomerUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_UPDATE.value))
 ):
     """Update customer - delegates to CRM module"""
     if not tenant_context:
@@ -1709,7 +1727,8 @@ async def delete_customer_endpoint(
     customer_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_DELETE.value))
 ):
     """Delete customer - delegates to CRM module"""
     if not tenant_context:

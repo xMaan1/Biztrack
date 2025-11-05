@@ -19,7 +19,7 @@ from ...models.unified_models import (
 from ...config.database import (
     get_db, get_user_by_id
 )
-from ...api.dependencies import get_current_user, get_tenant_context, require_tenant_admin_or_super_admin, require_permission
+from ...api.dependencies import get_current_user, get_tenant_context, require_permission
 from ...models.unified_models import ModulePermission
 
 router = APIRouter(prefix="/sales", tags=["sales"])

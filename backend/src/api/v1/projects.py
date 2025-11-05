@@ -17,7 +17,8 @@ from ...config.database import (
     User, Project as DBProject, Task as DBTask
 )
 from ...config.hrm_models import TimeEntry as DBTimeEntry, Employee as DBEmployee
-from ...api.dependencies import get_current_user, get_tenant_context, require_tenant_admin_or_super_admin
+from ...api.dependencies import get_current_user, get_tenant_context, require_permission
+from ...models.unified_models import ModulePermission
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -83,7 +84,8 @@ async def get_projects(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PROJECTS_VIEW.value))
 ):
     """Get all projects with optional filtering (tenant-scoped)"""
     skip = (page - 1) * limit
@@ -134,7 +136,8 @@ async def get_project_time_entries(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PROJECTS_VIEW.value))
 ):
     """Get all time entries with optional filtering"""
     try:
@@ -179,7 +182,8 @@ async def create_project_time_entry(
     time_entry_data: TimeEntryCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PROJECTS_CREATE.value))
 ):
     """Create a new time entry"""
     try:
@@ -206,11 +210,12 @@ async def get_project_time_entry(
     entry_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PROJECTS_VIEW.value))
 ):
     """Get a specific time entry by ID"""
     try:
-        time_entry = get_time_entry_by_id(db, entry_id, tenant_context["tenant_id"] if tenant_context else None)
+        time_entry = get_time_entry_by_id(entry_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not time_entry:
             raise HTTPException(status_code=404, detail="Time entry not found")
         return time_entry
@@ -223,7 +228,8 @@ async def update_project_time_entry(
     time_entry_data: TimeEntryUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PROJECTS_UPDATE.value))
 ):
     """Update a time entry"""
     try:
@@ -239,7 +245,8 @@ async def delete_project_time_entry(
     entry_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PROJECTS_DELETE.value))
 ):
     """Delete a time entry"""
     try:
@@ -255,7 +262,8 @@ async def approve_project_time_entry(
     entry_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PROJECTS_UPDATE.value))
 ):
     """Approve a time entry"""
     try:
@@ -282,7 +290,8 @@ async def reject_project_time_entry(
     rejection_data: dict,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PROJECTS_UPDATE.value))
 ):
     """Reject a time entry"""
     try:
@@ -308,7 +317,8 @@ async def reject_project_time_entry(
 async def get_project_time_tracking_dashboard(
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PROJECTS_VIEW.value))
 ):
     """Get time tracking dashboard data"""
     try:
@@ -357,7 +367,8 @@ async def get_project_time_tracking_stats(
     employee_id: Optional[str] = Query(None),
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PROJECTS_VIEW.value))
 ):
     """Get time tracking statistics"""
     try:
@@ -403,7 +414,8 @@ async def get_project_time_tracking_stats(
 async def get_current_project_time_session(
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PROJECTS_VIEW.value))
 ):
     """Get current active time session"""
     try:
@@ -448,7 +460,8 @@ async def start_project_time_session(
     session_data: dict,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PROJECTS_CREATE.value))
 ):
     """Start a new time tracking session"""
     try:
@@ -524,7 +537,8 @@ async def stop_project_time_session(
     stop_data: dict,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PROJECTS_UPDATE.value))
 ):
     """Stop a time tracking session"""
     try:
@@ -574,7 +588,8 @@ async def pause_project_time_session(
     session_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PROJECTS_UPDATE.value))
 ):
     """Pause a time tracking session"""
     try:
@@ -625,7 +640,8 @@ async def resume_project_time_session(
     session_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PROJECTS_UPDATE.value))
 ):
     """Resume a paused time tracking session"""
     try:
@@ -675,7 +691,8 @@ async def resume_project_time_session(
 async def get_project(
     project_id: str, 
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PROJECTS_VIEW.value))
 ):
     """Get a specific project"""
     import uuid
@@ -695,7 +712,8 @@ async def create_new_project(
     project_data: ProjectCreate, 
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PROJECTS_CREATE.value))
 ):
     """Create a new project"""
     try:
@@ -775,7 +793,8 @@ async def update_existing_project(
     project_data: ProjectUpdate, 
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PROJECTS_UPDATE.value))
 ):
     """Update a project"""
     tenant_id = tenant_context["tenant_id"] if tenant_context else None
@@ -815,7 +834,8 @@ async def delete_existing_project(
     project_id: str, 
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PROJECTS_DELETE.value))
 ):
     """Delete a project"""
     tenant_id = tenant_context["tenant_id"] if tenant_context else None
@@ -857,7 +877,8 @@ def transform_task_to_response(task: DBTask):
 async def get_project_tasks(
     project_id: str, 
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PROJECTS_VIEW.value))
 ):
     """Get all tasks for a specific project"""
     tenant_id = tenant_context["tenant_id"] if tenant_context else None
@@ -881,7 +902,8 @@ async def get_project_tasks(
 @router.get("/team-members")
 async def get_project_team_members(
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PROJECTS_VIEW.value))
 ):
     """Get all available team members for project assignment"""
     from ...models.unified_models import UserRole

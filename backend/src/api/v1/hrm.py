@@ -44,7 +44,8 @@ from ...config.database import (
 from ...config.core_crud import (
     update_user,
 )
-from ...api.dependencies import get_current_user, get_tenant_context, require_tenant_admin_or_super_admin
+from ...api.dependencies import get_current_user, get_tenant_context, require_permission
+from ...models.unified_models import ModulePermission
 
 router = APIRouter(prefix="/hrm", tags=["hrm"])
 
@@ -58,7 +59,8 @@ async def get_hrm_employees(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_VIEW.value))
 ):
     """Get all employees with optional filtering"""
     try:
@@ -142,7 +144,8 @@ async def create_hrm_employee(
     employee_data: EmployeeCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_CREATE.value))
 ):
     """Create a new employee"""
     try:
@@ -218,7 +221,8 @@ async def create_hrm_employee(
 async def get_hrm_employee(
     employee_id: str,
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_VIEW.value))
 ):
     """Get employee by ID"""
     try:
@@ -235,7 +239,8 @@ async def update_hrm_employee(
     employee_update: EmployeeUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_UPDATE.value))
 ):
     """Update employee"""
     try:
@@ -299,7 +304,8 @@ async def delete_hrm_employee(
     employee_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_DELETE.value))
 ):
     """Delete employee"""
     try:
@@ -371,7 +377,8 @@ async def get_hrm_jobs(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_VIEW.value))
 ):
     """Get all job postings with optional filtering"""
     try:
@@ -445,7 +452,8 @@ def create_hrm_job(
     job_data: JobPostingCreate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_CREATE.value))
 ):
     """Create a new job posting"""
     if not tenant_context:
@@ -507,7 +515,8 @@ def create_hrm_job(
 async def get_hrm_job_by_id(
     job_id: str,
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_VIEW.value))
 ):
     """Get a specific job posting by ID"""
     try:
@@ -547,7 +556,8 @@ async def update_hrm_job(
     job_data: JobPostingUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_UPDATE.value))
 ):
     """Update an existing job posting"""
     try:
@@ -587,7 +597,8 @@ async def delete_hrm_job(
     job_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_DELETE.value))
 ):
     """Delete a job posting"""
     try:
@@ -609,7 +620,8 @@ async def get_hrm_applications(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_VIEW.value))
 ):
     """Get all applications with optional filtering"""
     try:
@@ -684,7 +696,8 @@ def create_hrm_application(
     application_data: ApplicationCreate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_CREATE.value))
 ):
     """Create a new application"""
     if not tenant_context:
@@ -759,7 +772,8 @@ async def get_hrm_reviews(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_VIEW.value))
 ):
     """Get all performance reviews with optional filtering"""
     try:
@@ -829,7 +843,8 @@ async def create_hrm_review(
     review_data: PerformanceReviewCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_CREATE.value))
 ):
     """Create a new performance review"""
     try:
@@ -892,7 +907,8 @@ async def create_hrm_review(
 async def get_hrm_review_by_id(
     review_id: str,
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_VIEW.value))
 ):
     """Get a specific performance review by ID"""
     try:
@@ -909,7 +925,8 @@ async def update_hrm_review(
     review_data: PerformanceReviewUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_UPDATE.value))
 ):
     """Update an existing performance review"""
     try:
@@ -952,7 +969,8 @@ async def delete_hrm_review(
     review_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_DELETE.value))
 ):
     """Delete a performance review"""
     try:
@@ -974,7 +992,8 @@ async def get_hrm_time_entries(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_VIEW.value))
 ):
     """Get all time entries with optional filtering"""
     try:
@@ -1016,7 +1035,8 @@ async def create_hrm_time_entry(
     time_entry_data: TimeEntryCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_CREATE.value))
 ):
     """Create a new time entry"""
     try:
@@ -1050,7 +1070,8 @@ async def get_hrm_leave_requests(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_VIEW.value))
 ):
     """Get all leave requests with optional filtering"""
     try:
@@ -1117,7 +1138,8 @@ async def create_hrm_leave_request(
     leave_request_data: LeaveRequestCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_CREATE.value))
 ):
     """Create a new leave request"""
     try:
@@ -1177,7 +1199,8 @@ async def get_hrm_leave_request(
     leave_request_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_VIEW.value))
 ):
     """Get a specific leave request by ID"""
     try:
@@ -1214,7 +1237,8 @@ async def update_hrm_leave_request(
     leave_request_update: LeaveRequestUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_UPDATE.value))
 ):
     """Update a leave request"""
     try:
@@ -1273,7 +1297,8 @@ async def delete_hrm_leave_request(
     leave_request_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_DELETE.value))
 ):
     """Delete a leave request"""
     try:
@@ -1295,7 +1320,8 @@ async def get_hrm_payroll(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_VIEW.value))
 ):
     """Get all payroll records with optional filtering"""
     try:
@@ -1364,7 +1390,8 @@ async def create_hrm_payroll(
     payroll_data: PayrollCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_CREATE.value))
 ):
     """Create a new payroll record"""
     try:
@@ -1448,11 +1475,12 @@ async def create_hrm_payroll(
         raise HTTPException(status_code=500, detail=f"Error creating payroll record: {str(e)}")
 
 @router.get("/payroll/{payroll_id}", response_model=Payroll)
-async def get_hrm_payroll(
+async def get_hrm_payroll_by_id(
     payroll_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_VIEW.value))
 ):
     """Get a specific payroll record by ID"""
     try:
@@ -1491,7 +1519,8 @@ async def update_hrm_payroll(
     payroll_update: PayrollUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_UPDATE.value))
 ):
     """Update a payroll record"""
     try:
@@ -1534,7 +1563,8 @@ async def delete_hrm_payroll(
     payroll_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_DELETE.value))
 ):
     """Delete a payroll record"""
     try:
@@ -1554,7 +1584,8 @@ async def get_hrm_benefits(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_VIEW.value))
 ):
     """Get all benefits with optional filtering"""
     try:
@@ -1594,7 +1625,8 @@ async def create_hrm_benefit(
     benefit_data: BenefitsCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_CREATE.value))
 ):
     """Create a new benefit"""
     try:
@@ -1626,7 +1658,8 @@ async def get_hrm_training(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_VIEW.value))
 ):
     """Get all training programs with optional filtering"""
     try:
@@ -1699,7 +1732,8 @@ async def create_hrm_training(
     training_data: TrainingCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_CREATE.value))
 ):
     """Create a new training program"""
     try:
@@ -1772,11 +1806,12 @@ async def create_hrm_training(
         raise HTTPException(status_code=500, detail=f"Error creating training program: {str(e)}")
 
 @router.get("/training/{training_id}", response_model=Training)
-async def get_hrm_training(
+async def get_hrm_training_by_id(
     training_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_VIEW.value))
 ):
     """Get a specific training program by ID"""
     try:
@@ -1815,7 +1850,8 @@ async def update_hrm_training(
     training_update: TrainingUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_UPDATE.value))
 ):
     """Update a training program"""
     try:
@@ -1858,7 +1894,8 @@ async def delete_hrm_training(
     training_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_DELETE.value))
 ):
     """Delete a training program"""
     try:
@@ -1878,7 +1915,8 @@ async def get_hrm_training_enrollments(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_VIEW.value))
 ):
     """Get all training enrollments with optional filtering"""
     try:
@@ -1918,7 +1956,8 @@ async def create_hrm_training_enrollment(
     enrollment_data: TrainingEnrollmentCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_CREATE.value))
 ):
     """Create a new training enrollment"""
     try:
@@ -1945,7 +1984,8 @@ async def get_hrm_training_enrollment(
     enrollment_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_VIEW.value))
 ):
     """Get a specific training enrollment by ID"""
     try:
@@ -1962,7 +2002,8 @@ async def update_hrm_training_enrollment(
     enrollment_update: TrainingEnrollmentUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_UPDATE.value))
 ):
     """Update a training enrollment"""
     try:
@@ -1983,7 +2024,8 @@ async def delete_hrm_training_enrollment(
     enrollment_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_DELETE.value))
 ):
     """Delete a training enrollment"""
     try:
@@ -2001,7 +2043,8 @@ def read_suppliers(
     limit: int = Query(100, ge=1, le=1000),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_VIEW.value))
 ):
     """Get all suppliers for the current tenant"""
     try:
@@ -2016,7 +2059,8 @@ def read_supplier(
     supplier_id: str,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_VIEW.value))
 ):
     """Get supplier by ID"""
     try:
@@ -2032,7 +2076,8 @@ def create_supplier_endpoint(
     supplier: SupplierCreate,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_CREATE.value))
 ):
     """Create a new supplier"""
     try:
@@ -2067,7 +2112,8 @@ def update_supplier_endpoint(
     supplier: SupplierUpdate,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_UPDATE.value))
 ):
     """Update supplier"""
     try:
@@ -2087,7 +2133,8 @@ def delete_supplier_endpoint(
     supplier_id: str,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_DELETE.value))
 ):
     """Delete supplier"""
     try:
@@ -2105,7 +2152,8 @@ def delete_supplier_endpoint(
 @router.get("/dashboard", response_model=HRMDashboard)
 async def get_hrm_dashboard(
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.HRM_VIEW.value))
 ):
     """Get HRM dashboard data"""
     try:

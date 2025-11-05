@@ -5,7 +5,8 @@ from datetime import datetime, timedelta
 import logging
 
 from ...config.database import get_db
-from ...api.dependencies import get_current_user, get_tenant_context
+from ...api.dependencies import get_current_user, get_tenant_context, require_permission
+from ...models.unified_models import ModulePermission
 from ...config.quality_control_crud import (
     create_quality_check, get_quality_check_by_id, get_all_quality_checks,
     get_quality_checks_by_status, get_quality_checks_by_priority,
@@ -50,7 +51,8 @@ async def get_quality_checks(
     search: Optional[str] = Query(None),
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.QUALITY_VIEW.value))
 ):
     """Get all quality checks with optional filtering"""
     try:
@@ -118,7 +120,8 @@ async def get_quality_check(
     check_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.QUALITY_VIEW.value))
 ):
     """Get quality check by ID"""
     try:
@@ -171,7 +174,8 @@ async def create_quality_check_endpoint(
     check_data: QualityCheckCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.QUALITY_CREATE.value))
 ):
     """Create a new quality check"""
     try:
@@ -225,7 +229,8 @@ async def update_quality_check_endpoint(
     check_data: QualityCheckUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.QUALITY_UPDATE.value))
 ):
     """Update quality check"""
     try:
@@ -281,7 +286,8 @@ async def delete_quality_check_endpoint(
     check_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.QUALITY_DELETE.value))
 ):
     """Delete quality check"""
     try:
@@ -315,7 +321,8 @@ async def get_quality_inspections(
     search: Optional[str] = Query(None),
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.QUALITY_VIEW.value))
 ):
     """Get all quality inspections with optional filtering"""
     try:
@@ -340,7 +347,8 @@ async def get_quality_inspection(
     inspection_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.QUALITY_VIEW.value))
 ):
     """Get quality inspection by ID"""
     try:
@@ -364,7 +372,8 @@ async def create_quality_inspection_endpoint(
     inspection_data: QualityInspectionCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.QUALITY_CREATE.value))
 ):
     """Create a new quality inspection"""
     try:
@@ -389,7 +398,8 @@ async def update_quality_inspection_endpoint(
     inspection_data: QualityInspectionUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.QUALITY_UPDATE.value))
 ):
     """Update quality inspection"""
     try:
@@ -416,7 +426,8 @@ async def delete_quality_inspection_endpoint(
     inspection_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.QUALITY_DELETE.value))
 ):
     """Delete quality inspection"""
     try:
@@ -452,7 +463,8 @@ async def get_quality_defects(
     search: Optional[str] = Query(None),
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.QUALITY_VIEW.value))
 ):
     """Get all quality defects with optional filtering"""
     try:
@@ -477,7 +489,8 @@ async def get_quality_defect(
     defect_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.QUALITY_VIEW.value))
 ):
     """Get quality defect by ID"""
     try:
@@ -501,7 +514,8 @@ async def create_quality_defect_endpoint(
     defect_data: QualityDefectCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.QUALITY_CREATE.value))
 ):
     """Create a new quality defect"""
     try:
@@ -526,7 +540,8 @@ async def update_quality_defect_endpoint(
     defect_data: QualityDefectUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.QUALITY_UPDATE.value))
 ):
     """Update quality defect"""
     try:
@@ -553,7 +568,8 @@ async def delete_quality_defect_endpoint(
     defect_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.QUALITY_DELETE.value))
 ):
     """Delete quality defect"""
     try:
@@ -580,7 +596,8 @@ async def get_quality_reports(
     report_type: Optional[str] = Query(None),
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.QUALITY_VIEW.value))
 ):
     """Get all quality reports with optional filtering"""
     try:
@@ -603,7 +620,8 @@ async def get_quality_report(
     report_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.QUALITY_VIEW.value))
 ):
     """Get quality report by ID"""
     try:
@@ -627,7 +645,8 @@ async def create_quality_report_endpoint(
     report_data: QualityReportCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.QUALITY_CREATE.value))
 ):
     """Create a new quality report"""
     try:
@@ -652,7 +671,8 @@ async def update_quality_report_endpoint(
     report_data: QualityReportUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.QUALITY_UPDATE.value))
 ):
     """Update quality report"""
     try:
@@ -679,7 +699,8 @@ async def delete_quality_report_endpoint(
     report_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.QUALITY_DELETE.value))
 ):
     """Delete quality report"""
     try:
@@ -703,7 +724,8 @@ async def delete_quality_report_endpoint(
 async def get_quality_dashboard(
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.QUALITY_VIEW.value))
 ):
     """Get quality control dashboard data"""
     try:
@@ -732,7 +754,8 @@ async def get_quality_dashboard(
 async def get_quality_statistics(
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.QUALITY_VIEW.value))
 ):
     """Get quality control statistics"""
     try:

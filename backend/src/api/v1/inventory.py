@@ -6,7 +6,7 @@ from datetime import datetime
 import uuid
 import re
 
-from ..dependencies import get_current_user, get_tenant_context, require_permission
+from ...api.dependencies import get_current_user, get_tenant_context, require_permission
 from ...models.unified_models import ModulePermission
 from ...config.database import get_db
 from ...models.unified_models import (
@@ -436,39 +436,6 @@ def read_stock_movements(
     
     total = len(response_movements)
     return StockMovementsResponse(stockMovements=response_movements, total=total)
-
-# Customer Returns Endpoints
-
-@router.post("/customer-returns", response_model=StockMovementResponse)
-def create_customer_return(
-    return_data: StockMovementCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context),
-    _: dict = Depends(require_permission(ModulePermission.INVENTORY_CREATE.value))
-):
-    """Create a new customer return"""
-    # Convert to dict and ensure the movement type is RETURN and reference type is customer_return
-    movement_data = return_data.dict()
-    
-    # Handle empty date strings - convert to None for database compatibility
-    if movement_data.get("expiryDate") == "":
-        movement_data["expiryDate"] = None
-    
-    movement_data.update({
-        "movementType": "return",
-        "referenceType": "customer_return",
-        "tenant_id": str(tenant_context["tenant_id"]),
-        "createdBy": str(current_user.id),
-        "status": "pending",
-        "createdAt": datetime.utcnow(),
-        "updatedAt": datetime.utcnow()
-    })
-    
-    # Create the stock movement
-    movement = create_stock_movement(movement_data, db)
-    
-    return StockMovementResponse(stockMovement=movement)
 
 @router.get("/stock-movements/{movement_id}", response_model=StockMovementResponse)
 def read_stock_movement(
