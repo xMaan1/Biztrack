@@ -1,4 +1,5 @@
 import { User } from '../models/auth/User';
+import { extractErrorMessage } from '../utils/errorUtils';
 
 export interface SessionData {
   token: string;
@@ -275,9 +276,8 @@ class SessionManager {
           }
         }
       } catch (error: any) {
-        const errorMessage = error?.response?.data?.detail || error?.message || 'Session refresh failed';
-        console.warn('Session refresh error:', errorMessage);
-        }
+        extractErrorMessage(error, 'Session refresh failed');
+      }
     };
 
     // Check every 2 minutes for proactive refresh

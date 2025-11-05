@@ -567,11 +567,7 @@ export default function ProjectsPage() {
       setProjects(response.projects || []);
 
     } catch (error) {
-
-      console.error('Failed to fetch projects:', error);
-
       setError('Failed to load projects');
-
     } finally {
 
       setLoading(false);
@@ -616,9 +612,6 @@ export default function ProjectsPage() {
       }
 
     } catch (error) {
-
-      console.error('Failed to fetch users:', error);
-
     }
 
   }, []);

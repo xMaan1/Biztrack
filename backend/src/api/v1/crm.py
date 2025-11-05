@@ -25,9 +25,11 @@ from ...config.crm_crud import (
     create_company, get_company_by_id, get_companies, update_company, delete_company,
     create_opportunity, get_opportunity_by_id, get_opportunities, update_opportunity, delete_opportunity,
     create_customer, get_customer_by_id, get_customers, update_customer, delete_customer,
-    get_customer_stats, search_customers
+    get_customer_stats, search_customers, get_sales_activities, get_crm_dashboard_data,
+    get_sales_activity_by_id, update_sales_activity, delete_sales_activity
 )
-from ...api.dependencies import get_current_user, get_tenant_context
+from ...api.dependencies import get_current_user, get_tenant_context, require_permission
+from ...models.unified_models import ModulePermission
 
 
 router = APIRouter(prefix="/crm", tags=["crm"])
@@ -38,7 +40,8 @@ async def create_customer_endpoint(
     customer_data: CustomerCreate,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_CREATE.value))
 ):
     """Create a new customer"""
     try:
@@ -65,7 +68,8 @@ async def get_customers_endpoint(
     customer_type: Optional[str] = Query(None),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
     """Get customers with optional filtering and search"""
     if not tenant_context:
@@ -85,7 +89,8 @@ async def get_customers_endpoint(
 async def get_customer_stats_endpoint(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
     """Get customer statistics"""
     if not tenant_context:
@@ -99,7 +104,8 @@ async def search_customers_endpoint(
     limit: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
     """Search customers by name, ID, CNIC, phone, or email"""
     if not tenant_context:
@@ -112,7 +118,8 @@ async def get_customer_endpoint(
     customer_id: str,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
     """Get customer by ID"""
     if not tenant_context:
@@ -128,7 +135,8 @@ async def update_customer_endpoint(
     customer_data: CustomerUpdate,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_UPDATE.value))
 ):
     """Update customer"""
     if not tenant_context:
@@ -143,7 +151,8 @@ async def delete_customer_endpoint(
     customer_id: str,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_DELETE.value))
 ):
     """Delete customer"""
     if not tenant_context:
@@ -163,7 +172,8 @@ async def get_crm_leads(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
     """Get all leads with optional filtering"""
     try:
@@ -212,7 +222,8 @@ async def create_crm_lead(
     lead_data: LeadCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_CREATE.value))
 ):
     """Create a new lead"""
     try:
@@ -238,7 +249,8 @@ async def create_crm_lead(
 async def get_crm_lead(
     lead_id: str,
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
     """Get a specific lead by ID"""
     try:
@@ -255,7 +267,8 @@ async def update_crm_lead(
     lead_data: LeadUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_UPDATE.value))
 ):
     """Update a lead"""
     try:
@@ -276,7 +289,8 @@ async def delete_crm_lead(
     lead_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_DELETE.value))
 ):
     """Delete a lead"""
     try:
@@ -296,7 +310,8 @@ async def get_crm_contacts(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
     """Get all contacts with optional filtering"""
     try:
@@ -342,7 +357,8 @@ async def create_crm_contact(
     contact_data: ContactCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_CREATE.value))
 ):
     """Create a new contact"""
     try:
@@ -376,7 +392,8 @@ async def create_crm_contact(
 async def get_crm_contact(
     contact_id: str,
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
     """Get a specific contact by ID"""
     try:
@@ -393,7 +410,8 @@ async def update_crm_contact(
     contact_data: ContactUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_UPDATE.value))
 ):
     """Update a contact"""
     try:
@@ -414,7 +432,8 @@ async def delete_crm_contact(
     contact_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_DELETE.value))
 ):
     """Delete a contact"""
     try:
@@ -434,7 +453,8 @@ async def get_crm_companies(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
     """Get all companies with optional filtering"""
     try:
@@ -479,7 +499,8 @@ async def create_crm_company(
     company_data: CompanyCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_CREATE.value))
 ):
     """Create a new company"""
     try:
@@ -505,7 +526,8 @@ async def create_crm_company(
 async def get_crm_company(
     company_id: str,
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
     """Get a specific company by ID"""
     try:
@@ -522,7 +544,8 @@ async def update_crm_company(
     company_data: CompanyUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_UPDATE.value))
 ):
     """Update a company"""
     try:
@@ -543,7 +566,8 @@ async def delete_crm_company(
     company_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_DELETE.value))
 ):
     """Delete a company"""
     try:
@@ -563,7 +587,8 @@ async def get_crm_opportunities(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
     """Get all opportunities with optional filtering"""
     try:
@@ -607,7 +632,8 @@ async def create_crm_opportunity(
     opportunity_data: OpportunityCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_CREATE.value))
 ):
     """Create a new opportunity"""
     try:
@@ -633,7 +659,8 @@ async def create_crm_opportunity(
 async def get_crm_opportunity(
     opportunity_id: str,
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
     """Get a specific opportunity by ID"""
     try:
@@ -650,7 +677,8 @@ async def update_crm_opportunity(
     opportunity_data: OpportunityUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_UPDATE.value))
 ):
     """Update an opportunity"""
     try:
@@ -671,7 +699,8 @@ async def delete_crm_opportunity(
     opportunity_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_DELETE.value))
 ):
     """Delete an opportunity"""
     try:
@@ -691,7 +720,8 @@ async def get_crm_activities(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
     """Get all sales activities with optional filtering"""
     try:
@@ -735,7 +765,8 @@ async def create_crm_activity(
     activity_data: SalesActivityCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_CREATE.value))
 ):
     """Create a new sales activity"""
     try:
@@ -761,7 +792,8 @@ async def create_crm_activity(
 async def get_crm_activity(
     activity_id: str,
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
     """Get a specific sales activity by ID"""
     try:
@@ -778,7 +810,8 @@ async def update_crm_activity(
     activity_data: SalesActivityUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_UPDATE.value))
 ):
     """Update a sales activity"""
     try:
@@ -803,7 +836,8 @@ async def delete_crm_activity(
     activity_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_DELETE.value))
 ):
     """Delete a sales activity"""
     try:
@@ -818,7 +852,8 @@ async def delete_crm_activity(
 @router.get("/dashboard", response_model=CRMDashboard)
 async def get_crm_dashboard(
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
     """Get CRM dashboard data and metrics"""
     try:
@@ -875,7 +910,8 @@ async def convert_lead_to_contact(
     contact_data: ContactCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_CREATE.value))
 ):
     """Convert a lead to a contact"""
     try:

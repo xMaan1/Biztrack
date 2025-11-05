@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { parallelApiService, ParallelApiCall, ParallelApiResult } from '../services/parallelApiService';
+import { extractErrorMessage } from '../utils/errorUtils';
 
 // Re-export createApiCall for convenience
 export { createApiCall } from '../services/parallelApiService';
@@ -40,14 +41,9 @@ export const useParallelApi = <T = any>(
       setData(result.results);
       setErrors(result.errors);
       setHasErrors(result.hasErrors);
-      
-      if (result.hasErrors) {
-        console.warn('⚠️ Some parallel API calls had errors:', result.errors);
-      }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch data';
+      const errorMessage = extractErrorMessage(err, 'Failed to fetch data');
       setError(errorMessage);
-      console.error('Parallel API fetch error:', err);
     } finally {
       setLoading(false);
     }

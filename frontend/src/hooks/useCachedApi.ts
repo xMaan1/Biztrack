@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { frontendCache } from '../services/frontendCacheService';
+import { extractErrorMessage } from '../utils/errorUtils';
 
 interface UseCachedApiOptions {
   ttl?: number;
@@ -73,9 +74,8 @@ export const useCachedApi = <T = any>(
       
       setData(freshData);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch data';
+      const errorMessage = extractErrorMessage(err, 'Failed to fetch data');
       setError(errorMessage);
-      console.error(`Cached API error for key ${currentKey}:`, err);
     } finally {
       setLoading(false);
     }

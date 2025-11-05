@@ -80,7 +80,11 @@ def require_permission(permission: str):
                 detail="Tenant context required"
             )
         
-        if not RBACService.has_permission(db, str(current_user.id), tenant_context["tenant_id"], permission):
+        if tenant_context.get("is_owner"):
+            return current_user
+        
+        user_permissions = tenant_context.get("permissions", [])
+        if permission not in user_permissions:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Permission '{permission}' required"
@@ -103,7 +107,12 @@ def require_module_access(module: str):
                 detail="Tenant context required"
             )
         
-        if not RBACService.has_module_access(db, str(current_user.id), tenant_context["tenant_id"], module):
+        if tenant_context.get("is_owner"):
+            return current_user
+        
+        user_permissions = tenant_context.get("permissions", [])
+        module_permissions = [p for p in user_permissions if p.startswith(f"{module}:")]
+        if len(module_permissions) == 0:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Access to '{module}' module required"
@@ -126,13 +135,17 @@ def require_owner_or_permission(permission: str):
                 detail="Tenant context required"
             )
         
-        if tenant_context["is_owner"] or RBACService.has_permission(db, str(current_user.id), tenant_context["tenant_id"], permission):
+        if tenant_context.get("is_owner"):
             return current_user
         
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Owner role or specific permission required"
-        )
+        user_permissions = tenant_context.get("permissions", [])
+        if permission not in user_permissions:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Owner role or specific permission required"
+            )
+        
+        return current_user
     
     return checker
 

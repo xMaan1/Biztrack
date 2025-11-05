@@ -39,7 +39,7 @@ import { EditUserModal } from '@/src/components/users/EditUserModal';
 import { RoleManagementModal } from '@/src/components/users/RoleManagementModal';
 
 export default function UserManagementPage() {
-  const { tenantUsers, roles, loading, refreshData, removeTenantUser } = useRBAC();
+  const { tenantUsers, roles, loading, removeTenantUser } = useRBAC();
   const { canManageUsers } = usePermissions();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -66,11 +66,9 @@ export default function UserManagementPage() {
     try {
       const userId = userToDelete.tenant_user_id || userToDelete.id;
       await removeTenantUser(userId);
-      await refreshData();
       setShowDeleteModal(false);
       setUserToDelete(null);
     } catch (error) {
-      console.error('Failed to remove user:', error);
     } finally {
       setIsDeleting(false);
     }
@@ -255,7 +253,6 @@ export default function UserManagementPage() {
           onOpenChange={setShowCreateModal}
           onSuccess={() => {
             setShowCreateModal(false);
-            refreshData();
           }}
         />
         
@@ -266,7 +263,6 @@ export default function UserManagementPage() {
           onSuccess={() => {
             setShowEditModal(false);
             setSelectedUser(null);
-            refreshData();
           }}
         />
         
@@ -275,7 +271,6 @@ export default function UserManagementPage() {
           onOpenChange={setShowRoleModal}
           onSuccess={() => {
             setShowRoleModal(false);
-            refreshData();
           }}
         />
 

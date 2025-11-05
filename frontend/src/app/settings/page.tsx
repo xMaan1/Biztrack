@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import InvoiceCustomizationService from '@/src/services/InvoiceCustomizationService';
 import { useNotifications } from '@/src/contexts/NotificationContext';
 import { Bell } from 'lucide-react';
+import { extractErrorMessage } from '@/src/utils/errorUtils';
 
 const CURRENCIES = [
   { code: 'USD', name: 'US Dollar', symbol: '$' },
@@ -63,8 +64,7 @@ export default function SettingsPage() {
 
       toast.success('Currency settings updated successfully!');
     } catch (error) {
-      console.error('Failed to update currency settings:', error);
-      toast.error('Failed to update currency settings. Please try again.');
+      toast.error(extractErrorMessage(error, 'Failed to update currency settings. Please try again.'));
     } finally {
       setSaving(false);
     }

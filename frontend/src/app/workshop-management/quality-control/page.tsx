@@ -154,7 +154,6 @@ function QualityCheckDialog({ open, onOpenChange, mode, check, onSuccess }: Qual
       
       onSuccess();
     } catch (error) {
-      console.error('Error saving quality check:', error);
     } finally {
       setLoading(false);
     }
@@ -334,7 +333,6 @@ function QualityControlContent() {
       setUpcomingChecks(dashboard.upcoming_checks || []);
       setCriticalDefects(dashboard.critical_defects || []);
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
     } finally {
       setLoading(false);
     }
@@ -346,7 +344,6 @@ function QualityControlContent() {
       const response = await service.getQualityChecks({}, 1, 100);
       setQualityChecks(response.quality_checks || []);
     } catch (error) {
-      console.error('Error loading quality checks:', error);
       setQualityChecks([]);
     }
   };
@@ -440,7 +437,6 @@ function QualityControlContent() {
       // Refresh dashboard data
       loadDashboardData();
     } catch (error) {
-      console.error('Error deleting quality check:', error);
     }
   };
 

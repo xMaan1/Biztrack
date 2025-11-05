@@ -1,11 +1,24 @@
 'use client';
 
 import { useRBAC } from '@/src/contexts/RBACContext';
+import { useAuth } from '@/src/contexts/AuthContext';
 
 export function usePermissions() {
-  const { userPermissions, hasPermission, hasModuleAccess, isOwner, loading, initializing } = useRBAC();
+  const { user } = useAuth();
+  const { userPermissions, hasPermission, hasModuleAccess, isOwner, loading, initializing, tenantUsers } = useRBAC();
+
+  const currentTenantUser = tenantUsers.find(
+    tu => tu.id === user?.id
+  );
+
+  const currentUserRole = currentTenantUser?.role;
+  const currentRoleName = currentUserRole?.name || currentTenantUser?.role_id;
 
   return {
+    currentUser: user,
+    currentTenantUser,
+    currentRole: currentUserRole,
+    currentRoleName,
     permissions: userPermissions?.permissions || [],
     accessibleModules: userPermissions?.accessible_modules || [],
     isOwner: isOwner,
@@ -15,7 +28,6 @@ export function usePermissions() {
     loading,
     initializing,
     
-    // Convenience methods for common permissions
     canManageUsers: () => hasPermission('users:create') || isOwner(),
     canViewCRM: () => hasModuleAccess('crm'),
     canManageCRM: () => hasPermission('crm:create') || isOwner(),
@@ -37,6 +49,10 @@ export function usePermissions() {
     canManageBanking: () => hasPermission('banking:create') || isOwner(),
     canViewEvents: () => hasModuleAccess('events'),
     canManageEvents: () => hasPermission('events:create') || isOwner(),
+    canViewSales: () => hasModuleAccess('sales'),
+    canManageSales: () => hasPermission('sales:create') || isOwner(),
+    canViewInvoices: () => hasModuleAccess('sales') || hasPermission('sales:view') || isOwner(),
+    canManageInvoices: () => hasPermission('sales:create') || hasPermission('sales:update') || isOwner(),
     canViewReports: () => hasPermission('reports:view') || isOwner(),
     canExportReports: () => hasPermission('reports:export') || isOwner(),
   };

@@ -69,6 +69,7 @@ import {
 import { DashboardLayout } from '../../../components/layout';
 import { toast } from 'sonner';
 import CustomerImportDialog from '../../../components/crm/CustomerImportDialog';
+import { extractErrorMessage } from '@/src/utils/errorUtils';
 
 export default function CustomersPage() {
   return (
@@ -139,7 +140,7 @@ function CustomersContent() {
         Math.ceil((response.total || customersData.length) / itemsPerPage),
       );
     } catch (error) {
-      toast.error('Failed to load customers');
+      toast.error(extractErrorMessage(error, 'Failed to load customers'));
     } finally {
       setLoading(false);
     }
@@ -150,8 +151,6 @@ function CustomersContent() {
       const statsData = await CustomerService.getCustomerStats();
       setStats(statsData);
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to load customer statistics';
-      console.warn('Customer stats load error:', errorMessage);
     }
   };
 
@@ -170,18 +169,7 @@ function CustomersContent() {
       loadCustomers();
       loadStats();
     } catch (error: any) {
-      // Extract error message from API response
-      let errorMessage = 'Failed to create customer';
-
-      if (error?.response?.data?.detail) {
-        errorMessage = error.response.data.detail;
-      } else if (error?.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error?.message) {
-        errorMessage = error.message;
-      }
-
-      toast.error(errorMessage);
+      toast.error(extractErrorMessage(error, 'Failed to create customer'));
     }
   };
 
@@ -195,18 +183,7 @@ function CustomersContent() {
       loadCustomers();
       loadStats();
     } catch (error: any) {
-      // Extract error message from API response
-      let errorMessage = 'Failed to update customer';
-
-      if (error?.response?.data?.detail) {
-        errorMessage = error.response.data.detail;
-      } else if (error?.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error?.message) {
-        errorMessage = error.message;
-      }
-
-      toast.error(errorMessage);
+      toast.error(extractErrorMessage(error, 'Failed to update customer'));
     }
   };
 
@@ -219,18 +196,7 @@ function CustomersContent() {
       loadCustomers();
       loadStats();
     } catch (error: any) {
-      // Extract error message from API response
-      let errorMessage = 'Failed to delete customer';
-
-      if (error?.response?.data?.detail) {
-        errorMessage = error.response.data.detail;
-      } else if (error?.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error?.message) {
-        errorMessage = error.message;
-      }
-
-      toast.error(errorMessage);
+      toast.error(extractErrorMessage(error, 'Failed to delete customer'));
     }
   };
 

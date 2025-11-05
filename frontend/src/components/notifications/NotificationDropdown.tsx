@@ -46,7 +46,6 @@ export default function NotificationDropdown({ onClose }: NotificationDropdownPr
     try {
       await markAllAsRead();
     } catch (error) {
-      console.error('Failed to mark all as read:', error);
     }
   };
 

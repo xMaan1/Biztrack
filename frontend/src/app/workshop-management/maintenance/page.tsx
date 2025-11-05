@@ -177,9 +177,7 @@ export default function MaintenancePage() {
     fetchDashboardData();
   };
 
-  const handleEditSchedule = (schedule: MaintenanceScheduleResponse) => {
-    // TODO: Implement edit functionality
-    console.log('Edit schedule:', schedule);
+  const handleEditSchedule = (_schedule: MaintenanceScheduleResponse) => {
   };
 
   const openViewModal = (equipment: EquipmentResponse) => {
@@ -229,7 +227,6 @@ export default function MaintenancePage() {
       setIsEditModalOpen(false);
       fetchDashboardData();
     } catch (error) {
-      console.error('Error updating equipment:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -258,7 +255,6 @@ export default function MaintenancePage() {
       setDeletingSchedule(null);
       setDeletingEquipment(null);
     } catch (error) {
-      console.error('Failed to delete:', error);
     }
   };
 

@@ -11,6 +11,8 @@ import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { LoginCredentials, RegisterData } from '@/src/models/auth';
 import { apiService } from '@/src/services/ApiService';
+import { extractErrorMessage } from '@/src/utils/errorUtils';
+import { toast } from 'sonner';
 
 interface AuthFormProps {
   mode: 'login' | 'signup';
@@ -44,7 +46,9 @@ export default function AuthForm({ mode, onSuccess }: AuthFormProps) {
         if (success) {
           onSuccess();
         } else {
-          setError('Invalid email or password');
+          const errorMessage = 'Invalid email or password';
+          setError(errorMessage);
+          toast.error(errorMessage);
         }
       } else {
         const user = await apiService.register({
@@ -56,7 +60,6 @@ export default function AuthForm({ mode, onSuccess }: AuthFormProps) {
         } as RegisterData);
 
         if (user) {
-          // After successful registration, automatically log the user in
           const loginSuccess = await login({
             email: formData.email,
             password: formData.password,
@@ -65,24 +68,18 @@ export default function AuthForm({ mode, onSuccess }: AuthFormProps) {
           if (loginSuccess) {
             onSuccess();
           } else {
-            setError(
-              'Registration successful but automatic login failed. Please sign in manually.',
-            );
+            const errorMessage = 'Registration successful but automatic login failed. Please sign in manually.';
+            setError(errorMessage);
+            toast.error(errorMessage);
           }
         }
       }
     } catch (err: any) {
-      if (err.response) {
-        setError(
-          err.response.data?.detail ||
-            err.response.data?.message ||
-            'An error occurred',
-        );
-      } else if (err.request) {
-        setError('No response from server. Please check your connection.');
-      } else {
-        setError(err.message || 'An error occurred');
-      }
+      const errorMessage = err.request && !err.response
+        ? 'No response from server. Please check your connection.'
+        : extractErrorMessage(err, 'An error occurred');
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

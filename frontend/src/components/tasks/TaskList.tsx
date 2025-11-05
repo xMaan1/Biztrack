@@ -43,6 +43,7 @@ import {
 import { Project } from '../../models/project/Project';
 import { User } from '../../models/auth';
 import { apiService } from '../../services/ApiService';
+import { extractErrorMessage } from '../../utils/errorUtils';
 import { cn } from '../../lib/utils';
 
 interface TaskListProps {
@@ -228,8 +229,7 @@ export const TaskList: React.FC<TaskListProps> = ({
       setParentTask(null);
       await loadTasks();
     } catch (err: any) {
-      console.error('Task operation failed:', err);
-      setDialogError(err.response?.data?.detail || 'Failed to save task');
+      setDialogError(extractErrorMessage(err, 'Failed to save task'));
     } finally {
       setDialogLoading(false);
     }

@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import NotificationService from '../services/NotificationService';
+import { extractErrorMessage } from '../utils/errorUtils';
 import {
   Notification,
   NotificationFilters,
@@ -55,8 +56,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       const response = await NotificationService.getNotifications(filters);
       setNotifications(response.notifications);
     } catch (err: any) {
-      setError(err?.response?.data?.detail || err?.message || 'Failed to load notifications');
-      console.error('Failed to load notifications:', err);
+      setError(extractErrorMessage(err, 'Failed to load notifications'));
     } finally {
       setLoading(false);
     }
@@ -70,7 +70,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       const response = await NotificationService.getUnreadCount();
       setUnreadCount(response.unread_count);
     } catch (err: any) {
-      console.error('Failed to load unread count:', err);
     }
   }, [user, currentTenant]);
 
@@ -82,7 +81,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       const response = await NotificationService.getNotificationPreferences();
       setPreferences(response.preferences);
     } catch (err: any) {
-      console.error('Failed to load preferences:', err);
     }
   }, [user, currentTenant]);
 
@@ -103,7 +101,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       // Update unread count
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (err: any) {
-      setError(err?.response?.data?.detail || err?.message || 'Failed to mark notification as read');
+      setError(extractErrorMessage(err, 'Failed to mark notification as read'));
       throw err;
     }
   }, []);
@@ -125,7 +123,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       // Update unread count
       setUnreadCount(prev => prev + 1);
     } catch (err: any) {
-      setError(err?.response?.data?.detail || err?.message || 'Failed to mark notification as unread');
+      setError(extractErrorMessage(err, 'Failed to mark notification as unread'));
       throw err;
     }
   }, []);
@@ -147,7 +145,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       // Reset unread count
       setUnreadCount(0);
     } catch (err: any) {
-      setError(err?.response?.data?.detail || err?.message || 'Failed to mark all notifications as read');
+      setError(extractErrorMessage(err, 'Failed to mark all notifications as read'));
       throw err;
     }
   }, []);
@@ -166,7 +164,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         setUnreadCount(prev => Math.max(0, prev - 1));
       }
     } catch (err: any) {
-      setError(err?.response?.data?.detail || err?.message || 'Failed to delete notification');
+      setError(extractErrorMessage(err, 'Failed to delete notification'));
       throw err;
     }
   }, [notifications]);
@@ -185,7 +183,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         )
       );
     } catch (err: any) {
-      setError(err?.response?.data?.detail || err?.message || 'Failed to update preference');
+      setError(extractErrorMessage(err, 'Failed to update preference'));
       throw err;
     }
   }, []);

@@ -36,7 +36,6 @@ export function TimeStats({ employeeId, startDate, endDate }: TimeStatsProps) {
       );
       setStats(response);
     } catch (error) {
-      console.error('Failed to fetch time tracking stats:', error);
     } finally {
       setLoading(false);
     }

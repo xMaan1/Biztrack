@@ -1,4 +1,5 @@
 import { apiClient } from './apiClient';
+import { extractErrorMessage } from '../utils/errorUtils';
 
 export interface ParallelApiCall<T = any> {
   key: string;
@@ -19,8 +20,6 @@ class ParallelApiService {
     calls: ParallelApiCall<T>[]
   ): Promise<ParallelApiResult<T>> {
     try {
-      console.log(`🚀 Executing ${calls.length} API calls in parallel...`);
-      
       const results = await Promise.allSettled(
         calls.map(call => call.promise)
       );
@@ -34,21 +33,14 @@ class ParallelApiService {
         if (result.status === 'fulfilled') {
           response[call.key] = result.value;
         } else {
-          console.error(`❌ API call failed for ${call.key}:`, result.reason);
-          errors.push(`${call.key}: ${result.reason}`);
+          const errorMessage = extractErrorMessage(result.reason, 'Unknown error');
+          errors.push(`${call.key}: ${errorMessage}`);
           response[call.key] = undefined as any;
         }
       });
       
-      if (errors.length > 0) {
-        console.warn('⚠️ Some API calls failed:', errors);
-      } else {
-        console.log('✅ All parallel API calls completed successfully');
-      }
-      
       return response;
     } catch (error) {
-      console.error('❌ Parallel API execution failed:', error);
       throw error;
     }
   }
@@ -66,8 +58,6 @@ class ParallelApiService {
     hasErrors: boolean;
   }> {
     try {
-      console.log(`🚀 Executing ${calls.length} API calls in parallel with error handling...`);
-      
       const results = await Promise.allSettled(
         calls.map(call => call.promise)
       );
@@ -82,10 +72,9 @@ class ParallelApiService {
         if (result.status === 'fulfilled') {
           response[call.key] = result.value;
         } else {
-          const errorMessage = result.reason?.message || 'Unknown error';
+          const errorMessage = extractErrorMessage(result.reason, 'Unknown error');
           errors[call.key] = errorMessage;
           hasErrors = true;
-          console.error(`❌ API call failed for ${call.key}:`, result.reason);
         }
       });
       
@@ -95,7 +84,6 @@ class ParallelApiService {
         hasErrors
       };
     } catch (error) {
-      console.error('❌ Parallel API execution failed:', error);
       throw error;
     }
   }
@@ -111,8 +99,6 @@ class ParallelApiService {
     timeoutMs: number = 10000
   ): Promise<ParallelApiResult<T>> {
     try {
-      console.log(`🚀 Executing ${calls.length} API calls in parallel with ${timeoutMs}ms timeout...`);
-      
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error('Parallel API calls timeout')), timeoutMs);
       });
@@ -131,14 +117,13 @@ class ParallelApiService {
         if (result.status === 'fulfilled') {
           response[call.key] = result.value;
         } else {
-          console.error(`❌ API call failed for ${call.key}:`, result.reason);
+          extractErrorMessage(result.reason, 'Unknown error');
           response[call.key] = undefined as any;
         }
       });
       
       return response;
     } catch (error) {
-      console.error('❌ Parallel API execution with timeout failed:', error);
       throw error;
     }
   }

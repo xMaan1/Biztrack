@@ -69,14 +69,11 @@ export default function ProjectTasksPage() {
       } else if (response.data && Array.isArray(response.data)) {
         taskList = response.data;
       } else {
-        console.warn('Unexpected tasks response structure:', response);
         taskList = [];
       }
 
       setTasks(taskList);
     } catch (err: any) {
-      const errorMessage = err?.response?.data?.detail || err?.message || 'Failed to load tasks';
-      console.warn('Tasks load error:', errorMessage);
     }
   }, [projectId]);
 

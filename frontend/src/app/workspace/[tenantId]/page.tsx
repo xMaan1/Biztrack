@@ -71,7 +71,6 @@ export default function WorkspacePage() {
         completionRate,
       });
     } catch (err) {
-      console.error('Failed to fetch workspace data:', err);
       setError('Failed to load workspace data');
     } finally {
       setLoading(false);

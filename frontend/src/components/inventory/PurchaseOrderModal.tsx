@@ -136,7 +136,6 @@ export default function PurchaseOrderModal({
         }));
       }
     } catch (error) {
-      console.error('Failed to fetch data:', error);
     }
   };
 

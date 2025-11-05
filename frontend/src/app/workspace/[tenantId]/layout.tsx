@@ -76,7 +76,6 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
       const token = sessionManager.getToken();
 
       if (!token) {
-        console.error('No authentication token found');
         router.push('/');
         return;
       }
@@ -94,7 +93,6 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
 
       setTenantInfo(response.data);
     } catch (error) {
-      console.error('Error fetching tenant info:', error);
       router.push('/');
     }
   }, [tenantId, router]);

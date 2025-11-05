@@ -6,12 +6,9 @@ export const useReportsDashboard = () => {
   const result = useCachedApi(
     'reports-dashboard',
     () => {
-      console.log('=== useReportsDashboard API CALL ===');
       return reportsService.getDashboard().then(data => {
-        console.log('Dashboard API response:', data);
         return data;
       }).catch(error => {
-        console.log('Dashboard API error:', error);
         throw error;
       });
     },
@@ -20,10 +17,6 @@ export const useReportsDashboard = () => {
     }
   );
   
-  console.log('=== useReportsDashboard RESULT ===');
-  console.log('result:', result);
-  console.log('===============================');
-  
   return result;
 };
 
@@ -31,12 +24,9 @@ export const useReportsSummary = () => {
   const result = useCachedApi(
     'reports-summary',
     () => {
-      console.log('=== useReportsSummary API CALL ===');
       return reportsService.getSummary().then(data => {
-        console.log('Summary API response:', data);
         return data;
       }).catch(error => {
-        console.log('Summary API error:', error);
         throw error;
       });
     },
@@ -44,10 +34,6 @@ export const useReportsSummary = () => {
       ttl: 2 * 60 * 1000, // 2 minutes
     }
   );
-  
-  console.log('=== useReportsSummary RESULT ===');
-  console.log('result:', result);
-  console.log('=============================');
   
   return result;
 };

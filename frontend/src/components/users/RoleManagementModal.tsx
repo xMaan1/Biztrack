@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRBAC, CreateRoleData, UpdateRoleData } from '@/src/contexts/RBACContext';
+import { extractErrorMessage } from '@/src/utils/errorUtils';
 import { Button } from '@/src/components/ui/button';
 import {
   Dialog,
@@ -16,7 +17,7 @@ import { Label } from '@/src/components/ui/label';
 import { Textarea } from '@/src/components/ui/textarea';
 import { Badge } from '@/src/components/ui/badge';
 import { Alert, AlertDescription } from '@/src/components/ui/alert';
-import { Loader2, Plus, Edit } from 'lucide-react';
+import { Loader2, Plus, Edit, Trash2 } from 'lucide-react';
 import { Checkbox } from '@/src/components/ui/checkbox';
 
 interface RoleManagementModalProps {
@@ -27,6 +28,7 @@ interface RoleManagementModalProps {
 
 const MODULE_PERMISSIONS = [
   { module: 'CRM', permissions: ['crm:view', 'crm:create', 'crm:update', 'crm:delete'] },
+  { module: 'Sales', permissions: ['sales:view', 'sales:create', 'sales:update', 'sales:delete'] },
   { module: 'HRM', permissions: ['hrm:view', 'hrm:create', 'hrm:update', 'hrm:delete'] },
   { module: 'Inventory', permissions: ['inventory:view', 'inventory:create', 'inventory:update', 'inventory:delete'] },
   { module: 'Finance', permissions: ['finance:view', 'finance:create', 'finance:update', 'finance:delete'] },
@@ -39,9 +41,10 @@ const MODULE_PERMISSIONS = [
 ];
 
 export function RoleManagementModal({ open, onOpenChange, onSuccess }: RoleManagementModalProps) {
-  const { roles, createRole, updateRole } = useRBAC();
+  const { roles, createRole, updateRole, deleteRole } = useRBAC();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingRole, setEditingRole] = useState<any>(null);
+  const [deletingRole, setDeletingRole] = useState<any>(null);
   const [formData, setFormData] = useState<CreateRoleData>({
     name: '',
     display_name: '',
@@ -50,12 +53,14 @@ export function RoleManagementModal({ open, onOpenChange, onSuccess }: RoleManag
     isActive: true,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (open) {
       setShowCreateForm(false);
       setEditingRole(null);
+      setDeletingRole(null);
       setFormData({
         name: '',
         display_name: '',
@@ -116,7 +121,7 @@ export function RoleManagementModal({ open, onOpenChange, onSuccess }: RoleManag
       }
       onSuccess();
     } catch (error: any) {
-      setError(error.message || 'Failed to save role');
+      setError(extractErrorMessage(error, 'Failed to save role'));
     } finally {
       setIsSubmitting(false);
     }
@@ -146,6 +151,23 @@ export function RoleManagementModal({ open, onOpenChange, onSuccess }: RoleManag
         ...prev,
         permissions: Array.from(new Set([...prev.permissions, ...modulePermissions]))
       }));
+    }
+  };
+
+  const handleDeleteRole = async () => {
+    if (!deletingRole) return;
+
+    setIsDeleting(true);
+    setError('');
+
+    try {
+      await deleteRole(deletingRole.id);
+      setDeletingRole(null);
+      onSuccess();
+    } catch (error: any) {
+      setError(extractErrorMessage(error, 'Failed to delete role'));
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -192,13 +214,25 @@ export function RoleManagementModal({ open, onOpenChange, onSuccess }: RoleManag
                         </Badge>
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEditRole(role)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditRole(role)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      {role.name !== 'owner' && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setDeletingRole(role)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -283,6 +317,44 @@ export function RoleManagementModal({ open, onOpenChange, onSuccess }: RoleManag
             </form>
           )}
         </div>
+
+        <Dialog open={!!deletingRole} onOpenChange={(open) => {
+          if (!open) {
+            setDeletingRole(null);
+            setError('');
+          }
+        }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Role</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete the role "{deletingRole?.display_name}"? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setDeletingRole(null)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteRole}
+                disabled={isDeleting}
+              >
+                {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Delete Role
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </DialogContent>
     </Dialog>
   );

@@ -72,7 +72,6 @@ function ProductsContent() {
       const response = await apiService.get('/pos/products');
       setProducts(response.products || []);
     } catch (error) {
-      console.error('Failed to fetch products:', error);
       setProducts([]);
     } finally {
       setLoading(false);

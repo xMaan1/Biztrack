@@ -6,7 +6,8 @@ from datetime import datetime
 import uuid
 import re
 
-from ..dependencies import get_current_user, get_tenant_context
+from ..dependencies import get_current_user, get_tenant_context, require_permission
+from ...models.unified_models import ModulePermission
 from ...config.database import get_db
 from ...models.unified_models import (
     User, Tenant,
@@ -53,10 +54,8 @@ def generate_purchase_order_number(tenant_id: str, db: Session) -> str:
     year = datetime.now().year
     month = datetime.now().month
     
-    # Use a retry mechanism to handle race conditions
     max_retries = 10
     for attempt in range(max_retries):
-        # Get the highest purchase order number for this month
         highest_po = db.query(PurchaseOrderDB).filter(
             and_(
                 PurchaseOrderDB.tenant_id == tenant_id,
@@ -66,15 +65,12 @@ def generate_purchase_order_number(tenant_id: str, db: Session) -> str:
         ).order_by(desc(PurchaseOrderDB.poNumber)).first()
         
         if highest_po:
-            # Extract the number from the highest purchase order
             try:
-                # Parse the existing purchase order number format: PO-YYYYMM-XXXX
                 parts = highest_po.poNumber.split('-')
                 if len(parts) == 3:
                     last_number = int(parts[2])
                     new_number = last_number + 1
                 else:
-                    # Fallback: count all purchase orders for this month
                     count = db.query(PurchaseOrderDB).filter(
                         and_(
                             PurchaseOrderDB.tenant_id == tenant_id,
@@ -84,7 +80,6 @@ def generate_purchase_order_number(tenant_id: str, db: Session) -> str:
                     ).count()
                     new_number = count + 1
             except (ValueError, IndexError):
-                # Fallback: count all purchase orders for this month
                 count = db.query(PurchaseOrderDB).filter(
                     and_(
                         PurchaseOrderDB.tenant_id == tenant_id,
@@ -94,13 +89,10 @@ def generate_purchase_order_number(tenant_id: str, db: Session) -> str:
                 ).count()
                 new_number = count + 1
         else:
-            # First purchase order for this month
             new_number = 1
         
-        # Format the purchase order number: PO-YYYYMM-XXXX
         po_number = f"PO-{year:04d}{month:02d}-{new_number:04d}"
         
-        # Check if this number already exists (race condition check)
         existing_po = db.query(PurchaseOrderDB).filter(
             PurchaseOrderDB.poNumber == po_number
         ).first()
@@ -108,7 +100,6 @@ def generate_purchase_order_number(tenant_id: str, db: Session) -> str:
         if not existing_po:
             return po_number
         
-        # If we get here, there was a race condition, retry
         if attempt == max_retries - 1:
             raise HTTPException(
                 status_code=500,
@@ -126,7 +117,8 @@ def read_warehouses(
     limit: int = Query(100, ge=1, le=1000),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
 ):
     """Get all warehouses for the current tenant"""
     warehouses = get_warehouses(db, str(tenant_context["tenant_id"]), skip, limit)
@@ -167,7 +159,8 @@ def read_warehouse(
     warehouse_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
 ):
     """Get a specific warehouse by ID"""
     warehouse = get_warehouse_by_id(warehouse_id, db, str(tenant_context["tenant_id"]))
@@ -206,7 +199,8 @@ def create_warehouse_endpoint(
     warehouse: WarehouseCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_CREATE.value))
 ):
     """Create a new warehouse"""
     try:
@@ -261,7 +255,8 @@ def update_warehouse_endpoint(
     warehouse: WarehouseUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_UPDATE.value))
 ):
     """Update an existing warehouse"""
     warehouse_update = warehouse.dict(exclude_unset=True)
@@ -303,7 +298,8 @@ def delete_warehouse_endpoint(
     warehouse_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_DELETE.value))
 ):
     """Delete a warehouse"""
     success = delete_warehouse(warehouse_id, db, str(tenant_context["tenant_id"]))
@@ -319,7 +315,8 @@ def read_storage_locations(
     limit: int = Query(100, ge=1, le=1000),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
 ):
     """Get all storage locations for the current tenant"""
     if warehouse_id:
@@ -334,7 +331,8 @@ def read_storage_location(
     location_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
 ):
     """Get a specific storage location by ID"""
     location = get_storage_location_by_id(db, location_id, str(tenant_context["tenant_id"]))
@@ -347,7 +345,8 @@ def create_storage_location_endpoint(
     location: StorageLocationCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_CREATE.value))
 ):
     """Create a new storage location"""
     location_data = location.dict()
@@ -368,7 +367,8 @@ def update_storage_location_endpoint(
     location: StorageLocationUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_UPDATE.value))
 ):
     """Update an existing storage location"""
     location_update = location.dict(exclude_unset=True)
@@ -385,7 +385,8 @@ def delete_storage_location_endpoint(
     location_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_DELETE.value))
 ):
     """Delete a storage location"""
     success = delete_storage_location(location_id, str(tenant_context["tenant_id"]), db)
@@ -402,7 +403,8 @@ def read_stock_movements(
     limit: int = Query(100, ge=1, le=1000),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
 ):
     """Get all stock movements for the current tenant"""
     movements = get_stock_movements(db, str(tenant_context["tenant_id"]), product_id, warehouse_id, skip, limit)
@@ -442,7 +444,8 @@ def create_customer_return(
     return_data: StockMovementCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_CREATE.value))
 ):
     """Create a new customer return"""
     # Convert to dict and ensure the movement type is RETURN and reference type is customer_return
@@ -472,7 +475,8 @@ def read_stock_movement(
     movement_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
 ):
     """Get a specific stock movement by ID"""
     movement = get_stock_movement_by_id(db, movement_id, str(tenant_context["tenant_id"]))
@@ -508,7 +512,8 @@ def create_stock_movement_endpoint(
     movement: StockMovementCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_CREATE.value))
 ):
     """Create a new stock movement"""
     tenant_id = str(tenant_context["tenant_id"])
@@ -560,7 +565,8 @@ def update_stock_movement_endpoint(
     movement: StockMovementUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_UPDATE.value))
 ):
     """Update an existing stock movement"""
     movement_update = movement.dict(exclude_unset=True)
@@ -602,7 +608,8 @@ def delete_stock_movement_endpoint(
     movement_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_DELETE.value))
 ):
     """Delete a stock movement"""
     success = delete_stock_movement(movement_id, db, str(tenant_context["tenant_id"]))
@@ -619,7 +626,8 @@ def read_purchase_orders(
     limit: int = Query(100, ge=1, le=1000),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
 ):
     """Get all purchase orders for the current tenant"""
     if status:
@@ -661,7 +669,8 @@ def read_purchase_order(
     order_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
 ):
     """Get a specific purchase order by ID"""
     order = get_purchase_order_by_id(order_id, db, str(tenant_context["tenant_id"]))
@@ -698,7 +707,8 @@ def create_purchase_order_endpoint(
     order: PurchaseOrderCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_CREATE.value))
 ):
     """Create a new purchase order"""
     # Calculate totals including VAT
@@ -768,7 +778,8 @@ def update_purchase_order_endpoint(
     order: PurchaseOrderUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_UPDATE.value))
 ):
     """Update an existing purchase order"""
     # Get the existing order to access items for VAT calculation
@@ -834,7 +845,8 @@ def delete_purchase_order_endpoint(
     order_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_DELETE.value))
 ):
     """Delete a purchase order"""
     success = delete_purchase_order(order_id, db, str(tenant_context["tenant_id"]))
@@ -850,7 +862,8 @@ def read_receivings(
     limit: int = Query(100, ge=1, le=1000),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
 ):
     """Get all receivings for the current tenant"""
     receivings = get_receivings(db, str(tenant_context["tenant_id"]), status, skip, limit)
@@ -883,7 +896,8 @@ def read_receiving(
     receiving_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
 ):
     """Get a specific receiving by ID"""
     receiving = get_receiving_by_id(db, receiving_id, str(tenant_context["tenant_id"]))
@@ -914,7 +928,8 @@ def create_receiving_endpoint(
     receiving: ReceivingCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_CREATE.value))
 ):
     """Create a new receiving"""
     receiving_data = receiving.dict()
@@ -959,7 +974,8 @@ def update_receiving_endpoint(
     receiving: ReceivingUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_UPDATE.value))
 ):
     """Update an existing receiving"""
     receiving_update = receiving.dict(exclude_unset=True)
@@ -976,7 +992,8 @@ def delete_receiving_endpoint(
     receiving_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_DELETE.value))
 ):
     """Delete a receiving"""
     success = delete_receiving(receiving_id, db, str(tenant_context["tenant_id"]))
@@ -989,7 +1006,8 @@ def delete_receiving_endpoint(
 def get_inventory_dashboard(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
 ):
     """Get inventory dashboard statistics"""
     return get_inventory_dashboard_stats(db, str(tenant_context["tenant_id"]))
@@ -1002,7 +1020,8 @@ def get_dumps(
     limit: int = Query(100, ge=1, le=1000),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
 ):
     """Get all damaged items (dumps) for the current tenant"""
     from sqlalchemy.orm import joinedload
@@ -1092,7 +1111,8 @@ def get_customer_returns(
     limit: int = Query(100, ge=1, le=1000),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
 ):
     """Get all customer returns for the current tenant"""
     from ...config.inventory_models import StockMovement, Product
@@ -1176,7 +1196,8 @@ def create_customer_return(
     return_data: StockMovementCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_CREATE.value))
 ):
     """Create a new customer return"""
     # Convert to dict and ensure the movement type is RETURN and reference type is customer_return
@@ -1209,7 +1230,8 @@ def get_supplier_returns(
     limit: int = Query(100, ge=1, le=1000),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
 ):
     """Get all supplier returns for the current tenant"""
     from ...config.inventory_models import StockMovement, Product
@@ -1293,7 +1315,8 @@ def create_supplier_return(
     return_data: StockMovementCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_CREATE.value))
 ):
     """Create a new supplier return"""
     # Convert to dict and ensure the movement type is RETURN and reference type is supplier_return

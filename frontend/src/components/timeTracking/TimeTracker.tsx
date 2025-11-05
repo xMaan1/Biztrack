@@ -75,7 +75,6 @@ export function TimeTracker({ projects = [], tasks = [], onTimeEntryCreated }: T
         setElapsedTime(Math.floor((now - startTime) / 1000));
       }
     } catch (error) {
-      console.error('Failed to fetch current session:', error);
     }
   };
 
@@ -109,7 +108,6 @@ export function TimeTracker({ projects = [], tasks = [], onTimeEntryCreated }: T
       setElapsedTime(0);
       toast.success('Time tracking started');
     } catch (error) {
-      console.error('Failed to start time session:', error);
       toast.error('Failed to start time tracking. Please try again.');
     } finally {
       setIsLoading(false);
@@ -133,7 +131,6 @@ export function TimeTracker({ projects = [], tasks = [], onTimeEntryCreated }: T
       }
       toast.success('Time tracking stopped');
     } catch (error) {
-      console.error('Failed to stop time session:', error);
       toast.error('Failed to stop time tracking. Please try again.');
     } finally {
       setIsLoading(false);
@@ -149,7 +146,6 @@ export function TimeTracker({ projects = [], tasks = [], onTimeEntryCreated }: T
       setCurrentSession(session);
       toast.success('Time tracking paused');
     } catch (error) {
-      console.error('Failed to pause time session:', error);
       toast.error('Failed to pause time tracking. Please try again.');
     } finally {
       setIsLoading(false);
@@ -165,7 +161,6 @@ export function TimeTracker({ projects = [], tasks = [], onTimeEntryCreated }: T
       setCurrentSession(session);
       toast.success('Time tracking resumed');
     } catch (error) {
-      console.error('Failed to resume time session:', error);
       toast.error('Failed to resume time tracking. Please try again.');
     } finally {
       setIsLoading(false);

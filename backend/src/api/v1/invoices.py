@@ -376,7 +376,8 @@ def bulk_delete_invoices(
     request: BulkOperationRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_DELETE.value))
 ):
     """Delete multiple invoices at once"""
     try:
@@ -482,7 +483,8 @@ def create_invoice(
     invoice_data: InvoiceCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_CREATE.value))
 ):
     """Create a new invoice"""
     try:
@@ -816,7 +818,8 @@ def update_invoice(
     invoice_data: InvoiceUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_UPDATE.value))
 ):
     """Update an existing invoice"""
     try:
@@ -963,7 +966,8 @@ def delete_invoice(
     invoice_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_DELETE.value))
 ):
     """Delete an invoice"""
     try:
@@ -982,11 +986,7 @@ def delete_invoice(
         if not invoice:
             raise HTTPException(status_code=404, detail="Invoice not found")
         
-        # Invoice can be deleted regardless of status or payments
-        
-        # Handle foreign key constraint by deleting related invoice_items first
         try:
-            # Check if invoice_items table exists and has references
             check_items_query = text("""
                 SELECT COUNT(*) FROM information_schema.tables 
                 WHERE table_name = 'invoice_items'

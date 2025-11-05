@@ -114,9 +114,7 @@ function HRMPerformanceReviewsContent() {
     try {
       setLoading(true);
       setError(null);
-      console.log('Loading performance reviews...');
       const response = await HRMService.getPerformanceReviews(filters, 1, 100);
-      console.log('Performance reviews loaded:', response.reviews);
       setPerformanceReviews(response.reviews);
     } catch (err) {
       setError('Failed to load performance reviews');
@@ -211,11 +209,8 @@ function HRMPerformanceReviewsContent() {
       setShowCreateDialog(false);
       setEditingReview(null);
       resetForm();
-      // Add a small delay to ensure backend has processed the update
       setTimeout(async () => {
-        console.log('Refreshing performance reviews after update...');
         await loadPerformanceReviews();
-        console.log('Performance reviews refreshed');
       }, 100);
     } catch (err) {
       setError('Failed to save performance review. Please try again.');

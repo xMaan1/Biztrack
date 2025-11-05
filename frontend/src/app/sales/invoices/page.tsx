@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   Card,
   CardContent,
@@ -51,14 +51,17 @@ import { InvoiceList } from '../../../components/sales/InvoiceList';
 import { InvoiceDashboard as InvoiceDashboardComponent } from '../../../components/sales/InvoiceDashboard';
 import { InvoiceCustomizationDialog } from '../../../components/sales/InvoiceCustomizationDialog';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
+import { usePermissions } from '@/src/hooks/usePermissions';
+import { extractErrorMessage } from '@/src/utils/errorUtils';
 
 export default function InvoicesPage() {
   const { formatCurrency } = useCurrency();
+  const { isOwner, canViewInvoices } = usePermissions();
   const [dashboard, setDashboard] = useState<InvoiceDashboard | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('invoices');
 
   // Dialog states
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -76,16 +79,19 @@ export default function InvoicesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => {
-    loadData();
-  }, [activeTab, currentPage]);
+  const hasViewPermission = useMemo(() => canViewInvoices(), [canViewInvoices]);
+  const userIsOwner = useMemo(() => isOwner(), [isOwner]);
+  const loadingRef = useRef(false);
 
   const loadData = useCallback(async () => {
+    if (loadingRef.current) return;
+    
     try {
+      loadingRef.current = true;
       setLoading(true);
       setError(null);
 
-      if (activeTab === 'dashboard') {
+      if (activeTab === 'dashboard' && userIsOwner) {
         const dashboardData = await InvoiceService.getDashboard();
         setDashboard(dashboardData);
       } else {
@@ -98,15 +104,30 @@ export default function InvoicesPage() {
           currentPage,
           10,
         );
-        setInvoices(response.invoices);
-        setTotalPages(response.pagination.pages);
+        setInvoices(response.invoices || []);
+        setTotalPages(response.pagination?.pages || 1);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load data');
+      setError(extractErrorMessage(err, 'Failed to load data'));
     } finally {
       setLoading(false);
+      loadingRef.current = false;
     }
-  }, [activeTab, filters, searchTerm, statusFilter, currentPage]);
+  }, [activeTab, filters, searchTerm, statusFilter, currentPage, userIsOwner]);
+
+  const filtersString = useMemo(() => JSON.stringify(filters), [filters]);
+
+  useEffect(() => {
+    if (!hasViewPermission) {
+      setActiveTab('invoices');
+      return;
+    }
+    if (!userIsOwner && activeTab === 'dashboard') {
+      setActiveTab('invoices');
+      return;
+    }
+    loadData();
+  }, [activeTab, currentPage, filtersString, searchTerm, statusFilter, loadData, hasViewPermission, userIsOwner]);
 
   const handleCreateInvoice = async (invoiceData: InvoiceCreate) => {
     try {
@@ -114,7 +135,7 @@ export default function InvoicesPage() {
       setShowCreateDialog(false);
       loadData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create invoice');
+      setError(extractErrorMessage(err, 'Failed to create invoice'));
     }
   };
 
@@ -128,7 +149,7 @@ export default function InvoicesPage() {
       setSelectedInvoice(null);
       loadData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update invoice');
+      setError(extractErrorMessage(err, 'Failed to update invoice'));
     }
   };
 
@@ -139,7 +160,7 @@ export default function InvoicesPage() {
       setSelectedInvoice(null);
       loadData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete invoice');
+      setError(extractErrorMessage(err, 'Failed to delete invoice'));
     }
   };
 
@@ -148,7 +169,7 @@ export default function InvoicesPage() {
       await InvoiceService.sendInvoice(invoiceId);
       loadData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send invoice');
+      setError(extractErrorMessage(err, 'Failed to send invoice'));
     }
   };
 
@@ -157,9 +178,7 @@ export default function InvoicesPage() {
       await InvoiceService.markInvoiceAsPaid(invoiceId);
       loadData();
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to mark invoice as paid',
-      );
+      setError(extractErrorMessage(err, 'Failed to mark invoice as paid'));
     }
   };
 
@@ -169,7 +188,7 @@ export default function InvoicesPage() {
       await InvoiceService.bulkSendInvoices(invoiceIds);
       loadData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send invoices');
+      setError(extractErrorMessage(err, 'Failed to send invoices'));
     }
   };
 
@@ -178,7 +197,7 @@ export default function InvoicesPage() {
       await InvoiceService.bulkMarkAsPaid(invoiceIds);
       loadData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to mark invoices as paid');
+      setError(extractErrorMessage(err, 'Failed to mark invoices as paid'));
     }
   };
 
@@ -187,7 +206,7 @@ export default function InvoicesPage() {
       await InvoiceService.bulkMarkAsUnpaid(invoiceIds);
       loadData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to mark invoices as unpaid');
+      setError(extractErrorMessage(err, 'Failed to mark invoices as unpaid'));
     }
   };
 
@@ -196,7 +215,7 @@ export default function InvoicesPage() {
       await InvoiceService.bulkDeleteInvoices(invoiceIds);
       loadData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete invoices');
+      setError(extractErrorMessage(err, 'Failed to delete invoices'));
     }
   };
 
@@ -297,16 +316,20 @@ export default function InvoicesPage() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsList className={`grid w-full ${isOwner() ? 'grid-cols-3' : 'grid-cols-2'}`}>
+            {isOwner() && (
+              <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            )}
             <TabsTrigger value="invoices">All Invoices</TabsTrigger>
             <TabsTrigger value="overdue">Overdue</TabsTrigger>
           </TabsList>
 
-          {/* Dashboard Tab */}
-          <TabsContent value="dashboard" className="space-y-6">
-            {dashboard && <InvoiceDashboardComponent dashboard={dashboard} />}
-          </TabsContent>
+          {/* Dashboard Tab - Only visible to owners */}
+          {isOwner() && (
+            <TabsContent value="dashboard" className="space-y-6">
+              {dashboard && <InvoiceDashboardComponent dashboard={dashboard} />}
+            </TabsContent>
+          )}
 
           {/* Invoices Tab */}
           <TabsContent value="invoices" className="space-y-6">

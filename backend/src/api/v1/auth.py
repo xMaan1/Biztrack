@@ -14,6 +14,7 @@ from ...models.unified_models import (
     RefreshTokenResponse, TenantSelectionRequest, TenantSelectionResponse, TenantInfo
 )
 from ...config.database import get_db, get_user_by_email, get_user_by_username, create_user, get_user_tenants, get_user_by_id, update_user
+from ...services.rbac_service import RBACService
 from ...config.core_models import PasswordResetToken
 from ...core.auth import (
     verify_password, get_password_hash, create_access_token, create_refresh_token,
@@ -292,17 +293,19 @@ async def update_user_info(
     else:
         logger.info(f"User is updating themselves - allowing update")
     
-    # Check if email is unique (if being updated)
     if user_data.email and user_data.email != user.email:
         existing_user = get_user_by_email(user_data.email, db)
         if existing_user and str(existing_user.id) != user_id:
             raise HTTPException(status_code=400, detail="Email already registered")
     
-    # Check if username is unique (if being updated)
     if user_data.userName and user_data.userName != user.userName:
-        existing_user = get_user_by_username(user_data.userName, db)
-        if existing_user and str(existing_user.id) != user_id:
-            raise HTTPException(status_code=400, detail="Username already taken")
+        if tenant_context:
+            if not RBACService.validate_username_uniqueness(db, user_data.userName, tenant_context["tenant_id"], exclude_user_id=user_id):
+                raise HTTPException(status_code=400, detail="Username already taken in this tenant")
+        else:
+            existing_user = get_user_by_username(user_data.userName, db)
+            if existing_user and str(existing_user.id) != user_id:
+                raise HTTPException(status_code=400, detail="Username already taken")
     
     # Update user
     update_dict = user_data.dict(exclude_unset=True)
@@ -339,19 +342,16 @@ async def request_password_reset(
     """Request password reset - sends email with reset link"""
     user = get_user_by_email(request.email, db)
     
-    # Always return success message for security (don't reveal if email exists)
     if not user:
         return PasswordResetResponse(
             message="If an account with that email exists, we've sent a password reset link.",
             success=True,
-            token=None  # No token for non-existent users
+            token=None
         )
     
-    # Generate reset token
     reset_token = secrets.token_urlsafe(32)
-    expires_at = datetime.utcnow() + timedelta(hours=1)  # Token expires in 1 hour
+    expires_at = datetime.utcnow() + timedelta(hours=1)
     
-    # Store reset token in database
     reset_token_record = PasswordResetToken(
         token=reset_token,
         user_id=user.id,
@@ -361,17 +361,15 @@ async def request_password_reset(
     db.add(reset_token_record)
     db.commit()
     
-    # Send email (in production, you'd use a proper email service)
     try:
         send_password_reset_email(user.email, reset_token)
     except Exception as e:
         print(f"Failed to send email: {e}")
-        # Don't fail the request if email sending fails
     
     return PasswordResetResponse(
         message="If an account with that email exists, we've sent a password reset link.",
         success=True,
-        token=reset_token  # Return token for immediate use
+        token=reset_token
     )
 
 @router.post("/reset-password/confirm", response_model=PasswordResetResponse)
@@ -380,7 +378,6 @@ async def confirm_password_reset(
     db: Session = Depends(get_db)
 ):
     """Confirm password reset with token"""
-    # Find valid reset token
     reset_token_record = db.query(PasswordResetToken).filter(
         PasswordResetToken.token == request.token,
         PasswordResetToken.is_used == False,
@@ -393,7 +390,6 @@ async def confirm_password_reset(
             detail="Invalid or expired reset token"
         )
     
-    # Get user and update password
     from ...config.core_models import User as UserModel
     user = db.query(UserModel).filter(UserModel.id == reset_token_record.user_id).first()
     if not user:
@@ -402,10 +398,8 @@ async def confirm_password_reset(
             detail="User not found"
         )
     
-    # Update password
     user.hashedPassword = get_password_hash(request.new_password)
     
-    # Mark token as used
     reset_token_record.is_used = True
     
     db.commit()

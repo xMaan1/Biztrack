@@ -19,7 +19,8 @@ from ...models.unified_models import (
 from ...config.database import (
     get_db, get_user_by_id
 )
-from ...api.dependencies import get_current_user, get_tenant_context, require_tenant_admin_or_super_admin
+from ...api.dependencies import get_current_user, get_tenant_context, require_tenant_admin_or_super_admin, require_permission
+from ...models.unified_models import ModulePermission
 
 router = APIRouter(prefix="/sales", tags=["sales"])
 
@@ -42,7 +43,8 @@ async def get_leads(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_VIEW.value))
 ):
     """Get all leads with optional filtering"""
     try:
@@ -86,7 +88,8 @@ async def create_lead(
     lead_data: LeadCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_CREATE.value))
 ):
     """Create a new lead"""
     try:
@@ -112,7 +115,8 @@ async def create_lead(
 async def get_lead(
     lead_id: str,
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_VIEW.value))
 ):
     """Get a specific lead"""
     try:
@@ -135,7 +139,8 @@ async def update_lead(
     lead_id: str,
     lead_data: LeadUpdate,
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_UPDATE.value))
 ):
     """Update a lead"""
     try:
@@ -165,7 +170,8 @@ async def update_lead(
 async def delete_lead(
     lead_id: str,
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_DELETE.value))
 ):
     """Delete a lead"""
     try:
@@ -196,7 +202,8 @@ async def get_contacts(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_VIEW.value))
 ):
     """Get all contacts with optional filtering"""
     try:
@@ -237,7 +244,8 @@ async def create_contact(
     contact_data: ContactCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_CREATE.value))
 ):
     """Create a new contact"""
     try:
@@ -264,7 +272,8 @@ async def update_contact(
     contact_id: str,
     contact_data: ContactUpdate,
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_UPDATE.value))
 ):
     """Update a contact"""
     try:
@@ -294,7 +303,8 @@ async def update_contact(
 async def delete_contact(
     contact_id: str,
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_DELETE.value))
 ):
     """Delete a contact"""
     try:
@@ -324,7 +334,8 @@ async def get_companies(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_VIEW.value))
 ):
     """Get all companies with optional filtering"""
     try:
@@ -362,7 +373,8 @@ async def create_company(
     company_data: CompanyCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_CREATE.value))
 ):
     """Create a new company"""
     try:
@@ -389,7 +401,8 @@ async def update_company(
     company_id: str,
     company_data: CompanyUpdate,
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_UPDATE.value))
 ):
     """Update a company"""
     try:
@@ -419,7 +432,8 @@ async def update_company(
 async def delete_company(
     company_id: str,
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_DELETE.value))
 ):
     """Delete a company"""
     try:
@@ -450,7 +464,8 @@ async def get_opportunities(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_VIEW.value))
 ):
     """Get all opportunities with optional filtering"""
     try:
@@ -491,7 +506,8 @@ async def create_opportunity(
     opportunity_data: OpportunityCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_CREATE.value))
 ):
     """Create a new opportunity"""
     try:
@@ -518,7 +534,8 @@ async def update_opportunity(
     opportunity_id: str,
     opportunity_data: OpportunityUpdate,
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_UPDATE.value))
 ):
     """Update an opportunity"""
     try:
@@ -548,7 +565,8 @@ async def update_opportunity(
 async def delete_opportunity(
     opportunity_id: str,
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_DELETE.value))
 ):
     """Delete an opportunity"""
     try:
@@ -578,7 +596,8 @@ async def get_quotes(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_VIEW.value))
 ):
     """Get all quotes with optional filtering"""
     try:
@@ -612,7 +631,8 @@ async def create_quote(
     quote_data: QuoteCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_CREATE.value))
 ):
     """Create a new quote"""
     try:
@@ -640,7 +660,8 @@ async def update_quote(
     quote_id: str,
     quote_data: QuoteUpdate,
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_UPDATE.value))
 ):
     """Update a quote"""
     try:
@@ -670,7 +691,8 @@ async def update_quote(
 async def delete_quote(
     quote_id: str,
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_DELETE.value))
 ):
     """Delete a quote"""
     try:
@@ -700,7 +722,8 @@ async def get_contracts(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_VIEW.value))
 ):
     """Get all contracts with optional filtering"""
     try:
@@ -734,7 +757,8 @@ async def create_contract(
     contract_data: ContractCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_CREATE.value))
 ):
     """Create a new contract"""
     try:
@@ -762,7 +786,8 @@ async def update_contract(
     contract_id: str,
     contract_data: ContractUpdate,
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_UPDATE.value))
 ):
     """Update a contract"""
     try:
@@ -792,7 +817,8 @@ async def update_contract(
 async def delete_contract(
     contract_id: str,
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_DELETE.value))
 ):
     """Delete a contract"""
     try:
@@ -825,7 +851,8 @@ async def get_sales_activities(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_VIEW.value))
 ):
     """Get all sales activities with optional filtering"""
     try:
@@ -865,7 +892,8 @@ async def create_sales_activity(
     activity_data: SalesActivityCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_CREATE.value))
 ):
     """Create a new sales activity"""
     try:
@@ -891,7 +919,8 @@ async def create_sales_activity(
 @router.get("/dashboard", response_model=SalesDashboard)
 async def get_sales_dashboard(
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_VIEW.value))
 ):
     """Get sales dashboard data"""
     try:
@@ -1004,7 +1033,8 @@ async def get_revenue_analytics(
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_VIEW.value))
 ):
     """Get revenue analytics data"""
     try:
@@ -1025,7 +1055,8 @@ async def get_revenue_analytics(
 @router.get("/analytics/conversion")
 async def get_conversion_analytics(
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_VIEW.value))
 ):
     """Get conversion rate analytics"""
     try:

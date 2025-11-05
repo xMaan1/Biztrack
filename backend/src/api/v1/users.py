@@ -7,8 +7,10 @@ from ...config.database import (
     get_db, get_user_by_email, get_user_by_username,
     get_user_by_id, create_user, get_all_users, update_user
 )
+from ...config.core_models import TenantUser
 from ...core.auth import get_password_hash
 from ...api.dependencies import get_current_user, get_tenant_context, require_super_admin, require_tenant_admin_or_super_admin
+from ...services.rbac_service import RBACService
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -79,8 +81,14 @@ async def create_new_user(
     # Check if user already exists
     if get_user_by_email(user_data.email, db):
         raise HTTPException(status_code=400, detail="Email already registered")
-    if get_user_by_username(user_data.userName, db):
-        raise HTTPException(status_code=400, detail="Username already taken")
+    
+    # Check username uniqueness - tenant-scoped if tenant context available, otherwise global
+    if tenant_context:
+        if not RBACService.validate_username_uniqueness(db, user_data.userName, tenant_context["tenant_id"]):
+            raise HTTPException(status_code=400, detail="Username already taken in this tenant")
+    else:
+        if get_user_by_username(user_data.userName, db):
+            raise HTTPException(status_code=400, detail="Username already taken")
     
     # Hash password and create user
     hashed_password = get_password_hash(user_data.password)
@@ -154,9 +162,13 @@ async def update_user_info(
             raise HTTPException(status_code=400, detail="Email already registered")
     
     if user_data.userName and user_data.userName != user.userName:
-        existing_user = get_user_by_username(user_data.userName, db)
-        if existing_user and str(existing_user.id) != user_id:
-            raise HTTPException(status_code=400, detail="Username already taken")
+        if tenant_context:
+            if not RBACService.validate_username_uniqueness(db, user_data.userName, tenant_context["tenant_id"], exclude_user_id=user_id):
+                raise HTTPException(status_code=400, detail="Username already taken in this tenant")
+        else:
+            existing_user = get_user_by_username(user_data.userName, db)
+            if existing_user and str(existing_user.id) != user_id:
+                raise HTTPException(status_code=400, detail="Username already taken")
     
     update_dict = user_data.dict(exclude_unset=True)
     logger.info(f"Updating user with data: {update_dict}")
@@ -205,8 +217,11 @@ async def delete_user(
             detail="You cannot delete your own account"
         )
     
-    # Soft delete (set inactive)
-    user.isActive = False
+    tenant_users = db.query(TenantUser).filter(TenantUser.userId == user.id).all()
+    for tenant_user in tenant_users:
+        db.delete(tenant_user)
+    
+    db.delete(user)
     db.commit()
     
     return {"message": "User deleted successfully"}

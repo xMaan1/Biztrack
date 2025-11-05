@@ -56,7 +56,6 @@ export default function NotificationItem({
         await markAsRead(notification.id);
       }
     } catch (error) {
-      console.error('Failed to toggle read status:', error);
     }
   };
 
@@ -64,7 +63,6 @@ export default function NotificationItem({
     try {
       await deleteNotification(notification.id);
     } catch (error) {
-      console.error('Failed to delete notification:', error);
     }
   };
 

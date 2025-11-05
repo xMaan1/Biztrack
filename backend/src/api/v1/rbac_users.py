@@ -128,7 +128,47 @@ async def update_role(
         updatedAt=role.updatedAt
     )
 
-# Tenant User Management Endpoints
+@router.delete("/roles/{role_id}")
+async def delete_role(
+    role_id: str,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    current_user = Depends(require_permission(ModulePermission.USERS_DELETE.value))
+):
+    """Delete a role (soft delete by setting isActive to False)"""
+    from ...models.unified_models import TenantRole
+    
+    role = db.query(RoleModel).filter(
+        and_(
+            RoleModel.id == role_id,
+            RoleModel.tenant_id == tenant_context["tenant_id"]
+        )
+    ).first()
+    
+    if not role:
+        raise HTTPException(status_code=404, detail="Role not found")
+    
+    if role.name == TenantRole.OWNER.value:
+        raise HTTPException(status_code=400, detail="Cannot delete owner role")
+    
+    active_users_count = db.query(TenantUserModel).filter(
+        and_(
+            TenantUserModel.role_id == role_id,
+            TenantUserModel.isActive == True
+        )
+    ).count()
+    
+    if active_users_count > 0:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Cannot delete role: {active_users_count} active user(s) are assigned to this role"
+        )
+    
+    role.isActive = False
+    db.commit()
+    
+    return {"message": "Role deleted successfully"}
+
 @router.get("/tenant-users", response_model=List[UserWithPermissions])
 async def get_tenant_users(
     db: Session = Depends(get_db),
@@ -137,10 +177,7 @@ async def get_tenant_users(
 ):
     """Get all tenant users with their roles and permissions"""
     tenant_users = db.query(TenantUserModel).join(UserModel).join(RoleModel).filter(
-        and_(
-            TenantUserModel.tenant_id == tenant_context["tenant_id"],
-            TenantUserModel.isActive == True
-        )
+        TenantUserModel.tenant_id == tenant_context["tenant_id"]
     ).all()
     
     user_list = []
@@ -185,12 +222,10 @@ async def create_tenant_user(
     current_user = Depends(require_permission(ModulePermission.USERS_CREATE.value))
 ):
     """Create a new tenant user"""
-    # Check if user exists
     user = get_user_by_id(user_data.userId, db)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    # Check if user is already in this tenant
     existing_tenant_user = db.query(TenantUserModel).filter(
         and_(
             TenantUserModel.userId == user_data.userId,
@@ -202,7 +237,6 @@ async def create_tenant_user(
         if existing_tenant_user.isActive:
             raise HTTPException(status_code=400, detail="User already exists in this tenant")
         else:
-            # Reactivate user
             existing_tenant_user.isActive = True
             existing_tenant_user.role_id = user_data.role_id
             existing_tenant_user.custom_permissions = user_data.custom_permissions
@@ -221,7 +255,6 @@ async def create_tenant_user(
                 updatedAt=existing_tenant_user.updatedAt
             )
     
-    # Verify role exists
     role = db.query(RoleModel).filter(
         and_(
             RoleModel.id == user_data.role_id,
@@ -232,12 +265,11 @@ async def create_tenant_user(
     if not role:
         raise HTTPException(status_code=404, detail="Role not found")
     
-    # Create tenant user
     tenant_user = TenantUserModel(
         tenant_id=tenant_context["tenant_id"],
         userId=user_data.userId,
         role_id=user_data.role_id,
-        role=role.name,  # Populate the role name field
+        role=role.name,
         custom_permissions=user_data.custom_permissions,
         isActive=user_data.isActive,
         invitedBy=str(current_user.id)
@@ -298,7 +330,6 @@ async def update_tenant_user(
         
         raise HTTPException(status_code=404, detail="Tenant user not found")
     
-    # Verify role exists if updating role
     if user_data.role_id:
         try:
             role_uuid = UUID(user_data.role_id)
@@ -363,15 +394,13 @@ async def remove_tenant_user(
     if not tenant_user:
         raise HTTPException(status_code=404, detail="Tenant user not found")
     
-    # Don't allow removing self
     if str(tenant_user.userId) == str(current_user.id):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="You cannot remove yourself from the tenant"
         )
     
-    # Soft delete
-    tenant_user.isActive = False
+    db.delete(tenant_user)
     db.commit()
     
     return {"message": "User removed from tenant successfully"}
@@ -394,17 +423,14 @@ async def remove_user_from_tenant(
     if not tenant_user:
         raise HTTPException(status_code=404, detail="User not found in this tenant")
     
-    # Don't allow removing self
     if str(tenant_user.userId) == str(current_user.id):
         raise HTTPException(status_code=400, detail="Cannot remove yourself from tenant")
     
-    # Soft delete - set isActive to False
-    tenant_user.isActive = False
+    db.delete(tenant_user)
     db.commit()
     
     return {"message": "User removed from tenant successfully"}
 
-# User Creation Endpoint (for tenant owners)
 @router.post("/create-user", response_model=User)
 async def create_user_for_tenant(
     user_data: UserCreate,
@@ -414,15 +440,13 @@ async def create_user_for_tenant(
     current_user = Depends(require_permission(ModulePermission.USERS_CREATE.value))
 ):
     """Create a new user and add them to the tenant"""
-    # Check if email is unique within tenant
-    if not RBACService.validate_email_uniqueness(db, user_data.email, tenant_context["tenant_id"]):
-        raise HTTPException(status_code=400, detail="Email already exists in this tenant")
+    existing_global_user = get_user_by_email(user_data.email, db)
+    if existing_global_user:
+        raise HTTPException(status_code=400, detail="A user with this email already exists. Please use a different email or add the existing user to this tenant.")
     
-    # Check if username is unique
-    if get_user_by_username(user_data.userName, db):
-        raise HTTPException(status_code=400, detail="Username already taken")
+    if not RBACService.validate_username_uniqueness(db, user_data.userName, tenant_context["tenant_id"]):
+        raise HTTPException(status_code=400, detail="Username already taken in this tenant")
     
-    # Verify role exists
     role = db.query(RoleModel).filter(
         and_(
             RoleModel.id == role_id,
@@ -433,7 +457,6 @@ async def create_user_for_tenant(
     if not role:
         raise HTTPException(status_code=404, detail="Role not found")
     
-    # Hash password and create user
     hashed_password = get_password_hash(user_data.password)
     user_dict = user_data.dict()
     user_dict.pop('password')
@@ -442,12 +465,11 @@ async def create_user_for_tenant(
     
     db_user = create_user(user_dict, db)
     
-    # Add user to tenant
     tenant_user = TenantUserModel(
         tenant_id=UUID(tenant_context["tenant_id"]),
         userId=UUID(str(db_user.id)),
         role_id=UUID(role_id),
-        role=role.name,  # Populate the role name field
+        role=role.name,
         custom_permissions=[],
         isActive=True,
         invitedBy=UUID(str(current_user.id))
@@ -467,7 +489,6 @@ async def create_user_for_tenant(
         permissions=[]
     )
 
-# Permission checking endpoints
 @router.get("/permissions")
 async def get_user_permissions(
     db: Session = Depends(get_db),

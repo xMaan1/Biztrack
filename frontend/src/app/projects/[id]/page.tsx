@@ -58,6 +58,7 @@ import {
 } from '../../../models/project';
 import { Task } from '../../../models/task';
 import { apiService } from '../../../services/ApiService';
+import { extractErrorMessage } from '../../../utils/errorUtils';
 import { useAuth } from '../../../hooks/useAuth';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { DashboardLayout } from '../../../components/layout';
@@ -87,8 +88,7 @@ export default function ProjectDetailsPage() {
       const response = await apiService.getProject(projectId);
       setProject(response);
     } catch (err: any) {
-      console.error('Failed to load project:', err);
-      setError(err.response?.data?.detail || 'Failed to load project details');
+      setError(extractErrorMessage(err, 'Failed to load project details'));
     } finally {
       setLoading(false);
     }
@@ -104,7 +104,6 @@ export default function ProjectDetailsPage() {
       });
       setTasks(response.tasks || []);
     } catch (err) {
-      console.error('Failed to load tasks:', err);
     } finally {
       setTasksLoading(false);
     }
@@ -137,7 +136,6 @@ export default function ProjectDetailsPage() {
       await apiService.deleteProject(projectId);
       router.push('/projects');
     } catch (err) {
-      console.error('Failed to delete project:', err);
       setError('Failed to delete project');
     }
   };

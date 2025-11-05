@@ -97,7 +97,6 @@ export default function InvestmentForm({ isOpen, onClose, onSuccess, editingInve
       onClose();
       router.refresh();
     } catch (error) {
-      console.error(`Failed to ${editingInvestment ? 'update' : 'create'} investment:`, error);
       alert(`Failed to ${editingInvestment ? 'update' : 'create'} investment. Please try again.`);
     } finally {
       setLoading(false);

@@ -37,13 +37,9 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
       const customization = await InvoiceCustomizationService.getCustomization();
       setCurrencyState(customization.default_currency || 'USD');
     } catch (error: any) {
-      console.error('Failed to load currency settings:', error);
-      // Check if it's a tenant context error (400) or other error
       if (error?.response?.status === 400 && error?.response?.data?.detail?.includes('Tenant context required')) {
-        // This is expected during tenant creation, just use default currency
-        console.log('Tenant context not ready yet, using default currency');
       }
-      setCurrencyState('USD'); // fallback to USD
+      setCurrencyState('USD');
     } finally {
       setLoading(false);
     }

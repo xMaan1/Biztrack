@@ -173,11 +173,22 @@ class RBACService:
         return accessible_modules
     
     @staticmethod
-    def validate_email_uniqueness(db: Session, email: str, tenant_id: str, exclude_user_id: Optional[str] = None) -> bool:
-        """Check if email is unique within tenant"""
+    def validate_email_uniqueness(db: Session, email: str, tenant_id: str = None, exclude_user_id: Optional[str] = None) -> bool:
+        """Check if email is unique globally"""
+        query = db.query(User).filter(User.email == email)
+        
+        if exclude_user_id:
+            query = query.filter(User.id != exclude_user_id)
+        
+        existing_user = query.first()
+        return existing_user is None
+    
+    @staticmethod
+    def validate_username_uniqueness(db: Session, username: str, tenant_id: str, exclude_user_id: Optional[str] = None) -> bool:
+        """Check if username is unique within tenant"""
         query = db.query(User).join(TenantUser).filter(
             and_(
-                User.email == email,
+                User.userName == username,
                 TenantUser.tenant_id == tenant_id,
                 TenantUser.isActive == True
             )

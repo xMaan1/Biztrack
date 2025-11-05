@@ -87,7 +87,6 @@ function EditWarehouseContent() {
         isActive: warehouse.isActive,
       });
     } catch (error) {
-      console.error('Error fetching warehouse:', error);
       toast.error('Failed to load warehouse data. Please try again.');
       router.push('/inventory/warehouses');
     } finally {
@@ -118,7 +117,6 @@ function EditWarehouseContent() {
       await inventoryService.updateWarehouse(warehouseId, warehouseData);
       router.push('/inventory/warehouses');
     } catch (error) {
-      console.error('Error updating warehouse:', error);
       toast.error('Failed to update warehouse. Please try again.');
     } finally {
       setLoading(false);

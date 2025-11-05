@@ -233,9 +233,8 @@ class FrontendCacheService {
     return totalSize;
   }
 
-  private log(message: string, ...args: any[]): void {
+  private log(_message: string, ..._args: any[]): void {
     if (this.enableLogging) {
-      console.log(`[Cache] ${message}`, ...args);
     }
   }
 }

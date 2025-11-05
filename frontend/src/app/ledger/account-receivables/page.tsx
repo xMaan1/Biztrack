@@ -36,6 +36,7 @@ import {
 } from '@/src/models/ledger';
 import { toast } from 'sonner';
 import { formatDate } from '@/src/lib/utils';
+import { extractErrorMessage } from '@/src/utils/errorUtils';
 
 export default function AccountReceivablesPage() {
   return (
@@ -62,8 +63,7 @@ function AccountReceivablesContent() {
       const response = await accountReceivableService.getAccountReceivables(status as AccountReceivableStatus);
       setAccountReceivables(response.account_receivables || []);
     } catch (error) {
-      console.error('Failed to load account receivables:', error);
-      toast.error('Failed to load account receivables');
+      toast.error(extractErrorMessage(error, 'Failed to load account receivables'));
     } finally {
       setLoading(false);
     }

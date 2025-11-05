@@ -69,6 +69,7 @@ import { DashboardLayout } from '@/src/components/layout';
 import { TillManagement } from '@/src/components/banking/TillManagement';
 import { tillService } from '@/src/services/TillService';
 import { toast } from 'sonner';
+import { extractErrorMessage } from '@/src/utils/errorUtils';
 
 export default function BankingDashboard() {
   return (
@@ -132,8 +133,7 @@ function BankingDashboardContent() {
       setRecentTransactions(dashboard?.recentTransactions || []);
       setTills(allTills || []);
     } catch (error) {
-      console.error('Failed to load banking dashboard:', error);
-      toast.error('Failed to load banking dashboard');
+      toast.error(extractErrorMessage(error, 'Failed to load banking dashboard'));
       setBankAccounts([]);
       setRecentTransactions([]);
       setTills([]);
@@ -148,7 +148,7 @@ function BankingDashboardContent() {
       await loadDashboardData();
       toast.success('Dashboard refreshed');
     } catch (error) {
-      toast.error('Failed to refresh dashboard');
+      toast.error(extractErrorMessage(error, 'Failed to refresh dashboard'));
     } finally {
       setRefreshing(false);
     }
@@ -177,18 +177,15 @@ function BankingDashboardContent() {
   const handleCreateAccount = async () => {
     try {
       setSubmitting(true);
-      console.log('[BANKING DEBUG] Creating account with form data:', formData);
       
-      const createdAccount = await bankingService.createBankAccount(formData);
-      console.log('[BANKING DEBUG] Created account:', createdAccount);
+      await bankingService.createBankAccount(formData);
       
       toast.success('Bank account created successfully!');
       setShowCreateModal(false);
       resetForm();
-      await loadDashboardData(); // Refresh the data
+      await loadDashboardData();
     } catch (error) {
-      console.error('[BANKING DEBUG] Failed to create bank account:', error);
-      toast.error('Failed to create bank account');
+      toast.error(extractErrorMessage(error, 'Failed to create bank account'));
     } finally {
       setSubmitting(false);
     }

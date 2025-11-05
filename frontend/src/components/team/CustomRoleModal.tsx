@@ -16,6 +16,7 @@ import { Badge } from '../ui/badge';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Loader2, Shield, Check } from 'lucide-react';
 import apiService from '../../services/ApiService';
+import { extractErrorMessage } from '../../utils/errorUtils';
 
 interface Permission {
   code: string;
@@ -104,7 +105,7 @@ export default function CustomRoleModal({
       onSave(savedRole);
       onClose();
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to save role');
+      setError(extractErrorMessage(err, 'Failed to save role'));
     } finally {
       setLoading(false);
     }

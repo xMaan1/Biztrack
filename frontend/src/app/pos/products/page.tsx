@@ -104,7 +104,6 @@ const POSProducts = () => {
       const response = await apiService.get('/pos/products');
       setProducts(response.products || []);
     } catch (error) {
-      console.error('Error fetching products:', error);
     } finally {
       setLoading(false);
     }
@@ -142,7 +141,6 @@ const POSProducts = () => {
       });
       fetchProducts();
     } catch (error) {
-      console.error('Error submitting product:', error);
     }
   };
 

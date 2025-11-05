@@ -114,7 +114,6 @@ function WarehousesContent() {
       fetchWarehouses();
       closeDeleteDialog();
     } catch (error) {
-      console.error('Error deleting warehouse:', error);
     } finally {
       setDeleteLoading(false);
     }

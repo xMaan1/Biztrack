@@ -111,7 +111,6 @@ export default function ReportsPage() {
       const response = await apiService.get(url);
       setDashboardData(response);
     } catch (error) {
-      console.error('Failed to fetch dashboard data:', error);
       setError('Failed to load reports data');
     } finally {
       setLoading(false);
@@ -161,7 +160,6 @@ export default function ReportsPage() {
       window.URL.revokeObjectURL(url_blob);
       
     } catch (error) {
-      console.error('Failed to export reports:', error);
       setError('Failed to export reports');
     } finally {
       setLoading(false);

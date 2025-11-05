@@ -74,7 +74,6 @@ export function TimeEntryList({
       setTotalPages(response.pagination.pages);
       setTotalEntries(response.pagination.total);
     } catch (error) {
-      console.error('Failed to fetch time entries:', error);
     } finally {
       setLoading(false);
     }
@@ -88,7 +87,6 @@ export function TimeEntryList({
       await fetchTimeEntries();
       if (onDelete) onDelete(timeEntry);
     } catch (error) {
-      console.error('Failed to delete time entry:', error);
     }
   };
 
@@ -97,7 +95,6 @@ export function TimeEntryList({
       await timeTrackingService.approveTimeEntry(timeEntry.id);
       await fetchTimeEntries();
     } catch (error) {
-      console.error('Failed to approve time entry:', error);
     }
   };
 
@@ -109,7 +106,6 @@ export function TimeEntryList({
       await timeTrackingService.rejectTimeEntry(timeEntry.id, reason);
       await fetchTimeEntries();
     } catch (error) {
-      console.error('Failed to reject time entry:', error);
     }
   };
 

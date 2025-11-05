@@ -85,17 +85,11 @@ export default function NotificationSettingsPage() {
     }
   }, [preferences]);
 
-  // Debug logging for localPreferences changes
-  useEffect(() => {
-    console.log('localPreferences updated:', localPreferences);
-  }, [localPreferences]);
-
   const handlePreferenceChange = (
     category: NotificationCategory,
     channel: 'email' | 'push' | 'in_app',
     enabled: boolean
   ) => {
-    console.log(`Changing preference for ${category} - ${channel}: ${enabled}`);
     setLocalPreferences(prev => {
       const existingPreference = prev.find(pref => pref.category === category);
       
@@ -106,7 +100,6 @@ export default function NotificationSettingsPage() {
             ? { ...pref, [`${channel}_enabled`]: enabled }
             : pref
         );
-        console.log('Updated preferences:', updated);
         return updated;
       } else {
         // Create new preference if it doesn't exist
@@ -122,7 +115,6 @@ export default function NotificationSettingsPage() {
           updated_at: new Date().toISOString(),
         };
         const updated = [...prev, newPreference];
-        console.log('Created new preference:', updated);
         return updated;
       }
     });
@@ -131,7 +123,6 @@ export default function NotificationSettingsPage() {
 
   const getPreferenceForCategory = (category: NotificationCategory) => {
     const preference = localPreferences.find(pref => pref.category === category);
-    console.log(`Getting preference for ${category}:`, preference);
     return preference;
   };
 
@@ -158,7 +149,6 @@ export default function NotificationSettingsPage() {
       setHasChanges(false);
       toast.success('Notification preferences updated successfully!');
     } catch (error) {
-      console.error('Failed to update notification preferences:', error);
       toast.error('Failed to update notification preferences. Please try again.');
     } finally {
       setSaving(false);

@@ -39,18 +39,15 @@ export default function TimeTrackingPage() {
       
       setTasks(transformedTasks);
     } catch (error) {
-      console.error('Failed to fetch projects and tasks:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleTimeEntryCreated = (timeEntry: TimeEntry) => {
-    console.log('Time entry created:', timeEntry);
+  const handleTimeEntryCreated = (_timeEntry: TimeEntry) => {
   };
 
-  const handleDeleteTimeEntry = (timeEntry: TimeEntry) => {
-    console.log('Delete time entry:', timeEntry);
+  const handleDeleteTimeEntry = (_timeEntry: TimeEntry) => {
   };
 
   if (loading) {

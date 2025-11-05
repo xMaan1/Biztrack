@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { SuperAdminGuard } from '@/src/components/guards/PermissionGuard';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { apiService } from '@/src/services/ApiService';
+import { extractErrorMessage } from '@/src/utils/errorUtils';
 import { DashboardLayout } from '../../../../components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
 import { Button } from '@/src/components/ui/button';
@@ -155,8 +156,7 @@ function TenantDetailsContent() {
       const response = await apiService.get(`/admin/tenants/${tenantId}/complete`);
       setTenantDetails(response);
     } catch (err: any) {
-      console.error('Error fetching tenant details:', err);
-      setError(err.response?.data?.detail || 'Failed to load tenant details');
+      setError(extractErrorMessage(err, 'Failed to load tenant details'));
     } finally {
       setLoading(false);
     }
@@ -172,8 +172,7 @@ function TenantDetailsContent() {
       });
       await fetchTenantDetails(); // Refresh data
     } catch (err: any) {
-      console.error('Error updating tenant status:', err);
-      setError(err.response?.data?.detail || 'Failed to update tenant status');
+      setError(extractErrorMessage(err, 'Failed to update tenant status'));
     } finally {
       setActionLoading(null);
     }
@@ -187,8 +186,7 @@ function TenantDetailsContent() {
       await apiService.delete(`/admin/tenants/${tenantId}/users/${userId}`);
       await fetchTenantDetails(); // Refresh data
     } catch (err: any) {
-      console.error('Error deleting user:', err);
-      setError(err.response?.data?.detail || 'Failed to remove user');
+      setError(extractErrorMessage(err, 'Failed to remove user'));
     } finally {
       setActionLoading(null);
     }
@@ -202,8 +200,7 @@ function TenantDetailsContent() {
       await apiService.delete(`/admin/tenants/${tenantId}/invoices/${invoiceId}`);
       await fetchTenantDetails(); // Refresh data
     } catch (err: any) {
-      console.error('Error deleting invoice:', err);
-      setError(err.response?.data?.detail || 'Failed to delete invoice');
+      setError(extractErrorMessage(err, 'Failed to delete invoice'));
     } finally {
       setActionLoading(null);
     }
@@ -215,9 +212,8 @@ function TenantDetailsContent() {
       const response = await apiService.get(`/admin/tenants/${tenantId}/invoices/${invoiceId}`);
       setSelectedInvoice(response.invoice);
       setShowInvoiceDetails(true);
-    } catch (error) {
-      console.error('Error fetching invoice details:', error);
-      setError('Failed to load invoice details');
+    } catch (error: any) {
+      setError(extractErrorMessage(error, 'Failed to load invoice details'));
     } finally {
       setInvoiceDetailsLoading(false);
     }
@@ -238,8 +234,7 @@ function TenantDetailsContent() {
       // Redirect to tenants list after successful deletion
       router.push('/admin/tenants');
     } catch (err: any) {
-      console.error('Error deleting tenant:', err);
-      setError(err.response?.data?.detail || 'Failed to delete tenant');
+      setError(extractErrorMessage(err, 'Failed to delete tenant'));
     } finally {
       setActionLoading(null);
     }
@@ -253,8 +248,7 @@ function TenantDetailsContent() {
       await apiService.delete(`/admin/tenants/${tenantId}/projects/${projectId}`);
       await fetchTenantDetails(); // Refresh data
     } catch (err: any) {
-      console.error('Error deleting project:', err);
-      setError(err.response?.data?.detail || 'Failed to delete project');
+      setError(extractErrorMessage(err, 'Failed to delete project'));
     } finally {
       setActionLoading(null);
     }
@@ -268,8 +262,7 @@ function TenantDetailsContent() {
       await apiService.delete(`/admin/tenants/${tenantId}/customers/${customerId}`);
       await fetchTenantDetails(); // Refresh data
     } catch (err: any) {
-      console.error('Error deleting customer:', err);
-      setError(err.response?.data?.detail || 'Failed to delete customer');
+      setError(extractErrorMessage(err, 'Failed to delete customer'));
     } finally {
       setActionLoading(null);
     }

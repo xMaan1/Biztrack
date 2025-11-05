@@ -85,7 +85,6 @@ export default function ProductionPlanDetailPage() {
       const plan = await service.getProductionPlan(id);
       setProductionPlan(plan);
     } catch (error) {
-      console.error('Error fetching production plan:', error);
       router.push('/production');
     } finally {
       setLoading(false);
@@ -100,7 +99,6 @@ export default function ProductionPlanDetailPage() {
       await service.deleteProductionPlan(productionPlan.id);
       router.push('/production');
     } catch (error) {
-      console.error('Error deleting production plan:', error);
     }
   };
 

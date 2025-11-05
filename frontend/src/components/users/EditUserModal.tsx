@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRBAC, UpdateTenantUserData } from '@/src/contexts/RBACContext';
+import { extractErrorMessage } from '@/src/utils/errorUtils';
 import { Button } from '@/src/components/ui/button';
 import {
   Dialog,
@@ -81,7 +82,7 @@ export function EditUserModal({ open, onOpenChange, user, onSuccess }: EditUserM
       await updateTenantUser(tenantUserId, formData);
       onSuccess();
     } catch (error: any) {
-      setError(error.message || 'Failed to update user');
+      setError(extractErrorMessage(error, 'Failed to update user'));
     } finally {
       setIsSubmitting(false);
     }

@@ -141,7 +141,6 @@ function FinancialReportsContent() {
       window.URL.revokeObjectURL(url_blob);
       
     } catch (error) {
-      console.error('Failed to export report:', error);
       setError('Failed to export report');
     } finally {
       setLoading(false);

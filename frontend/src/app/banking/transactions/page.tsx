@@ -64,6 +64,7 @@ import { DashboardLayout } from '@/src/components/layout';
 import { Label } from '@/src/components/ui/label';
 import { Textarea } from '@/src/components/ui/textarea';
 import { toast } from 'sonner';
+import { extractErrorMessage } from '@/src/utils/errorUtils';
 
 export default function BankTransactionsPage() {
   return (
@@ -166,8 +167,7 @@ function BankTransactionsContent() {
       setTransactions(transactionsData || []);
       setBankAccounts(accountsData || []);
     } catch (error) {
-      console.error('Failed to load data:', error);
-      toast.error('Failed to load transactions');
+      toast.error(extractErrorMessage(error, 'Failed to load transactions'));
     } finally {
       setLoading(false);
     }
@@ -229,8 +229,7 @@ function BankTransactionsContent() {
       resetForm();
       loadData();
     } catch (error) {
-      console.error('Failed to create transaction:', error);
-      toast.error('Failed to create transaction');
+      toast.error(extractErrorMessage(error, 'Failed to create transaction'));
     } finally {
       setIsSubmitting(false);
     }
@@ -356,8 +355,7 @@ function BankTransactionsContent() {
       setEditingTransaction(null);
       loadData();
     } catch (error) {
-      console.error('Failed to update transaction:', error);
-      toast.error('Failed to update transaction');
+      toast.error(extractErrorMessage(error, 'Failed to update transaction'));
     } finally {
       setIsSubmitting(false);
     }
@@ -379,8 +377,7 @@ function BankTransactionsContent() {
       setDeletingTransaction(null);
       loadData();
     } catch (error) {
-      console.error('Failed to delete transaction:', error);
-      toast.error('Failed to delete transaction');
+      toast.error(extractErrorMessage(error, 'Failed to delete transaction'));
     } finally {
       setIsDeleting(false);
     }
@@ -392,8 +389,7 @@ function BankTransactionsContent() {
       toast.success('Transaction reconciled successfully');
       loadData();
     } catch (error) {
-      console.error('Failed to reconcile transaction:', error);
-      toast.error('Failed to reconcile transaction');
+      toast.error(extractErrorMessage(error, 'Failed to reconcile transaction'));
     }
   };
 
@@ -403,8 +399,7 @@ function BankTransactionsContent() {
       toast.success('Transaction unreconciled successfully');
       loadData();
     } catch (error) {
-      console.error('Failed to unreconcile transaction:', error);
-      toast.error('Failed to unreconcile transaction');
+      toast.error(extractErrorMessage(error, 'Failed to unreconcile transaction'));
     }
   };
 

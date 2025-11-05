@@ -10,6 +10,7 @@ import { Label } from '../../components/ui/label';
 import { Alert, AlertDescription } from '../../components/ui/alert';
 import { Loader2, ArrowLeft, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { apiService } from '../../services/ApiService';
+import { extractErrorMessage } from '../../utils/errorUtils';
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -41,16 +42,10 @@ export default function ResetPasswordPage() {
         setError('No account found with this email address.');
       }
     } catch (err: any) {
-      if (err.response) {
-        setError(
-          err.response.data?.detail ||
-            err.response.data?.message ||
-            'An error occurred',
-        );
-      } else if (err.request) {
+      if (err.request && !err.response) {
         setError('No response from server. Please check your connection.');
       } else {
-        setError(err.message || 'An error occurred');
+        setError(extractErrorMessage(err, 'An error occurred'));
       }
     } finally {
       setLoading(false);
@@ -85,16 +80,10 @@ export default function ResetPasswordPage() {
 
       setSuccess(true);
     } catch (err: any) {
-      if (err.response) {
-        setError(
-          err.response.data?.detail ||
-            err.response.data?.message ||
-            'An error occurred',
-        );
-      } else if (err.request) {
+      if (err.request && !err.response) {
         setError('No response from server. Please check your connection.');
       } else {
-        setError(err.message || 'An error occurred');
+        setError(extractErrorMessage(err, 'An error occurred'));
       }
     } finally {
       setLoading(false);

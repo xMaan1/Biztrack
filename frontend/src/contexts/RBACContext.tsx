@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { apiService } from '@/src/services/ApiService';
 import { useAuth } from './AuthContext';
+import { extractErrorMessage } from '@/src/utils/errorUtils';
 
 export interface Role {
   id: string;
@@ -109,6 +110,7 @@ interface RBACContextType {
   fetchRoles: () => Promise<void>;
   createRole: (roleData: CreateRoleData) => Promise<Role>;
   updateRole: (roleId: string, roleData: UpdateRoleData) => Promise<Role>;
+  deleteRole: (roleId: string) => Promise<void>;
 
   // User management
   fetchTenantUsers: () => Promise<void>;
@@ -148,7 +150,6 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
         setRoles(response.data.roles);
       }
     } catch (error) {
-      console.error('Failed to fetch roles:', error);
     } finally {
       setLoading(false);
     }
@@ -157,28 +158,64 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
   const createRole = async (roleData: CreateRoleData): Promise<Role> => {
     try {
       const response = await apiService.post('/rbac/roles', roleData);
-      if (response.success) {
-        await fetchRoles(); // Refresh roles list
-        return response.data;
+      if (response && response.id) {
+        const newRole = response as Role;
+        setRoles(prev => [...prev, newRole]);
+        return newRole;
+      }
+      if (response.success && response.data) {
+        const newRole = response.data;
+        setRoles(prev => [...prev, newRole]);
+        return newRole;
       }
       throw new Error(response.message || 'Failed to create role');
-    } catch (error) {
-      console.error('Failed to create role:', error);
-      throw error;
+    } catch (error: any) {
+      const errorMessage = extractErrorMessage(error, 'Failed to create role');
+      throw new Error(errorMessage);
     }
   };
 
   const updateRole = async (roleId: string, roleData: UpdateRoleData): Promise<Role> => {
     try {
       const response = await apiService.put(`/rbac/roles/${roleId}`, roleData);
-      if (response.success) {
-        await fetchRoles(); // Refresh roles list
-        return response.data;
+      if (response && response.id) {
+        const updatedRole = response as Role;
+        setRoles(prev => prev.map(role => role.id === roleId ? updatedRole : role));
+        setTenantUsers(prev => prev.map(user => 
+          user.role?.id === roleId 
+            ? { ...user, role: updatedRole }
+            : user
+        ));
+        return updatedRole;
+      }
+      if (response.success && response.data) {
+        const updatedRole = response.data;
+        setRoles(prev => prev.map(role => role.id === roleId ? updatedRole : role));
+        setTenantUsers(prev => prev.map(user => 
+          user.role?.id === roleId 
+            ? { ...user, role: updatedRole }
+            : user
+        ));
+        return updatedRole;
       }
       throw new Error(response.message || 'Failed to update role');
-    } catch (error) {
-      console.error('Failed to update role:', error);
-      throw error;
+    } catch (error: any) {
+      const errorMessage = extractErrorMessage(error, 'Failed to update role');
+      throw new Error(errorMessage);
+    }
+  };
+
+  const deleteRole = async (roleId: string): Promise<void> => {
+    try {
+      const response = await apiService.delete(`/rbac/roles/${roleId}`);
+      if (response.success || response.message) {
+        setRoles(prev => prev.filter(role => role.id !== roleId));
+      } else {
+        throw new Error(response.message || 'Failed to delete role');
+      }
+    } catch (error: any) {
+      const errorMessage = extractErrorMessage(error, 'Failed to delete role');
+      throw new Error(errorMessage);
     }
   };
 
@@ -192,7 +229,6 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
         setTenantUsers(response.data);
       }
     } catch (error) {
-      console.error('Failed to fetch tenant users:', error);
     } finally {
       setLoading(false);
     }
@@ -201,56 +237,120 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
   const createUser = async (userData: CreateUserData, roleId: string): Promise<any> => {
     try {
       const response = await apiService.post(`/rbac/create-user?role_id=${roleId}`, userData);
-      if (response.success) {
-        await fetchTenantUsers(); // Refresh users list
+      if (response && response.userId) {
+        await fetchTenantUsers();
+        return response;
+      }
+      if (response.success && response.data) {
+        await fetchTenantUsers();
         return response.data;
       }
       throw new Error(response.message || 'Failed to create user');
-    } catch (error) {
-      console.error('Failed to create user:', error);
-      throw error;
+    } catch (error: any) {
+      const errorMessage = extractErrorMessage(error, 'Failed to create user');
+      throw new Error(errorMessage);
     }
   };
 
   const createTenantUser = async (userData: CreateTenantUserData): Promise<TenantUser> => {
     try {
       const response = await apiService.post('/rbac/tenant-users', userData);
-      if (response.success) {
-        await fetchTenantUsers(); // Refresh users list
+      if (response && response.id) {
+        await fetchTenantUsers();
+        return response as TenantUser;
+      }
+      if (response.success && response.data) {
+        await fetchTenantUsers();
         return response.data;
       }
       throw new Error(response.message || 'Failed to add user to tenant');
-    } catch (error) {
-      console.error('Failed to add user to tenant:', error);
-      throw error;
+    } catch (error: any) {
+      const errorMessage = extractErrorMessage(error, 'Failed to add user to tenant');
+      throw new Error(errorMessage);
     }
   };
 
   const updateTenantUser = async (userId: string, userData: UpdateTenantUserData): Promise<TenantUser> => {
     try {
       const response = await apiService.put(`/rbac/tenant-users/${userId}`, userData);
-      if (response.success) {
-        await fetchTenantUsers(); // Refresh users list
-        return response.data;
+      if (response && response.id) {
+        const updatedUser = response as TenantUser;
+        const roleId = updatedUser.role_id || userData.role_id;
+        const role = roles.find(r => r.id === roleId);
+        
+        const updatedUserWithRole: UserWithPermissions = {
+          id: updatedUser.id,
+          tenant_user_id: updatedUser.id,
+          userName: updatedUser.user?.userName || '',
+          email: updatedUser.user?.email || '',
+          firstName: updatedUser.user?.firstName,
+          lastName: updatedUser.user?.lastName,
+          avatar: updatedUser.user?.avatar,
+          isActive: updatedUser.isActive,
+          role: role || undefined,
+          role_id: roleId,
+          custom_permissions: updatedUser.custom_permissions || [],
+          permissions: role?.permissions || [],
+          joinedAt: updatedUser.joinedAt,
+        };
+        
+        setTenantUsers(prev => prev.map(user => {
+          if (user.id === userId || user.tenant_user_id === userId) {
+            return updatedUserWithRole;
+          }
+          return user;
+        }));
+        return updatedUser;
+      }
+      if (response.success && response.data) {
+        const updatedUser = response.data;
+        const roleId = updatedUser.role_id || userData.role_id;
+        const role = roles.find(r => r.id === roleId);
+        
+        const updatedUserWithRole: UserWithPermissions = {
+          id: updatedUser.id,
+          tenant_user_id: updatedUser.id,
+          userName: updatedUser.user?.userName || '',
+          email: updatedUser.user?.email || '',
+          firstName: updatedUser.user?.firstName,
+          lastName: updatedUser.user?.lastName,
+          avatar: updatedUser.user?.avatar,
+          isActive: updatedUser.isActive,
+          role: role || undefined,
+          role_id: roleId,
+          custom_permissions: updatedUser.custom_permissions || [],
+          permissions: role?.permissions || [],
+          joinedAt: updatedUser.joinedAt,
+        };
+        
+        setTenantUsers(prev => prev.map(user => {
+          if (user.id === userId || user.tenant_user_id === userId) {
+            return updatedUserWithRole;
+          }
+          return user;
+        }));
+        return updatedUser;
       }
       throw new Error(response.message || 'Failed to update user');
-    } catch (error) {
-      console.error('Failed to update user:', error);
-      throw error;
+    } catch (error: any) {
+      const errorMessage = extractErrorMessage(error, 'Failed to update user');
+      throw new Error(errorMessage);
     }
   };
 
   const removeTenantUser = async (userId: string): Promise<void> => {
     try {
       const response = await apiService.delete(`/rbac/tenant-users/${userId}`);
-      if (response.success) {
-        await fetchTenantUsers(); // Refresh users list
+      if (response.success || response.message) {
+        setTenantUsers(prev => prev.filter(user => 
+          user.id !== userId && user.tenant_user_id !== userId
+        ));
       } else {
         throw new Error(response.message || 'Failed to remove user');
       }
-    } catch (error) {
-      console.error('Failed to remove user:', error);
-      throw error;
+    } catch (error: any) {
+      const errorMessage = extractErrorMessage(error, 'Failed to remove user');
+      throw new Error(errorMessage);
     }
   };
 
@@ -265,7 +365,6 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
         setUserPermissions(response.data);
       }
     } catch (error) {
-      console.error('Failed to fetch user permissions:', error);
     } finally {
       setLoading(false);
     }
@@ -325,6 +424,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     fetchRoles,
     createRole,
     updateRole,
+    deleteRole,
     fetchTenantUsers,
     createUser,
     createTenantUser,

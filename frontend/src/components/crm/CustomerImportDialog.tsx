@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { apiService } from '../../services/ApiService';
 import { toast } from 'sonner';
+import { extractErrorMessage } from '@/src/utils/errorUtils';
 
 interface ImportResult {
   success: boolean;
@@ -115,10 +116,11 @@ export default function CustomerImportDialog({
         toast.error(response.message || 'Import failed');
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Import failed');
+      const errorMessage = extractErrorMessage(error, 'Import failed');
+      toast.error(errorMessage);
       setImportResult({
         success: false,
-        message: error.response?.data?.detail || 'Import failed',
+        message: errorMessage,
         imported_count: 0,
         failed_count: 0,
         errors: [],

@@ -68,6 +68,7 @@ import { Label } from '@/src/components/ui/label';
 import { Textarea } from '@/src/components/ui/textarea';
 import { toast } from 'sonner';
 import { useCachedApi } from '@/src/hooks/useCachedApi';
+import { extractErrorMessage } from '@/src/utils/errorUtils';
 
 export default function LedgerTransactionsPage() {
   return (
@@ -249,8 +250,7 @@ function LedgerTransactionsContent() {
       });
       refetch();
     } catch (error) {
-      console.error('Transaction creation error:', error);
-      toast.error('Failed to create transaction. Please try again.');
+      toast.error(extractErrorMessage(error, 'Failed to create transaction. Please try again.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -261,7 +261,6 @@ function LedgerTransactionsContent() {
     
     try {
       setIsSubmitting(true);
-      console.log('[LEDGER DEBUG] Updating transaction:', editingTransaction.id, 'with data:', editFormData);
       
       // Prepare the update data
       const updateData = {
@@ -280,7 +279,6 @@ function LedgerTransactionsContent() {
       };
       
       await LedgerService.updateLedgerTransaction(editingTransaction.id, updateData);
-      console.log('[LEDGER DEBUG] Successfully updated transaction');
       
       // Refresh the transaction list
       refetch();
@@ -289,8 +287,7 @@ function LedgerTransactionsContent() {
       setIsEditModalOpen(false);
       setEditingTransaction(null);
     } catch (error) {
-      console.error('[LEDGER DEBUG] Error updating transaction:', error);
-      toast.error('Failed to update transaction. Please try again.');
+      toast.error(extractErrorMessage(error, 'Failed to update transaction. Please try again.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -301,9 +298,7 @@ function LedgerTransactionsContent() {
     
     try {
       setIsDeleting(true);
-      console.log('[LEDGER DEBUG] Deleting transaction:', deletingTransaction.id);
       await LedgerService.deleteLedgerTransaction(deletingTransaction.id);
-      console.log('[LEDGER DEBUG] Successfully deleted transaction');
       
       // Remove the transaction from the local state
       refetch();
@@ -312,8 +307,7 @@ function LedgerTransactionsContent() {
       setIsDeleteModalOpen(false);
       setDeletingTransaction(null);
     } catch (error) {
-      console.error('[LEDGER DEBUG] Error deleting transaction:', error);
-      toast.error('Failed to delete transaction. Please try again.');
+      toast.error(extractErrorMessage(error, 'Failed to delete transaction. Please try again.'));
     } finally {
       setIsDeleting(false);
     }

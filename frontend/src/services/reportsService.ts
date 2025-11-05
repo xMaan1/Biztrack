@@ -120,31 +120,19 @@ export interface FinancialAnalytics {
 
 class ReportsService {
   async getDashboard(): Promise<ReportsDashboard> {
-    console.log('=== ReportsService.getDashboard ===');
     try {
       const response = await apiClient.get('/reports/dashboard');
-      console.log('Dashboard response:', response);
-      console.log('Dashboard response.data:', response.data);
-      console.log('===============================');
       return response.data;
     } catch (error) {
-      console.log('Dashboard error:', error);
-      console.log('===============================');
       throw error;
     }
   }
 
   async getSummary(): Promise<ReportsSummary> {
-    console.log('=== ReportsService.getSummary ===');
     try {
       const response = await apiClient.get('/reports/summary');
-      console.log('Summary response:', response);
-      console.log('Summary response.summary:', response.summary);
-      console.log('=============================');
       return response.summary;
     } catch (error) {
-      console.log('Summary error:', error);
-      console.log('=============================');
       throw error;
     }
   }

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRBAC, CreateUserData } from '@/src/contexts/RBACContext';
+import { extractErrorMessage } from '@/src/utils/errorUtils';
 import { Button } from '@/src/components/ui/button';
 import {
   Dialog,
@@ -71,7 +72,7 @@ export function CreateUserModal({ open, onOpenChange, onSuccess }: CreateUserMod
       await createUser(formData, selectedRoleId);
       onSuccess();
     } catch (error: any) {
-      setError(error.message || 'Failed to create user');
+      setError(extractErrorMessage(error, 'Failed to create user'));
     } finally {
       setIsSubmitting(false);
     }

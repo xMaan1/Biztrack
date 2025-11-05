@@ -35,6 +35,7 @@ import {
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { Invoice } from '../../models/sales';
 import InvoiceService from '../../services/InvoiceService';
+import { extractErrorMessage } from '../../utils/errorUtils';
 import { toast } from 'sonner';
 
 interface InvoiceListProps {
@@ -129,15 +130,7 @@ Please find the attached invoices for your review and payment.`;
       toast.success('Invoice downloaded successfully!');
     } catch (error: any) {
       if (error.response?.status === 400) {
-        let errorMessage = 'Error downloading invoice';
-
-        if (error.response?.data?.detail) {
-          errorMessage = error.response.data.detail;
-        } else if (error.response?.data?.message) {
-          errorMessage = error.response.data.message;
-        } else if (typeof error.response?.data === 'string') {
-          errorMessage = error.response.data;
-        }
+        const errorMessage = extractErrorMessage(error, 'Error downloading invoice');
 
         if (errorMessage.includes('customization is required')) {
           toast.error('Please customize your invoice template first using the \'Customize Invoice\' button.', {

@@ -79,7 +79,6 @@ export default function InvestmentList() {
       const response = await investmentService.getInvestments();
       setInvestments(response.investments);
     } catch (error) {
-      console.error('Failed to fetch investments:', error);
     } finally {
       setLoading(false);
     }
@@ -90,7 +89,6 @@ export default function InvestmentList() {
       const response = await investmentService.getInvestmentDashboardStats();
       setStats(response);
     } catch (error) {
-      console.error('Failed to fetch investment stats:', error);
     }
   };
 
@@ -100,7 +98,6 @@ export default function InvestmentList() {
       await fetchInvestments();
       await fetchStats();
     } catch (error) {
-      console.error('Failed to approve investment:', error);
     }
   };
 
@@ -110,7 +107,6 @@ export default function InvestmentList() {
       await fetchInvestments();
       await fetchStats();
     } catch (error) {
-      console.error('Failed to cancel investment:', error);
     }
   };
 
@@ -208,7 +204,6 @@ export default function InvestmentList() {
       await fetchStats();
       setDeletingInvestment(null);
     } catch (error) {
-      console.error('Failed to delete investment:', error);
       alert('Failed to delete investment. Please try again.');
     }
   };

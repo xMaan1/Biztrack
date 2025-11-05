@@ -1,4 +1,5 @@
 import { apiService } from './ApiService';
+import { extractErrorMessage } from '../utils/errorUtils';
 import {
   ChartOfAccountsCreate,
   ChartOfAccountsUpdate,
@@ -415,7 +416,8 @@ export class LedgerService {
       const response = await apiService.post('/ledger/seed-accounts-simple');
       return response;
     } catch (error: any) {
-      throw error;
+      const errorMessage = extractErrorMessage(error, 'Failed to seed accounts');
+      throw new Error(errorMessage);
     }
   }
 

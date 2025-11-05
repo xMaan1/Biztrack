@@ -52,6 +52,7 @@ import {
   Crown,
 } from 'lucide-react';
 import { apiService } from '../../services/ApiService';
+import { extractErrorMessage } from '../../utils/errorUtils';
 import { User } from '../../models/auth';
 import { DashboardLayout } from '../../components/layout';
 import { cn, getInitials } from '../../lib/utils';
@@ -271,12 +272,8 @@ export default function TeamPage() {
       // Refresh the team members list
       await fetchTeamMembers();
       
-      // Show success message (you could add a toast notification here)
-      console.log(`${memberName} has been removed from the team`);
-      
     } catch (err: any) {
-      console.error('Error removing member:', err);
-      setError(err.response?.data?.detail || 'Failed to remove team member');
+      setError(extractErrorMessage(err, 'Failed to remove team member'));
     } finally {
       setLoading(false);
     }

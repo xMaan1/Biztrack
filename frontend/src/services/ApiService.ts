@@ -156,7 +156,6 @@ export class ApiService {
       async (error) => {
         // Handle timeout errors gracefully
         if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {
-          console.warn('Request timeout - server may be slow');
           return Promise.reject(new Error('Request timeout. Please try again.'));
         }
 

@@ -57,6 +57,7 @@ import { Label } from '../../../components/ui/label';
 import { Textarea } from '../../../components/ui/textarea';
 import { Switch } from '../../../components/ui/switch';
 import { toast } from 'sonner';
+import { extractErrorMessage } from '../../../utils/errorUtils';
 
 export default function BankAccountsPage() {
   return (
@@ -110,8 +111,7 @@ function BankAccountsContent() {
       const accounts = await bankingService.getBankAccounts(true);
       setBankAccounts(accounts);
     } catch (error) {
-      console.error('Failed to load bank accounts:', error);
-      toast.error('Failed to load bank accounts');
+      toast.error(extractErrorMessage(error, 'Failed to load bank accounts'));
     } finally {
       setLoading(false);
     }
@@ -126,8 +126,7 @@ function BankAccountsContent() {
       resetForm();
       loadBankAccounts();
     } catch (error) {
-      console.error('Failed to create bank account:', error);
-      toast.error('Failed to create bank account');
+      toast.error(extractErrorMessage(error, 'Failed to create bank account'));
     } finally {
       setIsSubmitting(false);
     }
@@ -144,8 +143,7 @@ function BankAccountsContent() {
       resetForm();
       loadBankAccounts();
     } catch (error) {
-      console.error('Failed to update bank account:', error);
-      toast.error('Failed to update bank account');
+      toast.error(extractErrorMessage(error, 'Failed to update bank account'));
     } finally {
       setIsSubmitting(false);
     }
@@ -162,8 +160,7 @@ function BankAccountsContent() {
       setSelectedAccount(null);
       loadBankAccounts();
     } catch (error) {
-      console.error('Failed to delete bank account:', error);
-      toast.error('Failed to delete bank account');
+      toast.error(extractErrorMessage(error, 'Failed to delete bank account'));
     } finally {
       setDeleteLoading(false);
     }

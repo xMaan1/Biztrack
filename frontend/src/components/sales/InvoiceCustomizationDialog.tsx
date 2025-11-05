@@ -158,9 +158,7 @@ export function InvoiceCustomizationDialog({
         if (filename && filename.startsWith('logo_')) {
           try {
             await FileUploadService.deleteLogo(filename);
-            console.log('Old logo deleted from S3:', filename);
           } catch (deleteError) {
-            console.warn('Failed to delete old logo from S3:', deleteError);
             // Continue with upload even if old logo deletion fails
           }
         }
@@ -200,9 +198,7 @@ export function InvoiceCustomizationDialog({
         if (filename && filename.startsWith('logo_')) {
           try {
             await FileUploadService.deleteLogo(filename);
-            console.log('Logo deleted from S3:', filename);
           } catch (deleteError) {
-            console.warn('Failed to delete logo from S3:', deleteError);
             // Continue with clearing form data even if S3 deletion fails
           }
         }

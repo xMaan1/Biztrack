@@ -129,7 +129,6 @@ function CustomerReturnsContent() {
         setNewReturn(prev => ({ ...prev, warehouseId: response.warehouses[0].id }));
       }
     } catch (error) {
-      console.error('Error loading warehouses:', error);
     }
   };
 
@@ -138,7 +137,6 @@ function CustomerReturnsContent() {
       const response = await apiService.get('/pos/products');
       setProducts(response.products || []);
     } catch (error) {
-      console.error('Error loading products:', error);
     }
   };
 
@@ -149,7 +147,6 @@ function CustomerReturnsContent() {
       const response = await inventoryService.getCustomerReturns(warehouseId);
       setReturns(response.stockMovements);
     } catch (error) {
-      console.error('Error loading customer returns:', error);
     } finally {
       setLoading(false);
     }
@@ -251,7 +248,6 @@ function CustomerReturnsContent() {
       loadReturns();
       closeDeleteDialog();
     } catch (error) {
-      console.error('Failed to delete customer return:', error);
     } finally {
       setDeleteLoading(false);
     }

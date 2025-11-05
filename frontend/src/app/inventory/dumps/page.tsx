@@ -128,7 +128,6 @@ function DumpsContent() {
         setNewDamage(prev => ({ ...prev, warehouseId: response.warehouses[0].id }));
       }
     } catch (error) {
-      console.error('Error loading warehouses:', error);
     }
   };
 
@@ -137,7 +136,6 @@ function DumpsContent() {
       const response = await apiService.get('/pos/products');
       setProducts(response.products || []);
     } catch (error) {
-      console.error('Error loading products:', error);
     }
   };
 
@@ -148,7 +146,6 @@ function DumpsContent() {
       const response = await inventoryService.getDumps(warehouseId);
       setDumps(response.stockMovements);
     } catch (error) {
-      console.error('Error loading dumps:', error);
     } finally {
       setLoading(false);
     }
@@ -252,7 +249,6 @@ function DumpsContent() {
       loadDumps();
       closeDeleteDialog();
     } catch (error) {
-      console.error('Failed to delete dump:', error);
     } finally {
       setDeleteLoading(false);
     }

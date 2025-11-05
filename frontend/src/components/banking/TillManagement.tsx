@@ -48,7 +48,6 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
       const accounts = await bankingService.getBankAccounts(true);
       setBankAccounts(accounts);
     } catch (error) {
-      console.error('Failed to load bank accounts:', error);
     }
   };
   

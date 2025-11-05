@@ -108,7 +108,6 @@ const ReconciliationContent = () => {
         setTotalPages(Math.ceil((response.total || 0) / 20));
       }
     } catch (error) {
-      console.error('Error fetching transactions:', error);
     } finally {
       setLoading(false);
     }
@@ -121,7 +120,6 @@ const ReconciliationContent = () => {
         setSummary(response);
       }
     } catch (error) {
-      console.error('Error fetching reconciliation summary:', error);
     }
   };
 
@@ -130,7 +128,6 @@ const ReconciliationContent = () => {
       setRefreshing(true);
       await Promise.all([fetchTransactions(), fetchSummary()]);
     } catch (error) {
-      console.error('Error refreshing data:', error);
     } finally {
       setRefreshing(false);
     }
@@ -152,7 +149,6 @@ const ReconciliationContent = () => {
         fetchSummary();
       }
     } catch (error) {
-      console.error('Error reconciling transaction:', error);
     }
   };
 
@@ -169,7 +165,6 @@ const ReconciliationContent = () => {
         fetchSummary();
       }
     } catch (error) {
-      console.error('Error unreconciling transaction:', error);
     }
   };
 
