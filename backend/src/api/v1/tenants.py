@@ -98,6 +98,7 @@ async def subscribe_to_plan(
         "tenant_id": tenant.id,
         "userId": current_user.id,
         "role_id": str(owner_role.id),
+        "role": owner_role.name,
         "custom_permissions": [],
         "isActive": True
     }
@@ -203,6 +204,7 @@ async def create_tenant_from_landing(
         "tenant_id": tenant.id,
         "userId": current_user.id,
         "role_id": str(owner_role.id),
+        "role": owner_role.name,
         "custom_permissions": [],
         "isActive": True
     }
