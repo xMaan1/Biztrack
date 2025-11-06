@@ -157,7 +157,9 @@ class AuditLogger:
     
     def _store_audit_record(self, audit_record: Dict[str, Any]):
         """Store audit record in database"""
+        db = None
         try:
+            from sqlalchemy.exc import OperationalError, DisconnectionError
             db = next(get_db())
             
             # Validate tenant_id exists before creating audit record
@@ -191,11 +193,16 @@ class AuditLogger:
             db.add(db_audit)
             db.commit()
             
+        except (OperationalError, DisconnectionError) as e:
+            logging.warning(f"Database connection error while storing audit record (non-critical): {str(e)}")
         except Exception as e:
             logging.error(f"Failed to store audit record in database: {str(e)}")
         finally:
-            if 'db' in locals():
-                db.close()
+            if db is not None:
+                try:
+                    db.close()
+                except Exception:
+                    pass
     
     def log_http_request(
         self,

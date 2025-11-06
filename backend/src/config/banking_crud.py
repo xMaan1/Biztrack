@@ -435,13 +435,12 @@ def update_till(till_id: str, till_data: Dict[str, Any], db: Session, tenant_id:
     return db_till
 
 def delete_till(till_id: str, db: Session, tenant_id: str) -> bool:
-    """Delete till (soft delete by setting is_active to False)"""
+    """Delete till"""
     db_till = get_till_by_id(till_id, db, tenant_id)
     if not db_till:
         return False
     
-    db_till.is_active = False
-    db_till.updated_at = datetime.utcnow()
+    db.delete(db_till)
     db.commit()
     return True
 

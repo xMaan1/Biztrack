@@ -110,6 +110,9 @@ async def security_middleware(request: Request, call_next):
             content={"detail": e.detail, "error_code": "SECURITY_VIOLATION"}
         )
     except Exception as e:
+        from sqlalchemy.exc import OperationalError, DisconnectionError
+        if isinstance(e, (OperationalError, DisconnectionError)):
+            logger.warning(f"Database connection error in security middleware (non-critical): {str(e)}")
         logger.error(f"Unexpected error in security middleware: {str(e)}")
         raise
 
@@ -146,7 +149,11 @@ async def audit_middleware(request: Request, call_next):
                 processing_time=processing_time
             )
         except Exception as e:
-            logger.error(f"Audit logging failed: {str(e)}")
+            from sqlalchemy.exc import OperationalError, DisconnectionError
+            if isinstance(e, (OperationalError, DisconnectionError)):
+                logger.warning(f"Database connection error in audit middleware (non-critical): {str(e)}")
+            else:
+                logger.error(f"Audit logging failed: {str(e)}")
         
         return response
         

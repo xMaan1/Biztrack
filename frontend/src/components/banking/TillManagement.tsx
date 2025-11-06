@@ -563,7 +563,7 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
             <DialogTitle>Delete Till</DialogTitle>
             <DialogDescription>
               Are you sure you want to delete the till "{tillToDelete?.name}"? 
-              This action will deactivate the till and cannot be undone.
+              This action will permanently delete the till and all its transactions. This cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end space-x-2 mt-4">
