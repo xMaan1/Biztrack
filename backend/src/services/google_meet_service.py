@@ -107,11 +107,17 @@ class GoogleMeetService:
         with open(client_secrets_path, 'r') as f:
             client_config = json.load(f)
         
+        if not redirect_uri:
+            base_url = os.getenv("API_URL") or os.getenv("BASE_URL") or "https://www.biztrack.uk"
+            if base_url.endswith('/'):
+                base_url = base_url.rstrip('/')
+            redirect_uri = f"{base_url}/events/google/callback"
+        
         if 'web' in client_config:
             client_info = client_config['web']
-            if not redirect_uri:
-                redirect_uris = client_info.get('redirect_uris', [])
-                redirect_uri = redirect_uris[0] if redirect_uris else 'http://localhost:8000/events/google/callback'
+            redirect_uris = client_info.get('redirect_uris', [])
+            if redirect_uri not in redirect_uris:
+                logger.warning(f"Redirect URI {redirect_uri} not in client_secrets.json redirect_uris. Make sure it's added to Google Cloud Console.")
         else:
             redirect_uri = redirect_uri or 'urn:ietf:wg:oauth:2.0:oob'
         
@@ -151,11 +157,17 @@ class GoogleMeetService:
             with open(client_secrets_path, 'r') as f:
                 client_config = json.load(f)
             
+            if not redirect_uri:
+                base_url = os.getenv("API_URL") or os.getenv("BASE_URL") or "https://www.biztrack.uk"
+                if base_url.endswith('/'):
+                    base_url = base_url.rstrip('/')
+                redirect_uri = f"{base_url}/events/google/callback"
+            
             if 'web' in client_config:
                 client_info = client_config['web']
-                if not redirect_uri:
-                    redirect_uris = client_info.get('redirect_uris', [])
-                    redirect_uri = redirect_uris[0] if redirect_uris else 'http://localhost:8000/events/google/callback'
+                redirect_uris = client_info.get('redirect_uris', [])
+                if redirect_uri not in redirect_uris:
+                    logger.warning(f"Redirect URI {redirect_uri} not in client_secrets.json redirect_uris. Make sure it's added to Google Cloud Console.")
             else:
                 redirect_uri = redirect_uri or 'urn:ietf:wg:oauth:2.0:oob'
             
