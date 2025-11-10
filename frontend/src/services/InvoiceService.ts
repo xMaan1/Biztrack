@@ -64,8 +64,9 @@ class InvoiceService {
     await apiService.post(`${this.baseUrl}/${invoiceId}/send`);
   }
 
-  async sendInvoiceEmail(invoiceId: string): Promise<void> {
-    await apiService.post(`${this.baseUrl}/${invoiceId}/send`);
+  async sendInvoiceEmail(invoiceId: string): Promise<{ message: string; warning?: string }> {
+    const response = await apiService.post(`${this.baseUrl}/${invoiceId}/send`);
+    return response;
   }
 
   async sendInvoiceWhatsApp(invoiceId: string): Promise<{ whatsapp_url: string; phone_number: string; formatted_message: string }> {

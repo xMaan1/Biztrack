@@ -1076,56 +1076,60 @@ def send_invoice(
             invoice_pdf_bytes=pdf_bytes
         )
         
+        if invoice.status == InvoiceStatus.DRAFT:
+            invoice.status = InvoiceStatus.SENT
+        invoice.sentAt = datetime.utcnow()
+        invoice.updatedAt = datetime.utcnow()
+        
+        try:
+            from ...config.ledger_models import AccountReceivable, AccountReceivableStatus
+            from datetime import datetime as dt
+            
+            existing_ar = db.query(AccountReceivable).filter(
+                and_(
+                    AccountReceivable.tenant_id == tenant_id,
+                    AccountReceivable.invoice_id == invoice.id
+                )
+            ).first()
+            
+            if not existing_ar:
+                days_overdue = 0
+                if invoice.dueDate < dt.utcnow():
+                    days_overdue = (dt.utcnow() - invoice.dueDate).days
+                
+                ar = AccountReceivable(
+                    tenant_id=tenant_id,
+                    invoice_id=invoice.id,
+                    invoice_number=invoice.invoiceNumber,
+                    customer_id=invoice.customerId or "",
+                    customer_name=invoice.customerName,
+                    customer_email=invoice.customerEmail or "",
+                    customer_phone=invoice.customerPhone,
+                    invoice_date=invoice.issueDate,
+                    due_date=invoice.dueDate,
+                    invoice_amount=invoice.total,
+                    amount_paid=0.0,
+                    outstanding_balance=invoice.total,
+                    currency=invoice.currency,
+                    status=AccountReceivableStatus.PENDING if days_overdue == 0 else AccountReceivableStatus.OVERDUE,
+                    payment_terms=invoice.paymentTerms,
+                    notes=invoice.notes,
+                    days_overdue=days_overdue,
+                    created_by=current_user.id
+                )
+                db.add(ar)
+        except Exception as ar_error:
+            logger.warning(f"Could not create Account Receivable: {str(ar_error)}")
+        
+        db.commit()
+        
         if email_sent:
-            if invoice.status == InvoiceStatus.DRAFT:
-                invoice.status = InvoiceStatus.SENT
-            invoice.sentAt = datetime.utcnow()
-            invoice.updatedAt = datetime.utcnow()
-            
-            try:
-                from ...config.ledger_models import AccountReceivable, AccountReceivableStatus
-                from datetime import datetime as dt
-                
-                existing_ar = db.query(AccountReceivable).filter(
-                    and_(
-                        AccountReceivable.tenant_id == tenant_id,
-                        AccountReceivable.invoice_id == invoice.id
-                    )
-                ).first()
-                
-                if not existing_ar:
-                    days_overdue = 0
-                    if invoice.dueDate < dt.utcnow():
-                        days_overdue = (dt.utcnow() - invoice.dueDate).days
-                    
-                    ar = AccountReceivable(
-                        tenant_id=tenant_id,
-                        invoice_id=invoice.id,
-                        invoice_number=invoice.invoiceNumber,
-                        customer_id=invoice.customerId or "",
-                        customer_name=invoice.customerName,
-                        customer_email=invoice.customerEmail or "",
-                        customer_phone=invoice.customerPhone,
-                        invoice_date=invoice.issueDate,
-                        due_date=invoice.dueDate,
-                        invoice_amount=invoice.total,
-                        amount_paid=0.0,
-                        outstanding_balance=invoice.total,
-                        currency=invoice.currency,
-                        status=AccountReceivableStatus.PENDING if days_overdue == 0 else AccountReceivableStatus.OVERDUE,
-                        payment_terms=invoice.paymentTerms,
-                        notes=invoice.notes,
-                        days_overdue=days_overdue,
-                        created_by=current_user.id
-                    )
-                    db.add(ar)
-            except Exception as ar_error:
-                logger.warning(f"Could not create Account Receivable: {str(ar_error)}")
-            
-            db.commit()
             return {"message": "Invoice sent successfully via email"}
         else:
-            raise HTTPException(status_code=500, detail="Failed to send email. Please check email configuration.")
+            return {
+                "message": "Invoice status updated but email could not be sent. Please check SMTP configuration in your environment variables.",
+                "warning": "SMTP credentials not configured"
+            }
         
     except HTTPException:
         raise

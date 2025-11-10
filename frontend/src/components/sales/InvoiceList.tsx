@@ -84,8 +84,13 @@ export function InvoiceList({
 
     try {
       setSendingEmail(invoice.id);
-      await InvoiceService.sendInvoiceEmail(invoice.id);
-      toast.success(`Invoice sent successfully to ${invoice.customerEmail}`);
+      const response = await InvoiceService.sendInvoiceEmail(invoice.id);
+      
+      if (response?.warning) {
+        toast.warning(response.message || 'Invoice status updated but email could not be sent. Please check SMTP configuration.');
+      } else {
+        toast.success(response?.message || `Invoice sent successfully to ${invoice.customerEmail}`);
+      }
     } catch (error: any) {
       const errorMessage = extractErrorMessage(error, 'Failed to send invoice via email');
       toast.error(errorMessage);
