@@ -4,6 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
 from sqlalchemy.exc import DisconnectionError, OperationalError
+from fastapi import HTTPException
 from dotenv import load_dotenv
 import logging
 
@@ -60,6 +61,8 @@ def get_db():
     db = SessionLocal()
     try:
         yield db
+    except HTTPException:
+        raise
     except OperationalError as e:
         logger.error(f"Database operational error: {e}")
         db.rollback()
