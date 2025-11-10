@@ -11,10 +11,15 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
 SCOPES = ['https://www.googleapis.com/auth/calendar']
+
+GOOGLE_OAUTH_REDIRECT_URI = os.getenv("GOOGLE_OAUTH_REDIRECT_URI")
 
 EMAIL_PATTERN = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
 
@@ -103,13 +108,15 @@ class GoogleMeetService:
         with open(client_secrets_path, 'r') as f:
             client_config = json.load(f)
         
-        if 'web' in client_config:
-            client_info = client_config['web']
-            if not redirect_uri:
+        if not redirect_uri:
+            if GOOGLE_OAUTH_REDIRECT_URI:
+                redirect_uri = GOOGLE_OAUTH_REDIRECT_URI
+            elif 'web' in client_config:
+                client_info = client_config['web']
                 redirect_uris = client_info.get('redirect_uris', [])
                 redirect_uri = redirect_uris[0] if redirect_uris else 'http://localhost:8000/events/google/callback'
-        else:
-            redirect_uri = redirect_uri or 'urn:ietf:wg:oauth:2.0:oob'
+            else:
+                redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'
         
         flow = Flow.from_client_secrets_file(
             client_secrets_path,
@@ -141,13 +148,15 @@ class GoogleMeetService:
             with open(client_secrets_path, 'r') as f:
                 client_config = json.load(f)
             
-            if 'web' in client_config:
-                client_info = client_config['web']
-                if not redirect_uri:
+            if not redirect_uri:
+                if GOOGLE_OAUTH_REDIRECT_URI:
+                    redirect_uri = GOOGLE_OAUTH_REDIRECT_URI
+                elif 'web' in client_config:
+                    client_info = client_config['web']
                     redirect_uris = client_info.get('redirect_uris', [])
                     redirect_uri = redirect_uris[0] if redirect_uris else 'http://localhost:8000/events/google/callback'
-            else:
-                redirect_uri = redirect_uri or 'urn:ietf:wg:oauth:2.0:oob'
+                else:
+                    redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'
             
             flow = Flow.from_client_secrets_file(
                 client_secrets_path,
@@ -216,10 +225,35 @@ class GoogleMeetService:
             start_time = event_data.get('startDate')
             end_time = event_data.get('endDate')
             
+            if not start_time or not end_time:
+                return {
+                    'success': False,
+                    'error': 'Start date and end date are required',
+                    'event_id': None,
+                    'meet_link': None
+                }
+            
             if isinstance(start_time, str):
                 start_time = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
             if isinstance(end_time, str):
                 end_time = datetime.fromisoformat(end_time.replace('Z', '+00:00'))
+            
+            if start_time >= end_time:
+                return {
+                    'success': False,
+                    'error': 'End date must be after start date',
+                    'event_id': None,
+                    'meet_link': None
+                }
+            
+            time_diff = (end_time - start_time).total_seconds()
+            if time_diff < 60:
+                return {
+                    'success': False,
+                    'error': 'Event duration must be at least 1 minute',
+                    'event_id': None,
+                    'meet_link': None
+                }
             
             participants = event_data.get('participants', [])
             valid_emails = filter_valid_emails(participants) if participants else []

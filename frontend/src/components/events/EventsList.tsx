@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
-import { Input } from '../ui/input';
 import {
   Select,
   SelectContent,
@@ -16,14 +15,6 @@ import EventCard from './EventCard';
 import EventForm from './EventForm';
 import { useApiService } from '../../hooks/useApiService';
 import { toast } from 'sonner';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '../ui/dialog';
-import { Label } from '../ui/label';
 
 interface Event {
   id: string;
@@ -50,8 +41,6 @@ export default function EventsList() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState(false);
-  const [showAuthDialog, setShowAuthDialog] = useState(false);
-  const [authCode, setAuthCode] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
 
   const apiService = useApiService();
@@ -65,7 +54,6 @@ export default function EventsList() {
     const handleMessage = (event: MessageEvent) => {
       if (event.data && event.data.type === 'GOOGLE_AUTH_SUCCESS') {
         checkAuthStatus();
-        setShowAuthDialog(false);
         toast.success('Google Calendar connected successfully!');
       }
     };
@@ -89,30 +77,40 @@ export default function EventsList() {
     try {
       setAuthLoading(true);
       const response = await apiService.getGoogleAuthUrl();
-      setShowAuthDialog(true);
-      window.open(response.authorization_url, '_blank');
+      
+      const width = 500;
+      const height = 600;
+      const left = (window.screen.width - width) / 2;
+      const top = (window.screen.height - height) / 2;
+      
+      const popup = window.open(
+        response.authorization_url,
+        'google-oauth',
+        `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes,resizable=yes`
+      );
+      
+      if (!popup) {
+        toast.error('Please allow popups for this site to complete authorization');
+        setAuthLoading(false);
+        return;
+      }
+      
+      const checkPopup = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(checkPopup);
+          setAuthLoading(false);
+          checkAuthStatus();
+        }
+      }, 500);
+      
+      setTimeout(() => {
+        if (!popup.closed) {
+          clearInterval(checkPopup);
+        }
+      }, 300000);
+      
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Failed to get authorization URL');
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  const handleSubmitAuthCode = async () => {
-    if (!authCode.trim()) {
-      toast.error('Please enter the authorization code');
-      return;
-    }
-    try {
-      setAuthLoading(true);
-      await apiService.googleAuthCallback(authCode.trim());
-      toast.success('Google Calendar connected successfully!');
-      setShowAuthDialog(false);
-      setAuthCode('');
-      checkAuthStatus();
-    } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Authorization failed');
-    } finally {
       setAuthLoading(false);
     }
   };
@@ -235,7 +233,7 @@ export default function EventsList() {
               disabled={authLoading}
             >
               <Link2 className="h-4 w-4" />
-              Connect Google Calendar
+              {authLoading ? 'Connecting...' : 'Connect Google Calendar'}
             </Button>
           )}
           <Button
@@ -392,53 +390,6 @@ export default function EventsList() {
         </div>
       )}
 
-      <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Connect Google Calendar</DialogTitle>
-            <DialogDescription>
-              Authorize access to create Google Meet links for your events
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div>
-              <p className="text-sm text-gray-600 mb-2">
-                1. A new window should have opened with Google's authorization page
-              </p>
-              <p className="text-sm text-gray-600 mb-2">
-                2. Sign in and click "Allow" to grant access
-              </p>
-              <p className="text-sm text-gray-600 mb-4">
-                3. Copy the authorization code from the page and paste it below:
-              </p>
-            </div>
-            <div>
-              <Label htmlFor="auth-code">Authorization Code</Label>
-              <Input
-                id="auth-code"
-                value={authCode}
-                onChange={(e) => setAuthCode(e.target.value)}
-                placeholder="Paste authorization code here"
-                className="mt-1"
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowAuthDialog(false);
-                  setAuthCode('');
-                }}
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleSubmitAuthCode} disabled={authLoading}>
-                {authLoading ? 'Connecting...' : 'Connect'}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

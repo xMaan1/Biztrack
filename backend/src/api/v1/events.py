@@ -54,7 +54,7 @@ def convert_event_to_response(event):
         "updatedAt": event.updatedAt
     }
 
-@router.post("/", response_model=Event)
+@router.post("/", response_model=Event, status_code=status.HTTP_201_CREATED)
 async def create_new_event(
     event: EventCreate,
     db: Session = Depends(get_db),
