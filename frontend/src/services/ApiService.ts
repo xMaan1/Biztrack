@@ -26,8 +26,16 @@ export class ApiService {
   constructor() {
     this.sessionManager = new SessionManager();
 
+    const getApiUrl = () => {
+      if (typeof window !== 'undefined') {
+        const runtimeUrl = (window as any).__API_URL__;
+        if (runtimeUrl) return runtimeUrl;
+      }
+      return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    };
+
     this.client = axios.create({
-      baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
+      baseURL: getApiUrl(),
       headers: {
         'Content-Type': 'application/json',
       },

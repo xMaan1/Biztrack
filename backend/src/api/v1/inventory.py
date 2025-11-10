@@ -31,6 +31,10 @@ from ...config.database import (
 
 router = APIRouter(prefix="/inventory", tags=["Inventory Management"])
 
+@router.get("/health")
+def inventory_health_check():
+    return {"status": "ok", "module": "inventory", "message": "Inventory endpoints are accessible"}
+
 def calculate_purchase_order_totals(items: List, vat_rate: float) -> dict:
     """Calculate purchase order totals including VAT"""
     subtotal = 0

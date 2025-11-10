@@ -24,15 +24,32 @@ import {
 } from '../models/inventory';
 
 class InventoryService {
-  // Warehouse Management
+  private handleError(error: any, endpoint: string) {
+    console.error(`[InventoryService] Error calling ${endpoint}:`, error);
+    if (error.response) {
+      console.error(`[InventoryService] Response status: ${error.response.status}`);
+      console.error(`[InventoryService] Response data:`, error.response.data);
+    } else if (error.request) {
+      console.error(`[InventoryService] No response received. Request:`, error.request);
+    } else {
+      console.error(`[InventoryService] Error message:`, error.message);
+    }
+    throw error;
+  }
+
   async getWarehouses(
     skip: number = 0,
     limit: number = 100,
   ): Promise<WarehousesResponse> {
-    const response = await apiService.get(
-      `/inventory/warehouses?skip=${skip}&limit=${limit}`,
-    );
-    return response;
+    try {
+      const response = await apiService.get(
+        `/inventory/warehouses?skip=${skip}&limit=${limit}`,
+      );
+      return response;
+    } catch (error) {
+      this.handleError(error, '/inventory/warehouses');
+      throw error;
+    }
   }
 
   async getWarehouse(id: string): Promise<WarehouseResponse> {
@@ -248,8 +265,13 @@ class InventoryService {
 
   // Dashboard
   async getInventoryDashboard(): Promise<InventoryDashboardStats> {
-    const response = await apiService.get('/inventory/dashboard');
-    return response;
+    try {
+      const response = await apiService.get('/inventory/dashboard');
+      return response;
+    } catch (error) {
+      this.handleError(error, '/inventory/dashboard');
+      throw error;
+    }
   }
 
   // Dumps Management
