@@ -488,18 +488,25 @@ async def get_google_authorization_url(
                 api_url = os.getenv("API_URL") or "http://localhost:8000"
                 if api_url.endswith('/'):
                     api_url = api_url.rstrip('/')
+                if not api_url.startswith('http://localhost:8000') and not api_url.startswith('http://127.0.0.1:8000'):
+                    api_url = "http://localhost:8000"
                 redirect_uri = f"{api_url}/events/google/callback"
             else:
                 base_url = os.getenv("API_URL") or os.getenv("BASE_URL") or "https://www.biztrack.uk"
                 if base_url.endswith('/'):
                     base_url = base_url.rstrip('/')
+                if not base_url.startswith('http'):
+                    base_url = f"https://{base_url}"
                 redirect_uri = f"{base_url}/events/google/callback"
         else:
             base_url = os.getenv("API_URL") or os.getenv("BASE_URL") or "https://www.biztrack.uk"
             if base_url.endswith('/'):
                 base_url = base_url.rstrip('/')
+            if not base_url.startswith('http'):
+                base_url = f"https://{base_url}"
             redirect_uri = f"{base_url}/events/google/callback"
         
+        logger.info(f"Using redirect_uri: {redirect_uri}")
         google_meet_service = GoogleMeetService(user_email=user_email, db=db)
         auth_url = google_meet_service.get_authorization_url(redirect_uri=redirect_uri)
         
@@ -674,15 +681,18 @@ async def google_oauth_callback_get(
             <!DOCTYPE html>
             <html>
             <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <meta http-equiv="X-UA-Compatible" content="IE=edge">
                 <title>Authorization Successful</title>
                 <style>
-                    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f5f5f5; }
+                    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f5f5f5; margin: 0; }
                     .container { background: white; padding: 30px; border-radius: 8px; max-width: 400px; margin: 0 auto; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
                     .success { color: #2e7d32; font-size: 24px; margin-bottom: 10px; }
                     .message { color: #666; margin: 20px 0; }
                 </style>
             </head>
-            <body>
+            <body onbeforeunload="return false;" onunload="return false;">
                 <div class="container">
                     <h1 class="success">✓ Authorization Successful!</h1>
                     <p class="message">Google Calendar has been connected successfully.</p>
@@ -692,10 +702,20 @@ async def google_oauth_callback_get(
                     (function() {
                         var messageSent = false;
                         var attempts = 0;
-                        var maxAttempts = 10;
+                        var maxAttempts = 20;
+                        var closed = false;
+                        
+                        function preventRedirect(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            return false;
+                        }
+                        
+                        window.addEventListener('beforeunload', preventRedirect);
+                        window.addEventListener('unload', preventRedirect);
                         
                         function sendMessage() {
-                            if (messageSent) return;
+                            if (messageSent || closed) return;
                             attempts++;
                             
                             try {
@@ -704,28 +724,43 @@ async def google_oauth_callback_get(
                                     messageSent = true;
                                     console.log('Message sent to parent window');
                                     setTimeout(function() {
-                                        if (window.opener) {
-                                            window.close();
+                                        closed = true;
+                                        if (window.opener && !window.opener.closed) {
+                                            try {
+                                                window.close();
+                                            } catch(e) {
+                                                console.log('Could not close window');
+                                            }
                                         }
-                                    }, 500);
+                                    }, 300);
                                 } else {
                                     console.log('No opener window found, attempt', attempts);
                                     if (attempts < maxAttempts) {
-                                        setTimeout(sendMessage, 200);
+                                        setTimeout(sendMessage, 100);
                                     } else {
+                                        closed = true;
                                         setTimeout(function() {
-                                            window.close();
-                                        }, 2000);
+                                            try {
+                                                window.close();
+                                            } catch(e) {
+                                                console.log('Could not close window');
+                                            }
+                                        }, 1000);
                                     }
                                 }
                             } catch (e) {
                                 console.error('Error sending message:', e);
                                 if (attempts < maxAttempts) {
-                                    setTimeout(sendMessage, 200);
+                                    setTimeout(sendMessage, 100);
                                 } else {
+                                    closed = true;
                                     setTimeout(function() {
-                                        window.close();
-                                    }, 2000);
+                                        try {
+                                            window.close();
+                                        } catch(e) {
+                                            console.log('Could not close window');
+                                        }
+                                    }, 1000);
                                 }
                             }
                         }
@@ -739,10 +774,15 @@ async def google_oauth_callback_get(
                         }
                         
                         setTimeout(function() {
-                            if (!messageSent) {
+                            if (!messageSent && !closed) {
                                 sendMessage();
                             }
-                        }, 100);
+                        }, 50);
+                        
+                        document.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        });
                     })();
                 </script>
             </body>
