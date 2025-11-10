@@ -465,7 +465,8 @@ async def join_event(
 
 @router.get("/google/authorize")
 async def get_google_authorization_url(
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
     """Get Google OAuth2 authorization URL"""
     try:
@@ -744,7 +745,8 @@ async def google_oauth_callback(
 
 @router.get("/google/status")
 async def get_google_authorization_status(
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
     """Check if user has authorized Google Calendar"""
     try:
