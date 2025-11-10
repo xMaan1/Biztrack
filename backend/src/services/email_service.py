@@ -27,17 +27,20 @@ class EmailService:
         invoice_total: float,
         currency: str = 'USD',
         due_date: str = None,
-        invoice_pdf_path: Optional[str] = None
+        invoice_pdf_path: Optional[str] = None,
+        invoice_pdf_bytes: Optional[bytes] = None
     ) -> bool:
         """Send invoice email to customer"""
         try:
-            # Create message
+            if not to_email:
+                logger.error("Recipient email address is required")
+                return False
+                
             msg = MIMEMultipart()
             msg['From'] = f"{self.from_name} <{self.from_email}>"
             msg['To'] = to_email
             msg['Subject'] = f"Invoice {invoice_number} - Payment Due"
             
-            # Create email body
             body = f"""
 Dear {customer_name},
 
@@ -47,7 +50,7 @@ Invoice Number: {invoice_number}
 Amount Due: {currency} {invoice_total:.2f}
 Due Date: {due_date or 'As agreed'}
 
-Please make payment at your earliest convenience. If you have any questions about this invoice, please don't hesitate to contact us.
+Please find the invoice PDF attached to this email. Please make payment at your earliest convenience. If you have any questions about this invoice, please don't hesitate to contact us.
 
 Thank you for your prompt payment.
 
@@ -57,19 +60,26 @@ Best regards,
             
             msg.attach(MIMEText(body, 'plain'))
             
-            # Attach PDF if provided
-            if invoice_pdf_path and os.path.exists(invoice_pdf_path):
+            if invoice_pdf_bytes:
+                part = MIMEBase('application', 'octet-stream')
+                part.set_payload(invoice_pdf_bytes)
+                encoders.encode_base64(part)
+                part.add_header(
+                    'Content-Disposition',
+                    f'attachment; filename=invoice-{invoice_number}.pdf'
+                )
+                msg.attach(part)
+            elif invoice_pdf_path and os.path.exists(invoice_pdf_path):
                 with open(invoice_pdf_path, "rb") as attachment:
                     part = MIMEBase('application', 'octet-stream')
                     part.set_payload(attachment.read())
                     encoders.encode_base64(part)
                     part.add_header(
                         'Content-Disposition',
-                        f'attachment; filename= invoice-{invoice_number}.pdf'
+                        f'attachment; filename=invoice-{invoice_number}.pdf'
                     )
                     msg.attach(part)
             
-            # Send email
             if not self.smtp_username or not self.smtp_password:
                 logger.warning("SMTP credentials not configured. Email not sent.")
                 return False

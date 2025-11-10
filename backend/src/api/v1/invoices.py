@@ -2,6 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status, Response
 from typing import List, Optional
 from datetime import datetime, timedelta
 import uuid
+import os
+import urllib.parse
+import logging
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func, desc, text
 from pydantic import BaseModel
@@ -27,6 +30,7 @@ from ...config.crm_crud import (
 from ...services.inventory_sync_service import InventorySyncService
 from ...services.email_service import EmailService
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/invoices", tags=["Invoices"])
 
 # Bulk operation models
@@ -1051,10 +1055,16 @@ def send_invoice(
         if not invoice:
             raise HTTPException(status_code=404, detail="Invoice not found")
         
-        if invoice.status != InvoiceStatus.DRAFT:
-            raise HTTPException(status_code=400, detail="Only draft invoices can be sent")
+        if not invoice.customerEmail:
+            raise HTTPException(status_code=400, detail="Customer email is required to send invoice")
         
-        # Send email
+        pdf_bytes = None
+        try:
+            from .pdf_generator_modern import generate_modern_invoice_pdf
+            pdf_bytes = generate_modern_invoice_pdf(invoice, db)
+        except Exception as pdf_error:
+            logger.warning(f"Could not generate PDF for email: {str(pdf_error)}")
+        
         email_service = EmailService()
         email_sent = email_service.send_invoice_email(
             to_email=invoice.customerEmail,
@@ -1062,20 +1072,20 @@ def send_invoice(
             invoice_number=invoice.invoiceNumber,
             invoice_total=invoice.total,
             currency=invoice.currency,
-            due_date=invoice.dueDate.strftime('%Y-%m-%d') if invoice.dueDate else None
+            due_date=invoice.dueDate.strftime('%Y-%m-%d') if invoice.dueDate else None,
+            invoice_pdf_bytes=pdf_bytes
         )
         
         if email_sent:
-            invoice.status = InvoiceStatus.SENT
+            if invoice.status == InvoiceStatus.DRAFT:
+                invoice.status = InvoiceStatus.SENT
             invoice.sentAt = datetime.utcnow()
             invoice.updatedAt = datetime.utcnow()
             
-            # Create Account Receivable when invoice is sent
             try:
                 from ...config.ledger_models import AccountReceivable, AccountReceivableStatus
                 from datetime import datetime as dt
                 
-                # Check if Account Receivable already exists for this invoice
                 existing_ar = db.query(AccountReceivable).filter(
                     and_(
                         AccountReceivable.tenant_id == tenant_id,
@@ -1084,7 +1094,6 @@ def send_invoice(
                 ).first()
                 
                 if not existing_ar:
-                    # Calculate days overdue
                     days_overdue = 0
                     if invoice.dueDate < dt.utcnow():
                         days_overdue = (dt.utcnow() - invoice.dueDate).days
@@ -1111,19 +1120,78 @@ def send_invoice(
                     )
                     db.add(ar)
             except Exception as ar_error:
-                # Don't fail invoice sending if AR creation fails
-                print(f"Warning: Could not create Account Receivable: {str(ar_error)}")
+                logger.warning(f"Could not create Account Receivable: {str(ar_error)}")
             
             db.commit()
             return {"message": "Invoice sent successfully via email"}
         else:
-            return {"message": "Invoice prepared but email could not be sent. Please check email configuration."}
+            raise HTTPException(status_code=500, detail="Failed to send email. Please check email configuration.")
         
     except HTTPException:
         raise
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to send invoice: {str(e)}")
+
+@router.post("/{invoice_id}/send-whatsapp")
+def send_invoice_whatsapp(
+    invoice_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_UPDATE.value))
+):
+    """Get WhatsApp message and link for sending invoice"""
+    try:
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+            
+        tenant_id = tenant_context["tenant_id"]
+        
+        invoice = db.query(Invoice).filter(
+            and_(
+                Invoice.id == invoice_id,
+                Invoice.tenant_id == tenant_id
+            )
+        ).first()
+        
+        if not invoice:
+            raise HTTPException(status_code=404, detail="Invoice not found")
+        
+        if not invoice.customerPhone:
+            raise HTTPException(status_code=400, detail="Customer phone number is required to send via WhatsApp")
+        
+        frontend_url = os.getenv("FRONTEND_URL", "https://www.biztrack.uk")
+        invoice_url = f"{frontend_url}/invoices/{invoice_id}/view"
+        
+        message = f"""📄 *Invoice Details*
+
+*Invoice Number:* {invoice.invoiceNumber}
+*Customer:* {invoice.customerName}
+*Amount Due:* {invoice.currency} {invoice.total:.2f}
+*Due Date:* {invoice.dueDate.strftime('%Y-%m-%d') if invoice.dueDate else 'As agreed'}
+*Status:* {invoice.status.title()}
+
+Please review the invoice and make payment at your earliest convenience.
+
+View Invoice: {invoice_url}
+
+Thank you for your business!"""
+        
+        phone_number = invoice.customerPhone.replace('+', '').replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
+        whatsapp_url = f"https://wa.me/{phone_number}?text={urllib.parse.quote(message)}"
+        
+        return {
+            "message": "WhatsApp link generated successfully",
+            "whatsapp_url": whatsapp_url,
+            "phone_number": invoice.customerPhone,
+            "formatted_message": message
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate WhatsApp link: {str(e)}")
 
 @router.post("/{invoice_id}/mark-as-paid")
 def mark_invoice_as_paid(

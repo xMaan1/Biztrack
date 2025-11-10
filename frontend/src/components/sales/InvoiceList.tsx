@@ -31,6 +31,7 @@ import {
   Send,
   XCircle,
   MessageCircle,
+  Mail,
 } from 'lucide-react';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { Invoice } from '../../models/sales';
@@ -72,46 +73,81 @@ export function InvoiceList({
   const [downloading, setDownloading] = useState<string | null>(null);
   const [selectedInvoices, setSelectedInvoices] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState<string | null>(null);
+  const [sendingEmail, setSendingEmail] = useState<string | null>(null);
+  const [sendingWhatsApp, setSendingWhatsApp] = useState<string | null>(null);
 
-  const handleSendWhatsApp = (invoice: Invoice) => {
-    const invoiceMessage = `📄 *Invoice Details*
+  const handleSendEmail = async (invoice: Invoice) => {
+    if (!invoice.customerEmail) {
+      toast.error('Customer email is required to send invoice via email');
+      return;
+    }
 
-*Invoice Number:* ${invoice.invoiceNumber}
-*Customer:* ${invoice.customerName}
-*Amount:* ${formatCurrency(invoice.total)}
-*Due Date:* ${InvoiceService.formatDate(invoice.dueDate)}
-*Status:* ${InvoiceService.getStatusLabel(invoice.status)}
-
-Please find the attached invoice for your review and payment.`;
-
-    const encodedMessage = encodeURIComponent(invoiceMessage);
-    const whatsappUrl = `https://web.whatsapp.com/send?text=${encodedMessage}`;
-    
-    window.open(whatsappUrl, '_blank');
+    try {
+      setSendingEmail(invoice.id);
+      await InvoiceService.sendInvoiceEmail(invoice.id);
+      toast.success(`Invoice sent successfully to ${invoice.customerEmail}`);
+    } catch (error: any) {
+      const errorMessage = extractErrorMessage(error, 'Failed to send invoice via email');
+      toast.error(errorMessage);
+    } finally {
+      setSendingEmail(null);
+    }
   };
 
-  const handleBulkSendWhatsApp = () => {
+  const handleSendWhatsApp = async (invoice: Invoice) => {
+    if (!invoice.customerPhone) {
+      toast.error('Customer phone number is required to send invoice via WhatsApp');
+      return;
+    }
+
+    try {
+      setSendingWhatsApp(invoice.id);
+      const response = await InvoiceService.sendInvoiceWhatsApp(invoice.id);
+      window.open(response.whatsapp_url, '_blank');
+      toast.success('Opening WhatsApp...');
+    } catch (error: any) {
+      const errorMessage = extractErrorMessage(error, 'Failed to generate WhatsApp link');
+      toast.error(errorMessage);
+    } finally {
+      setSendingWhatsApp(null);
+    }
+  };
+
+  const handleBulkSendWhatsApp = async () => {
     if (selectedInvoices.size === 0) return;
     
     const selectedInvoiceData = invoices.filter(inv => selectedInvoices.has(inv.id));
     
     if (selectedInvoiceData.length === 0) return;
     
-    const invoiceNumbers = selectedInvoiceData.map(inv => inv.invoiceNumber).join(', ');
-    const totalAmount = selectedInvoiceData.reduce((sum, inv) => sum + inv.total, 0);
+    const invoicesWithPhone = selectedInvoiceData.filter(inv => inv.customerPhone);
     
-    const message = `📄 *Multiple Invoice Details*
-
-*Invoice Numbers:* ${invoiceNumbers}
-*Total Amount:* ${formatCurrency(totalAmount)}
-*Count:* ${selectedInvoiceData.length} invoice${selectedInvoiceData.length !== 1 ? 's' : ''}
-
-Please find the attached invoices for your review and payment.`;
-
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://web.whatsapp.com/send?text=${encodedMessage}`;
+    if (invoicesWithPhone.length === 0) {
+      toast.error('None of the selected invoices have customer phone numbers');
+      return;
+    }
     
-    window.open(whatsappUrl, '_blank');
+    if (invoicesWithPhone.length !== selectedInvoiceData.length) {
+      toast.warning(`${selectedInvoiceData.length - invoicesWithPhone.length} invoice(s) skipped (no phone number)`);
+    }
+    
+    setBulkLoading('whatsapp');
+    try {
+      for (const invoice of invoicesWithPhone) {
+        try {
+          const response = await InvoiceService.sendInvoiceWhatsApp(invoice.id);
+          window.open(response.whatsapp_url, '_blank');
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (error) {
+          console.error(`Failed to send WhatsApp for invoice ${invoice.invoiceNumber}:`, error);
+        }
+      }
+      toast.success(`Opening WhatsApp for ${invoicesWithPhone.length} invoice(s)...`);
+    } catch (error) {
+      toast.error('Failed to generate WhatsApp links');
+    } finally {
+      setBulkLoading(null);
+    }
   };
 
   const handleDownload = async (invoiceId: string) => {
@@ -278,10 +314,20 @@ Please find the attached invoices for your review and payment.`;
                   size="sm"
                   variant="outline"
                   onClick={handleBulkSendWhatsApp}
+                  disabled={bulkLoading === 'whatsapp'}
                   className="text-green-600 border-green-300 hover:bg-green-100"
                 >
-                  <MessageCircle className="mr-2 h-4 w-4" />
-                  Send via WhatsApp
+                  {bulkLoading === 'whatsapp' ? (
+                    <>
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-green-300 border-t-green-600" />
+                      Opening WhatsApp...
+                    </>
+                  ) : (
+                    <>
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      Send via WhatsApp
+                    </>
+                  )}
                 </Button>
                 <Button
                   size="sm"
@@ -456,25 +502,49 @@ Please find the attached invoices for your review and payment.`;
                         Edit Invoice
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      {invoice.status === 'draft' && (
-                        <DropdownMenuItem onClick={() => handleSendWhatsApp(invoice)}>
-                          <MessageCircle className="h-4 w-4 mr-2" />
-                          Send via WhatsApp
+                      {invoice.customerEmail && (
+                        <DropdownMenuItem
+                          onClick={() => handleSendEmail(invoice)}
+                          disabled={sendingEmail === invoice.id}
+                        >
+                          {sendingEmail === invoice.id ? (
+                            <>
+                              <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+                              Sending Email...
+                            </>
+                          ) : (
+                            <>
+                              <Mail className="h-4 w-4 mr-2" />
+                              Send via Email
+                            </>
+                          )}
+                        </DropdownMenuItem>
+                      )}
+                      {invoice.customerPhone && (
+                        <DropdownMenuItem
+                          onClick={() => handleSendWhatsApp(invoice)}
+                          disabled={sendingWhatsApp === invoice.id}
+                        >
+                          {sendingWhatsApp === invoice.id ? (
+                            <>
+                              <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-green-600" />
+                              Opening WhatsApp...
+                            </>
+                          ) : (
+                            <>
+                              <MessageCircle className="h-4 w-4 mr-2" />
+                              Send via WhatsApp
+                            </>
+                          )}
                         </DropdownMenuItem>
                       )}
                       {invoice.status === 'sent' && (
-                        <>
-                          <DropdownMenuItem
-                            onClick={() => onMarkAsPaid(invoice.id)}
-                          >
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            Mark as Paid
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleSendWhatsApp(invoice)}>
-                            <MessageCircle className="h-4 w-4 mr-2" />
-                            Send Reminder via WhatsApp
-                          </DropdownMenuItem>
-                        </>
+                        <DropdownMenuItem
+                          onClick={() => onMarkAsPaid(invoice.id)}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Mark as Paid
+                        </DropdownMenuItem>
                       )}
                       <DropdownMenuItem
                         onClick={() => handleDownload(invoice.id)}

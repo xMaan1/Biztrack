@@ -60,9 +60,17 @@ class InvoiceService {
     await apiService.delete(`${this.baseUrl}/${invoiceId}`);
   }
 
-  // Invoice actions
   async sendInvoice(invoiceId: string): Promise<void> {
     await apiService.post(`${this.baseUrl}/${invoiceId}/send`);
+  }
+
+  async sendInvoiceEmail(invoiceId: string): Promise<void> {
+    await apiService.post(`${this.baseUrl}/${invoiceId}/send`);
+  }
+
+  async sendInvoiceWhatsApp(invoiceId: string): Promise<{ whatsapp_url: string; phone_number: string; formatted_message: string }> {
+    const response = await apiService.post(`${this.baseUrl}/${invoiceId}/send-whatsapp`);
+    return response;
   }
 
   async markInvoiceAsPaid(invoiceId: string): Promise<void> {
