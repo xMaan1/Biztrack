@@ -492,19 +492,29 @@ async def get_google_authorization_url(
                     api_url = "http://localhost:8000"
                 redirect_uri = f"{api_url}/events/google/callback"
             else:
-                base_url = os.getenv("API_URL") or os.getenv("BASE_URL") or "https://www.biztrack.uk"
-                if base_url.endswith('/'):
-                    base_url = base_url.rstrip('/')
-                if not base_url.startswith('http'):
-                    base_url = f"https://{base_url}"
-                redirect_uri = f"{base_url}/events/google/callback"
+                api_url = os.getenv("API_URL")
+                if not api_url:
+                    api_url = os.getenv("BASE_URL") or "https://www.biztrack.uk"
+                if api_url.endswith('/'):
+                    api_url = api_url.rstrip('/')
+                if not api_url.startswith('http'):
+                    api_url = f"https://{api_url}"
+                if ':8000' not in api_url and 'api.' not in api_url and 'localhost' not in api_url:
+                    if api_url == "https://www.biztrack.uk":
+                        api_url = "https://www.biztrack.uk:8000"
+                redirect_uri = f"{api_url}/events/google/callback"
         else:
-            base_url = os.getenv("API_URL") or os.getenv("BASE_URL") or "https://www.biztrack.uk"
-            if base_url.endswith('/'):
-                base_url = base_url.rstrip('/')
-            if not base_url.startswith('http'):
-                base_url = f"https://{base_url}"
-            redirect_uri = f"{base_url}/events/google/callback"
+            api_url = os.getenv("API_URL")
+            if not api_url:
+                api_url = os.getenv("BASE_URL") or "https://www.biztrack.uk"
+            if api_url.endswith('/'):
+                api_url = api_url.rstrip('/')
+            if not api_url.startswith('http'):
+                api_url = f"https://{api_url}"
+            if ':8000' not in api_url and 'api.' not in api_url and 'localhost' not in api_url:
+                if api_url == "https://www.biztrack.uk":
+                    api_url = "https://www.biztrack.uk:8000"
+            redirect_uri = f"{api_url}/events/google/callback"
         
         logger.info(f"Using redirect_uri: {redirect_uri}")
         google_meet_service = GoogleMeetService(user_email=user_email, db=db)
