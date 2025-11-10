@@ -522,6 +522,7 @@ async def google_oauth_callback_get(
     db: Session = Depends(get_db)
 ):
     """Handle Google OAuth2 callback redirect (GET request from Google)"""
+    logger.info(f"OAuth callback received - code: {bool(code)}, state: {bool(state)}, error: {error}")
     try:
         if error:
             error_html = f"""
@@ -663,9 +664,11 @@ async def google_oauth_callback_get(
                 base_url = base_url.rstrip('/')
             redirect_uri = f"{base_url}/events/google/callback"
         
+        logger.info(f"Processing OAuth authorization for user: {user_email}")
         google_meet_service = GoogleMeetService(user_email=user_email, db=db)
         success = google_meet_service.authorize(code, redirect_uri=redirect_uri, db=db)
         
+        logger.info(f"OAuth authorization result: {success}")
         if success:
             success_html = """
             <!DOCTYPE html>
@@ -745,7 +748,10 @@ async def google_oauth_callback_get(
             </body>
             </html>
             """
-            return HTMLResponse(content=success_html)
+            response = HTMLResponse(content=success_html)
+            response.headers["X-Frame-Options"] = "SAMEORIGIN"
+            response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; frame-ancestors *;"
+            return response
         else:
             error_html = """
             <!DOCTYPE html>

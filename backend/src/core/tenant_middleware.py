@@ -77,6 +77,7 @@ class TenantMiddleware:
             "/tenants/subscribe",
             "/tenants/plans",
             "/tenants/create-tenant",
+            "/events/google/callback",
             "/"  # Root landing page
         ]
         

@@ -97,13 +97,18 @@ export default function EventsList() {
       const response = await apiService.getGoogleAuthUrl();
       setShowAuthDialog(true);
       
+      const width = 500;
+      const height = 600;
+      const left = (window.screen.width / 2) - (width / 2);
+      const top = (window.screen.height / 2) - (height / 2);
+      
       const popup = window.open(
         response.authorization_url,
         'googleAuth',
-        'width=500,height=600,left=' + (window.screen.width / 2 - 250) + ',top=' + (window.screen.height / 2 - 300)
+        `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no`
       );
       
-      if (!popup) {
+      if (!popup || popup.closed || typeof popup.closed === 'undefined') {
         toast.error('Popup blocked. Please allow popups for this site.');
         setShowAuthDialog(false);
         setAuthLoading(false);
@@ -112,17 +117,30 @@ export default function EventsList() {
       
       popupRef.current = popup;
       
+      let pollTimer: NodeJS.Timeout;
       const checkPopup = setInterval(() => {
-        if (popup.closed) {
-          clearInterval(checkPopup);
-          popupRef.current = null;
-          setShowAuthDialog(false);
-          setAuthLoading(false);
-          setTimeout(() => {
-            checkAuthStatus();
-          }, 1000);
+        try {
+          if (popup.closed) {
+            clearInterval(checkPopup);
+            if (pollTimer) clearTimeout(pollTimer);
+            popupRef.current = null;
+            setShowAuthDialog(false);
+            setAuthLoading(false);
+            setTimeout(() => {
+              checkAuthStatus();
+            }, 1000);
+          }
+        } catch (e) {
+          console.error('Error checking popup:', e);
         }
       }, 500);
+      
+      pollTimer = setTimeout(() => {
+        clearInterval(checkPopup);
+        if (popup && !popup.closed) {
+          console.warn('Popup still open after 5 minutes, closing interval check');
+        }
+      }, 5 * 60 * 1000);
       
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Failed to get authorization URL');

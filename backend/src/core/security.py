@@ -63,8 +63,9 @@ class SecurityMiddleware:
             # 3. Process request and get response
             response = await call_next(request)
             
-            # 4. Add security headers to response
-            self._add_security_headers(response)
+            # 4. Add security headers to response (skip for OAuth callback)
+            if "/events/google/callback" not in str(request.url.path):
+                self._add_security_headers(response)
             
             # 5. Logging
             await self._log_request(request, response, start_time)
@@ -88,10 +89,11 @@ class SecurityMiddleware:
     def _add_security_headers(self, response):
         """Add security headers to response"""
         response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["X-Frame-Options"] = "DENY"
+        if "/events/google/callback" not in str(response.url) if hasattr(response, 'url') else True:
+            response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-        response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';"
+        response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; frame-ancestors 'self' *;"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
     
