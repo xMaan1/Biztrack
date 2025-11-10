@@ -64,7 +64,11 @@ export default function EventsList() {
     const handleMessage = (event: MessageEvent) => {
       if (event.data && event.data.type === 'GOOGLE_AUTH_SUCCESS') {
         checkAuthStatus();
+        setAuthLoading(false);
         toast.success('Google Calendar connected successfully!');
+      } else if (event.data && event.data.type === 'GOOGLE_AUTH_ERROR') {
+        setAuthLoading(false);
+        toast.error(event.data.error || 'Authorization failed');
       }
     };
 

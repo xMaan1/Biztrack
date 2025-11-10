@@ -11,6 +11,7 @@ const publicRoutes = [
   '/_next',
   '/favicon.ico',
   '/manifest.json',
+  '/events/google/callback',
 ];
 
 // List of protected routes that require authentication

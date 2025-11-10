@@ -19,7 +19,12 @@ logger = logging.getLogger(__name__)
 
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
-GOOGLE_OAUTH_REDIRECT_URI = os.getenv("GOOGLE_OAUTH_REDIRECT_URI")
+GOOGLE_OAUTH_REDIRECT_URI = os.getenv("GOOGLE_OAUTH_REDIRECT_URI") or os.getenv("GOOGLE_REDIRECT_URI")
+
+if not GOOGLE_OAUTH_REDIRECT_URI:
+    logger.warning("GOOGLE_OAUTH_REDIRECT_URI environment variable not set. Will use default or client_secrets.json")
+else:
+    logger.info(f"GOOGLE_OAUTH_REDIRECT_URI loaded from environment: {GOOGLE_OAUTH_REDIRECT_URI}")
 
 EMAIL_PATTERN = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
 
@@ -111,12 +116,21 @@ class GoogleMeetService:
         if not redirect_uri:
             if GOOGLE_OAUTH_REDIRECT_URI:
                 redirect_uri = GOOGLE_OAUTH_REDIRECT_URI
+                logger.info(f"Using redirect URI from environment variable: {redirect_uri}")
             elif 'web' in client_config:
                 client_info = client_config['web']
                 redirect_uris = client_info.get('redirect_uris', [])
-                redirect_uri = redirect_uris[0] if redirect_uris else 'http://localhost:8000/events/google/callback'
+                if redirect_uris:
+                    redirect_uri = redirect_uris[0]
+                    logger.info(f"Using redirect URI from client_secrets.json: {redirect_uri}")
+                else:
+                    redirect_uri = 'https://www.biztrack.uk/events/google/callback'
+                    logger.warning(f"No redirect URI found, using default: {redirect_uri}")
             else:
-                redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'
+                redirect_uri = 'https://www.biztrack.uk/events/google/callback'
+                logger.warning(f"Using fallback redirect URI: {redirect_uri}")
+        
+        logger.info(f"Final redirect URI being used: {redirect_uri}")
         
         flow = Flow.from_client_secrets_file(
             client_secrets_path,
@@ -151,12 +165,19 @@ class GoogleMeetService:
             if not redirect_uri:
                 if GOOGLE_OAUTH_REDIRECT_URI:
                     redirect_uri = GOOGLE_OAUTH_REDIRECT_URI
+                    logger.info(f"Using redirect URI from environment variable: {redirect_uri}")
                 elif 'web' in client_config:
                     client_info = client_config['web']
                     redirect_uris = client_info.get('redirect_uris', [])
-                    redirect_uri = redirect_uris[0] if redirect_uris else 'http://localhost:8000/events/google/callback'
+                    if redirect_uris:
+                        redirect_uri = redirect_uris[0]
+                        logger.info(f"Using redirect URI from client_secrets.json: {redirect_uri}")
+                    else:
+                        redirect_uri = 'https://www.biztrack.uk/events/google/callback'
+                        logger.warning(f"No redirect URI found, using default: {redirect_uri}")
                 else:
-                    redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'
+                    redirect_uri = 'https://www.biztrack.uk/events/google/callback'
+                    logger.warning(f"Using fallback redirect URI: {redirect_uri}")
             
             flow = Flow.from_client_secrets_file(
                 client_secrets_path,
