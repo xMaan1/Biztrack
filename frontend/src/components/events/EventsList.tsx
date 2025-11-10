@@ -11,10 +11,19 @@ import {
   SelectValue,
 } from '../ui/select';
 import { Card, CardContent } from '../ui/card';
-import { Calendar, Plus, Search, Grid, List } from 'lucide-react';
+import { Calendar, Plus, Search, Grid, List, Link2 } from 'lucide-react';
 import EventCard from './EventCard';
 import EventForm from './EventForm';
 import { useApiService } from '../../hooks/useApiService';
+import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '../ui/dialog';
+import { Label } from '../ui/label';
 
 interface Event {
   id: string;
@@ -40,12 +49,73 @@ export default function EventsList() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [authCode, setAuthCode] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
 
   const apiService = useApiService();
 
   useEffect(() => {
     loadEvents();
+    checkAuthStatus();
   }, []);
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'GOOGLE_AUTH_SUCCESS') {
+        checkAuthStatus();
+        setShowAuthDialog(false);
+        toast.success('Google Calendar connected successfully!');
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      const response = await apiService.getGoogleAuthStatus();
+      setIsAuthorized(response.authorized || false);
+    } catch (error) {
+      setIsAuthorized(false);
+    }
+  };
+
+  const handleAuthorize = async () => {
+    try {
+      setAuthLoading(true);
+      const response = await apiService.getGoogleAuthUrl();
+      setShowAuthDialog(true);
+      window.open(response.authorization_url, '_blank');
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Failed to get authorization URL');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleSubmitAuthCode = async () => {
+    if (!authCode.trim()) {
+      toast.error('Please enter the authorization code');
+      return;
+    }
+    try {
+      setAuthLoading(true);
+      await apiService.googleAuthCallback(authCode.trim());
+      toast.success('Google Calendar connected successfully!');
+      setShowAuthDialog(false);
+      setAuthCode('');
+      checkAuthStatus();
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Authorization failed');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
 
   const loadEvents = async () => {
     try {
@@ -70,11 +140,20 @@ export default function EventsList() {
 
   const handleJoinEvent = async (id: string) => {
     try {
-      await apiService.joinEvent(id);
-      // Refresh events to update status
-      loadEvents();
-    } catch (error) {
+      const event = events.find((e) => e.id === id);
+      if (event?.googleMeetLink) {
+        window.open(event.googleMeetLink, '_blank');
+      } else {
+        const response = await apiService.joinEvent(id);
+        if (response?.meet_link) {
+          window.open(response.meet_link, '_blank');
+        }
+        toast.success('You have joined this event');
+        loadEvents();
       }
+    } catch (error) {
+      toast.error('Failed to join event');
+    }
   };
 
   const handleLeaveEvent = async (id: string) => {
@@ -91,10 +170,10 @@ export default function EventsList() {
       setCreateLoading(true);
       await apiService.createEvent(eventData);
       setShowCreateForm(false);
-      // Refresh events to show the new event
+      toast.success('Event created successfully!');
       loadEvents();
     } catch (error) {
-      alert('Failed to create event. Please try again.');
+      toast.error('Failed to create event. Please try again.');
     } finally {
       setCreateLoading(false);
     }
@@ -147,13 +226,26 @@ export default function EventsList() {
           <h1 className="text-3xl font-bold text-gray-900">Events</h1>
           <p className="text-gray-600 mt-1">Manage and track your events</p>
         </div>
-        <Button
-          onClick={() => setShowCreateForm(true)}
-          className="flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Create Event
-        </Button>
+        <div className="flex items-center gap-2">
+          {!isAuthorized && (
+            <Button
+              onClick={handleAuthorize}
+              variant="outline"
+              className="flex items-center gap-2"
+              disabled={authLoading}
+            >
+              <Link2 className="h-4 w-4" />
+              Connect Google Calendar
+            </Button>
+          )}
+          <Button
+            onClick={() => setShowCreateForm(true)}
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Create Event
+          </Button>
+        </div>
       </div>
 
       {/* Filters and Search */}
@@ -299,6 +391,54 @@ export default function EventsList() {
           </div>
         </div>
       )}
+
+      <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Connect Google Calendar</DialogTitle>
+            <DialogDescription>
+              Authorize access to create Google Meet links for your events
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <p className="text-sm text-gray-600 mb-2">
+                1. A new window should have opened with Google's authorization page
+              </p>
+              <p className="text-sm text-gray-600 mb-2">
+                2. Sign in and click "Allow" to grant access
+              </p>
+              <p className="text-sm text-gray-600 mb-4">
+                3. Copy the authorization code from the page and paste it below:
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="auth-code">Authorization Code</Label>
+              <Input
+                id="auth-code"
+                value={authCode}
+                onChange={(e) => setAuthCode(e.target.value)}
+                placeholder="Paste authorization code here"
+                className="mt-1"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowAuthDialog(false);
+                  setAuthCode('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleSubmitAuthCode} disabled={authLoading}>
+                {authLoading ? 'Connecting...' : 'Connect'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

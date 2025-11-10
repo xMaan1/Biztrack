@@ -42,7 +42,7 @@ export default function EventCard({
   const startDate = new Date(event.startDate);
   const endDate = new Date(event.endDate);
   const isUpcoming = startDate > new Date();
-  const isOnline = event.isOnline && event.googleMeetLink;
+  const hasMeetLink = event.googleMeetLink && event.googleMeetLink.trim().length > 0;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -144,7 +144,7 @@ export default function EventCard({
         </div>
 
         <div className="flex items-center gap-2 pt-2">
-          {isOnline && (
+          {hasMeetLink && (
             <Button
               size="sm"
               variant="outline"

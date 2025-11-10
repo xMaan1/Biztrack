@@ -579,6 +579,33 @@ export class ApiService {
     }
   }
 
+  async getGoogleAuthUrl() {
+    try {
+      const response = await this.get('/events/google/authorize');
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async googleAuthCallback(code: string) {
+    try {
+      const response = await this.post('/events/google/callback', { code });
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getGoogleAuthStatus() {
+    try {
+      const response = await this.get('/events/google/status');
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async regenerateMeetLink(id: string) {
     try {
       const response = await this.post(`/events/${id}/regenerate-meet-link`);

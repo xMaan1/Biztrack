@@ -1,15 +1,24 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime, timedelta
+from pydantic import BaseModel
 import uuid
+import logging
+import base64
+import json
 
-from ...config.database import get_db, get_event_by_id, get_all_events, create_event, update_event, delete_event, get_events_by_project, get_events_by_user, get_upcoming_events
+from ...config.database import get_db, get_event_by_id, get_all_events, create_event, update_event, delete_event, get_events_by_project, get_events_by_user, get_upcoming_events, get_user_by_email
 from ...models.unified_models import EventCreate, EventUpdate, Event, EventResponse, EventType, EventStatus, RecurrenceType
 from ...api.dependencies import get_current_user, get_tenant_context
 from ...services.google_meet_service import GoogleMeetService
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/events", tags=["events"])
+
+class AuthorizationCodeRequest(BaseModel):
+    code: str
 
 def convert_event_to_response(event):
     """Convert database event object to response model"""
@@ -54,7 +63,6 @@ async def create_new_event(
 ):
     """Create a new event with Google Meet integration"""
     try:
-        # Prepare event data
         event_data = event.dict()
         event_data['id'] = str(uuid.uuid4())
         event_data['tenant_id'] = str(tenant_context['tenant_id'])
@@ -62,13 +70,11 @@ async def create_new_event(
         event_data['createdAt'] = datetime.utcnow()
         event_data['updatedAt'] = datetime.utcnow()
         
-        # Handle optional fields that should be None instead of empty strings
         if event_data.get('projectId') == '':
             event_data['projectId'] = None
         if event_data.get('location') == '':
             event_data['location'] = None
             
-        # Convert enum values to strings
         if 'eventType' in event_data and hasattr(event_data['eventType'], 'value'):
             event_data['eventType'] = event_data['eventType'].value
         if 'recurrenceType' in event_data and hasattr(event_data['recurrenceType'], 'value'):
@@ -76,32 +82,48 @@ async def create_new_event(
         if 'status' in event_data and hasattr(event_data['status'], 'value'):
             event_data['status'] = event_data['status'].value
         
-        # Create Google Meet event if online and credentials are available
-        if event_data.get('isOnline', True):
+        if event_data.get('isOnline', False):
+            user_email = current_user.email if hasattr(current_user, 'email') else None
+            if not user_email:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="User email is required for online events with Google Meet integration"
+                )
+            
+            google_meet_service = GoogleMeetService(user_email=user_email, db=db)
+            
+            if not google_meet_service.is_authorized(db):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Google Calendar authorization required. Please authorize your Google account first to create events with Google Meet links."
+                )
+            
             try:
-                google_meet_service = GoogleMeetService()
                 meet_result = google_meet_service.create_meeting(event_data)
-                if meet_result['success']:
-                    event_data['googleMeetLink'] = meet_result.get('meet_link')
-                    event_data['googleCalendarEventId'] = meet_result.get('event_id')
-                else:
-                    # Log the error but continue with event creation
-                    print(f"Google Meet creation failed: {meet_result.get('error')}")
+                
+                if not meet_result.get('success'):
+                    error_msg = meet_result.get('error', 'Unknown error')
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail=f"Failed to create Google Meet link: {error_msg}"
+                    )
+                
+                event_data['googleMeetLink'] = meet_result.get('meet_link')
+                event_data['googleCalendarEventId'] = meet_result.get('event_id')
+            except HTTPException:
+                raise
             except Exception as e:
-                # Google API not configured or failed - continue without meet link
-                print(f"Google Meet integration not available: {str(e)}")
-                # Set isOnline to False if Google Meet is required but not available
-                if event_data.get('isOnline', True):
-                    event_data['isOnline'] = False
-                    event_data['googleMeetLink'] = None
+                logger.error(f"Google Meet creation failed: {e}", exc_info=True)
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Failed to create Google Meet link: {str(e)}"
+                )
         
-        # Create event in database
         db_event = create_event(event_data, db)
-        
-        # Convert database object to response model
         return convert_event_to_response(db_event)
         
     except Exception as e:
+        logger.error(f"Failed to create event: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create event: {str(e)}"
@@ -226,19 +248,20 @@ async def update_existing_event(
         update_data = event_update.dict(exclude_unset=True)
         update_data['updatedAt'] = datetime.utcnow()
         
-        # Update Google Calendar event if it exists and credentials are available
         if existing_event.googleCalendarEventId and update_data:
-            try:
-                google_meet_service = GoogleMeetService()
-                meet_result = google_meet_service.update_meeting(
-                    existing_event.googleCalendarEventId,
-                    update_data
-                )
-                if not meet_result['success']:
-                    print(f"Google Calendar update failed: {meet_result.get('error')}")
-            except Exception as e:
-                # Google API not configured or failed - continue without updating calendar
-                print(f"Google Calendar integration not available: {str(e)}")
+            user_email = current_user.email if hasattr(current_user, 'email') else None
+            if user_email:
+                google_meet_service = GoogleMeetService(user_email=user_email, db=db)
+                if google_meet_service.is_authorized(db):
+                    try:
+                        meet_result = google_meet_service.update_meeting(
+                            existing_event.googleCalendarEventId,
+                            update_data
+                        )
+                        if not meet_result['success']:
+                            logger.error(f"Google Calendar update failed: {meet_result.get('error')}")
+                    except Exception as e:
+                        logger.error(f"Google Calendar integration error: {e}")
         
         # Update event in database
         updated_event = update_event(event_id, update_data, db, str(tenant_context['tenant_id']))
@@ -277,16 +300,17 @@ async def delete_existing_event(
                 detail="Event not found"
             )
         
-        # Delete from Google Calendar if it exists and credentials are available
         if existing_event.googleCalendarEventId:
-            try:
-                google_meet_service = GoogleMeetService()
-                meet_result = google_meet_service.delete_meeting(existing_event.googleCalendarEventId)
-                if not meet_result['success']:
-                    print(f"Google Calendar deletion failed: {meet_result.get('error')}")
-            except Exception as e:
-                # Google API not configured or failed - continue without deleting from calendar
-                print(f"Google Calendar integration not available: {str(e)}")
+            user_email = current_user.email if hasattr(current_user, 'email') else None
+            if user_email:
+                google_meet_service = GoogleMeetService(user_email=user_email, db=db)
+                if google_meet_service.is_authorized(db):
+                    try:
+                        meet_result = google_meet_service.delete_meeting(existing_event.googleCalendarEventId)
+                        if not meet_result['success']:
+                            logger.error(f"Google Calendar deletion failed: {meet_result.get('error')}")
+                    except Exception as e:
+                        logger.error(f"Google Calendar integration error: {e}")
         
         # Delete event from database
         success = delete_event(event_id, db, str(tenant_context['tenant_id']))
@@ -331,9 +355,22 @@ async def regenerate_meet_link(
                 detail="Cannot generate meet link for offline events"
             )
         
-        # Generate new Google Meet link if credentials are available
+        user_email = current_user.email if hasattr(current_user, 'email') else None
+        if not user_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User email is required for Google Meet integration"
+            )
+        
+        google_meet_service = GoogleMeetService(user_email=user_email, db=db)
+        
+        if not google_meet_service.is_authorized(db):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Google Calendar authorization required. Please authorize your Google account first."
+            )
+        
         try:
-            google_meet_service = GoogleMeetService()
             meet_result = google_meet_service.create_meeting({
                 'id': str(existing_event.id),
                 'title': existing_event.title,
@@ -347,18 +384,19 @@ async def regenerate_meet_link(
                     detail=f"Failed to generate meet link: {meet_result.get('error')}"
                 )
             
-            # Update event with new meet link
             update_data = {
                 'googleMeetLink': meet_result.get('meet_link'),
                 'googleCalendarEventId': meet_result.get('event_id'),
                 'updatedAt': datetime.utcnow()
             }
             
+        except HTTPException:
+            raise
         except Exception as e:
-            # Google API not configured or failed
+            logger.error(f"Google Meet integration error: {e}", exc_info=True)
             raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"Google Meet integration not available: {str(e)}"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to generate meet link: {str(e)}"
             )
         
         updated_event = update_event(event_id, update_data, db, str(tenant_context['tenant_id']))
@@ -396,7 +434,6 @@ async def join_event(
                 detail="Event not found"
             )
         
-        # Add user to participants if not already present
         participants = event.participants or []
         if str(current_user.id) not in participants:
             participants.append(str(current_user.id))
@@ -413,7 +450,10 @@ async def join_event(
                     detail="Failed to join event"
                 )
         
-        return {"message": "Successfully joined event"}
+        return {
+            "message": "Successfully joined event",
+            "meet_link": event.googleMeetLink
+        }
         
     except HTTPException:
         raise
@@ -422,6 +462,304 @@ async def join_event(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to join event: {str(e)}"
         )
+
+@router.get("/google/authorize")
+async def get_google_authorization_url(
+    current_user: dict = Depends(get_current_user)
+):
+    """Get Google OAuth2 authorization URL"""
+    try:
+        user_email = current_user.email if hasattr(current_user, 'email') else None
+        if not user_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User email is required"
+            )
+        
+        google_meet_service = GoogleMeetService(user_email=user_email, db=db)
+        auth_url = google_meet_service.get_authorization_url()
+        
+        return {
+            "authorization_url": auth_url
+        }
+    except Exception as e:
+        logger.error(f"Failed to get authorization URL: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get authorization URL: {str(e)}"
+        )
+
+@router.get("/google/callback")
+async def google_oauth_callback_get(
+    code: Optional[str] = None,
+    state: Optional[str] = None,
+    error: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Handle Google OAuth2 callback redirect (GET request from Google)"""
+    try:
+        if error:
+            error_html = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Authorization Failed</title>
+                <style>
+                    body {{ font-family: Arial, sans-serif; text-align: center; padding: 50px; }}
+                    .error {{ color: #d32f2f; }}
+                </style>
+            </head>
+            <body>
+                <h1 class="error">Authorization Failed</h1>
+                <p>Error: {error}</p>
+                <p>Please try again.</p>
+                <script>
+                    setTimeout(function() {{
+                        window.close();
+                    }}, 3000);
+                </script>
+            </body>
+            </html>
+            """
+            return HTMLResponse(content=error_html, status_code=400)
+        
+        if not code:
+            error_html = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Authorization Failed</title>
+                <style>
+                    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+                    .error { color: #d32f2f; }
+                </style>
+            </head>
+            <body>
+                <h1 class="error">Authorization Failed</h1>
+                <p>No authorization code received.</p>
+                <script>
+                    setTimeout(function() {
+                        window.close();
+                    }, 3000);
+                </script>
+            </body>
+            </html>
+            """
+            return HTMLResponse(content=error_html, status_code=400)
+        
+        if not state:
+            error_html = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Authorization Failed</title>
+                <style>
+                    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+                    .error { color: #d32f2f; }
+                </style>
+            </head>
+            <body>
+                <h1 class="error">Authorization Failed</h1>
+                <p>Invalid authorization request. Please try again.</p>
+                <script>
+                    setTimeout(function() {
+                        window.close();
+                    }, 3000);
+                </script>
+            </body>
+            </html>
+            """
+            return HTMLResponse(content=error_html, status_code=400)
+        
+        user_email = None
+        try:
+            state_data = json.loads(base64.urlsafe_b64decode(state.encode()).decode())
+            user_email = state_data.get('email')
+            if not user_email or not isinstance(user_email, str):
+                raise ValueError("Invalid email in state")
+        except Exception as e:
+            logger.error(f"Failed to decode or validate state: {e}")
+            error_html = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Authorization Failed</title>
+                <style>
+                    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+                    .error { color: #d32f2f; }
+                </style>
+            </head>
+            <body>
+                <h1 class="error">Authorization Failed</h1>
+                <p>Invalid authorization request. Please try again.</p>
+                <script>
+                    setTimeout(function() {
+                        window.close();
+                    }, 3000);
+                </script>
+            </body>
+            </html>
+            """
+            return HTMLResponse(content=error_html, status_code=400)
+        
+        user = get_user_by_email(user_email, db)
+        if not user:
+            logger.error(f"User not found for email in OAuth callback: {user_email}")
+            error_html = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Authorization Failed</title>
+                <style>
+                    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+                    .error { color: #d32f2f; }
+                </style>
+            </head>
+            <body>
+                <h1 class="error">Authorization Failed</h1>
+                <p>User account not found. Please contact support.</p>
+                <script>
+                    setTimeout(function() {
+                        window.close();
+                    }, 3000);
+                </script>
+            </body>
+            </html>
+            """
+            return HTMLResponse(content=error_html, status_code=400)
+        
+        google_meet_service = GoogleMeetService(user_email=user_email, db=db)
+        success = google_meet_service.authorize(code, db=db)
+        
+        if success:
+            success_html = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Authorization Successful</title>
+                <style>
+                    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+                    .success { color: #2e7d32; }
+                </style>
+            </head>
+            <body>
+                <h1 class="success">Authorization Successful!</h1>
+                <p>Google Calendar has been connected successfully.</p>
+                <p>You can close this window now.</p>
+                <script>
+                    if (window.opener) {
+                        window.opener.postMessage({ type: 'GOOGLE_AUTH_SUCCESS' }, '*');
+                    }
+                    setTimeout(function() {
+                        window.close();
+                    }, 2000);
+                </script>
+            </body>
+            </html>
+            """
+            return HTMLResponse(content=success_html)
+        else:
+            error_html = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Authorization Failed</title>
+                <style>
+                    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+                    .error { color: #d32f2f; }
+                </style>
+            </head>
+            <body>
+                <h1 class="error">Authorization Failed</h1>
+                <p>Failed to complete authorization. Please try again.</p>
+                <script>
+                    setTimeout(function() {
+                        window.close();
+                    }, 3000);
+                </script>
+            </body>
+            </html>
+            """
+            return HTMLResponse(content=error_html, status_code=400)
+            
+    except Exception as e:
+        logger.error(f"Authorization callback failed: {e}")
+        error_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Authorization Failed</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; text-align: center; padding: 50px; }}
+                .error {{ color: #d32f2f; }}
+            </style>
+        </head>
+        <body>
+            <h1 class="error">Authorization Failed</h1>
+            <p>An error occurred: {str(e)}</p>
+            <script>
+                setTimeout(function() {{
+                    window.close();
+                }}, 3000);
+            </script>
+        </body>
+        </html>
+        """
+        return HTMLResponse(content=error_html, status_code=500)
+
+@router.post("/google/callback")
+async def google_oauth_callback(
+    request: AuthorizationCodeRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Handle Google OAuth2 callback with authorization code (manual code submission)"""
+    try:
+        user_email = current_user.email if hasattr(current_user, 'email') else None
+        if not user_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User email is required"
+            )
+        
+        google_meet_service = GoogleMeetService(user_email=user_email, db=db)
+        success = google_meet_service.authorize(request.code, db=db)
+        
+        if success:
+            return {
+                "message": "Google Calendar authorization successful. You can now create events with Google Meet links."
+            }
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Authorization failed. Please try again."
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Authorization callback failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Authorization failed: {str(e)}"
+        )
+
+@router.get("/google/status")
+async def get_google_authorization_status(
+    current_user: dict = Depends(get_current_user)
+):
+    """Check if user has authorized Google Calendar"""
+    try:
+        user_email = current_user.email if hasattr(current_user, 'email') else None
+        if not user_email:
+            return {"authorized": False, "message": "User email is required"}
+        
+        google_meet_service = GoogleMeetService(user_email=user_email, db=db)
+        return {
+            "authorized": google_meet_service.is_authorized(db),
+            "message": "Authorized" if google_meet_service.is_authorized(db) else "Not authorized. Please authorize first."
+        }
+    except Exception as e:
+        logger.error(f"Failed to check authorization status: {e}")
+        return {"authorized": False, "message": f"Error: {str(e)}"}
 
 @router.post("/{event_id}/leave")
 async def leave_event(

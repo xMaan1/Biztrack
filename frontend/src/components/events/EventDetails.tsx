@@ -49,7 +49,7 @@ export default function EventDetails({
   const startDate = new Date(event.startDate);
   const endDate = new Date(event.endDate);
   const isUpcoming = startDate > new Date();
-  const isOnline = event.isOnline && event.googleMeetLink;
+  const hasMeetLink = event.googleMeetLink && event.googleMeetLink.trim().length > 0;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -116,7 +116,7 @@ export default function EventDetails({
         </div>
 
         <div className="flex gap-2">
-          {isOnline && (
+          {hasMeetLink && (
             <Button
               variant="outline"
               className="flex items-center gap-2"
@@ -210,7 +210,7 @@ export default function EventDetails({
               </div>
             </div>
 
-            {isOnline && (
+            {hasMeetLink && (
               <div className="flex items-center gap-3">
                 <Video className="h-5 w-5 text-gray-500" />
                 <div>
