@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime, timedelta
@@ -8,6 +8,8 @@ import uuid
 import logging
 import base64
 import json
+import os
+import urllib.parse
 
 from ...config.database import get_db, get_event_by_id, get_all_events, create_event, update_event, delete_event, get_events_by_project, get_events_by_user, get_upcoming_events, get_user_by_email
 from ...models.unified_models import EventCreate, EventUpdate, Event, EventResponse, EventType, EventStatus, RecurrenceType
@@ -496,216 +498,68 @@ async def google_oauth_callback_get(
     error: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
-    """Handle Google OAuth2 callback redirect (GET request from Google)"""
+    """Handle Google OAuth2 callback redirect - completes authorization and redirects to frontend"""
+    frontend_base_url = os.getenv("FRONTEND_URL", "https://www.biztrack.uk")
+    callback_url = f"{frontend_base_url}/events/google/callback"
+    
+    if error:
+        params = {"error": error}
+        query_string = urllib.parse.urlencode(params)
+        redirect_url = f"{callback_url}?{query_string}"
+        return RedirectResponse(url=redirect_url, status_code=302)
+    
+    if not code:
+        params = {"error": "no_code"}
+        query_string = urllib.parse.urlencode(params)
+        redirect_url = f"{callback_url}?{query_string}"
+        return RedirectResponse(url=redirect_url, status_code=302)
+    
+    if not state:
+        params = {"error": "invalid_state"}
+        query_string = urllib.parse.urlencode(params)
+        redirect_url = f"{callback_url}?{query_string}"
+        return RedirectResponse(url=redirect_url, status_code=302)
+    
     try:
-        if error:
-            error_html = f"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Authorization Failed</title>
-                <style>
-                    body {{ font-family: Arial, sans-serif; text-align: center; padding: 50px; }}
-                    .error {{ color: #d32f2f; }}
-                </style>
-            </head>
-            <body>
-                <h1 class="error">Authorization Failed</h1>
-                <p>Error: {error}</p>
-                <p>Please try again.</p>
-                <script>
-                    setTimeout(function() {{
-                        window.close();
-                    }}, 3000);
-                </script>
-            </body>
-            </html>
-            """
-            return HTMLResponse(content=error_html, status_code=400)
-        
-        if not code:
-            error_html = """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Authorization Failed</title>
-                <style>
-                    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-                    .error { color: #d32f2f; }
-                </style>
-            </head>
-            <body>
-                <h1 class="error">Authorization Failed</h1>
-                <p>No authorization code received.</p>
-                <script>
-                    setTimeout(function() {
-                        window.close();
-                    }, 3000);
-                </script>
-            </body>
-            </html>
-            """
-            return HTMLResponse(content=error_html, status_code=400)
-        
-        if not state:
-            error_html = """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Authorization Failed</title>
-                <style>
-                    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-                    .error { color: #d32f2f; }
-                </style>
-            </head>
-            <body>
-                <h1 class="error">Authorization Failed</h1>
-                <p>Invalid authorization request. Please try again.</p>
-                <script>
-                    setTimeout(function() {
-                        window.close();
-                    }, 3000);
-                </script>
-            </body>
-            </html>
-            """
-            return HTMLResponse(content=error_html, status_code=400)
-        
-        user_email = None
-        try:
-            state_data = json.loads(base64.urlsafe_b64decode(state.encode()).decode())
-            user_email = state_data.get('email')
-            if not user_email or not isinstance(user_email, str):
-                raise ValueError("Invalid email in state")
-        except Exception as e:
-            logger.error(f"Failed to decode or validate state: {e}")
-            error_html = """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Authorization Failed</title>
-                <style>
-                    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-                    .error { color: #d32f2f; }
-                </style>
-            </head>
-            <body>
-                <h1 class="error">Authorization Failed</h1>
-                <p>Invalid authorization request. Please try again.</p>
-                <script>
-                    setTimeout(function() {
-                        window.close();
-                    }, 3000);
-                </script>
-            </body>
-            </html>
-            """
-            return HTMLResponse(content=error_html, status_code=400)
-        
-        user = get_user_by_email(user_email, db)
-        if not user:
-            logger.error(f"User not found for email in OAuth callback: {user_email}")
-            error_html = """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Authorization Failed</title>
-                <style>
-                    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-                    .error { color: #d32f2f; }
-                </style>
-            </head>
-            <body>
-                <h1 class="error">Authorization Failed</h1>
-                <p>User account not found. Please contact support.</p>
-                <script>
-                    setTimeout(function() {
-                        window.close();
-                    }, 3000);
-                </script>
-            </body>
-            </html>
-            """
-            return HTMLResponse(content=error_html, status_code=400)
-        
+        state_data = json.loads(base64.urlsafe_b64decode(state.encode()).decode())
+        user_email = state_data.get('email')
+        if not user_email or not isinstance(user_email, str):
+            raise ValueError("Invalid email in state")
+    except Exception as e:
+        logger.error(f"Failed to decode or validate state: {e}")
+        params = {"error": "invalid_state"}
+        query_string = urllib.parse.urlencode(params)
+        redirect_url = f"{callback_url}?{query_string}"
+        return RedirectResponse(url=redirect_url, status_code=302)
+    
+    user = get_user_by_email(user_email, db)
+    if not user:
+        logger.error(f"User not found for email in OAuth callback: {user_email}")
+        params = {"error": "user_not_found"}
+        query_string = urllib.parse.urlencode(params)
+        redirect_url = f"{callback_url}?{query_string}"
+        return RedirectResponse(url=redirect_url, status_code=302)
+    
+    try:
         google_meet_service = GoogleMeetService(user_email=user_email)
         success = google_meet_service.authorize(code)
         
         if success:
-            success_html = """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Authorization Successful</title>
-                <style>
-                    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-                    .success { color: #2e7d32; }
-                </style>
-            </head>
-            <body>
-                <h1 class="success">Authorization Successful!</h1>
-                <p>Google Calendar has been connected successfully.</p>
-                <p>You can close this window now.</p>
-                <script>
-                    if (window.opener) {
-                        window.opener.postMessage({ type: 'GOOGLE_AUTH_SUCCESS' }, '*');
-                    }
-                    setTimeout(function() {
-                        window.close();
-                    }, 2000);
-                </script>
-            </body>
-            </html>
-            """
-            return HTMLResponse(content=success_html)
+            params = {"code": code, "success": "true"}
+            query_string = urllib.parse.urlencode(params)
+            redirect_url = f"{callback_url}?{query_string}"
+            return RedirectResponse(url=redirect_url, status_code=302)
         else:
-            error_html = """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Authorization Failed</title>
-                <style>
-                    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-                    .error { color: #d32f2f; }
-                </style>
-            </head>
-            <body>
-                <h1 class="error">Authorization Failed</h1>
-                <p>Failed to complete authorization. Please try again.</p>
-                <script>
-                    setTimeout(function() {
-                        window.close();
-                    }, 3000);
-                </script>
-            </body>
-            </html>
-            """
-            return HTMLResponse(content=error_html, status_code=400)
-            
+            params = {"error": "authorization_failed"}
+            query_string = urllib.parse.urlencode(params)
+            redirect_url = f"{callback_url}?{query_string}"
+            return RedirectResponse(url=redirect_url, status_code=302)
     except Exception as e:
         logger.error(f"Authorization callback failed: {e}")
-        error_html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Authorization Failed</title>
-            <style>
-                body {{ font-family: Arial, sans-serif; text-align: center; padding: 50px; }}
-                .error {{ color: #d32f2f; }}
-            </style>
-        </head>
-        <body>
-            <h1 class="error">Authorization Failed</h1>
-            <p>An error occurred: {str(e)}</p>
-            <script>
-                setTimeout(function() {{
-                    window.close();
-                }}, 3000);
-            </script>
-        </body>
-        </html>
-        """
-        return HTMLResponse(content=error_html, status_code=500)
+        params = {"error": "authorization_error"}
+        query_string = urllib.parse.urlencode(params)
+        redirect_url = f"{callback_url}?{query_string}"
+        return RedirectResponse(url=redirect_url, status_code=302)
 
 @router.post("/google/callback")
 async def google_oauth_callback(

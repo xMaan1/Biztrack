@@ -124,10 +124,10 @@ class GoogleMeetService:
                     redirect_uri = redirect_uris[0]
                     logger.info(f"Using redirect URI from client_secrets.json: {redirect_uri}")
                 else:
-                    redirect_uri = 'https://www.biztrack.uk/events/google/callback'
+                    redirect_uri = 'https://www.biztrack.uk/api/events/google/callback'
                     logger.warning(f"No redirect URI found, using default: {redirect_uri}")
             else:
-                redirect_uri = 'https://www.biztrack.uk/events/google/callback'
+                redirect_uri = 'https://www.biztrack.uk/api/events/google/callback'
                 logger.warning(f"Using fallback redirect URI: {redirect_uri}")
         
         logger.info(f"Final redirect URI being used: {redirect_uri}")
@@ -173,10 +173,10 @@ class GoogleMeetService:
                         redirect_uri = redirect_uris[0]
                         logger.info(f"Using redirect URI from client_secrets.json: {redirect_uri}")
                     else:
-                        redirect_uri = 'https://www.biztrack.uk/events/google/callback'
+                        redirect_uri = 'https://www.biztrack.uk/api/events/google/callback'
                         logger.warning(f"No redirect URI found, using default: {redirect_uri}")
                 else:
-                    redirect_uri = 'https://www.biztrack.uk/events/google/callback'
+                    redirect_uri = 'https://www.biztrack.uk/api/events/google/callback'
                     logger.warning(f"Using fallback redirect URI: {redirect_uri}")
             
             flow = Flow.from_client_secrets_file(

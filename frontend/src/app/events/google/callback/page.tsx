@@ -14,6 +14,7 @@ function CallbackContent() {
       try {
         const code = searchParams.get('code');
         const error = searchParams.get('error');
+        const success = searchParams.get('success');
 
         if (error) {
           setStatus('error');
@@ -24,6 +25,20 @@ function CallbackContent() {
           setTimeout(() => {
             window.close();
           }, 3000);
+          return;
+        }
+
+        if (success === 'true') {
+          setStatus('success');
+          setMessage('Authorization successful! Closing window...');
+          
+          if (window.opener) {
+            window.opener.postMessage({ type: 'GOOGLE_AUTH_SUCCESS' }, '*');
+          }
+          
+          setTimeout(() => {
+            window.close();
+          }, 1500);
           return;
         }
 
