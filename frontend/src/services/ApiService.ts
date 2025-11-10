@@ -114,28 +114,32 @@ export class ApiService {
     // Request interceptor
     this.client.interceptors.request.use(
       (config) => {
+        // Check if this is a public endpoint
+        const isPublicEndpoint = this.publicEndpoints.some((endpoint) => {
+          const matches = config.url?.includes(endpoint);
+          return matches;
+        });
+
         // Only check auth on client side
         if (typeof window !== 'undefined') {
-          // Check if this is a public endpoint
-          const isPublicEndpoint = this.publicEndpoints.some((endpoint) => {
-            const matches = config.url?.includes(endpoint);
-            return matches;
-          });
-
           if (!isPublicEndpoint) {
             // Check if user is authenticated for protected endpoints
             if (!this.sessionManager.isSessionValid()) {
-              // Don't redirect immediately, let the component handle it
+              console.warn(
+                `[ApiService] Session invalid - rejecting request | URL: ${config.url} | Method: ${config.method}`
+              );
               return Promise.reject(new Error('Not authenticated'));
             }
-          }
 
-          // Only add Authorization header for non-public endpoints
-          if (!isPublicEndpoint) {
+            // Get token and ensure it exists
             const token = this.sessionManager.getToken();
-            if (token) {
-              config.headers.Authorization = `Bearer ${token}`;
+            if (!token) {
+              console.error(
+                `[ApiService] Session valid but token missing - rejecting request | URL: ${config.url} | Method: ${config.method}`
+              );
+              return Promise.reject(new Error('Authentication token missing'));
             }
+            config.headers.Authorization = `Bearer ${token}`;
           }
         }
 
@@ -143,6 +147,10 @@ export class ApiService {
         const tenantId = this.getTenantId();
         if (tenantId) {
           config.headers['X-Tenant-ID'] = tenantId;
+        } else if (!isPublicEndpoint && typeof window !== 'undefined') {
+          console.warn(
+            `[ApiService] Tenant ID missing for protected endpoint | URL: ${config.url} | Method: ${config.method}`
+          );
         }
 
         return config;
