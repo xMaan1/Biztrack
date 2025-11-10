@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -8,6 +8,7 @@ import uuid
 import logging
 import base64
 import json
+import os
 
 from ...config.database import get_db, get_event_by_id, get_all_events, create_event, update_event, delete_event, get_events_by_project, get_events_by_user, get_upcoming_events, get_user_by_email
 from ...models.unified_models import EventCreate, EventUpdate, Event, EventResponse, EventType, EventStatus, RecurrenceType
@@ -465,6 +466,7 @@ async def join_event(
 
 @router.get("/google/authorize")
 async def get_google_authorization_url(
+    request: Request,
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -477,8 +479,29 @@ async def get_google_authorization_url(
                 detail="User email is required"
             )
         
+        origin = request.headers.get("origin") or request.headers.get("referer")
+        redirect_uri = None
+        
+        if origin:
+            origin = origin.rstrip('/')
+            if 'localhost' in origin or '127.0.0.1' in origin:
+                api_url = os.getenv("API_URL") or "http://localhost:8000"
+                if api_url.endswith('/'):
+                    api_url = api_url.rstrip('/')
+                redirect_uri = f"{api_url}/events/google/callback"
+            else:
+                base_url = os.getenv("API_URL") or os.getenv("BASE_URL") or "https://www.biztrack.uk"
+                if base_url.endswith('/'):
+                    base_url = base_url.rstrip('/')
+                redirect_uri = f"{base_url}/events/google/callback"
+        else:
+            base_url = os.getenv("API_URL") or os.getenv("BASE_URL") or "https://www.biztrack.uk"
+            if base_url.endswith('/'):
+                base_url = base_url.rstrip('/')
+            redirect_uri = f"{base_url}/events/google/callback"
+        
         google_meet_service = GoogleMeetService(user_email=user_email, db=db)
-        auth_url = google_meet_service.get_authorization_url()
+        auth_url = google_meet_service.get_authorization_url(redirect_uri=redirect_uri)
         
         return {
             "authorization_url": auth_url
@@ -492,6 +515,7 @@ async def get_google_authorization_url(
 
 @router.get("/google/callback")
 async def google_oauth_callback_get(
+    request: Request,
     code: Optional[str] = None,
     state: Optional[str] = None,
     error: Optional[str] = None,
@@ -629,8 +653,18 @@ async def google_oauth_callback_get(
             """
             return HTMLResponse(content=error_html, status_code=400)
         
+        host = request.headers.get("host") or ""
+        scheme = request.url.scheme if hasattr(request.url, 'scheme') else "https"
+        if 'localhost' in host or '127.0.0.1' in host:
+            redirect_uri = f"http://{host}/events/google/callback"
+        else:
+            base_url = os.getenv("API_URL") or os.getenv("BASE_URL") or "https://www.biztrack.uk"
+            if base_url.endswith('/'):
+                base_url = base_url.rstrip('/')
+            redirect_uri = f"{base_url}/events/google/callback"
+        
         google_meet_service = GoogleMeetService(user_email=user_email, db=db)
-        success = google_meet_service.authorize(code, db=db)
+        success = google_meet_service.authorize(code, redirect_uri=redirect_uri, db=db)
         
         if success:
             success_html = """
@@ -639,21 +673,74 @@ async def google_oauth_callback_get(
             <head>
                 <title>Authorization Successful</title>
                 <style>
-                    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-                    .success { color: #2e7d32; }
+                    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f5f5f5; }
+                    .container { background: white; padding: 30px; border-radius: 8px; max-width: 400px; margin: 0 auto; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                    .success { color: #2e7d32; font-size: 24px; margin-bottom: 10px; }
+                    .message { color: #666; margin: 20px 0; }
                 </style>
             </head>
             <body>
-                <h1 class="success">Authorization Successful!</h1>
-                <p>Google Calendar has been connected successfully.</p>
-                <p>You can close this window now.</p>
+                <div class="container">
+                    <h1 class="success">✓ Authorization Successful!</h1>
+                    <p class="message">Google Calendar has been connected successfully.</p>
+                    <p class="message">This window will close automatically...</p>
+                </div>
                 <script>
-                    if (window.opener) {
-                        window.opener.postMessage({ type: 'GOOGLE_AUTH_SUCCESS' }, '*');
-                    }
-                    setTimeout(function() {
-                        window.close();
-                    }, 2000);
+                    (function() {
+                        var messageSent = false;
+                        var attempts = 0;
+                        var maxAttempts = 10;
+                        
+                        function sendMessage() {
+                            if (messageSent) return;
+                            attempts++;
+                            
+                            try {
+                                if (window.opener && !window.opener.closed) {
+                                    window.opener.postMessage({ type: 'GOOGLE_AUTH_SUCCESS' }, '*');
+                                    messageSent = true;
+                                    console.log('Message sent to parent window');
+                                    setTimeout(function() {
+                                        if (window.opener) {
+                                            window.close();
+                                        }
+                                    }, 500);
+                                } else {
+                                    console.log('No opener window found, attempt', attempts);
+                                    if (attempts < maxAttempts) {
+                                        setTimeout(sendMessage, 200);
+                                    } else {
+                                        setTimeout(function() {
+                                            window.close();
+                                        }, 2000);
+                                    }
+                                }
+                            } catch (e) {
+                                console.error('Error sending message:', e);
+                                if (attempts < maxAttempts) {
+                                    setTimeout(sendMessage, 200);
+                                } else {
+                                    setTimeout(function() {
+                                        window.close();
+                                    }, 2000);
+                                }
+                            }
+                        }
+                        
+                        window.addEventListener('load', function() {
+                            sendMessage();
+                        });
+                        
+                        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                            sendMessage();
+                        }
+                        
+                        setTimeout(function() {
+                            if (!messageSent) {
+                                sendMessage();
+                            }
+                        }, 100);
+                    })();
                 </script>
             </body>
             </html>
