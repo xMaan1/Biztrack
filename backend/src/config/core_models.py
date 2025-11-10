@@ -37,7 +37,6 @@ class User(Base):
     assigned_tasks = relationship("Task", foreign_keys="Task.assignedToId", back_populates="assignedTo")
     created_tasks = relationship("Task", foreign_keys="Task.createdById", back_populates="createdBy")
     team_projects = relationship("Project", secondary=project_team_members, back_populates="teamMembers")
-    oauth_tokens = relationship("OAuthToken", back_populates="user")
     
     
     # Custom tenant-specific options relationships
@@ -333,23 +332,3 @@ class PasswordResetToken(Base):
     
     # Relationships
     user = relationship("User")
-
-class OAuthToken(Base):
-    __tablename__ = "oauth_tokens"
-    
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
-    provider = Column(String, nullable=False, default="google")  # google, microsoft, etc.
-    encrypted_token_data = Column(Text, nullable=False)
-    expires_at = Column(DateTime, nullable=True)
-    refresh_token_available = Column(Boolean, default=True)
-    isActive = Column(Boolean, default=True)
-    createdAt = Column(DateTime, default=datetime.utcnow)
-    updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # Relationships
-    user = relationship("User", back_populates="oauth_tokens")
-    
-    __table_args__ = (
-        {'comment': 'Stores encrypted OAuth tokens for third-party integrations'}
-    )

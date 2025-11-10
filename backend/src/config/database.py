@@ -8,7 +8,7 @@ from .database_config import (
 
 # Import all models
 from .core_models import (
-    User, Tenant, Plan, Subscription, TenantUser, OAuthToken, project_team_members
+    User, Tenant, Plan, Subscription, TenantUser, project_team_members
 )
 
 from .project_models import (
@@ -101,10 +101,7 @@ from .core_crud import (
     create_subscription, update_subscription, delete_subscription,
     
     # TenantUser functions
-    get_tenant_user, get_tenant_users, get_user_tenants, create_tenant_user, update_tenant_user, delete_tenant_user,
-    
-    # OAuth Token functions
-    get_oauth_token, get_oauth_token_decrypted, create_or_update_oauth_token, delete_oauth_token, revoke_all_oauth_tokens
+    get_tenant_user, get_tenant_users, get_user_tenants, create_tenant_user, update_tenant_user, delete_tenant_user
 )
 
 from .project_crud import (

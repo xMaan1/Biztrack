@@ -6,14 +6,11 @@ import logging
 import base64
 from datetime import datetime
 from typing import Dict, Any, Optional, List
-from sqlalchemy.orm import Session
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-
-from ..config.database import get_oauth_token_decrypted, create_or_update_oauth_token, get_user_by_email
 
 logger = logging.getLogger(__name__)
 
@@ -42,54 +39,53 @@ def filter_valid_emails(participants: List[str]) -> List[str]:
     return valid_emails
 
 class GoogleMeetService:
-    def __init__(self, user_email: Optional[str] = None, db: Optional[Session] = None):
+    def __init__(self, user_email: Optional[str] = None):
         self.credentials = None
         self.service = None
         self.user_email = user_email
-        self.db = db
-        self.user_id = None
-        
-        if user_email and db:
-            user = get_user_by_email(user_email, db)
-            if user:
-                self.user_id = str(user.id)
-        
-        if user_email and db:
+        if user_email:
             self._load_credentials()
-        elif user_email:
-            logger.warning("Database session is required for OAuth token management")
+        else:
+            logger.warning("User email is required for OAuth authentication")
+    
+    def _get_token_path(self) -> str:
+        if not self.user_email:
+            raise ValueError("User email is required to determine token path")
+        tokens_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'tokens')
+        os.makedirs(tokens_dir, exist_ok=True)
+        safe_email = self.user_email.replace('@', '_at_').replace('.', '_')
+        return os.path.join(tokens_dir, f'{safe_email}_token.json')
     
     def _load_credentials(self):
-        if not self.db or not self.user_id:
-            self.service = None
-            return
-            
         try:
-            token_data = get_oauth_token_decrypted(self.user_id, "google", self.db)
+            client_secrets_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'client_secrets.json')
+            if not os.path.exists(client_secrets_path):
+                client_secrets_path = 'client_secrets.json'
             
-            if not token_data:
+            if not os.path.exists(client_secrets_path):
+                logger.warning("OAuth2 client secrets not found")
                 self.service = None
                 return
             
-            try:
-                self.credentials = Credentials.from_authorized_user_info(token_data, SCOPES)
-                
-                if self.credentials and self.credentials.expired and self.credentials.refresh_token:
-                    self.credentials.refresh(Request())
-                    expires_at = None
-                    if self.credentials.expiry:
-                        expires_at = self.credentials.expiry
-                    create_or_update_oauth_token(
-                        self.user_id,
-                        "google",
-                        json.loads(self.credentials.to_json()),
-                        expires_at,
-                        self.db
-                    )
-                
-                self.service = build('calendar', 'v3', credentials=self.credentials)
-            except Exception as e:
-                logger.error(f"Failed to load OAuth2 token: {e}")
+            token_path = self._get_token_path()
+            
+            if os.path.exists(token_path):
+                try:
+                    with open(token_path, 'r') as token_file:
+                        token_data = json.load(token_file)
+                        self.credentials = Credentials.from_authorized_user_info(token_data, SCOPES)
+                    
+                    if self.credentials and self.credentials.expired and self.credentials.refresh_token:
+                        self.credentials.refresh(Request())
+                        with open(token_path, 'w') as token_file:
+                            token_file.write(self.credentials.to_json())
+                    
+                    self.service = build('calendar', 'v3', credentials=self.credentials)
+                    return
+                except Exception as e:
+                    logger.error(f"Failed to load OAuth2 token: {e}")
+                    self.service = None
+            else:
                 self.service = None
                 
         except Exception as e:
@@ -107,17 +103,11 @@ class GoogleMeetService:
         with open(client_secrets_path, 'r') as f:
             client_config = json.load(f)
         
-        if not redirect_uri:
-            base_url = os.getenv("API_URL") or os.getenv("BASE_URL") or "https://www.biztrack.uk"
-            if base_url.endswith('/'):
-                base_url = base_url.rstrip('/')
-            redirect_uri = f"{base_url}/events/google/callback"
-        
         if 'web' in client_config:
             client_info = client_config['web']
-            redirect_uris = client_info.get('redirect_uris', [])
-            if redirect_uri not in redirect_uris:
-                logger.warning(f"Redirect URI {redirect_uri} not in client_secrets.json redirect_uris. Make sure it's added to Google Cloud Console.")
+            if not redirect_uri:
+                redirect_uris = client_info.get('redirect_uris', [])
+                redirect_uri = redirect_uris[0] if redirect_uris else 'http://localhost:8000/events/google/callback'
         else:
             redirect_uri = redirect_uri or 'urn:ietf:wg:oauth:2.0:oob'
         
@@ -139,13 +129,7 @@ class GoogleMeetService:
         )
         return auth_url
     
-    def authorize(self, authorization_code: str, redirect_uri: Optional[str] = None, db: Optional[Session] = None) -> bool:
-        if not db:
-            db = self.db
-        if not db or not self.user_id:
-            logger.error("Database session and user_id are required for authorization")
-            return False
-            
+    def authorize(self, authorization_code: str, redirect_uri: Optional[str] = None) -> bool:
         try:
             client_secrets_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'client_secrets.json')
             if not os.path.exists(client_secrets_path):
@@ -157,17 +141,11 @@ class GoogleMeetService:
             with open(client_secrets_path, 'r') as f:
                 client_config = json.load(f)
             
-            if not redirect_uri:
-                base_url = os.getenv("API_URL") or os.getenv("BASE_URL") or "https://www.biztrack.uk"
-                if base_url.endswith('/'):
-                    base_url = base_url.rstrip('/')
-                redirect_uri = f"{base_url}/events/google/callback"
-            
             if 'web' in client_config:
                 client_info = client_config['web']
-                redirect_uris = client_info.get('redirect_uris', [])
-                if redirect_uri not in redirect_uris:
-                    logger.warning(f"Redirect URI {redirect_uri} not in client_secrets.json redirect_uris. Make sure it's added to Google Cloud Console.")
+                if not redirect_uri:
+                    redirect_uris = client_info.get('redirect_uris', [])
+                    redirect_uri = redirect_uris[0] if redirect_uris else 'http://localhost:8000/events/google/callback'
             else:
                 redirect_uri = redirect_uri or 'urn:ietf:wg:oauth:2.0:oob'
             
@@ -183,19 +161,11 @@ class GoogleMeetService:
                 logger.error("Failed to obtain credentials from authorization code")
                 return False
             
-            token_json = self.credentials.to_json()
-            token_data = json.loads(token_json)
-            expires_at = None
-            if self.credentials.expiry:
-                expires_at = self.credentials.expiry
+            token_path = self._get_token_path()
+            os.makedirs(os.path.dirname(token_path), exist_ok=True)
             
-            create_or_update_oauth_token(
-                self.user_id,
-                "google",
-                token_data,
-                expires_at,
-                db
-            )
+            with open(token_path, 'w') as token_file:
+                token_file.write(self.credentials.to_json())
             
             self.service = build('calendar', 'v3', credentials=self.credentials)
             logger.info(f"Successfully authorized and saved token for {self.user_email}")
@@ -204,30 +174,25 @@ class GoogleMeetService:
             logger.error(f"Authorization failed: {e}", exc_info=True)
             return False
     
-    def is_authorized(self, db: Optional[Session] = None) -> bool:
+    def is_authorized(self) -> bool:
         if not self.user_email:
-            return False
-        
-        if db:
-            self.db = db
-            if not self.user_id:
-                user = get_user_by_email(self.user_email, db)
-                if user:
-                    self.user_id = str(user.id)
-        
-        if not self.db or not self.user_id:
             return False
         
         if self.service is not None:
             return True
         
         try:
-            token_data = get_oauth_token_decrypted(self.user_id, "google", self.db)
-            if not token_data or not isinstance(token_data, dict):
+            token_path = self._get_token_path()
+            if not os.path.exists(token_path):
                 return False
             
-            if 'token' not in token_data and 'access_token' not in token_data:
-                return False
+            with open(token_path, 'r') as token_file:
+                token_data = json.load(token_file)
+                if not token_data or not isinstance(token_data, dict):
+                    return False
+                
+                if 'token' not in token_data and 'access_token' not in token_data:
+                    return False
             
             self._load_credentials()
             return self.service is not None

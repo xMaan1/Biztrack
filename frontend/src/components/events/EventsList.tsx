@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import {
@@ -51,8 +51,8 @@ export default function EventsList() {
   const [createLoading, setCreateLoading] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [authCode, setAuthCode] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
-  const popupRef = useRef<Window | null>(null);
 
   const apiService = useApiService();
 
@@ -63,15 +63,9 @@ export default function EventsList() {
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      console.log('Received message:', event.data, 'from origin:', event.origin);
       if (event.data && event.data.type === 'GOOGLE_AUTH_SUCCESS') {
-        console.log('Google auth success message received');
-        if (popupRef.current) {
-          popupRef.current = null;
-        }
-        setShowAuthDialog(false);
-        setAuthLoading(false);
         checkAuthStatus();
+        setShowAuthDialog(false);
         toast.success('Google Calendar connected successfully!');
       }
     };
@@ -96,59 +90,32 @@ export default function EventsList() {
       setAuthLoading(true);
       const response = await apiService.getGoogleAuthUrl();
       setShowAuthDialog(true);
-      
-      const width = 500;
-      const height = 600;
-      const left = (window.screen.width / 2) - (width / 2);
-      const top = (window.screen.height / 2) - (height / 2);
-      
-      const popup = window.open(
-        response.authorization_url,
-        'googleAuth',
-        `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no`
-      );
-      
-      if (!popup || popup.closed || typeof popup.closed === 'undefined') {
-        toast.error('Popup blocked. Please allow popups for this site.');
-        setShowAuthDialog(false);
-        setAuthLoading(false);
-        return;
-      }
-      
-      popupRef.current = popup;
-      
-      let pollTimer: NodeJS.Timeout;
-      const checkPopup = setInterval(() => {
-        try {
-          if (popup.closed) {
-            clearInterval(checkPopup);
-            if (pollTimer) clearTimeout(pollTimer);
-            popupRef.current = null;
-            setShowAuthDialog(false);
-            setAuthLoading(false);
-            setTimeout(() => {
-              checkAuthStatus();
-            }, 1000);
-          }
-        } catch (e) {
-          console.error('Error checking popup:', e);
-        }
-      }, 500);
-      
-      pollTimer = setTimeout(() => {
-        clearInterval(checkPopup);
-        if (popup && !popup.closed) {
-          console.warn('Popup still open after 5 minutes, closing interval check');
-        }
-      }, 5 * 60 * 1000);
-      
+      window.open(response.authorization_url, '_blank');
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Failed to get authorization URL');
-      setShowAuthDialog(false);
+    } finally {
       setAuthLoading(false);
     }
   };
 
+  const handleSubmitAuthCode = async () => {
+    if (!authCode.trim()) {
+      toast.error('Please enter the authorization code');
+      return;
+    }
+    try {
+      setAuthLoading(true);
+      await apiService.googleAuthCallback(authCode.trim());
+      toast.success('Google Calendar connected successfully!');
+      setShowAuthDialog(false);
+      setAuthCode('');
+      checkAuthStatus();
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Authorization failed');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
 
   const loadEvents = async () => {
     try {
@@ -425,15 +392,7 @@ export default function EventsList() {
         </div>
       )}
 
-      <Dialog open={showAuthDialog} onOpenChange={(open) => {
-        if (!open) {
-          setShowAuthDialog(false);
-          setAuthLoading(false);
-          if (popupRef.current && !popupRef.current.closed) {
-            popupRef.current.close();
-          }
-        }
-      }}>
+      <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Connect Google Calendar</DialogTitle>
@@ -444,33 +403,37 @@ export default function EventsList() {
           <div className="space-y-4 py-4">
             <div>
               <p className="text-sm text-gray-600 mb-2">
-                1. A popup window should have opened with Google's authorization page
+                1. A new window should have opened with Google's authorization page
               </p>
               <p className="text-sm text-gray-600 mb-2">
                 2. Sign in and click "Allow" to grant access
               </p>
               <p className="text-sm text-gray-600 mb-4">
-                3. The popup will close automatically once authorization is complete
+                3. Copy the authorization code from the page and paste it below:
               </p>
             </div>
-            {authLoading && (
-              <div className="flex items-center justify-center py-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <span className="ml-3 text-sm text-gray-600">Waiting for authorization...</span>
-              </div>
-            )}
+            <div>
+              <Label htmlFor="auth-code">Authorization Code</Label>
+              <Input
+                id="auth-code"
+                value={authCode}
+                onChange={(e) => setAuthCode(e.target.value)}
+                placeholder="Paste authorization code here"
+                className="mt-1"
+              />
+            </div>
             <div className="flex justify-end gap-2">
               <Button
                 variant="outline"
                 onClick={() => {
                   setShowAuthDialog(false);
-                  setAuthLoading(false);
-                  if (popupRef.current && !popupRef.current.closed) {
-                    popupRef.current.close();
-                  }
+                  setAuthCode('');
                 }}
               >
                 Cancel
+              </Button>
+              <Button onClick={handleSubmitAuthCode} disabled={authLoading}>
+                {authLoading ? 'Connecting...' : 'Connect'}
               </Button>
             </div>
           </div>

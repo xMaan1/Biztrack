@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -8,7 +8,6 @@ import uuid
 import logging
 import base64
 import json
-import os
 
 from ...config.database import get_db, get_event_by_id, get_all_events, create_event, update_event, delete_event, get_events_by_project, get_events_by_user, get_upcoming_events, get_user_by_email
 from ...models.unified_models import EventCreate, EventUpdate, Event, EventResponse, EventType, EventStatus, RecurrenceType
@@ -91,9 +90,9 @@ async def create_new_event(
                     detail="User email is required for online events with Google Meet integration"
                 )
             
-            google_meet_service = GoogleMeetService(user_email=user_email, db=db)
+            google_meet_service = GoogleMeetService(user_email=user_email)
             
-            if not google_meet_service.is_authorized(db):
+            if not google_meet_service.is_authorized():
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Google Calendar authorization required. Please authorize your Google account first to create events with Google Meet links."
@@ -252,8 +251,8 @@ async def update_existing_event(
         if existing_event.googleCalendarEventId and update_data:
             user_email = current_user.email if hasattr(current_user, 'email') else None
             if user_email:
-                google_meet_service = GoogleMeetService(user_email=user_email, db=db)
-                if google_meet_service.is_authorized(db):
+                google_meet_service = GoogleMeetService(user_email=user_email)
+                if google_meet_service.is_authorized():
                     try:
                         meet_result = google_meet_service.update_meeting(
                             existing_event.googleCalendarEventId,
@@ -304,8 +303,8 @@ async def delete_existing_event(
         if existing_event.googleCalendarEventId:
             user_email = current_user.email if hasattr(current_user, 'email') else None
             if user_email:
-                google_meet_service = GoogleMeetService(user_email=user_email, db=db)
-                if google_meet_service.is_authorized(db):
+                google_meet_service = GoogleMeetService(user_email=user_email)
+                if google_meet_service.is_authorized():
                     try:
                         meet_result = google_meet_service.delete_meeting(existing_event.googleCalendarEventId)
                         if not meet_result['success']:
@@ -363,9 +362,9 @@ async def regenerate_meet_link(
                 detail="User email is required for Google Meet integration"
             )
         
-        google_meet_service = GoogleMeetService(user_email=user_email, db=db)
+        google_meet_service = GoogleMeetService(user_email=user_email)
         
-        if not google_meet_service.is_authorized(db):
+        if not google_meet_service.is_authorized():
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Google Calendar authorization required. Please authorize your Google account first."
@@ -466,9 +465,7 @@ async def join_event(
 
 @router.get("/google/authorize")
 async def get_google_authorization_url(
-    request: Request,
-    current_user: dict = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    current_user: dict = Depends(get_current_user)
 ):
     """Get Google OAuth2 authorization URL"""
     try:
@@ -479,46 +476,8 @@ async def get_google_authorization_url(
                 detail="User email is required"
             )
         
-        origin = request.headers.get("origin") or request.headers.get("referer")
-        redirect_uri = None
-        
-        if origin:
-            origin = origin.rstrip('/')
-            if 'localhost' in origin or '127.0.0.1' in origin:
-                api_url = os.getenv("API_URL") or "http://localhost:8000"
-                if api_url.endswith('/'):
-                    api_url = api_url.rstrip('/')
-                if not api_url.startswith('http://localhost:8000') and not api_url.startswith('http://127.0.0.1:8000'):
-                    api_url = "http://localhost:8000"
-                redirect_uri = f"{api_url}/events/google/callback"
-            else:
-                api_url = os.getenv("API_URL")
-                if not api_url:
-                    api_url = os.getenv("BASE_URL") or "https://www.biztrack.uk"
-                if api_url.endswith('/'):
-                    api_url = api_url.rstrip('/')
-                if not api_url.startswith('http'):
-                    api_url = f"https://{api_url}"
-                if ':8000' not in api_url and 'api.' not in api_url and 'localhost' not in api_url:
-                    if api_url == "https://www.biztrack.uk":
-                        api_url = "https://www.biztrack.uk:8000"
-                redirect_uri = f"{api_url}/events/google/callback"
-        else:
-            api_url = os.getenv("API_URL")
-            if not api_url:
-                api_url = os.getenv("BASE_URL") or "https://www.biztrack.uk"
-            if api_url.endswith('/'):
-                api_url = api_url.rstrip('/')
-            if not api_url.startswith('http'):
-                api_url = f"https://{api_url}"
-            if ':8000' not in api_url and 'api.' not in api_url and 'localhost' not in api_url:
-                if api_url == "https://www.biztrack.uk":
-                    api_url = "https://www.biztrack.uk:8000"
-            redirect_uri = f"{api_url}/events/google/callback"
-        
-        logger.info(f"Using redirect_uri: {redirect_uri}")
-        google_meet_service = GoogleMeetService(user_email=user_email, db=db)
-        auth_url = google_meet_service.get_authorization_url(redirect_uri=redirect_uri)
+        google_meet_service = GoogleMeetService(user_email=user_email)
+        auth_url = google_meet_service.get_authorization_url()
         
         return {
             "authorization_url": auth_url
@@ -532,14 +491,12 @@ async def get_google_authorization_url(
 
 @router.get("/google/callback")
 async def google_oauth_callback_get(
-    request: Request,
     code: Optional[str] = None,
     state: Optional[str] = None,
     error: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     """Handle Google OAuth2 callback redirect (GET request from Google)"""
-    logger.info(f"OAuth callback received - code: {bool(code)}, state: {bool(state)}, error: {error}")
     try:
         if error:
             error_html = f"""
@@ -671,137 +628,36 @@ async def google_oauth_callback_get(
             """
             return HTMLResponse(content=error_html, status_code=400)
         
-        host = request.headers.get("host") or ""
-        scheme = request.url.scheme if hasattr(request.url, 'scheme') else "https"
-        if 'localhost' in host or '127.0.0.1' in host:
-            redirect_uri = f"http://{host}/events/google/callback"
-        else:
-            base_url = os.getenv("API_URL") or os.getenv("BASE_URL") or "https://www.biztrack.uk"
-            if base_url.endswith('/'):
-                base_url = base_url.rstrip('/')
-            redirect_uri = f"{base_url}/events/google/callback"
+        google_meet_service = GoogleMeetService(user_email=user_email)
+        success = google_meet_service.authorize(code)
         
-        logger.info(f"Processing OAuth authorization for user: {user_email}")
-        google_meet_service = GoogleMeetService(user_email=user_email, db=db)
-        success = google_meet_service.authorize(code, redirect_uri=redirect_uri, db=db)
-        
-        logger.info(f"OAuth authorization result: {success}")
         if success:
             success_html = """
             <!DOCTYPE html>
             <html>
             <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <meta http-equiv="X-UA-Compatible" content="IE=edge">
                 <title>Authorization Successful</title>
                 <style>
-                    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f5f5f5; margin: 0; }
-                    .container { background: white; padding: 30px; border-radius: 8px; max-width: 400px; margin: 0 auto; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-                    .success { color: #2e7d32; font-size: 24px; margin-bottom: 10px; }
-                    .message { color: #666; margin: 20px 0; }
+                    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+                    .success { color: #2e7d32; }
                 </style>
             </head>
-            <body onbeforeunload="return false;" onunload="return false;">
-                <div class="container">
-                    <h1 class="success">✓ Authorization Successful!</h1>
-                    <p class="message">Google Calendar has been connected successfully.</p>
-                    <p class="message">This window will close automatically...</p>
-                </div>
+            <body>
+                <h1 class="success">Authorization Successful!</h1>
+                <p>Google Calendar has been connected successfully.</p>
+                <p>You can close this window now.</p>
                 <script>
-                    (function() {
-                        var messageSent = false;
-                        var attempts = 0;
-                        var maxAttempts = 20;
-                        var closed = false;
-                        
-                        function preventRedirect(e) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            return false;
-                        }
-                        
-                        window.addEventListener('beforeunload', preventRedirect);
-                        window.addEventListener('unload', preventRedirect);
-                        
-                        function sendMessage() {
-                            if (messageSent || closed) return;
-                            attempts++;
-                            
-                            try {
-                                if (window.opener && !window.opener.closed) {
-                                    window.opener.postMessage({ type: 'GOOGLE_AUTH_SUCCESS' }, '*');
-                                    messageSent = true;
-                                    console.log('Message sent to parent window');
-                                    setTimeout(function() {
-                                        closed = true;
-                                        if (window.opener && !window.opener.closed) {
-                                            try {
-                                                window.close();
-                                            } catch(e) {
-                                                console.log('Could not close window');
-                                            }
-                                        }
-                                    }, 300);
-                                } else {
-                                    console.log('No opener window found, attempt', attempts);
-                                    if (attempts < maxAttempts) {
-                                        setTimeout(sendMessage, 100);
-                                    } else {
-                                        closed = true;
-                                        setTimeout(function() {
-                                            try {
-                                                window.close();
-                                            } catch(e) {
-                                                console.log('Could not close window');
-                                            }
-                                        }, 1000);
-                                    }
-                                }
-                            } catch (e) {
-                                console.error('Error sending message:', e);
-                                if (attempts < maxAttempts) {
-                                    setTimeout(sendMessage, 100);
-                                } else {
-                                    closed = true;
-                                    setTimeout(function() {
-                                        try {
-                                            window.close();
-                                        } catch(e) {
-                                            console.log('Could not close window');
-                                        }
-                                    }, 1000);
-                                }
-                            }
-                        }
-                        
-                        window.addEventListener('load', function() {
-                            sendMessage();
-                        });
-                        
-                        if (document.readyState === 'complete' || document.readyState === 'interactive') {
-                            sendMessage();
-                        }
-                        
-                        setTimeout(function() {
-                            if (!messageSent && !closed) {
-                                sendMessage();
-                            }
-                        }, 50);
-                        
-                        document.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                        });
-                    })();
+                    if (window.opener) {
+                        window.opener.postMessage({ type: 'GOOGLE_AUTH_SUCCESS' }, '*');
+                    }
+                    setTimeout(function() {
+                        window.close();
+                    }, 2000);
                 </script>
             </body>
             </html>
             """
-            response = HTMLResponse(content=success_html)
-            response.headers["X-Frame-Options"] = "SAMEORIGIN"
-            response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; frame-ancestors *;"
-            return response
+            return HTMLResponse(content=success_html)
         else:
             error_html = """
             <!DOCTYPE html>
@@ -865,8 +721,8 @@ async def google_oauth_callback(
                 detail="User email is required"
             )
         
-        google_meet_service = GoogleMeetService(user_email=user_email, db=db)
-        success = google_meet_service.authorize(request.code, db=db)
+        google_meet_service = GoogleMeetService(user_email=user_email)
+        success = google_meet_service.authorize(request.code)
         
         if success:
             return {
@@ -888,8 +744,7 @@ async def google_oauth_callback(
 
 @router.get("/google/status")
 async def get_google_authorization_status(
-    current_user: dict = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    current_user: dict = Depends(get_current_user)
 ):
     """Check if user has authorized Google Calendar"""
     try:
@@ -897,10 +752,10 @@ async def get_google_authorization_status(
         if not user_email:
             return {"authorized": False, "message": "User email is required"}
         
-        google_meet_service = GoogleMeetService(user_email=user_email, db=db)
+        google_meet_service = GoogleMeetService(user_email=user_email)
         return {
-            "authorized": google_meet_service.is_authorized(db),
-            "message": "Authorized" if google_meet_service.is_authorized(db) else "Not authorized. Please authorize first."
+            "authorized": google_meet_service.is_authorized(),
+            "message": "Authorized" if google_meet_service.is_authorized() else "Not authorized. Please authorize first."
         }
     except Exception as e:
         logger.error(f"Failed to check authorization status: {e}")

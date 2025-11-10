@@ -1,8 +1,7 @@
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
-from .core_models import User, Tenant, Plan, Subscription, TenantUser, OAuthToken
-from ..core.encryption import encrypt_token_data, decrypt_token_data
+from .core_models import User, Tenant, Plan, Subscription, TenantUser
 
 # User functions
 def get_user_by_email(email: str, db: Session) -> Optional[User]:
@@ -213,74 +212,6 @@ def delete_tenant_user(tenant_user_id: str, db: Session) -> bool:
     tenant_user = db.query(TenantUser).filter(TenantUser.id == tenant_user_id).first()
     if tenant_user:
         db.delete(tenant_user)
-        db.commit()
-        return True
-    return False
-
-# OAuth Token functions
-def get_oauth_token(user_id: str, provider: str, db: Session) -> Optional[OAuthToken]:
-    return db.query(OAuthToken).filter(
-        OAuthToken.user_id == user_id,
-        OAuthToken.provider == provider,
-        OAuthToken.isActive == True
-    ).first()
-
-def get_oauth_token_decrypted(user_id: str, provider: str, db: Session) -> Optional[Dict[str, Any]]:
-    token = get_oauth_token(user_id, provider, db)
-    if not token:
-        return None
-    try:
-        return decrypt_token_data(token.encrypted_token_data)
-    except Exception:
-        return None
-
-def create_or_update_oauth_token(user_id: str, provider: str, token_data: Dict[str, Any], expires_at: Optional[datetime] = None, db: Session = None) -> OAuthToken:
-    existing_token = get_oauth_token(user_id, provider, db)
-    
-    encrypted_data = encrypt_token_data(token_data)
-    refresh_token_available = bool(token_data.get('refresh_token'))
-    
-    if existing_token:
-        existing_token.encrypted_token_data = encrypted_data
-        existing_token.expires_at = expires_at
-        existing_token.refresh_token_available = refresh_token_available
-        existing_token.updatedAt = datetime.utcnow()
-        existing_token.isActive = True
-        db.commit()
-        db.refresh(existing_token)
-        return existing_token
-    else:
-        new_token = OAuthToken(
-            user_id=user_id,
-            provider=provider,
-            encrypted_token_data=encrypted_data,
-            expires_at=expires_at,
-            refresh_token_available=refresh_token_available,
-            isActive=True
-        )
-        db.add(new_token)
-        db.commit()
-        db.refresh(new_token)
-        return new_token
-
-def delete_oauth_token(user_id: str, provider: str, db: Session) -> bool:
-    token = get_oauth_token(user_id, provider, db)
-    if token:
-        token.isActive = False
-        token.updatedAt = datetime.utcnow()
-        db.commit()
-        return True
-    return False
-
-def revoke_all_oauth_tokens(user_id: str, db: Session) -> bool:
-    tokens = db.query(OAuthToken).filter(
-        OAuthToken.user_id == user_id,
-        OAuthToken.isActive == True
-    ).all()
-    if tokens:
-        for token in tokens:
-            token.isActive = False
-            token.updatedAt = datetime.utcnow()
         db.commit()
         return True
     return False
