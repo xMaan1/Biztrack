@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
+import { Input } from '../ui/input';
 import {
   Select,
   SelectContent,
@@ -45,6 +46,15 @@ export default function EventsList() {
 
   const apiService = useApiService();
 
+  const checkAuthStatus = async () => {
+    try {
+      const response = await apiService.getGoogleAuthStatus();
+      setIsAuthorized(response.authorized || false);
+    } catch (error) {
+      setIsAuthorized(false);
+    }
+  };
+
   useEffect(() => {
     loadEvents();
     checkAuthStatus();
@@ -63,15 +73,6 @@ export default function EventsList() {
       window.removeEventListener('message', handleMessage);
     };
   }, []);
-
-  const checkAuthStatus = async () => {
-    try {
-      const response = await apiService.getGoogleAuthStatus();
-      setIsAuthorized(response.authorized || false);
-    } catch (error) {
-      setIsAuthorized(false);
-    }
-  };
 
   const handleAuthorize = async () => {
     try {
