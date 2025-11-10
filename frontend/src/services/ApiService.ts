@@ -120,34 +120,38 @@ export class ApiService {
           return matches;
         });
 
-        // Only check auth on client side
-        if (typeof window !== 'undefined') {
-          if (!isPublicEndpoint) {
-            // Check if user is authenticated for protected endpoints
-            if (!this.sessionManager.isSessionValid()) {
-              console.warn(
-                `[ApiService] Session invalid - rejecting request | URL: ${config.url} | Method: ${config.method}`
-              );
-              return Promise.reject(new Error('Not authenticated'));
-            }
-
-            // Get token and ensure it exists
-            const token = this.sessionManager.getToken();
-            if (!token) {
-              console.error(
-                `[ApiService] Session valid but token missing - rejecting request | URL: ${config.url} | Method: ${config.method}`
-              );
-              return Promise.reject(new Error('Authentication token missing'));
-            }
-            config.headers.Authorization = `Bearer ${token}`;
-          }
+        if (isPublicEndpoint) {
+          return config;
         }
 
-        // Add tenant header if available
+        if (typeof window === 'undefined') {
+          console.error(
+            `[ApiService] Server-side request to protected endpoint without auth | URL: ${config.url} | Method: ${config.method}`
+          );
+          return Promise.reject(new Error('Server-side requests to protected endpoints are not allowed'));
+        }
+
+        if (!this.sessionManager.isSessionValid()) {
+          console.warn(
+            `[ApiService] Session invalid - rejecting request | URL: ${config.url} | Method: ${config.method}`
+          );
+          return Promise.reject(new Error('Not authenticated'));
+        }
+
+        const token = this.sessionManager.getToken();
+        if (!token) {
+          console.error(
+            `[ApiService] Session valid but token missing - rejecting request | URL: ${config.url} | Method: ${config.method}`
+          );
+          return Promise.reject(new Error('Authentication token missing'));
+        }
+
+        config.headers.Authorization = `Bearer ${token}`;
+
         const tenantId = this.getTenantId();
         if (tenantId) {
           config.headers['X-Tenant-ID'] = tenantId;
-        } else if (!isPublicEndpoint && typeof window !== 'undefined') {
+        } else {
           console.warn(
             `[ApiService] Tenant ID missing for protected endpoint | URL: ${config.url} | Method: ${config.method}`
           );
@@ -158,35 +162,27 @@ export class ApiService {
       (error) => Promise.reject(error),
     );
 
-    // Response interceptor
     this.client.interceptors.response.use(
       (response) => response,
       async (error) => {
-        // Handle timeout errors gracefully
         if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {
           return Promise.reject(new Error('Request timeout. Please try again.'));
         }
 
         if (error.response?.status === 401) {
-          // Prevent infinite retry loops
           if (error.config._retry) {
             this.sessionManager.clearSession();
             return Promise.reject(error);
           }
 
-          // Try to refresh the token first
           const refreshSuccess = await this.sessionManager.refreshAccessToken();
           if (refreshSuccess) {
-            // Retry the original request with new token
             const originalRequest = error.config;
-            originalRequest._retry = true; // Mark as retried
+            originalRequest._retry = true;
             originalRequest.headers.Authorization = `Bearer ${this.sessionManager.getToken()}`;
             return this.client(originalRequest);
           } else {
-            // Refresh failed, clear session
             this.sessionManager.clearSession();
-            // Don't redirect immediately, let the component handle it
-            // The AuthGuard will detect the cleared session and redirect
           }
         }
         return Promise.reject(error);
@@ -194,7 +190,6 @@ export class ApiService {
     );
   }
 
-  // Generic HTTP methods
   async get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.get<T>(url, config);
     return response.data;

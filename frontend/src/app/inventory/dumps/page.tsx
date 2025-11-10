@@ -67,7 +67,12 @@ export default function DumpsPage() {
 }
 
 function DumpsContent() {
-  const { } = useAuth();
+  const { isAuthenticated } = useAuth();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const { formatCurrency } = useCurrency();
   const router = useRouter();
   const [dumps, setDumps] = useState<StockMovement[]>([]);
@@ -115,10 +120,12 @@ function DumpsContent() {
   });
 
   useEffect(() => {
-    loadDumps();
-    loadWarehouses();
-    loadProducts();
-  }, [warehouseFilter, statusFilter]);
+    if (mounted && isAuthenticated) {
+      loadDumps();
+      loadWarehouses();
+      loadProducts();
+    }
+  }, [mounted, isAuthenticated, warehouseFilter, statusFilter]);
 
   const loadWarehouses = async () => {
     try {

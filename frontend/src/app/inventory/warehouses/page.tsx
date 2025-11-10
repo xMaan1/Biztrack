@@ -53,7 +53,7 @@ export default function WarehousesPage() {
 }
 
 function WarehousesContent() {
-  const { } = useAuth();
+  const { isAuthenticated } = useAuth();
   const router = useRouter();
   const [warehouses, setWarehouses] = useState<WarehouseType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,10 +61,17 @@ function WarehousesContent() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [warehouseToDelete, setWarehouseToDelete] = useState<WarehouseType | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    fetchWarehouses();
+    setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (mounted && isAuthenticated) {
+      fetchWarehouses();
+    }
+  }, [mounted, isAuthenticated]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {

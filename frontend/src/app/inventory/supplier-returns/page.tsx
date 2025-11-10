@@ -68,7 +68,13 @@ export default function SupplierReturnsPage() {
 }
 
 function SupplierReturnsContent() {
-  const { } = useAuth();
+  const { isAuthenticated } = useAuth();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const { formatCurrency } = useCurrency();
   const router = useRouter();
   const [returns, setReturns] = useState<StockMovement[]>([]);
@@ -116,10 +122,12 @@ function SupplierReturnsContent() {
   });
 
   useEffect(() => {
-    loadReturns();
-    loadWarehouses();
-    loadProducts();
-  }, [warehouseFilter, statusFilter]);
+    if (mounted && isAuthenticated) {
+      loadReturns();
+      loadWarehouses();
+      loadProducts();
+    }
+  }, [mounted, isAuthenticated, warehouseFilter, statusFilter]);
 
   const loadWarehouses = async () => {
     try {
