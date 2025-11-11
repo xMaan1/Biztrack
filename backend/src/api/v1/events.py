@@ -56,7 +56,7 @@ def convert_event_to_response(event):
         "updatedAt": event.updatedAt
     }
 
-@router.post("/", response_model=Event, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=Event, status_code=status.HTTP_201_CREATED)
 async def create_new_event(
     event: EventCreate,
     db: Session = Depends(get_db),
@@ -124,14 +124,17 @@ async def create_new_event(
         db_event = create_event(event_data, db)
         return convert_event_to_response(db_event)
         
+    except HTTPException:
+        raise
     except Exception as e:
+        db.rollback()
         logger.error(f"Failed to create event: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create event: {str(e)}"
         )
 
-@router.get("/", response_model=EventResponse)
+@router.get("", response_model=EventResponse)
 async def get_events(
     skip: int = 0,
     limit: int = 100,
