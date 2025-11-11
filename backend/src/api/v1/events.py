@@ -122,6 +122,25 @@ async def create_new_event(
                 )
         
         db_event = create_event(event_data, db)
+        
+        try:
+            from ...services.notification_service import create_event_notification_for_all_tenant_users
+            from ...config.notification_models import NotificationType
+            
+            user_name = f"{current_user.firstName} {current_user.lastName}".strip() if hasattr(current_user, 'firstName') else current_user.userName if hasattr(current_user, 'userName') else "A user"
+            
+            create_event_notification_for_all_tenant_users(
+                db,
+                str(tenant_context['tenant_id']),
+                "New Event Created",
+                f"{user_name} created a new event: {event_data.get('title', 'Untitled Event')}",
+                NotificationType.INFO,
+                f"/events/{str(db_event.id)}",
+                {"event_id": str(db_event.id), "created_by": str(current_user.id)}
+            )
+        except Exception as notification_error:
+            logger.error(f"Failed to create notification: {notification_error}", exc_info=True)
+        
         return convert_event_to_response(db_event)
         
     except HTTPException:
@@ -276,6 +295,24 @@ async def update_existing_event(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to update event"
             )
+        
+        try:
+            from ...services.notification_service import create_event_notification_for_all_tenant_users
+            from ...config.notification_models import NotificationType
+            
+            user_name = f"{current_user.firstName} {current_user.lastName}".strip() if hasattr(current_user, 'firstName') else current_user.userName if hasattr(current_user, 'userName') else "A user"
+            
+            create_event_notification_for_all_tenant_users(
+                db,
+                str(tenant_context['tenant_id']),
+                "Event Updated",
+                f"{user_name} updated the event: {updated_event.title}",
+                NotificationType.INFO,
+                f"/events/{event_id}",
+                {"event_id": event_id, "updated_by": str(current_user.id)}
+            )
+        except Exception as notification_error:
+            logger.error(f"Failed to create notification: {notification_error}", exc_info=True)
         
         # Convert database object to response model
         return convert_event_to_response(updated_event)

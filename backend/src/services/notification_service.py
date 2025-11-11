@@ -9,6 +9,7 @@ from ..config.notification_crud import (
     create_or_update_notification_preference, get_user_notification_preferences
 )
 from ..config.notification_models import NotificationType, NotificationCategory
+from ..config.core_crud import get_tenant_users
 
 class NotificationService:
     def __init__(self, db: Session):
@@ -65,9 +66,26 @@ class NotificationService:
         """Create notifications for multiple users"""
         created_count = 0
         for user_id in user_ids:
-            if self.create_notification(tenant_id, user_id, title, message, category, type, action_url, metadata):
+            if self.create_notification(tenant_id, user_id, title, message, category, type, action_url, notification_data):
                 created_count += 1
         return created_count
+    
+    def create_notification_for_all_tenant_users(
+        self,
+        tenant_id: str,
+        title: str,
+        message: str,
+        category: NotificationCategory,
+        type: NotificationType = NotificationType.INFO,
+        action_url: Optional[str] = None,
+        notification_data: Optional[Dict[str, Any]] = None
+    ) -> int:
+        """Create notifications for all active users in a tenant"""
+        tenant_users = get_tenant_users(tenant_id, self.db, skip=0, limit=10000)
+        user_ids = [str(tu.userId) for tu in tenant_users if tu.isActive]
+        return self.create_bulk_notifications(
+            tenant_id, user_ids, title, message, category, type, action_url, notification_data
+        )
     
     def get_user_notifications(
         self,
@@ -189,12 +207,27 @@ def create_hrm_notification(
     message: str,
     type: NotificationType = NotificationType.INFO,
     action_url: Optional[str] = None,
-        notification_data: Optional[Dict[str, Any]] = None
+    notification_data: Optional[Dict[str, Any]] = None
 ) -> bool:
     """Create an HRM-related notification"""
     service = NotificationService(db)
     return service.create_notification(
-        tenant_id, user_id, title, message, NotificationCategory.HRM, type, action_url, metadata
+        tenant_id, user_id, title, message, NotificationCategory.HRM, type, action_url, notification_data
+    )
+
+def create_hrm_notification_for_all_tenant_users(
+    db: Session,
+    tenant_id: str,
+    title: str,
+    message: str,
+    type: NotificationType = NotificationType.INFO,
+    action_url: Optional[str] = None,
+    notification_data: Optional[Dict[str, Any]] = None
+) -> int:
+    """Create HRM-related notification for all active users in a tenant"""
+    service = NotificationService(db)
+    return service.create_notification_for_all_tenant_users(
+        tenant_id, title, message, NotificationCategory.HRM, type, action_url, notification_data
     )
 
 def create_inventory_notification(
@@ -205,12 +238,27 @@ def create_inventory_notification(
     message: str,
     type: NotificationType = NotificationType.WARNING,
     action_url: Optional[str] = None,
-        notification_data: Optional[Dict[str, Any]] = None
+    notification_data: Optional[Dict[str, Any]] = None
 ) -> bool:
     """Create an inventory-related notification"""
     service = NotificationService(db)
     return service.create_notification(
-        tenant_id, user_id, title, message, NotificationCategory.INVENTORY, type, action_url, metadata
+        tenant_id, user_id, title, message, NotificationCategory.INVENTORY, type, action_url, notification_data
+    )
+
+def create_inventory_notification_for_all_tenant_users(
+    db: Session,
+    tenant_id: str,
+    title: str,
+    message: str,
+    type: NotificationType = NotificationType.WARNING,
+    action_url: Optional[str] = None,
+    notification_data: Optional[Dict[str, Any]] = None
+) -> int:
+    """Create inventory-related notification for all active users in a tenant"""
+    service = NotificationService(db)
+    return service.create_notification_for_all_tenant_users(
+        tenant_id, title, message, NotificationCategory.INVENTORY, type, action_url, notification_data
     )
 
 def create_system_notification(
@@ -221,10 +269,70 @@ def create_system_notification(
     message: str,
     type: NotificationType = NotificationType.SYSTEM,
     action_url: Optional[str] = None,
-        notification_data: Optional[Dict[str, Any]] = None
+    notification_data: Optional[Dict[str, Any]] = None
 ) -> bool:
     """Create a system-related notification"""
     service = NotificationService(db)
     return service.create_notification(
-        tenant_id, user_id, title, message, NotificationCategory.SYSTEM, type, action_url, metadata
+        tenant_id, user_id, title, message, NotificationCategory.SYSTEM, type, action_url, notification_data
+    )
+
+def create_system_notification_for_all_tenant_users(
+    db: Session,
+    tenant_id: str,
+    title: str,
+    message: str,
+    type: NotificationType = NotificationType.SYSTEM,
+    action_url: Optional[str] = None,
+    notification_data: Optional[Dict[str, Any]] = None
+) -> int:
+    """Create system-related notification for all active users in a tenant"""
+    service = NotificationService(db)
+    return service.create_notification_for_all_tenant_users(
+        tenant_id, title, message, NotificationCategory.SYSTEM, type, action_url, notification_data
+    )
+
+def create_crm_notification_for_all_tenant_users(
+    db: Session,
+    tenant_id: str,
+    title: str,
+    message: str,
+    type: NotificationType = NotificationType.INFO,
+    action_url: Optional[str] = None,
+    notification_data: Optional[Dict[str, Any]] = None
+) -> int:
+    """Create CRM-related notification for all active users in a tenant"""
+    service = NotificationService(db)
+    return service.create_notification_for_all_tenant_users(
+        tenant_id, title, message, NotificationCategory.CRM, type, action_url, notification_data
+    )
+
+def create_project_notification_for_all_tenant_users(
+    db: Session,
+    tenant_id: str,
+    title: str,
+    message: str,
+    type: NotificationType = NotificationType.INFO,
+    action_url: Optional[str] = None,
+    notification_data: Optional[Dict[str, Any]] = None
+) -> int:
+    """Create project-related notification for all active users in a tenant"""
+    service = NotificationService(db)
+    return service.create_notification_for_all_tenant_users(
+        tenant_id, title, message, NotificationCategory.SYSTEM, type, action_url, notification_data
+    )
+
+def create_event_notification_for_all_tenant_users(
+    db: Session,
+    tenant_id: str,
+    title: str,
+    message: str,
+    type: NotificationType = NotificationType.INFO,
+    action_url: Optional[str] = None,
+    notification_data: Optional[Dict[str, Any]] = None
+) -> int:
+    """Create event-related notification for all active users in a tenant"""
+    service = NotificationService(db)
+    return service.create_notification_for_all_tenant_users(
+        tenant_id, title, message, NotificationCategory.SYSTEM, type, action_url, notification_data
     )

@@ -49,6 +49,27 @@ async def create_customer_endpoint(
             raise HTTPException(status_code=400, detail="Tenant context required")
         
         customer = create_customer(db, customer_data.dict(), tenant_context["tenant_id"])
+        
+        try:
+            from ...services.notification_service import create_crm_notification_for_all_tenant_users
+            from ...config.notification_models import NotificationType
+            
+            user_name = f"{current_user.firstName} {current_user.lastName}".strip() if hasattr(current_user, 'firstName') else current_user.userName if hasattr(current_user, 'userName') else "A user"
+            
+            create_crm_notification_for_all_tenant_users(
+                db,
+                str(tenant_context["tenant_id"]),
+                "New Customer Created",
+                f"{user_name} created a new customer: {customer_data.name}",
+                NotificationType.INFO,
+                f"/crm/customers/{str(customer.id)}",
+                {"customer_id": str(customer.id), "created_by": str(current_user.id)}
+            )
+        except Exception as notification_error:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Failed to create notification: {notification_error}", exc_info=True)
+        
         return CustomerResponse.from_orm(customer)
         
     except HTTPException:
@@ -144,6 +165,27 @@ async def update_customer_endpoint(
     customer = update_customer(db, customer_id, customer_data.dict(exclude_unset=True), tenant_context["tenant_id"])
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
+    
+    try:
+        from ...services.notification_service import create_crm_notification_for_all_tenant_users
+        from ...config.notification_models import NotificationType
+        
+        user_name = f"{current_user.firstName} {current_user.lastName}".strip() if hasattr(current_user, 'firstName') else current_user.userName if hasattr(current_user, 'userName') else "A user"
+        
+        create_crm_notification_for_all_tenant_users(
+            db,
+            str(tenant_context["tenant_id"]),
+            "Customer Updated",
+            f"{user_name} updated customer: {customer.name}",
+            NotificationType.INFO,
+            f"/crm/customers/{customer_id}",
+            {"customer_id": customer_id, "updated_by": str(current_user.id)}
+        )
+    except Exception as notification_error:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to create notification: {notification_error}", exc_info=True)
+    
     return CustomerResponse.from_orm(customer)
 
 @router.delete("/customers/{customer_id}")
@@ -240,6 +282,26 @@ async def create_crm_lead(
         db.commit()
         db.refresh(lead)
         
+        try:
+            from ...services.notification_service import create_crm_notification_for_all_tenant_users
+            from ...config.notification_models import NotificationType
+            
+            user_name = f"{current_user.firstName} {current_user.lastName}".strip() if hasattr(current_user, 'firstName') else current_user.userName if hasattr(current_user, 'userName') else "A user"
+            
+            create_crm_notification_for_all_tenant_users(
+                db,
+                str(tenant_context["tenant_id"]) if tenant_context else str(uuid.uuid4()),
+                "New Lead Created",
+                f"{user_name} created a new lead: {lead_data.name}",
+                NotificationType.INFO,
+                f"/crm/leads/{str(lead.id)}",
+                {"lead_id": str(lead.id), "created_by": str(current_user.id)}
+            )
+        except Exception as notification_error:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Failed to create notification: {notification_error}", exc_info=True)
+        
         return lead
     except Exception as e:
         db.rollback()
@@ -280,6 +342,27 @@ async def update_crm_lead(
         update_data["updatedAt"] = datetime.now()
         
         updated_lead = update_lead(lead_id, update_data, db, tenant_context["tenant_id"] if tenant_context else None)
+        
+        try:
+            from ...services.notification_service import create_crm_notification_for_all_tenant_users
+            from ...config.notification_models import NotificationType
+            
+            user_name = f"{current_user.firstName} {current_user.lastName}".strip() if hasattr(current_user, 'firstName') else current_user.userName if hasattr(current_user, 'userName') else "A user"
+            
+            create_crm_notification_for_all_tenant_users(
+                db,
+                str(tenant_context["tenant_id"]) if tenant_context else str(uuid.uuid4()),
+                "Lead Updated",
+                f"{user_name} updated lead: {updated_lead.name}",
+                NotificationType.INFO,
+                f"/crm/leads/{lead_id}",
+                {"lead_id": lead_id, "updated_by": str(current_user.id)}
+            )
+        except Exception as notification_error:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Failed to create notification: {notification_error}", exc_info=True)
+        
         return updated_lead
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating lead: {str(e)}")
@@ -378,6 +461,26 @@ async def create_crm_contact(
         db.commit()
         db.refresh(contact)
         
+        try:
+            from ...services.notification_service import create_crm_notification_for_all_tenant_users
+            from ...config.notification_models import NotificationType
+            
+            user_name = f"{current_user.firstName} {current_user.lastName}".strip() if hasattr(current_user, 'firstName') else current_user.userName if hasattr(current_user, 'userName') else "A user"
+            
+            create_crm_notification_for_all_tenant_users(
+                db,
+                str(tenant_context["tenant_id"]),
+                "New Contact Created",
+                f"{user_name} created a new contact: {contact_data.name}",
+                NotificationType.INFO,
+                f"/crm/contacts/{str(contact.id)}",
+                {"contact_id": str(contact.id), "created_by": str(current_user.id)}
+            )
+        except Exception as notification_error:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Failed to create notification: {notification_error}", exc_info=True)
+        
         return contact
         
     except HTTPException:
@@ -423,6 +526,27 @@ async def update_crm_contact(
         update_data["updatedAt"] = datetime.now()
         
         updated_contact = update_contact(contact_id, update_data, db, tenant_context["tenant_id"] if tenant_context else None)
+        
+        try:
+            from ...services.notification_service import create_crm_notification_for_all_tenant_users
+            from ...config.notification_models import NotificationType
+            
+            user_name = f"{current_user.firstName} {current_user.lastName}".strip() if hasattr(current_user, 'firstName') else current_user.userName if hasattr(current_user, 'userName') else "A user"
+            
+            create_crm_notification_for_all_tenant_users(
+                db,
+                str(tenant_context["tenant_id"]) if tenant_context else str(uuid.uuid4()),
+                "Contact Updated",
+                f"{user_name} updated contact: {updated_contact.name}",
+                NotificationType.INFO,
+                f"/crm/contacts/{contact_id}",
+                {"contact_id": contact_id, "updated_by": str(current_user.id)}
+            )
+        except Exception as notification_error:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Failed to create notification: {notification_error}", exc_info=True)
+        
         return updated_contact
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating contact: {str(e)}")

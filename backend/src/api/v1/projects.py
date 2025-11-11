@@ -780,6 +780,26 @@ async def create_new_project(
         db.commit()
         db.refresh(db_project)
         
+        try:
+            from ...services.notification_service import create_project_notification_for_all_tenant_users
+            from ...config.notification_models import NotificationType
+            
+            user_name = f"{current_user.firstName} {current_user.lastName}".strip() if hasattr(current_user, 'firstName') else current_user.userName if hasattr(current_user, 'userName') else "A user"
+            
+            create_project_notification_for_all_tenant_users(
+                db,
+                str(tenant_id),
+                "New Project Created",
+                f"{user_name} created a new project: {project_data.name}",
+                NotificationType.INFO,
+                f"/projects/{str(db_project.id)}",
+                {"project_id": str(db_project.id), "created_by": str(current_user.id)}
+            )
+        except Exception as notification_error:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Failed to create notification: {notification_error}", exc_info=True)
+        
         return transform_project_to_response(db_project)
     except HTTPException:
         raise
@@ -826,6 +846,26 @@ async def update_existing_project(
     
     # Update other fields
     updated_project = update_project(project_id, update_dict, db, tenant_id=tenant_id)
+    
+    try:
+        from ...services.notification_service import create_project_notification_for_all_tenant_users
+        from ...config.notification_models import NotificationType
+        
+        user_name = f"{current_user.firstName} {current_user.lastName}".strip() if hasattr(current_user, 'firstName') else current_user.userName if hasattr(current_user, 'userName') else "A user"
+        
+        create_project_notification_for_all_tenant_users(
+            db,
+            str(tenant_id),
+            "Project Updated",
+            f"{user_name} updated the project: {updated_project.name}",
+            NotificationType.INFO,
+            f"/projects/{project_id}",
+            {"project_id": project_id, "updated_by": str(current_user.id)}
+        )
+    except Exception as notification_error:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to create notification: {notification_error}", exc_info=True)
     
     return transform_project_to_response(updated_project)
 

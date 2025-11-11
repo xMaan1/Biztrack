@@ -1448,17 +1448,16 @@ async def create_hrm_payroll(
         }
         # Create notification for payroll creation
         try:
-            from ...services.notification_service import create_hrm_notification
+            from ...services.notification_service import create_hrm_notification_for_all_tenant_users
             from ...config.notification_models import NotificationType
             
             # Get employee name for notification
             employee = get_employee_by_id(payroll_data.employeeId, db, tenant_context["tenant_id"])
             employee_name = f"{employee.firstName} {employee.lastName}" if employee else "Employee"
             
-            create_hrm_notification(
+            create_hrm_notification_for_all_tenant_users(
                 db,
                 tenant_context["tenant_id"],
-                str(current_user.id),
                 "New Payroll Record Created",
                 f"Payroll record for {employee_name} ({payroll_data.payPeriod}) has been created",
                 NotificationType.INFO,
@@ -1783,13 +1782,12 @@ async def create_hrm_training(
         }
         # Create notification for training creation
         try:
-            from ...services.notification_service import create_hrm_notification
+            from ...services.notification_service import create_hrm_notification_for_all_tenant_users
             from ...config.notification_models import NotificationType
             
-            create_hrm_notification(
+            create_hrm_notification_for_all_tenant_users(
                 db,
                 tenant_context["tenant_id"],
-                str(current_user.id),
                 "New Training Program Created",
                 f"Training program '{training_data.title}' has been created",
                 NotificationType.INFO,
