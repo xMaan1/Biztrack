@@ -15,13 +15,14 @@ from ...config.database import (
     get_db, get_user_by_email, get_user_by_username,
     get_user_by_id, create_user, get_all_users
 )
-from ...config.core_models import User as UserModel, TenantUser as TenantUserModel, Role as RoleModel
+from ...config.core_models import User as UserModel, TenantUser as TenantUserModel, Role as RoleModel, Tenant as TenantModel
 from ...core.auth import get_password_hash
 from ...api.dependencies import (
     get_current_user, get_tenant_context, 
     require_owner_or_permission, require_permission
 )
 from ...services.rbac_service import RBACService
+from ...services.email_service import EmailService
 
 router = APIRouter(prefix="/rbac", tags=["rbac"])
 
@@ -29,10 +30,13 @@ router = APIRouter(prefix="/rbac", tags=["rbac"])
 @router.get("/roles", response_model=RolesResponse)
 async def get_roles(
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context),
-    current_user = Depends(require_permission(ModulePermission.USERS_VIEW.value))
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    current_user = Depends(get_current_user)
 ):
     """Get all roles for the tenant"""
+    if not tenant_context:
+        return RolesResponse(roles=[], pagination={})
+    
     roles = db.query(RoleModel).filter(
         and_(
             RoleModel.tenant_id == tenant_context["tenant_id"],
@@ -172,10 +176,13 @@ async def delete_role(
 @router.get("/tenant-users", response_model=List[UserWithPermissions])
 async def get_tenant_users(
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context),
-    current_user = Depends(require_permission(ModulePermission.USERS_VIEW.value))
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    current_user = Depends(get_current_user)
 ):
     """Get all tenant users with their roles and permissions"""
+    if not tenant_context:
+        return []
+    
     tenant_users = db.query(TenantUserModel).join(UserModel).join(RoleModel).filter(
         TenantUserModel.tenant_id == tenant_context["tenant_id"]
     ).all()
@@ -237,11 +244,42 @@ async def create_tenant_user(
         if existing_tenant_user.isActive:
             raise HTTPException(status_code=400, detail="User already exists in this tenant")
         else:
+            role = db.query(RoleModel).filter(
+                and_(
+                    RoleModel.id == user_data.role_id,
+                    RoleModel.tenant_id == tenant_context["tenant_id"]
+                )
+            ).first()
+            
+            if not role:
+                raise HTTPException(status_code=404, detail="Role not found")
+            
             existing_tenant_user.isActive = True
             existing_tenant_user.role_id = user_data.role_id
             existing_tenant_user.custom_permissions = user_data.custom_permissions
             db.commit()
             db.refresh(existing_tenant_user)
+            
+            try:
+                tenant = db.query(TenantModel).filter(TenantModel.id == tenant_context["tenant_id"]).first()
+                tenant_name = tenant.name if tenant else None
+                
+                inviter_name = f"{current_user.firstName} {current_user.lastName}".strip() if hasattr(current_user, 'firstName') and current_user.firstName else current_user.userName if hasattr(current_user, 'userName') else "A team member"
+                user_name = f"{user.firstName} {user.lastName}".strip() if user.firstName else user.userName
+                
+                email_service = EmailService()
+                email_service.send_user_invitation_email(
+                    to_email=user.email,
+                    user_name=user_name,
+                    inviter_name=inviter_name,
+                    tenant_name=tenant_name,
+                    role_name=role.display_name if role.display_name else role.name
+                )
+            except Exception as email_error:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Failed to send invitation email: {email_error}", exc_info=True)
+            
             return TenantUser(
                 id=str(existing_tenant_user.id),
                 tenant_id=str(existing_tenant_user.tenant_id),
@@ -278,6 +316,26 @@ async def create_tenant_user(
     db.add(tenant_user)
     db.commit()
     db.refresh(tenant_user)
+    
+    try:
+        tenant = db.query(TenantModel).filter(TenantModel.id == tenant_context["tenant_id"]).first()
+        tenant_name = tenant.name if tenant else None
+        
+        inviter_name = f"{current_user.firstName} {current_user.lastName}".strip() if hasattr(current_user, 'firstName') and current_user.firstName else current_user.userName if hasattr(current_user, 'userName') else "A team member"
+        user_name = f"{user.firstName} {user.lastName}".strip() if user.firstName else user.userName
+        
+        email_service = EmailService()
+        email_service.send_user_invitation_email(
+            to_email=user.email,
+            user_name=user_name,
+            inviter_name=inviter_name,
+            tenant_name=tenant_name,
+            role_name=role.display_name if role.display_name else role.name
+        )
+    except Exception as email_error:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to send invitation email: {email_error}", exc_info=True)
     
     return TenantUser(
         id=str(tenant_user.id),
@@ -478,6 +536,26 @@ async def create_user_for_tenant(
     db.add(tenant_user)
     db.commit()
     
+    try:
+        tenant = db.query(TenantModel).filter(TenantModel.id == tenant_context["tenant_id"]).first()
+        tenant_name = tenant.name if tenant else None
+        
+        inviter_name = f"{current_user.firstName} {current_user.lastName}".strip() if hasattr(current_user, 'firstName') and current_user.firstName else current_user.userName if hasattr(current_user, 'userName') else "A team member"
+        user_name = f"{db_user.firstName} {db_user.lastName}".strip() if db_user.firstName else db_user.userName
+        
+        email_service = EmailService()
+        email_service.send_user_invitation_email(
+            to_email=db_user.email,
+            user_name=user_name,
+            inviter_name=inviter_name,
+            tenant_name=tenant_name,
+            role_name=role.display_name if role.display_name else role.name
+        )
+    except Exception as email_error:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to send invitation email: {email_error}", exc_info=True)
+    
     return User(
         userId=str(db_user.id),
         userName=db_user.userName,
@@ -492,10 +570,17 @@ async def create_user_for_tenant(
 @router.get("/permissions")
 async def get_user_permissions(
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
     current_user = Depends(get_current_user)
 ):
     """Get current user's permissions"""
+    if not tenant_context:
+        return {
+            "permissions": [],
+            "accessible_modules": [],
+            "is_owner": False
+        }
+    
     permissions = RBACService.get_user_permissions(db, str(current_user.id), tenant_context["tenant_id"])
     accessible_modules = RBACService.get_accessible_modules(db, str(current_user.id), tenant_context["tenant_id"])
     is_owner = RBACService.is_owner(db, str(current_user.id), tenant_context["tenant_id"])
@@ -510,10 +595,16 @@ async def get_user_permissions(
 async def check_permission(
     permission: str,
     db: Session = Depends(get_db),
-    tenant_context: dict = Depends(get_tenant_context),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
     current_user = Depends(get_current_user)
 ):
     """Check if current user has specific permission"""
+    if not tenant_context:
+        return {
+            "permission": permission,
+            "has_permission": False
+        }
+    
     has_permission = RBACService.has_permission(db, str(current_user.id), tenant_context["tenant_id"], permission)
     
     return {

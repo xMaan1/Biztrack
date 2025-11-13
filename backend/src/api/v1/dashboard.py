@@ -20,11 +20,18 @@ def get_dashboard_overview(
     """Get comprehensive dashboard data in a single request"""
     try:
         if not tenant_context:
-            raise HTTPException(status_code=400, detail="Tenant context required")
+            return {
+                "projects": {"recent": [], "stats": {"total": 0, "active": 0, "completed": 0, "on_hold": 0}},
+                "workOrders": {"stats": {"total": 0, "draft": 0, "planned": 0, "in_progress": 0, "completed": 0, "on_hold": 0, "urgent": 0}},
+                "invoices": {"invoices": {"total": 0, "draft": 0, "sent": 0, "paid": 0, "overdue": 0}, "amounts": {"total": 0, "paid": 0, "outstanding": 0}},
+                "users": {"users": [], "total": 0},
+                "subscription": {"plan": "basic", "status": "active"},
+                "timestamp": None,
+                "tenant_id": None
+            }
         
         tenant_id = tenant_context["tenant_id"]
         
-        # Get all data synchronously
         projects_data = get_projects_data(db, tenant_id)
         work_orders_data = get_work_orders_data(db, tenant_id)
         invoices_data = get_invoices_data(db, tenant_id)

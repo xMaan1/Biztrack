@@ -33,39 +33,17 @@ interface AddMemberModalProps {
 
 interface MemberData {
   email: string;
-  role: string;
+  roleId: string;
   firstName?: string;
   lastName?: string;
 }
 
-const roles = [
-  { value: 'admin', label: 'Administrator' },
-  { value: 'project_manager', label: 'Project Manager' },
-  { value: 'team_member', label: 'Team Member' },
-  { value: 'client', label: 'Client' },
-  { value: 'viewer', label: 'Viewer' },
-];
-
-const getRoleId = async (roleName: string) => {
-  try {
-    const response = await apiService.get('/rbac/roles');
-    const roles = response.roles || [];
-    
-    const role = roles.find((r: any) => r.name === roleName);
-    if (role) {
-      return role.id;
-    }
-    
-    const defaultRole = roles.find((r: any) => r.name === 'team_member');
-    if (defaultRole) {
-      return defaultRole.id;
-    }
-    
-    return null;
-  } catch (error) {
-    return null;
-  }
-};
+interface Role {
+  id: string;
+  name: string;
+  display_name: string;
+  isActive: boolean;
+}
 
 export default function AddMemberModal({
   open,
@@ -74,18 +52,21 @@ export default function AddMemberModal({
 }: AddMemberModalProps) {
   const [formData, setFormData] = useState<MemberData>({
     email: '',
-    role: 'team_member',
+    roleId: '',
     firstName: '',
     lastName: '',
   });
+  const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingRoles, setLoadingRoles] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
+      fetchRoles();
       setFormData({
         email: '',
-        role: 'team_member',
+        roleId: '',
         firstName: '',
         lastName: '',
       });
@@ -93,15 +74,43 @@ export default function AddMemberModal({
     }
   }, [open]);
 
+  const fetchRoles = async () => {
+    try {
+      setLoadingRoles(true);
+      const response = await apiService.get('/rbac/roles');
+      const rolesList = response.roles || [];
+      const activeRoles = rolesList.filter((r: Role) => r.isActive);
+      setRoles(activeRoles);
+      
+      if (activeRoles.length > 0) {
+        const defaultRole = activeRoles.find((r: Role) => r.name === 'team_member') || activeRoles[0];
+        if (defaultRole) {
+          setFormData(prev => ({ ...prev, roleId: defaultRole.id }));
+        }
+      }
+    } catch (error) {
+      setError('Failed to load roles. Please try again.');
+    } finally {
+      setLoadingRoles(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.email.trim()) return;
+    if (!formData.email.trim()) {
+      setError('Email is required');
+      return;
+    }
+
+    if (!formData.roleId) {
+      setError('Please select a role');
+      return;
+    }
 
     try {
       setLoading(true);
       setError(null);
 
-      // Generate unique username to avoid conflicts
       const baseUsername = formData.email.split('@')[0];
       const timestamp = Date.now().toString().slice(-4);
       const uniqueUsername = `${baseUsername}_${timestamp}`;
@@ -112,17 +121,9 @@ export default function AddMemberModal({
         firstName: formData.firstName || '',
         lastName: formData.lastName || '',
         password: 'TempPassword123!',
-        userRole: formData.role
       };
-
-      const roleId = await getRoleId(formData.role);
       
-      if (!roleId) {
-        setError('Failed to find role. Please try again.');
-        return;
-      }
-      
-      await apiService.post(`/rbac/create-user?role_id=${roleId}`, userData);
+      await apiService.post(`/rbac/create-user?role_id=${formData.roleId}`, userData);
 
       onSuccess();
       onClose();
@@ -189,22 +190,26 @@ export default function AddMemberModal({
           </div>
 
           <div className="space-y-2">
-            <Label>Role</Label>
+            <Label>Role *</Label>
             <Select
-              value={formData.role}
-              onValueChange={(value) => handleInputChange('role', value)}
+              value={formData.roleId}
+              onValueChange={(value) => handleInputChange('roleId', value)}
+              disabled={loadingRoles}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a role" />
+                <SelectValue placeholder={loadingRoles ? "Loading roles..." : "Select a role"} />
               </SelectTrigger>
               <SelectContent>
                 {roles.map((role) => (
-                  <SelectItem key={role.value} value={role.value}>
-                    {role.label}
+                  <SelectItem key={role.id} value={role.id}>
+                    {role.display_name || role.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {loadingRoles && (
+              <p className="text-xs text-muted-foreground">Loading roles...</p>
+            )}
           </div>
 
           {error && (

@@ -133,6 +133,72 @@ Best regards,
         
         return results
     
+    def send_user_invitation_email(
+        self,
+        to_email: str,
+        user_name: str,
+        inviter_name: str,
+        tenant_name: Optional[str] = None,
+        role_name: Optional[str] = None,
+        login_url: Optional[str] = None
+    ) -> bool:
+        """Send user invitation email"""
+        try:
+            if not to_email:
+                logger.error("Recipient email address is required")
+                return False
+            
+            if not self.smtp_username or not self.smtp_password:
+                logger.warning("SMTP credentials not configured. Email not sent.")
+                return False
+            
+            msg = MIMEMultipart()
+            msg['From'] = f"{self.from_name} <{self.from_email}>"
+            msg['To'] = to_email
+            msg['Subject'] = f"You've been invited to join {tenant_name or 'BizTrack'}"
+            
+            tenant_info = f" to {tenant_name}" if tenant_name else ""
+            role_info = f" as {role_name}" if role_name else ""
+            login_info = f"\n\nYou can log in at: {login_url}" if login_url else ""
+            
+            body = f"""
+Dear {user_name},
+
+You have been invited{tenant_info}{role_info} by {inviter_name}.
+
+Welcome to {self.from_name}! We're excited to have you on board.
+
+{login_info}
+
+If you have any questions, please don't hesitate to reach out.
+
+Best regards,
+{self.from_name} Team
+            """
+            
+            msg.attach(MIMEText(body, 'plain'))
+            
+            server = smtplib.SMTP(self.smtp_server, self.smtp_port)
+            server.starttls()
+            server.login(self.smtp_username, self.smtp_password)
+            text = msg.as_string()
+            server.sendmail(self.from_email, to_email, text)
+            server.quit()
+            
+            logger.info(f"Invitation email sent successfully to {to_email}")
+            return True
+            
+        except smtplib.SMTPAuthenticationError as e:
+            error_msg = str(e)
+            if "535" in error_msg or "BadCredentials" in error_msg or "Username and Password not accepted" in error_msg:
+                logger.error(f"Gmail authentication failed. Please use an App Password instead of your regular Gmail password. Error: {error_msg}")
+            else:
+                logger.error(f"SMTP authentication failed: {error_msg}")
+            return False
+        except Exception as e:
+            logger.error(f"Failed to send invitation email to {to_email}: {str(e)}")
+            return False
+    
     def test_email_connection(self) -> bool:
         """Test email connection"""
         try:
