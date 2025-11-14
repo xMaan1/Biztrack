@@ -458,7 +458,22 @@ async def remove_tenant_user(
             detail="You cannot remove yourself from the tenant"
         )
     
+    user_id_uuid = tenant_user.userId
+    
+    other_tenant_users_count = db.query(TenantUserModel).filter(
+        and_(
+            TenantUserModel.userId == user_id_uuid,
+            TenantUserModel.tenant_id != tenant_context["tenant_id"]
+        )
+    ).count()
+    
     db.delete(tenant_user)
+    
+    if other_tenant_users_count == 0:
+        user = db.query(UserModel).filter(UserModel.id == user_id_uuid).first()
+        if user:
+            db.delete(user)
+    
     db.commit()
     
     return {"message": "User removed from tenant successfully"}
@@ -484,7 +499,22 @@ async def remove_user_from_tenant(
     if str(tenant_user.userId) == str(current_user.id):
         raise HTTPException(status_code=400, detail="Cannot remove yourself from tenant")
     
+    user_id_uuid = UUID(user_id)
+    
+    other_tenant_users_count = db.query(TenantUserModel).filter(
+        and_(
+            TenantUserModel.userId == user_id_uuid,
+            TenantUserModel.tenant_id != tenant_context["tenant_id"]
+        )
+    ).count()
+    
     db.delete(tenant_user)
+    
+    if other_tenant_users_count == 0:
+        user = db.query(UserModel).filter(UserModel.id == user_id_uuid).first()
+        if user:
+            db.delete(user)
+    
     db.commit()
     
     return {"message": "User removed from tenant successfully"}
