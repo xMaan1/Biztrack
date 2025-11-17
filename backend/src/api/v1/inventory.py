@@ -627,6 +627,7 @@ def read_purchase_orders(
             "totalAmount": order.totalAmount,
             "notes": order.notes,
             "items": order.items if order.items else [],
+            "vehicleReg": order.vehicleReg if hasattr(order, 'vehicleReg') else None,
             "createdBy": str(order.createdBy) if hasattr(order, 'createdBy') else "",
             "createdAt": order.createdAt,
             "updatedAt": order.updatedAt
@@ -666,6 +667,7 @@ def read_purchase_order(
         "totalAmount": order.totalAmount,
         "notes": order.notes,
         "items": order.items if order.items else [],
+        "vehicleReg": order.vehicleReg if hasattr(order, 'vehicleReg') else None,
         "createdBy": str(order.createdBy) if hasattr(order, 'createdBy') else "",
         "createdAt": order.createdAt,
         "updatedAt": order.updatedAt
@@ -736,6 +738,7 @@ def create_purchase_order_endpoint(
         "totalAmount": db_order.totalAmount,
         "notes": db_order.notes,
         "items": db_order.items if db_order.items else [],
+        "vehicleReg": db_order.vehicleReg if hasattr(db_order, 'vehicleReg') else None,
         "createdBy": str(db_order.createdBy),
         "createdAt": db_order.createdAt,
         "updatedAt": db_order.updatedAt
@@ -804,6 +807,7 @@ def update_purchase_order_endpoint(
         "totalAmount": db_order.totalAmount,
         "notes": db_order.notes,
         "items": db_order.items if db_order.items else [],
+        "vehicleReg": db_order.vehicleReg if hasattr(db_order, 'vehicleReg') else None,
         "createdBy": str(db_order.createdBy) if hasattr(db_order, 'createdBy') else "",
         "createdAt": db_order.createdAt,
         "updatedAt": db_order.updatedAt

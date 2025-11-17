@@ -83,6 +83,7 @@ class PurchaseOrder(Base):
     totalAmount = Column(Float, default=0.0)  # Total amount including VAT
     notes = Column(Text)
     items = Column(JSON, default=[])  # Store purchase order items as JSON
+    vehicleReg = Column(String, nullable=True)  # Vehicle registration number
     approvedBy = Column(UUID(as_uuid=True), ForeignKey("users.id"))
     approvedAt = Column(DateTime)
     createdAt = Column(DateTime, default=datetime.utcnow)

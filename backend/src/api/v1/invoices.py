@@ -761,7 +761,8 @@ def get_invoices(
             search_filter = or_(
                 Invoice.invoiceNumber.ilike(f"%{normalized_search}%"),
                 func.regexp_replace(Invoice.customerName, r'\s+', ' ', 'g').ilike(f"%{normalized_search}%"),
-                Invoice.customerEmail.ilike(f"%{normalized_search}%")
+                Invoice.customerEmail.ilike(f"%{normalized_search}%"),
+                Invoice.vehicleReg.ilike(f"%{normalized_search}%")
             )
             query = query.filter(search_filter)
         

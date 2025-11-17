@@ -62,6 +62,7 @@ export interface PurchaseOrder {
   vatAmount: number;
   totalAmount: number;
   notes?: string;
+  vehicleReg?: string;
   items: PurchaseOrderItemCreate[];
   createdAt: string;
   updatedAt: string;
@@ -77,6 +78,7 @@ export interface PurchaseOrderCreate {
   expectedDeliveryDate: string;
   vatRate?: number;
   notes?: string;
+  vehicleReg?: string;
   items: PurchaseOrderItemCreate[];
 }
 
@@ -94,6 +96,7 @@ export interface PurchaseOrderUpdate {
   vatAmount?: number;
   totalAmount?: number;
   notes?: string;
+  vehicleReg?: string;
 }
 
 export interface PurchaseOrderResponse {

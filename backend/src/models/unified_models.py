@@ -3084,9 +3084,11 @@ class PurchaseOrderBase(BaseModel):
     vatAmount: float = 0.0
     totalAmount: float
     notes: Optional[str] = None
+    vehicleReg: Optional[str] = None
     items: List[PurchaseOrderItemCreate]
 
 class PurchaseOrderCreate(BaseModel):
+    vehicleReg: Optional[str] = None
     orderNumber: Optional[str] = None
     batchNumber: Optional[str] = None
     supplierId: str
@@ -3112,6 +3114,7 @@ class PurchaseOrderUpdate(BaseModel):
     vatAmount: Optional[float] = None
     totalAmount: Optional[float] = None
     notes: Optional[str] = None
+    vehicleReg: Optional[str] = None
 
 class PurchaseOrder(PurchaseOrderBase):
     id: str

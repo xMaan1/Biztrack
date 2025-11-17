@@ -132,9 +132,11 @@ function PurchaseOrdersContent() {
 
   const filteredPurchaseOrders = useMemo(() => {
     return purchaseOrders.filter((order) => {
+      const searchLower = debouncedSearchTerm.toLowerCase();
       const matchesSearch =
-        order.orderNumber.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-        order.supplierName.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
+        order.orderNumber.toLowerCase().includes(searchLower) ||
+        order.supplierName.toLowerCase().includes(searchLower) ||
+        (order.vehicleReg && order.vehicleReg.toLowerCase().includes(searchLower));
 
       const matchesStatus =
         statusFilter === 'all' || !statusFilter || order.status === statusFilter;
