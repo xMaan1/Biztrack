@@ -28,7 +28,8 @@ class EmailService:
         currency: str = 'USD',
         due_date: str = None,
         invoice_pdf_path: Optional[str] = None,
-        invoice_pdf_bytes: Optional[bytes] = None
+        invoice_pdf_bytes: Optional[bytes] = None,
+        custom_message: Optional[str] = None
     ) -> bool:
         """Send invoice email to customer"""
         try:
@@ -41,6 +42,10 @@ class EmailService:
             msg['To'] = to_email
             msg['Subject'] = f"Invoice {invoice_number} - Payment Due"
             
+            custom_message_section = ""
+            if custom_message:
+                custom_message_section = f"\n\n{custom_message}\n"
+            
             body = f"""
 Dear {customer_name},
 
@@ -49,7 +54,7 @@ Thank you for your business! Please find your invoice details below:
 Invoice Number: {invoice_number}
 Amount Due: {currency} {invoice_total:.2f}
 Due Date: {due_date or 'As agreed'}
-
+{custom_message_section}
 Please find the invoice PDF attached to this email. Please make payment at your earliest convenience. If you have any questions about this invoice, please don't hesitate to contact us.
 
 Thank you for your prompt payment.
@@ -197,6 +202,43 @@ Best regards,
             return False
         except Exception as e:
             logger.error(f"Failed to send invitation email to {to_email}: {str(e)}")
+            return False
+    
+    def send_report_email(
+        self,
+        to_email: str,
+        subject: str,
+        body: str
+    ) -> bool:
+        """Send a general report email"""
+        try:
+            if not to_email:
+                logger.error("Recipient email address is required")
+                return False
+            
+            if not self.smtp_username or not self.smtp_password:
+                logger.warning("SMTP credentials not configured. Email not sent.")
+                return False
+            
+            msg = MIMEMultipart()
+            msg['From'] = f"{self.from_name} <{self.from_email}>"
+            msg['To'] = to_email
+            msg['Subject'] = subject
+            
+            msg.attach(MIMEText(body, 'plain'))
+            
+            server = smtplib.SMTP(self.smtp_server, self.smtp_port)
+            server.starttls()
+            server.login(self.smtp_username, self.smtp_password)
+            text = msg.as_string()
+            server.sendmail(self.from_email, to_email, text)
+            server.quit()
+            
+            logger.info(f"Report email sent successfully to {to_email}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to send report email to {to_email}: {str(e)}")
             return False
     
     def test_email_connection(self) -> bool:

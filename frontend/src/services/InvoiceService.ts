@@ -64,8 +64,22 @@ class InvoiceService {
     await apiService.post(`${this.baseUrl}/${invoiceId}/send`);
   }
 
-  async sendInvoiceEmail(invoiceId: string): Promise<{ message: string; warning?: string }> {
-    const response = await apiService.post(`${this.baseUrl}/${invoiceId}/send`);
+  async sendInvoiceEmail(
+    invoiceId: string,
+    toEmail?: string,
+    message?: string
+  ): Promise<{ message: string; warning?: string }> {
+    const body: any = {};
+    if (toEmail) {
+      body.to_email = toEmail;
+    }
+    if (message) {
+      body.message = message;
+    }
+    const response = await apiService.post(
+      `${this.baseUrl}/${invoiceId}/send`,
+      Object.keys(body).length > 0 ? body : undefined
+    );
     return response;
   }
 

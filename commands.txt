@@ -1,5 +1,10 @@
 git add .; git commit -m "aa"; git push; ssh -i biztrack.pem ubuntu@56.228.50.229 "cd Biztrack && git pull && cd frontend && npm run build && pm2 restart all && pm2 logs"
 git add .; git commit -m "aa"; git push; ssh -i biztrack.pem ubuntu@56.228.50.229 "cd Biztrack && git pull && pm2 restart all && pm2 logs"
+
+
+
+ssh -i biztrack.pem ubuntu@56.228.50.229 "cd Biztrack && git pull && cd frontend && npm run build && pm2 restart all && pm2 logs"
+
 for psql:
 psql "host=database-2.cx2ueqemct2p.eu-north-1.rds.amazonaws.com port=5432 dbname=postgres user=postgres password=abdulrehman25 sslmode=require"
 

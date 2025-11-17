@@ -24,6 +24,7 @@ import {
   RefreshCw,
   MessageCircle,
   Download,
+  Mail,
 } from 'lucide-react';
 import { LedgerService } from '@/src/services/ledgerService';
 import DashboardLayout from '@/src/components/layout/DashboardLayout';
@@ -35,6 +36,10 @@ import {
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { useCachedApi } from '@/src/hooks/useCachedApi';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { SendProfitLossEmailDialog } from '@/src/components/ledger/SendProfitLossEmailDialog';
+import { SendProfitLossWhatsAppDialog } from '@/src/components/ledger/SendProfitLossWhatsAppDialog';
+import { toast } from 'sonner';
+import { extractErrorMessage } from '@/src/utils/errorUtils';
 
 export default function ProfitLossDashboardPage() {
   return (
@@ -48,6 +53,8 @@ function ProfitLossDashboardContent() {
   const { formatCurrency, loading: currencyLoading } = useCurrency();
   const [selectedPeriod, setSelectedPeriod] = useState<ProfitLossPeriod>(ProfitLossPeriod.MONTH);
   const [customDateRange, setCustomDateRange] = useState<{ start: string; end: string } | null>(null);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
 
   const { data: dashboardData, loading, refetch } = useCachedApi<ProfitLossDashboard>(
     `profit_loss_dashboard_${selectedPeriod}_${customDateRange?.start || ''}_${customDateRange?.end || ''}`,
@@ -68,35 +75,43 @@ function ProfitLossDashboardContent() {
     refetch();
   };
 
-  const handleShareWhatsApp = () => {
-    if (!dashboardData) return;
-    
-    const message = `📊 *Profit/Loss Report - ${getProfitLossPeriodLabel(selectedPeriod)}*
-    
-💰 *Summary:*
-• Total Sales: ${formatCurrency(dashboardData.summary?.total_sales || 0)}
-• Total Purchases: ${formatCurrency(dashboardData.summary?.total_purchases || 0)}
-• Total Investments: ${formatCurrency(dashboardData.summary?.total_investments || 0)}
-• Net Profit: ${formatCurrency(dashboardData.summary?.net_profit || 0)}
-• Profit After Investment: ${formatCurrency(dashboardData.summary?.profit_after_investment || 0)}
+  const handleSendEmail = async (toEmail: string, message?: string) => {
+    try {
+      const response = await LedgerService.sendProfitLossReportEmail(
+        selectedPeriod,
+        customDateRange?.start,
+        customDateRange?.end,
+        toEmail,
+        message
+      );
+      
+      if (response?.warning) {
+        toast.warning(response.message || 'Report could not be sent. Please check SMTP configuration.');
+      } else {
+        toast.success(response?.message || `Report sent successfully to ${toEmail}`);
+      }
+    } catch (error: any) {
+      const errorMessage = extractErrorMessage(error, 'Failed to send report via email');
+      toast.error(errorMessage);
+      throw error;
+    }
+  };
 
-📈 *Sales:*
-• Invoices: ${dashboardData.sales?.total_invoices || 0}
-• Paid: ${dashboardData.sales?.paid_invoices || 0}
-• Pending: ${dashboardData.sales?.pending_invoices || 0}
-• Overdue: ${dashboardData.sales?.overdue_invoices || 0}
-
-📦 *Purchases:*
-• Orders: ${dashboardData.purchases?.total_purchase_orders || 0}
-• Completed: ${dashboardData.purchases?.completed_purchases || 0}
-• Pending: ${dashboardData.purchases?.pending_purchases || 0}
-
-📊 *Inventory:*
-• Products: ${dashboardData.inventory?.total_products || 0}
-• Value: ${formatCurrency(dashboardData.inventory?.total_inventory_value || 0)}`;
-
-    const encodedMessage = encodeURIComponent(message);
-    window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
+  const handleSendWhatsApp = async (phoneNumber: string) => {
+    try {
+      const response = await LedgerService.sendProfitLossReportWhatsApp(
+        selectedPeriod,
+        customDateRange?.start,
+        customDateRange?.end,
+        phoneNumber
+      );
+      window.open(response.whatsapp_url, '_blank');
+      toast.success('Opening WhatsApp...');
+    } catch (error: any) {
+      const errorMessage = extractErrorMessage(error, 'Failed to generate WhatsApp link');
+      toast.error(errorMessage);
+      throw error;
+    }
   };
 
 
@@ -455,9 +470,13 @@ function ProfitLossDashboardContent() {
               </CardHeader>
               <CardContent>
                 <div className="flex gap-2">
-                  <Button onClick={handleShareWhatsApp} variant="outline">
+                  <Button onClick={() => setEmailDialogOpen(true)} variant="outline">
+                    <Mail className="h-4 w-4 mr-2" />
+                    Send via Email
+                  </Button>
+                  <Button onClick={() => setWhatsappDialogOpen(true)} variant="outline">
                     <MessageCircle className="h-4 w-4 mr-2" />
-                    Share on WhatsApp
+                    Send via WhatsApp
                   </Button>
                   <Button onClick={handleDownloadReport} variant="outline">
                     <Download className="h-4 w-4 mr-2" />
@@ -468,6 +487,24 @@ function ProfitLossDashboardContent() {
             </Card>
           </>
         )}
+
+        <SendProfitLossEmailDialog
+          open={emailDialogOpen}
+          onOpenChange={setEmailDialogOpen}
+          period={selectedPeriod}
+          startDate={customDateRange?.start}
+          endDate={customDateRange?.end}
+          onSend={handleSendEmail}
+        />
+
+        <SendProfitLossWhatsAppDialog
+          open={whatsappDialogOpen}
+          onOpenChange={setWhatsappDialogOpen}
+          period={selectedPeriod}
+          startDate={customDateRange?.start}
+          endDate={customDateRange?.end}
+          onSend={handleSendWhatsApp}
+        />
       </div>
     </DashboardLayout>
   );

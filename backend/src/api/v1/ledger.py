@@ -1,8 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Body
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List, Optional
 from datetime import datetime, date, timedelta
+from pydantic import BaseModel
+import os
+import urllib.parse
+import logging
 
 from ...api.dependencies import get_current_user, get_tenant_context
 from ...config.database import get_db
@@ -22,6 +26,9 @@ from ...config.ledger_models import (
     AccountReceivable, AccountReceivableStatus
 )
 from ...config.investment_models import Investment, InvestmentStatus
+from ...services.email_service import EmailService
+
+logger = logging.getLogger(__name__)
 from ...config.ledger_crud import (
     # Chart of Accounts
     create_chart_of_accounts, get_chart_of_accounts_by_id, get_all_chart_of_accounts,
@@ -983,6 +990,200 @@ async def get_profit_loss_dashboard(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch profit/loss dashboard: {str(e)}")
+
+class SendProfitLossReportRequest(BaseModel):
+    to_email: Optional[str] = None
+    message: Optional[str] = None
+
+class SendProfitLossWhatsAppRequest(BaseModel):
+    phone_number: Optional[str] = None
+
+@router.post("/profit-loss-dashboard/send-email")
+async def send_profit_loss_report_email(
+    period: str = Query("month", regex="^(day|week|month|year)$"),
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    request: Optional[SendProfitLossReportRequest] = Body(None),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context = Depends(get_tenant_context)
+):
+    """Send profit/loss report via email"""
+    try:
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+        
+        to_email = None
+        if request and request.to_email:
+            to_email = request.to_email
+        else:
+            raise HTTPException(status_code=400, detail="Email address is required to send report")
+        
+        dashboard_data = await get_profit_loss_dashboard(
+            period=period,
+            start_date=start_date,
+            end_date=end_date,
+            db=db,
+            current_user=current_user,
+            tenant_context=tenant_context
+        )
+        
+        period_label = period.title()
+        if start_date and end_date:
+            period_label = f"{start_date} to {end_date}"
+        
+        summary = dashboard_data.get("summary", {})
+        sales = dashboard_data.get("sales", {})
+        purchases = dashboard_data.get("purchases", {})
+        inventory = dashboard_data.get("inventory", {})
+        
+        custom_message = request.message if request and request.message else None
+        custom_message_section = f"\n\n{custom_message}\n" if custom_message else ""
+        
+        email_body = f"""Profit & Loss Report - {period_label}
+
+Report Period: {dashboard_data.get('start_date', 'N/A')} to {dashboard_data.get('end_date', 'N/A')}
+
+SUMMARY:
+• Total Sales: {summary.get('total_sales', 0):.2f}
+• Total Purchases: {summary.get('total_purchases', 0):.2f}
+• Total Investments: {summary.get('total_investments', 0):.2f}
+• Net Profit: {summary.get('net_profit', 0):.2f}
+• Profit After Investment: {summary.get('profit_after_investment', 0):.2f}
+• Inventory Value: {summary.get('inventory_value', 0):.2f}
+
+SALES OVERVIEW:
+• Total Invoices: {sales.get('total_invoices', 0)}
+• Paid Invoices: {sales.get('paid_invoices', 0)}
+• Pending Invoices: {sales.get('pending_invoices', 0)}
+• Overdue Invoices: {sales.get('overdue_invoices', 0)}
+• Total Payments Received: {sales.get('total_payments_received', 0):.2f}
+
+PURCHASES OVERVIEW:
+• Total Purchase Orders: {purchases.get('total_purchase_orders', 0)}
+• Completed Purchases: {purchases.get('completed_purchases', 0)}
+• Pending Purchases: {purchases.get('pending_purchases', 0)}
+• Total Purchases: {purchases.get('total_purchases', 0):.2f}
+
+INVENTORY OVERVIEW:
+• Total Products: {inventory.get('total_products', 0)}
+• Total Inventory Value: {inventory.get('total_inventory_value', 0):.2f}
+• Inbound Movements: {inventory.get('inbound_movements', 0)}
+• Outbound Movements: {inventory.get('outbound_movements', 0)}
+{custom_message_section}
+This report was generated on {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}.
+
+Best regards,
+BizTrack Team"""
+        
+        email_service = EmailService()
+        email_sent = email_service.send_report_email(
+            to_email=to_email,
+            subject=f"Profit & Loss Report - {period_label}",
+            body=email_body
+        )
+        
+        if email_sent:
+            return {"message": f"Profit/Loss report sent successfully to {to_email}"}
+        else:
+            return {
+                "message": "Report could not be sent. Please check SMTP configuration.",
+                "warning": "SMTP credentials not configured"
+            }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to send profit/loss report via email: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to send report: {str(e)}")
+
+@router.post("/profit-loss-dashboard/send-whatsapp")
+async def send_profit_loss_report_whatsapp(
+    period: str = Query("month", regex="^(day|week|month|year)$"),
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    request: Optional[SendProfitLossWhatsAppRequest] = Body(None),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context = Depends(get_tenant_context)
+):
+    """Get WhatsApp message and link for sending profit/loss report"""
+    try:
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+        
+        phone_number = None
+        if request and request.phone_number:
+            phone_number = request.phone_number
+        else:
+            raise HTTPException(status_code=400, detail="Phone number is required to send via WhatsApp")
+        
+        dashboard_data = await get_profit_loss_dashboard(
+            period=period,
+            start_date=start_date,
+            end_date=end_date,
+            db=db,
+            current_user=current_user,
+            tenant_context=tenant_context
+        )
+        
+        period_label = period.title()
+        if start_date and end_date:
+            period_label = f"{start_date} to {end_date}"
+        
+        summary = dashboard_data.get("summary", {})
+        sales = dashboard_data.get("sales", {})
+        purchases = dashboard_data.get("purchases", {})
+        inventory = dashboard_data.get("inventory", {})
+        
+        message = f"""📊 *Profit/Loss Report - {period_label}*
+
+*Report Period:* {dashboard_data.get('start_date', 'N/A')} to {dashboard_data.get('end_date', 'N/A')}
+
+💰 *SUMMARY:*
+• Total Sales: {summary.get('total_sales', 0):.2f}
+• Total Purchases: {summary.get('total_purchases', 0):.2f}
+• Total Investments: {summary.get('total_investments', 0):.2f}
+• Net Profit: {summary.get('net_profit', 0):.2f}
+• Profit After Investment: {summary.get('profit_after_investment', 0):.2f}
+• Inventory Value: {summary.get('inventory_value', 0):.2f}
+
+📈 *SALES:*
+• Total Invoices: {sales.get('total_invoices', 0)}
+• Paid: {sales.get('paid_invoices', 0)}
+• Pending: {sales.get('pending_invoices', 0)}
+• Overdue: {sales.get('overdue_invoices', 0)}
+• Payments Received: {sales.get('total_payments_received', 0):.2f}
+
+📦 *PURCHASES:*
+• Total Orders: {purchases.get('total_purchase_orders', 0)}
+• Completed: {purchases.get('completed_purchases', 0)}
+• Pending: {purchases.get('pending_purchases', 0)}
+• Total Value: {purchases.get('total_purchases', 0):.2f}
+
+📊 *INVENTORY:*
+• Products: {inventory.get('total_products', 0)}
+• Value: {inventory.get('total_inventory_value', 0):.2f}
+• Inbound: {inventory.get('inbound_movements', 0)}
+• Outbound: {inventory.get('outbound_movements', 0)}
+
+Generated on {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}"""
+        
+        cleaned_phone = phone_number.replace('+', '').replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
+        whatsapp_url = f"https://wa.me/{cleaned_phone}?text={urllib.parse.quote(message)}"
+        
+        return {
+            "message": "WhatsApp link generated successfully",
+            "whatsapp_url": whatsapp_url,
+            "phone_number": phone_number,
+            "formatted_message": message
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to generate WhatsApp link for profit/loss report: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate WhatsApp link: {str(e)}")
 
 @router.post("/account-receivables", response_model=AccountReceivableResponse, status_code=status.HTTP_201_CREATED)
 async def create_account_receivable_endpoint(

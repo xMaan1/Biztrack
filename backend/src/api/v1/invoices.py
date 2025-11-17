@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Response, Body
 from typing import List, Optional
 from datetime import datetime, timedelta
 import uuid
@@ -42,6 +42,10 @@ class BulkOperationResponse(BaseModel):
     processed_count: int
     failed_count: int
     errors: List[str] = []
+
+class SendInvoiceRequest(BaseModel):
+    to_email: Optional[str] = None
+    message: Optional[str] = None
 
 def generate_invoice_number(tenant_id: str, db: Session) -> str:
     """Generate unique invoice number with proper race condition handling"""
@@ -660,7 +664,7 @@ def create_invoice(
                 existing_ar = db.query(AccountReceivable).filter(
                     and_(
                         AccountReceivable.tenant_id == tenant_id,
-                        AccountReceivable.invoice_id == db_invoice.id
+                        AccountReceivable.invoice_id == str(db_invoice.id)
                     )
                 ).first()
                 
@@ -672,7 +676,7 @@ def create_invoice(
                     
                     ar = AccountReceivable(
                         tenant_id=tenant_id,
-                        invoice_id=db_invoice.id,
+                        invoice_id=str(db_invoice.id),
                         invoice_number=db_invoice.invoiceNumber,
                         customer_id=db_invoice.customerId or "",
                         customer_name=db_invoice.customerName,
@@ -1033,6 +1037,7 @@ def delete_invoice(
 @router.post("/{invoice_id}/send")
 def send_invoice(
     invoice_id: str,
+    request: Optional[SendInvoiceRequest] = Body(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     tenant_context: dict = Depends(get_tenant_context),
@@ -1055,8 +1060,13 @@ def send_invoice(
         if not invoice:
             raise HTTPException(status_code=404, detail="Invoice not found")
         
-        if not invoice.customerEmail:
-            raise HTTPException(status_code=400, detail="Customer email is required to send invoice")
+        to_email = None
+        if request and request.to_email:
+            to_email = request.to_email
+        elif invoice.customerEmail:
+            to_email = invoice.customerEmail
+        else:
+            raise HTTPException(status_code=400, detail="Email address is required to send invoice")
         
         pdf_bytes = None
         try:
@@ -1066,14 +1076,16 @@ def send_invoice(
             logger.warning(f"Could not generate PDF for email: {str(pdf_error)}")
         
         email_service = EmailService()
+        custom_message = request.message if request and request.message else None
         email_sent = email_service.send_invoice_email(
-            to_email=invoice.customerEmail,
+            to_email=to_email,
             customer_name=invoice.customerName,
             invoice_number=invoice.invoiceNumber,
             invoice_total=invoice.total,
             currency=invoice.currency,
             due_date=invoice.dueDate.strftime('%Y-%m-%d') if invoice.dueDate else None,
-            invoice_pdf_bytes=pdf_bytes
+            invoice_pdf_bytes=pdf_bytes,
+            custom_message=custom_message
         )
         
         if invoice.status == InvoiceStatus.DRAFT:
@@ -1088,7 +1100,7 @@ def send_invoice(
             existing_ar = db.query(AccountReceivable).filter(
                 and_(
                     AccountReceivable.tenant_id == tenant_id,
-                    AccountReceivable.invoice_id == invoice.id
+                    AccountReceivable.invoice_id == str(invoice.id)
                 )
             ).first()
             
@@ -1099,7 +1111,7 @@ def send_invoice(
                 
                 ar = AccountReceivable(
                     tenant_id=tenant_id,
-                    invoice_id=invoice.id,
+                    invoice_id=str(invoice.id),
                     invoice_number=invoice.invoiceNumber,
                     customer_id=invoice.customerId or "",
                     customer_name=invoice.customerName,
@@ -1233,7 +1245,7 @@ def mark_invoice_as_paid(
             existing_ar = db.query(AccountReceivable).filter(
                 and_(
                     AccountReceivable.tenant_id == tenant_id,
-                    AccountReceivable.invoice_id == invoice.id
+                    AccountReceivable.invoice_id == str(invoice.id)
                 )
             ).first()
             

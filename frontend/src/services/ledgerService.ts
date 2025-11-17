@@ -437,4 +437,46 @@ export class LedgerService {
     );
     return response;
   }
+
+  static async sendProfitLossReportEmail(
+    period: string = 'month',
+    startDate: string | undefined,
+    endDate: string | undefined,
+    toEmail: string,
+    message?: string,
+  ): Promise<{ message: string; warning?: string }> {
+    const params = new URLSearchParams();
+    params.append('period', period);
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+
+    const body: any = { to_email: toEmail };
+    if (message) {
+      body.message = message;
+    }
+
+    const response = await apiService.post(
+      `/ledger/profit-loss-dashboard/send-email?${params.toString()}`,
+      body,
+    );
+    return response;
+  }
+
+  static async sendProfitLossReportWhatsApp(
+    period: string = 'month',
+    startDate: string | undefined,
+    endDate: string | undefined,
+    phoneNumber: string,
+  ): Promise<{ whatsapp_url: string; phone_number: string; formatted_message: string }> {
+    const params = new URLSearchParams();
+    params.append('period', period);
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+
+    const response = await apiService.post(
+      `/ledger/profit-loss-dashboard/send-whatsapp?${params.toString()}`,
+      { phone_number: phoneNumber },
+    );
+    return response;
+  }
 }

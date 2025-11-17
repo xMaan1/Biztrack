@@ -38,6 +38,7 @@ import { Invoice } from '../../models/sales';
 import InvoiceService from '../../services/InvoiceService';
 import { extractErrorMessage } from '../../utils/errorUtils';
 import { toast } from 'sonner';
+import { SendInvoiceEmailDialog } from './SendInvoiceEmailDialog';
 
 interface InvoiceListProps {
   invoices: Invoice[];
@@ -75,25 +76,28 @@ export function InvoiceList({
   const [bulkLoading, setBulkLoading] = useState<string | null>(null);
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
   const [sendingWhatsApp, setSendingWhatsApp] = useState<string | null>(null);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [selectedInvoiceForEmail, setSelectedInvoiceForEmail] = useState<Invoice | null>(null);
 
-  const handleSendEmail = async (invoice: Invoice) => {
-    if (!invoice.customerEmail) {
-      toast.error('Customer email is required to send invoice via email');
-      return;
-    }
+  const handleSendEmail = (invoice: Invoice) => {
+    setSelectedInvoiceForEmail(invoice);
+    setEmailDialogOpen(true);
+  };
 
+  const handleEmailSend = async (invoiceId: string, toEmail: string, message?: string) => {
     try {
-      setSendingEmail(invoice.id);
-      const response = await InvoiceService.sendInvoiceEmail(invoice.id);
+      setSendingEmail(invoiceId);
+      const response = await InvoiceService.sendInvoiceEmail(invoiceId, toEmail, message);
       
       if (response?.warning) {
         toast.warning(response.message || 'Invoice status updated but email could not be sent. Please check SMTP configuration.');
       } else {
-        toast.success(response?.message || `Invoice sent successfully to ${invoice.customerEmail}`);
+        toast.success(response?.message || `Invoice sent successfully to ${toEmail}`);
       }
     } catch (error: any) {
       const errorMessage = extractErrorMessage(error, 'Failed to send invoice via email');
       toast.error(errorMessage);
+      throw error;
     } finally {
       setSendingEmail(null);
     }
@@ -507,24 +511,22 @@ export function InvoiceList({
                         Edit Invoice
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      {invoice.customerEmail && (
-                        <DropdownMenuItem
-                          onClick={() => handleSendEmail(invoice)}
-                          disabled={sendingEmail === invoice.id}
-                        >
-                          {sendingEmail === invoice.id ? (
-                            <>
-                              <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
-                              Sending Email...
-                            </>
-                          ) : (
-                            <>
-                              <Mail className="h-4 w-4 mr-2" />
-                              Send via Email
-                            </>
-                          )}
-                        </DropdownMenuItem>
-                      )}
+                      <DropdownMenuItem
+                        onClick={() => handleSendEmail(invoice)}
+                        disabled={sendingEmail === invoice.id}
+                      >
+                        {sendingEmail === invoice.id ? (
+                          <>
+                            <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+                            Sending Email...
+                          </>
+                        ) : (
+                          <>
+                            <Mail className="h-4 w-4 mr-2" />
+                            Send via Email
+                          </>
+                        )}
+                      </DropdownMenuItem>
                       {invoice.customerPhone && (
                         <DropdownMenuItem
                           onClick={() => handleSendWhatsApp(invoice)}
@@ -610,6 +612,13 @@ export function InvoiceList({
           </div>
         </div>
       )}
+
+      <SendInvoiceEmailDialog
+        open={emailDialogOpen}
+        onOpenChange={setEmailDialogOpen}
+        invoice={selectedInvoiceForEmail}
+        onSend={handleEmailSend}
+      />
     </div>
   );
 }
