@@ -39,6 +39,10 @@ export default function Header({ onMenuClick }: HeaderProps) {
     router.push('/settings');
   };
 
+  const handleProfileClick = () => {
+    router.push('/profile');
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md shadow-sm">
       <div className="flex h-16 items-center justify-between px-4 md:px-6">
@@ -95,7 +99,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleProfileClick}>
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </DropdownMenuItem>

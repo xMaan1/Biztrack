@@ -328,6 +328,21 @@ export class ApiService {
     return this.put(`/auth/users/${id}`, data);
   }
 
+  async getMyProfile() {
+    return this.get('/profile/me');
+  }
+
+  async updateMyProfile(data: any) {
+    return this.put('/profile/me', data);
+  }
+
+  async changePassword(currentPassword: string, newPassword: string) {
+    return this.post('/profile/change-password', {
+      current_password: currentPassword,
+      new_password: newPassword,
+    });
+  }
+
   async deleteUser(id: string) {
     return this.delete(`/users/${id}`);
   }

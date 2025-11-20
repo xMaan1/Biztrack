@@ -124,6 +124,25 @@ export function useAuth() {
     }
   };
 
+  const refreshUser = async () => {
+    try {
+      const response = await apiService.getCurrentUser();
+      if (response) {
+        setUser(response);
+        const sessionManager = new SessionManager();
+        const session = sessionManager.getSession();
+        if (session) {
+          sessionManager.setSession({
+            ...session,
+            user: response,
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to refresh user:', error);
+    }
+  };
+
   const isAuthenticated = !!user;
 
   return {
@@ -135,5 +154,6 @@ export function useAuth() {
     tenants,
     currentTenant,
     switchTenant,
+    refreshUser,
   };
 }
