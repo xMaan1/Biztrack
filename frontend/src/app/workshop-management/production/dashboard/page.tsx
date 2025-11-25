@@ -141,7 +141,7 @@ export default function ProductionDashboardPage() {
             </p>
           </div>
           <Button
-            onClick={() => router.push('/production')}
+          onClick={() => router.push('/workshop-management/production')}
             className="flex items-center gap-2"
           >
             <BarChart3 className="h-4 w-4" />

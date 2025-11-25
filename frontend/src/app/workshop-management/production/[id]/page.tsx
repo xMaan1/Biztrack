@@ -85,7 +85,7 @@ export default function ProductionPlanDetailPage() {
       const plan = await service.getProductionPlan(id);
       setProductionPlan(plan);
     } catch (error) {
-      router.push('/production');
+      router.push('/workshop-management/production');
     } finally {
       setLoading(false);
     }
@@ -97,7 +97,7 @@ export default function ProductionPlanDetailPage() {
     try {
       const service = new ProductionService();
       await service.deleteProductionPlan(productionPlan.id);
-      router.push('/production');
+      router.push('/workshop-management/production');
     } catch (error) {
     }
   };
@@ -154,7 +154,7 @@ export default function ProductionPlanDetailPage() {
           <h3 className="text-lg font-medium text-gray-900 mb-2">
             Production plan not found
           </h3>
-          <Button onClick={() => router.push('/production')}>
+          <Button onClick={() => router.push('/workshop-management/production')}>
             Back to Production
           </Button>
         </div>
@@ -169,7 +169,7 @@ export default function ProductionPlanDetailPage() {
         <Breadcrumb className="mb-6">
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href="/production">Production</BreadcrumbLink>
+              <BreadcrumbLink href="/workshop-management/production">Production</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
@@ -184,7 +184,7 @@ export default function ProductionPlanDetailPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => router.push('/production')}
+              onClick={() => router.push('/workshop-management/production')}
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
