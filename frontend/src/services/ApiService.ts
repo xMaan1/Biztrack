@@ -336,6 +336,17 @@ export class ApiService {
     return this.put('/profile/me', data);
   }
 
+  async uploadCompanyLogo(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.client.post('/file-upload/logo', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  }
+
   async changePassword(currentPassword: string, newPassword: string) {
     return this.post('/profile/change-password', {
       current_password: currentPassword,

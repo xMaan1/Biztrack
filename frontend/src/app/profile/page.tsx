@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/src/hooks/useAuth';
 import { DashboardLayout } from '@/src/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
@@ -23,6 +23,7 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle2,
+  UploadCloud,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiService } from '@/src/services/ApiService';
@@ -41,6 +42,8 @@ export default function ProfilePage() {
     lastName: '',
     avatar: '',
   });
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [logoUploading, setLogoUploading] = useState(false);
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -109,6 +112,32 @@ export default function ProfilePage() {
       toast.error(extractErrorMessage(error, 'Failed to update profile'));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleLogoUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleLogoFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    event.target.value = '';
+    setLogoUploading(true);
+
+    try {
+      await apiService.uploadCompanyLogo(file);
+      toast.success('Company logo uploaded to S3');
+      await refreshUser();
+    } catch (error) {
+      toast.error(extractErrorMessage(error, 'Failed to upload company logo'));
+    } finally {
+      setLogoUploading(false);
     }
   };
 
@@ -197,6 +226,14 @@ export default function ProfilePage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleLogoFileChange}
+                    aria-hidden="true"
+                  />
                   <form onSubmit={handleProfileSubmit} className="space-y-6">
                     <div className="flex items-center gap-6 pb-6 border-b">
                       <Avatar className="h-24 w-24">
@@ -220,6 +257,21 @@ export default function ProfilePage() {
                           </Badge>
                         )}
                       </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleLogoUploadClick}
+                        className="gap-2"
+                        disabled={logoUploading}
+                      >
+                        <UploadCloud className="h-4 w-4" />
+                        {logoUploading ? 'Uploading logo...' : 'Upload company logo'}
+                      </Button>
+                      <span className="text-sm text-muted-foreground">
+                        This saves the company logo to S3 and updates your tenant branding.
+                      </span>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
