@@ -72,6 +72,7 @@ export default function PurchaseOrderModal({
     warehouseId: '',
     orderDate: new Date().toISOString().split('T')[0],
     expectedDeliveryDate: '',
+    vehicleReg: '',
     vatRate: 0,
     notes: '',
     items: [],
@@ -237,6 +238,7 @@ export default function PurchaseOrderModal({
       warehouseId: warehouses.length > 0 ? warehouses[0].id : '',
       orderDate: new Date().toISOString().split('T')[0],
       expectedDeliveryDate: '',
+      vehicleReg: initialData?.vehicleReg || '',
       vatRate: 0,
       notes: '',
       items: [],
@@ -407,6 +409,20 @@ export default function PurchaseOrderModal({
                 )}
               </SelectContent>
             </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="vehicleReg">Vehicle Registration</Label>
+            <Input
+              id="vehicleReg"
+              value={newOrder.vehicleReg}
+              onChange={(e) =>
+                setNewOrder((prev) => ({
+                  ...prev,
+                  vehicleReg: e.target.value,
+                }))
+              }
+              placeholder="Enter vehicle registration or driver info"
+            />
           </div>
 
           <div className="space-y-2">
