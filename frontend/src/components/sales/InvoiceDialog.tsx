@@ -82,6 +82,7 @@ export function InvoiceDialog({
     vehicleVin: '',
     vehicleReg: '',
     vehicleMileage: '',
+    documentNo: '',
     // Workshop specific fields
     jobDescription: '',
     partsDescription: '',
@@ -159,6 +160,7 @@ export function InvoiceDialog({
         vehicleVin: invoice.vehicleVin || '',
         vehicleReg: invoice.vehicleReg || '',
         vehicleMileage: invoice.vehicleMileage || '',
+        documentNo: invoice.documentNo || '',
         // Workshop specific fields
         jobDescription: invoice.jobDescription || '',
         partsDescription: invoice.partsDescription || '',
@@ -236,6 +238,7 @@ export function InvoiceDialog({
         vehicleVin: '',
         vehicleReg: '',
         vehicleMileage: '',
+        documentNo: '',
         // Workshop specific fields
         jobDescription: '',
         partsDescription: '',
@@ -647,6 +650,18 @@ export function InvoiceDialog({
                     handleInputChange('vehicleMileage', e.target.value)
                   }
                   placeholder="e.g., 50,000 miles"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="documentNo">Document No</Label>
+                <Input
+                  id="documentNo"
+                  value={formData.documentNo}
+                  onChange={(e) =>
+                    handleInputChange('documentNo', e.target.value)
+                  }
+                  placeholder="e.g., DOC-001"
                 />
               </div>
 

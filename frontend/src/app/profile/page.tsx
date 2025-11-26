@@ -24,6 +24,7 @@ import {
   AlertCircle,
   CheckCircle2,
   UploadCloud,
+  Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiService } from '@/src/services/ApiService';
@@ -131,11 +132,37 @@ export default function ProfilePage() {
     setLogoUploading(true);
 
     try {
-      await apiService.uploadCompanyLogo(file);
+      console.log('Starting logo upload...');
+      const uploadResponse = await apiService.uploadCompanyLogo(file);
+      console.log('Logo upload response:', uploadResponse);
       toast.success('Company logo uploaded to S3');
+      
+      console.log('Refreshing user data...');
+      await refreshUser();
+      console.log('User data refreshed successfully');
+    } catch (error: any) {
+      console.error('Logo upload error:', error);
+      console.error('Error response:', error?.response);
+      console.error('Error message:', error?.message);
+      toast.error(extractErrorMessage(error, 'Failed to upload company logo'));
+    } finally {
+      setLogoUploading(false);
+    }
+  };
+
+  const handleLogoDelete = async () => {
+    if (!confirm('Are you sure you want to remove the company logo?')) {
+      return;
+    }
+
+    setLogoUploading(true);
+
+    try {
+      await apiService.deleteCompanyLogo();
+      toast.success('Company logo removed successfully');
       await refreshUser();
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to upload company logo'));
+      toast.error(extractErrorMessage(error, 'Failed to remove company logo'));
     } finally {
       setLogoUploading(false);
     }
@@ -237,7 +264,7 @@ export default function ProfilePage() {
                   <form onSubmit={handleProfileSubmit} className="space-y-6">
                     <div className="flex items-center gap-6 pb-6 border-b">
                       <Avatar className="h-24 w-24">
-                        <AvatarImage src={profileData.avatar} alt={profileData.userName} />
+                        <AvatarImage src={user?.tenantLogoUrl || profileData.avatar} alt={profileData.userName} />
                         <AvatarFallback className="bg-gradient-primary text-white text-2xl">
                           {getInitials(
                             `${profileData.firstName} ${profileData.lastName}` || profileData.userName
@@ -258,7 +285,7 @@ export default function ProfilePage() {
                         )}
                       </div>
                     </div>
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 items-center">
                       <Button
                         type="button"
                         variant="outline"
@@ -267,8 +294,20 @@ export default function ProfilePage() {
                         disabled={logoUploading}
                       >
                         <UploadCloud className="h-4 w-4" />
-                        {logoUploading ? 'Uploading logo...' : 'Upload company logo'}
+                        {logoUploading ? 'Uploading...' : 'Upload company logo'}
                       </Button>
+                      {user?.tenantLogoUrl && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleLogoDelete}
+                          className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          disabled={logoUploading}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Remove logo
+                        </Button>
+                      )}
                       <span className="text-sm text-muted-foreground">
                         This saves the company logo to S3 and updates your tenant branding.
                       </span>

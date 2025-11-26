@@ -178,19 +178,31 @@ export class ApiService {
         }
 
         if (error.response?.status === 401) {
+          console.warn('401 Unauthorized error:', error.config?.url);
+          
           if (error.config._retry) {
+            console.error('Token refresh failed, clearing session');
             this.sessionManager.clearSession();
+            if (typeof window !== 'undefined') {
+              window.location.href = '/login';
+            }
             return Promise.reject(error);
           }
 
+          console.log('Attempting to refresh token...');
           const refreshSuccess = await this.sessionManager.refreshAccessToken();
           if (refreshSuccess) {
+            console.log('Token refreshed successfully, retrying request');
             const originalRequest = error.config;
             originalRequest._retry = true;
             originalRequest.headers.Authorization = `Bearer ${this.sessionManager.getToken()}`;
             return this.client(originalRequest);
           } else {
+            console.error('Token refresh failed, clearing session');
             this.sessionManager.clearSession();
+            if (typeof window !== 'undefined') {
+              window.location.href = '/login';
+            }
           }
         }
         return Promise.reject(error);
@@ -340,11 +352,15 @@ export class ApiService {
     const formData = new FormData();
     formData.append('file', file);
 
-    return this.client.post('/file-upload/logo', formData, {
+    return this.post('/file-upload/logo', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
+  }
+
+  async deleteCompanyLogo() {
+    return this.delete('/file-upload/logo');
   }
 
   async changePassword(currentPassword: string, newPassword: string) {

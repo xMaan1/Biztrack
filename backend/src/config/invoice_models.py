@@ -59,6 +59,7 @@ class Invoice(Base):
     vehicleVin = Column(String, nullable=True)
     vehicleReg = Column(String, nullable=True)
     vehicleMileage = Column(String, nullable=True)
+    documentNo = Column(String, nullable=True)
     
     # Workshop specific fields
     jobDescription = Column(Text, nullable=True)

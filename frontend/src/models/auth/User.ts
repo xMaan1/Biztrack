@@ -13,6 +13,7 @@ export interface User {
   firstName?: string;
   lastName?: string;
   avatar?: string;
+  tenantLogoUrl?: string;
   permissions?: string[];
   isActive?: boolean;
   createdAt?: string;

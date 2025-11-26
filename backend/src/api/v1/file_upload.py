@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from ...config.database import get_db
 from ...api.dependencies import get_current_user, get_tenant_context
 from ...config.database import User
+from ...config.core_models import Tenant
 from ...services.s3_service import s3_service
 
 router = APIRouter(prefix="/file-upload", tags=["File Upload"])
@@ -90,6 +91,13 @@ async def upload_logo(
             original_filename=file.filename
         )
         
+        tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
+        if tenant:
+            tenant.logo_url = result["file_url"]
+            tenant.updatedAt = datetime.utcnow()
+            db.commit()
+            logger.info(f"Tenant logo_url updated in database: {result['file_url']}")
+        
         logger.info(f"Logo uploaded successfully for tenant {tenant_id}: {result['file_url']}")
         
         return JSONResponse({
@@ -108,9 +116,8 @@ async def upload_logo(
         logger.error(f"Error uploading logo: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to upload logo: {str(e)}")
 
-@router.delete("/logo/{filename}")
+@router.delete("/logo")
 async def delete_logo(
-    filename: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     tenant_context: dict = Depends(get_tenant_context)
@@ -122,16 +129,21 @@ async def delete_logo(
         
         tenant_id = tenant_context["tenant_id"]
         
-        # Construct S3 key
-        s3_key = f"logos/{tenant_id}/{filename}"
+        tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
+        if not tenant or not tenant.logo_url:
+            raise HTTPException(status_code=404, detail="No logo found for this tenant")
         
-        # Delete from S3
-        success = s3_service.delete_logo(s3_key)
+        logo_url = tenant.logo_url
+        s3_key = logo_url.split('.amazonaws.com/')[-1] if '.amazonaws.com/' in logo_url else None
         
-        if not success:
-            raise HTTPException(status_code=404, detail="Logo file not found or could not be deleted")
+        if s3_key:
+            s3_service.delete_logo(s3_key)
         
-        logger.info(f"Logo deleted successfully for tenant {tenant_id}: {filename}")
+        tenant.logo_url = None
+        tenant.updatedAt = datetime.utcnow()
+        db.commit()
+        
+        logger.info(f"Logo deleted successfully for tenant {tenant_id}")
         
         return JSONResponse({
             "success": True,

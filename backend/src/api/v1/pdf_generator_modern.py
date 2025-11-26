@@ -336,6 +336,7 @@ def create_vehicle_section(invoice, customization: Optional[Dict[str, Any]], sty
         hasattr(invoice, 'vehicleVin') and invoice.vehicleVin,
         hasattr(invoice, 'vehicleReg') and invoice.vehicleReg,
         hasattr(invoice, 'vehicleMileage') and invoice.vehicleMileage,
+        hasattr(invoice, 'documentNo') and invoice.documentNo,
     ])
     
     if not has_vehicle_data:
@@ -358,6 +359,8 @@ def create_vehicle_section(invoice, customization: Optional[Dict[str, Any]], sty
         vehicle_data.append(f"Registration: {invoice.vehicleReg}")
     if hasattr(invoice, 'vehicleMileage') and invoice.vehicleMileage:
         vehicle_data.append(f"Mileage: {invoice.vehicleMileage}")
+    if hasattr(invoice, 'documentNo') and invoice.documentNo:
+        vehicle_data.append(f"Document No: {invoice.documentNo}")
     
     if vehicle_data:
         vehicle_table_data = []

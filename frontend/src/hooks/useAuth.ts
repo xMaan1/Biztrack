@@ -127,6 +127,7 @@ export function useAuth() {
   const refreshUser = async () => {
     try {
       const response = await apiService.getCurrentUser();
+      console.log('Refreshed user data:', response);
       if (response) {
         setUser(response);
         const sessionManager = new SessionManager();

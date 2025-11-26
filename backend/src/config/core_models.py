@@ -133,6 +133,7 @@ class Tenant(Base):
     name = Column(String, nullable=False)
     domain = Column(String, unique=True, index=True)
     description = Column(Text)
+    logo_url = Column(String, nullable=True)
     settings = Column(JSON, default={})
     isActive = Column(Boolean, default=True)
     createdAt = Column(DateTime, default=datetime.utcnow)

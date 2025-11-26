@@ -352,6 +352,7 @@ class User(UserBase):
     userId: str
     isActive: bool = True
     permissions: List[str] = []
+    tenantLogoUrl: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -2424,6 +2425,7 @@ class InvoiceBase(BaseModel):
     vehicleVin: Optional[str] = None
     vehicleReg: Optional[str] = None
     vehicleMileage: Optional[str] = None
+    documentNo: Optional[str] = None
     
     # Workshop specific fields
     jobDescription: Optional[str] = None
@@ -2460,6 +2462,7 @@ class InvoiceCreate(BaseModel):
     vehicleVin: Optional[str] = None
     vehicleReg: Optional[str] = None
     vehicleMileage: Optional[str] = None
+    documentNo: Optional[str] = None
     
     # Workshop specific fields
     jobDescription: Optional[str] = None
@@ -2492,6 +2495,7 @@ class InvoiceUpdate(BaseModel):
     vehicleVin: Optional[str] = None
     vehicleReg: Optional[str] = None
     vehicleMileage: Optional[str] = None
+    documentNo: Optional[str] = None
     
     # Workshop specific fields
     jobDescription: Optional[str] = None

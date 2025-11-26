@@ -46,7 +46,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md shadow-sm">
       <div className="flex h-16 items-center justify-between px-4 md:px-6">
-        {/* Left side - Menu button */}
+        {/* Left side - Menu button and Logo */}
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
@@ -56,6 +56,21 @@ export default function Header({ onMenuClick }: HeaderProps) {
           >
             <Menu className="h-5 w-5" />
           </Button>
+          {user?.tenantLogoUrl && (
+            <img 
+              src={user.tenantLogoUrl} 
+              alt="Company Logo" 
+              className="h-10 w-auto object-contain"
+              key={user.tenantLogoUrl}
+              onError={(e) => {
+                console.error('Failed to load logo:', user.tenantLogoUrl);
+                e.currentTarget.style.display = 'none';
+              }}
+              onLoad={() => {
+                console.log('Logo loaded successfully:', user.tenantLogoUrl);
+              }}
+            />
+          )}
         </div>
 
         {/* Right side - Notifications and User menu */}
@@ -71,7 +86,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 className="relative h-10 w-10 rounded-full"
               >
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src={user?.avatar} alt={user?.userName} />
+                  <AvatarImage src={user?.tenantLogoUrl || user?.avatar} alt={user?.userName} />
                   <AvatarFallback className="bg-gradient-primary text-white">
                     {user
                       ? getInitials(

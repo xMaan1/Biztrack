@@ -205,8 +205,19 @@ async def refresh_access_token(refresh_request: RefreshTokenRequest):
         )
 
 @router.get("/me", response_model=User)
-async def get_current_user_info(current_user = Depends(get_current_user)):
+async def get_current_user_info(
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    tenant_context: Optional[dict] = Depends(get_tenant_context)
+):
     """Get current user information"""
+    tenant_logo_url = None
+    if tenant_context:
+        from ...config.core_models import Tenant
+        tenant = db.query(Tenant).filter(Tenant.id == tenant_context["tenant_id"]).first()
+        if tenant:
+            tenant_logo_url = tenant.logo_url
+    
     return User(
         userId=str(current_user.id),
         userName=current_user.userName,
@@ -215,6 +226,7 @@ async def get_current_user_info(current_user = Depends(get_current_user)):
         lastName=current_user.lastName,
         userRole=current_user.userRole,
         avatar=current_user.avatar,
+        tenantLogoUrl=tenant_logo_url,
         permissions=[]
     )
 
