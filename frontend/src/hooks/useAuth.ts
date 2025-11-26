@@ -133,10 +133,12 @@ export function useAuth() {
         const sessionManager = new SessionManager();
         const session = sessionManager.getSession();
         if (session) {
-          sessionManager.setSession({
-            ...session,
-            user: response,
-          });
+          sessionManager.setSession(
+            session.token,
+            response,
+            session.expiresAt ? Math.floor((session.expiresAt - Date.now()) / 1000) : undefined,
+            session.refreshToken
+          );
         }
       }
     } catch (error) {

@@ -25,6 +25,7 @@ import {
   CheckCircle2,
   UploadCloud,
   Trash2,
+  X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiService } from '@/src/services/ApiService';
@@ -43,8 +44,8 @@ export default function ProfilePage() {
     lastName: '',
     avatar: '',
   });
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [logoUploading, setLogoUploading] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -67,6 +68,7 @@ export default function ProfilePage() {
         avatar: user.avatar || '',
       };
       setProfileData(initialData);
+      setAvatarPreview(null);
     }
   }, [user]);
 
@@ -82,6 +84,7 @@ export default function ProfilePage() {
         lastName: profile.lastName || '',
         avatar: profile.avatar || '',
       });
+      setAvatarPreview(null);
     } catch (error) {
       toast.error(extractErrorMessage(error, 'Failed to load profile'));
     } finally {
@@ -116,56 +119,40 @@ export default function ProfilePage() {
     }
   };
 
-  const handleLogoUploadClick = () => {
-    fileInputRef.current?.click();
+  const handleAvatarClick = () => {
+    avatarInputRef.current?.click();
   };
 
-  const handleLogoFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) {
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
       return;
     }
 
-    event.target.value = '';
-    setLogoUploading(true);
-
-    try {
-      console.log('Starting logo upload...');
-      const uploadResponse = await apiService.uploadCompanyLogo(file);
-      console.log('Logo upload response:', uploadResponse);
-      toast.success('Company logo uploaded to S3');
-      
-      console.log('Refreshing user data...');
-      await refreshUser();
-      console.log('User data refreshed successfully');
-    } catch (error: any) {
-      console.error('Logo upload error:', error);
-      console.error('Error response:', error?.response);
-      console.error('Error message:', error?.message);
-      toast.error(extractErrorMessage(error, 'Failed to upload company logo'));
-    } finally {
-      setLogoUploading(false);
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB');
+      return;
     }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target?.result as string;
+      setAvatarPreview(base64);
+      setProfileData(prev => ({ ...prev, avatar: base64 }));
+      setHasChanges(true);
+      toast.success('Avatar selected. Click "Save Changes" to update.');
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
   };
 
-  const handleLogoDelete = async () => {
-    if (!confirm('Are you sure you want to remove the company logo?')) {
-      return;
-    }
-
-    setLogoUploading(true);
-
-    try {
-      await apiService.deleteCompanyLogo();
-      toast.success('Company logo removed successfully');
-      await refreshUser();
-    } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to remove company logo'));
-    } finally {
-      setLogoUploading(false);
-    }
+  const handleRemoveAvatar = () => {
+    setAvatarPreview(null);
+    setProfileData(prev => ({ ...prev, avatar: '' }));
+    setHasChanges(true);
   };
 
   const handlePasswordChange = (field: string, value: string) => {
@@ -254,23 +241,42 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent>
                   <input
-                    ref={fileInputRef}
+                    ref={avatarInputRef}
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={handleLogoFileChange}
+                    onChange={handleAvatarChange}
                     aria-hidden="true"
                   />
                   <form onSubmit={handleProfileSubmit} className="space-y-6">
                     <div className="flex items-center gap-6 pb-6 border-b">
-                      <Avatar className="h-24 w-24">
-                        <AvatarImage src={user?.tenantLogoUrl || profileData.avatar} alt={profileData.userName} />
-                        <AvatarFallback className="bg-gradient-primary text-white text-2xl">
-                          {getInitials(
-                            `${profileData.firstName} ${profileData.lastName}` || profileData.userName
-                          )}
-                        </AvatarFallback>
-                      </Avatar>
+                      <div className="relative">
+                        <Avatar className="h-24 w-24 cursor-pointer" onClick={handleAvatarClick}>
+                          <AvatarImage 
+                            src={avatarPreview || profileData.avatar} 
+                            alt={profileData.userName} 
+                          />
+                          <AvatarFallback className="bg-gradient-primary text-white text-2xl">
+                            {getInitials(
+                              `${profileData.firstName} ${profileData.lastName}` || profileData.userName
+                            )}
+                          </AvatarFallback>
+                        </Avatar>
+                        {(avatarPreview || profileData.avatar) && (
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveAvatar();
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
                       <div className="flex-1">
                         <h3 className="text-lg font-semibold">
                           {profileData.firstName && profileData.lastName
@@ -283,34 +289,22 @@ export default function ProfilePage() {
                             {user.userRole.replace('_', ' ').toUpperCase()}
                           </Badge>
                         )}
+                        <div className="mt-3 flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleAvatarClick}
+                            className="gap-2"
+                          >
+                            <UploadCloud className="h-4 w-4" />
+                            {profileData.avatar ? 'Change Avatar' : 'Upload Avatar'}
+                          </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Click avatar or button to upload. Max 5MB.
+                        </p>
                       </div>
-                    </div>
-                    <div className="flex gap-3 items-center">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleLogoUploadClick}
-                        className="gap-2"
-                        disabled={logoUploading}
-                      >
-                        <UploadCloud className="h-4 w-4" />
-                        {logoUploading ? 'Uploading...' : 'Upload company logo'}
-                      </Button>
-                      {user?.tenantLogoUrl && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={handleLogoDelete}
-                          className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
-                          disabled={logoUploading}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Remove logo
-                        </Button>
-                      )}
-                      <span className="text-sm text-muted-foreground">
-                        This saves the company logo to S3 and updates your tenant branding.
-                      </span>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -352,16 +346,6 @@ export default function ProfilePage() {
                           value={profileData.lastName}
                           onChange={(e) => handleProfileChange('lastName', e.target.value)}
                           placeholder="Doe"
-                        />
-                      </div>
-
-                      <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="avatar">Avatar URL</Label>
-                        <Input
-                          id="avatar"
-                          value={profileData.avatar}
-                          onChange={(e) => handleProfileChange('avatar', e.target.value)}
-                          placeholder="https://example.com/avatar.jpg"
                         />
                       </div>
                     </div>

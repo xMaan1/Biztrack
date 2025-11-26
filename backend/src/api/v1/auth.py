@@ -210,7 +210,6 @@ async def get_current_user_info(
     db: Session = Depends(get_db),
     tenant_context: Optional[dict] = Depends(get_tenant_context)
 ):
-    """Get current user information"""
     tenant_logo_url = None
     if tenant_context:
         from ...config.core_models import Tenant

@@ -182,9 +182,8 @@ class SessionManager {
 
     const token = this.getToken();
     const user = this.getUser();
-    const refreshToken = this.getRefreshToken();
 
-    return !!(token && user && refreshToken);
+    return !!(token && user);
   }
 
   isTokenExpired(): boolean {
