@@ -42,11 +42,11 @@ export default function CommerceDashboard({
   onNavigate,
 }: CommerceDashboardProps) {
   const { getCurrencySymbol } = useCurrency();
-  const handleCreateProject = () => onNavigate('/projects/new');
+  const handleCreateProject = () => onNavigate('/projects');
   const handleNewSale = () => onNavigate('/pos/sale');
   const handleViewSales = () => onNavigate('/sales');
   const handleViewInventory = () => onNavigate('/inventory');
-  const handleAddInvestment = () => onNavigate('/ledger/investments/new');
+  const handleAddInvestment = () => onNavigate('/ledger/investments');
 
   return (
     <div className="space-y-8">

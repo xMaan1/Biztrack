@@ -59,11 +59,11 @@ export default function WorkshopDashboard({
     ? Math.round((stats.completedProjects / stats.totalProjects) * 100)
     : 0;
 
-  const handleCreateProject = () => onNavigate('/projects/new');
-  const handleCreateWorkOrder = () => onNavigate('/workshop-management/work-orders/new');
+  const handleCreateProject = () => onNavigate('/projects');
+  const handleCreateWorkOrder = () => onNavigate('/workshop-management/work-orders');
   const handleViewProduction = () => onNavigate('/workshop-management/production');
   const handleViewMaintenance = () => onNavigate('/workshop-management/maintenance');
-  const handleAddInvestment = () => onNavigate('/ledger/investments/new');
+  const handleAddInvestment = () => onNavigate('/ledger/investments');
 
   return (
     <div className="space-y-6">

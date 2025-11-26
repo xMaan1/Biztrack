@@ -53,8 +53,8 @@ export default function HealthcareDashboard({
     completedProjects: stats?.completedProjects ?? 0,
     totalTeamMembers: stats?.totalTeamMembers ?? 0,
   };
-  const handleCreateProject = () => onNavigate('/projects/new');
-  const handleNewAppointment = () => onNavigate('/appointments/new');
+  const handleCreateProject = () => onNavigate('/projects');
+  const handleNewAppointment = () => onNavigate('/appointments');
   const handleViewPatients = () => onNavigate('/patients');
   const handleViewSchedule = () => onNavigate('/schedule');
 
