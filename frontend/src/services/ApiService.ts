@@ -363,6 +363,10 @@ export class ApiService {
     return this.delete('/file-upload/logo');
   }
 
+  async deleteAvatar() {
+    return this.delete('/profile/avatar');
+  }
+
   async changePassword(currentPassword: string, newPassword: string) {
     return this.post('/profile/change-password', {
       current_password: currentPassword,

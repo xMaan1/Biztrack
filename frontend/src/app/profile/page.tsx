@@ -46,6 +46,7 @@ export default function ProfilePage() {
   });
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -101,21 +102,37 @@ export default function ProfilePage() {
     e.preventDefault();
     try {
       setSaving(true);
+      setAvatarUploading(true);
+      
       const updateData: any = {};
       if (profileData.userName !== user?.userName) updateData.userName = profileData.userName;
       if (profileData.email !== user?.email) updateData.email = profileData.email;
       if (profileData.firstName !== user?.firstName) updateData.firstName = profileData.firstName;
       if (profileData.lastName !== user?.lastName) updateData.lastName = profileData.lastName;
-      if (profileData.avatar !== user?.avatar) updateData.avatar = profileData.avatar;
+      
+      if (profileData.avatar !== user?.avatar) {
+        if (profileData.avatar && user?.avatar && user.avatar.startsWith('http') && user.avatar.includes('avatars/')) {
+          try {
+            await apiService.deleteAvatar();
+          } catch (deleteError) {
+            console.warn('Failed to delete old avatar, continuing with upload:', deleteError);
+          }
+        }
+        updateData.avatar = profileData.avatar;
+      }
 
       await apiService.updateMyProfile(updateData);
       await refreshUser();
       setHasChanges(false);
+      setAvatarPreview(null);
       toast.success('Profile updated successfully!');
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to update profile'));
+      const errorMessage = extractErrorMessage(error, 'Failed to update profile');
+      toast.error(errorMessage);
+      console.error('Profile update error:', error);
     } finally {
       setSaving(false);
+      setAvatarUploading(false);
     }
   };
 
@@ -127,32 +144,77 @@ export default function ProfilePage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file');
-      return;
-    }
+    try {
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select an image file (PNG, JPG, GIF, or WEBP)');
+        event.target.value = '';
+        return;
+      }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size must be less than 5MB');
-      return;
-    }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size must be less than 5MB');
+        event.target.value = '';
+        return;
+      }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const base64 = e.target?.result as string;
-      setAvatarPreview(base64);
-      setProfileData(prev => ({ ...prev, avatar: base64 }));
-      setHasChanges(true);
-      toast.success('Avatar selected. Click "Save Changes" to update.');
-    };
-    reader.readAsDataURL(file);
-    event.target.value = '';
+      const reader = new FileReader();
+      reader.onerror = () => {
+        toast.error('Failed to read image file. Please try again.');
+        event.target.value = '';
+      };
+      
+      reader.onload = (e) => {
+        try {
+          const base64 = e.target?.result as string;
+          if (!base64) {
+            throw new Error('Failed to convert image to base64');
+          }
+          setAvatarPreview(base64);
+          setProfileData(prev => ({ ...prev, avatar: base64 }));
+          setHasChanges(true);
+          toast.success('Avatar selected. Click "Save Changes" to upload.');
+        } catch (error) {
+          console.error('Error processing avatar:', error);
+          toast.error('Failed to process image. Please try a different file.');
+        }
+      };
+      
+      reader.readAsDataURL(file);
+      event.target.value = '';
+    } catch (error) {
+      console.error('Avatar selection error:', error);
+      toast.error('An error occurred while selecting the image. Please try again.');
+      event.target.value = '';
+    }
   };
 
-  const handleRemoveAvatar = () => {
-    setAvatarPreview(null);
-    setProfileData(prev => ({ ...prev, avatar: '' }));
-    setHasChanges(true);
+  const handleRemoveAvatar = async () => {
+    if (!user?.avatar) {
+      setAvatarPreview(null);
+      setProfileData(prev => ({ ...prev, avatar: '' }));
+      setHasChanges(true);
+      return;
+    }
+
+    if (!confirm('Are you sure you want to remove your avatar?')) {
+      return;
+    }
+
+    try {
+      setAvatarUploading(true);
+      await apiService.deleteAvatar();
+      setAvatarPreview(null);
+      setProfileData(prev => ({ ...prev, avatar: '' }));
+      await refreshUser();
+      setHasChanges(false);
+      toast.success('Avatar removed successfully');
+    } catch (error) {
+      const errorMessage = extractErrorMessage(error, 'Failed to remove avatar');
+      toast.error(errorMessage);
+      console.error('Avatar deletion error:', error);
+    } finally {
+      setAvatarUploading(false);
+    }
   };
 
   const handlePasswordChange = (field: string, value: string) => {
@@ -246,12 +308,21 @@ export default function ProfilePage() {
                     accept="image/*"
                     className="hidden"
                     onChange={handleAvatarChange}
+                    disabled={avatarUploading}
                     aria-hidden="true"
                   />
                   <form onSubmit={handleProfileSubmit} className="space-y-6">
                     <div className="flex items-center gap-6 pb-6 border-b">
                       <div className="relative">
-                        <Avatar className="h-24 w-24 cursor-pointer" onClick={handleAvatarClick}>
+                        {avatarUploading && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full z-10">
+                            <Loader2 className="h-6 w-6 animate-spin text-white" />
+                          </div>
+                        )}
+                        <Avatar 
+                          className={`h-24 w-24 ${avatarUploading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`} 
+                          onClick={avatarUploading ? undefined : handleAvatarClick}
+                        >
                           <AvatarImage 
                             src={avatarPreview || profileData.avatar} 
                             alt={profileData.userName} 
@@ -262,7 +333,7 @@ export default function ProfilePage() {
                             )}
                           </AvatarFallback>
                         </Avatar>
-                        {(avatarPreview || profileData.avatar) && (
+                        {(avatarPreview || profileData.avatar) && !avatarUploading && (
                           <Button
                             type="button"
                             variant="destructive"
@@ -272,6 +343,7 @@ export default function ProfilePage() {
                               e.stopPropagation();
                               handleRemoveAvatar();
                             }}
+                            disabled={avatarUploading}
                           >
                             <X className="h-3 w-3" />
                           </Button>
@@ -296,13 +368,25 @@ export default function ProfilePage() {
                             size="sm"
                             onClick={handleAvatarClick}
                             className="gap-2"
+                            disabled={avatarUploading}
                           >
-                            <UploadCloud className="h-4 w-4" />
-                            {profileData.avatar ? 'Change Avatar' : 'Upload Avatar'}
+                            {avatarUploading ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Uploading...
+                              </>
+                            ) : (
+                              <>
+                                <UploadCloud className="h-4 w-4" />
+                                {profileData.avatar ? 'Change Avatar' : 'Upload Avatar'}
+                              </>
+                            )}
                           </Button>
                         </div>
                         <p className="text-xs text-muted-foreground mt-2">
-                          Click avatar or button to upload. Max 5MB.
+                          {avatarUploading 
+                            ? 'Uploading avatar to server...' 
+                            : 'Click avatar or button to upload. Max 5MB.'}
                         </p>
                       </div>
                     </div>
@@ -362,15 +446,15 @@ export default function ProfilePage() {
                     <div className="flex justify-end">
                       <Button
                         type="submit"
-                        disabled={!hasChanges || saving}
+                        disabled={!hasChanges || saving || avatarUploading}
                         className="gap-2"
                       >
-                        {saving ? (
+                        {saving || avatarUploading ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
                           <Save className="h-4 w-4" />
                         )}
-                        {saving ? 'Saving...' : 'Save Changes'}
+                        {saving || avatarUploading ? 'Saving...' : 'Save Changes'}
                       </Button>
                     </div>
                   </form>
