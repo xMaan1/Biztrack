@@ -22,9 +22,7 @@ import {
   Lock,
   Loader2,
   AlertCircle,
-  CheckCircle2,
   UploadCloud,
-  Trash2,
   X,
 } from 'lucide-react';
 import { toast } from 'sonner';

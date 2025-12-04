@@ -47,7 +47,6 @@ import {
 } from '@/src/components/ui/dropdown-menu';
 import {
   Plus,
-  Search,
   MoreHorizontal,
   Edit,
   Trash2,
@@ -57,10 +56,10 @@ import {
 import {
   Appointment,
   AppointmentCreate,
-  AppointmentService,
   AppointmentStats,
-  PatientService,
   Patient,
+  appointmentService,
+  patientService,
 } from '@/src/services/HealthcareService';
 import { DashboardLayout } from '../../components/layout';
 import { toast } from 'sonner';
@@ -114,7 +113,7 @@ function AppointmentsContent() {
     try {
       setLoading(true);
       const skip = (currentPage - 1) * itemsPerPage;
-      const response = await AppointmentService.getAppointments(
+      const response = await appointmentService.getAppointments(
         skip,
         itemsPerPage,
         undefined,
@@ -135,7 +134,7 @@ function AppointmentsContent() {
 
   const loadPatients = async () => {
     try {
-      const response = await PatientService.getPatients(0, 1000);
+      const response = await patientService.getPatients(0, 1000);
       setPatients(response.patients);
     } catch (error) {
       console.error('Failed to load patients:', error);
@@ -144,7 +143,7 @@ function AppointmentsContent() {
 
   const loadStats = async () => {
     try {
-      const response = await AppointmentService.getAppointmentStats();
+      const response = await appointmentService.getAppointmentStats();
       setStats(response);
     } catch (error) {
       console.error('Failed to load stats:', error);
@@ -167,7 +166,7 @@ function AppointmentsContent() {
       return;
     }
     try {
-      await AppointmentService.createAppointment(formData);
+      await appointmentService.createAppointment(formData);
       toast.success('Appointment created successfully');
       setIsCreateDialogOpen(false);
       resetForm();
@@ -185,7 +184,7 @@ function AppointmentsContent() {
       return;
     }
     try {
-      await AppointmentService.updateAppointment(selectedAppointment.id, formData);
+      await appointmentService.updateAppointment(selectedAppointment.id, formData);
       toast.success('Appointment updated successfully');
       setIsEditDialogOpen(false);
       resetForm();
@@ -199,7 +198,7 @@ function AppointmentsContent() {
   const handleDelete = async () => {
     if (!appointmentToDelete) return;
     try {
-      await AppointmentService.deleteAppointment(appointmentToDelete.id);
+      await appointmentService.deleteAppointment(appointmentToDelete.id);
       toast.success('Appointment deleted successfully');
       setIsDeleteDialogOpen(false);
       setAppointmentToDelete(null);
@@ -504,91 +503,93 @@ function AppointmentsContent() {
             ) : appointments.length === 0 ? (
               <div className="text-center py-8 text-gray-500">No appointments found</div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Patient</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {appointments.map((appointment) => (
-                    <TableRow key={appointment.id}>
-                      <TableCell>{getPatientName(appointment.patient_id)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4" />
-                          {new Date(appointment.appointmentDate).toLocaleDateString()}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4" />
-                          {appointment.appointmentTime}
-                        </div>
-                      </TableCell>
-                      <TableCell>{appointment.type}</TableCell>
-                      <TableCell>{getStatusBadge(appointment.status)}</TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => openEditDialog(appointment)}>
-                              <Edit className="w-4 h-4 mr-2" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setAppointmentToDelete(appointment);
-                                setIsDeleteDialogOpen(true);
-                              }}
-                              className="text-red-600"
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Patient</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Time</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              {totalPages > 1 && (
-                <div className="flex justify-between items-center mt-4">
-                  <div className="text-sm text-gray-600">
-                    Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount} appointments
+                  </TableHeader>
+                  <TableBody>
+                    {appointments.map((appointment) => (
+                      <TableRow key={appointment.id}>
+                        <TableCell>{getPatientName(appointment.patient_id)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4" />
+                            {new Date(appointment.appointmentDate).toLocaleDateString()}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4" />
+                            {appointment.appointmentTime}
+                          </div>
+                        </TableCell>
+                        <TableCell>{appointment.type}</TableCell>
+                        <TableCell>{getStatusBadge(appointment.status)}</TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => openEditDialog(appointment)}>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setAppointmentToDelete(appointment);
+                                  setIsDeleteDialogOpen(true);
+                                }}
+                                className="text-red-600"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                {totalPages > 1 && (
+                  <div className="flex justify-between items-center mt-4">
+                    <div className="text-sm text-gray-600">
+                      Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount} appointments
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                      >
+                        Previous
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage((p) => p + 1)}
+                        disabled={currentPage >= totalPages}
+                      >
+                        Next
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                      disabled={currentPage === 1}
-                    >
-                      Previous
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage((p) => p + 1)}
-                      disabled={currentPage >= totalPages}
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
-              )}
+                )}
+              </>
             )}
           </CardContent>
         </Card>

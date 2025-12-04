@@ -193,3 +193,22 @@ export const appointmentService = new AppointmentService();
 export const medicalRecordService = new MedicalRecordService();
 export const medicalSupplyService = new MedicalSupplyService();
 
+export type {
+  Patient,
+  PatientCreate,
+  PatientUpdate,
+  PatientStats,
+  Appointment,
+  AppointmentCreate,
+  AppointmentUpdate,
+  AppointmentStats,
+  MedicalRecord,
+  MedicalRecordCreate,
+  MedicalRecordUpdate,
+  MedicalRecordStats,
+  MedicalSupply,
+  MedicalSupplyCreate,
+  MedicalSupplyUpdate,
+  MedicalSupplyStats,
+};
+

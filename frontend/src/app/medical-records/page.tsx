@@ -51,17 +51,16 @@ import {
   MoreHorizontal,
   Edit,
   Trash2,
-  FileText,
   Calendar,
   Lock,
 } from 'lucide-react';
 import {
   MedicalRecord,
   MedicalRecordCreate,
-  MedicalRecordService,
   MedicalRecordStats,
-  PatientService,
   Patient,
+  medicalRecordService,
+  patientService,
 } from '@/src/services/HealthcareService';
 import { DashboardLayout } from '../../components/layout';
 import { toast } from 'sonner';
@@ -140,7 +139,7 @@ function MedicalRecordsContent() {
     try {
       setLoading(true);
       const skip = (currentPage - 1) * itemsPerPage;
-      const response = await MedicalRecordService.getMedicalRecords(
+      const response = await medicalRecordService.getMedicalRecords(
         skip,
         itemsPerPage,
         debouncedSearchTerm || undefined,
@@ -158,7 +157,7 @@ function MedicalRecordsContent() {
 
   const loadPatients = async () => {
     try {
-      const response = await PatientService.getPatients(0, 1000);
+      const response = await patientService.getPatients(0, 1000);
       setPatients(response.patients);
     } catch (error) {
       console.error('Failed to load patients:', error);
@@ -167,7 +166,7 @@ function MedicalRecordsContent() {
 
   const loadStats = async () => {
     try {
-      const response = await MedicalRecordService.getMedicalRecordStats();
+      const response = await medicalRecordService.getMedicalRecordStats();
       setStats(response);
     } catch (error) {
       console.error('Failed to load stats:', error);
@@ -190,7 +189,7 @@ function MedicalRecordsContent() {
       return;
     }
     try {
-      await MedicalRecordService.createMedicalRecord(formData);
+      await medicalRecordService.createMedicalRecord(formData);
       toast.success('Medical record created successfully');
       setIsCreateDialogOpen(false);
       resetForm();
@@ -208,7 +207,7 @@ function MedicalRecordsContent() {
       return;
     }
     try {
-      await MedicalRecordService.updateMedicalRecord(selectedRecord.id, formData);
+      await medicalRecordService.updateMedicalRecord(selectedRecord.id, formData);
       toast.success('Medical record updated successfully');
       setIsEditDialogOpen(false);
       resetForm();
@@ -222,7 +221,7 @@ function MedicalRecordsContent() {
   const handleDelete = async () => {
     if (!recordToDelete) return;
     try {
-      await MedicalRecordService.deleteMedicalRecord(recordToDelete.id);
+      await medicalRecordService.deleteMedicalRecord(recordToDelete.id);
       toast.success('Medical record deleted successfully');
       setIsDeleteDialogOpen(false);
       setRecordToDelete(null);
@@ -448,7 +447,7 @@ function MedicalRecordsContent() {
                   {Object.entries(stats.byType).map(([type, count]) => (
                     <div key={type} className="flex justify-between text-sm">
                       <span>{type}</span>
-                      <span className="font-medium">{count}</span>
+                      <span className="font-medium">{String(count)}</span>
                     </div>
                   ))}
                 </div>
@@ -502,97 +501,99 @@ function MedicalRecordsContent() {
             ) : records.length === 0 ? (
               <div className="text-center py-8 text-gray-500">No medical records found</div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Patient</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Visit Date</TableHead>
-                    <TableHead>Confidential</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {records.map((record) => (
-                    <TableRow key={record.id}>
-                      <TableCell>{getPatientName(record.patient_id)}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{record.recordType}</Badge>
-                      </TableCell>
-                      <TableCell className="font-medium">{record.title}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4" />
-                          {new Date(record.visitDate).toLocaleDateString()}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {record.isConfidential ? (
-                          <Badge className="bg-red-100 text-red-800">
-                            <Lock className="w-3 h-3 mr-1" />
-                            Confidential
-                          </Badge>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => openEditDialog(record)}>
-                              <Edit className="w-4 h-4 mr-2" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setRecordToDelete(record);
-                                setIsDeleteDialogOpen(true);
-                              }}
-                              className="text-red-600"
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Patient</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Visit Date</TableHead>
+                      <TableHead>Confidential</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              {totalPages > 1 && (
-                <div className="flex justify-between items-center mt-4">
-                  <div className="text-sm text-gray-600">
-                    Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount} records
+                  </TableHeader>
+                  <TableBody>
+                    {records.map((record) => (
+                      <TableRow key={record.id}>
+                        <TableCell>{getPatientName(record.patient_id)}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{record.recordType}</Badge>
+                        </TableCell>
+                        <TableCell className="font-medium">{record.title}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4" />
+                            {new Date(record.visitDate).toLocaleDateString()}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {record.isConfidential ? (
+                            <Badge className="bg-red-100 text-red-800">
+                              <Lock className="w-3 h-3 mr-1" />
+                              Confidential
+                            </Badge>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => openEditDialog(record)}>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setRecordToDelete(record);
+                                  setIsDeleteDialogOpen(true);
+                                }}
+                                className="text-red-600"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                {totalPages > 1 && (
+                  <div className="flex justify-between items-center mt-4">
+                    <div className="text-sm text-gray-600">
+                      Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount} records
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                      >
+                        Previous
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage((p) => p + 1)}
+                        disabled={currentPage >= totalPages}
+                      >
+                        Next
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                      disabled={currentPage === 1}
-                    >
-                      Previous
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage((p) => p + 1)}
-                      disabled={currentPage >= totalPages}
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
-              )}
+                )}
+              </>
             )}
           </CardContent>
         </Card>

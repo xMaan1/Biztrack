@@ -51,15 +51,14 @@ import {
   MoreHorizontal,
   Edit,
   Trash2,
-  Pill,
   AlertTriangle,
   Package,
 } from 'lucide-react';
 import {
   MedicalSupply,
   MedicalSupplyCreate,
-  MedicalSupplyService,
   MedicalSupplyStats,
+  medicalSupplyService,
 } from '@/src/services/HealthcareService';
 import { DashboardLayout } from '../../components/layout';
 import { toast } from 'sonner';
@@ -134,7 +133,7 @@ function MedicalSuppliesContent() {
     try {
       setLoading(true);
       const skip = (currentPage - 1) * itemsPerPage;
-      const response = await MedicalSupplyService.getMedicalSupplies(
+      const response = await medicalSupplyService.getMedicalSupplies(
         skip,
         itemsPerPage,
         debouncedSearchTerm || undefined,
@@ -153,7 +152,7 @@ function MedicalSuppliesContent() {
 
   const loadStats = async () => {
     try {
-      const response = await MedicalSupplyService.getMedicalSupplyStats();
+      const response = await medicalSupplyService.getMedicalSupplyStats();
       setStats(response);
     } catch (error) {
       console.error('Failed to load stats:', error);
@@ -163,9 +162,9 @@ function MedicalSuppliesContent() {
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
     if (!formData.name.trim()) errors.name = 'Name is required';
-    if (formData.stockQuantity < 0) errors.stockQuantity = 'Stock quantity cannot be negative';
-    if (formData.minStockLevel < 0) errors.minStockLevel = 'Min stock level cannot be negative';
-    if (formData.unitPrice < 0) errors.unitPrice = 'Unit price cannot be negative';
+    if (formData.stockQuantity !== undefined && formData.stockQuantity < 0) errors.stockQuantity = 'Stock quantity cannot be negative';
+    if (formData.minStockLevel !== undefined && formData.minStockLevel < 0) errors.minStockLevel = 'Min stock level cannot be negative';
+    if (formData.unitPrice !== undefined && formData.unitPrice < 0) errors.unitPrice = 'Unit price cannot be negative';
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -176,7 +175,7 @@ function MedicalSuppliesContent() {
       return;
     }
     try {
-      await MedicalSupplyService.createMedicalSupply(formData);
+      await medicalSupplyService.createMedicalSupply(formData);
       toast.success('Medical supply created successfully');
       setIsCreateDialogOpen(false);
       resetForm();
@@ -194,7 +193,7 @@ function MedicalSuppliesContent() {
       return;
     }
     try {
-      await MedicalSupplyService.updateMedicalSupply(selectedSupply.id, formData);
+      await medicalSupplyService.updateMedicalSupply(selectedSupply.id, formData);
       toast.success('Medical supply updated successfully');
       setIsEditDialogOpen(false);
       resetForm();
@@ -208,7 +207,7 @@ function MedicalSuppliesContent() {
   const handleDelete = async () => {
     if (!supplyToDelete) return;
     try {
-      await MedicalSupplyService.deleteMedicalSupply(supplyToDelete.id);
+      await medicalSupplyService.deleteMedicalSupply(supplyToDelete.id);
       toast.success('Medical supply deleted successfully');
       setIsDeleteDialogOpen(false);
       setSupplyToDelete(null);
@@ -570,89 +569,91 @@ function MedicalSuppliesContent() {
             ) : supplies.length === 0 ? (
               <div className="text-center py-8 text-gray-500">No medical supplies found</div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Supply ID</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Stock</TableHead>
-                    <TableHead>Unit Price</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {supplies.map((supply) => (
-                    <TableRow key={supply.id}>
-                      <TableCell className="font-medium">{supply.supplyId}</TableCell>
-                      <TableCell>{supply.name}</TableCell>
-                      <TableCell>
-                        {supply.category && (
-                          <Badge variant="outline">{supply.category}</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {supply.stockQuantity} {supply.unit}
-                      </TableCell>
-                      <TableCell>${supply.unitPrice.toFixed(2)}</TableCell>
-                      <TableCell>{getStockBadge(supply)}</TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => openEditDialog(supply)}>
-                              <Edit className="w-4 h-4 mr-2" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setSupplyToDelete(supply);
-                                setIsDeleteDialogOpen(true);
-                              }}
-                              className="text-red-600"
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Supply ID</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Stock</TableHead>
+                      <TableHead>Unit Price</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              {totalPages > 1 && (
-                <div className="flex justify-between items-center mt-4">
-                  <div className="text-sm text-gray-600">
-                    Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount} supplies
+                  </TableHeader>
+                  <TableBody>
+                    {supplies.map((supply) => (
+                      <TableRow key={supply.id}>
+                        <TableCell className="font-medium">{supply.supplyId}</TableCell>
+                        <TableCell>{supply.name}</TableCell>
+                        <TableCell>
+                          {supply.category && (
+                            <Badge variant="outline">{supply.category}</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {supply.stockQuantity} {supply.unit}
+                        </TableCell>
+                        <TableCell>${supply.unitPrice.toFixed(2)}</TableCell>
+                        <TableCell>{getStockBadge(supply)}</TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => openEditDialog(supply)}>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setSupplyToDelete(supply);
+                                  setIsDeleteDialogOpen(true);
+                                }}
+                                className="text-red-600"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                {totalPages > 1 && (
+                  <div className="flex justify-between items-center mt-4">
+                    <div className="text-sm text-gray-600">
+                      Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount} supplies
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                      >
+                        Previous
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage((p) => p + 1)}
+                        disabled={currentPage >= totalPages}
+                      >
+                        Next
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                      disabled={currentPage === 1}
-                    >
-                      Previous
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage((p) => p + 1)}
-                      disabled={currentPage >= totalPages}
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
-              )}
+                )}
+              </>
             )}
           </CardContent>
         </Card>

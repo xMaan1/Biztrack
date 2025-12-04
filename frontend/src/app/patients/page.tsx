@@ -52,15 +52,14 @@ import {
   Edit,
   Trash2,
   Phone,
-  User,
   CheckCircle,
   XCircle,
 } from 'lucide-react';
 import {
   Patient,
   PatientCreate,
-  PatientService,
   PatientStats,
+  patientService,
 } from '@/src/services/HealthcareService';
 import { DashboardLayout } from '../../components/layout';
 import { toast } from 'sonner';
@@ -135,7 +134,7 @@ function PatientsContent() {
     try {
       setLoading(true);
       const skip = (currentPage - 1) * itemsPerPage;
-      const response = await PatientService.getPatients(
+      const response = await patientService.getPatients(
         skip,
         itemsPerPage,
         debouncedSearchTerm || undefined,
@@ -153,7 +152,7 @@ function PatientsContent() {
 
   const loadStats = async () => {
     try {
-      const response = await PatientService.getPatientStats();
+      const response = await patientService.getPatientStats();
       setStats(response);
     } catch (error) {
       console.error('Failed to load stats:', error);
@@ -177,7 +176,7 @@ function PatientsContent() {
       return;
     }
     try {
-      await PatientService.createPatient(formData);
+      await patientService.createPatient(formData);
       toast.success('Patient created successfully');
       setIsCreateDialogOpen(false);
       resetForm();
@@ -195,7 +194,7 @@ function PatientsContent() {
       return;
     }
     try {
-      await PatientService.updatePatient(selectedPatient.id, formData);
+      await patientService.updatePatient(selectedPatient.id, formData);
       toast.success('Patient updated successfully');
       setIsEditDialogOpen(false);
       resetForm();
@@ -209,7 +208,7 @@ function PatientsContent() {
   const handleDelete = async () => {
     if (!patientToDelete) return;
     try {
-      await PatientService.deletePatient(patientToDelete.id);
+      await patientService.deletePatient(patientToDelete.id);
       toast.success('Patient deleted successfully');
       setIsDeleteDialogOpen(false);
       setPatientToDelete(null);
