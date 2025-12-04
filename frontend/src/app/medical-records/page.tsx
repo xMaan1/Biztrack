@@ -108,6 +108,18 @@ function MedicalRecordsContent() {
     isConfidential: false,
   });
 
+  const recordTypes = [
+    'Consultation',
+    'Diagnosis',
+    'Treatment',
+    'Lab Report',
+    'X-Ray',
+    'Prescription',
+    'Surgery',
+    'Follow-up',
+    'Other',
+  ];
+
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -265,18 +277,6 @@ function MedicalRecordsContent() {
     const patient = patients.find((p) => p.id === patientId);
     return patient ? `${patient.firstName} ${patient.lastName}` : 'Unknown';
   };
-
-  const recordTypes = [
-    'Consultation',
-    'Diagnosis',
-    'Treatment',
-    'Lab Report',
-    'X-Ray',
-    'Prescription',
-    'Surgery',
-    'Follow-up',
-    'Other',
-  ];
 
   return (
     <DashboardLayout>
