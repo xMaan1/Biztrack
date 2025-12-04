@@ -63,7 +63,7 @@ async def get_medical_supplies_endpoint(
         low_stock
     )
     return MedicalSuppliesResponse(
-        supplies=[MedicalSupplyResponse.from_attributes(supply) for supply in supplies],
+        supplies=[MedicalSupplyResponse.model_validate(supply) for supply in supplies],
         total=total
     )
 
@@ -92,7 +92,7 @@ async def get_medical_supply_endpoint(
     supply = get_medical_supply_by_id(db, supply_id, tenant_context["tenant_id"])
     if not supply:
         raise HTTPException(status_code=404, detail="Medical supply not found")
-    return MedicalSupplyResponse.from_attributes(supply)
+    return MedicalSupplyResponse.model_validate(supply)
 
 @router.put("/{supply_id}", response_model=MedicalSupplyResponse)
 async def update_medical_supply_endpoint(
@@ -108,7 +108,7 @@ async def update_medical_supply_endpoint(
     supply = update_medical_supply(db, supply_id, supply_data.dict(exclude_unset=True), tenant_context["tenant_id"])
     if not supply:
         raise HTTPException(status_code=404, detail="Medical supply not found")
-    return MedicalSupplyResponse.from_attributes(supply)
+    return MedicalSupplyResponse.model_validate(supply)
 
 @router.delete("/{supply_id}")
 async def delete_medical_supply_endpoint(

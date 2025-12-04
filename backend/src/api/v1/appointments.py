@@ -71,7 +71,7 @@ async def get_appointments_endpoint(
         date_to
     )
     return AppointmentsResponse(
-        appointments=[AppointmentResponse.from_attributes(appointment) for appointment in appointments],
+        appointments=[AppointmentResponse.model_validate(appointment) for appointment in appointments],
         total=total
     )
 
@@ -100,7 +100,7 @@ async def get_appointment_endpoint(
     appointment = get_appointment_by_id(db, appointment_id, tenant_context["tenant_id"])
     if not appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")
-    return AppointmentResponse.from_attributes(appointment)
+    return AppointmentResponse.model_validate(appointment)
 
 @router.put("/{appointment_id}", response_model=AppointmentResponse)
 async def update_appointment_endpoint(
@@ -116,7 +116,7 @@ async def update_appointment_endpoint(
     appointment = update_appointment(db, appointment_id, appointment_data.dict(exclude_unset=True), tenant_context["tenant_id"])
     if not appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")
-    return AppointmentResponse.from_attributes(appointment)
+    return AppointmentResponse.model_validate(appointment)
 
 @router.delete("/{appointment_id}")
 async def delete_appointment_endpoint(

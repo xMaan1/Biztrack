@@ -62,7 +62,7 @@ async def get_patients_endpoint(
         status
     )
     return PatientsResponse(
-        patients=[PatientResponse.from_attributes(patient) for patient in patients],
+        patients=[PatientResponse.model_validate(patient) for patient in patients],
         total=total
     )
 
@@ -91,7 +91,7 @@ async def get_patient_endpoint(
     patient = get_patient_by_id(db, patient_id, tenant_context["tenant_id"])
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
-    return PatientResponse.from_attributes(patient)
+    return PatientResponse.model_validate(patient)
 
 @router.put("/{patient_id}", response_model=PatientResponse)
 async def update_patient_endpoint(
@@ -107,7 +107,7 @@ async def update_patient_endpoint(
     patient = update_patient(db, patient_id, patient_data.dict(exclude_unset=True), tenant_context["tenant_id"])
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
-    return PatientResponse.from_attributes(patient)
+    return PatientResponse.model_validate(patient)
 
 @router.delete("/{patient_id}")
 async def delete_patient_endpoint(

@@ -71,7 +71,7 @@ async def get_medical_records_endpoint(
         date_to
     )
     return MedicalRecordsResponse(
-        records=[MedicalRecordResponse.from_attributes(record) for record in records],
+        records=[MedicalRecordResponse.model_validate(record) for record in records],
         total=total
     )
 
@@ -100,7 +100,7 @@ async def get_medical_record_endpoint(
     record = get_medical_record_by_id(db, record_id, tenant_context["tenant_id"])
     if not record:
         raise HTTPException(status_code=404, detail="Medical record not found")
-    return MedicalRecordResponse.from_attributes(record)
+    return MedicalRecordResponse.model_validate(record)
 
 @router.put("/{record_id}", response_model=MedicalRecordResponse)
 async def update_medical_record_endpoint(
@@ -116,7 +116,7 @@ async def update_medical_record_endpoint(
     record = update_medical_record(db, record_id, record_data.dict(exclude_unset=True), tenant_context["tenant_id"])
     if not record:
         raise HTTPException(status_code=404, detail="Medical record not found")
-    return MedicalRecordResponse.from_attributes(record)
+    return MedicalRecordResponse.model_validate(record)
 
 @router.delete("/{record_id}")
 async def delete_medical_record_endpoint(
