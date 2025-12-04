@@ -16,6 +16,7 @@ from ...config.database import (
     get_user_by_id, create_user, get_all_users
 )
 from ...config.core_models import User as UserModel, TenantUser as TenantUserModel, Role as RoleModel, Tenant as TenantModel
+from ...config.notification_models import Notification, NotificationPreference
 from ...core.auth import get_password_hash
 from ...api.dependencies import (
     get_current_user, get_tenant_context, 
@@ -472,6 +473,8 @@ async def remove_tenant_user(
     if other_tenant_users_count == 0:
         user = db.query(UserModel).filter(UserModel.id == user_id_uuid).first()
         if user:
+            db.query(Notification).filter(Notification.user_id == user_id_uuid).delete()
+            db.query(NotificationPreference).filter(NotificationPreference.user_id == user_id_uuid).delete()
             db.delete(user)
     
     db.commit()
@@ -513,6 +516,8 @@ async def remove_user_from_tenant(
     if other_tenant_users_count == 0:
         user = db.query(UserModel).filter(UserModel.id == user_id_uuid).first()
         if user:
+            db.query(Notification).filter(Notification.user_id == user_id_uuid).delete()
+            db.query(NotificationPreference).filter(NotificationPreference.user_id == user_id_uuid).delete()
             db.delete(user)
     
     db.commit()
