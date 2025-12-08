@@ -11,7 +11,7 @@ from ...config.medical_supply_crud import (
     create_medical_supply, get_medical_supply_by_id, get_medical_supplies, update_medical_supply, delete_medical_supply, get_medical_supply_stats
 )
 from ...api.dependencies import get_current_user, get_tenant_context, require_permission
-from ...models.unified_models import ModulePermission
+from ...models.common import ModulePermission
 
 class MedicalSuppliesResponse(BaseModel):
     supplies: List[MedicalSupplyResponse]

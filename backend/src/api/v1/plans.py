@@ -5,7 +5,7 @@ from sqlalchemy import and_
 
 from ...config.database import get_db, get_plans
 from ...config.core_models import Plan
-from ...models.unified_models import PlansResponse, PlanUpdate
+from ...models.user_models import PlansResponse, PlanUpdate
 
 router = APIRouter(prefix="/plans", tags=["plans"])
 

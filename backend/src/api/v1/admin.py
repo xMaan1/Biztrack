@@ -5,7 +5,7 @@ from typing import Optional, List
 from datetime import datetime
 from pydantic import BaseModel
 
-from ...models.unified_models import Tenant, TenantCreate
+from ...models.user_models import Tenant, TenantCreate
 from ...config.database import get_db
 from ...api.dependencies import get_current_user
 from ...config.core_models import Tenant as TenantModel, User, Subscription, Plan, TenantUser
@@ -604,9 +604,11 @@ async def get_tenant_invoice_details(
             )
         
         # Convert invoice to response format
-        from ...models.unified_models import InvoiceResponse
+        from ...models.invoice_models import InvoiceResponse
+        from ...api.v1.invoices import transform_invoice_to_pydantic
         try:
-            return InvoiceResponse(invoice=invoice)
+            pydantic_invoice = transform_invoice_to_pydantic(invoice)
+            return InvoiceResponse(invoice=pydantic_invoice)
         except Exception as validation_error:
             print(f"Validation error in InvoiceResponse: {validation_error}")
             print(f"Invoice items: {invoice.items}")

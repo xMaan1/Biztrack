@@ -5,7 +5,7 @@ import json
 import uuid
 from datetime import datetime, timedelta
 
-from ...models.unified_models import (
+from ...models.crm_models import (
     Lead, LeadCreate, LeadUpdate, LeadsResponse,
     Contact, ContactCreate, ContactUpdate, ContactsResponse,
     Company, CompanyCreate, CompanyUpdate, CompaniesResponse,
@@ -13,14 +13,14 @@ from ...models.unified_models import (
     Quote, QuoteCreate, QuoteUpdate, QuotesResponse,
     Contract, ContractCreate, ContractUpdate, ContractsResponse,
     SalesActivity, SalesActivityCreate, SalesActivityUpdate, SalesActivitiesResponse,
-    SalesDashboard, SalesMetrics, SalesPipeline,
-    LeadStatus, LeadSource, OpportunityStage, QuoteStatus, ContractStatus, ContactType, ActivityType
+    SalesDashboard, SalesMetrics, SalesPipeline
 )
+from ...models.common import LeadStatus, LeadSource, OpportunityStage, QuoteStatus, ContractStatus, ContactType, ActivityType
 from ...config.database import (
     get_db, get_user_by_id
 )
 from ...api.dependencies import get_current_user, get_tenant_context, require_permission
-from ...models.unified_models import ModulePermission
+from ...models.common import ModulePermission
 
 router = APIRouter(prefix="/sales", tags=["sales"])
 

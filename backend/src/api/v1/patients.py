@@ -12,7 +12,7 @@ from ...config.patient_crud import (
     create_patient, get_patient_by_id, get_patients, update_patient, delete_patient, get_patient_stats
 )
 from ...api.dependencies import get_current_user, get_tenant_context, require_permission
-from ...models.unified_models import ModulePermission
+from ...models.common import ModulePermission
 
 class PatientsResponse(BaseModel):
     patients: List[PatientResponse]

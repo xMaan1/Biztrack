@@ -5,8 +5,9 @@ from datetime import datetime, timedelta
 
 from ..dependencies import get_current_user, get_tenant_context
 from ...config.database import get_db
-from ...models.unified_models import (
-    User, ReportsDashboard, WorkOrderMetrics, ProjectMetrics, HRMMetrics,
+from ...models.user_models import User
+from ...models.reports_models import (
+    ReportsDashboard, WorkOrderMetrics, ProjectMetrics, HRMMetrics,
     InventoryMetrics, FinancialMetrics, MonthlyTrend, DepartmentPerformance,
     ReportsFilters
 )

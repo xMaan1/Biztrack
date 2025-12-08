@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from ...config.database import get_db
 from ...api.dependencies import get_current_user, get_tenant_context
-from ...models.unified_models import (
+from ...models.invoice_models import (
     InvoiceCustomizationCreate, InvoiceCustomizationUpdate, 
     InvoiceCustomizationResponse, InvoiceCustomization
 )
@@ -58,7 +58,42 @@ def get_invoice_customization(
             db.refresh(default_customization)
             customization = default_customization
         
-        return InvoiceCustomizationResponse(customization=customization)
+        from ...models.invoice_models import InvoiceCustomization as PydanticInvoiceCustomization
+        pydantic_customization = PydanticInvoiceCustomization(
+            id=str(customization.id),
+            tenant_id=str(customization.tenant_id),
+            company_name=customization.company_name,
+            company_logo_url=customization.company_logo_url,
+            company_address=customization.company_address,
+            company_phone=customization.company_phone,
+            company_email=customization.company_email,
+            company_website=customization.company_website,
+            bank_sort_code=customization.bank_sort_code,
+            bank_account_number=customization.bank_account_number,
+            payment_instructions=customization.payment_instructions,
+            primary_color=customization.primary_color,
+            secondary_color=customization.secondary_color,
+            accent_color=customization.accent_color,
+            show_vehicle_info=customization.show_vehicle_info,
+            show_parts_section=customization.show_parts_section,
+            show_labour_section=customization.show_labour_section,
+            show_comments_section=customization.show_comments_section,
+            footer_text=customization.footer_text,
+            show_contact_info_in_footer=customization.show_contact_info_in_footer,
+            footer_background_color=customization.footer_background_color,
+            grid_color=customization.grid_color,
+            thank_you_message=customization.thank_you_message,
+            enquiry_message=customization.enquiry_message,
+            contact_message=customization.contact_message,
+            default_payment_instructions=customization.default_payment_instructions,
+            default_currency=customization.default_currency,
+            custom_fields=customization.custom_fields if hasattr(customization, 'custom_fields') else {},
+            created_by=str(customization.created_by),
+            is_active=customization.is_active,
+            created_at=customization.created_at,
+            updated_at=customization.updated_at
+        )
+        return InvoiceCustomizationResponse(customization=pydantic_customization)
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get invoice customization: {str(e)}")
@@ -106,7 +141,42 @@ def create_invoice_customization(
             db.commit()
             db.refresh(customization)
         
-        return InvoiceCustomizationResponse(customization=customization)
+        from ...models.invoice_models import InvoiceCustomization as PydanticInvoiceCustomization
+        pydantic_customization = PydanticInvoiceCustomization(
+            id=str(customization.id),
+            tenant_id=str(customization.tenant_id),
+            company_name=customization.company_name,
+            company_logo_url=customization.company_logo_url,
+            company_address=customization.company_address,
+            company_phone=customization.company_phone,
+            company_email=customization.company_email,
+            company_website=customization.company_website,
+            bank_sort_code=customization.bank_sort_code,
+            bank_account_number=customization.bank_account_number,
+            payment_instructions=customization.payment_instructions,
+            primary_color=customization.primary_color,
+            secondary_color=customization.secondary_color,
+            accent_color=customization.accent_color,
+            show_vehicle_info=customization.show_vehicle_info,
+            show_parts_section=customization.show_parts_section,
+            show_labour_section=customization.show_labour_section,
+            show_comments_section=customization.show_comments_section,
+            footer_text=customization.footer_text,
+            show_contact_info_in_footer=customization.show_contact_info_in_footer,
+            footer_background_color=customization.footer_background_color,
+            grid_color=customization.grid_color,
+            thank_you_message=customization.thank_you_message,
+            enquiry_message=customization.enquiry_message,
+            contact_message=customization.contact_message,
+            default_payment_instructions=customization.default_payment_instructions,
+            default_currency=customization.default_currency,
+            custom_fields=customization.custom_fields if hasattr(customization, 'custom_fields') else {},
+            created_by=str(customization.created_by),
+            is_active=customization.is_active,
+            created_at=customization.created_at,
+            updated_at=customization.updated_at
+        )
+        return InvoiceCustomizationResponse(customization=pydantic_customization)
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create/update invoice customization: {str(e)}")
@@ -142,7 +212,42 @@ def update_invoice_customization(
         db.commit()
         db.refresh(customization)
         
-        return InvoiceCustomizationResponse(customization=customization)
+        from ...models.invoice_models import InvoiceCustomization as PydanticInvoiceCustomization
+        pydantic_customization = PydanticInvoiceCustomization(
+            id=str(customization.id),
+            tenant_id=str(customization.tenant_id),
+            company_name=customization.company_name,
+            company_logo_url=customization.company_logo_url,
+            company_address=customization.company_address,
+            company_phone=customization.company_phone,
+            company_email=customization.company_email,
+            company_website=customization.company_website,
+            bank_sort_code=customization.bank_sort_code,
+            bank_account_number=customization.bank_account_number,
+            payment_instructions=customization.payment_instructions,
+            primary_color=customization.primary_color,
+            secondary_color=customization.secondary_color,
+            accent_color=customization.accent_color,
+            show_vehicle_info=customization.show_vehicle_info,
+            show_parts_section=customization.show_parts_section,
+            show_labour_section=customization.show_labour_section,
+            show_comments_section=customization.show_comments_section,
+            footer_text=customization.footer_text,
+            show_contact_info_in_footer=customization.show_contact_info_in_footer,
+            footer_background_color=customization.footer_background_color,
+            grid_color=customization.grid_color,
+            thank_you_message=customization.thank_you_message,
+            enquiry_message=customization.enquiry_message,
+            contact_message=customization.contact_message,
+            default_payment_instructions=customization.default_payment_instructions,
+            default_currency=customization.default_currency,
+            custom_fields=customization.custom_fields if hasattr(customization, 'custom_fields') else {},
+            created_by=str(customization.created_by),
+            is_active=customization.is_active,
+            created_at=customization.created_at,
+            updated_at=customization.updated_at
+        )
+        return InvoiceCustomizationResponse(customization=pydantic_customization)
         
     except HTTPException:
         raise

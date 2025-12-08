@@ -6,9 +6,8 @@ import uuid
 
 from ..dependencies import get_current_user, get_tenant_context
 from ...config.database import get_db
-from ...models.unified_models import (
-    User, WorkOrderBase, WorkOrderCreate, WorkOrderUpdate, WorkOrderResponse
-)
+from ...models.user_models import User
+from ...models.project_models import WorkOrderBase, WorkOrderCreate, WorkOrderUpdate, WorkOrderResponse
 from ...config.workshop_crud import (
     get_work_order_by_id, get_all_work_orders, get_work_orders_by_status, get_work_orders_by_type,
     get_work_orders_by_assigned_user, get_work_orders_by_project, create_work_order, update_work_order, delete_work_order,

@@ -6,7 +6,7 @@ import base64
 import uuid
 import logging
 
-from ...models.unified_models import User, UserUpdate
+from ...models.user_models import User, UserUpdate
 from ...config.database import get_db, get_user_by_id, update_user, get_user_by_email, get_user_by_username
 from ...core.auth import verify_password, get_password_hash
 from ...api.dependencies import get_current_user, get_tenant_context

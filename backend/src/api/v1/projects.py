@@ -6,10 +6,11 @@ import json
 import uuid
 from datetime import datetime, timedelta
 
-from ...models.unified_models import (
-    Project, ProjectCreate, ProjectUpdate, ProjectsResponse, TeamMember,
-    TasksResponse, Task, TimeEntry, TimeEntryCreate, TimeEntryUpdate, HRMTimeEntriesResponse
+from ...models.project_models import (
+    Project, ProjectCreate, ProjectUpdate, ProjectsResponse, TasksResponse, Task
 )
+from ...models.user_models import TeamMember
+from ...models.hrm_models import TimeEntry, TimeEntryCreate, TimeEntryUpdate, HRMTimeEntriesResponse
 from ...config.database import (
     get_db, get_user_by_id, create_project, get_project_by_id,
     get_all_projects, update_project, delete_project, get_tasks_by_project,
@@ -18,7 +19,7 @@ from ...config.database import (
 )
 from ...config.hrm_models import TimeEntry as DBTimeEntry, Employee as DBEmployee
 from ...api.dependencies import get_current_user, get_tenant_context, require_permission
-from ...models.unified_models import ModulePermission
+from ...models.common import ModulePermission
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -889,11 +890,15 @@ def transform_task_to_response(task: DBTask):
     """Transform database task to response format for project tasks"""
     return Task(
         id=str(task.id),
+        tenant_id=str(task.tenant_id),
         title=task.title,
         description=task.description,
         status=task.status,
         priority=task.priority,
-        project=str(task.projectId),
+        projectId=str(task.projectId),
+        assignedToId=str(task.assignedToId) if task.assignedToId else None,
+        createdById=str(task.createdById),
+        parentTaskId=str(task.parentTaskId) if task.parentTaskId else None,
         assignedTo={
             "id": str(task.assignedTo.id),
             "name": f"{task.assignedTo.firstName or ''} {task.assignedTo.lastName or ''}".strip() or task.assignedTo.userName,
@@ -910,7 +915,10 @@ def transform_task_to_response(task: DBTask):
         },
         completedAt=task.completedAt,
         createdAt=task.createdAt,
-        updatedAt=task.updatedAt
+        updatedAt=task.updatedAt,
+        subtasks=[],
+        subtaskCount=0,
+        completedSubtaskCount=0
     )
 
 @router.get("/{project_id}/tasks", response_model=TasksResponse)
@@ -946,7 +954,7 @@ async def get_project_team_members(
     _: dict = Depends(require_permission(ModulePermission.PROJECTS_VIEW.value))
 ):
     """Get all available team members for project assignment"""
-    from ...models.unified_models import UserRole
+    from ...models.common import UserRole
     from ...config.database import get_all_users
     
     # Get all active users who can be team members

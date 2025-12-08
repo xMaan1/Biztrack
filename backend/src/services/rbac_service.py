@@ -2,7 +2,7 @@ from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 from ..config.core_models import User, TenantUser, Role, Tenant
-from ..models.unified_models import ModulePermission, TenantRole
+from ..models.common import ModulePermission, TenantRole
 import logging
 
 logger = logging.getLogger(__name__)

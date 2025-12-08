@@ -12,7 +12,7 @@ from ...config.appointment_crud import (
     create_appointment, get_appointment_by_id, get_appointments, update_appointment, delete_appointment, get_appointment_stats
 )
 from ...api.dependencies import get_current_user, get_tenant_context, require_permission
-from ...models.unified_models import ModulePermission
+from ...models.common import ModulePermission
 
 class AppointmentsResponse(BaseModel):
     appointments: List[AppointmentResponse]

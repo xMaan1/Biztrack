@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from ...models.crm import (
     CustomerCreate, CustomerUpdate, CustomerResponse, CustomerStatsResponse
 )
-from ...models.unified_models import (
+from ...models.crm_models import (
     Lead, LeadCreate, LeadUpdate,
     Contact, ContactCreate, ContactUpdate,
     Company, CompanyCreate, CompanyUpdate,
@@ -29,7 +29,7 @@ from ...config.crm_crud import (
     get_sales_activity_by_id, update_sales_activity, delete_sales_activity
 )
 from ...api.dependencies import get_current_user, get_tenant_context, require_permission
-from ...models.unified_models import ModulePermission
+from ...models.common import ModulePermission
 
 
 router = APIRouter(prefix="/crm", tags=["crm"])

@@ -10,7 +10,7 @@ import logging
 
 from ...api.dependencies import get_current_user, get_tenant_context
 from ...config.database import get_db
-from ...models.unified_models import (
+from ...models.ledger_models import (
     ChartOfAccountsCreate, ChartOfAccountsUpdate, ChartOfAccountsResponse,
     LedgerTransactionCreate, LedgerTransactionUpdate, LedgerTransactionResponse,
     JournalEntryCreate, JournalEntryUpdate, JournalEntryResponse,

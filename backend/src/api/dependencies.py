@@ -6,7 +6,7 @@ from ..config.database import get_db, get_user_by_email, get_user_tenants, get_t
 from ..services.rbac_service import RBACService
 from sqlalchemy.orm import Session
 from typing import Optional, List
-from ..models.unified_models import ModulePermission
+from ..models.common import ModulePermission
 import logging
 
 logger = logging.getLogger(__name__)

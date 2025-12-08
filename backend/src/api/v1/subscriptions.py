@@ -7,9 +7,8 @@ from ...config.database import get_db
 from ...services.subscription_service import subscription_service
 from ...api.dependencies import get_current_user, require_tenant_admin_or_super_admin
 from ...core.audit import audit_logger, AuditEventType, AuditSeverity
-from ...models.unified_models import (
-    PlanUpgradeRequest, UsageSummary, PlanLimits, SubscriptionStatus
-)
+from ...models.user_models import PlanUpgradeRequest, UsageSummary, PlanLimits
+from ...models.common import SubscriptionStatus
 
 router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])
 

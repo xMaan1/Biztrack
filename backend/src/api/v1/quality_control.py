@@ -6,7 +6,7 @@ import logging
 
 from ...config.database import get_db
 from ...api.dependencies import get_current_user, get_tenant_context, require_permission
-from ...models.unified_models import ModulePermission
+from ...models.common import ModulePermission
 from ...config.quality_control_crud import (
     create_quality_check, get_quality_check_by_id, get_all_quality_checks,
     get_quality_checks_by_status, get_quality_checks_by_priority,

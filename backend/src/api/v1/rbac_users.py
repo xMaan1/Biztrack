@@ -5,12 +5,13 @@ from typing import List, Optional
 from uuid import UUID
 from datetime import datetime
 
-from ...models.unified_models import (
+from ...models.user_models import (
     User, UserCreate, UserUpdate, UsersResponse,
     TenantUser, TenantUserCreate, TenantUserUpdate, TenantUsersResponse,
     Role, RoleCreate, RoleUpdate, RolesResponse,
-    UserWithPermissions, ModulePermission, TenantRole
+    UserWithPermissions
 )
+from ...models.common import ModulePermission, TenantRole
 from ...config.database import (
     get_db, get_user_by_email, get_user_by_username,
     get_user_by_id, create_user, get_all_users
@@ -59,7 +60,16 @@ async def get_roles(
             updatedAt=role.updatedAt
         ))
     
-    return RolesResponse(roles=role_list, pagination={})
+    from ...models.common import Pagination
+    return RolesResponse(
+        roles=role_list, 
+        pagination=Pagination(
+            page=1,
+            limit=len(role_list),
+            total=len(role_list),
+            pages=1
+        )
+    )
 
 @router.post("/roles", response_model=Role)
 async def create_role(
@@ -141,7 +151,7 @@ async def delete_role(
     current_user = Depends(require_permission(ModulePermission.USERS_DELETE.value))
 ):
     """Delete a role (soft delete by setting isActive to False)"""
-    from ...models.unified_models import TenantRole
+    from ...models.common import TenantRole
     
     role = db.query(RoleModel).filter(
         and_(

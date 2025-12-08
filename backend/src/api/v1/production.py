@@ -6,7 +6,7 @@ import logging
 
 from ...config.database import get_db
 from ...api.dependencies import get_current_user, get_tenant_context, require_permission
-from ...models.unified_models import ModulePermission
+from ...models.common import ModulePermission
 from ...config.production_crud import (
     get_production_plan_by_id, get_all_production_plans, get_production_plans_by_status,
     get_production_plans_by_priority, get_production_plans_by_project, get_production_plans_by_work_order,

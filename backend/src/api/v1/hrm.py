@@ -8,8 +8,9 @@ from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
-from ...models.unified_models import (
-    User, Employee, EmployeeCreate, EmployeeUpdate, HRMEmployeesResponse,
+from ...models.user_models import User
+from ...models.hrm_models import (
+    Employee, EmployeeCreate, EmployeeUpdate, HRMEmployeesResponse,
     JobPosting, JobPostingCreate, JobPostingUpdate, HRMJobPostingsResponse,
     Application, ApplicationCreate, ApplicationUpdate, HRMApplicationsResponse,
     PerformanceReview, PerformanceReviewCreate, PerformanceReviewUpdate, HRMReviewsResponse,
@@ -45,7 +46,7 @@ from ...config.core_crud import (
     update_user,
 )
 from ...api.dependencies import get_current_user, get_tenant_context, require_permission
-from ...models.unified_models import ModulePermission
+from ...models.common import ModulePermission
 
 router = APIRouter(prefix="/hrm", tags=["hrm"])
 
@@ -2034,6 +2035,34 @@ async def delete_hrm_training_enrollment(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error deleting training enrollment: {str(e)}")
 
+def transform_supplier_to_pydantic(db_supplier):
+    """Transform database Supplier to Pydantic Supplier model"""
+    from ...models.hrm_models import Supplier as PydanticSupplier
+    
+    postal_code = getattr(db_supplier, 'postalCode', None) or getattr(db_supplier, 'zipCode', None)
+    
+    return PydanticSupplier(
+        id=str(db_supplier.id),
+        tenant_id=str(db_supplier.tenant_id),
+        code=db_supplier.code,
+        name=db_supplier.name,
+        contactPerson=getattr(db_supplier, 'contactPerson', None),
+        email=getattr(db_supplier, 'email', None),
+        phone=getattr(db_supplier, 'phone', None),
+        address=getattr(db_supplier, 'address', None),
+        city=getattr(db_supplier, 'city', None),
+        state=getattr(db_supplier, 'state', None),
+        country=getattr(db_supplier, 'country', None),
+        postalCode=postal_code,
+        website=getattr(db_supplier, 'website', None),
+        paymentTerms=getattr(db_supplier, 'paymentTerms', None),
+        creditLimit=getattr(db_supplier, 'creditLimit', None),
+        isActive=getattr(db_supplier, 'isActive', True),
+        createdBy=str(db_supplier.createdBy),
+        createdAt=db_supplier.createdAt,
+        updatedAt=db_supplier.updatedAt
+    )
+
 # Supplier endpoints
 @router.get("/suppliers", response_model=SuppliersResponse)
 def read_suppliers(
@@ -2046,7 +2075,8 @@ def read_suppliers(
 ):
     """Get all suppliers for the current tenant"""
     try:
-        suppliers = get_suppliers(db, tenant_context["tenant_id"] if tenant_context else None, skip, limit)
+        db_suppliers = get_suppliers(db, tenant_context["tenant_id"] if tenant_context else None, skip, limit)
+        suppliers = [transform_supplier_to_pydantic(supplier) for supplier in db_suppliers]
         total = len(suppliers)
         return SuppliersResponse(suppliers=suppliers, total=total)
     except Exception as e:
@@ -2062,9 +2092,10 @@ def read_supplier(
 ):
     """Get supplier by ID"""
     try:
-        supplier = get_supplier_by_id(supplier_id, db, tenant_context["tenant_id"] if tenant_context else None)
-        if not supplier:
+        db_supplier = get_supplier_by_id(supplier_id, db, tenant_context["tenant_id"] if tenant_context else None)
+        if not db_supplier:
             raise HTTPException(status_code=404, detail="Supplier not found")
+        supplier = transform_supplier_to_pydantic(db_supplier)
         return SupplierResponse(supplier=supplier)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching supplier: {str(e)}")
@@ -2097,7 +2128,8 @@ def create_supplier_endpoint(
         })
         
         db_supplier = create_supplier(supplier_data, db)
-        return SupplierResponse(supplier=db_supplier)
+        supplier = transform_supplier_to_pydantic(db_supplier)
+        return SupplierResponse(supplier=supplier)
     except HTTPException:
         raise
     except Exception as e:
@@ -2119,7 +2151,8 @@ def update_supplier_endpoint(
         db_supplier = update_supplier(supplier_id, update_data, db, tenant_context["tenant_id"] if tenant_context else None)
         if not db_supplier:
             raise HTTPException(status_code=404, detail="Supplier not found")
-        return SupplierResponse(supplier=db_supplier)
+        supplier = transform_supplier_to_pydantic(db_supplier)
+        return SupplierResponse(supplier=supplier)
     except HTTPException:
         raise
     except Exception as e:

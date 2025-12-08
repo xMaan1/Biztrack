@@ -4,7 +4,7 @@ from typing import Optional, List
 import json
 from datetime import datetime
 
-from ...models.unified_models import Task, TaskCreate, TaskUpdate, TasksResponse, SubTask
+from ...models.project_models import TaskCreate, TaskUpdate, TasksResponse, SubTask
 from ...config.database import (
     get_db, get_user_by_email, get_user_by_id,
     get_project_by_id, create_task, get_task_by_id, get_all_tasks,
@@ -43,7 +43,7 @@ def transform_subtask_to_response(task: DBTask) -> SubTask:
         updatedAt=task.updatedAt
     )
 
-def transform_task_to_response(task: DBTask, include_subtasks: bool = True) -> Task:
+def transform_task_to_response(task: DBTask, include_subtasks: bool = True) -> SubTask:
     """Transform database task to response format"""
     subtasks = []
     subtask_count = 0
@@ -54,7 +54,7 @@ def transform_task_to_response(task: DBTask, include_subtasks: bool = True) -> T
         subtask_count = len(subtasks)
         completed_subtask_count = len([s for s in subtasks if s.status == 'completed'])
     
-    return Task(
+    return SubTask(
         id=str(task.id),
         tenant_id=str(task.tenant_id),
         title=task.title,
@@ -137,7 +137,7 @@ async def get_tasks(
         }
     )
 
-@router.get("/{task_id}", response_model=Task)
+@router.get("/{task_id}", response_model=SubTask)
 async def get_task(
     task_id: str, 
     include_subtasks: bool = Query(True),
@@ -157,7 +157,7 @@ async def get_task(
     
     return transform_task_to_response(task, include_subtasks)
 
-@router.post("", response_model=Task, dependencies=[Depends(require_tenant_admin_or_super_admin)])
+@router.post("", response_model=SubTask, dependencies=[Depends(require_tenant_admin_or_super_admin)])
 async def create_new_task(
     task_data: TaskCreate, 
     current_user = Depends(get_current_user),
@@ -216,7 +216,7 @@ async def create_new_task(
     
     return transform_task_to_response(db_task, include_subtasks=False)
 
-@router.put("/{task_id}", response_model=Task, dependencies=[Depends(require_tenant_admin_or_super_admin)])
+@router.put("/{task_id}", response_model=SubTask, dependencies=[Depends(require_tenant_admin_or_super_admin)])
 async def update_existing_task(
     task_id: str, 
     task_data: TaskUpdate, 

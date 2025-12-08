@@ -5,8 +5,10 @@ import json
 import uuid
 from datetime import datetime, timedelta
 
-from ...models.unified_models import (
-    Product, ProductCreate, ProductUpdate, ProductsResponse, ProductResponse,
+from ...models.inventory_models import (
+    Product, ProductCreate, ProductUpdate, ProductsResponse, ProductResponse
+)
+from ...models.pos_models import (
     POSShift, POSShiftCreate, POSShiftUpdate, POSShiftsResponse, POSShiftResponse,
     POSTransaction, POSTransactionCreate, POSTransactionUpdate, POSTransactionsResponse, POSTransactionResponse,
     POSDashboard, POSMetrics, ProductFilters, POSTransactionFilters, POSShiftFilters
@@ -33,7 +35,7 @@ def generate_shift_number():
 
 def convert_db_product_to_pydantic(db_product):
     """Convert database Product model to Pydantic Product model"""
-    from ...models.unified_models import Product as PydanticProduct, UnitOfMeasure, ProductCategory
+    from ...models.inventory_models import Product as PydanticProduct, UnitOfMeasure, ProductCategory
     
     return PydanticProduct(
         id=str(db_product.id),

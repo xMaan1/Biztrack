@@ -7,10 +7,10 @@ import uuid
 import re
 
 from ...api.dependencies import get_current_user, get_tenant_context, require_permission
-from ...models.unified_models import ModulePermission
+from ...models.common import ModulePermission
 from ...config.database import get_db
-from ...models.unified_models import (
-    User, Tenant,
+from ...models.user_models import User, Tenant
+from ...models.inventory_models import (
     Warehouse, WarehouseCreate, WarehouseUpdate, WarehouseResponse, WarehousesResponse,
     StorageLocation, StorageLocationCreate, StorageLocationUpdate, StorageLocationResponse, StorageLocationsResponse,
     StockMovement, StockMovementCreate, StockMovementUpdate, StockMovementResponse, StockMovementsResponse,

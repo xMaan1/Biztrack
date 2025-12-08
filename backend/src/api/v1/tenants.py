@@ -17,11 +17,12 @@ from ...config.database import (
     get_tenant_by_id, get_tenant_users, get_subscription_by_tenant,
     get_permissions, create_permission, get_custom_roles, create_custom_role, update_custom_role, delete_custom_role
 )
-from ...models.unified_models import (
+from ...models.user_models import (
     Plan, PlansResponse, TenantCreate, Tenant, SubscriptionCreate,
-    TenantUserCreate, TenantRole, SubscriptionStatus, TenantUsersResponse,
+    TenantUserCreate, TenantUsersResponse,
     SubscribeRequest, CustomRole, CustomRoleCreate, CustomRoleUpdate, Permission, UsersResponse
 )
+from ...models.common import TenantRole, SubscriptionStatus
 
 # Import the ledger seeding function from services
 from ...services.ledger_seeding import create_default_chart_of_accounts

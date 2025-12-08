@@ -16,7 +16,7 @@ from ..config.database import get_db
 from ..config.invoice_models import Invoice
 from ..config.inventory_models import Product, StockMovement
 from ..config.inventory_crud import get_product_by_id, create_stock_movement
-from ..models.unified_models import StockMovementCreate
+from ..models.inventory_models import StockMovementCreate
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

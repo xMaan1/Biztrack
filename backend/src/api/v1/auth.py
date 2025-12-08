@@ -9,7 +9,7 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional
 import os
 
-from ...models.unified_models import (
+from ...models.user_models import (
     LoginCredentials, AuthResponse, User, UserCreate, UserUpdate, RefreshTokenRequest, 
     RefreshTokenResponse, TenantSelectionRequest, TenantSelectionResponse, TenantInfo
 )

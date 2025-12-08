@@ -12,7 +12,7 @@ from ...config.medical_record_crud import (
     create_medical_record, get_medical_record_by_id, get_medical_records, update_medical_record, delete_medical_record, get_medical_record_stats
 )
 from ...api.dependencies import get_current_user, get_tenant_context, require_permission
-from ...models.unified_models import ModulePermission
+from ...models.common import ModulePermission
 
 class MedicalRecordsResponse(BaseModel):
     records: List[MedicalRecordResponse]

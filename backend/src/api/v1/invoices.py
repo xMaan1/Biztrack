@@ -11,8 +11,8 @@ from pydantic import BaseModel
 
 from ...config.database import get_db
 from ...api.dependencies import get_current_user, get_tenant_context, require_permission
-from ...models.unified_models import ModulePermission
-from ...models.unified_models import (
+from ...models.common import ModulePermission
+from ...models.invoice_models import (
     InvoiceCreate, InvoiceUpdate, InvoiceStatus,
     PaymentCreate, PaymentUpdate, PaymentStatus,
     InvoicesResponse, InvoiceResponse, PaymentsResponse, PaymentResponse,
@@ -141,6 +141,95 @@ def calculate_invoice_totals(items: List, tax_rate: float, discount: float) -> d
         "taxAmount": round(tax_amount, 2),
         "total": round(total, 2)
     }
+
+def transform_invoice_to_pydantic(db_invoice: Invoice):
+    """Transform database Invoice to Pydantic Invoice model"""
+    from ...models.invoice_models import Invoice as PydanticInvoice, InvoiceItem
+    
+    invoice_items = []
+    if db_invoice.items:
+        if isinstance(db_invoice.items, str):
+            import json
+            items_data = json.loads(db_invoice.items)
+        else:
+            items_data = db_invoice.items
+        
+        for item in items_data:
+            if isinstance(item, dict):
+                invoice_items.append(InvoiceItem(
+                    id=str(item.get('id', '')),
+                    description=item.get('description', ''),
+                    quantity=item.get('quantity', 0),
+                    unitPrice=item.get('unitPrice', 0),
+                    discount=item.get('discount', 0),
+                    taxRate=item.get('taxRate', 0),
+                    taxAmount=item.get('taxAmount', 0),
+                    total=item.get('total', 0),
+                    productId=str(item.get('productId')) if item.get('productId') else None,
+                    projectId=str(item.get('projectId')) if item.get('projectId') else None,
+                    taskId=str(item.get('taskId')) if item.get('taskId') else None
+                ))
+    
+    payments = []
+    if db_invoice.payments:
+        if isinstance(db_invoice.payments, str):
+            import json
+            payments = json.loads(db_invoice.payments)
+        else:
+            payments = db_invoice.payments
+    
+    return PydanticInvoice(
+        id=str(db_invoice.id),
+        tenant_id=str(db_invoice.tenant_id),
+        invoiceNumber=db_invoice.invoiceNumber,
+        customerId=str(db_invoice.customerId) if db_invoice.customerId else '',
+        customerName=db_invoice.customerName,
+        customerEmail=db_invoice.customerEmail,
+        customerPhone=db_invoice.customerPhone,
+        billingAddress=db_invoice.billingAddress,
+        shippingAddress=db_invoice.shippingAddress,
+        issueDate=db_invoice.issueDate,
+        dueDate=db_invoice.dueDate,
+        orderNumber=db_invoice.orderNumber,
+        orderTime=db_invoice.orderTime,
+        paymentTerms=db_invoice.paymentTerms,
+        currency=db_invoice.currency,
+        subtotal=db_invoice.subtotal,
+        taxRate=db_invoice.taxRate,
+        taxAmount=db_invoice.taxAmount,
+        discount=db_invoice.discount,
+        total=db_invoice.total,
+        notes=db_invoice.notes,
+        terms=db_invoice.terms,
+        status=db_invoice.status,
+        items=invoice_items,
+        createdBy=str(db_invoice.createdBy),
+        opportunityId=str(db_invoice.opportunityId) if db_invoice.opportunityId else None,
+        quoteId=str(db_invoice.quoteId) if db_invoice.quoteId else None,
+        projectId=str(db_invoice.projectId) if db_invoice.projectId else None,
+        sentAt=getattr(db_invoice, 'sentAt', None),
+        viewedAt=getattr(db_invoice, 'viewedAt', None),
+        paidAt=getattr(db_invoice, 'paidAt', None),
+        overdueAt=getattr(db_invoice, 'overdueAt', None),
+        createdAt=db_invoice.createdAt,
+        updatedAt=db_invoice.updatedAt,
+        payments=payments,
+        totalPaid=db_invoice.totalPaid if hasattr(db_invoice, 'totalPaid') else 0.0,
+        balance=db_invoice.balance if hasattr(db_invoice, 'balance') else 0.0,
+        daysOverdue=db_invoice.daysOverdue if hasattr(db_invoice, 'daysOverdue') else 0,
+        vehicleMake=db_invoice.vehicleMake,
+        vehicleModel=db_invoice.vehicleModel,
+        vehicleYear=db_invoice.vehicleYear,
+        vehicleColor=db_invoice.vehicleColor,
+        vehicleVin=db_invoice.vehicleVin,
+        vehicleReg=db_invoice.vehicleReg,
+        vehicleMileage=db_invoice.vehicleMileage,
+        documentNo=db_invoice.documentNo,
+        jobDescription=db_invoice.jobDescription,
+        partsDescription=db_invoice.partsDescription,
+        labourTotal=db_invoice.labourTotal,
+        partsTotal=db_invoice.partsTotal
+    )
 
 
 
@@ -701,11 +790,10 @@ def create_invoice(
                 print(f"Warning: Could not create Account Receivable: {str(ar_error)}")
         
         try:
-            return InvoiceResponse(invoice=db_invoice)
+            pydantic_invoice = transform_invoice_to_pydantic(db_invoice)
+            return InvoiceResponse(invoice=pydantic_invoice)
         except Exception as validation_error:
-            # Log the validation error for debugging
-            print(f"Validation error in InvoiceResponse: {validation_error}")
-            print(f"Invoice items: {db_invoice.items}")
+            logger.error(f"Validation error in InvoiceResponse: {validation_error}", exc_info=True)
             raise HTTPException(status_code=500, detail=f"Failed to create invoice response: {str(validation_error)}")
         
     except HTTPException:
@@ -770,7 +858,10 @@ def get_invoices(
         total = query.count()
         
         # Apply pagination and ordering
-        invoices = query.order_by(desc(Invoice.createdAt)).offset((page - 1) * limit).limit(limit).all()
+        db_invoices = query.order_by(desc(Invoice.createdAt)).offset((page - 1) * limit).limit(limit).all()
+        
+        # Transform database invoices to Pydantic models
+        invoices = [transform_invoice_to_pydantic(inv) for inv in db_invoices]
         
         # Calculate pagination info
         pages = (total + limit - 1) // limit
@@ -814,11 +905,10 @@ def get_invoice(
             raise HTTPException(status_code=404, detail="Invoice not found")
         
         try:
-            return InvoiceResponse(invoice=invoice)
+            pydantic_invoice = transform_invoice_to_pydantic(invoice)
+            return InvoiceResponse(invoice=pydantic_invoice)
         except Exception as validation_error:
-            # Log the validation error for debugging
-            print(f"Validation error in InvoiceResponse: {validation_error}")
-            print(f"Invoice items: {invoice.items}")
+            logger.error(f"Validation error in InvoiceResponse: {validation_error}", exc_info=True)
             raise HTTPException(status_code=500, detail=f"Failed to create invoice response: {str(validation_error)}")
         
     except HTTPException:
@@ -960,11 +1050,10 @@ def update_invoice(
         db.refresh(invoice)
         
         try:
-            return InvoiceResponse(invoice=invoice)
+            pydantic_invoice = transform_invoice_to_pydantic(invoice)
+            return InvoiceResponse(invoice=pydantic_invoice)
         except Exception as validation_error:
-            # Log the validation error for debugging
-            print(f"Validation error in InvoiceResponse: {validation_error}")
-            print(f"Invoice items: {invoice.items}")
+            logger.error(f"Validation error in InvoiceResponse: {validation_error}", exc_info=True)
             raise HTTPException(status_code=500, detail=f"Failed to create invoice response: {str(validation_error)}")
         
     except HTTPException:
