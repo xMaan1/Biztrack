@@ -283,6 +283,10 @@ class Subscription(Base):
     startDate = Column(DateTime, nullable=False)
     endDate = Column(DateTime)
     autoRenew = Column(Boolean, default=True)
+    stripe_customer_id = Column(String, nullable=True, index=True)
+    stripe_subscription_id = Column(String, nullable=True, index=True)
+    stripe_payment_method_id = Column(String, nullable=True)
+    stripe_price_id = Column(String, nullable=True)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

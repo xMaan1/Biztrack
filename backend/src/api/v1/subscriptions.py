@@ -1,14 +1,20 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request, Header
 from sqlalchemy.orm import Session
 from typing import Optional, Dict, Any
 from datetime import datetime, timedelta
+import stripe
+import logging
 
-from ...config.database import get_db
+from ...config.database import get_db, get_subscription_by_tenant, get_plan_by_id, update_subscription
+from ...config.core_models import Subscription
 from ...services.subscription_service import subscription_service
+from ...services.stripe_service import stripe_service
 from ...api.dependencies import get_current_user, require_tenant_admin_or_super_admin
 from ...core.audit import audit_logger, AuditEventType, AuditSeverity
 from ...models.user_models import PlanUpgradeRequest, UsageSummary, PlanLimits
 from ...models.common import SubscriptionStatus
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])
 
@@ -373,4 +379,139 @@ async def reactivate_subscription(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Subscription reactivation failed: {str(e)}"
+        )
+
+@router.post("/webhook")
+async def stripe_webhook(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    payload = await request.body()
+    sig_header = request.headers.get("stripe-signature")
+    
+    if not sig_header:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing stripe-signature header"
+        )
+    
+    event = stripe_service.verify_webhook(payload, sig_header)
+    
+    if not event:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid webhook signature"
+        )
+    
+    try:
+        if event['type'] == 'checkout.session.completed':
+            session = event['data']['object']
+            tenant_id = session.get('metadata', {}).get('tenant_id')
+            
+            if tenant_id:
+                subscription = get_subscription_by_tenant(tenant_id, db)
+                if subscription:
+                    stripe_subscription_id = session.get('subscription')
+                    stripe_customer_id = session.get('customer')
+                    
+                    subscription.stripe_customer_id = stripe_customer_id
+                    subscription.stripe_subscription_id = stripe_subscription_id
+                    subscription.status = SubscriptionStatus.ACTIVE.value
+                    subscription.startDate = datetime.utcnow()
+                    subscription.endDate = datetime.utcnow() + timedelta(days=30)
+                    subscription.updatedAt = datetime.utcnow()
+                    
+                    db.commit()
+                    
+                    audit_logger.log_event(
+                        event_type=AuditEventType.SUBSCRIPTION_CHANGED,
+                        user_id=None,
+                        tenant_id=tenant_id,
+                        action="Subscription activated via Stripe",
+                        details={
+                            "stripe_subscription_id": stripe_subscription_id,
+                            "stripe_customer_id": stripe_customer_id
+                        },
+                        severity=AuditSeverity.MEDIUM
+                    )
+        
+        elif event['type'] == 'customer.subscription.updated':
+            stripe_subscription = event['data']['object']
+            stripe_subscription_id = stripe_subscription.get('id')
+            
+            subscription = db.query(Subscription).filter(
+                Subscription.stripe_subscription_id == stripe_subscription_id
+            ).first()
+            
+            if subscription:
+                subscription.status = stripe_subscription.get('status', subscription.status)
+                if stripe_subscription.get('current_period_end'):
+                    subscription.endDate = datetime.fromtimestamp(
+                        stripe_subscription.get('current_period_end')
+                    )
+                subscription.updatedAt = datetime.utcnow()
+                db.commit()
+        
+        elif event['type'] == 'customer.subscription.deleted':
+            stripe_subscription = event['data']['object']
+            stripe_subscription_id = stripe_subscription.get('id')
+            
+            subscription = db.query(Subscription).filter(
+                Subscription.stripe_subscription_id == stripe_subscription_id
+            ).first()
+            
+            if subscription:
+                subscription.status = SubscriptionStatus.CANCELLED.value
+                subscription.autoRenew = False
+                subscription.updatedAt = datetime.utcnow()
+                db.commit()
+                
+                audit_logger.log_event(
+                    event_type=AuditEventType.SUBSCRIPTION_CHANGED,
+                    user_id=None,
+                    tenant_id=str(subscription.tenant_id),
+                    action="Subscription cancelled via Stripe",
+                    details={
+                        "stripe_subscription_id": stripe_subscription_id
+                    },
+                    severity=AuditSeverity.HIGH
+                )
+        
+        elif event['type'] == 'invoice.payment_succeeded':
+            invoice = event['data']['object']
+            stripe_subscription_id = invoice.get('subscription')
+            
+            if stripe_subscription_id:
+                subscription = db.query(Subscription).filter(
+                    Subscription.stripe_subscription_id == stripe_subscription_id
+                ).first()
+                
+                if subscription:
+                    subscription.status = SubscriptionStatus.ACTIVE.value
+                    if invoice.get('period_end'):
+                        subscription.endDate = datetime.fromtimestamp(invoice.get('period_end'))
+                    subscription.updatedAt = datetime.utcnow()
+                    db.commit()
+        
+        elif event['type'] == 'invoice.payment_failed':
+            invoice = event['data']['object']
+            stripe_subscription_id = invoice.get('subscription')
+            
+            if stripe_subscription_id:
+                subscription = db.query(Subscription).filter(
+                    Subscription.stripe_subscription_id == stripe_subscription_id
+                ).first()
+                
+                if subscription:
+                    subscription.status = SubscriptionStatus.EXPIRED.value
+                    subscription.updatedAt = datetime.utcnow()
+                    db.commit()
+        
+        return {"status": "success"}
+        
+    except Exception as e:
+        logger.error(f"Error processing webhook: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Webhook processing failed: {str(e)}"
         )
