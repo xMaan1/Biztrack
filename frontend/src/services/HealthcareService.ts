@@ -16,6 +16,14 @@ import {
   MedicalSupplyCreate,
   MedicalSupplyUpdate,
   MedicalSupplyStats,
+  Consultation,
+  ConsultationCreate,
+  ConsultationUpdate,
+  ConsultationStats,
+  LabReport,
+  LabReportCreate,
+  LabReportUpdate,
+  LabReportStats,
 } from '../models/healthcare';
 
 export class PatientService {
@@ -188,10 +196,106 @@ export class MedicalSupplyService {
   }
 }
 
+export class ConsultationService {
+  private baseUrl = '/consultations';
+
+  async getConsultations(
+    skip: number = 0,
+    limit: number = 100,
+    patient_id?: string,
+    doctor_id?: string,
+    date_from?: string,
+    date_to?: string,
+  ): Promise<{ consultations: Consultation[]; total: number }> {
+    const params = new URLSearchParams();
+    params.append('skip', skip.toString());
+    params.append('limit', limit.toString());
+    if (patient_id) params.append('patient_id', patient_id);
+    if (doctor_id) params.append('doctor_id', doctor_id);
+    if (date_from) params.append('date_from', date_from);
+    if (date_to) params.append('date_to', date_to);
+
+    return apiService.get(`${this.baseUrl}?${params.toString()}`);
+  }
+
+  async getConsultation(id: string): Promise<Consultation> {
+    return apiService.get(`${this.baseUrl}/${id}`);
+  }
+
+  async createConsultation(consultation: ConsultationCreate): Promise<Consultation> {
+    return apiService.post(this.baseUrl, consultation);
+  }
+
+  async updateConsultation(id: string, consultation: ConsultationUpdate): Promise<Consultation> {
+    return apiService.put(`${this.baseUrl}/${id}`, consultation);
+  }
+
+  async deleteConsultation(id: string): Promise<void> {
+    return apiService.delete(`${this.baseUrl}/${id}`);
+  }
+
+  async getConsultationStats(): Promise<ConsultationStats> {
+    return apiService.get(`${this.baseUrl}/stats`);
+  }
+}
+
+export class LabReportService {
+  private baseUrl = '/lab-reports';
+
+  async getLabReports(
+    skip: number = 0,
+    limit: number = 100,
+    patient_id?: string,
+    doctor_id?: string,
+    test_category?: string,
+    date_from?: string,
+    date_to?: string,
+    is_verified?: boolean,
+  ): Promise<{ labReports: LabReport[]; total: number }> {
+    const params = new URLSearchParams();
+    params.append('skip', skip.toString());
+    params.append('limit', limit.toString());
+    if (patient_id) params.append('patient_id', patient_id);
+    if (doctor_id) params.append('doctor_id', doctor_id);
+    if (test_category) params.append('test_category', test_category);
+    if (date_from) params.append('date_from', date_from);
+    if (date_to) params.append('date_to', date_to);
+    if (is_verified !== undefined) params.append('is_verified', is_verified.toString());
+
+    return apiService.get(`${this.baseUrl}?${params.toString()}`);
+  }
+
+  async getLabReport(id: string): Promise<LabReport> {
+    return apiService.get(`${this.baseUrl}/${id}`);
+  }
+
+  async createLabReport(labReport: LabReportCreate): Promise<LabReport> {
+    return apiService.post(this.baseUrl, labReport);
+  }
+
+  async updateLabReport(id: string, labReport: LabReportUpdate): Promise<LabReport> {
+    return apiService.put(`${this.baseUrl}/${id}`, labReport);
+  }
+
+  async deleteLabReport(id: string): Promise<void> {
+    return apiService.delete(`${this.baseUrl}/${id}`);
+  }
+
+  async verifyLabReport(id: string): Promise<LabReport> {
+    return apiService.post(`${this.baseUrl}/${id}/verify`, {});
+  }
+
+  async getLabReportStats(): Promise<LabReportStats> {
+    return apiService.get(`${this.baseUrl}/stats`);
+  }
+}
+
 export const patientService = new PatientService();
 export const appointmentService = new AppointmentService();
 export const medicalRecordService = new MedicalRecordService();
 export const medicalSupplyService = new MedicalSupplyService();
+export const consultationService = new ConsultationService();
+export const labReportService = new LabReportService();
 
 export type {
   Patient,
@@ -210,5 +314,13 @@ export type {
   MedicalSupplyCreate,
   MedicalSupplyUpdate,
   MedicalSupplyStats,
+  Consultation,
+  ConsultationCreate,
+  ConsultationUpdate,
+  ConsultationStats,
+  LabReport,
+  LabReportCreate,
+  LabReportUpdate,
+  LabReportStats,
 };
 

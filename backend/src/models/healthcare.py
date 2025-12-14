@@ -216,3 +216,116 @@ class MedicalSupplyStatsResponse(BaseModel):
     byCategory: Dict[str, int]
     totalValue: float
 
+class ConsultationBase(BaseModel):
+    patient_id: UUID
+    appointment_id: Optional[UUID] = None
+    consultationDate: date
+    consultationTime: str
+    doctorId: UUID
+    chiefComplaint: Optional[str] = None
+    historyOfPresentIllness: Optional[str] = None
+    physicalExamination: Optional[str] = None
+    assessment: Optional[str] = None
+    plan: Optional[str] = None
+    prescriptions: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
+    followUpDate: Optional[date] = None
+    followUpNotes: Optional[str] = None
+    vitalSigns: Optional[Dict[str, Any]] = Field(default_factory=dict)
+
+class ConsultationCreate(ConsultationBase):
+    pass
+
+class ConsultationUpdate(BaseModel):
+    patient_id: Optional[UUID] = None
+    appointment_id: Optional[UUID] = None
+    consultationDate: Optional[date] = None
+    consultationTime: Optional[str] = None
+    doctorId: Optional[UUID] = None
+    chiefComplaint: Optional[str] = None
+    historyOfPresentIllness: Optional[str] = None
+    physicalExamination: Optional[str] = None
+    assessment: Optional[str] = None
+    plan: Optional[str] = None
+    prescriptions: Optional[List[Dict[str, Any]]] = None
+    followUpDate: Optional[date] = None
+    followUpNotes: Optional[str] = None
+    vitalSigns: Optional[Dict[str, Any]] = None
+
+class ConsultationResponse(ConsultationBase):
+    id: UUID
+    tenant_id: UUID
+    createdById: UUID
+    createdAt: datetime
+    updatedAt: datetime
+    
+    class Config:
+        from_attributes = True
+        populate_by_name = True
+
+class ConsultationStatsResponse(BaseModel):
+    total: int
+    today: int
+    thisMonth: int
+
+class TestResult(BaseModel):
+    testName: str
+    value: str
+    unit: Optional[str] = None
+    referenceRange: Optional[str] = None
+    status: Optional[str] = None
+
+class LabReportBase(BaseModel):
+    patient_id: UUID
+    appointment_id: Optional[UUID] = None
+    reportNumber: str = Field(..., min_length=1, max_length=100)
+    reportDate: date
+    orderedBy: UUID
+    testName: str = Field(..., min_length=1, max_length=200)
+    testCategory: Optional[str] = None
+    testResults: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
+    labName: Optional[str] = None
+    labAddress: Optional[str] = None
+    technicianName: Optional[str] = None
+    notes: Optional[str] = None
+    attachments: Optional[List[str]] = Field(default_factory=list)
+    isVerified: Optional[bool] = Field(default=False)
+
+class LabReportCreate(LabReportBase):
+    pass
+
+class LabReportUpdate(BaseModel):
+    patient_id: Optional[UUID] = None
+    appointment_id: Optional[UUID] = None
+    reportNumber: Optional[str] = Field(None, min_length=1, max_length=100)
+    reportDate: Optional[date] = None
+    orderedBy: Optional[UUID] = None
+    testName: Optional[str] = Field(None, min_length=1, max_length=200)
+    testCategory: Optional[str] = None
+    testResults: Optional[List[Dict[str, Any]]] = None
+    labName: Optional[str] = None
+    labAddress: Optional[str] = None
+    technicianName: Optional[str] = None
+    notes: Optional[str] = None
+    attachments: Optional[List[str]] = None
+    isVerified: Optional[bool] = None
+
+class LabReportResponse(LabReportBase):
+    id: UUID
+    tenant_id: UUID
+    verifiedBy: Optional[UUID] = None
+    verifiedAt: Optional[datetime] = None
+    createdById: UUID
+    createdAt: datetime
+    updatedAt: datetime
+    
+    class Config:
+        from_attributes = True
+        populate_by_name = True
+
+class LabReportStatsResponse(BaseModel):
+    total: int
+    verified: int
+    unverified: int
+    today: int
+    byCategory: Dict[str, int]
+

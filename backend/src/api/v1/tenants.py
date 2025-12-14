@@ -29,6 +29,8 @@ from ...services.ledger_seeding import create_default_chart_of_accounts
 
 from ...api.dependencies import get_current_user, require_super_admin, require_tenant_admin_or_super_admin
 from ...services.rbac_service import RBACService
+from ...services.stripe_service import stripe_service
+import os
 
 @router.get("/plans", response_model=PlansResponse)
 async def get_available_plans(db: Session = Depends(get_db)):
@@ -139,12 +141,11 @@ async def create_tenant_from_landing(
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Create a new tenant from landing page subscription"""
+    """Create a new tenant and redirect to Stripe checkout"""
     plan_id = req.planId
     tenant_name = req.tenantName
     domain = req.domain
     
-    # Verify plan exists
     plan = get_plan_by_id(plan_id, db)
     if not plan:
         raise HTTPException(
@@ -152,7 +153,6 @@ async def create_tenant_from_landing(
             detail="Plan not found"
         )
     
-    # Check if user already has a tenant with this name
     existing_tenants = get_user_tenants(current_user.id, db)
     for tenant in existing_tenants:
         if tenant.name.lower() == tenant_name.lower():
@@ -161,7 +161,6 @@ async def create_tenant_from_landing(
                 detail="You already have a tenant with this name"
             )
     
-    # Create tenant
     tenant_data = {
         "name": tenant_name,
         "domain": f"{tenant_name.lower().replace(' ', '-')}-{str(uuid.uuid4())[:8]}",
@@ -176,23 +175,19 @@ async def create_tenant_from_landing(
     
     tenant = create_tenant(tenant_data, db)
     
-    # Create subscription (trial for now)
     subscription_data = {
         "tenant_id": tenant.id,
         "planId": plan.id,
         "status": SubscriptionStatus.TRIAL.value,
         "startDate": datetime.utcnow(),
-        "endDate": datetime.utcnow() + timedelta(days=14),  # 14-day trial
+        "endDate": datetime.utcnow() + timedelta(days=14),
         "autoRenew": True
     }
     
     subscription = create_subscription(subscription_data, db)
     
-    # Add user as owner with new RBAC system
-    # First create default roles for the tenant
     default_roles = RBACService.create_default_roles(db, str(tenant.id))
     
-    # Find the owner role
     owner_role = next((role for role in default_roles if role.name == "owner"), None)
     if not owner_role:
         raise HTTPException(
@@ -200,7 +195,6 @@ async def create_tenant_from_landing(
             detail="Failed to create owner role"
         )
     
-    # Create tenant user with owner role
     tenant_user_data = {
         "tenant_id": tenant.id,
         "userId": current_user.id,
@@ -212,7 +206,6 @@ async def create_tenant_from_landing(
     
     tenant_user = create_tenant_user(tenant_user_data, db)
 
-    # Automatically seed the ledger for the new tenant
     try:
         create_default_chart_of_accounts(
             tenant_id=str(tenant.id), 
@@ -222,23 +215,36 @@ async def create_tenant_from_landing(
         logger.info(f"✅ Ledger seeded successfully for tenant: {tenant.name}")
     except Exception as e:
         logger.warning(f"⚠️ Warning: Ledger seeding failed for tenant {tenant.name}: {str(e)}")
-        # Don't fail the tenant creation, but log the warning
+    
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    success_url = f"{frontend_url}/subscription/success?session_id={{CHECKOUT_SESSION_ID}}"
+    cancel_url = f"{frontend_url}/subscription/cancel"
+    
+    checkout_result = stripe_service.create_checkout_session(
+        plan_id=str(plan.id),
+        plan_name=plan.name,
+        plan_price=plan.price,
+        tenant_id=str(tenant.id),
+        user_email=current_user.email,
+        success_url=success_url,
+        cancel_url=cancel_url
+    )
+    
+    if not checkout_result.get('success'):
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create checkout session: {checkout_result.get('error')}"
+        )
     
     return {
         "success": True,
-        "message": "Tenant created successfully! Welcome to BizTrack",
+        "message": "Tenant created. Redirecting to payment...",
+        "checkout_url": checkout_result.get('url'),
+        "session_id": checkout_result.get('session_id'),
         "tenant": {
             "id": str(tenant.id),
             "name": tenant.name,
-            "domain": tenant.domain,
-            "plan_type": plan.planType,
-            "features": plan.features or []
-        },
-        "subscription": {
-            "id": str(subscription.id),
-            "status": subscription.status,
-            "trial_ends": subscription.endDate,
-            "plan_name": plan.name
+            "domain": tenant.domain
         }
     }
 

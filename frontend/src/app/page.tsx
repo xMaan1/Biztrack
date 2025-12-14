@@ -221,32 +221,25 @@ export default function LandingPage() {
         domain: tenantName.toLowerCase().replace(/\s+/g, '-'),
       });
 
-      if (response.success && response.tenant) {
-        // Close modal
+      if (response.success && response.checkout_url) {
         setSubscriptionModal({ isOpen: false, plan: null });
-
-        // Refresh tenant data to get the newly created tenant
+        window.location.href = response.checkout_url;
+      } else if (response.success && response.tenant) {
+        setSubscriptionModal({ isOpen: false, plan: null });
         try {
           await apiService.refreshTenants();
-
-          // Verify tenant was created and set as current
           const tenants = apiService.getUserTenants();
           const newTenant = tenants.find((t) => t.name === tenantName);
 
           if (newTenant) {
             apiService.setTenantId(newTenant.id);
-
-            // Small delay to ensure localStorage is updated
             await new Promise((resolve) => setTimeout(resolve, 100));
-
-            // Only redirect if tenant was successfully created and set
             router.push('/dashboard');
           } else {
             throw new Error('Tenant was not found after creation');
           }
         } catch (error) {
           alert('Workspace created but there was an issue setting it up. Please refresh the page and try again.');
-          return; // Don't redirect if tenant setup failed
         }
       } else {
         throw new Error('Tenant creation failed: ' + (response.message || 'Unknown error'));

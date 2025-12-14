@@ -78,6 +78,7 @@ class TenantMiddleware:
             "/tenants/plans",
             "/tenants/create-tenant",
             "/inventory/health",
+            "/subscriptions/webhook",
             "/"  # Root landing page
         ]
         

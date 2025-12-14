@@ -67,6 +67,18 @@ class Invoice(Base):
     labourTotal = Column(Float, default=0.0)
     partsTotal = Column(Float, default=0.0)
     
+    # Healthcare specific fields
+    patientId = Column("patient_id", String, nullable=True)
+    patientName = Column("patient_name", String, nullable=True)
+    patientDateOfBirth = Column("patient_date_of_birth", DateTime, nullable=True)
+    medicalRecordNumber = Column("medical_record_number", String, nullable=True)
+    diagnosis = Column("diagnosis", Text, nullable=True)
+    treatment = Column("treatment", Text, nullable=True)
+    physicianName = Column("physician_name", String, nullable=True)
+    appointmentDate = Column("appointment_date", DateTime, nullable=True)
+    insuranceProvider = Column("insurance_provider", String, nullable=True)
+    insurancePolicyNumber = Column("insurance_policy_number", String, nullable=True)
+    
     # Relationships
     payments = relationship("Payment", back_populates="invoice")
     tenant = relationship("Tenant", back_populates="invoices")

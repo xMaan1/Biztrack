@@ -28,6 +28,8 @@ class Appointment(Base):
     patient = relationship("Patient", back_populates="appointments")
     doctor = relationship("User", foreign_keys=[doctorId])
     createdBy = relationship("User", foreign_keys=[createdById])
+    consultations = relationship("Consultation", back_populates="appointment")
+    lab_reports = relationship("LabReport", back_populates="appointment")
     
     __table_args__ = (
         Index('idx_appointment_tenant_date', 'tenant_id', 'appointmentDate'),

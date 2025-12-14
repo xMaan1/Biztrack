@@ -251,6 +251,8 @@ class Tenant(Base):
     appointments = relationship("Appointment", back_populates="tenant")
     medical_records = relationship("MedicalRecord", back_populates="tenant")
     medical_supplies = relationship("MedicalSupply", back_populates="tenant")
+    consultations = relationship("Consultation", back_populates="tenant")
+    lab_reports = relationship("LabReport", back_populates="tenant")
 
 class Plan(Base):
     __tablename__ = "plans"
@@ -283,6 +285,10 @@ class Subscription(Base):
     startDate = Column(DateTime, nullable=False)
     endDate = Column(DateTime)
     autoRenew = Column(Boolean, default=True)
+    stripe_customer_id = Column(String, nullable=True, index=True)
+    stripe_subscription_id = Column(String, nullable=True, index=True)
+    stripe_payment_method_id = Column(String, nullable=True)
+    stripe_price_id = Column(String, nullable=True)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
