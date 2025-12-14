@@ -385,6 +385,77 @@ def create_vehicle_section(invoice, customization: Optional[Dict[str, Any]], sty
     elements.append(Spacer(1, 5))
     return elements
 
+def create_healthcare_section(invoice, customization: Optional[Dict[str, Any]], styles: Dict[str, ParagraphStyle]) -> List:
+    elements = []
+    
+    has_healthcare_data = any([
+        hasattr(invoice, 'patientId') and invoice.patientId,
+        hasattr(invoice, 'patientName') and invoice.patientName,
+        hasattr(invoice, 'medicalRecordNumber') and invoice.medicalRecordNumber,
+        hasattr(invoice, 'diagnosis') and invoice.diagnosis,
+        hasattr(invoice, 'treatment') and invoice.treatment,
+        hasattr(invoice, 'physicianName') and invoice.physicianName,
+        hasattr(invoice, 'insuranceProvider') and invoice.insuranceProvider,
+    ])
+    
+    if not has_healthcare_data:
+        return elements
+    
+    elements.append(Paragraph("Patient Information", styles['header']))
+    
+    healthcare_data = []
+    if hasattr(invoice, 'patientId') and invoice.patientId:
+        healthcare_data.append(f"Patient ID: {invoice.patientId}")
+    if hasattr(invoice, 'patientName') and invoice.patientName:
+        healthcare_data.append(f"Patient Name: {invoice.patientName}")
+    if hasattr(invoice, 'patientDateOfBirth') and invoice.patientDateOfBirth:
+        dob = invoice.patientDateOfBirth.strftime('%B %d, %Y') if hasattr(invoice.patientDateOfBirth, 'strftime') else str(invoice.patientDateOfBirth)
+        healthcare_data.append(f"Date of Birth: {dob}")
+    if hasattr(invoice, 'medicalRecordNumber') and invoice.medicalRecordNumber:
+        healthcare_data.append(f"Medical Record Number: {invoice.medicalRecordNumber}")
+    if hasattr(invoice, 'physicianName') and invoice.physicianName:
+        healthcare_data.append(f"Physician: {invoice.physicianName}")
+    if hasattr(invoice, 'appointmentDate') and invoice.appointmentDate:
+        appt_date = invoice.appointmentDate.strftime('%B %d, %Y %I:%M %p') if hasattr(invoice.appointmentDate, 'strftime') else str(invoice.appointmentDate)
+        healthcare_data.append(f"Appointment Date: {appt_date}")
+    if hasattr(invoice, 'insuranceProvider') and invoice.insuranceProvider:
+        healthcare_data.append(f"Insurance Provider: {invoice.insuranceProvider}")
+    if hasattr(invoice, 'insurancePolicyNumber') and invoice.insurancePolicyNumber:
+        healthcare_data.append(f"Policy Number: {invoice.insurancePolicyNumber}")
+    
+    if healthcare_data:
+        healthcare_table_data = []
+        for i in range(0, len(healthcare_data), 2):
+            row = [healthcare_data[i]]
+            if i + 1 < len(healthcare_data):
+                row.append(healthcare_data[i + 1])
+            else:
+                row.append("")
+            healthcare_table_data.append(row)
+        
+        healthcare_table = Table(healthcare_table_data, colWidths=[3*inch, 3*inch])
+        healthcare_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        
+        elements.append(healthcare_table)
+    
+    if hasattr(invoice, 'diagnosis') and invoice.diagnosis:
+        elements.append(Spacer(1, 10))
+        elements.append(Paragraph("Diagnosis", styles['subheader']))
+        elements.append(Paragraph(invoice.diagnosis, styles['body']))
+    
+    if hasattr(invoice, 'treatment') and invoice.treatment:
+        elements.append(Spacer(1, 10))
+        elements.append(Paragraph("Treatment", styles['subheader']))
+        elements.append(Paragraph(invoice.treatment, styles['body']))
+    
+    elements.append(Spacer(1, 5))
+    return elements
+
 def create_items_table(invoice, styles: Dict[str, ParagraphStyle], colors: Dict[str, tuple], currency: str = "USD") -> List:
     elements = []
     
@@ -596,11 +667,19 @@ def create_footer(customization: Optional[Dict[str, Any]], styles: Dict[str, Par
 def generate_modern_invoice_pdf(invoice, db: Session) -> bytes:
     try:
         from ...config.invoice_customization_models import InvoiceCustomization
+        from ...config.database import get_subscription_by_tenant, get_plan_by_id
         
         customization_obj = db.query(InvoiceCustomization).filter(
             InvoiceCustomization.tenant_id == invoice.tenant_id,
             InvoiceCustomization.is_active == True
         ).first()
+        
+        subscription = get_subscription_by_tenant(str(invoice.tenant_id), db)
+        plan_type = None
+        if subscription:
+            plan = get_plan_by_id(str(subscription.planId), db)
+            if plan:
+                plan_type = plan.planType
         
         customization = None
         if customization_obj:
@@ -659,7 +738,10 @@ def generate_modern_invoice_pdf(invoice, db: Session) -> bytes:
         
         story.extend(create_customer_section(invoice, styles))
         
-        story.extend(create_vehicle_section(invoice, customization, styles))
+        if plan_type == 'healthcare':
+            story.extend(create_healthcare_section(invoice, customization, styles))
+        else:
+            story.extend(create_vehicle_section(invoice, customization, styles))
         
         story.extend(create_items_table(invoice, styles, colors, currency))
         

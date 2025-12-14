@@ -228,7 +228,17 @@ def transform_invoice_to_pydantic(db_invoice: Invoice):
         jobDescription=db_invoice.jobDescription,
         partsDescription=db_invoice.partsDescription,
         labourTotal=db_invoice.labourTotal,
-        partsTotal=db_invoice.partsTotal
+        partsTotal=db_invoice.partsTotal,
+        patientId=db_invoice.patientId if hasattr(db_invoice, 'patientId') else None,
+        patientName=db_invoice.patientName if hasattr(db_invoice, 'patientName') else None,
+        patientDateOfBirth=db_invoice.patientDateOfBirth.isoformat() if hasattr(db_invoice, 'patientDateOfBirth') and db_invoice.patientDateOfBirth else None,
+        medicalRecordNumber=db_invoice.medicalRecordNumber if hasattr(db_invoice, 'medicalRecordNumber') else None,
+        diagnosis=db_invoice.diagnosis if hasattr(db_invoice, 'diagnosis') else None,
+        treatment=db_invoice.treatment if hasattr(db_invoice, 'treatment') else None,
+        physicianName=db_invoice.physicianName if hasattr(db_invoice, 'physicianName') else None,
+        appointmentDate=db_invoice.appointmentDate.isoformat() if hasattr(db_invoice, 'appointmentDate') and db_invoice.appointmentDate else None,
+        insuranceProvider=db_invoice.insuranceProvider if hasattr(db_invoice, 'insuranceProvider') else None,
+        insurancePolicyNumber=db_invoice.insurancePolicyNumber if hasattr(db_invoice, 'insurancePolicyNumber') else None
     )
 
 
@@ -657,6 +667,17 @@ def create_invoice(
             partsDescription=invoice_data.partsDescription,
             labourTotal=invoice_data.labourTotal or 0.0,
             partsTotal=invoice_data.partsTotal or 0.0,
+            # Healthcare specific fields
+            patientId=invoice_data.patientId,
+            patientName=invoice_data.patientName,
+            patientDateOfBirth=datetime.fromisoformat(invoice_data.patientDateOfBirth) if invoice_data.patientDateOfBirth else None,
+            medicalRecordNumber=invoice_data.medicalRecordNumber,
+            diagnosis=invoice_data.diagnosis,
+            treatment=invoice_data.treatment,
+            physicianName=invoice_data.physicianName,
+            appointmentDate=datetime.fromisoformat(invoice_data.appointmentDate) if invoice_data.appointmentDate else None,
+            insuranceProvider=invoice_data.insuranceProvider,
+            insurancePolicyNumber=invoice_data.insurancePolicyNumber,
             **totals,
             createdAt=datetime.utcnow(),
             updatedAt=datetime.utcnow()

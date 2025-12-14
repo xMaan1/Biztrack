@@ -145,7 +145,7 @@ const allMenuItems: MenuItem[] = [
     icon: Banknote,
     path: '/sales/invoices',
     roles: ['*'],
-    planTypes: ['workshop'], // Workshop plan - invoicing needed
+    planTypes: ['workshop', 'healthcare'], // Workshop and Healthcare plans - invoicing needed
     gradient: 'from-green-500 to-emerald-500',
   },
   {
@@ -511,6 +511,20 @@ const allMenuItems: MenuItem[] = [
         text: 'Medical Supplies',
         icon: Pill,
         path: '/medical-supplies',
+        roles: ['*'],
+        planTypes: ['healthcare'],
+      },
+      {
+        text: 'Doctor Consultation',
+        icon: UserCheck,
+        path: '/consultations',
+        roles: ['*'],
+        planTypes: ['healthcare'],
+      },
+      {
+        text: 'Lab Reports',
+        icon: ClipboardList,
+        path: '/lab-reports',
         roles: ['*'],
         planTypes: ['healthcare'],
       },

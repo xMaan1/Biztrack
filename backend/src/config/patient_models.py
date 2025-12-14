@@ -43,6 +43,8 @@ class Patient(Base):
     assignedTo = relationship("User", foreign_keys=[assignedToId])
     appointments = relationship("Appointment", back_populates="patient")
     medical_records = relationship("MedicalRecord", back_populates="patient")
+    consultations = relationship("Consultation", back_populates="patient")
+    lab_reports = relationship("LabReport", back_populates="patient")
     
     __table_args__ = (
         Index('idx_patient_tenant_search', 'tenant_id', 'firstName', 'lastName'),

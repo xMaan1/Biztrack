@@ -84,6 +84,11 @@ class PurchaseOrder(Base):
     notes = Column(Text)
     items = Column(JSON, default=[])  # Store purchase order items as JSON
     vehicleReg = Column(String, nullable=True)  # Vehicle registration number
+    # Healthcare specific fields
+    patientId = Column("patient_id", String, nullable=True)
+    patientName = Column("patient_name", String, nullable=True)
+    medicalRecordNumber = Column("medical_record_number", String, nullable=True)
+    department = Column("department", String, nullable=True)
     approvedBy = Column(UUID(as_uuid=True), ForeignKey("users.id"))
     approvedAt = Column(DateTime)
     createdAt = Column(DateTime, default=datetime.utcnow)

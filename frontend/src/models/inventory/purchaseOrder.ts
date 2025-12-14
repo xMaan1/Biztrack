@@ -63,6 +63,11 @@ export interface PurchaseOrder {
   totalAmount: number;
   notes?: string;
   vehicleReg?: string;
+  // Healthcare specific fields
+  patientId?: string;
+  patientName?: string;
+  medicalRecordNumber?: string;
+  department?: string;
   items: PurchaseOrderItemCreate[];
   createdAt: string;
   updatedAt: string;
@@ -79,6 +84,11 @@ export interface PurchaseOrderCreate {
   vatRate?: number;
   notes?: string;
   vehicleReg?: string;
+  // Healthcare specific fields
+  patientId?: string;
+  patientName?: string;
+  medicalRecordNumber?: string;
+  department?: string;
   items: PurchaseOrderItemCreate[];
 }
 

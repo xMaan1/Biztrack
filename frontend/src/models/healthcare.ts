@@ -257,3 +257,139 @@ export interface MedicalSupplyStats {
   totalValue: number;
 }
 
+export interface Consultation {
+  id: string;
+  tenant_id: string;
+  patient_id: string;
+  appointment_id?: string;
+  consultationDate: string;
+  consultationTime: string;
+  doctorId: string;
+  chiefComplaint?: string;
+  historyOfPresentIllness?: string;
+  physicalExamination?: string;
+  assessment?: string;
+  plan?: string;
+  prescriptions?: Array<Record<string, any>>;
+  followUpDate?: string;
+  followUpNotes?: string;
+  vitalSigns?: Record<string, any>;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ConsultationCreate {
+  patient_id: string;
+  appointment_id?: string;
+  consultationDate: string;
+  consultationTime: string;
+  doctorId: string;
+  chiefComplaint?: string;
+  historyOfPresentIllness?: string;
+  physicalExamination?: string;
+  assessment?: string;
+  plan?: string;
+  prescriptions?: Array<Record<string, any>>;
+  followUpDate?: string;
+  followUpNotes?: string;
+  vitalSigns?: Record<string, any>;
+}
+
+export interface ConsultationUpdate {
+  patient_id?: string;
+  appointment_id?: string;
+  consultationDate?: string;
+  consultationTime?: string;
+  doctorId?: string;
+  chiefComplaint?: string;
+  historyOfPresentIllness?: string;
+  physicalExamination?: string;
+  assessment?: string;
+  plan?: string;
+  prescriptions?: Array<Record<string, any>>;
+  followUpDate?: string;
+  followUpNotes?: string;
+  vitalSigns?: Record<string, any>;
+}
+
+export interface ConsultationStats {
+  total: number;
+  today: number;
+  thisMonth: number;
+}
+
+export interface TestResult {
+  testName: string;
+  value: string;
+  unit?: string;
+  referenceRange?: string;
+  status?: string;
+}
+
+export interface LabReport {
+  id: string;
+  tenant_id: string;
+  patient_id: string;
+  appointment_id?: string;
+  reportNumber: string;
+  reportDate: string;
+  orderedBy: string;
+  testName: string;
+  testCategory?: string;
+  testResults?: Array<Record<string, any>>;
+  labName?: string;
+  labAddress?: string;
+  technicianName?: string;
+  notes?: string;
+  attachments?: string[];
+  isVerified: boolean;
+  verifiedBy?: string;
+  verifiedAt?: string;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LabReportCreate {
+  patient_id: string;
+  appointment_id?: string;
+  reportNumber: string;
+  reportDate: string;
+  orderedBy: string;
+  testName: string;
+  testCategory?: string;
+  testResults?: Array<Record<string, any>>;
+  labName?: string;
+  labAddress?: string;
+  technicianName?: string;
+  notes?: string;
+  attachments?: string[];
+  isVerified?: boolean;
+}
+
+export interface LabReportUpdate {
+  patient_id?: string;
+  appointment_id?: string;
+  reportNumber?: string;
+  reportDate?: string;
+  orderedBy?: string;
+  testName?: string;
+  testCategory?: string;
+  testResults?: Array<Record<string, any>>;
+  labName?: string;
+  labAddress?: string;
+  technicianName?: string;
+  notes?: string;
+  attachments?: string[];
+  isVerified?: boolean;
+}
+
+export interface LabReportStats {
+  total: number;
+  verified: number;
+  unverified: number;
+  today: number;
+  byCategory: Record<string, number>;
+}
+

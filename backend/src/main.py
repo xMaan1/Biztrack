@@ -9,7 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 from .config.database import create_tables, get_plans
-from .api.v1 import auth, users, projects, tasks, tenants, plans, sales, crm, hrm, custom_options, invoices, invoice_customization, pos, inventory, subscriptions, work_orders, production, quality_control, maintenance, ledger, admin, file_upload, deduct_stock, customer_import, dashboard, investments, reports, notifications, banking, rbac_users, events, profile, patients, appointments, medical_records, medical_supplies
+from .api.v1 import auth, users, projects, tasks, tenants, plans, sales, crm, hrm, custom_options, invoices, invoice_customization, pos, inventory, subscriptions, work_orders, production, quality_control, maintenance, ledger, admin, file_upload, deduct_stock, customer_import, dashboard, investments, reports, notifications, banking, rbac_users, events, profile, patients, appointments, medical_records, medical_supplies, consultations, lab_reports
 from .core.security import security_middleware
 from .core.tenant_middleware import tenant_middleware
 from .core.audit import audit_logger
@@ -198,6 +198,8 @@ app.include_router(patients.router)
 app.include_router(appointments.router)
 app.include_router(medical_records.router)
 app.include_router(medical_supplies.router)
+app.include_router(consultations.router)
+app.include_router(lab_reports.router)
 
 # Add CORS middleware for frontend integration
 app.add_middleware(

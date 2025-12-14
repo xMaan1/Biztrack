@@ -343,10 +343,20 @@ class PurchaseOrderBase(BaseModel):
     totalAmount: float
     notes: Optional[str] = None
     vehicleReg: Optional[str] = None
+    # Healthcare specific fields
+    patientId: Optional[str] = None
+    patientName: Optional[str] = None
+    medicalRecordNumber: Optional[str] = None
+    department: Optional[str] = None
     items: List[PurchaseOrderItemCreate]
 
 class PurchaseOrderCreate(BaseModel):
     vehicleReg: Optional[str] = None
+    # Healthcare specific fields
+    patientId: Optional[str] = None
+    patientName: Optional[str] = None
+    medicalRecordNumber: Optional[str] = None
+    department: Optional[str] = None
     orderNumber: Optional[str] = None
     batchNumber: Optional[str] = None
     supplierId: str

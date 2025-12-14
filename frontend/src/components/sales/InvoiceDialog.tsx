@@ -34,6 +34,7 @@ import { CustomerSearch } from '../ui/customer-search';
 import { Customer } from '../../services/CustomerService';
 import { Product } from '../../models/pos';
 import { apiService } from '../../services/ApiService';
+import { usePlanInfo } from '../../hooks/usePlanInfo';
 
 interface InvoiceDialogProps {
   open: boolean;
@@ -53,6 +54,8 @@ export function InvoiceDialog({
   error,
 }: InvoiceDialogProps) {
   const { currency, formatCurrency } = useCurrency();
+  const { planInfo } = usePlanInfo();
+  const isHealthcare = planInfo?.planType === 'healthcare';
   const [formData, setFormData] = useState<InvoiceCreate>({
     customerId: '',
     customerName: '',
@@ -88,6 +91,17 @@ export function InvoiceDialog({
     partsDescription: '',
     labourTotal: 0,
     partsTotal: 0,
+    // Healthcare specific fields
+    patientId: '',
+    patientName: '',
+    patientDateOfBirth: '',
+    medicalRecordNumber: '',
+    diagnosis: '',
+    treatment: '',
+    physicianName: '',
+    appointmentDate: '',
+    insuranceProvider: '',
+    insurancePolicyNumber: '',
   });
 
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -166,6 +180,17 @@ export function InvoiceDialog({
         partsDescription: invoice.partsDescription || '',
         labourTotal: invoice.labourTotal || 0,
         partsTotal: invoice.partsTotal || 0,
+        // Healthcare specific fields
+        patientId: invoice.patientId || '',
+        patientName: invoice.patientName || '',
+        patientDateOfBirth: invoice.patientDateOfBirth || '',
+        medicalRecordNumber: invoice.medicalRecordNumber || '',
+        diagnosis: invoice.diagnosis || '',
+        treatment: invoice.treatment || '',
+        physicianName: invoice.physicianName || '',
+        appointmentDate: invoice.appointmentDate || '',
+        insuranceProvider: invoice.insuranceProvider || '',
+        insurancePolicyNumber: invoice.insurancePolicyNumber || '',
       });
       setItems(
         invoice.items.map((item) => ({
@@ -244,6 +269,17 @@ export function InvoiceDialog({
         partsDescription: '',
         labourTotal: 0,
         partsTotal: 0,
+        // Healthcare specific fields
+        patientId: '',
+        patientName: '',
+        patientDateOfBirth: '',
+        medicalRecordNumber: '',
+        diagnosis: '',
+        treatment: '',
+        physicianName: '',
+        appointmentDate: '',
+        insuranceProvider: '',
+        insurancePolicyNumber: '',
       });
       setItems([]);
       setSelectedCustomer(null);
@@ -560,15 +596,16 @@ export function InvoiceDialog({
             </CardContent>
           </Card>
 
-          {/* Vehicle Details for Workshop */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building className="h-4 w-4" />
-                Vehicle Details (Workshop)
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Vehicle Details for Workshop - Only show for non-healthcare plans */}
+          {!isHealthcare && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building className="h-4 w-4" />
+                  Vehicle Details (Workshop)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="vehicleMake">Vehicle Make</Label>
                 <Input
@@ -726,6 +763,140 @@ export function InvoiceDialog({
               </div>
             </CardContent>
           </Card>
+          )}
+
+          {/* Healthcare Details - Only show for healthcare plan */}
+          {isHealthcare && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  Patient Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="patientId">Patient ID</Label>
+                  <Input
+                    id="patientId"
+                    value={formData.patientId}
+                    onChange={(e) =>
+                      handleInputChange('patientId', e.target.value)
+                    }
+                    placeholder="Patient ID"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="patientName">Patient Name</Label>
+                  <Input
+                    id="patientName"
+                    value={formData.patientName}
+                    onChange={(e) =>
+                      handleInputChange('patientName', e.target.value)
+                    }
+                    placeholder="Full name"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="patientDateOfBirth">Date of Birth</Label>
+                  <Input
+                    id="patientDateOfBirth"
+                    type="date"
+                    value={formData.patientDateOfBirth}
+                    onChange={(e) =>
+                      handleInputChange('patientDateOfBirth', e.target.value)
+                    }
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="medicalRecordNumber">Medical Record Number</Label>
+                  <Input
+                    id="medicalRecordNumber"
+                    value={formData.medicalRecordNumber}
+                    onChange={(e) =>
+                      handleInputChange('medicalRecordNumber', e.target.value)
+                    }
+                    placeholder="MRN"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="physicianName">Physician Name</Label>
+                  <Input
+                    id="physicianName"
+                    value={formData.physicianName}
+                    onChange={(e) =>
+                      handleInputChange('physicianName', e.target.value)
+                    }
+                    placeholder="Dr. Name"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="appointmentDate">Appointment Date</Label>
+                  <Input
+                    id="appointmentDate"
+                    type="datetime-local"
+                    value={formData.appointmentDate}
+                    onChange={(e) =>
+                      handleInputChange('appointmentDate', e.target.value)
+                    }
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="insuranceProvider">Insurance Provider</Label>
+                  <Input
+                    id="insuranceProvider"
+                    value={formData.insuranceProvider}
+                    onChange={(e) =>
+                      handleInputChange('insuranceProvider', e.target.value)
+                    }
+                    placeholder="Insurance company name"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="insurancePolicyNumber">Insurance Policy Number</Label>
+                  <Input
+                    id="insurancePolicyNumber"
+                    value={formData.insurancePolicyNumber}
+                    onChange={(e) =>
+                      handleInputChange('insurancePolicyNumber', e.target.value)
+                    }
+                    placeholder="Policy number"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <Label htmlFor="diagnosis">Diagnosis</Label>
+                  <Textarea
+                    id="diagnosis"
+                    value={formData.diagnosis}
+                    onChange={(e) =>
+                      handleInputChange('diagnosis', e.target.value)
+                    }
+                    placeholder="Medical diagnosis"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <Label htmlFor="treatment">Treatment</Label>
+                  <Textarea
+                    id="treatment"
+                    value={formData.treatment}
+                    onChange={(e) =>
+                      handleInputChange('treatment', e.target.value)
+                    }
+                    placeholder="Treatment provided"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Invoice Items */}
           <Card>

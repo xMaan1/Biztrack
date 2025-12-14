@@ -99,6 +99,17 @@ class InvoiceBase(BaseModel):
     partsDescription: Optional[str] = None
     labourTotal: Optional[float] = 0.0
     partsTotal: Optional[float] = 0.0
+    # Healthcare specific fields
+    patientId: Optional[str] = None
+    patientName: Optional[str] = None
+    patientDateOfBirth: Optional[str] = None
+    medicalRecordNumber: Optional[str] = None
+    diagnosis: Optional[str] = None
+    treatment: Optional[str] = None
+    physicianName: Optional[str] = None
+    appointmentDate: Optional[str] = None
+    insuranceProvider: Optional[str] = None
+    insurancePolicyNumber: Optional[str] = None
 
 class InvoiceCreate(BaseModel):
     customerId: str
@@ -132,6 +143,17 @@ class InvoiceCreate(BaseModel):
     partsDescription: Optional[str] = None
     labourTotal: Optional[float] = 0.0
     partsTotal: Optional[float] = 0.0
+    # Healthcare specific fields
+    patientId: Optional[str] = None
+    patientName: Optional[str] = None
+    patientDateOfBirth: Optional[str] = None
+    medicalRecordNumber: Optional[str] = None
+    diagnosis: Optional[str] = None
+    treatment: Optional[str] = None
+    physicianName: Optional[str] = None
+    appointmentDate: Optional[str] = None
+    insuranceProvider: Optional[str] = None
+    insurancePolicyNumber: Optional[str] = None
 
 class InvoiceUpdate(BaseModel):
     customerName: Optional[str] = None
