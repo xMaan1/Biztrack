@@ -78,3 +78,4 @@ secret.env.here.txt is not environment file its just file with some commands i n
 - MAKE SURE TO USE BEST PRACTICES USE BEST RECOMMENDED PATTERNS AND STRUCTURES AND TRY TO REUSE THINGS IF POSSIBLE AND NEEDED AVOID DEFINING THINGS AGAIN AND AGAIN AND USE BEST PROJECT STRUCTURES
 - dont add comments unless i ask you in prompt to add comments
 - dont run commands to run servers for me to test or u test unless i ask you to thanks
+- GIVE ME COMMIT MSG FOR EVERY SUCCESSFUL CHANGE AND ALSO INCLUDE PREVIOUS CHANGES UNTIL WE HAVE COMMITED IT IN EVERY PROMPT

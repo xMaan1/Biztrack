@@ -223,7 +223,17 @@ export class ConsultationService {
   }
 
   async createConsultation(consultation: ConsultationCreate): Promise<Consultation> {
-    return apiService.post(this.baseUrl, consultation);
+    console.log('[ConsultationService] createConsultation called');
+    console.log('[ConsultationService] baseUrl:', this.baseUrl);
+    console.log('[ConsultationService] consultation data:', consultation);
+    try {
+      const result = await apiService.post(this.baseUrl, consultation);
+      console.log('[ConsultationService] createConsultation success:', result);
+      return result;
+    } catch (error) {
+      console.error('[ConsultationService] createConsultation error:', error);
+      throw error;
+    }
   }
 
   async updateConsultation(id: string, consultation: ConsultationUpdate): Promise<Consultation> {

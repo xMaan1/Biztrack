@@ -52,7 +52,20 @@ class ErrorHandler:
             "timestamp": self._get_timestamp()
         }
         
-        # Log the validation error
+        logger.error(f"Validation error for {request.method} {request.url}: {error_details}")
+        
+        try:
+            body = await request.body()
+            if body:
+                import json
+                try:
+                    body_data = json.loads(body)
+                    logger.error(f"Request body: {json.dumps(body_data, indent=2)}")
+                except:
+                    logger.error(f"Request body (raw): {body}")
+        except Exception as e:
+            logger.error(f"Could not read request body: {str(e)}")
+        
         self._log_error(
             request=request,
             error_type="validation_error",

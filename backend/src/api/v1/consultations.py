@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Depends, Query
 from sqlalchemy.orm import Session
 from typing import Optional, List
-from datetime import date
+from datetime import date, time as dt_time
 from pydantic import BaseModel
 
 from ...models.healthcare import (
@@ -20,6 +20,12 @@ class ConsultationsResponse(BaseModel):
 
 router = APIRouter(prefix="/consultations", tags=["consultations"])
 
+def convert_consultation_for_response(consultation):
+    consultation_dict = consultation.__dict__.copy()
+    if isinstance(consultation.consultationTime, dt_time):
+        consultation_dict['consultationTime'] = consultation.consultationTime.strftime('%H:%M')
+    return ConsultationResponse.model_validate(consultation_dict)
+
 @router.post("", response_model=ConsultationResponse)
 async def create_consultation_endpoint(
     consultation_data: ConsultationCreate,
@@ -28,18 +34,35 @@ async def create_consultation_endpoint(
     tenant_context: dict = Depends(get_tenant_context),
     _: dict = Depends(require_permission(ModulePermission.CRM_CREATE.value))
 ):
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info("=== CONSULTATION CREATE ENDPOINT CALLED ===")
+    logger.info(f"Current user: {current_user.id if current_user else 'None'}")
+    logger.info(f"Tenant context: {tenant_context}")
+    logger.info(f"Consultation data received: {consultation_data.dict()}")
+    
     if not tenant_context:
+        logger.error("Tenant context is missing!")
         raise HTTPException(status_code=400, detail="Tenant context required")
+    
+    logger.info(f"Tenant ID: {tenant_context.get('tenant_id')}")
     
     consultation_dict = consultation_data.dict()
     consultation_dict["createdById"] = current_user.id
     
+    logger.info(f"Consultation dict before creation: {consultation_dict}")
+    
     try:
+        logger.info("Calling create_consultation function...")
         consultation = create_consultation(db, consultation_dict, tenant_context["tenant_id"])
-        return ConsultationResponse.model_validate(consultation)
+        logger.info(f"Consultation created successfully with ID: {consultation.id}")
+        return convert_consultation_for_response(consultation)
     except ValueError as e:
+        logger.error(f"Validation error in create_consultation: {str(e)}", exc_info=True)
         raise HTTPException(status_code=422, detail=f"Validation error: {str(e)}")
     except Exception as e:
+        logger.error(f"Error creating consultation: {str(e)}", exc_info=True)
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to create consultation: {str(e)}")
 
@@ -69,7 +92,7 @@ async def get_consultations_endpoint(
         date_to
     )
     return ConsultationsResponse(
-        consultations=[ConsultationResponse.model_validate(consultation) for consultation in consultations],
+        consultations=[convert_consultation_for_response(consultation) for consultation in consultations],
         total=total
     )
 
@@ -98,7 +121,7 @@ async def get_consultation_endpoint(
     consultation = get_consultation_by_id(db, consultation_id, tenant_context["tenant_id"])
     if not consultation:
         raise HTTPException(status_code=404, detail="Consultation not found")
-    return ConsultationResponse.model_validate(consultation)
+    return convert_consultation_for_response(consultation)
 
 @router.put("/{consultation_id}", response_model=ConsultationResponse)
 async def update_consultation_endpoint(
@@ -114,7 +137,7 @@ async def update_consultation_endpoint(
     consultation = update_consultation(db, consultation_id, consultation_data.dict(exclude_unset=True), tenant_context["tenant_id"])
     if not consultation:
         raise HTTPException(status_code=404, detail="Consultation not found")
-    return ConsultationResponse.model_validate(consultation)
+    return convert_consultation_for_response(consultation)
 
 @router.delete("/{consultation_id}")
 async def delete_consultation_endpoint(

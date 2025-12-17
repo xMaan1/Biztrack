@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Depends, Query
 from sqlalchemy.orm import Session
 from typing import Optional, List
-from datetime import date
+from datetime import date, time as dt_time
 from pydantic import BaseModel
 
 from ...models.healthcare import (
@@ -20,6 +20,12 @@ class AppointmentsResponse(BaseModel):
 
 router = APIRouter(prefix="/appointments", tags=["appointments"])
 
+def convert_appointment_for_response(appointment):
+    appointment_dict = appointment.__dict__.copy()
+    if isinstance(appointment.appointmentTime, dt_time):
+        appointment_dict['appointmentTime'] = appointment.appointmentTime.strftime('%H:%M')
+    return AppointmentResponse.model_validate(appointment_dict)
+
 @router.post("", response_model=AppointmentResponse)
 async def create_appointment_endpoint(
     appointment_data: AppointmentCreate,
@@ -36,7 +42,7 @@ async def create_appointment_endpoint(
     
     try:
         appointment = create_appointment(db, appointment_dict, tenant_context["tenant_id"])
-        return AppointmentResponse.model_validate(appointment)
+        return convert_appointment_for_response(appointment)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=f"Validation error: {str(e)}")
     except Exception as e:
@@ -71,7 +77,7 @@ async def get_appointments_endpoint(
         date_to
     )
     return AppointmentsResponse(
-        appointments=[AppointmentResponse.model_validate(appointment) for appointment in appointments],
+        appointments=[convert_appointment_for_response(appointment) for appointment in appointments],
         total=total
     )
 
@@ -100,7 +106,7 @@ async def get_appointment_endpoint(
     appointment = get_appointment_by_id(db, appointment_id, tenant_context["tenant_id"])
     if not appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")
-    return AppointmentResponse.model_validate(appointment)
+    return convert_appointment_for_response(appointment)
 
 @router.put("/{appointment_id}", response_model=AppointmentResponse)
 async def update_appointment_endpoint(
@@ -116,7 +122,7 @@ async def update_appointment_endpoint(
     appointment = update_appointment(db, appointment_id, appointment_data.dict(exclude_unset=True), tenant_context["tenant_id"])
     if not appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")
-    return AppointmentResponse.model_validate(appointment)
+    return convert_appointment_for_response(appointment)
 
 @router.delete("/{appointment_id}")
 async def delete_appointment_endpoint(

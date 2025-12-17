@@ -122,6 +122,8 @@ export class ApiService {
     // Request interceptor
     this.client.interceptors.request.use(
       (config) => {
+        console.log('[ApiService Interceptor] Request intercepted:', config.method, config.url);
+        
         // Check if this is a public endpoint
         const isPublicEndpoint = this.publicEndpoints.some((endpoint) => {
           const matches = config.url?.includes(endpoint);
@@ -129,45 +131,67 @@ export class ApiService {
         });
 
         if (isPublicEndpoint) {
+          console.log('[ApiService Interceptor] Public endpoint, skipping auth');
           return config;
         }
 
         if (typeof window === 'undefined') {
           console.error(
-            `[ApiService] Server-side request to protected endpoint without auth | URL: ${config.url} | Method: ${config.method}`
+            `[ApiService Interceptor] Server-side request to protected endpoint without auth | URL: ${config.url} | Method: ${config.method}`
           );
           return Promise.reject(new Error('Server-side requests to protected endpoints are not allowed'));
         }
 
-        if (!this.sessionManager.isSessionValid()) {
+        const isSessionValid = this.sessionManager.isSessionValid();
+        console.log('[ApiService Interceptor] Session valid:', isSessionValid);
+        
+        if (!isSessionValid) {
           console.warn(
-            `[ApiService] Session invalid - rejecting request | URL: ${config.url} | Method: ${config.method}`
+            `[ApiService Interceptor] Session invalid - rejecting request | URL: ${config.url} | Method: ${config.method}`
           );
           return Promise.reject(new Error('Not authenticated'));
         }
 
         const token = this.sessionManager.getToken();
+        console.log('[ApiService Interceptor] Token exists:', !!token);
+        
         if (!token) {
           console.error(
-            `[ApiService] Session valid but token missing - rejecting request | URL: ${config.url} | Method: ${config.method}`
+            `[ApiService Interceptor] Session valid but token missing - rejecting request | URL: ${config.url} | Method: ${config.method}`
           );
           return Promise.reject(new Error('Authentication token missing'));
         }
 
         config.headers.Authorization = `Bearer ${token}`;
+        console.log('[ApiService Interceptor] Authorization header set');
 
         const tenantId = this.getTenantId();
+        console.log('[ApiService Interceptor] Tenant ID:', tenantId);
+        
         if (tenantId) {
           config.headers['X-Tenant-ID'] = tenantId;
+          console.log('[ApiService Interceptor] X-Tenant-ID header set:', tenantId);
         } else {
           console.warn(
-            `[ApiService] Tenant ID missing for protected endpoint | URL: ${config.url} | Method: ${config.method}`
+            `[ApiService Interceptor] Tenant ID missing for protected endpoint | URL: ${config.url} | Method: ${config.method}`
           );
         }
 
+        console.log('[ApiService Interceptor] Request config final:', {
+          url: config.url,
+          method: config.method,
+          headers: {
+            Authorization: config.headers.Authorization ? 'Bearer ***' : 'missing',
+            'X-Tenant-ID': config.headers['X-Tenant-ID'] || 'missing'
+          }
+        });
+
         return config;
       },
-      (error) => Promise.reject(error),
+      (error) => {
+        console.error('[ApiService Interceptor] Request interceptor error:', error);
+        return Promise.reject(error);
+      },
     );
 
     this.client.interceptors.response.use(
@@ -220,8 +244,28 @@ export class ApiService {
     data?: any,
     config?: AxiosRequestConfig,
   ): Promise<T> {
-    const response = await this.client.post<T>(url, data, config);
-    return response.data;
+    console.log('[ApiService] POST request:', url);
+    console.log('[ApiService] POST data:', data);
+    console.log('[ApiService] Base URL:', this.client.defaults.baseURL);
+    console.log('[ApiService] Full URL:', `${this.client.defaults.baseURL}${url}`);
+    console.log('[ApiService] Tenant ID:', this.getTenantId());
+    console.log('[ApiService] Session valid:', this.sessionManager.isSessionValid());
+    
+    try {
+      const response = await this.client.post<T>(url, data, config);
+      console.log('[ApiService] POST response status:', response.status);
+      console.log('[ApiService] POST response data:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('[ApiService] POST error:', error);
+      console.error('[ApiService] POST error message:', error?.message);
+      console.error('[ApiService] POST error response:', error?.response);
+      if (error?.response) {
+        console.error('[ApiService] POST error status:', error.response.status);
+        console.error('[ApiService] POST error data:', error.response.data);
+      }
+      throw error;
+    }
   }
 
   async put<T = any>(

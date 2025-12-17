@@ -152,7 +152,20 @@ function ConsultationsContent() {
   const loadDoctors = async () => {
     try {
       const response = await apiService.getUsers();
-      setDoctors(response.users || []);
+      const users = response.users || [];
+      console.log('[Consultation] Loaded doctors:', users);
+      console.log('[Consultation] Doctor IDs:', users.map(d => ({ 
+        id: d.id, 
+        userId: d.userId,
+        actualId: d.id || d.userId,
+        name: `${d.firstName || ''} ${d.lastName || ''}`.trim() || d.email 
+      })));
+      const validDoctors = users.filter(d => {
+        const doctorId = d.id || d.userId;
+        return doctorId && doctorId !== 'undefined' && doctorId !== 'null' && String(doctorId).trim() !== '';
+      });
+      console.log('[Consultation] Valid doctors after filtering:', validDoctors.length);
+      setDoctors(validDoctors); 
     } catch (error) {
       console.error('Failed to load doctors:', error);
     }
@@ -178,19 +191,84 @@ function ConsultationsContent() {
   };
 
   const handleCreate = async () => {
+    console.log('[Consultation] handleCreate called');
+    console.log('[Consultation] Form data:', formData);
+    
     if (!validateForm()) {
+      console.log('[Consultation] Form validation failed');
       toast.error('Please fix form errors');
       return;
     }
+    
+    if (!formData.patient_id || !formData.doctorId || !formData.consultationDate || !formData.consultationTime) {
+      console.log('[Consultation] Required fields missing');
+      toast.error('Please fill in all required fields');
+      return;
+    }
+    
+    const patientId = formData.patient_id.trim();
+    let doctorId = formData.doctorId.trim();
+    
+    if (doctorId === 'undefined' || doctorId === 'null' || !doctorId) {
+      console.log('[Consultation] Doctor not selected or invalid:', doctorId);
+      toast.error('Please select a valid doctor');
+      setFormErrors({ ...formErrors, doctorId: 'Doctor is required' });
+      return;
+    }
+    
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(patientId)) {
+      console.log('[Consultation] Invalid patient ID format:', patientId);
+      toast.error('Invalid patient ID format');
+      return;
+    }
+    if (!uuidRegex.test(doctorId)) {
+      console.log('[Consultation] Invalid doctor ID format:', doctorId);
+      toast.error('Invalid doctor ID format. Please select a doctor from the list.');
+      setFormErrors({ ...formErrors, doctorId: 'Please select a valid doctor' });
+      return;
+    }
+    
     try {
-      await consultationService.createConsultation(formData);
+      const payload: ConsultationCreate = {
+        patient_id: patientId,
+        consultationDate: formData.consultationDate,
+        consultationTime: formData.consultationTime,
+        doctorId: doctorId,
+        chiefComplaint: formData.chiefComplaint?.trim() || undefined,
+        historyOfPresentIllness: formData.historyOfPresentIllness?.trim() || undefined,
+        physicalExamination: formData.physicalExamination?.trim() || undefined,
+        assessment: formData.assessment?.trim() || undefined,
+        plan: formData.plan?.trim() || undefined,
+        prescriptions: formData.prescriptions || [],
+        followUpDate: formData.followUpDate || undefined,
+        followUpNotes: formData.followUpNotes?.trim() || undefined,
+        vitalSigns: formData.vitalSigns || {},
+      };
+      console.log('[Consultation] Sending consultation payload:', JSON.stringify(payload, null, 2));
+      console.log('[Consultation] Calling consultationService.createConsultation...');
+      const result = await consultationService.createConsultation(payload);
+      console.log('[Consultation] Success! Response:', result);
       toast.success('Consultation created successfully');
       setIsCreateDialogOpen(false);
       resetForm();
       loadConsultations();
       loadStats();
-    } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to create consultation'));
+    } catch (error: any) {
+      console.error('[Consultation] === CREATION ERROR ===');
+      console.error('[Consultation] Error object:', error);
+      console.error('[Consultation] Error message:', error?.message);
+      console.error('[Consultation] Error response:', error?.response);
+      console.error('[Consultation] Error response data:', error?.response?.data);
+      console.error('[Consultation] Error response status:', error?.response?.status);
+      console.error('[Consultation] Error response headers:', error?.response?.headers);
+      console.error('[Consultation] Error config:', error?.config);
+      if (error?.response) {
+        console.error('[Consultation] Full error response:', JSON.stringify(error.response.data, null, 2));
+      }
+      const errorMessage = extractErrorMessage(error, 'Failed to create consultation');
+      console.error('[Consultation] Extracted error message:', errorMessage);
+      toast.error(errorMessage, { duration: 10000 });
     }
   };
 
@@ -249,11 +327,11 @@ function ConsultationsContent() {
   const openEditDialog = (consultation: Consultation) => {
     setSelectedConsultation(consultation);
     setFormData({
-      patient_id: consultation.patient_id,
-      appointment_id: consultation.appointment_id,
+      patient_id: String(consultation.patient_id),
+      appointment_id: consultation.appointment_id ? String(consultation.appointment_id) : undefined,
       consultationDate: consultation.consultationDate,
       consultationTime: consultation.consultationTime,
-      doctorId: consultation.doctorId,
+      doctorId: String(consultation.doctorId),
       chiefComplaint: consultation.chiefComplaint || '',
       historyOfPresentIllness: consultation.historyOfPresentIllness || '',
       physicalExamination: consultation.physicalExamination || '',
@@ -273,7 +351,7 @@ function ConsultationsContent() {
   };
 
   const getDoctorName = (doctorId: string) => {
-    const doctor = doctors.find((d) => d.id === doctorId);
+    const doctor = doctors.find((d) => String(d.id || d.userId) === String(doctorId));
     return doctor ? `${doctor.firstName || ''} ${doctor.lastName || ''}`.trim() || doctor.email : 'Unknown';
   };
 
@@ -301,7 +379,7 @@ function ConsultationsContent() {
                 <div className="col-span-2">
                   <Label htmlFor="patient_id">Patient *</Label>
                   <Select
-                    value={formData.patient_id}
+                    value={formData.patient_id || ''}
                     onValueChange={(value) => {
                       setFormData({ ...formData, patient_id: value });
                       if (formErrors.patient_id) setFormErrors({ ...formErrors, patient_id: '' });
@@ -312,7 +390,7 @@ function ConsultationsContent() {
                     </SelectTrigger>
                     <SelectContent>
                       {patients.map((patient) => (
-                        <SelectItem key={patient.id} value={patient.id}>
+                        <SelectItem key={String(patient.id)} value={String(patient.id)}>
                           {patient.firstName} {patient.lastName} ({patient.patientId})
                         </SelectItem>
                       ))}
@@ -351,21 +429,38 @@ function ConsultationsContent() {
                 <div className="col-span-2">
                   <Label htmlFor="doctorId">Doctor *</Label>
                   <Select
-                    value={formData.doctorId}
+                    value={formData.doctorId && formData.doctorId !== 'undefined' && formData.doctorId !== 'null' ? formData.doctorId : ''}
                     onValueChange={(value) => {
-                      setFormData({ ...formData, doctorId: value });
-                      if (formErrors.doctorId) setFormErrors({ ...formErrors, doctorId: '' });
+                      console.log('[Consultation] Doctor selected:', value);
+                      if (value && value !== 'undefined' && value !== 'null') {
+                        setFormData({ ...formData, doctorId: value });
+                        if (formErrors.doctorId) setFormErrors({ ...formErrors, doctorId: '' });
+                      } else {
+                        console.warn('[Consultation] Invalid doctor value selected:', value);
+                        setFormData({ ...formData, doctorId: '' });
+                        setFormErrors({ ...formErrors, doctorId: 'Please select a valid doctor' });
+                      }
                     }}
                   >
                     <SelectTrigger className={formErrors.doctorId ? 'border-red-500' : ''}>
                       <SelectValue placeholder="Select doctor" />
                     </SelectTrigger>
                     <SelectContent>
-                      {doctors.map((doctor) => (
-                        <SelectItem key={doctor.id} value={doctor.id}>
-                          {doctor.firstName || doctor.lastName ? `${doctor.firstName || ''} ${doctor.lastName || ''}`.trim() : doctor.email}
-                        </SelectItem>
-                      ))}
+                      {doctors.length === 0 ? (
+                        <SelectItem value="no-doctors" disabled>No doctors available</SelectItem>
+                      ) : (
+                        doctors.map((doctor) => {
+                          const doctorId = String(doctor.id || doctor.userId || '');
+                          if (!doctorId || doctorId === 'undefined' || doctorId === 'null' || doctorId === '') {
+                            return null;
+                          }
+                          return (
+                            <SelectItem key={doctorId} value={doctorId}>
+                              {doctor.firstName || doctor.lastName ? `${doctor.firstName || ''} ${doctor.lastName || ''}`.trim() : doctor.email}
+                            </SelectItem>
+                          );
+                        }).filter(Boolean)
+                      )}
                     </SelectContent>
                   </Select>
                   {formErrors.doctorId && <p className="text-sm text-red-500 mt-1">{formErrors.doctorId}</p>}
@@ -438,7 +533,16 @@ function ConsultationsContent() {
                 <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleCreate}>Create</Button>
+                <Button 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('[Consultation] Create button clicked');
+                    handleCreate();
+                  }}
+                >
+                  Create
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -491,14 +595,14 @@ function ConsultationsContent() {
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="All Patients" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Patients</SelectItem>
-                    {patients.map((patient) => (
-                      <SelectItem key={patient.id} value={patient.id}>
-                        {patient.firstName} {patient.lastName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
+                    <SelectContent>
+                      <SelectItem value="all">All Patients</SelectItem>
+                      {patients.map((patient) => (
+                        <SelectItem key={String(patient.id)} value={String(patient.id)}>
+                          {patient.firstName} {patient.lastName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
                 </Select>
                 <Select
                   value={doctorFilter}
@@ -510,14 +614,14 @@ function ConsultationsContent() {
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="All Doctors" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Doctors</SelectItem>
-                    {doctors.map((doctor) => (
-                      <SelectItem key={doctor.id} value={doctor.id}>
-                        {doctor.firstName || doctor.lastName ? `${doctor.firstName || ''} ${doctor.lastName || ''}`.trim() : doctor.email}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
+                    <SelectContent>
+                      <SelectItem value="all">All Doctors</SelectItem>
+                      {doctors.map((doctor) => (
+                        <SelectItem key={String(doctor.id)} value={String(doctor.id)}>
+                          {doctor.firstName || doctor.lastName ? `${doctor.firstName || ''} ${doctor.lastName || ''}`.trim() : doctor.email}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
                 </Select>
                 <Input
                   type="date"
@@ -649,7 +753,7 @@ function ConsultationsContent() {
               <div className="col-span-2">
                 <Label htmlFor="edit-patient_id">Patient *</Label>
                 <Select
-                  value={formData.patient_id}
+                  value={formData.patient_id || ''}
                   onValueChange={(value) => {
                     setFormData({ ...formData, patient_id: value });
                     if (formErrors.patient_id) setFormErrors({ ...formErrors, patient_id: '' });
@@ -660,7 +764,7 @@ function ConsultationsContent() {
                   </SelectTrigger>
                   <SelectContent>
                     {patients.map((patient) => (
-                      <SelectItem key={patient.id} value={patient.id}>
+                      <SelectItem key={String(patient.id)} value={String(patient.id)}>
                         {patient.firstName} {patient.lastName} ({patient.patientId})
                       </SelectItem>
                     ))}
@@ -699,21 +803,38 @@ function ConsultationsContent() {
               <div className="col-span-2">
                 <Label htmlFor="edit-doctorId">Doctor *</Label>
                 <Select
-                  value={formData.doctorId}
+                  value={formData.doctorId && formData.doctorId !== 'undefined' && formData.doctorId !== 'null' ? formData.doctorId : ''}
                   onValueChange={(value) => {
-                    setFormData({ ...formData, doctorId: value });
-                    if (formErrors.doctorId) setFormErrors({ ...formErrors, doctorId: '' });
+                    console.log('[Consultation] Doctor selected (edit):', value);
+                    if (value && value !== 'undefined' && value !== 'null') {
+                      setFormData({ ...formData, doctorId: value });
+                      if (formErrors.doctorId) setFormErrors({ ...formErrors, doctorId: '' });
+                    } else {
+                      console.warn('[Consultation] Invalid doctor value selected (edit):', value);
+                      setFormData({ ...formData, doctorId: '' });
+                      setFormErrors({ ...formErrors, doctorId: 'Please select a valid doctor' });
+                    }
                   }}
                 >
                   <SelectTrigger className={formErrors.doctorId ? 'border-red-500' : ''}>
                     <SelectValue placeholder="Select doctor" />
                   </SelectTrigger>
                   <SelectContent>
-                    {doctors.map((doctor) => (
-                      <SelectItem key={doctor.id} value={doctor.id}>
-                        {doctor.firstName || doctor.lastName ? `${doctor.firstName || ''} ${doctor.lastName || ''}`.trim() : doctor.email}
-                      </SelectItem>
-                    ))}
+                    {doctors.length === 0 ? (
+                      <SelectItem value="no-doctors" disabled>No doctors available</SelectItem>
+                    ) : (
+                      doctors.map((doctor) => {
+                        const doctorId = String(doctor.id || doctor.userId || '');
+                        if (!doctorId || doctorId === 'undefined' || doctorId === 'null' || doctorId === '') {
+                          return null;
+                        }
+                        return (
+                          <SelectItem key={doctorId} value={doctorId}>
+                            {doctor.firstName || doctor.lastName ? `${doctor.firstName || ''} ${doctor.lastName || ''}`.trim() : doctor.email}
+                          </SelectItem>
+                        );
+                      }).filter(Boolean)
+                    )}
                   </SelectContent>
                 </Select>
                 {formErrors.doctorId && <p className="text-sm text-red-500 mt-1">{formErrors.doctorId}</p>}
