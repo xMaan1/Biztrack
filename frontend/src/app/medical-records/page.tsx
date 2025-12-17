@@ -62,6 +62,7 @@ import {
   medicalRecordService,
   patientService,
 } from '@/src/services/HealthcareService';
+import { apiService } from '@/src/services/ApiService';
 import { DashboardLayout } from '../../components/layout';
 import { toast } from 'sonner';
 import { extractErrorMessage } from '@/src/utils/errorUtils';
@@ -77,6 +78,7 @@ export default function MedicalRecordsPage() {
 function MedicalRecordsContent() {
   const [records, setRecords] = useState<MedicalRecord[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [doctors, setDoctors] = useState<any[]>([]);
   const [stats, setStats] = useState<MedicalRecordStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -133,6 +135,7 @@ function MedicalRecordsContent() {
     loadRecords();
     loadStats();
     loadPatients();
+    loadDoctors();
   }, [currentPage, recordTypeFilter, debouncedSearchTerm]);
 
   const loadRecords = async () => {
@@ -164,6 +167,20 @@ function MedicalRecordsContent() {
     }
   };
 
+  const loadDoctors = async () => {
+    try {
+      const response = await apiService.getUsers();
+      const users = response.users || [];
+      const validDoctors = users.filter(d => {
+        const doctorId = d.id || d.userId;
+        return doctorId && doctorId !== 'undefined' && doctorId !== 'null' && String(doctorId).trim() !== '';
+      });
+      setDoctors(validDoctors);
+    } catch (error) {
+      console.error('Failed to load doctors:', error);
+    }
+  };
+
   const loadStats = async () => {
     try {
       const response = await medicalRecordService.getMedicalRecordStats();
@@ -179,6 +196,9 @@ function MedicalRecordsContent() {
     if (!formData.recordType) errors.recordType = 'Record type is required';
     if (!formData.title) errors.title = 'Title is required';
     if (!formData.visitDate) errors.visitDate = 'Visit date is required';
+    if (!formData.doctorId || formData.doctorId === '' || formData.doctorId === 'undefined' || formData.doctorId === 'null') {
+      errors.doctorId = 'Doctor is required';
+    }
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -188,8 +208,19 @@ function MedicalRecordsContent() {
       toast.error('Please fix form errors');
       return;
     }
+    
+    const payload = {
+      ...formData,
+      doctorId: formData.doctorId && formData.doctorId !== 'undefined' && formData.doctorId !== 'null' ? formData.doctorId : undefined,
+    };
+    
+    if (!payload.doctorId) {
+      toast.error('Please select a doctor');
+      return;
+    }
+    
     try {
-      await medicalRecordService.createMedicalRecord(formData);
+      await medicalRecordService.createMedicalRecord(payload);
       toast.success('Medical record created successfully');
       setIsCreateDialogOpen(false);
       resetForm();
@@ -206,8 +237,19 @@ function MedicalRecordsContent() {
       toast.error('Please fix form errors');
       return;
     }
+    
+    const payload = {
+      ...formData,
+      doctorId: formData.doctorId && formData.doctorId !== 'undefined' && formData.doctorId !== 'null' ? formData.doctorId : undefined,
+    };
+    
+    if (!payload.doctorId) {
+      toast.error('Please select a doctor');
+      return;
+    }
+    
     try {
-      await medicalRecordService.updateMedicalRecord(selectedRecord.id, formData);
+      await medicalRecordService.updateMedicalRecord(selectedRecord.id, payload);
       toast.success('Medical record updated successfully');
       setIsEditDialogOpen(false);
       resetForm();
@@ -252,6 +294,11 @@ function MedicalRecordsContent() {
     setFormErrors({});
   };
 
+  const getDoctorName = (doctorId: string) => {
+    const doctor = doctors.find((d) => String(d.id || d.userId) === String(doctorId));
+    return doctor ? `${doctor.firstName || ''} ${doctor.lastName || ''}`.trim() || doctor.email : 'Unknown';
+  };
+
   const openEditDialog = (record: MedicalRecord) => {
     setSelectedRecord(record);
     setFormData({
@@ -266,7 +313,7 @@ function MedicalRecordsContent() {
       labResults: record.labResults || {},
       attachments: record.attachments || [],
       visitDate: record.visitDate,
-      doctorId: record.doctorId || '',
+      doctorId: record.doctorId ? String(record.doctorId) : '',
       isConfidential: record.isConfidential || false,
     });
     setIsEditDialogOpen(true);
@@ -355,6 +402,43 @@ function MedicalRecordsContent() {
                     className={formErrors.visitDate ? 'border-red-500' : ''}
                   />
                   {formErrors.visitDate && <p className="text-sm text-red-500 mt-1">{formErrors.visitDate}</p>}
+                </div>
+                <div className="col-span-2">
+                  <Label htmlFor="doctorId">Doctor *</Label>
+                  <Select
+                    value={formData.doctorId && formData.doctorId !== 'undefined' && formData.doctorId !== 'null' ? formData.doctorId : ''}
+                    onValueChange={(value) => {
+                      if (value && value !== 'undefined' && value !== 'null') {
+                        setFormData({ ...formData, doctorId: value });
+                        if (formErrors.doctorId) setFormErrors({ ...formErrors, doctorId: '' });
+                      } else {
+                        setFormData({ ...formData, doctorId: '' });
+                        setFormErrors({ ...formErrors, doctorId: 'Please select a valid doctor' });
+                      }
+                    }}
+                  >
+                    <SelectTrigger className={formErrors.doctorId ? 'border-red-500' : ''}>
+                      <SelectValue placeholder="Select doctor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {doctors.length === 0 ? (
+                        <SelectItem value="no-doctors" disabled>No doctors available</SelectItem>
+                      ) : (
+                        doctors.map((doctor) => {
+                          const doctorId = String(doctor.id || doctor.userId || '');
+                          if (!doctorId || doctorId === 'undefined' || doctorId === 'null' || doctorId === '') {
+                            return null;
+                          }
+                          return (
+                            <SelectItem key={doctorId} value={doctorId}>
+                              {doctor.firstName || doctor.lastName ? `${doctor.firstName || ''} ${doctor.lastName || ''}`.trim() : doctor.email}
+                            </SelectItem>
+                          );
+                        }).filter(Boolean)
+                      )}
+                    </SelectContent>
+                  </Select>
+                  {formErrors.doctorId && <p className="text-sm text-red-500 mt-1">{formErrors.doctorId}</p>}
                 </div>
                 <div className="col-span-2">
                   <Label htmlFor="title">Title *</Label>
@@ -662,6 +746,43 @@ function MedicalRecordsContent() {
                   className={formErrors.visitDate ? 'border-red-500' : ''}
                 />
                 {formErrors.visitDate && <p className="text-sm text-red-500 mt-1">{formErrors.visitDate}</p>}
+              </div>
+              <div className="col-span-2">
+                <Label htmlFor="edit-doctorId">Doctor *</Label>
+                <Select
+                  value={formData.doctorId && formData.doctorId !== 'undefined' && formData.doctorId !== 'null' ? formData.doctorId : ''}
+                  onValueChange={(value) => {
+                    if (value && value !== 'undefined' && value !== 'null') {
+                      setFormData({ ...formData, doctorId: value });
+                      if (formErrors.doctorId) setFormErrors({ ...formErrors, doctorId: '' });
+                    } else {
+                      setFormData({ ...formData, doctorId: '' });
+                      setFormErrors({ ...formErrors, doctorId: 'Please select a valid doctor' });
+                    }
+                  }}
+                >
+                  <SelectTrigger className={formErrors.doctorId ? 'border-red-500' : ''}>
+                    <SelectValue placeholder="Select doctor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {doctors.length === 0 ? (
+                      <SelectItem value="no-doctors" disabled>No doctors available</SelectItem>
+                    ) : (
+                      doctors.map((doctor) => {
+                        const doctorId = String(doctor.id || doctor.userId || '');
+                        if (!doctorId || doctorId === 'undefined' || doctorId === 'null' || doctorId === '') {
+                          return null;
+                        }
+                        return (
+                          <SelectItem key={doctorId} value={doctorId}>
+                            {doctor.firstName || doctor.lastName ? `${doctor.firstName || ''} ${doctor.lastName || ''}`.trim() : doctor.email}
+                          </SelectItem>
+                        );
+                      }).filter(Boolean)
+                    )}
+                  </SelectContent>
+                </Select>
+                {formErrors.doctorId && <p className="text-sm text-red-500 mt-1">{formErrors.doctorId}</p>}
               </div>
               <div className="col-span-2">
                 <Label htmlFor="edit-title">Title *</Label>

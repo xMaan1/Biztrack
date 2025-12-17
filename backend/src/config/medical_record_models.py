@@ -21,7 +21,7 @@ class MedicalRecord(Base):
     labResults = Column(JSON, default={})
     attachments = Column(JSON, default=[])
     visitDate = Column(Date, nullable=False)
-    doctorId = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    doctorId = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     createdById = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     isConfidential = Column(Boolean, default=False)
     createdAt = Column(DateTime, default=datetime.utcnow)

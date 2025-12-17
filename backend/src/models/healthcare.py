@@ -131,7 +131,7 @@ class MedicalRecordBase(BaseModel):
     labResults: Optional[Dict[str, Any]] = Field(default_factory=dict)
     attachments: Optional[List[str]] = Field(default_factory=list)
     visitDate: date
-    doctorId: Optional[UUID] = None
+    doctorId: UUID
     isConfidential: Optional[bool] = Field(default=False)
 
 class MedicalRecordCreate(MedicalRecordBase):
