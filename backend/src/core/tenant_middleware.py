@@ -255,7 +255,8 @@ class TenantMiddleware:
             "/auth",
             "/health",
             "/docs",
-            "/openapi.json"
+            "/openapi.json",
+            "/subscriptions/webhook"
         ]
         
         return any(request.url.path.startswith(path) for path in skip_paths)

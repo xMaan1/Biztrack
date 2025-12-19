@@ -274,8 +274,21 @@ async def cancel_subscription(
                 detail="No subscription found for tenant"
             )
         
-        # Cancel subscription
-        subscription.status = "cancelled"
+        if not subscription.stripe_subscription_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Subscription is not linked to Stripe"
+            )
+        
+        stripe_cancelled = stripe_service.cancel_subscription(
+            subscription.stripe_subscription_id,
+            immediately=False
+        )
+        
+        if not stripe_cancelled:
+            logger.warning(f"Failed to cancel Stripe subscription {subscription.stripe_subscription_id}, but proceeding with database update")
+        
+        subscription.status = SubscriptionStatus.CANCELLED.value
         subscription.autoRenew = False
         subscription.updatedAt = datetime.utcnow()
         
@@ -408,104 +421,159 @@ async def stripe_webhook(
             session = event['data']['object']
             tenant_id = session.get('metadata', {}).get('tenant_id')
             
-            if tenant_id:
-                subscription = get_subscription_by_tenant(tenant_id, db)
-                if subscription:
-                    stripe_subscription_id = session.get('subscription')
-                    stripe_customer_id = session.get('customer')
-                    
-                    subscription.stripe_customer_id = stripe_customer_id
-                    subscription.stripe_subscription_id = stripe_subscription_id
-                    subscription.status = SubscriptionStatus.ACTIVE.value
-                    subscription.startDate = datetime.utcnow()
-                    subscription.endDate = datetime.utcnow() + timedelta(days=30)
-                    subscription.updatedAt = datetime.utcnow()
-                    
-                    db.commit()
-                    
-                    audit_logger.log_event(
-                        event_type=AuditEventType.SUBSCRIPTION_CHANGED,
-                        user_id=None,
-                        tenant_id=tenant_id,
-                        action="Subscription activated via Stripe",
-                        details={
-                            "stripe_subscription_id": stripe_subscription_id,
-                            "stripe_customer_id": stripe_customer_id
-                        },
-                        severity=AuditSeverity.MEDIUM
-                    )
+            if not tenant_id:
+                logger.warning("checkout.session.completed event missing tenant_id in metadata")
+                return {"status": "success", "message": "No tenant_id in metadata"}
+            
+            subscription = get_subscription_by_tenant(tenant_id, db)
+            if not subscription:
+                logger.error(f"Subscription not found for tenant_id: {tenant_id}")
+                return {"status": "error", "message": f"Subscription not found for tenant_id: {tenant_id}"}
+            
+            stripe_subscription_id = session.get('subscription')
+            stripe_customer_id = session.get('customer')
+            
+            if not stripe_subscription_id:
+                logger.error("checkout.session.completed event missing subscription ID")
+                return {"status": "error", "message": "Missing subscription ID in checkout session"}
+            
+            stripe_subscription_data = stripe_service.get_subscription(stripe_subscription_id)
+            
+            subscription.stripe_customer_id = stripe_customer_id
+            subscription.stripe_subscription_id = stripe_subscription_id
+            subscription.status = SubscriptionStatus.ACTIVE.value
+            subscription.startDate = datetime.utcnow()
+            
+            if stripe_subscription_data and stripe_subscription_data.get('current_period_end'):
+                subscription.endDate = stripe_subscription_data['current_period_end']
+            else:
+                subscription.endDate = datetime.utcnow() + timedelta(days=30)
+                logger.warning(f"Using fallback 30-day period for subscription {stripe_subscription_id}")
+            
+            subscription.updatedAt = datetime.utcnow()
+            
+            db.commit()
+            
+            audit_logger.log_event(
+                event_type=AuditEventType.SUBSCRIPTION_CHANGED,
+                user_id=None,
+                tenant_id=tenant_id,
+                action="Subscription activated via Stripe",
+                details={
+                    "stripe_subscription_id": stripe_subscription_id,
+                    "stripe_customer_id": stripe_customer_id
+                },
+                severity=AuditSeverity.MEDIUM
+            )
         
         elif event['type'] == 'customer.subscription.updated':
             stripe_subscription = event['data']['object']
             stripe_subscription_id = stripe_subscription.get('id')
             
+            if not stripe_subscription_id:
+                logger.warning("customer.subscription.updated event missing subscription ID")
+                return {"status": "success"}
+            
             subscription = db.query(Subscription).filter(
                 Subscription.stripe_subscription_id == stripe_subscription_id
             ).first()
             
-            if subscription:
-                subscription.status = stripe_subscription.get('status', subscription.status)
-                if stripe_subscription.get('current_period_end'):
-                    subscription.endDate = datetime.fromtimestamp(
-                        stripe_subscription.get('current_period_end')
-                    )
-                subscription.updatedAt = datetime.utcnow()
-                db.commit()
+            if not subscription:
+                logger.warning(f"Subscription not found for stripe_subscription_id: {stripe_subscription_id}")
+                return {"status": "success", "message": f"Subscription not found for stripe_subscription_id: {stripe_subscription_id}"}
+            
+            stripe_status = stripe_subscription.get('status')
+            if stripe_status:
+                status_mapping = {
+                    'active': SubscriptionStatus.ACTIVE.value,
+                    'canceled': SubscriptionStatus.CANCELLED.value,
+                    'past_due': SubscriptionStatus.EXPIRED.value,
+                    'unpaid': SubscriptionStatus.EXPIRED.value,
+                    'trialing': SubscriptionStatus.TRIAL.value,
+                }
+                subscription.status = status_mapping.get(stripe_status, subscription.status)
+            
+            if stripe_subscription.get('current_period_end'):
+                subscription.endDate = datetime.fromtimestamp(
+                    stripe_subscription.get('current_period_end')
+                )
+            
+            subscription.updatedAt = datetime.utcnow()
+            db.commit()
         
         elif event['type'] == 'customer.subscription.deleted':
             stripe_subscription = event['data']['object']
             stripe_subscription_id = stripe_subscription.get('id')
             
+            if not stripe_subscription_id:
+                logger.warning("customer.subscription.deleted event missing subscription ID")
+                return {"status": "success"}
+            
             subscription = db.query(Subscription).filter(
                 Subscription.stripe_subscription_id == stripe_subscription_id
             ).first()
             
-            if subscription:
-                subscription.status = SubscriptionStatus.CANCELLED.value
-                subscription.autoRenew = False
-                subscription.updatedAt = datetime.utcnow()
-                db.commit()
-                
-                audit_logger.log_event(
-                    event_type=AuditEventType.SUBSCRIPTION_CHANGED,
-                    user_id=None,
-                    tenant_id=str(subscription.tenant_id),
-                    action="Subscription cancelled via Stripe",
-                    details={
-                        "stripe_subscription_id": stripe_subscription_id
-                    },
-                    severity=AuditSeverity.HIGH
-                )
+            if not subscription:
+                logger.warning(f"Subscription not found for stripe_subscription_id: {stripe_subscription_id}")
+                return {"status": "success", "message": f"Subscription not found for stripe_subscription_id: {stripe_subscription_id}"}
+            
+            subscription.status = SubscriptionStatus.CANCELLED.value
+            subscription.autoRenew = False
+            subscription.updatedAt = datetime.utcnow()
+            db.commit()
+            
+            audit_logger.log_event(
+                event_type=AuditEventType.SUBSCRIPTION_CHANGED,
+                user_id=None,
+                tenant_id=str(subscription.tenant_id),
+                action="Subscription cancelled via Stripe",
+                details={
+                    "stripe_subscription_id": stripe_subscription_id
+                },
+                severity=AuditSeverity.HIGH
+            )
         
         elif event['type'] == 'invoice.payment_succeeded':
             invoice = event['data']['object']
             stripe_subscription_id = invoice.get('subscription')
             
-            if stripe_subscription_id:
-                subscription = db.query(Subscription).filter(
-                    Subscription.stripe_subscription_id == stripe_subscription_id
-                ).first()
-                
-                if subscription:
-                    subscription.status = SubscriptionStatus.ACTIVE.value
-                    if invoice.get('period_end'):
-                        subscription.endDate = datetime.fromtimestamp(invoice.get('period_end'))
-                    subscription.updatedAt = datetime.utcnow()
-                    db.commit()
+            if not stripe_subscription_id:
+                logger.warning("invoice.payment_succeeded event missing subscription ID")
+                return {"status": "success"}
+            
+            subscription = db.query(Subscription).filter(
+                Subscription.stripe_subscription_id == stripe_subscription_id
+            ).first()
+            
+            if not subscription:
+                logger.warning(f"Subscription not found for stripe_subscription_id: {stripe_subscription_id}")
+                return {"status": "success", "message": f"Subscription not found for stripe_subscription_id: {stripe_subscription_id}"}
+            
+            subscription.status = SubscriptionStatus.ACTIVE.value
+            if invoice.get('period_end'):
+                subscription.endDate = datetime.fromtimestamp(invoice.get('period_end'))
+            subscription.updatedAt = datetime.utcnow()
+            db.commit()
         
         elif event['type'] == 'invoice.payment_failed':
             invoice = event['data']['object']
             stripe_subscription_id = invoice.get('subscription')
             
-            if stripe_subscription_id:
-                subscription = db.query(Subscription).filter(
-                    Subscription.stripe_subscription_id == stripe_subscription_id
-                ).first()
-                
-                if subscription:
-                    subscription.status = SubscriptionStatus.EXPIRED.value
-                    subscription.updatedAt = datetime.utcnow()
-                    db.commit()
+            if not stripe_subscription_id:
+                logger.warning("invoice.payment_failed event missing subscription ID")
+                return {"status": "success"}
+            
+            subscription = db.query(Subscription).filter(
+                Subscription.stripe_subscription_id == stripe_subscription_id
+            ).first()
+            
+            if not subscription:
+                logger.warning(f"Subscription not found for stripe_subscription_id: {stripe_subscription_id}")
+                return {"status": "success", "message": f"Subscription not found for stripe_subscription_id: {stripe_subscription_id}"}
+            
+            subscription.status = SubscriptionStatus.EXPIRED.value
+            subscription.updatedAt = datetime.utcnow()
+            db.commit()
         
         return {"status": "success"}
         
@@ -514,4 +582,83 @@ async def stripe_webhook(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Webhook processing failed: {str(e)}"
+        )
+
+@router.post("/sync")
+async def sync_subscription_status(
+    tenant_id: str = Query(..., description="Tenant ID"),
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    try:
+        from ...api.dependencies import require_tenant_admin_or_super_admin
+        await require_tenant_admin_or_super_admin(current_user, tenant_id)
+        
+        subscription = get_subscription_by_tenant(tenant_id, db)
+        if not subscription:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No subscription found for tenant"
+            )
+        
+        if not subscription.stripe_subscription_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Subscription is not linked to Stripe"
+            )
+        
+        stripe_subscription_data = stripe_service.get_subscription(subscription.stripe_subscription_id)
+        
+        if not stripe_subscription_data:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to retrieve subscription from Stripe"
+            )
+        
+        stripe_status = stripe_subscription_data.get('status')
+        if stripe_status:
+            status_mapping = {
+                'active': SubscriptionStatus.ACTIVE.value,
+                'canceled': SubscriptionStatus.CANCELLED.value,
+                'past_due': SubscriptionStatus.EXPIRED.value,
+                'unpaid': SubscriptionStatus.EXPIRED.value,
+                'trialing': SubscriptionStatus.TRIAL.value,
+            }
+            subscription.status = status_mapping.get(stripe_status, subscription.status)
+        
+        if stripe_subscription_data.get('current_period_end'):
+            subscription.endDate = stripe_subscription_data['current_period_end']
+        
+        subscription.updatedAt = datetime.utcnow()
+        db.commit()
+        
+        audit_logger.log_event(
+            event_type=AuditEventType.SUBSCRIPTION_CHANGED,
+            user_id=str(current_user.id),
+            tenant_id=tenant_id,
+            action="Subscription status synced from Stripe",
+            details={
+                "stripe_subscription_id": subscription.stripe_subscription_id,
+                "new_status": subscription.status
+            },
+            severity=AuditSeverity.LOW
+        )
+        
+        return {
+            "success": True,
+            "message": "Subscription status synced successfully",
+            "subscription": {
+                "id": str(subscription.id),
+                "status": subscription.status,
+                "end_date": subscription.endDate.isoformat() if subscription.endDate else None
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error syncing subscription: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Subscription sync failed: {str(e)}"
         )

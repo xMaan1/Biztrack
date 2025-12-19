@@ -232,11 +232,20 @@ class SubscriptionService:
                     detail="Invalid plan upgrade"
                 )
             
-            # Update subscription
+            if current_subscription.stripe_subscription_id:
+                from ..services.stripe_service import stripe_service
+                stripe_updated = stripe_service.update_subscription_price(
+                    current_subscription.stripe_subscription_id,
+                    new_plan.price,
+                    new_plan.name
+                )
+                if not stripe_updated:
+                    logger.warning(f"Failed to update Stripe subscription {current_subscription.stripe_subscription_id}, but proceeding with database update")
+            
             current_subscription.planId = new_plan.id
+            current_subscription.stripe_price_id = None
             current_subscription.updatedAt = datetime.utcnow()
             
-            # If upgrading from trial, set proper dates
             if current_subscription.status == "trial":
                 current_subscription.status = "active"
                 current_subscription.startDate = datetime.utcnow()

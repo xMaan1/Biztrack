@@ -649,6 +649,13 @@ const allMenuItems: MenuItem[] = [
         roles: ['*'],
         planTypes: ['*'],
       },
+      {
+        text: 'Subscription',
+        icon: CreditCard,
+        path: '/subscription/manage',
+        roles: ['owner', 'admin'],
+        planTypes: ['*'],
+      },
     ],
   },
   {
@@ -661,7 +668,7 @@ const allMenuItems: MenuItem[] = [
   },
 ];
 
-// Super admin menu items - only show Tenants and Plans
+// Super admin menu items - only show Tenants, Plans, and Subscriptions
 const superAdminMenuItems: MenuItem[] = [
   {
     text: 'Tenants',
@@ -678,6 +685,14 @@ const superAdminMenuItems: MenuItem[] = [
     roles: ['super_admin'],
     planTypes: ['*'],
     gradient: 'from-green-500 to-emerald-500',
+  },
+  {
+    text: 'Subscriptions',
+    icon: CreditCard,
+    path: '/admin/subscriptions',
+    roles: ['super_admin'],
+    planTypes: ['*'],
+    gradient: 'from-blue-500 to-cyan-500',
   },
 ];
 
