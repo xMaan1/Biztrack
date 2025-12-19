@@ -124,6 +124,42 @@ class StripeService:
             logger.error(f"Stripe error cancelling subscription: {str(e)}")
             return False
     
+    def update_subscription_price(
+        self,
+        subscription_id: str,
+        new_price: float,
+        plan_name: str
+    ) -> bool:
+        try:
+            subscription = stripe.Subscription.retrieve(subscription_id)
+            
+            if not subscription.items.data:
+                logger.error(f"No items found in subscription {subscription_id}")
+                return False
+            
+            price_amount = int(new_price * 100)
+            
+            new_price_obj = stripe.Price.create(
+                currency='usd',
+                unit_amount=price_amount,
+                recurring={'interval': 'month'},
+                product_data={'name': plan_name}
+            )
+            
+            stripe.Subscription.modify(
+                subscription_id,
+                items=[{
+                    'id': subscription.items.data[0].id,
+                    'price': new_price_obj.id,
+                }],
+                proration_behavior='always_invoice'
+            )
+            
+            return True
+        except stripe.error.StripeError as e:
+            logger.error(f"Stripe error updating subscription price: {str(e)}")
+            return False
+    
     def verify_webhook(self, payload: bytes, signature: str) -> Optional[Dict]:
         try:
             if not self.webhook_secret:

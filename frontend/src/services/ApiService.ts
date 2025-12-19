@@ -442,6 +442,38 @@ export class ApiService {
     return this.post('/tenants/create-tenant', data);
   }
 
+  async getSubscriptionBilling(tenantId: string) {
+    return this.get(`/subscriptions/billing?tenant_id=${tenantId}`);
+  }
+
+  async getSubscriptionUsage(tenantId: string) {
+    return this.get(`/subscriptions/usage?tenant_id=${tenantId}`);
+  }
+
+  async cancelSubscription(tenantId: string, reason: string) {
+    return this.post(`/subscriptions/cancel?tenant_id=${tenantId}&reason=${encodeURIComponent(reason)}`);
+  }
+
+  async reactivateSubscription(tenantId: string) {
+    return this.post(`/subscriptions/reactivate?tenant_id=${tenantId}`);
+  }
+
+  async upgradePlan(tenantId: string, newPlanId: string, oldPlanId: string) {
+    return this.post('/subscriptions/upgrade', {
+      tenant_id: tenantId,
+      new_plan_id: newPlanId,
+      old_plan_id: oldPlanId
+    });
+  }
+
+  async syncSubscriptionStatus(tenantId: string) {
+    return this.post(`/subscriptions/sync?tenant_id=${tenantId}`);
+  }
+
+  async getPlanLimits(tenantId: string, resourceType: string) {
+    return this.get(`/subscriptions/limits?tenant_id=${tenantId}&resource_type=${resourceType}`);
+  }
+
   // Tenant endpoints
   async getMyTenants() {
     return this.get('/tenants/my-tenants');

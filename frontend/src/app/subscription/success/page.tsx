@@ -4,14 +4,16 @@ import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/src/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { CheckCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, Loader2, RefreshCw } from 'lucide-react';
 import { apiService } from '@/src/services/ApiService';
+import { toast } from 'sonner';
 
 export default function SubscriptionSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
   const sessionId = searchParams.get('session_id');
 
   useEffect(() => {
@@ -23,22 +25,82 @@ export default function SubscriptionSuccessPage() {
       }
 
       try {
-        await apiService.refreshTenants();
-        const tenants = apiService.getUserTenants();
-        
-        if (tenants && tenants.length > 0) {
-          const latestTenant = tenants[0];
-          apiService.setTenantId(latestTenant.id);
+        let attempts = 0;
+        const maxAttempts = 30;
+        const pollInterval = 2000;
+
+        const verifySubscription = async (): Promise<boolean> => {
+          try {
+            await apiService.refreshTenants();
+            const tenants = apiService.getUserTenants();
+            
+            if (tenants && tenants.length > 0) {
+              const latestTenant = tenants[0];
+              apiService.setTenantId(latestTenant.id);
+              
+              try {
+                const subscriptionResponse = await apiService.get('/tenants/current/subscription');
+                const status = subscriptionResponse?.subscription?.status;
+                if (status === 'active' || status === 'trial') {
+                  return true;
+                }
+              } catch (subErr) {
+                console.log('Subscription not yet active, waiting...');
+              }
+            }
+            return false;
+          } catch (err) {
+            console.error('Error verifying subscription:', err);
+            return false;
+          }
+        };
+
+        const pollForSubscription = async () => {
+          while (attempts < maxAttempts) {
+            attempts++;
+            const verified = await verifySubscription();
+            
+            if (verified) {
+              setLoading(false);
+              setTimeout(() => {
+                router.push('/dashboard');
+              }, 1500);
+              return;
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, pollInterval));
+          }
+
+          await apiService.refreshTenants();
+          const tenants = apiService.getUserTenants();
           
-          setTimeout(() => {
-            router.push('/dashboard');
-          }, 2000);
-        } else {
-          setError('Tenant not found. Please contact support.');
-          setLoading(false);
-        }
+          if (tenants && tenants.length > 0) {
+            const latestTenant = tenants[0];
+            apiService.setTenantId(latestTenant.id);
+            
+            const latestTenantId = latestTenant.id;
+            try {
+              if (latestTenantId) {
+                await apiService.syncSubscriptionStatus(latestTenantId);
+              }
+            } catch (syncErr) {
+              console.error('Failed to sync subscription:', syncErr);
+            }
+            
+            setLoading(false);
+            setTimeout(() => {
+              router.push('/dashboard');
+            }, 1500);
+          } else {
+            setError('Subscription is processing. This may take a few minutes. You can check your subscription status from the dashboard.');
+            setLoading(false);
+          }
+        };
+
+        pollForSubscription();
       } catch (err) {
-        setError('Failed to complete setup. Please contact support.');
+        console.error('Error in handleSuccess:', err);
+        setError('Failed to complete setup. Please contact support if the issue persists.');
         setLoading(false);
       }
     };
@@ -70,9 +132,41 @@ export default function SubscriptionSuccessPage() {
           </CardHeader>
           <CardContent>
             <p className="text-center text-muted-foreground mb-4">{error}</p>
-            <Button onClick={() => router.push('/')} className="w-full">
-              Return to Home
-            </Button>
+            <div className="flex flex-col gap-2">
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    setSyncing(true);
+                    await apiService.refreshTenants();
+                    const tenants = apiService.getUserTenants();
+                    if (tenants && tenants.length > 0) {
+                      const latestTenant = tenants[0];
+                      await apiService.syncSubscriptionStatus(latestTenant.id);
+                      toast.success('Subscription status synced. Please refresh.');
+                      router.push('/dashboard');
+                    } else {
+                      toast.error('No tenant found');
+                    }
+                  } catch (err) {
+                    toast.error('Failed to sync subscription status');
+                  } finally {
+                    setSyncing(false);
+                  }
+                }}
+                disabled={syncing}
+                className="w-full"
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+                Sync Subscription Status
+              </Button>
+              <Button onClick={() => router.push('/dashboard')} className="w-full">
+                Go to Dashboard
+              </Button>
+              <Button onClick={() => router.push('/')} variant="outline" className="w-full">
+                Return to Home
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>

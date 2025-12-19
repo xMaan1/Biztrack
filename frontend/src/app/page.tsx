@@ -223,7 +223,12 @@ export default function LandingPage() {
 
       if (response.success && response.checkout_url) {
         setSubscriptionModal({ isOpen: false, plan: null });
-        window.location.href = response.checkout_url;
+        try {
+          window.location.href = response.checkout_url;
+        } catch (redirectError) {
+          console.error('Failed to redirect to checkout:', redirectError);
+          alert('Workspace created but failed to redirect to payment. Please contact support.');
+        }
       } else if (response.success && response.tenant) {
         setSubscriptionModal({ isOpen: false, plan: null });
         try {
@@ -239,13 +244,17 @@ export default function LandingPage() {
             throw new Error('Tenant was not found after creation');
           }
         } catch (error) {
+          console.error('Error setting up tenant:', error);
           alert('Workspace created but there was an issue setting it up. Please refresh the page and try again.');
         }
       } else {
-        throw new Error('Tenant creation failed: ' + (response.message || 'Unknown error'));
+        const errorMessage = response.error || response.message || 'Unknown error';
+        throw new Error(`Tenant creation failed: ${errorMessage}`);
       }
-    } catch (error) {
-      alert('Failed to create workspace. Please try again.');
+    } catch (error: any) {
+      console.error('Failed to create workspace:', error);
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to create workspace. Please try again.';
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
