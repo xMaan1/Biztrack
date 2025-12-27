@@ -2,10 +2,9 @@ module.exports = {
   apps: [
     {
       name: 'biztrack-backend',
-      script: 'uvicorn',
+      script: './venv/bin/uvicorn',
       args: 'src.main:app --host 0.0.0.0 --port 8000',
       cwd: './backend',
-      interpreter: './venv/bin/python',
       instances: 2,
       exec_mode: 'cluster',
       env: {
