@@ -51,21 +51,23 @@ jobs:
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
           GITHUB_REPO: ${{ github.repository }}
         run: |
-          ssh -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_HOST} bash << 'ENDSSH'
+          ssh -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_HOST} "DEPLOY_PATH='${DEPLOY_PATH}' GITHUB_REPO='${GITHUB_REPO}' bash" << 'ENDSSH'
             set -e
             
             REPO_URL="git@github.com:${GITHUB_REPO}.git"
             
             if [ ! -d "${DEPLOY_PATH}" ]; then
               echo "Directory does not exist. Cloning repository..."
-              mkdir -p $(dirname ${DEPLOY_PATH})
+              PARENT_DIR=$(dirname "${DEPLOY_PATH}")
+              mkdir -p "${PARENT_DIR}"
               git clone ${REPO_URL} ${DEPLOY_PATH}
               cd ${DEPLOY_PATH}
               git checkout main
             elif [ ! -d "${DEPLOY_PATH}/.git" ]; then
               echo "Directory exists but is not a git repository. Removing and cloning..."
               rm -rf ${DEPLOY_PATH}
-              mkdir -p $(dirname ${DEPLOY_PATH})
+              PARENT_DIR=$(dirname "${DEPLOY_PATH}")
+              mkdir -p "${PARENT_DIR}"
               git clone ${REPO_URL} ${DEPLOY_PATH}
               cd ${DEPLOY_PATH}
               git checkout main
