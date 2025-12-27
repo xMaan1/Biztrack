@@ -12,28 +12,36 @@ class S3Service:
     def __init__(self):
         self.bucket_name = os.getenv('S3_BUCKET_NAME')
         self.region = os.getenv('AWS_REGION', 'eu-north-1')
-        self.public_url_base = f"https://{self.bucket_name}.s3.{self.region}.amazonaws.com"
+        self.s3_client = None
+        self.public_url_base = None
+        self.enabled = False
         
         if not self.bucket_name:
-            raise ValueError("S3_BUCKET_NAME environment variable is required")
+            logger.warning("S3_BUCKET_NAME not configured. File upload functionality is disabled.")
+            return
         
         try:
+            self.public_url_base = f"https://{self.bucket_name}.s3.{self.region}.amazonaws.com"
             self.s3_client = boto3.client(
                 's3',
                 region_name=self.region,
                 aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
                 aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
             )
+            self.enabled = True
             logger.info(f"S3 service initialized for bucket: {self.bucket_name}")
         except NoCredentialsError:
-            logger.error("AWS credentials not found")
-            raise
+            logger.warning("AWS credentials not found. File upload functionality is disabled.")
         except Exception as e:
-            logger.error(f"Failed to initialize S3 client: {str(e)}")
-            raise
+            logger.warning(f"Failed to initialize S3 client: {str(e)}. File upload functionality is disabled.")
+    
+    def _check_enabled(self):
+        if not self.enabled:
+            raise ValueError("S3 storage is not configured. Please set S3_BUCKET_NAME, AWS_ACCESS_KEY_ID, and AWS_SECRET_ACCESS_KEY environment variables.")
 
     def upload_logo(self, file_content: bytes, tenant_id: str, original_filename: str) -> dict:
         """Upload logo to S3 and return file info"""
+        self._check_enabled()
         try:
             # Generate unique filename
             file_extension = Path(original_filename).suffix.lower() if original_filename else ".png"
@@ -73,6 +81,9 @@ class S3Service:
 
     def delete_logo(self, s3_key: str) -> bool:
         """Delete logo from S3"""
+        if not self.enabled:
+            logger.warning("S3 storage not enabled, skipping logo deletion")
+            return False
         try:
             self.s3_client.delete_object(
                 Bucket=self.bucket_name,
@@ -90,10 +101,14 @@ class S3Service:
 
     def get_logo_url(self, s3_key: str) -> str:
         """Get public URL for a logo"""
+        if not self.enabled:
+            return ""
         return f"{self.public_url_base}/{s3_key}"
 
     def list_tenant_logos(self, tenant_id: str) -> list:
         """List all logos for a tenant"""
+        if not self.enabled:
+            return []
         try:
             response = self.s3_client.list_objects_v2(
                 Bucket=self.bucket_name,
@@ -122,6 +137,7 @@ class S3Service:
 
     def upload_file(self, file_content: bytes, tenant_id: str, folder: str, original_filename: str) -> dict:
         """Upload any file to S3 and return file info"""
+        self._check_enabled()
         try:
             file_extension = Path(original_filename).suffix.lower() if original_filename else ""
             unique_filename = f"{uuid.uuid4().hex}{file_extension}"
@@ -160,6 +176,9 @@ class S3Service:
     
     def delete_file(self, s3_key: str) -> bool:
         """Delete any file from S3"""
+        if not self.enabled:
+            logger.warning("S3 storage not enabled, skipping file deletion")
+            return False
         try:
             self.s3_client.delete_object(
                 Bucket=self.bucket_name,

@@ -65,12 +65,15 @@ def process_avatar_upload(avatar_data: str, user_id: str) -> Optional[str]:
             
             filename = f"avatar_{uuid.uuid4().hex}{file_ext}"
             
-            result = s3_service.upload_file(
-                file_content=image_data,
-                tenant_id=user_id,
-                folder='avatars',
-                original_filename=filename
-            )
+            try:
+                result = s3_service.upload_file(
+                    file_content=image_data,
+                    tenant_id=user_id,
+                    folder='avatars',
+                    original_filename=filename
+                )
+            except ValueError as e:
+                raise HTTPException(status_code=503, detail="File upload service is not configured. Please contact administrator.")
             
             if not result or 'file_url' not in result:
                 raise ValueError("S3 upload failed - no file URL returned")

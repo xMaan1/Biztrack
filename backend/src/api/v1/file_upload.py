@@ -84,12 +84,14 @@ async def upload_logo(
         # Read file content
         file_content = await file.read()
         
-        # Upload to S3
-        result = s3_service.upload_logo(
-            file_content=file_content,
-            tenant_id=tenant_id,
-            original_filename=file.filename
-        )
+        try:
+            result = s3_service.upload_logo(
+                file_content=file_content,
+                tenant_id=tenant_id,
+                original_filename=file.filename
+            )
+        except ValueError as e:
+            raise HTTPException(status_code=503, detail="File upload service is not configured. Please contact administrator.")
         
         tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
         if tenant:
@@ -290,12 +292,15 @@ async def upload_employee_file(
         
         file_content = await file.read()
         
-        result = s3_service.upload_file(
-            file_content=file_content,
-            tenant_id=tenant_id,
-            folder=f"employees/{category}",
-            original_filename=file.filename
-        )
+        try:
+            result = s3_service.upload_file(
+                file_content=file_content,
+                tenant_id=tenant_id,
+                folder=f"employees/{category}",
+                original_filename=file.filename
+            )
+        except ValueError as e:
+            raise HTTPException(status_code=503, detail="File upload service is not configured. Please contact administrator.")
         
         logger.info(f"Employee file uploaded successfully: {result['file_url']}")
         
