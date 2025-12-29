@@ -367,8 +367,7 @@ async def proxy_image(
         if not url or not (url.startswith('http://') or url.startswith('https://')):
             raise HTTPException(status_code=400, detail="Invalid image URL")
         
-        allowed_domains = ['contabostorage.com', 'amazonaws.com', 's3.']
-        if not any(domain in url for domain in allowed_domains):
+        if 'contabostorage.com' not in url:
             raise HTTPException(status_code=403, detail="Image URL not allowed")
         
         response = requests.get(url, timeout=10, stream=True)

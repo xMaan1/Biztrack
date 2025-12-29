@@ -149,24 +149,21 @@ export function InvoiceCustomizationDialog({
     try {
       setUploading(true);
 
-      // Delete old logo if exists
       const currentLogoUrl = formData.company_logo_url;
       if (currentLogoUrl) {
-        const urlParts = currentLogoUrl.split('/');
-        const filename = urlParts[urlParts.length - 1];
-
-        if (filename && filename.startsWith('logo_')) {
+        const s3Key = FileUploadService.extractS3KeyFromUrl(currentLogoUrl);
+        
+        if (s3Key) {
           try {
-            await FileUploadService.deleteLogo(filename);
+            await FileUploadService.deleteFile(s3Key);
           } catch (deleteError) {
-            // Continue with upload even if old logo deletion fails
+            console.error('Failed to delete old logo from S3:', deleteError);
           }
         }
       }
 
       const response = await FileUploadService.uploadLogo(file);
 
-      // Update form data with the new logo URL
       setFormData(prev => ({
         ...prev,
         company_logo_url: response.file_url,
@@ -187,24 +184,19 @@ export function InvoiceCustomizationDialog({
     try {
       setUploading(true);
 
-      // Extract filename from S3 URL for deletion
       const currentLogoUrl = formData.company_logo_url;
       if (currentLogoUrl) {
-        // Extract filename from S3 URL
-        // URL format: https://bucket.s3.region.amazonaws.com/logos/tenant-id/filename
-        const urlParts = currentLogoUrl.split('/');
-        const filename = urlParts[urlParts.length - 1];
-
-        if (filename && filename.startsWith('logo_')) {
+        const s3Key = FileUploadService.extractS3KeyFromUrl(currentLogoUrl);
+        
+        if (s3Key) {
           try {
-            await FileUploadService.deleteLogo(filename);
+            await FileUploadService.deleteFile(s3Key);
           } catch (deleteError) {
-            // Continue with clearing form data even if S3 deletion fails
+            console.error('Failed to delete logo from S3:', deleteError);
           }
         }
       }
 
-      // Clear form data
       setFormData(prev => ({
         ...prev,
         company_logo_url: '',

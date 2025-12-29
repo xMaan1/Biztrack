@@ -159,6 +159,40 @@ class FileUploadService {
     }
     return fileUrl;
   }
+
+  extractS3KeyFromUrl(url: string): string | null {
+    if (!url) {
+      return null;
+    }
+
+    try {
+      if (!url.includes('contabostorage.com')) {
+        console.warn('URL does not appear to be a Contabo URL:', url);
+        return null;
+      }
+
+      const urlWithoutParams = url.split('?')[0];
+      
+      if (urlWithoutParams.includes('/logos/')) {
+        const s3Key = 'logos/' + urlWithoutParams.split('/logos/')[1];
+        return s3Key;
+      } else if (urlWithoutParams.includes('/avatars/')) {
+        const s3Key = 'avatars/' + urlWithoutParams.split('/avatars/')[1];
+        return s3Key;
+      } else if (urlWithoutParams.includes('/documents/')) {
+        const s3Key = 'documents/' + urlWithoutParams.split('/documents/')[1];
+        return s3Key;
+      } else if (urlWithoutParams.includes('/employees/')) {
+        const s3Key = 'employees/' + urlWithoutParams.split('/employees/')[1];
+        return s3Key;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error extracting S3 key from URL:', error);
+      return null;
+    }
+  }
 }
 
 export default new FileUploadService();

@@ -356,7 +356,7 @@ async def delete_hrm_employee(
             logger.warning(f"[DELETE EMPLOYEE] Employee deleted but S3 files could not be deleted: {s3_deletion_errors}")
             return {
                 "message": "Employee deleted successfully",
-                "warning": "Some files could not be deleted from S3 (check AWS IAM permissions)",
+                "warning": "Some files could not be deleted from storage",
                 "errors": s3_deletion_errors
             }
         

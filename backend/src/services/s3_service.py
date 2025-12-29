@@ -12,10 +12,10 @@ logger = logging.getLogger(__name__)
 class S3Service:
     def __init__(self):
         self.bucket_name = os.getenv('S3_BUCKET_NAME')
-        self.access_key_id = os.getenv('S3_ACCESS_KEY_ID') or os.getenv('AWS_ACCESS_KEY_ID')
-        self.secret_access_key = os.getenv('S3_SECRET_ACCESS_KEY') or os.getenv('AWS_SECRET_ACCESS_KEY')
+        self.access_key_id = os.getenv('S3_ACCESS_KEY_ID')
+        self.secret_access_key = os.getenv('S3_SECRET_ACCESS_KEY')
         self.endpoint_url = os.getenv('S3_ENDPOINT_URL')
-        self.region = os.getenv('S3_REGION') or os.getenv('AWS_REGION', 'eu-north-1')
+        self.region = os.getenv('S3_REGION', 'eu-north-1')
         self.s3_client = None
         self.public_url_base = None
         self.enabled = False
@@ -28,31 +28,23 @@ class S3Service:
             logger.warning("S3 credentials not found. File upload functionality is disabled.")
             return
         
+        if not self.endpoint_url:
+            logger.warning("S3_ENDPOINT_URL not configured. File upload functionality is disabled.")
+            return
+        
         try:
-            client_config = {}
+            client_config = Config(s3={'addressing_style': 'path'})
             boto3_config = {
                 'aws_access_key_id': self.access_key_id,
                 'aws_secret_access_key': self.secret_access_key,
+                'endpoint_url': self.endpoint_url,
+                'region_name': self.region,
             }
             
-            if self.endpoint_url:
-                boto3_config['endpoint_url'] = self.endpoint_url
-                boto3_config['region_name'] = self.region
-                if 'contabostorage.com' in self.endpoint_url:
-                    client_config = Config(s3={'addressing_style': 'path'})
-                self.public_url_base = f"{self.endpoint_url}/{self.bucket_name}"
-                logger.info(f"Using S3-compatible storage (Contabo): {self.endpoint_url}")
-            else:
-                self.public_url_base = f"https://{self.bucket_name}.s3.{self.region}.amazonaws.com"
-                boto3_config['region_name'] = self.region
-                logger.info(f"Using AWS S3: {self.region}")
-            
-            if client_config:
-                self.s3_client = boto3.client('s3', config=client_config, **boto3_config)
-            else:
-                self.s3_client = boto3.client('s3', **boto3_config)
+            self.public_url_base = f"{self.endpoint_url}/{self.bucket_name}"
+            self.s3_client = boto3.client('s3', config=client_config, **boto3_config)
             self.enabled = True
-            logger.info(f"S3 service initialized for bucket: {self.bucket_name}")
+            logger.info(f"Contabo S3 service initialized for bucket: {self.bucket_name} at {self.endpoint_url}")
         except NoCredentialsError:
             logger.warning("S3 credentials not found. File upload functionality is disabled.")
         except Exception as e:
@@ -60,32 +52,47 @@ class S3Service:
     
     def _check_enabled(self):
         if not self.enabled:
-            raise ValueError("S3 storage is not configured. Please set S3_BUCKET_NAME, S3_ACCESS_KEY_ID (or AWS_ACCESS_KEY_ID), and S3_SECRET_ACCESS_KEY (or AWS_SECRET_ACCESS_KEY) environment variables.")
+            raise ValueError("S3 storage is not configured. Please set S3_BUCKET_NAME, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, and S3_ENDPOINT_URL environment variables.")
     
     def extract_s3_key_from_url(self, url: str) -> Optional[str]:
-        """Extract S3 key from a full URL (works with both AWS and Contabo formats)"""
+        """Extract S3 key from Contabo URL format"""
         if not url:
             return None
         
         try:
-            if '/logos/' in url:
-                s3_key = 'logos/' + url.split('/logos/')[-1].split('?')[0]
-                return s3_key
-            elif '/avatars/' in url:
-                s3_key = 'avatars/' + url.split('/avatars/')[-1].split('?')[0]
-                return s3_key
-            elif '/documents/' in url:
-                s3_key = 'documents/' + url.split('/documents/')[-1].split('?')[0]
-                return s3_key
-            elif '/employees/' in url:
-                s3_key = 'employees/' + url.split('/employees/')[-1].split('?')[0]
-                return s3_key
-            else:
-                if self.bucket_name and self.bucket_name in url:
-                    parts = url.split(f'/{self.bucket_name}/')
+            if 'contabostorage.com' not in url:
+                logger.warning(f"URL does not appear to be a Contabo URL: {url}")
+                return None
+            
+            url_without_params = url.split('?')[0]
+            
+            folder_patterns = ['/logos/', '/avatars/', '/documents/', '/employees/']
+            for pattern in folder_patterns:
+                if pattern in url_without_params:
+                    parts = url_without_params.split(pattern)
                     if len(parts) > 1:
-                        s3_key = parts[1].split('?')[0]
+                        s3_key = pattern.strip('/') + '/' + parts[1]
+                        logger.info(f"Extracted S3 key: {s3_key} from URL: {url}")
                         return s3_key
+            
+            if self.bucket_name:
+                bucket_pattern = f'/{self.bucket_name}/'
+                if bucket_pattern in url_without_params:
+                    parts = url_without_params.split(bucket_pattern)
+                    if len(parts) > 1:
+                        s3_key = parts[1]
+                        logger.info(f"Extracted S3 key: {s3_key} from URL: {url}")
+                        return s3_key
+                
+                access_key_bucket_pattern = f':{self.bucket_name}/'
+                if access_key_bucket_pattern in url_without_params:
+                    parts = url_without_params.split(access_key_bucket_pattern)
+                    if len(parts) > 1:
+                        s3_key = parts[1]
+                        logger.info(f"Extracted S3 key: {s3_key} from URL: {url}")
+                        return s3_key
+            
+            logger.warning(f"Could not extract S3 key from URL: {url}")
             return None
         except Exception as e:
             logger.error(f"Error extracting S3 key from URL {url}: {str(e)}")
@@ -102,17 +109,12 @@ class S3Service:
             # S3 key (path in bucket)
             s3_key = f"logos/{tenant_id}/{unique_filename}"
             
-            # Upload to S3
             put_params = {
                 'Bucket': self.bucket_name,
                 'Key': s3_key,
                 'Body': file_content,
                 'ContentType': self._get_content_type(file_extension),
             }
-            
-            # Only add ACL for AWS S3 (Contabo uses bucket-level public access)
-            if not self.endpoint_url or 'contabostorage.com' not in self.endpoint_url:
-                put_params['ACL'] = 'public-read'
             
             self.s3_client.put_object(**put_params)
             
@@ -224,10 +226,6 @@ class S3Service:
                 'Body': file_content,
                 'ContentType': content_type,
             }
-            
-            # Only add ACL for AWS S3 (Contabo uses bucket-level public access)
-            if not self.endpoint_url or 'contabostorage.com' not in self.endpoint_url:
-                put_params['ACL'] = 'public-read'
             
             self.s3_client.put_object(**put_params)
             
