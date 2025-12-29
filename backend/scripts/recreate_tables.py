@@ -50,7 +50,11 @@ def recreate_tables(engine):
             return
     
     try:
-        # Import the table creation function
+        # Import database module which imports all models and registers them with Base
+        # This must be imported first to register all models with Base.metadata
+        import config.database as _  # Import to register models
+        
+        # Now import create_tables (models are already registered)
         from config.database_config import create_tables
         
         print("📋 Creating all tables...")
