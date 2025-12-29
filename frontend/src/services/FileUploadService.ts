@@ -50,7 +50,7 @@ class FileUploadService {
     return await response.json();
   }
 
-  async deleteLogo(filename: string): Promise<{ success: boolean; message: string }> {
+  async deleteLogo(): Promise<{ success: boolean; message: string }> {
     const token = localStorage.getItem('auth_token');
     const tenantId = localStorage.getItem('currentTenantId');
 
@@ -58,7 +58,7 @@ class FileUploadService {
       throw new Error('Authentication required');
     }
 
-    const response = await fetch(`${API_BASE_URL}/file-upload/logo/${filename}`, {
+    const response = await fetch(`${API_BASE_URL}/file-upload/logo`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,

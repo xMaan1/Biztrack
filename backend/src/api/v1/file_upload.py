@@ -126,6 +126,61 @@ async def upload_logo(
         logger.error(f"Error uploading logo: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to upload logo: {str(e)}")
 
+async def _delete_logo_impl(
+    db: Session,
+    current_user: User,
+    tenant_context: dict
+):
+    """Internal implementation for deleting logo"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    
+    tenant_id = tenant_context["tenant_id"]
+    
+    tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
+    if not tenant or not tenant.logo_url:
+        raise HTTPException(status_code=404, detail="No logo found for this tenant")
+    
+    logo_url = tenant.logo_url
+    logger.info(f"[DELETE LOGO] Deleting logo for tenant {tenant_id}, URL: {logo_url}")
+    s3_key = s3_service.extract_s3_key_from_url(logo_url)
+    
+    if s3_key:
+        logger.info(f"[DELETE LOGO] Extracted S3 key for deletion: {s3_key}")
+        delete_success = s3_service.delete_logo(s3_key)
+        if not delete_success:
+            logger.warning(f"[DELETE LOGO] Failed to delete logo from S3: {s3_key}, but continuing with database update")
+    else:
+        logger.warning(f"[DELETE LOGO] Could not extract S3 key from logo URL: {logo_url}")
+    
+    tenant.logo_url = None
+    tenant.updatedAt = datetime.utcnow()
+    db.commit()
+    
+    logger.info(f"[DELETE LOGO] Logo deleted successfully for tenant {tenant_id}")
+    
+    return JSONResponse({
+        "success": True,
+        "message": "Logo deleted successfully"
+    })
+
+@router.delete("/logo/{filename:path}")
+async def delete_logo_by_filename(
+    filename: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
+):
+    """Delete company logo by filename (backward compatibility - filename is ignored)"""
+    logger.info(f"[DELETE LOGO] Delete request with filename: {filename} (ignored, using tenant logo)")
+    try:
+        return await _delete_logo_impl(db, current_user, tenant_context)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[DELETE LOGO] Error deleting logo: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete logo: {str(e)}")
+
 @router.delete("/logo")
 async def delete_logo(
     db: Session = Depends(get_db),
@@ -134,41 +189,11 @@ async def delete_logo(
 ):
     """Delete company logo"""
     try:
-        if not tenant_context:
-            raise HTTPException(status_code=400, detail="Tenant context required")
-        
-        tenant_id = tenant_context["tenant_id"]
-        
-        tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
-        if not tenant or not tenant.logo_url:
-            raise HTTPException(status_code=404, detail="No logo found for this tenant")
-        
-        logo_url = tenant.logo_url
-        s3_key = s3_service.extract_s3_key_from_url(logo_url)
-        
-        if s3_key:
-            logger.info(f"Extracted S3 key for deletion: {s3_key}")
-            delete_success = s3_service.delete_logo(s3_key)
-            if not delete_success:
-                logger.warning(f"Failed to delete logo from S3: {s3_key}, but continuing with database update")
-        else:
-            logger.warning(f"Could not extract S3 key from logo URL: {logo_url}")
-        
-        tenant.logo_url = None
-        tenant.updatedAt = datetime.utcnow()
-        db.commit()
-        
-        logger.info(f"Logo deleted successfully for tenant {tenant_id}")
-        
-        return JSONResponse({
-            "success": True,
-            "message": "Logo deleted successfully"
-        })
-        
+        return await _delete_logo_impl(db, current_user, tenant_context)
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error deleting logo: {str(e)}")
+        logger.error(f"[DELETE LOGO] Error deleting logo: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to delete logo: {str(e)}")
 
 @router.get("/logo")
