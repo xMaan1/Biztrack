@@ -11,8 +11,9 @@ from sqlalchemy import text, create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from dotenv import load_dotenv
 
-# Add the src directory to the Python path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
+# Add the backend directory to the Python path so src.config is a proper package
+backend_dir = os.path.join(os.path.dirname(__file__), '..')
+sys.path.insert(0, backend_dir)
 
 # Load environment variables from .env file in backend folder
 env_path = os.path.join(os.path.dirname(__file__), '..', '.env')
@@ -51,11 +52,8 @@ def recreate_tables(engine):
     
     try:
         # Import database module which imports all models and registers them with Base
-        # This must be imported first to register all models with Base.metadata
-        import config.database as _  # Import to register models
-        
-        # Now import create_tables (models are already registered)
-        from config.database_config import create_tables
+        # Import using src.config to ensure proper package resolution
+        from src.config.database import create_tables
         
         print("📋 Creating all tables...")
         create_tables()
