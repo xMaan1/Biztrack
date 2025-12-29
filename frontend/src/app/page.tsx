@@ -23,6 +23,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { apiService } from '../services/ApiService';
 import { LandingNav } from '../components/landing/LandingNav';
+import { extractErrorMessage } from '../utils/errorUtils';
 import {
   Check,
   Star,
@@ -253,7 +254,7 @@ export default function LandingPage() {
       }
     } catch (error: any) {
       console.error('Failed to create workspace:', error);
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to create workspace. Please try again.';
+      const errorMessage = extractErrorMessage(error, 'Failed to create workspace. Please try again.');
       alert(errorMessage);
     } finally {
       setLoading(false);
