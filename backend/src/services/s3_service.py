@@ -14,6 +14,7 @@ class S3Service:
         self.bucket_name = os.getenv('S3_BUCKET_NAME')
         self.access_key_id = os.getenv('S3_ACCESS_KEY_ID')
         self.secret_access_key = os.getenv('S3_SECRET_ACCESS_KEY')
+        self.public_access_key_id = os.getenv('S3_PUBLIC_ACCESS_KEY_ID')
         self.endpoint_url = os.getenv('S3_ENDPOINT_URL')
         self.region = os.getenv('S3_REGION', 'eu-north-1')
         self.s3_client = None
@@ -41,10 +42,13 @@ class S3Service:
                 'region_name': self.region,
             }
             
-            self.public_url_base = f"{self.endpoint_url}/{self.access_key_id}:{self.bucket_name}"
+            public_key = self.public_access_key_id or self.access_key_id
+            self.public_url_base = f"{self.endpoint_url}/{public_key}:{self.bucket_name}"
             self.s3_client = boto3.client('s3', config=client_config, **boto3_config)
             self.enabled = True
-            logger.info(f"Contabo S3 service initialized - Endpoint: {self.endpoint_url}, Bucket: {self.bucket_name}, Access Key: {self.access_key_id[:8]}...")
+            logger.info(f"Contabo S3 service initialized - Endpoint: {self.endpoint_url}, Bucket: {self.bucket_name}")
+            logger.info(f"API Access Key: {self.access_key_id[:8]}...")
+            logger.info(f"Public URL Access Key: {public_key[:8]}...")
             logger.info(f"Public URL base format: {self.public_url_base}")
         except NoCredentialsError:
             logger.warning("S3 credentials not found. File upload functionality is disabled.")
@@ -124,9 +128,11 @@ class S3Service:
             
             public_url = f"{self.public_url_base}/{s3_key}"
             
+            public_key = self.public_access_key_id or self.access_key_id
             logger.info(f"[UPLOAD LOGO] Upload successful - S3 Key: {s3_key}")
             logger.info(f"[UPLOAD LOGO] Generated public URL: {public_url}")
-            logger.info(f"[UPLOAD LOGO] URL format breakdown - Endpoint: {self.endpoint_url}, AccessKey:Bucket: {self.access_key_id}:{self.bucket_name}, S3 Key: {s3_key}")
+            logger.info(f"[UPLOAD LOGO] URL format breakdown - Endpoint: {self.endpoint_url}, PublicAccessKey:Bucket: {public_key}:{self.bucket_name}, S3 Key: {s3_key}")
+            logger.info(f"[UPLOAD LOGO] API Access Key (for operations): {self.access_key_id[:8]}..., Public Access Key (for URLs): {public_key[:8]}...")
             
             try:
                 actual_url = self.s3_client.generate_presigned_url(
@@ -249,9 +255,11 @@ class S3Service:
             
             public_url = f"{self.public_url_base}/{s3_key}"
             
+            public_key = self.public_access_key_id or self.access_key_id
             logger.info(f"[UPLOAD FILE] Upload successful - S3 Key: {s3_key}")
             logger.info(f"[UPLOAD FILE] Generated public URL: {public_url}")
-            logger.info(f"[UPLOAD FILE] URL format breakdown - Endpoint: {self.endpoint_url}, AccessKey:Bucket: {self.access_key_id}:{self.bucket_name}, S3 Key: {s3_key}")
+            logger.info(f"[UPLOAD FILE] URL format breakdown - Endpoint: {self.endpoint_url}, PublicAccessKey:Bucket: {public_key}:{self.bucket_name}, S3 Key: {s3_key}")
+            logger.info(f"[UPLOAD FILE] API Access Key (for operations): {self.access_key_id[:8]}..., Public Access Key (for URLs): {public_key[:8]}...")
             
             try:
                 actual_url = self.s3_client.generate_presigned_url(
