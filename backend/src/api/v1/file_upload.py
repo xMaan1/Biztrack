@@ -136,7 +136,10 @@ async def delete_logo(
             raise HTTPException(status_code=404, detail="No logo found for this tenant")
         
         logo_url = tenant.logo_url
-        s3_key = logo_url.split('.amazonaws.com/')[-1] if '.amazonaws.com/' in logo_url else None
+        if '/logos/' in logo_url:
+            s3_key = 'logos/' + logo_url.split('/logos/')[-1].split('?')[0]
+        else:
+            s3_key = None
         
         if s3_key:
             s3_service.delete_logo(s3_key)

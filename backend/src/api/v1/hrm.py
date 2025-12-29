@@ -322,7 +322,10 @@ async def delete_hrm_employee(
         
         if resume_url:
             try:
-                s3_key = resume_url.split('.amazonaws.com/')[1] if '.amazonaws.com/' in resume_url else None
+                if '/employees/' in resume_url:
+                    s3_key = 'employees/' + resume_url.split('/employees/')[-1].split('?')[0]
+                else:
+                    s3_key = None
                 if s3_key:
                     logger.info(f"[DELETE EMPLOYEE] Attempting to delete resume from S3: {s3_key}")
                     success = s3_service.delete_file(s3_key)
@@ -336,7 +339,10 @@ async def delete_hrm_employee(
         
         for attachment_url in attachments:
             try:
-                s3_key = attachment_url.split('.amazonaws.com/')[1] if '.amazonaws.com/' in attachment_url else None
+                if '/employees/' in attachment_url:
+                    s3_key = 'employees/' + attachment_url.split('/employees/')[-1].split('?')[0]
+                else:
+                    s3_key = None
                 if s3_key:
                     logger.info(f"[DELETE EMPLOYEE] Attempting to delete attachment from S3: {s3_key}")
                     success = s3_service.delete_file(s3_key)

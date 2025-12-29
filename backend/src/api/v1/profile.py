@@ -252,10 +252,8 @@ async def delete_avatar(
     if user.avatar and (user.avatar.startswith('http://') or user.avatar.startswith('https://')):
         if 'avatars/' in user.avatar:
             try:
-                if '.amazonaws.com/' in user.avatar:
-                    s3_key = user.avatar.split('.amazonaws.com/')[-1]
-                elif '/avatars/' in user.avatar:
-                    s3_key = 'avatars/' + user.avatar.split('/avatars/')[-1]
+                if '/avatars/' in user.avatar:
+                    s3_key = 'avatars/' + user.avatar.split('/avatars/')[-1].split('?')[0]
                 else:
                     s3_key = None
                 

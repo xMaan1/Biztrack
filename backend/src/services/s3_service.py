@@ -5,13 +5,17 @@ from pathlib import Path
 from typing import Optional
 import logging
 from botocore.exceptions import ClientError, NoCredentialsError
+from botocore.config import Config
 
 logger = logging.getLogger(__name__)
 
 class S3Service:
     def __init__(self):
         self.bucket_name = os.getenv('S3_BUCKET_NAME')
-        self.region = os.getenv('AWS_REGION', 'eu-north-1')
+        self.access_key_id = os.getenv('S3_ACCESS_KEY_ID') or os.getenv('AWS_ACCESS_KEY_ID')
+        self.secret_access_key = os.getenv('S3_SECRET_ACCESS_KEY') or os.getenv('AWS_SECRET_ACCESS_KEY')
+        self.endpoint_url = os.getenv('S3_ENDPOINT_URL')
+        self.region = os.getenv('S3_REGION') or os.getenv('AWS_REGION', 'eu-north-1')
         self.s3_client = None
         self.public_url_base = None
         self.enabled = False
@@ -20,24 +24,43 @@ class S3Service:
             logger.warning("S3_BUCKET_NAME not configured. File upload functionality is disabled.")
             return
         
+        if not self.access_key_id or not self.secret_access_key:
+            logger.warning("S3 credentials not found. File upload functionality is disabled.")
+            return
+        
         try:
-            self.public_url_base = f"https://{self.bucket_name}.s3.{self.region}.amazonaws.com"
-            self.s3_client = boto3.client(
-                's3',
-                region_name=self.region,
-                aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-                aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
-            )
+            client_config = {}
+            boto3_config = {
+                'aws_access_key_id': self.access_key_id,
+                'aws_secret_access_key': self.secret_access_key,
+            }
+            
+            if self.endpoint_url:
+                boto3_config['endpoint_url'] = self.endpoint_url
+                boto3_config['region_name'] = self.region
+                if 'contabostorage.com' in self.endpoint_url:
+                    client_config = Config(s3={'addressing_style': 'path'})
+                self.public_url_base = f"{self.endpoint_url}/{self.bucket_name}"
+                logger.info(f"Using S3-compatible storage (Contabo): {self.endpoint_url}")
+            else:
+                self.public_url_base = f"https://{self.bucket_name}.s3.{self.region}.amazonaws.com"
+                boto3_config['region_name'] = self.region
+                logger.info(f"Using AWS S3: {self.region}")
+            
+            if client_config:
+                self.s3_client = boto3.client('s3', config=client_config, **boto3_config)
+            else:
+                self.s3_client = boto3.client('s3', **boto3_config)
             self.enabled = True
             logger.info(f"S3 service initialized for bucket: {self.bucket_name}")
         except NoCredentialsError:
-            logger.warning("AWS credentials not found. File upload functionality is disabled.")
+            logger.warning("S3 credentials not found. File upload functionality is disabled.")
         except Exception as e:
             logger.warning(f"Failed to initialize S3 client: {str(e)}. File upload functionality is disabled.")
     
     def _check_enabled(self):
         if not self.enabled:
-            raise ValueError("S3 storage is not configured. Please set S3_BUCKET_NAME, AWS_ACCESS_KEY_ID, and AWS_SECRET_ACCESS_KEY environment variables.")
+            raise ValueError("S3 storage is not configured. Please set S3_BUCKET_NAME, S3_ACCESS_KEY_ID (or AWS_ACCESS_KEY_ID), and S3_SECRET_ACCESS_KEY (or AWS_SECRET_ACCESS_KEY) environment variables.")
 
     def upload_logo(self, file_content: bytes, tenant_id: str, original_filename: str) -> dict:
         """Upload logo to S3 and return file info"""
@@ -73,7 +96,7 @@ class S3Service:
             }
             
         except ClientError as e:
-            logger.error(f"AWS S3 error uploading logo: {str(e)}")
+            logger.error(f"S3 error uploading logo: {str(e)}")
             raise Exception(f"Failed to upload logo: {str(e)}")
         except Exception as e:
             logger.error(f"Error uploading logo: {str(e)}")
@@ -93,7 +116,7 @@ class S3Service:
             return True
             
         except ClientError as e:
-            logger.error(f"AWS S3 error deleting logo: {str(e)}")
+            logger.error(f"S3 error deleting logo: {str(e)}")
             return False
         except Exception as e:
             logger.error(f"Error deleting logo: {str(e)}")
@@ -129,7 +152,7 @@ class S3Service:
             return logos
             
         except ClientError as e:
-            logger.error(f"AWS S3 error listing logos: {str(e)}")
+            logger.error(f"S3 error listing logos: {str(e)}")
             return []
         except Exception as e:
             logger.error(f"Error listing logos: {str(e)}")
@@ -168,7 +191,7 @@ class S3Service:
             }
             
         except ClientError as e:
-            logger.error(f"AWS S3 error uploading file: {str(e)}")
+            logger.error(f"S3 error uploading file: {str(e)}")
             raise Exception(f"Failed to upload file: {str(e)}")
         except Exception as e:
             logger.error(f"Error uploading file: {str(e)}")
@@ -188,7 +211,7 @@ class S3Service:
             return True
             
         except ClientError as e:
-            logger.error(f"AWS S3 error deleting file: {str(e)}")
+            logger.error(f"S3 error deleting file: {str(e)}")
             return False
         except Exception as e:
             logger.error(f"Error deleting file: {str(e)}")
