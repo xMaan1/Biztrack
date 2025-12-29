@@ -36,8 +36,13 @@ async def get_roles(
     current_user = Depends(get_current_user)
 ):
     """Get all roles for the tenant"""
+    from ...models.common import Pagination
+    
     if not tenant_context:
-        return RolesResponse(roles=[], pagination={})
+        return RolesResponse(
+            roles=[], 
+            pagination=Pagination(page=1, limit=0, total=0, pages=0)
+        )
     
     roles = db.query(RoleModel).filter(
         and_(
@@ -60,7 +65,6 @@ async def get_roles(
             updatedAt=role.updatedAt
         ))
     
-    from ...models.common import Pagination
     return RolesResponse(
         roles=role_list, 
         pagination=Pagination(
