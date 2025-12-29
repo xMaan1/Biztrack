@@ -166,8 +166,8 @@ jobs:
     needs: [check-changes, sync-code, deploy-backend, deploy-frontend]
     if: |
       (needs.check-changes.outputs.backend == 'true' || needs.check-changes.outputs.frontend == 'true') &&
-      (needs.deploy-backend.result == 'success' || needs.check-changes.outputs.backend != 'true') &&
-      (needs.deploy-frontend.result == 'success' || needs.check-changes.outputs.frontend != 'true')
+      (needs.deploy-backend.result == 'success' || needs.deploy-backend.result == 'skipped') &&
+      (needs.deploy-frontend.result == 'success' || needs.deploy-frontend.result == 'skipped')
     steps:
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
