@@ -86,22 +86,29 @@ async def upload_logo(
         file_content = await file.read()
         
         try:
+            logger.info(f"[FILE UPLOAD] Starting logo upload - Tenant: {tenant_id}, Filename: {file.filename}, Size: {file.size} bytes")
             result = s3_service.upload_logo(
                 file_content=file_content,
                 tenant_id=tenant_id,
                 original_filename=file.filename
             )
+            logger.info(f"[FILE UPLOAD] S3 service returned - File URL: {result.get('file_url')}, S3 Key: {result.get('s3_key')}")
         except ValueError as e:
             raise HTTPException(status_code=503, detail="File upload service is not configured. Please contact administrator.")
         
         tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
         if tenant:
+            old_logo_url = tenant.logo_url
             tenant.logo_url = result["file_url"]
             tenant.updatedAt = datetime.utcnow()
             db.commit()
-            logger.info(f"Tenant logo_url updated in database: {result['file_url']}")
+            logger.info(f"[FILE UPLOAD] Database updated - Old URL: {old_logo_url}, New URL: {result['file_url']}")
+            logger.info(f"[FILE UPLOAD] URL stored in database: {result['file_url']}")
+        else:
+            logger.warning(f"[FILE UPLOAD] Tenant not found in database: {tenant_id}")
         
-        logger.info(f"Logo uploaded successfully for tenant {tenant_id}: {result['file_url']}")
+        logger.info(f"[FILE UPLOAD] Logo upload completed successfully for tenant {tenant_id}")
+        logger.info(f"[FILE UPLOAD] Final URL that will be returned to client: {result['file_url']}")
         
         return JSONResponse({
             "success": True,

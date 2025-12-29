@@ -41,10 +41,11 @@ class S3Service:
                 'region_name': self.region,
             }
             
-            self.public_url_base = f"{self.endpoint_url}/{self.bucket_name}"
+            self.public_url_base = f"{self.endpoint_url}/{self.access_key_id}:{self.bucket_name}"
             self.s3_client = boto3.client('s3', config=client_config, **boto3_config)
             self.enabled = True
-            logger.info(f"Contabo S3 service initialized for bucket: {self.bucket_name} at {self.endpoint_url}")
+            logger.info(f"Contabo S3 service initialized - Endpoint: {self.endpoint_url}, Bucket: {self.bucket_name}, Access Key: {self.access_key_id[:8]}...")
+            logger.info(f"Public URL base format: {self.public_url_base}")
         except NoCredentialsError:
             logger.warning("S3 credentials not found. File upload functionality is disabled.")
         except Exception as e:
@@ -116,12 +117,26 @@ class S3Service:
                 'ContentType': self._get_content_type(file_extension),
             }
             
+            logger.info(f"[UPLOAD LOGO] Starting upload - S3 Key: {s3_key}, Tenant ID: {tenant_id}, Original filename: {original_filename}")
+            logger.info(f"[UPLOAD LOGO] Upload params - Bucket: {self.bucket_name}, ContentType: {put_params['ContentType']}")
+            
             self.s3_client.put_object(**put_params)
             
-            # Generate public URL
             public_url = f"{self.public_url_base}/{s3_key}"
             
-            logger.info(f"Logo uploaded successfully: {s3_key}")
+            logger.info(f"[UPLOAD LOGO] Upload successful - S3 Key: {s3_key}")
+            logger.info(f"[UPLOAD LOGO] Generated public URL: {public_url}")
+            logger.info(f"[UPLOAD LOGO] URL format breakdown - Endpoint: {self.endpoint_url}, AccessKey:Bucket: {self.access_key_id}:{self.bucket_name}, S3 Key: {s3_key}")
+            
+            try:
+                actual_url = self.s3_client.generate_presigned_url(
+                    'get_object',
+                    Params={'Bucket': self.bucket_name, 'Key': s3_key},
+                    ExpiresIn=3600
+                )
+                logger.info(f"[UPLOAD LOGO] Contabo presigned URL (for comparison): {actual_url}")
+            except Exception as e:
+                logger.warning(f"[UPLOAD LOGO] Could not generate presigned URL for comparison: {str(e)}")
             
             return {
                 "success": True,
@@ -227,11 +242,26 @@ class S3Service:
                 'ContentType': content_type,
             }
             
+            logger.info(f"[UPLOAD FILE] Starting upload - S3 Key: {s3_key}, Tenant ID: {tenant_id}, Folder: {folder}, Original filename: {original_filename}")
+            logger.info(f"[UPLOAD FILE] Upload params - Bucket: {self.bucket_name}, ContentType: {content_type}")
+            
             self.s3_client.put_object(**put_params)
             
             public_url = f"{self.public_url_base}/{s3_key}"
             
-            logger.info(f"File uploaded successfully: {s3_key}")
+            logger.info(f"[UPLOAD FILE] Upload successful - S3 Key: {s3_key}")
+            logger.info(f"[UPLOAD FILE] Generated public URL: {public_url}")
+            logger.info(f"[UPLOAD FILE] URL format breakdown - Endpoint: {self.endpoint_url}, AccessKey:Bucket: {self.access_key_id}:{self.bucket_name}, S3 Key: {s3_key}")
+            
+            try:
+                actual_url = self.s3_client.generate_presigned_url(
+                    'get_object',
+                    Params={'Bucket': self.bucket_name, 'Key': s3_key},
+                    ExpiresIn=3600
+                )
+                logger.info(f"[UPLOAD FILE] Contabo presigned URL (for comparison): {actual_url}")
+            except Exception as e:
+                logger.warning(f"[UPLOAD FILE] Could not generate presigned URL for comparison: {str(e)}")
             
             return {
                 "success": True,
