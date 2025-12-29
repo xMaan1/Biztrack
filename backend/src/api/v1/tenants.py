@@ -153,9 +153,10 @@ async def create_tenant_from_landing(
             detail="Plan not found"
         )
     
-    existing_tenants = get_user_tenants(current_user.id, db)
-    for tenant in existing_tenants:
-        if tenant.name.lower() == tenant_name.lower():
+    existing_tenant_users = get_user_tenants(current_user.id, db)
+    for tenant_user in existing_tenant_users:
+        tenant = get_tenant_by_id(str(tenant_user.tenant_id), db)
+        if tenant and tenant.name.lower() == tenant_name.lower():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="You already have a tenant with this name"
