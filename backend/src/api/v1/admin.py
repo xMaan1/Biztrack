@@ -304,7 +304,17 @@ async def delete_tenant(
                 
                 # Delete tenant-user relationships FIRST
                 db.execute(text("DELETE FROM tenant_users WHERE tenant_id = :tenant_id"), {"tenant_id": tenant_id})
-                db.commit()  # Commit after each major step
+                db.commit()
+                
+                # Delete RBAC-related tables BEFORE other tables (they have foreign keys to tenants)
+                rbac_tables = ["roles", "custom_roles"]
+                for table in rbac_tables:
+                    try:
+                        db.execute(text(f"DELETE FROM {table} WHERE tenant_id = :tenant_id"), {"tenant_id": tenant_id})
+                        db.commit()
+                    except Exception as e:
+                        print(f"Warning: Could not delete from {table}: {e}")
+                        db.rollback()
                 
                 # Delete only the core tables we know exist
                 core_tables = [
