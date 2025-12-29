@@ -250,25 +250,18 @@ async def delete_avatar(
         )
     
     if user.avatar and (user.avatar.startswith('http://') or user.avatar.startswith('https://')):
-        if 'avatars/' in user.avatar:
-            try:
-                if '/avatars/' in user.avatar:
-                    s3_key = 'avatars/' + user.avatar.split('/avatars/')[-1].split('?')[0]
+        try:
+            s3_key = s3_service.extract_s3_key_from_url(user.avatar)
+            if s3_key:
+                delete_success = s3_service.delete_file(s3_key)
+                if delete_success:
+                    logger.info(f"Avatar deleted from S3: {s3_key}")
                 else:
-                    s3_key = None
-                
-                if s3_key:
-                    delete_success = s3_service.delete_file(s3_key)
-                    if delete_success:
-                        logger.info(f"Avatar deleted from S3: {s3_key}")
-                    else:
-                        logger.warning(f"Failed to delete avatar from S3: {s3_key}")
-                else:
-                    logger.warning(f"Could not extract S3 key from avatar URL: {user.avatar}")
-            except Exception as e:
-                logger.error(f"Error deleting avatar from S3: {str(e)}", exc_info=True)
-        else:
-            logger.info(f"Avatar URL does not appear to be in S3 (no 'avatars/' in path): {user.avatar}")
+                    logger.warning(f"Failed to delete avatar from S3: {s3_key}")
+            else:
+                logger.warning(f"Could not extract S3 key from avatar URL: {user.avatar}")
+        except Exception as e:
+            logger.error(f"Error deleting avatar from S3: {str(e)}", exc_info=True)
     
     try:
         update_dict = {"avatar": None}

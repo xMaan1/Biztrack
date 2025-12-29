@@ -61,6 +61,35 @@ class S3Service:
     def _check_enabled(self):
         if not self.enabled:
             raise ValueError("S3 storage is not configured. Please set S3_BUCKET_NAME, S3_ACCESS_KEY_ID (or AWS_ACCESS_KEY_ID), and S3_SECRET_ACCESS_KEY (or AWS_SECRET_ACCESS_KEY) environment variables.")
+    
+    def extract_s3_key_from_url(self, url: str) -> Optional[str]:
+        """Extract S3 key from a full URL (works with both AWS and Contabo formats)"""
+        if not url:
+            return None
+        
+        try:
+            if '/logos/' in url:
+                s3_key = 'logos/' + url.split('/logos/')[-1].split('?')[0]
+                return s3_key
+            elif '/avatars/' in url:
+                s3_key = 'avatars/' + url.split('/avatars/')[-1].split('?')[0]
+                return s3_key
+            elif '/documents/' in url:
+                s3_key = 'documents/' + url.split('/documents/')[-1].split('?')[0]
+                return s3_key
+            elif '/employees/' in url:
+                s3_key = 'employees/' + url.split('/employees/')[-1].split('?')[0]
+                return s3_key
+            else:
+                if self.bucket_name and self.bucket_name in url:
+                    parts = url.split(f'/{self.bucket_name}/')
+                    if len(parts) > 1:
+                        s3_key = parts[1].split('?')[0]
+                        return s3_key
+            return None
+        except Exception as e:
+            logger.error(f"Error extracting S3 key from URL {url}: {str(e)}")
+            return None
 
     def upload_logo(self, file_content: bytes, tenant_id: str, original_filename: str) -> dict:
         """Upload logo to S3 and return file info"""
@@ -74,13 +103,18 @@ class S3Service:
             s3_key = f"logos/{tenant_id}/{unique_filename}"
             
             # Upload to S3
-            self.s3_client.put_object(
-                Bucket=self.bucket_name,
-                Key=s3_key,
-                Body=file_content,
-                ContentType=self._get_content_type(file_extension),
-                ACL='public-read'  # Make it publicly readable
-            )
+            put_params = {
+                'Bucket': self.bucket_name,
+                'Key': s3_key,
+                'Body': file_content,
+                'ContentType': self._get_content_type(file_extension),
+            }
+            
+            # Only add ACL for AWS S3 (Contabo uses bucket-level public access)
+            if not self.endpoint_url or 'contabostorage.com' not in self.endpoint_url:
+                put_params['ACL'] = 'public-read'
+            
+            self.s3_client.put_object(**put_params)
             
             # Generate public URL
             public_url = f"{self.public_url_base}/{s3_key}"
@@ -127,6 +161,21 @@ class S3Service:
         if not self.enabled:
             return ""
         return f"{self.public_url_base}/{s3_key}"
+    
+    def get_signed_url(self, s3_key: str, expiration: int = 3600) -> str:
+        """Generate a signed URL for private access (valid for specified seconds)"""
+        if not self.enabled:
+            return ""
+        try:
+            url = self.s3_client.generate_presigned_url(
+                'get_object',
+                Params={'Bucket': self.bucket_name, 'Key': s3_key},
+                ExpiresIn=expiration
+            )
+            return url
+        except Exception as e:
+            logger.error(f"Error generating signed URL: {str(e)}")
+            return f"{self.public_url_base}/{s3_key}"
 
     def list_tenant_logos(self, tenant_id: str) -> list:
         """List all logos for a tenant"""
@@ -169,13 +218,18 @@ class S3Service:
             
             content_type = self._get_content_type_for_all_files(file_extension)
             
-            self.s3_client.put_object(
-                Bucket=self.bucket_name,
-                Key=s3_key,
-                Body=file_content,
-                ContentType=content_type,
-                ACL='public-read'
-            )
+            put_params = {
+                'Bucket': self.bucket_name,
+                'Key': s3_key,
+                'Body': file_content,
+                'ContentType': content_type,
+            }
+            
+            # Only add ACL for AWS S3 (Contabo uses bucket-level public access)
+            if not self.endpoint_url or 'contabostorage.com' not in self.endpoint_url:
+                put_params['ACL'] = 'public-read'
+            
+            self.s3_client.put_object(**put_params)
             
             public_url = f"{self.public_url_base}/{s3_key}"
             
@@ -257,6 +311,20 @@ class S3Service:
             return False
         except Exception as e:
             logger.error(f"S3 connection test failed: {str(e)}")
+            return False
+    
+    def verify_file_access(self, s3_key: str) -> bool:
+        """Verify if a file is publicly accessible"""
+        if not self.enabled:
+            return False
+        try:
+            self.s3_client.head_object(Bucket=self.bucket_name, Key=s3_key)
+            return True
+        except ClientError as e:
+            logger.error(f"File access verification failed: {str(e)}")
+            return False
+        except Exception as e:
+            logger.error(f"Error verifying file access: {str(e)}")
             return False
 
 # Create singleton instance

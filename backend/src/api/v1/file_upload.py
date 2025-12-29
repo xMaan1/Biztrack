@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from typing import Optional
 import os
 import uuid
@@ -7,6 +7,7 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 import logging
+import requests
 from sqlalchemy.orm import Session
 
 from ...config.database import get_db
@@ -136,13 +137,15 @@ async def delete_logo(
             raise HTTPException(status_code=404, detail="No logo found for this tenant")
         
         logo_url = tenant.logo_url
-        if '/logos/' in logo_url:
-            s3_key = 'logos/' + logo_url.split('/logos/')[-1].split('?')[0]
-        else:
-            s3_key = None
+        s3_key = s3_service.extract_s3_key_from_url(logo_url)
         
         if s3_key:
-            s3_service.delete_logo(s3_key)
+            logger.info(f"Extracted S3 key for deletion: {s3_key}")
+            delete_success = s3_service.delete_logo(s3_key)
+            if not delete_success:
+                logger.warning(f"Failed to delete logo from S3: {s3_key}, but continuing with database update")
+        else:
+            logger.warning(f"Could not extract S3 key from logo URL: {logo_url}")
         
         tenant.logo_url = None
         tenant.updatedAt = datetime.utcnow()
@@ -353,3 +356,37 @@ async def delete_file(
     except Exception as e:
         logger.error(f"Error deleting file: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to delete file: {str(e)}")
+
+@router.get("/proxy-image")
+async def proxy_image(
+    url: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Proxy image requests to bypass CORS issues"""
+    try:
+        if not url or not (url.startswith('http://') or url.startswith('https://')):
+            raise HTTPException(status_code=400, detail="Invalid image URL")
+        
+        allowed_domains = ['contabostorage.com', 'amazonaws.com', 's3.']
+        if not any(domain in url for domain in allowed_domains):
+            raise HTTPException(status_code=403, detail="Image URL not allowed")
+        
+        response = requests.get(url, timeout=10, stream=True)
+        response.raise_for_status()
+        
+        content_type = response.headers.get('Content-Type', 'image/jpeg')
+        
+        return StreamingResponse(
+            response.iter_content(chunk_size=8192),
+            media_type=content_type,
+            headers={
+                "Cache-Control": "public, max-age=31536000",
+                "Access-Control-Allow-Origin": "*"
+            }
+        )
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error proxying image from {url}: {str(e)}")
+        raise HTTPException(status_code=502, detail=f"Failed to load image: {str(e)}")
+    except Exception as e:
+        logger.error(f"Error proxying image: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to proxy image: {str(e)}")
