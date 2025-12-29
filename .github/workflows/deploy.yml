@@ -116,15 +116,18 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_HOST} "DEPLOY_PATH='${DEPLOY_PATH}' bash" << 'ENDSSH'
             set -e
-            echo "Setting up backend..."
+            echo "🚀 Setting up backend..."
             cd ${DEPLOY_PATH}/backend
             if [ ! -d "venv" ]; then
+              echo "Creating virtual environment..."
               python3 -m venv venv
             fi
             source venv/bin/activate
+            echo "Upgrading pip..."
             pip install --upgrade pip
+            echo "Installing dependencies..."
             pip install -r requirements.txt
-            echo "Backend setup completed!"
+            echo "✅ Backend setup completed successfully!"
           ENDSSH
 
   deploy-frontend:
@@ -149,17 +152,22 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_HOST} "DEPLOY_PATH='${DEPLOY_PATH}' bash" << 'ENDSSH'
             set -e
-            echo "Setting up frontend..."
+            echo "🚀 Setting up frontend..."
             cd ${DEPLOY_PATH}/frontend
+            echo "Installing dependencies..."
             npm ci
+            echo "Building frontend..."
             npm run build
-            echo "Frontend setup completed!"
+            echo "✅ Frontend setup completed successfully!"
           ENDSSH
 
   restart-services:
     runs-on: ubuntu-latest
     needs: [check-changes, sync-code, deploy-backend, deploy-frontend]
-    if: always() && (needs.check-changes.outputs.backend == 'true' || needs.check-changes.outputs.frontend == 'true')
+    if: |
+      (needs.check-changes.outputs.backend == 'true' || needs.check-changes.outputs.frontend == 'true') &&
+      (needs.deploy-backend.result == 'success' || needs.check-changes.outputs.backend != 'true') &&
+      (needs.deploy-frontend.result == 'success' || needs.check-changes.outputs.frontend != 'true')
     steps:
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
@@ -178,26 +186,38 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_HOST} "DEPLOY_PATH='${DEPLOY_PATH}' bash" << 'ENDSSH'
             set -e
-            echo "Updating ecosystem.config.js interpreter path..."
+            echo "🔄 Updating ecosystem.config.js interpreter path..."
             INTERPRETER_PATH="${DEPLOY_PATH}/backend/venv/bin/python"
             sed -i "s|interpreter: 'venv/bin/python'|interpreter: '${INTERPRETER_PATH}'|g" ${DEPLOY_PATH}/ecosystem.config.js || true
-            echo "Restarting PM2 processes..."
+            echo "🔄 Restarting PM2 processes..."
             cd ${DEPLOY_PATH}
             pm2 delete biztrack-backend biztrack-frontend 2>/dev/null || true
             pm2 start ecosystem.config.js --update-env
+            if [ $? -ne 0 ]; then
+              echo "❌ Error: Failed to start PM2 processes"
+              exit 1
+            fi
             pm2 save
-            echo "Services restarted successfully!"
+            echo "✅ Services restarted successfully!"
           ENDSSH
 
   health-check:
     runs-on: ubuntu-latest
     needs: [check-changes, restart-services]
-    if: needs.check-changes.outputs.backend == 'true'
+    if: |
+      needs.check-changes.outputs.backend == 'true' &&
+      needs.restart-services.result == 'success'
     env:
       BACKEND_URL: ${{ secrets.BACKEND_URL }}
     steps:
       - name: Health check
         run: |
+          echo "Waiting for services to be ready..."
           sleep 10
-          curl -f ${BACKEND_URL}/health || exit 1
+          echo "Checking backend health..."
+          if ! curl -f ${BACKEND_URL}/health; then
+            echo "❌ Health check failed: Backend is not responding"
+            exit 1
+          fi
+          echo "✅ Health check passed: Backend is healthy"
 
