@@ -1,0 +1,43 @@
+{
+  "extends": [
+    "expo",
+    "prettier"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "plugins": [
+    "@typescript-eslint",
+    "prettier"
+  ],
+  "rules": {
+    "prettier/prettier": "error",
+    "no-console": "warn",
+    "no-debugger": "error",
+    "prefer-const": "error",
+    "no-duplicate-imports": "error",
+    "no-unused-expressions": "error",
+    "no-unreachable": "error",
+    "no-multiple-empty-lines": ["error", { "max": 1 }],
+    "no-trailing-spaces": "error",
+    "eol-last": "error",
+    "comma-dangle": ["error", "always-multiline"],
+    "semi": ["error", "always"],
+    "max-len": ["warn", { "code": 120, "ignoreUrls": true }],
+    "react/prop-types": "off",
+    "react/react-in-jsx-scope": "off",
+    "react-hooks/exhaustive-deps": "warn",
+    "react-hooks/rules-of-hooks": "error",
+    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }]
+  },
+  "env": {
+    "es2022": true,
+    "node": true
+  }
+}
+

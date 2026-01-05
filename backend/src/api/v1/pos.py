@@ -20,7 +20,8 @@ from ...config.database import (
     get_pos_transactions, get_pos_transaction_by_id, create_pos_transaction, update_pos_transaction,
     get_pos_dashboard_data
 )
-from ...api.dependencies import get_current_user, get_tenant_context, require_tenant_admin_or_super_admin
+from ...api.dependencies import get_current_user, get_tenant_context, require_permission
+from ...models.common import ModulePermission
 
 router = APIRouter(prefix="/pos", tags=["pos"])
 
@@ -99,12 +100,16 @@ async def get_pos_products(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
 ):
     """Get all products with optional filtering"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     try:
         skip = (page - 1) * limit
-        products = get_products(db, tenant_context["tenant_id"] if tenant_context else None, skip, limit)
+        products = get_products(db, tenant_context["tenant_id"], skip, limit)
         
         # Apply additional filters if provided
         if category or search or low_stock is not None or is_active is not None:
@@ -152,11 +157,15 @@ async def get_pos_products(
 async def get_pos_product(
     product_id: str,
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
 ):
     """Get a specific product by ID"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     try:
-        db_product = get_product_by_id(product_id, db, tenant_context["tenant_id"] if tenant_context else None)
+        db_product = get_product_by_id(product_id, db, tenant_context["tenant_id"])
         if not db_product:
             raise HTTPException(status_code=404, detail="Product not found")
         
@@ -174,9 +183,12 @@ async def create_pos_product(
     product_data: ProductCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_CREATE.value))
 ):
     """Create a new product"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     try:
         # Map Pydantic model fields to database model fields
         product_dict = product_data.dict()
@@ -206,7 +218,7 @@ async def create_pos_product(
         product_data = {
             'id': str(uuid.uuid4()),
             **mapped_data,
-            'tenant_id': tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            'tenant_id': tenant_context["tenant_id"],
             'createdAt': datetime.now(),
             'updatedAt': datetime.now()
         }
@@ -228,9 +240,12 @@ async def update_pos_product(
     product_data: ProductUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_UPDATE.value))
 ):
     """Update an existing product"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     try:
         # Map Pydantic model fields to database model fields
         product_dict = product_data.dict(exclude_unset=True)
@@ -275,7 +290,7 @@ async def update_pos_product(
             product_id,
             mapped_data,
             db,
-            tenant_context["tenant_id"] if tenant_context else None
+            tenant_context["tenant_id"]
         )
         if not db_product:
             raise HTTPException(status_code=404, detail="Product not found")
@@ -294,11 +309,14 @@ async def delete_pos_product(
     product_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_DELETE.value))
 ):
     """Delete a product"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     try:
-        success = delete_product(product_id, db, tenant_context["tenant_id"] if tenant_context else None)
+        success = delete_product(product_id, db, tenant_context["tenant_id"])
         if not success:
             raise HTTPException(status_code=404, detail="Product not found")
         return {"message": "Product deleted successfully"}
@@ -317,12 +335,16 @@ async def get_pos_shifts(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
 ):
     """Get all POS shifts with optional filtering"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     try:
         skip = (page - 1) * limit
-        shifts = get_pos_shifts(db, tenant_context["tenant_id"] if tenant_context else None, skip, limit)
+        shifts = get_pos_shifts(db, tenant_context["tenant_id"], skip, limit)
         
         # Apply additional filters if provided
         if status or cashier_id or date_from or date_to:
@@ -364,11 +386,15 @@ async def get_pos_shifts(
 async def get_pos_shift(
     shift_id: str,
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
 ):
     """Get a specific shift by ID"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     try:
-        shift = get_pos_shift_by_id(db, shift_id, tenant_context["tenant_id"] if tenant_context else None)
+        shift = get_pos_shift_by_id(db, shift_id, tenant_context["tenant_id"])
         if not shift:
             raise HTTPException(status_code=404, detail="Shift not found")
         return POSShiftResponse(shift=shift)
@@ -382,12 +408,15 @@ async def create_pos_shift(
     shift_data: POSShiftCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_CREATE.value))
 ):
     """Create a new POS shift"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     try:
         # Check if user already has an open shift
-        existing_open_shift = get_open_pos_shift(db, tenant_context["tenant_id"] if tenant_context else None, str(current_user.id))
+        existing_open_shift = get_open_pos_shift(db, tenant_context["tenant_id"], str(current_user.id))
         if existing_open_shift:
             raise HTTPException(status_code=400, detail="User already has an open shift")
         
@@ -401,7 +430,7 @@ async def create_pos_shift(
             totalTransactions=0,
             status="open",
             openedAt=datetime.now(),
-            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            tenant_id=tenant_context["tenant_id"],
             createdAt=datetime.now(),
             updatedAt=datetime.now()
         )
@@ -419,15 +448,18 @@ async def update_pos_shift(
     shift_data: POSShiftUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_UPDATE.value))
 ):
     """Update an existing shift"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     try:
         db_shift = update_pos_shift(
             db, 
             shift_id, 
             shift_data.dict(exclude_unset=True), 
-            tenant_context["tenant_id"] if tenant_context else None
+            tenant_context["tenant_id"]
         )
         if not db_shift:
             raise HTTPException(status_code=404, detail="Shift not found")
@@ -441,11 +473,14 @@ async def update_pos_shift(
 async def get_current_open_shift(
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
 ):
     """Get current user's open shift"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     try:
-        shift = get_open_pos_shift(db, tenant_context["tenant_id"] if tenant_context else None, str(current_user.id))
+        shift = get_open_pos_shift(db, tenant_context["tenant_id"], str(current_user.id))
         if shift:
             return {"shift": shift}
         return {"shift": None}
@@ -465,12 +500,16 @@ async def get_pos_transactions(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
 ):
     """Get all POS transactions with optional filtering"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     try:
         skip = (page - 1) * limit
-        transactions = get_pos_transactions(db, tenant_context["tenant_id"] if tenant_context else None, skip, limit)
+        transactions = get_pos_transactions(db, tenant_context["tenant_id"], skip, limit)
         
         # Apply additional filters if provided
         if status or payment_method or date_from or date_to or amount_from or amount_to or search:
@@ -524,11 +563,15 @@ async def get_pos_transactions(
 async def get_pos_transaction(
     transaction_id: str,
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
 ):
     """Get a specific transaction by ID"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     try:
-        transaction = get_pos_transaction_by_id(db, transaction_id, tenant_context["tenant_id"] if tenant_context else None)
+        transaction = get_pos_transaction_by_id(db, transaction_id, tenant_context["tenant_id"])
         if not transaction:
             raise HTTPException(status_code=404, detail="Transaction not found")
         return POSTransactionResponse(transaction=transaction)
@@ -542,12 +585,15 @@ async def create_pos_transaction(
     transaction_data: POSTransactionCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_CREATE.value))
 ):
     """Create a new POS transaction"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     try:
         # Check if user has an open shift
-        open_shift = get_open_pos_shift(db, tenant_context["tenant_id"] if tenant_context else None, str(current_user.id))
+        open_shift = get_open_pos_shift(db, tenant_context["tenant_id"], str(current_user.id))
         if not open_shift:
             raise HTTPException(status_code=400, detail="No open shift found. Please open a shift first.")
         
@@ -559,8 +605,8 @@ async def create_pos_transaction(
             transactionNumber=generate_transaction_number(),
             **transaction_data.dict(),
             **totals,
-            status="completed",  # Auto-complete for now
-            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
+            status="completed",
+            tenant_id=tenant_context["tenant_id"],
             shiftId=str(open_shift.id),
             cashierId=str(current_user.id),
             cashierName=f"{current_user.firstName or ''} {current_user.lastName or ''}".strip() or current_user.userName,
@@ -588,15 +634,18 @@ async def update_pos_transaction(
     transaction_data: POSTransactionUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_UPDATE.value))
 ):
     """Update an existing transaction"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     try:
         db_transaction = update_pos_transaction(
             db, 
             transaction_id, 
             transaction_data.dict(exclude_unset=True), 
-            tenant_context["tenant_id"] if tenant_context else None
+            tenant_context["tenant_id"]
         )
         if not db_transaction:
             raise HTTPException(status_code=404, detail="Transaction not found")
@@ -614,11 +663,15 @@ async def get_pos_sales_report(
     payment_method: Optional[str] = Query(None),
     cashier_id: Optional[str] = Query(None),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
 ):
     """Get POS sales report"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     try:
-        transactions = get_pos_transactions(db, tenant_context["tenant_id"] if tenant_context else None, 0, 1000)
+        transactions = get_pos_transactions(db, tenant_context["tenant_id"], 0, 1000)
         
         # Handle case where no transactions exist
         if not transactions:
@@ -716,11 +769,15 @@ async def get_pos_inventory_report(
     low_stock_only: bool = Query(False, description="Show only low stock items"),
     category: Optional[str] = Query(None),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
 ):
     """Get POS inventory report"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     try:
-        products = get_products(db, tenant_context["tenant_id"] if tenant_context else None, 0, 1000)
+        products = get_products(db, tenant_context["tenant_id"], 0, 1000)
         
         # Handle case where no products exist
         if not products:
@@ -780,11 +837,15 @@ async def get_pos_shifts_report(
     date_to: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
     cashier_id: Optional[str] = Query(None),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
 ):
     """Get POS shifts report"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     try:
-        shifts = get_pos_shifts(db, tenant_context["tenant_id"] if tenant_context else None, 0, 1000)
+        shifts = get_pos_shifts(db, tenant_context["tenant_id"], 0, 1000)
         
         # Handle case where no shifts exist
         if not shifts:
@@ -871,11 +932,14 @@ async def get_pos_shifts_report(
 async def get_pos_dashboard(
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
 ):
     """Get POS dashboard data"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     try:
-        dashboard_data = get_pos_dashboard_data(db, tenant_context["tenant_id"] if tenant_context else None)
+        dashboard_data = get_pos_dashboard_data(db, tenant_context["tenant_id"])
         return dashboard_data
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching dashboard data: {str(e)}")
@@ -885,11 +949,15 @@ async def get_pos_dashboard(
 async def search_products(
     q: str = Query(..., description="Search query for product name, SKU, or barcode"),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
 ):
     """Search products for POS operations"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
     try:
-        products = get_products(db, tenant_context["tenant_id"] if tenant_context else None, 0, 100)
+        products = get_products(db, tenant_context["tenant_id"], 0, 100)
         
         # Filter products by search query
         search_lower = q.lower()
