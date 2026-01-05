@@ -337,6 +337,18 @@ export class ApiService {
   async getMyTenants() {
     return this.get('/auth/tenants');
   }
+
+  async switchTenant(tenantId: string) {
+    const storedTenants = await this.getUserTenants();
+    const tenant = storedTenants.find((t: any) => t.id === tenantId);
+
+    if (!tenant) {
+      throw new Error('Access denied to this tenant');
+    }
+
+    this.setTenantId(tenantId);
+    return tenant;
+  }
 }
 
 export const apiService = new ApiService();
