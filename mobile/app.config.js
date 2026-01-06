@@ -24,7 +24,24 @@ module.exports = {
       },
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
+      intentFilters: [
+        {
+          action: 'VIEW',
+          autoVerify: true,
+          data: [
+            {
+              scheme: 'https',
+              host: 'biztrack.app',
+            },
+            {
+              scheme: 'biztrack',
+            },
+          ],
+          category: ['BROWSABLE', 'DEFAULT'],
+        },
+      ],
     },
+    scheme: 'biztrack',
     web: {
       favicon: './assets/favicon.png',
     },
