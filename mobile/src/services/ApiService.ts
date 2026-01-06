@@ -349,6 +349,58 @@ export class ApiService {
     this.setTenantId(tenantId);
     return tenant;
   }
+
+  async getDashboardOverview() {
+    return this.get('/dashboard/overview');
+  }
+
+  async getCurrentSubscription() {
+    return this.get('/tenants/current/subscription');
+  }
+
+  async resetPassword(email: string) {
+    return this.post('/auth/reset-password', { email });
+  }
+
+  async getRoles() {
+    return this.get('/rbac/roles');
+  }
+
+  async createRole(roleData: any) {
+    return this.post('/rbac/roles', roleData);
+  }
+
+  async updateRole(roleId: string, roleData: any) {
+    return this.put(`/rbac/roles/${roleId}`, roleData);
+  }
+
+  async deleteRole(roleId: string) {
+    return this.delete(`/rbac/roles/${roleId}`);
+  }
+
+  async getRBACTenantUsers() {
+    return this.get('/rbac/tenant-users');
+  }
+
+  async createTenantUser(userData: any) {
+    return this.post('/rbac/tenant-users', userData);
+  }
+
+  async updateTenantUser(userId: string, userData: any) {
+    return this.put(`/rbac/tenant-users/${userId}`, userData);
+  }
+
+  async deleteTenantUser(userId: string) {
+    return this.delete(`/rbac/tenant-users/${userId}`);
+  }
+
+  async createUser(userData: any, roleId: string) {
+    return this.post(`/rbac/create-user?role_id=${roleId}`, userData);
+  }
+
+  async getUserPermissions() {
+    return this.get('/rbac/permissions');
+  }
 }
 
 export const apiService = new ApiService();

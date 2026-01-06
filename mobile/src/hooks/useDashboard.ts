@@ -76,7 +76,7 @@ export function useDashboard() {
     try {
       setLoading(true);
       setError(null);
-      const response = await apiService.get('/dashboard/overview');
+      const response = await apiService.getDashboardOverview();
       setData(response);
     } catch (err: any) {
       setError(err?.message || 'Failed to load dashboard data');

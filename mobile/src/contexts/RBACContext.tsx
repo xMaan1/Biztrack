@@ -135,7 +135,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
   const fetchRoles = async () => {
     try {
       setLoading(true);
-      const response = await apiService.get('/rbac/roles');
+      const response = await apiService.getRoles();
       if (response.roles) {
         setRoles(response.roles);
       } else if (response.success && response.data?.roles) {
@@ -149,7 +149,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
 
   const createRole = async (roleData: CreateRoleData): Promise<Role> => {
     try {
-      const response = await apiService.post('/rbac/roles', roleData);
+      const response = await apiService.createRole(roleData);
       if (response && response.id) {
         const newRole = response as Role;
         setRoles(prev => [...prev, newRole]);
@@ -169,7 +169,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
 
   const updateRole = async (roleId: string, roleData: UpdateRoleData): Promise<Role> => {
     try {
-      const response = await apiService.put(`/rbac/roles/${roleId}`, roleData);
+      const response = await apiService.updateRole(roleId, roleData);
       if (response && response.id) {
         const updatedRole = response as Role;
         setRoles(prev => prev.map(role => role.id === roleId ? updatedRole : role));
@@ -199,7 +199,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
 
   const deleteRole = async (roleId: string): Promise<void> => {
     try {
-      const response = await apiService.delete(`/rbac/roles/${roleId}`);
+      const response = await apiService.deleteRole(roleId);
       if (response.success || response.message) {
         setRoles(prev => prev.filter(role => role.id !== roleId));
       } else {
@@ -214,7 +214,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
   const fetchTenantUsers = async () => {
     try {
       setLoading(true);
-      const response = await apiService.get('/rbac/tenant-users');
+      const response = await apiService.getRBACTenantUsers();
       if (Array.isArray(response)) {
         setTenantUsers(response);
       } else if (response.success && Array.isArray(response.data)) {
@@ -228,7 +228,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
 
   const createUser = async (userData: CreateUserData, roleId: string): Promise<any> => {
     try {
-      const response = await apiService.post(`/rbac/create-user?role_id=${roleId}`, userData);
+      const response = await apiService.createUser(userData, roleId);
       if (response && response.userId) {
         await fetchTenantUsers();
         return response;
@@ -246,7 +246,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
 
   const createTenantUser = async (userData: CreateTenantUserData): Promise<TenantUser> => {
     try {
-      const response = await apiService.post('/rbac/tenant-users', userData);
+      const response = await apiService.createTenantUser(userData);
       if (response && response.id) {
         await fetchTenantUsers();
         return response as TenantUser;
@@ -264,7 +264,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
 
   const updateTenantUser = async (userId: string, userData: UpdateTenantUserData): Promise<TenantUser> => {
     try {
-      const response = await apiService.put(`/rbac/tenant-users/${userId}`, userData);
+      const response = await apiService.updateTenantUser(userId, userData);
       if (response && response.id) {
         const updatedUser = response as TenantUser;
         const roleId = updatedUser.role_id || userData.role_id;
@@ -332,7 +332,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
 
   const removeTenantUser = async (userId: string): Promise<void> => {
     try {
-      const response = await apiService.delete(`/rbac/tenant-users/${userId}`);
+      const response = await apiService.deleteTenantUser(userId);
       if (response.success || response.message) {
         setTenantUsers(prev => prev.filter(user => 
           user.id !== userId && user.tenant_user_id !== userId
@@ -349,7 +349,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
   const fetchUserPermissions = async () => {
     try {
       setLoading(true);
-      const response = await apiService.get('/rbac/permissions');
+      const response = await apiService.getUserPermissions();
 
       if (response.permissions && response.accessible_modules !== undefined) {
         setUserPermissions(response);

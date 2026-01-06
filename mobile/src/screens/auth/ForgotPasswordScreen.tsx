@@ -39,7 +39,7 @@ export default function ForgotPasswordScreen() {
       setSuccess(false);
       setLoading(true);
 
-      await apiService.post('/auth/reset-password', { email: data.email });
+      await apiService.resetPassword(data.email);
       setSuccess(true);
     } catch (err: any) {
       const errorMessage = err?.response?.data?.detail || err?.message || 'An error occurred. Please try again.';

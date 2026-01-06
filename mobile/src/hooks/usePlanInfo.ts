@@ -19,7 +19,7 @@ export function usePlanInfo() {
     try {
       setLoading(true);
       setError(null);
-      const response = await apiService.get('/tenants/current/subscription');
+      const response = await apiService.getCurrentSubscription();
       
       if (response.success && response.subscription) {
         const subscription = response.subscription;
