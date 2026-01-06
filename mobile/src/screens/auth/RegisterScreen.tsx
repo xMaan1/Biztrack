@@ -7,48 +7,75 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuth } from '@/contexts/AuthContext';
+import { apiService } from '@/services/ApiService';
 import { Input } from '@/components/forms';
 import { Button } from '@/components/ui';
 import { Card } from '@/components/ui';
 import { Alert } from '@/components/ui';
-import { colors, spacing, typography, borderRadius } from '@/theme';
+import { colors, spacing, typography } from '@/theme';
 import { AuthStackParamList } from '@/navigation/types';
-import { Ionicons } from '@expo/vector-icons';
 
-type LoginScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'Login'>;
+type RegisterScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'Register'>;
 
-const loginSchema = yup.object().shape({
+const registerSchema = yup.object().shape({
+  userName: yup.string().required('Username is required').min(3, 'Username must be at least 3 characters'),
   email: yup.string().email('Invalid email address').required('Email is required'),
   password: yup.string().required('Password is required').min(6, 'Password must be at least 6 characters'),
+  firstName: yup.string(),
+  lastName: yup.string(),
 });
 
-export default function LoginScreen() {
-  const navigation = useNavigation<LoginScreenNavigationProp>();
-  const { login, loading: authLoading } = useAuth();
+export default function RegisterScreen() {
+  const navigation = useNavigation<RegisterScreenNavigationProp>();
+  const { login } = useAuth();
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
 
   const { control, handleSubmit, formState: { errors } } = useForm({
-    resolver: yupResolver(loginSchema),
+    resolver: yupResolver(registerSchema),
     defaultValues: {
+      userName: '',
       email: '',
       password: '',
+      firstName: '',
+      lastName: '',
     },
   });
 
-  const onSubmit = async (data: { email: string; password: string }) => {
+  const onSubmit = async (data: {
+    userName: string;
+    email: string;
+    password: string;
+    firstName?: string;
+    lastName?: string;
+  }) => {
     try {
       setError('');
-      const success = await login({
+      setLoading(true);
+
+      const user = await apiService.register({
+        userName: data.userName,
         email: data.email,
         password: data.password,
+        firstName: data.firstName,
+        lastName: data.lastName,
       });
 
-      if (!success) {
-        setError('Invalid email or password');
+      if (user) {
+        const loginSuccess = await login({
+          email: data.email,
+          password: data.password,
+        });
+
+        if (!loginSuccess) {
+          setError('Registration successful but automatic login failed. Please sign in manually.');
+        }
       }
     } catch (err: any) {
-      const errorMessage = err?.response?.data?.detail || err?.message || 'An error occurred during login';
+      const errorMessage = err?.response?.data?.detail || err?.message || 'An error occurred during registration';
       setError(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -69,8 +96,8 @@ export default function LoginScreen() {
         >
           <Card style={styles.card}>
             <View style={styles.header}>
-              <Text style={styles.title}>Welcome Back</Text>
-              <Text style={styles.subtitle}>Sign in to your account</Text>
+              <Text style={styles.title}>Create Account</Text>
+              <Text style={styles.subtitle}>Sign up to get started</Text>
             </View>
 
             {error && (
@@ -78,6 +105,22 @@ export default function LoginScreen() {
             )}
 
             <View style={styles.form}>
+              <Controller
+                control={control}
+                name="userName"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <Input
+                    label="Username"
+                    placeholder="Enter your username"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    autoCapitalize="none"
+                    error={errors.userName?.message}
+                  />
+                )}
+              />
+
               <Controller
                 control={control}
                 name="email"
@@ -95,6 +138,42 @@ export default function LoginScreen() {
                 )}
               />
 
+              <View style={styles.nameRow}>
+                <View style={styles.nameField}>
+                  <Controller
+                    control={control}
+                    name="firstName"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <Input
+                        label="First Name"
+                        placeholder="First name"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        error={errors.firstName?.message}
+                      />
+                    )}
+                  />
+                </View>
+
+                <View style={styles.nameField}>
+                  <Controller
+                    control={control}
+                    name="lastName"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <Input
+                        label="Last Name"
+                        placeholder="Last name"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        error={errors.lastName?.message}
+                      />
+                    )}
+                  />
+                </View>
+              </View>
+
               <Controller
                 control={control}
                 name="password"
@@ -111,24 +190,17 @@ export default function LoginScreen() {
                 )}
               />
 
-              <TouchableOpacity
-                onPress={() => navigation.navigate('ForgotPassword')}
-                style={styles.forgotPassword}
-              >
-                <Text style={styles.forgotPasswordText}>Forgot your password?</Text>
-              </TouchableOpacity>
-
               <Button
-                title={authLoading ? 'Signing in...' : 'Sign In'}
+                title={loading ? 'Creating account...' : 'Create Account'}
                 onPress={handleSubmit(onSubmit)}
-                loading={authLoading}
+                loading={loading}
                 style={styles.button}
               />
 
-              <View style={styles.signupContainer}>
-                <Text style={styles.signupText}>Don't have an account? </Text>
-                <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-                  <Text style={styles.signupLink}>Sign Up</Text>
+              <View style={styles.loginContainer}>
+                <Text style={styles.loginText}>Already have an account? </Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                  <Text style={styles.loginLink}>Sign In</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -173,30 +245,29 @@ const styles = StyleSheet.create({
   form: {
     width: '100%',
   },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginBottom: spacing.md,
+  nameRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
   },
-  forgotPasswordText: {
-    fontSize: typography.fontSize.sm,
-    color: colors.light.primary,
-    fontWeight: typography.fontWeight.medium,
+  nameField: {
+    flex: 1,
   },
   button: {
     marginTop: spacing.md,
   },
-  signupContainer: {
+  loginContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: spacing.lg,
   },
-  signupText: {
+  loginText: {
     fontSize: typography.fontSize.sm,
     color: colors.light.mutedForeground,
   },
-  signupLink: {
+  loginLink: {
     fontSize: typography.fontSize.sm,
     color: colors.light.primary,
     fontWeight: typography.fontWeight.semibold,
   },
 });
+

@@ -7,6 +7,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { RootStackParamList, AuthStackParamList, MainTabParamList, CommerceStackParamList, HealthcareStackParamList, WorkshopStackParamList, DrawerParamList } from './types';
 import { ActivityIndicator, View } from 'react-native';
 import { colors } from '@/theme';
+
+const primaryColor = colors.light.primary;
+const backgroundColor = colors.light.background;
+const foregroundColor = colors.light.foreground;
+const mutedColor = colors.light.muted;
 import { Ionicons } from '@expo/vector-icons';
 
 const RootStack = createStackNavigator<RootStackParamList>();
@@ -18,6 +23,8 @@ const WorkshopStack = createStackNavigator<WorkshopStackParamList>();
 const Drawer = createDrawerNavigator<DrawerParamList>();
 
 import LoginScreen from '@/screens/auth/LoginScreen';
+import RegisterScreen from '@/screens/auth/RegisterScreen';
+import ForgotPasswordScreen from '@/screens/auth/ForgotPasswordScreen';
 import DashboardScreen from '@/screens/dashboard/DashboardScreen';
 
 const CommerceHomeScreen = () => (
@@ -44,7 +51,7 @@ function CommerceNavigator() {
       screenOptions={{
         headerShown: true,
         headerStyle: {
-          backgroundColor: colors.background,
+          backgroundColor: backgroundColor,
         },
         headerTintColor: colors.foreground,
       }}
@@ -64,7 +71,7 @@ function HealthcareNavigator() {
       screenOptions={{
         headerShown: true,
         headerStyle: {
-          backgroundColor: colors.background,
+          backgroundColor: backgroundColor,
         },
         headerTintColor: colors.foreground,
       }}
@@ -84,7 +91,7 @@ function WorkshopNavigator() {
       screenOptions={{
         headerShown: true,
         headerStyle: {
-          backgroundColor: colors.background,
+          backgroundColor: backgroundColor,
         },
         headerTintColor: colors.foreground,
       }}
@@ -103,11 +110,11 @@ function MainTabNavigator() {
     <MainTab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.muted,
+        tabBarActiveTintColor: primaryColor,
+        tabBarInactiveTintColor: mutedColor,
         tabBarStyle: {
-          backgroundColor: colors.background,
-          borderTopColor: colors.muted,
+          backgroundColor: backgroundColor,
+          borderTopColor: mutedColor,
         },
       }}
     >
@@ -161,10 +168,10 @@ function DrawerNavigator() {
       screenOptions={{
         headerShown: true,
         drawerStyle: {
-          backgroundColor: colors.background,
+          backgroundColor: backgroundColor,
         },
-        drawerActiveTintColor: colors.primary,
-        drawerInactiveTintColor: colors.muted,
+        drawerActiveTintColor: primaryColor,
+        drawerInactiveTintColor: mutedColor,
       }}
     >
       <Drawer.Screen
@@ -184,6 +191,8 @@ function AuthNavigator() {
       }}
     >
       <AuthStack.Screen name="Login" component={LoginScreen} />
+      <AuthStack.Screen name="Register" component={RegisterScreen} />
+      <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
     </AuthStack.Navigator>
   );
 }
@@ -193,8 +202,8 @@ export default function AppNavigator() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: backgroundColor }}>
+        <ActivityIndicator size="large" color={primaryColor} />
       </View>
     );
   }
