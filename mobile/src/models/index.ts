@@ -1,3 +1,2 @@
-export * from './User';
-export * from './notifications';
+export * from './auth';
 

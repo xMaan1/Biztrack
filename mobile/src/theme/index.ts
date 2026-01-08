@@ -1,16 +1,9 @@
-export * from './colors';
-export * from './spacing';
-export * from './typography';
-export * from './shadows';
-export * from './gradients';
-export * from './fonts';
-export * from './gradientUtils';
-
-import { colors } from './colors';
-import { spacing, borderRadius, borderWidth } from './spacing';
-import { typography } from './typography';
-import { shadows } from './shadows';
-import { gradients } from './gradients';
+export { colors } from "./colors";
+export { spacing, borderRadius, borderWidth } from "./spacing";
+export { typography, textStyles } from "./typography";
+export { shadows } from "./shadows";
+export { gradients, gradientColors } from "./gradients";
+export { useAppFonts, fontConfig } from "./fonts";
 
 export const theme = {
   colors,
@@ -18,8 +11,10 @@ export const theme = {
   borderRadius,
   borderWidth,
   typography,
+  textStyles,
   shadows,
   gradients,
+  gradientColors,
 };
 
-export type Theme = typeof theme;
+export default theme;

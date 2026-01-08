@@ -1,8 +1,8 @@
 export const typography = {
   fontFamily: {
-    inter: 'Inter',
-    jetbrainsMono: 'JetBrains Mono',
-    system: 'System',
+    inter: "Inter",
+    jetbrainsMono: "JetBrains Mono",
+    system: "System",
   },
   fontSize: {
     xs: 12,
@@ -10,23 +10,22 @@ export const typography = {
     base: 16,
     lg: 18,
     xl: 20,
-    '2xl': 24,
-    '3xl': 30,
-    '4xl': 36,
-    '5xl': 48,
-    '6xl': 60,
-    '7xl': 72,
+    "2xl": 24,
+    "3xl": 30,
+    "4xl": 36,
+    "5xl": 48,
+    "6xl": 60,
   },
   fontWeight: {
-    thin: '100',
-    extralight: '200',
-    light: '300',
-    normal: '400',
-    medium: '500',
-    semibold: '600',
-    bold: '700',
-    extrabold: '800',
-    black: '900',
+    thin: "100",
+    extralight: "200",
+    light: "300",
+    normal: "400",
+    medium: "500",
+    semibold: "600",
+    bold: "700",
+    extrabold: "800",
+    black: "900",
   },
   lineHeight: {
     none: 1,
@@ -46,5 +45,67 @@ export const typography = {
   },
 };
 
-export type Typography = typeof typography;
+export const textStyles = {
+  h1: {
+    fontSize: typography.fontSize["4xl"],
+    fontWeight: typography.fontWeight.bold,
+    lineHeight: typography.lineHeight.tight,
+    letterSpacing: typography.letterSpacing.tight,
+  },
+  h2: {
+    fontSize: typography.fontSize["3xl"],
+    fontWeight: typography.fontWeight.bold,
+    lineHeight: typography.lineHeight.tight,
+    letterSpacing: typography.letterSpacing.tight,
+  },
+  h3: {
+    fontSize: typography.fontSize["2xl"],
+    fontWeight: typography.fontWeight.semibold,
+    lineHeight: typography.lineHeight.snug,
+    letterSpacing: typography.letterSpacing.tight,
+  },
+  h4: {
+    fontSize: typography.fontSize.xl,
+    fontWeight: typography.fontWeight.semibold,
+    lineHeight: typography.lineHeight.snug,
+    letterSpacing: typography.letterSpacing.normal,
+  },
+  h5: {
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.medium,
+    lineHeight: typography.lineHeight.normal,
+    letterSpacing: typography.letterSpacing.normal,
+  },
+  h6: {
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.medium,
+    lineHeight: typography.lineHeight.normal,
+    letterSpacing: typography.letterSpacing.normal,
+  },
+  body1: {
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.normal,
+    lineHeight: typography.lineHeight.relaxed,
+    letterSpacing: typography.letterSpacing.normal,
+  },
+  body2: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.normal,
+    lineHeight: typography.lineHeight.normal,
+    letterSpacing: typography.letterSpacing.normal,
+  },
+  caption: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.normal,
+    lineHeight: typography.lineHeight.normal,
+    letterSpacing: typography.letterSpacing.wide,
+  },
+  overline: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.medium,
+    lineHeight: typography.lineHeight.normal,
+    letterSpacing: typography.letterSpacing.widest,
+    textTransform: "uppercase" as const,
+  },
+};
 

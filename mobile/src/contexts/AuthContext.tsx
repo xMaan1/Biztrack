@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, LoginCredentials } from '@/models';
-import { apiService } from '@/services';
+import { User, LoginCredentials } from '@/models/auth';
+import { apiService } from '@/services/ApiService';
 import { SessionManager } from '@/services/SessionManager';
 
 interface Tenant {
@@ -20,7 +20,6 @@ interface AuthContextType {
   login: (credentials: LoginCredentials) => Promise<boolean>;
   logout: () => Promise<void>;
   switchTenant: (tenantId: string) => Promise<boolean>;
-  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const sessionManager = new SessionManager();
 
         const isSessionValid = await sessionManager.isSessionValid();
+
         if (!isSessionValid) {
           await sessionManager.clearSession();
           setUser(null);
@@ -63,9 +63,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (session && session.token && session.user) {
             const userWithId = {
               ...session.user,
-              id: session.user.userId || session.user.id,
+              id: session.user.userId || session.user.id
             };
             setUser(userWithId);
+
+            sessionManager.startProactiveRefresh();
 
             const storedTenants = await apiService.getUserTenants();
             if (storedTenants.length > 0) {
@@ -76,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setCurrentTenant(currentTenant);
               } else {
                 setCurrentTenant(storedTenants[0]);
-                apiService.setTenantId(storedTenants[0].id);
+                await apiService.setTenantId(storedTenants[0].id);
               }
             }
           } else {
@@ -107,9 +109,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (response.success && response.user) {
         const userWithId = {
           ...response.user,
-          id: response.user.userId || response.user.id,
+          id: response.user.userId || response.user.id
         };
         setUser(userWithId);
+
+        const sessionManager = new SessionManager();
+        sessionManager.startProactiveRefresh();
 
         const storedTenants = await apiService.getUserTenants();
         if (storedTenants.length > 0) {
@@ -135,13 +140,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await apiService.logout();
     } catch (error: any) {
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to logout';
+      console.error(`Logout Error: ${errorMessage}`);
     } finally {
       const sessionManager = new SessionManager();
       setUser(null);
       setTenants([]);
       setCurrentTenant(null);
       await sessionManager.clearSession();
-      apiService.setTenantId(null);
+      await apiService.setTenantId(null);
     }
   };
 
@@ -155,20 +162,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const refreshUser = async () => {
-    try {
-      const userData = await apiService.getCurrentUser();
-      if (userData) {
-        const userWithId = {
-          ...userData,
-          id: userData.userId || userData.id,
-        };
-        setUser(userWithId);
-      }
-    } catch (error) {
-    }
-  };
-
   const value: AuthContextType = {
     user,
     loading,
@@ -178,7 +171,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     logout,
     switchTenant,
-    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

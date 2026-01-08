@@ -4,9 +4,9 @@ export const spacing = {
   md: 16,
   lg: 24,
   xl: 32,
-  '2xl': 48,
-  '3xl': 64,
-  '4xl': 96,
+  "2xl": 48,
+  "3xl": 64,
+  "4xl": 96,
 };
 
 export const borderRadius = {
@@ -15,7 +15,8 @@ export const borderRadius = {
   md: 8,
   lg: 12,
   xl: 16,
-  '2xl': 24,
+  "2xl": 20,
+  "3xl": 24,
   full: 9999,
 };
 
@@ -25,8 +26,4 @@ export const borderWidth = {
   medium: 2,
   thick: 4,
 };
-
-export type Spacing = typeof spacing;
-export type BorderRadius = typeof borderRadius;
-export type BorderWidth = typeof borderWidth;
 

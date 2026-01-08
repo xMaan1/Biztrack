@@ -29,11 +29,11 @@
     "comma-dangle": ["error", "always-multiline"],
     "semi": ["error", "always"],
     "max-len": ["warn", { "code": 120, "ignoreUrls": true }],
+    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
     "react/prop-types": "off",
     "react/react-in-jsx-scope": "off",
     "react-hooks/exhaustive-deps": "warn",
-    "react-hooks/rules-of-hooks": "error",
-    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }]
+    "react-hooks/rules-of-hooks": "error"
   },
   "env": {
     "es2022": true,
