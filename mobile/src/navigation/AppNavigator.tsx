@@ -7,6 +7,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { colors } from '@/theme';
+import { LoginScreen, RegisterScreen, ForgotPasswordScreen } from '@/screens';
+import DashboardScreen from '@/screens/dashboard/DashboardScreen';
 import {
   RootStackParamList,
   AuthStackParamList,
@@ -177,7 +179,7 @@ function MainTabNavigator() {
     >
       <MainTab.Screen
         name="Dashboard"
-        component={PlaceholderScreen}
+        component={DashboardScreen}
         options={{
           tabBarLabel: 'Dashboard',
           tabBarIcon: ({ color, size }) => (
@@ -295,12 +297,9 @@ function AuthNavigator() {
         headerShown: false,
       }}
     >
-      <AuthStack.Screen name="Login" component={PlaceholderScreen} />
-      <AuthStack.Screen name="Register" component={PlaceholderScreen} />
-      <AuthStack.Screen
-        name="ForgotPassword"
-        component={PlaceholderScreen}
-      />
+      <AuthStack.Screen name="Login" component={LoginScreen} />
+      <AuthStack.Screen name="Register" component={RegisterScreen} />
+      <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
     </AuthStack.Navigator>
   );
 }
