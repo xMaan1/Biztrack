@@ -15,6 +15,8 @@ class SessionManager {
   private readonly EXPIRES_KEY = "token_expires";
   private readonly REFRESH_TOKEN_KEY = "refresh_token";
   private refreshInterval: NodeJS.Timeout | null = null;
+  private sessionExpiryInterval: NodeJS.Timeout | null = null;
+  private sessionExpiredCallback: (() => void) | null = null;
 
   async setToken(token: string, expiresIn?: number): Promise<void> {
     await SecureStore.setItemAsync(this.TOKEN_KEY, token);
@@ -124,6 +126,7 @@ class SessionManager {
 
   async clearSession(): Promise<void> {
     this.stopProactiveRefresh();
+    this.stopSessionExpiryMonitoring();
     await this.removeToken();
     await this.removeUser();
     await this.removeRefreshToken();
@@ -228,6 +231,10 @@ class SessionManager {
         if (timeUntilExpiration && timeUntilExpiration < 5 * 60 * 1000) {
           const refreshSuccess = await this.refreshAccessToken();
           if (!refreshSuccess) {
+            await this.clearSession();
+            if (this.sessionExpiredCallback) {
+              this.sessionExpiredCallback();
+            }
           }
         }
       } catch (error) {
@@ -244,6 +251,56 @@ class SessionManager {
       clearInterval(this.refreshInterval);
       this.refreshInterval = null;
     }
+  }
+
+  onSessionExpired(callback: () => void): void {
+    this.sessionExpiredCallback = callback;
+    this.startSessionExpiryMonitoring();
+  }
+
+  private startSessionExpiryMonitoring(): void {
+    if (this.sessionExpiryInterval) {
+      return;
+    }
+
+    const checkExpiration = async () => {
+      const isExpired = await this.isTokenExpired();
+      if (isExpired) {
+        const refreshSuccess = await this.refreshAccessToken();
+        if (!refreshSuccess) {
+          await this.clearSession();
+          if (this.sessionExpiredCallback) {
+            this.sessionExpiredCallback();
+          }
+        }
+      }
+    };
+
+    this.sessionExpiryInterval = setInterval(checkExpiration, 60000);
+    checkExpiration();
+  }
+
+  stopSessionExpiryMonitoring(): void {
+    if (this.sessionExpiryInterval) {
+      clearInterval(this.sessionExpiryInterval);
+      this.sessionExpiryInterval = null;
+    }
+    this.sessionExpiredCallback = null;
+  }
+
+  async checkSessionTimeout(): Promise<boolean> {
+    const isExpired = await this.isTokenExpired();
+    if (isExpired) {
+      const refreshSuccess = await this.refreshAccessToken();
+      if (!refreshSuccess) {
+        await this.clearSession();
+        if (this.sessionExpiredCallback) {
+          this.sessionExpiredCallback();
+        }
+        return false;
+      }
+    }
+    return true;
   }
 }
 

@@ -35,6 +35,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const sessionManager = new SessionManager();
 
+        sessionManager.onSessionExpired(async () => {
+          await handleAutoLogout();
+        });
+
         const isSessionValid = await sessionManager.isSessionValid();
 
         if (!isSessionValid) {
@@ -100,6 +104,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initializeAuth();
   }, []);
+
+  const handleAutoLogout = async () => {
+    const sessionManager = new SessionManager();
+    setUser(null);
+    setTenants([]);
+    setCurrentTenant(null);
+    await sessionManager.clearSession();
+    await apiService.setTenantId(null);
+  };
 
   const login = async (credentials: LoginCredentials): Promise<boolean> => {
     try {
