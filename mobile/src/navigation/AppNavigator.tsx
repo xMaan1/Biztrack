@@ -18,6 +18,7 @@ import OpportunityListScreen from '@/screens/commerce/crm/OpportunityListScreen'
 import OpportunityFormScreen from '@/screens/commerce/crm/OpportunityFormScreen';
 import ContactListScreen from '@/screens/commerce/crm/ContactListScreen';
 import CompanyListScreen from '@/screens/commerce/crm/CompanyListScreen';
+import CompanyFormScreen from '@/screens/commerce/crm/CompanyFormScreen';
 import SalesHomeScreen from '@/screens/commerce/sales/SalesHomeScreen';
 import QuoteListScreen from '@/screens/commerce/sales/QuoteListScreen';
 import QuoteDetailScreen from '@/screens/commerce/sales/QuoteDetailScreen';
@@ -27,6 +28,32 @@ import ContractDetailScreen from '@/screens/commerce/sales/ContractDetailScreen'
 import InvoiceListScreen from '@/screens/commerce/sales/InvoiceListScreen';
 import InvoiceDetailScreen from '@/screens/commerce/sales/InvoiceDetailScreen';
 import AnalyticsScreen from '@/screens/commerce/sales/AnalyticsScreen';
+import POSDashboardScreen from '@/screens/commerce/pos/POSDashboardScreen';
+import POSSaleScreen from '@/screens/commerce/pos/POSSaleScreen';
+import ProductListScreen from '@/screens/commerce/pos/ProductListScreen';
+import ProductDetailScreen from '@/screens/commerce/pos/ProductDetailScreen';
+import ProductFormScreen from '@/screens/commerce/pos/ProductFormScreen';
+import TransactionListScreen from '@/screens/commerce/pos/TransactionListScreen';
+import TransactionDetailScreen from '@/screens/commerce/pos/TransactionDetailScreen';
+import ShiftListScreen from '@/screens/commerce/pos/ShiftListScreen';
+import ShiftDetailScreen from '@/screens/commerce/pos/ShiftDetailScreen';
+import ReportsScreen from '@/screens/commerce/pos/ReportsScreen';
+import InventoryDashboardScreen from '@/screens/commerce/inventory/InventoryDashboardScreen';
+import WarehouseListScreen from '@/screens/commerce/inventory/WarehouseListScreen';
+import WarehouseDetailScreen from '@/screens/commerce/inventory/WarehouseDetailScreen';
+import WarehouseFormScreen from '@/screens/commerce/inventory/WarehouseFormScreen';
+import StorageLocationListScreen from '@/screens/commerce/inventory/StorageLocationListScreen';
+import StorageLocationDetailScreen from '@/screens/commerce/inventory/StorageLocationDetailScreen';
+import StorageLocationFormScreen from '@/screens/commerce/inventory/StorageLocationFormScreen';
+import StockMovementListScreen from '@/screens/commerce/inventory/StockMovementListScreen';
+import StockMovementDetailScreen from '@/screens/commerce/inventory/StockMovementDetailScreen';
+import StockMovementFormScreen from '@/screens/commerce/inventory/StockMovementFormScreen';
+import PurchaseOrderListScreen from '@/screens/commerce/inventory/PurchaseOrderListScreen';
+import PurchaseOrderDetailScreen from '@/screens/commerce/inventory/PurchaseOrderDetailScreen';
+import PurchaseOrderFormScreen from '@/screens/commerce/inventory/PurchaseOrderFormScreen';
+import ReceivingListScreen from '@/screens/commerce/inventory/ReceivingListScreen';
+import ReceivingDetailScreen from '@/screens/commerce/inventory/ReceivingDetailScreen';
+import ReceivingFormScreen from '@/screens/commerce/inventory/ReceivingFormScreen';
 import { DrawerMenu } from '@/components/layout/DrawerMenu';
 import {
   RootStackParamList,
@@ -110,6 +137,11 @@ function CommerceNavigator() {
         options={{ headerShown: false }}
       />
       <CommerceStack.Screen
+        name="CompanyForm"
+        component={CompanyFormScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
         name="Sales"
         component={SalesHomeScreen}
         options={{ headerShown: false }}
@@ -156,13 +188,148 @@ function CommerceNavigator() {
       />
       <CommerceStack.Screen
         name="POS"
-        component={PlaceholderScreen}
-        options={{ title: 'POS' }}
+        component={POSDashboardScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="POSDashboard"
+        component={POSDashboardScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="POSSale"
+        component={POSSaleScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="ProductList"
+        component={ProductListScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="ProductDetail"
+        component={ProductDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="ProductForm"
+        component={ProductFormScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="TransactionList"
+        component={TransactionListScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="TransactionDetail"
+        component={TransactionDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="ShiftList"
+        component={ShiftListScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="ShiftDetail"
+        component={ShiftDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="Reports"
+        component={ReportsScreen}
+        options={{ headerShown: false }}
       />
       <CommerceStack.Screen
         name="Inventory"
-        component={PlaceholderScreen}
-        options={{ title: 'Inventory' }}
+        component={InventoryDashboardScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="InventoryDashboard"
+        component={InventoryDashboardScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="WarehouseList"
+        component={WarehouseListScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="WarehouseDetail"
+        component={WarehouseDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="WarehouseForm"
+        component={WarehouseFormScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="StorageLocationList"
+        component={StorageLocationListScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="StorageLocationDetail"
+        component={StorageLocationDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="StorageLocationForm"
+        component={StorageLocationFormScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="StockMovementList"
+        component={StockMovementListScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="StockMovementDetail"
+        component={StockMovementDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="StockMovementForm"
+        component={StockMovementFormScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="PurchaseOrderList"
+        component={PurchaseOrderListScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="PurchaseOrderDetail"
+        component={PurchaseOrderDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="PurchaseOrderForm"
+        component={PurchaseOrderFormScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="ReceivingList"
+        component={ReceivingListScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="ReceivingDetail"
+        component={ReceivingDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="ReceivingForm"
+        component={ReceivingFormScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="Invoicing"
+        component={InvoiceListScreen}
+        options={{ headerShown: false }}
       />
     </CommerceStack.Navigator>
   );
@@ -216,6 +383,11 @@ function HealthcareNavigator() {
         component={PlaceholderScreen}
         options={{ title: 'Lab Reports' }}
       />
+      <HealthcareStack.Screen
+        name="Invoicing"
+        component={InvoiceListScreen}
+        options={{ headerShown: false }}
+      />
     </HealthcareStack.Navigator>
   );
 }
@@ -257,6 +429,16 @@ function WorkshopNavigator() {
         name="Maintenance"
         component={PlaceholderScreen}
         options={{ title: 'Maintenance' }}
+      />
+      <WorkshopStack.Screen
+        name="CustomerList"
+        component={CustomerListScreen}
+        options={{ headerShown: false }}
+      />
+      <WorkshopStack.Screen
+        name="Invoicing"
+        component={InvoiceListScreen}
+        options={{ headerShown: false }}
       />
     </WorkshopStack.Navigator>
   );

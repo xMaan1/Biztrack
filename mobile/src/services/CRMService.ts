@@ -120,11 +120,57 @@ class CRMService {
   }
 
   async createCompany(company: CompanyCreate): Promise<Company> {
-    return apiService.post(`${this.baseUrl}/companies`, company);
+    try {
+      console.log('[CRMService] Creating company with data:', JSON.stringify(company, null, 2));
+      console.log('[CRMService] Company data keys:', Object.keys(company));
+      console.log('[CRMService] Company name:', company.name);
+      console.log('[CRMService] Company industry:', company.industry);
+      console.log('[CRMService] Company size:', company.size);
+      console.log('[CRMService] Company isActive:', company.isActive);
+      console.log('[CRMService] Company tags:', company.tags);
+      
+      const url = `${this.baseUrl}/companies`;
+      console.log('[CRMService] POST URL:', url);
+      
+      const response = await apiService.post(url, company);
+      
+      console.log('[CRMService] Company creation response:', JSON.stringify(response, null, 2));
+      console.log('[CRMService] Response keys:', Object.keys(response || {}));
+      
+      return response;
+    } catch (error: any) {
+      console.error('[CRMService] Error creating company:', error);
+      console.error('[CRMService] Error message:', error.message);
+      console.error('[CRMService] Error response status:', error.response?.status);
+      console.error('[CRMService] Error response statusText:', error.response?.statusText);
+      console.error('[CRMService] Error response data:', JSON.stringify(error.response?.data, null, 2));
+      console.error('[CRMService] Error config URL:', error.config?.url);
+      console.error('[CRMService] Error config method:', error.config?.method);
+      console.error('[CRMService] Error config data:', JSON.stringify(error.config?.data, null, 2));
+      throw error;
+    }
   }
 
   async updateCompany(id: string, company: CompanyUpdate): Promise<Company> {
-    return apiService.put(`${this.baseUrl}/companies/${id}`, company);
+    try {
+      console.log('[CRMService] Updating company with ID:', id);
+      console.log('[CRMService] Update data:', JSON.stringify(company, null, 2));
+      
+      const url = `${this.baseUrl}/companies/${id}`;
+      console.log('[CRMService] PUT URL:', url);
+      
+      const response = await apiService.put(url, company);
+      
+      console.log('[CRMService] Company update response:', JSON.stringify(response, null, 2));
+      
+      return response;
+    } catch (error: any) {
+      console.error('[CRMService] Error updating company:', error);
+      console.error('[CRMService] Error message:', error.message);
+      console.error('[CRMService] Error response status:', error.response?.status);
+      console.error('[CRMService] Error response data:', JSON.stringify(error.response?.data, null, 2));
+      throw error;
+    }
   }
 
   async deleteCompany(id: string): Promise<void> {

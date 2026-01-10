@@ -9,14 +9,14 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Container } from '@/components/layout/Container';
 import { Header } from '@/components/layout/Header';
 import { colors, spacing } from '@/theme';
 import CRMService from '@/services/CRMService';
-import { Opportunity, OpportunityCreate, OpportunityStage } from '@/models/crm';
+import { Opportunity, OpportunityCreate, OpportunityStage, Company, Contact } from '@/models/crm';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
 export default function OpportunityFormScreen() {
@@ -27,6 +27,9 @@ export default function OpportunityFormScreen() {
   const { id, opportunity } = route.params as { id?: string; opportunity?: Opportunity };
   const isEdit = !!id;
   const [loading, setLoading] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [formData, setFormData] = useState<OpportunityCreate>({
     title: opportunity?.title || '',
     description: opportunity?.description || '',
@@ -42,16 +45,40 @@ export default function OpportunityFormScreen() {
     tags: opportunity?.tags || [],
   });
 
-  const handleSubmit = async () => {
-    console.log('[OpportunityFormScreen] Form validation check:', {
-      title: formData.title,
-      stage: formData.stage,
-      amount: formData.amount,
-      probability: formData.probability,
-    });
+  useEffect(() => {
+    loadCompaniesAndContacts();
+  }, []);
 
+  useFocusEffect(
+    React.useCallback(() => {
+      loadCompaniesAndContacts();
+    }, [])
+  );
+
+  const loadCompaniesAndContacts = async () => {
+    try {
+      setLoadingData(true);
+      const [companiesResponse, contactsResponse] = await Promise.all([
+        CRMService.getCompanies({}, 1, 100),
+        CRMService.getContacts({}, 1, 100),
+      ]);
+      setCompanies(companiesResponse.companies || []);
+      setContacts(contactsResponse.contacts || []);
+    } catch (error: any) {
+      console.error('[OpportunityFormScreen] Error loading data:', error);
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  const handleSubmit = async () => {
     if (!formData.title) {
       Alert.alert('Validation Error', 'Please fill in the title field');
+      return;
+    }
+
+    if (!formData.companyId) {
+      Alert.alert('Validation Error', 'Please select a company');
       return;
     }
 
@@ -198,6 +225,101 @@ export default function OpportunityFormScreen() {
         </View>
 
         <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Relationships</Text>
+          <View style={styles.formCard}>
+            <View style={styles.inputGroup}>
+              <View style={styles.labelRow}>
+                <Text style={styles.label}>Company *</Text>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('CompanyList' as never)}
+                  style={styles.linkButton}
+                >
+                  <Ionicons name="add-circle-outline" size={16} color={colors.primary.main} />
+                  <Text style={styles.linkText}>Create New</Text>
+                </TouchableOpacity>
+              </View>
+              {loadingData ? (
+                <ActivityIndicator size="small" color={colors.primary.main} />
+              ) : companies.length === 0 ? (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>No companies available. Create one first.</Text>
+                </View>
+              ) : (
+                <View style={styles.selectContainer}>
+                  {companies.map((company) => (
+                    <TouchableOpacity
+                      key={company.id}
+                      style={[
+                        styles.selectOption,
+                        formData.companyId === company.id && styles.selectOptionActive,
+                      ]}
+                      onPress={() => updateField('companyId', company.id)}
+                    >
+                      <Text
+                        style={[
+                          styles.selectOptionText,
+                          formData.companyId === company.id && styles.selectOptionTextActive,
+                        ]}
+                      >
+                        {company.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Contact</Text>
+              {loadingData ? (
+                <ActivityIndicator size="small" color={colors.primary.main} />
+              ) : contacts.length === 0 ? (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>No contacts available</Text>
+                </View>
+              ) : (
+                <View style={styles.selectContainer}>
+                  <TouchableOpacity
+                    style={[
+                      styles.selectOption,
+                      !formData.contactId && styles.selectOptionActive,
+                    ]}
+                    onPress={() => updateField('contactId', '')}
+                  >
+                    <Text
+                      style={[
+                        styles.selectOptionText,
+                        !formData.contactId && styles.selectOptionTextActive,
+                      ]}
+                    >
+                      No Contact
+                    </Text>
+                  </TouchableOpacity>
+                  {contacts.map((contact) => (
+                    <TouchableOpacity
+                      key={contact.id}
+                      style={[
+                        styles.selectOption,
+                        formData.contactId === contact.id && styles.selectOptionActive,
+                      ]}
+                      onPress={() => updateField('contactId', contact.id)}
+                    >
+                      <Text
+                        style={[
+                          styles.selectOptionText,
+                          formData.contactId === contact.id && styles.selectOptionTextActive,
+                        ]}
+                      >
+                        {contact.firstName} {contact.lastName}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Additional Information</Text>
           <View style={styles.formCard}>
             <View style={styles.inputGroup}>
@@ -320,5 +442,33 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.background.default,
+  },
+  labelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
+  },
+  linkButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  linkText: {
+    fontSize: 12,
+    color: colors.primary.main,
+    fontWeight: '600',
+  },
+  emptyContainer: {
+    padding: spacing.md,
+    backgroundColor: colors.background.muted,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border.default,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: colors.text.secondary,
+    textAlign: 'center',
   },
 });

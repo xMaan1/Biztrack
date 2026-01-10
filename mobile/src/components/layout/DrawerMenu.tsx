@@ -27,11 +27,41 @@ const getModuleMenuItems = (
 ): MenuItem[] => {
   const items: MenuItem[] = [];
 
-  if (hasModuleAccess('crm') || accessibleModules.includes('commerce') || planType === 'commerce') {
+  if (planType === 'commerce' || planType === 'healthcare') {
+    if (hasModuleAccess('crm') || accessibleModules.includes('commerce') || accessibleModules.includes('healthcare') || planType === 'commerce' || planType === 'healthcare') {
+      items.push(
+        { label: 'CRM', icon: 'people', route: 'CRM', module: 'crm', section: 'modules' },
+      );
+    }
+  }
+
+  if (planType === 'commerce') {
+    if (hasModuleAccess('sales') || accessibleModules.includes('commerce')) {
+      items.push(
+        { label: 'Sales', icon: 'trending-up', route: 'Sales', module: 'sales', section: 'modules' },
+        { label: 'POS', icon: 'cash', route: 'POS', module: 'pos', section: 'modules' },
+      );
+    }
+  }
+
+  if (planType === 'workshop' || planType === 'healthcare') {
+    if (hasModuleAccess('sales') || accessibleModules.includes('workshop') || accessibleModules.includes('healthcare')) {
+      items.push(
+        { label: 'Invoicing', icon: 'receipt', route: 'Invoicing', module: 'sales', section: 'modules' },
+      );
+    }
+  }
+
+  if (planType === 'workshop') {
+    if (hasModuleAccess('crm') || accessibleModules.includes('workshop')) {
+      items.push(
+        { label: 'Customers', icon: 'people', route: 'CustomerList', module: 'crm', section: 'modules' },
+      );
+    }
+  }
+
+  if (hasModuleAccess('inventory') || accessibleModules.includes('commerce') || accessibleModules.includes('healthcare') || accessibleModules.includes('workshop') || planType === 'commerce' || planType === 'healthcare' || planType === 'workshop') {
     items.push(
-      { label: 'CRM', icon: 'people', route: 'CRM', module: 'crm', section: 'modules' },
-      { label: 'Sales', icon: 'trending-up', route: 'Sales', module: 'sales', section: 'modules' },
-      { label: 'POS', icon: 'cash', route: 'POS', module: 'pos', section: 'modules' },
       { label: 'Inventory', icon: 'cube', route: 'Inventory', module: 'inventory', section: 'modules' },
     );
   }
@@ -80,6 +110,58 @@ export function DrawerMenu(props: DrawerContentComponentProps) {
             },
           })
         );
+      } else if (route === 'CustomerList') {
+        if (planType === 'workshop') {
+          props.navigation.dispatch(
+            CommonActions.navigate({
+              name: 'MainTabs',
+              params: {
+                screen: 'Workshop',
+                params: {
+                  screen: 'CustomerList',
+                },
+              },
+            })
+          );
+        } else {
+          props.navigation.dispatch(
+            CommonActions.navigate({
+              name: 'MainTabs',
+              params: {
+                screen: 'Commerce',
+                params: {
+                  screen: 'CustomerList',
+                },
+              },
+            })
+          );
+        }
+      } else if (route === 'Invoicing') {
+        if (planType === 'workshop' || planType === 'healthcare') {
+          props.navigation.dispatch(
+            CommonActions.navigate({
+              name: 'MainTabs',
+              params: {
+                screen: planType === 'workshop' ? 'Workshop' : 'Healthcare',
+                params: {
+                  screen: 'Invoicing',
+                },
+              },
+            })
+          );
+        } else {
+          props.navigation.dispatch(
+            CommonActions.navigate({
+              name: 'MainTabs',
+              params: {
+                screen: 'Commerce',
+                params: {
+                  screen: 'Invoicing',
+                },
+              },
+            })
+          );
+        }
       } else if (route === 'Patients' || route === 'Appointments' || route === 'MedicalRecords' || route === 'Consultations' || route === 'MedicalSupplies' || route === 'LabReports') {
         props.navigation.dispatch(
           CommonActions.navigate({
@@ -193,21 +275,22 @@ export function DrawerMenu(props: DrawerContentComponentProps) {
 
   const renderSection = (title: string, items: MenuItem[]) => {
     if (items.length === 0) return null;
+    const isFirstSection = title === 'Main';
     return (
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{title}</Text>
+      <View style={[styles.section, isFirstSection && styles.firstSection]}>
+        <Text style={[styles.sectionTitle, isFirstSection && styles.firstSectionTitle]}>{title}</Text>
         {items.map(renderMenuItem)}
       </View>
     );
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={styles.container}>
       <LinearGradient
         colors={gradients.primary.colors}
         start={gradients.primary.start}
         end={gradients.primary.end}
-        style={styles.header}
+        style={[styles.header, { paddingTop: insets.top + spacing.lg, paddingBottom: spacing.lg }]}
       >
         <View style={styles.headerContent}>
           {user && (
@@ -217,7 +300,9 @@ export function DrawerMenu(props: DrawerContentComponentProps) {
               </View>
               <View style={styles.userDetails}>
                 <Text style={styles.userName} numberOfLines={1}>
-                  {user.full_name || user.email}
+                  {user.firstName && user.lastName 
+                    ? `${user.firstName} ${user.lastName}` 
+                    : user.userName || user.email}
                 </Text>
                 {currentTenant && (
                   <Text style={styles.tenantName} numberOfLines={1}>
@@ -239,13 +324,14 @@ export function DrawerMenu(props: DrawerContentComponentProps) {
         {...props}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        style={{ flex: 1 }}
       >
         {renderSection('Main', mainMenuItems)}
         {moduleMenuItems.length > 0 && renderSection('Modules', moduleMenuItems)}
         {renderSection('Settings', settingsMenuItems)}
       </DrawerContentScrollView>
 
-      <View style={[styles.footer, { paddingBottom: insets.bottom }]}>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={24} color={colors.status.error} />
           <Text style={styles.logoutText}>Logout</Text>
@@ -262,10 +348,11 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.lg,
+    minHeight: 120,
   },
   headerContent: {
-    marginTop: spacing.md,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.sm,
   },
   userInfo: {
     flexDirection: 'row',
@@ -285,46 +372,63 @@ const styles = StyleSheet.create({
   },
   userName: {
     ...textStyles.h6,
-    color: colors.background.default,
-    fontWeight: typography.fontWeight.semibold,
+    color: '#FFFFFF',
+    fontWeight: '600' as const,
     marginBottom: spacing.xs,
+    fontSize: 16,
+    lineHeight: 20,
   },
   tenantName: {
-    ...textStyles.body2,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: '#FFFFFF',
     marginBottom: spacing.xs,
+    fontSize: 14,
+    lineHeight: 18,
+    opacity: 0.9,
   },
   planBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.md,
+    marginTop: spacing.xs,
   },
   planText: {
     ...textStyles.caption,
-    color: colors.background.default,
-    fontWeight: typography.fontWeight.bold,
-    fontSize: 10,
+    color: '#FFFFFF',
+    fontWeight: '700' as const,
+    fontSize: 11,
+    lineHeight: 14,
   },
   scrollContent: {
-    paddingTop: spacing.md,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xl,
+    flexGrow: 1,
   },
   section: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
   sectionTitle: {
     ...textStyles.caption,
     color: colors.text.primary,
-    fontWeight: typography.fontWeight.bold,
+    fontWeight: '700' as const,
     textTransform: 'uppercase',
     letterSpacing: 1.5,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     marginBottom: spacing.md,
+    marginTop: spacing.lg,
+    fontSize: 12,
+    lineHeight: 16,
+    backgroundColor: colors.background.paper,
+    borderRadius: borderRadius.sm,
+    marginHorizontal: spacing.sm,
+  },
+  firstSection: {
+    marginBottom: spacing.sm,
+  },
+  firstSectionTitle: {
     marginTop: spacing.sm,
-    fontSize: 13,
-    lineHeight: 18,
   },
   menuItem: {
     marginHorizontal: spacing.md,
@@ -350,12 +454,12 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     flex: 1,
     fontSize: 16,
-    fontWeight: typography.fontWeight.medium,
+    fontWeight: '500' as const,
     lineHeight: 20,
   },
   activeLabel: {
     color: colors.background.default,
-    fontWeight: typography.fontWeight.semibold,
+    fontWeight: '600' as const,
   },
   menuBadge: {
     backgroundColor: colors.status.error,
@@ -369,25 +473,38 @@ const styles = StyleSheet.create({
   menuBadgeText: {
     color: colors.background.default,
     fontSize: typography.fontSize.xs,
-    fontWeight: typography.fontWeight.bold,
+    fontWeight: '700' as const,
   },
   footer: {
     borderTopWidth: 1,
     borderTopColor: colors.border.default,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
+    paddingBottom: spacing.md,
+    backgroundColor: colors.background.paper,
+    minHeight: 70,
+    shadowColor: colors.gray[900],
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 8,
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: spacing.md,
-    paddingVertical: spacing.lg,
+    paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
+    minHeight: 48,
+    backgroundColor: colors.background.default,
+    borderRadius: borderRadius.md,
   },
   logoutText: {
     ...textStyles.body1,
     color: colors.status.error,
-    fontWeight: typography.fontWeight.semibold,
-    fontSize: 15,
+    fontWeight: '600' as const,
+    fontSize: 16,
+    lineHeight: 20,
   },
 });
