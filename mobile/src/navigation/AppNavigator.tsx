@@ -9,9 +9,15 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { colors } from '@/theme';
 import { LoginScreen, RegisterScreen, ForgotPasswordScreen } from '@/screens';
 import DashboardScreen from '@/screens/dashboard/DashboardScreen';
+import CRMHomeScreen from '@/screens/commerce/crm/CRMHomeScreen';
 import CustomerListScreen from '@/screens/commerce/crm/CustomerListScreen';
 import CustomerDetailScreen from '@/screens/commerce/crm/CustomerDetailScreen';
 import CustomerFormScreen from '@/screens/commerce/crm/CustomerFormScreen';
+import LeadListScreen from '@/screens/commerce/crm/LeadListScreen';
+import OpportunityListScreen from '@/screens/commerce/crm/OpportunityListScreen';
+import OpportunityFormScreen from '@/screens/commerce/crm/OpportunityFormScreen';
+import ContactListScreen from '@/screens/commerce/crm/ContactListScreen';
+import CompanyListScreen from '@/screens/commerce/crm/CompanyListScreen';
 import SalesHomeScreen from '@/screens/commerce/sales/SalesHomeScreen';
 import QuoteListScreen from '@/screens/commerce/sales/QuoteListScreen';
 import QuoteDetailScreen from '@/screens/commerce/sales/QuoteDetailScreen';
@@ -60,6 +66,11 @@ function CommerceNavigator() {
       />
       <CommerceStack.Screen
         name="CRM"
+        component={CRMHomeScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="CustomerList"
         component={CustomerListScreen}
         options={{ headerShown: false }}
       />
@@ -71,6 +82,31 @@ function CommerceNavigator() {
       <CommerceStack.Screen
         name="CustomerForm"
         component={CustomerFormScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="LeadList"
+        component={LeadListScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="OpportunityList"
+        component={OpportunityListScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="OpportunityForm"
+        component={OpportunityFormScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="ContactList"
+        component={ContactListScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="CompanyList"
+        component={CompanyListScreen}
         options={{ headerShown: false }}
       />
       <CommerceStack.Screen

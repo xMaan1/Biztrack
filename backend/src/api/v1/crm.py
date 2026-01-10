@@ -12,12 +12,13 @@ from ...models.crm_models import (
     Lead, LeadCreate, LeadUpdate,
     Contact, ContactCreate, ContactUpdate,
     Company, CompanyCreate, CompanyUpdate,
-    Opportunity, OpportunityCreate, OpportunityUpdate,
+    Opportunity as OpportunityPydantic, OpportunityCreate, OpportunityUpdate,
     SalesActivity, SalesActivityCreate, SalesActivityUpdate,
     CRMLeadsResponse, CRMContactsResponse, CRMCompaniesResponse,
     CRMOpportunitiesResponse, CRMActivitiesResponse,
     CRMDashboard, CRMMetrics, CRMPipeline
 )
+from ...config.crm_models import Opportunity
 from ...config.database import get_db
 from ...config.crm_crud import (
     create_lead, get_lead_by_id, get_leads, update_lead, delete_lead,
@@ -751,7 +752,7 @@ async def get_crm_opportunities(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching opportunities: {str(e)}")
 
-@router.post("/opportunities", response_model=Opportunity)
+@router.post("/opportunities", response_model=OpportunityPydantic)
 async def create_crm_opportunity(
     opportunity_data: OpportunityCreate,
     current_user = Depends(get_current_user),
@@ -761,11 +762,34 @@ async def create_crm_opportunity(
 ):
     """Create a new opportunity"""
     try:
+        data = opportunity_data.dict()
+        
+        if not data.get('companyId'):
+            raise HTTPException(status_code=400, detail="companyId is required to create an opportunity")
+        
+        expected_close_date = None
+        if data.get('expectedCloseDate'):
+            try:
+                expected_close_date = datetime.fromisoformat(data['expectedCloseDate'].replace('Z', '+00:00'))
+            except:
+                try:
+                    expected_close_date = datetime.strptime(data['expectedCloseDate'], '%Y-%m-%d')
+                except:
+                    pass
+        
         opportunity = Opportunity(
-            id=str(uuid.uuid4()),
-            **opportunity_data.dict(),
-            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
-            createdBy=str(current_user.id),
+            id=uuid.uuid4(),
+            name=data.get('title', ''),
+            description=data.get('description'),
+            stage=data.get('stage', 'prospecting'),
+            amount=data.get('amount'),
+            probability=data.get('probability', 50),
+            expectedCloseDate=expected_close_date,
+            companyId=uuid.UUID(data['companyId']),
+            contactId=uuid.UUID(data['contactId']) if data.get('contactId') else None,
+            assignedToId=uuid.UUID(data['assignedTo']) if data.get('assignedTo') else None,
+            notes=data.get('notes'),
+            tenant_id=uuid.UUID(tenant_context["tenant_id"]) if tenant_context else uuid.uuid4(),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
         )
@@ -774,12 +798,12 @@ async def create_crm_opportunity(
         db.commit()
         db.refresh(opportunity)
         
-        return opportunity
+        return OpportunityPydantic.model_validate(opportunity)
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error creating opportunity: {str(e)}")
 
-@router.get("/opportunities/{opportunity_id}", response_model=Opportunity)
+@router.get("/opportunities/{opportunity_id}", response_model=OpportunityPydantic)
 async def get_crm_opportunity(
     opportunity_id: str,
     db: Session = Depends(get_db),
@@ -791,11 +815,11 @@ async def get_crm_opportunity(
         opportunity = get_opportunity_by_id(opportunity_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not opportunity:
             raise HTTPException(status_code=404, detail="Opportunity not found")
-        return opportunity
+        return OpportunityPydantic.model_validate(opportunity)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching opportunity: {str(e)}")
 
-@router.put("/opportunities/{opportunity_id}", response_model=Opportunity)
+@router.put("/opportunities/{opportunity_id}", response_model=OpportunityPydantic)
 async def update_crm_opportunity(
     opportunity_id: str,
     opportunity_data: OpportunityUpdate,
@@ -810,11 +834,40 @@ async def update_crm_opportunity(
         if not opportunity:
             raise HTTPException(status_code=404, detail="Opportunity not found")
         
-        update_data = opportunity_data.dict(exclude_unset=True)
-        update_data["updatedAt"] = datetime.now()
+        data = opportunity_data.dict(exclude_unset=True)
         
-        updated_opportunity = update_opportunity(opportunity_id, update_data, db, tenant_context["tenant_id"] if tenant_context else None)
-        return updated_opportunity
+        if 'title' in data:
+            opportunity.name = data['title']
+        if 'description' in data:
+            opportunity.description = data['description']
+        if 'stage' in data:
+            opportunity.stage = data['stage']
+        if 'amount' in data:
+            opportunity.amount = data['amount']
+        if 'probability' in data:
+            opportunity.probability = data['probability']
+        if 'expectedCloseDate' in data and data['expectedCloseDate']:
+            try:
+                opportunity.expectedCloseDate = datetime.fromisoformat(data['expectedCloseDate'].replace('Z', '+00:00'))
+            except:
+                try:
+                    opportunity.expectedCloseDate = datetime.strptime(data['expectedCloseDate'], '%Y-%m-%d')
+                except:
+                    pass
+        if 'companyId' in data and data['companyId']:
+            opportunity.companyId = uuid.UUID(data['companyId'])
+        if 'contactId' in data and data['contactId']:
+            opportunity.contactId = uuid.UUID(data['contactId'])
+        if 'assignedTo' in data and data['assignedTo']:
+            opportunity.assignedToId = uuid.UUID(data['assignedTo'])
+        if 'notes' in data:
+            opportunity.notes = data['notes']
+        
+        opportunity.updatedAt = datetime.now()
+        db.commit()
+        db.refresh(opportunity)
+        
+        return OpportunityPydantic.model_validate(opportunity)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating opportunity: {str(e)}")
 

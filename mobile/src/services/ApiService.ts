@@ -162,34 +162,15 @@ export class ApiService {
 
     this.client.interceptors.response.use(
       (response) => {
-        console.log('[ApiService] Response received:', {
-          url: response.config.url,
-          method: response.config.method,
-          status: response.status,
-          statusText: response.statusText,
-        });
         return response;
       },
       async (error) => {
-        console.error('[ApiService] Request error:', {
-          url: error.config?.url,
-          method: error.config?.method,
-          status: error.response?.status,
-          statusText: error.response?.statusText,
-          data: error.response?.data,
-          message: error.message,
-          code: error.code,
-        });
-
         if (error.code === "ECONNABORTED" && error.message.includes("timeout")) {
-          console.error('[ApiService] Request timeout');
           return Promise.reject(new Error("Request timeout. Please try again."));
         }
 
         if (error.response?.status === 401) {
-          console.log('[ApiService] 401 Unauthorized - attempting token refresh');
           if (error.config?._retry) {
-            console.error('[ApiService] Token refresh failed, clearing session');
             await this.sessionManager.clearSession();
             if (this.onUnauthorizedCallback) {
               this.onUnauthorizedCallback();
@@ -199,7 +180,6 @@ export class ApiService {
 
           const refreshSuccess = await this.sessionManager.refreshAccessToken();
           if (refreshSuccess) {
-            console.log('[ApiService] Token refreshed, retrying request');
             const originalRequest = error.config;
             originalRequest._retry = true;
             const token = await this.sessionManager.getToken();
@@ -208,20 +188,11 @@ export class ApiService {
             }
             return this.client(originalRequest);
           } else {
-            console.error('[ApiService] Token refresh failed, clearing session');
             await this.sessionManager.clearSession();
             if (this.onUnauthorizedCallback) {
               this.onUnauthorizedCallback();
             }
           }
-        }
-
-        if (error.response?.status >= 500) {
-          console.error('[ApiService] Server error (5xx):', {
-            status: error.response.status,
-            data: error.response.data,
-            url: error.config?.url,
-          });
         }
 
         return Promise.reject(error);
@@ -231,26 +202,9 @@ export class ApiService {
 
   async get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
     try {
-      console.log('[ApiService] GET request:', {
-        url,
-        baseURL: this.client.defaults.baseURL,
-        fullUrl: `${this.client.defaults.baseURL}${url}`,
-        headers: config?.headers,
-      });
       const response = await this.client.get<T>(url, config);
-      console.log('[ApiService] GET response:', {
-        url,
-        status: response.status,
-        dataKeys: response.data ? Object.keys(response.data) : [],
-      });
       return response.data;
     } catch (error: any) {
-      console.error('[ApiService] GET error:', {
-        url,
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message,
-      });
       throw error;
     }
   }

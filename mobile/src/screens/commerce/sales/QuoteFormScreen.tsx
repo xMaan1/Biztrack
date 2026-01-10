@@ -50,13 +50,27 @@ export default function QuoteFormScreen() {
 
   const loadOpportunities = async () => {
     try {
+      console.log('[QuoteFormScreen] Loading opportunities...');
       const response = await CRMService.getOpportunities({}, 1, 100);
-      setOpportunities(response.opportunities || []);
-    } catch (error) {
+      console.log('[QuoteFormScreen] Opportunities response:', JSON.stringify(response, null, 2));
+      const opps = response.opportunities || [];
+      console.log('[QuoteFormScreen] Opportunities count:', opps.length);
+      console.log('[QuoteFormScreen] Opportunities:', opps.map(o => ({ id: o.id, title: o.title })));
+      setOpportunities(opps);
+    } catch (error: any) {
+      console.error('[QuoteFormScreen] Error loading opportunities:', error);
+      console.error('[QuoteFormScreen] Error message:', error.message);
+      console.error('[QuoteFormScreen] Error response:', error.response?.data);
     }
   };
 
   const handleSubmit = async () => {
+    console.log('[QuoteFormScreen] Form validation check:', {
+      title: formData.title,
+      opportunityId: formData.opportunityId,
+      validUntil: formData.validUntil,
+    });
+
     if (!formData.title || !formData.opportunityId || !formData.validUntil) {
       Alert.alert('Validation Error', 'Please fill in all required fields');
       return;
@@ -64,15 +78,24 @@ export default function QuoteFormScreen() {
 
     try {
       setLoading(true);
+      console.log('[QuoteFormScreen] Submitting form data:', JSON.stringify(formData, null, 2));
+      console.log('[QuoteFormScreen] Is edit mode:', isEdit);
+      console.log('[QuoteFormScreen] Quote ID:', id);
+      
       if (isEdit && id) {
+        console.log('[QuoteFormScreen] Updating quote...');
         await SalesService.updateQuote(id, formData);
         Alert.alert('Success', 'Quote updated successfully');
       } else {
+        console.log('[QuoteFormScreen] Creating new quote...');
         await SalesService.createQuote(formData);
         Alert.alert('Success', 'Quote created successfully');
       }
       navigation.goBack();
     } catch (error: any) {
+      console.error('[QuoteFormScreen] Error in handleSubmit:', error);
+      console.error('[QuoteFormScreen] Error message:', error.message);
+      console.error('[QuoteFormScreen] Error response:', error.response?.data);
       Alert.alert('Error', error.message || 'Failed to save quote');
     } finally {
       setLoading(false);
@@ -174,27 +197,38 @@ export default function QuoteFormScreen() {
             </View>
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Opportunity *</Text>
-              <View style={styles.selectContainer}>
-                {opportunities.map((opp) => (
-                  <TouchableOpacity
-                    key={opp.id}
-                    style={[
-                      styles.selectOption,
-                      formData.opportunityId === opp.id && styles.selectOptionActive,
-                    ]}
-                    onPress={() => setFormData((prev) => ({ ...prev, opportunityId: opp.id }))}
-                  >
-                    <Text
+              {opportunities.length === 0 ? (
+                <View style={styles.emptyOpportunitiesContainer}>
+                  <Text style={styles.emptyOpportunitiesText}>
+                    No opportunities available. Please create an opportunity first.
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.selectContainer}>
+                  {opportunities.map((opp) => (
+                    <TouchableOpacity
+                      key={opp.id}
                       style={[
-                        styles.selectOptionText,
-                        formData.opportunityId === opp.id && styles.selectOptionTextActive,
+                        styles.selectOption,
+                        formData.opportunityId === opp.id && styles.selectOptionActive,
                       ]}
+                      onPress={() => {
+                        console.log('[QuoteFormScreen] Opportunity selected:', opp.id, opp.title);
+                        setFormData((prev) => ({ ...prev, opportunityId: opp.id }));
+                      }}
                     >
-                      {opp.title}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+                      <Text
+                        style={[
+                          styles.selectOptionText,
+                          formData.opportunityId === opp.id && styles.selectOptionTextActive,
+                        ]}
+                      >
+                        {opp.title}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
             </View>
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Valid Until *</Text>
@@ -218,11 +252,20 @@ export default function QuoteFormScreen() {
             </TouchableOpacity>
           </View>
           <View style={styles.formCard}>
+            {formData.items.length === 0 && (
+              <View style={styles.emptyItemsContainer}>
+                <Text style={styles.emptyItemsText}>No items added. Click "Add Item" to add items.</Text>
+              </View>
+            )}
             {formData.items.map((item, index) => (
-              <View key={index} style={styles.itemCard}>
+              <View key={`item-${index}-${item.description || 'new'}`} style={styles.itemCard}>
                 <View style={styles.itemHeader}>
                   <Text style={styles.itemNumber}>Item {index + 1}</Text>
-                  <TouchableOpacity onPress={() => removeItem(index)}>
+                  <TouchableOpacity 
+                    style={styles.deleteItemButton}
+                    onPress={() => removeItem(index)}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
                     <Ionicons name="trash-outline" size={20} color={colors.red[600]} />
                   </TouchableOpacity>
                 </View>
@@ -415,6 +458,18 @@ const styles = StyleSheet.create({
     color: colors.background.default,
     fontWeight: '600',
   },
+  emptyOpportunitiesContainer: {
+    padding: spacing.md,
+    backgroundColor: colors.background.muted,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border.default,
+  },
+  emptyOpportunitiesText: {
+    fontSize: 14,
+    color: colors.text.secondary,
+    textAlign: 'center',
+  },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -447,6 +502,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: colors.text.primary,
+  },
+  deleteItemButton: {
+    padding: spacing.xs,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyItemsContainer: {
+    padding: spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyItemsText: {
+    fontSize: 14,
+    color: colors.text.secondary,
+    textAlign: 'center',
   },
   itemTotalRow: {
     flexDirection: 'row',

@@ -50,11 +50,6 @@ export default function QuoteListScreen() {
   const loadQuotes = async () => {
     try {
       setLoading(true);
-      console.log('[QuoteListScreen] Loading quotes with filters:', {
-        status: statusFilter === 'all' ? undefined : statusFilter,
-        page: currentPage,
-        limit: itemsPerPage,
-      });
       
       const response = await SalesService.getQuotes(
         {
@@ -66,35 +61,9 @@ export default function QuoteListScreen() {
         itemsPerPage,
       );
       
-      console.log('[QuoteListScreen] Quotes loaded successfully:', {
-        count: response.quotes?.length || 0,
-        pagination: response.pagination,
-      });
-      
       setQuotes(response.quotes || []);
       setTotalPages(response.pagination?.pages || 1);
     } catch (error: any) {
-      console.error('[QuoteListScreen] Error loading quotes - Message:', error.message || 'Unknown error');
-      console.error('[QuoteListScreen] Error loading quotes - Status:', error.response?.status);
-      console.error('[QuoteListScreen] Error loading quotes - StatusText:', error.response?.statusText);
-      console.error('[QuoteListScreen] Error loading quotes - Response Data:', JSON.stringify(error.response?.data, null, 2));
-      console.error('[QuoteListScreen] Error loading quotes - URL:', error.config?.url);
-      console.error('[QuoteListScreen] Error loading quotes - Method:', error.config?.method);
-      console.error('[QuoteListScreen] Error loading quotes - Full Error Object:', error);
-      
-      if (error.response?.data) {
-        console.error('[QuoteListScreen] Error Response Data:', error.response.data);
-        if (error.response.data.detail) {
-          console.error('[QuoteListScreen] Error Detail:', error.response.data.detail);
-        }
-        if (error.response.data.message) {
-          console.error('[QuoteListScreen] Error Message:', error.response.data.message);
-        }
-        if (error.response.data.error) {
-          console.error('[QuoteListScreen] Error:', error.response.data.error);
-        }
-      }
-      
       const errorMessage = error.response?.data?.message || error.message || 'Failed to load quotes';
       const errorDetails = error.response?.data?.detail || error.response?.data?.error || '';
       

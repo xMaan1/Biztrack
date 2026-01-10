@@ -31,43 +31,11 @@ class SalesService {
       params.append('limit', (filters?.limit || limit).toString());
 
       const url = `${this.baseUrl}/quotes?${params.toString()}`;
-      console.log('[SalesService] Fetching quotes from:', url);
-      console.log('[SalesService] Request params:', {
-        status: filters?.status,
-        opportunityId: filters?.opportunityId,
-        page: filters?.page || page,
-        limit: filters?.limit || limit,
-      });
 
       const response = await apiService.get(url);
       
-      console.log('[SalesService] Quotes response received:', {
-        hasQuotes: !!response.quotes,
-        quotesCount: response.quotes?.length || 0,
-        hasPagination: !!response.pagination,
-        pagination: response.pagination,
-      });
-      
       return response;
     } catch (error: any) {
-      console.error('[SalesService] Error in getQuotes - Message:', error.message || 'Unknown error');
-      console.error('[SalesService] Error in getQuotes - Status:', error.response?.status);
-      console.error('[SalesService] Error in getQuotes - StatusText:', error.response?.statusText);
-      console.error('[SalesService] Error in getQuotes - Response Data:', JSON.stringify(error.response?.data, null, 2));
-      console.error('[SalesService] Error in getQuotes - URL:', error.config?.url);
-      console.error('[SalesService] Error in getQuotes - Method:', error.config?.method);
-      console.error('[SalesService] Error in getQuotes - Full Error:', error);
-      
-      if (error.response?.data) {
-        console.error('[SalesService] Error Details:', error.response.data);
-        if (error.response.data.detail) {
-          console.error('[SalesService] Error Detail:', error.response.data.detail);
-        }
-        if (error.response.data.message) {
-          console.error('[SalesService] Error Message:', error.response.data.message);
-        }
-      }
-      
       throw error;
     }
   }
@@ -78,8 +46,30 @@ class SalesService {
   }
 
   async createQuote(quoteData: QuoteCreate): Promise<Quote> {
-    const response = await apiService.post(`${this.baseUrl}/quotes`, quoteData);
-    return response.quote || response;
+    try {
+      console.log('[SalesService] Creating quote with data:', JSON.stringify(quoteData, null, 2));
+      console.log('[SalesService] Quote data keys:', Object.keys(quoteData));
+      console.log('[SalesService] Items count:', quoteData.items?.length || 0);
+      console.log('[SalesService] Items:', JSON.stringify(quoteData.items, null, 2));
+      
+      const url = `${this.baseUrl}/quotes`;
+      console.log('[SalesService] POST URL:', url);
+      
+      const response = await apiService.post(url, quoteData);
+      
+      console.log('[SalesService] Quote creation response:', JSON.stringify(response, null, 2));
+      console.log('[SalesService] Response keys:', Object.keys(response || {}));
+      
+      return response.quote || response;
+    } catch (error: any) {
+      console.error('[SalesService] Error creating quote:', error);
+      console.error('[SalesService] Error message:', error.message);
+      console.error('[SalesService] Error response status:', error.response?.status);
+      console.error('[SalesService] Error response data:', JSON.stringify(error.response?.data, null, 2));
+      console.error('[SalesService] Error config URL:', error.config?.url);
+      console.error('[SalesService] Error config method:', error.config?.method);
+      throw error;
+    }
   }
 
   async updateQuote(id: string, quoteData: QuoteUpdate): Promise<Quote> {

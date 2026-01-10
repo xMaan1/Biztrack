@@ -20,8 +20,14 @@ export type MainTabParamList = {
 export type CommerceStackParamList = {
   CommerceHome: undefined;
   CRM: undefined;
+  CustomerList: undefined;
   CustomerDetail: { id: string };
   CustomerForm: { id?: string; customer?: any };
+  LeadList: undefined;
+  OpportunityList: undefined;
+  OpportunityForm: { id?: string; opportunity?: any };
+  ContactList: undefined;
+  CompanyList: undefined;
   Sales: undefined;
   QuoteList: undefined;
   QuoteDetail: { id: string };

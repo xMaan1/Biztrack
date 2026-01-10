@@ -153,7 +153,34 @@ class CRMService {
   async createOpportunity(
     opportunity: OpportunityCreate,
   ): Promise<Opportunity> {
-    return apiService.post(`${this.baseUrl}/opportunities`, opportunity);
+    try {
+      console.log('[CRMService] Creating opportunity with data:', JSON.stringify(opportunity, null, 2));
+      console.log('[CRMService] Opportunity data keys:', Object.keys(opportunity));
+      console.log('[CRMService] Opportunity title:', opportunity.title);
+      console.log('[CRMService] Opportunity stage:', opportunity.stage);
+      console.log('[CRMService] Opportunity amount:', opportunity.amount);
+      console.log('[CRMService] Opportunity probability:', opportunity.probability);
+      
+      const url = `${this.baseUrl}/opportunities`;
+      console.log('[CRMService] POST URL:', url);
+      
+      const response = await apiService.post(url, opportunity);
+      
+      console.log('[CRMService] Opportunity creation response:', JSON.stringify(response, null, 2));
+      console.log('[CRMService] Response keys:', Object.keys(response || {}));
+      
+      return response;
+    } catch (error: any) {
+      console.error('[CRMService] Error creating opportunity:', error);
+      console.error('[CRMService] Error message:', error.message);
+      console.error('[CRMService] Error response status:', error.response?.status);
+      console.error('[CRMService] Error response statusText:', error.response?.statusText);
+      console.error('[CRMService] Error response data:', JSON.stringify(error.response?.data, null, 2));
+      console.error('[CRMService] Error config URL:', error.config?.url);
+      console.error('[CRMService] Error config method:', error.config?.method);
+      console.error('[CRMService] Error config data:', JSON.stringify(error.config?.data, null, 2));
+      throw error;
+    }
   }
 
   async updateOpportunity(
