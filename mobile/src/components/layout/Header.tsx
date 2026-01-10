@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, gradients, typography, spacing, borderRadius } from '@/theme';
+import { colors, gradients, typography, textStyles, spacing, borderRadius } from '@/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/contexts/NotificationContext';
 
@@ -12,6 +12,8 @@ interface HeaderProps {
   title?: string;
   showBack?: boolean;
   rightAction?: React.ReactNode;
+  rightIcon?: string;
+  onRightPress?: () => void;
   onBackPress?: () => void;
   gradient?: boolean;
 }
@@ -20,6 +22,8 @@ export function Header({
   title,
   showBack = false,
   rightAction,
+  rightIcon,
+  onRightPress,
   onBackPress,
   gradient = true,
 }: HeaderProps) {
@@ -44,8 +48,8 @@ export function Header({
       style={[
         styles.headerContent,
         {
-          paddingTop: insets.top + spacing.sm,
-          paddingBottom: spacing.sm,
+          paddingTop: insets.top + spacing.md,
+          paddingBottom: spacing.md,
         },
       ]}
     >
@@ -74,7 +78,17 @@ export function Header({
       </View>
 
       <View style={styles.rightSection}>
-        {rightAction || (
+        {rightAction || (rightIcon && onRightPress) ? (
+          rightAction || (
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={onRightPress}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name={rightIcon as any} size={24} color={iconColor} />
+            </TouchableOpacity>
+          )
+        ) : (
           <View style={styles.defaultActions}>
             <TouchableOpacity
               style={styles.iconButton}
@@ -142,28 +156,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    minHeight: 56,
+    paddingHorizontal: spacing.lg,
+    minHeight: 64,
   },
   leftSection: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: spacing.sm,
+    marginRight: spacing.md,
   },
   backButton: {
-    marginRight: spacing.sm,
-    padding: spacing.xs,
+    marginRight: spacing.md,
+    padding: spacing.sm,
   },
   title: {
-    ...typography.textStyles.h5,
+    ...textStyles.h5,
     flex: 1,
+    fontSize: 20,
+    fontWeight: typography.fontWeight.bold,
+    lineHeight: 24,
   },
   tenantInfo: {
     flex: 1,
   },
   tenantName: {
-    ...typography.textStyles.h5,
+    ...textStyles.h5,
     fontWeight: typography.fontWeight.semibold,
   },
   rightSection: {
@@ -177,7 +194,11 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     position: 'relative',
-    padding: spacing.xs,
+    padding: spacing.sm,
+    minWidth: 44,
+    minHeight: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   badge: {
     position: 'absolute',

@@ -10,11 +10,12 @@ from ...models.crm_models import (
     Contact, ContactCreate, ContactUpdate, ContactsResponse,
     Company, CompanyCreate, CompanyUpdate, CompaniesResponse,
     Opportunity, OpportunityCreate, OpportunityUpdate, OpportunitiesResponse,
-    Quote, QuoteCreate, QuoteUpdate, QuotesResponse,
-    Contract, ContractCreate, ContractUpdate, ContractsResponse,
+    Quote as QuotePydantic, QuoteCreate, QuoteUpdate, QuotesResponse,
+    Contract as ContractPydantic, ContractCreate, ContractUpdate, ContractsResponse,
     SalesActivity, SalesActivityCreate, SalesActivityUpdate, SalesActivitiesResponse,
     SalesDashboard, SalesMetrics, SalesPipeline
 )
+from ...config.sales_models import Quote, Contract
 from ...models.common import LeadStatus, LeadSource, OpportunityStage, QuoteStatus, ContractStatus, ContactType, ActivityType
 from ...config.database import (
     get_db, get_user_by_id
@@ -604,7 +605,7 @@ async def get_quotes(
         query = db.query(Quote)
         
         if tenant_context:
-            query = query.filter(Quote.tenant_id == tenant_context["tenant_id"])
+            query = query.filter(Quote.tenant_id == uuid.UUID(tenant_context["tenant_id"]))
         
         if status:
             query = query.filter(Quote.status == status)
@@ -614,8 +615,10 @@ async def get_quotes(
         total = query.count()
         quotes = query.offset((page - 1) * limit).limit(limit).all()
         
+        quotes_data = [QuotePydantic.model_validate(quote) for quote in quotes]
+        
         return QuotesResponse(
-            quotes=quotes,
+            quotes=quotes_data,
             pagination={
                 "page": page,
                 "limit": limit,
@@ -626,7 +629,7 @@ async def get_quotes(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching quotes: {str(e)}")
 
-@router.post("/quotes", response_model=Quote)
+@router.post("/quotes", response_model=QuotePydantic)
 async def create_quote(
     quote_data: QuoteCreate,
     current_user = Depends(get_current_user),
@@ -637,11 +640,11 @@ async def create_quote(
     """Create a new quote"""
     try:
         quote = Quote(
-            id=str(uuid.uuid4()),
+            id=uuid.uuid4(),
             **quote_data.dict(),
             quoteNumber=generate_quote_number(),
-            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
-            createdBy=str(current_user.id),
+            tenant_id=uuid.UUID(tenant_context["tenant_id"]) if tenant_context else uuid.uuid4(),
+            createdBy=uuid.UUID(str(current_user.id)),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
         )
@@ -650,12 +653,12 @@ async def create_quote(
         db.commit()
         db.refresh(quote)
         
-        return quote
+        return QuotePydantic.model_validate(quote)
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error creating quote: {str(e)}")
 
-@router.put("/quotes/{quote_id}", response_model=Quote)
+@router.put("/quotes/{quote_id}", response_model=QuotePydantic)
 async def update_quote(
     quote_id: str,
     quote_data: QuoteUpdate,
@@ -665,9 +668,9 @@ async def update_quote(
 ):
     """Update a quote"""
     try:
-        query = db.query(Quote).filter(Quote.id == quote_id)
+        query = db.query(Quote).filter(Quote.id == uuid.UUID(quote_id))
         if tenant_context:
-            query = query.filter(Quote.tenant_id == tenant_context["tenant_id"])
+            query = query.filter(Quote.tenant_id == uuid.UUID(tenant_context["tenant_id"]))
         
         quote = query.first()
         if not quote:
@@ -680,7 +683,7 @@ async def update_quote(
         db.commit()
         db.refresh(quote)
         
-        return quote
+        return QuotePydantic.model_validate(quote)
     except HTTPException:
         raise
     except Exception as e:
@@ -730,7 +733,7 @@ async def get_contracts(
         query = db.query(Contract)
         
         if tenant_context:
-            query = query.filter(Contract.tenant_id == tenant_context["tenant_id"])
+            query = query.filter(Contract.tenant_id == uuid.UUID(tenant_context["tenant_id"]))
         
         if status:
             query = query.filter(Contract.status == status)
@@ -740,8 +743,10 @@ async def get_contracts(
         total = query.count()
         contracts = query.offset((page - 1) * limit).limit(limit).all()
         
+        contracts_data = [ContractPydantic.model_validate(contract) for contract in contracts]
+        
         return ContractsResponse(
-            contracts=contracts,
+            contracts=contracts_data,
             pagination={
                 "page": page,
                 "limit": limit,
@@ -752,7 +757,7 @@ async def get_contracts(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching contracts: {str(e)}")
 
-@router.post("/contracts", response_model=Contract)
+@router.post("/contracts", response_model=ContractPydantic)
 async def create_contract(
     contract_data: ContractCreate,
     current_user = Depends(get_current_user),
@@ -763,11 +768,11 @@ async def create_contract(
     """Create a new contract"""
     try:
         contract = Contract(
-            id=str(uuid.uuid4()),
+            id=uuid.uuid4(),
             **contract_data.dict(),
             contractNumber=generate_contract_number(),
-            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
-            createdBy=str(current_user.id),
+            tenant_id=uuid.UUID(tenant_context["tenant_id"]) if tenant_context else uuid.uuid4(),
+            createdBy=uuid.UUID(str(current_user.id)),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
         )
@@ -776,12 +781,12 @@ async def create_contract(
         db.commit()
         db.refresh(contract)
         
-        return contract
+        return ContractPydantic.model_validate(contract)
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error creating contract: {str(e)}")
 
-@router.put("/contracts/{contract_id}", response_model=Contract)
+@router.put("/contracts/{contract_id}", response_model=ContractPydantic)
 async def update_contract(
     contract_id: str,
     contract_data: ContractUpdate,
@@ -791,9 +796,9 @@ async def update_contract(
 ):
     """Update a contract"""
     try:
-        query = db.query(Contract).filter(Contract.id == contract_id)
+        query = db.query(Contract).filter(Contract.id == uuid.UUID(contract_id))
         if tenant_context:
-            query = query.filter(Contract.tenant_id == tenant_context["tenant_id"])
+            query = query.filter(Contract.tenant_id == uuid.UUID(tenant_context["tenant_id"]))
         
         contract = query.first()
         if not contract:
@@ -806,7 +811,7 @@ async def update_contract(
         db.commit()
         db.refresh(contract)
         
-        return contract
+        return ContractPydantic.model_validate(contract)
     except HTTPException:
         raise
     except Exception as e:
@@ -822,9 +827,9 @@ async def delete_contract(
 ):
     """Delete a contract"""
     try:
-        query = db.query(Contract).filter(Contract.id == contract_id)
+        query = db.query(Contract).filter(Contract.id == uuid.UUID(contract_id))
         if tenant_context:
-            query = query.filter(Contract.tenant_id == tenant_context["tenant_id"])
+            query = query.filter(Contract.tenant_id == uuid.UUID(tenant_context["tenant_id"]))
         
         contract = query.first()
         if not contract:

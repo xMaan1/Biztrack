@@ -14,13 +14,23 @@ export type MainTabParamList = {
   Commerce: undefined;
   Healthcare: undefined;
   Workshop: undefined;
-  Profile: undefined;
+  More: undefined;
 };
 
 export type CommerceStackParamList = {
   CommerceHome: undefined;
   CRM: undefined;
+  CustomerDetail: { id: string };
+  CustomerForm: { id?: string; customer?: any };
   Sales: undefined;
+  QuoteList: undefined;
+  QuoteDetail: { id: string };
+  QuoteForm: { id?: string; quote?: any };
+  ContractList: undefined;
+  ContractDetail: { id: string };
+  InvoiceList: undefined;
+  InvoiceDetail: { id: string };
+  Analytics: undefined;
   POS: undefined;
   Inventory: undefined;
 };

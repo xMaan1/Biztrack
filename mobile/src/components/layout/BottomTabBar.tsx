@@ -4,20 +4,46 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, gradients, typography, spacing, borderRadius, shadows } from '@/theme';
+import { colors, gradients, typography, textStyles, spacing, borderRadius, shadows } from '@/theme';
 import { useNotifications } from '@/contexts/NotificationContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
+import { useNavigation } from '@react-navigation/native';
 
 const iconMap: Record<string, keyof typeof Ionicons.glyphMap> = {
   Dashboard: 'home',
   Commerce: 'cart',
   Healthcare: 'medical',
   Workshop: 'construct',
-  Profile: 'person',
+  More: 'ellipsis-horizontal',
 };
+
+const quickActions = [
+  { label: 'New', icon: 'add-circle', route: 'QuickAction' },
+  { label: 'Search', icon: 'search', route: 'Search' },
+  { label: 'Scan', icon: 'qr-code', route: 'Scan' },
+];
 
 export function BottomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { unreadCount } = useNotifications();
+  const { planType } = useSubscription();
+  const nav = useNavigation();
+
+  const handleQuickAction = (route: string) => {
+    if (route === 'QuickAction') {
+      if (planType === 'commerce') {
+        nav.navigate('Commerce' as never, { screen: 'CRM' } as never);
+      } else if (planType === 'healthcare') {
+        nav.navigate('Healthcare' as never, { screen: 'Patients' } as never);
+      } else if (planType === 'workshop') {
+        nav.navigate('Workshop' as never, { screen: 'WorkOrders' } as never);
+      }
+    } else if (route === 'Search') {
+    } else if (route === 'Scan') {
+    }
+  };
+
+  const visibleTabs = state.routes;
 
   return (
     <View
@@ -29,7 +55,8 @@ export function BottomTabBar({ state, descriptors, navigation }: BottomTabBarPro
       ]}
     >
       <View style={styles.tabBar}>
-        {state.routes.map((route, index) => {
+        {visibleTabs.map((route, index) => {
+          const actualIndex = state.routes.findIndex((r) => r.key === route.key);
           const { options } = descriptors[route.key];
           const label =
             options.tabBarLabel !== undefined
@@ -38,7 +65,7 @@ export function BottomTabBar({ state, descriptors, navigation }: BottomTabBarPro
               ? options.title
               : route.name;
 
-          const isFocused = state.index === index;
+          const isFocused = state.index === actualIndex;
 
           const onPress = () => {
             const event = navigation.emit({
@@ -98,7 +125,7 @@ export function BottomTabBar({ state, descriptors, navigation }: BottomTabBarPro
                     <Ionicons
                       name={`${iconName}-outline` as keyof typeof Ionicons.glyphMap}
                       size={24}
-                      color={colors.text.secondary}
+                      color={colors.text.primary}
                     />
                     {showBadge && (
                       <View style={styles.badge}>
@@ -116,6 +143,28 @@ export function BottomTabBar({ state, descriptors, navigation }: BottomTabBarPro
             </TouchableOpacity>
           );
         })}
+
+        {visibleTabs.length < 3 && (
+          <View style={styles.quickActionsContainer}>
+            <TouchableOpacity
+              style={styles.quickActionButton}
+              onPress={() => handleQuickAction('QuickAction')}
+            >
+              <LinearGradient
+                colors={gradients.primary.colors}
+                start={gradients.primary.start}
+                end={gradients.primary.end}
+                style={styles.quickActionGradient}
+              >
+                <Ionicons
+                  name="add"
+                  size={24}
+                  color={colors.background.default}
+                />
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -134,43 +183,58 @@ const styles = StyleSheet.create({
         elevation: 8,
       },
     }),
-    backgroundColor: colors.background.default,
+    backgroundColor: colors.background.paper,
     borderTopWidth: 1,
     borderTopColor: colors.border.default,
   },
   tabBar: {
     flexDirection: 'row',
-    height: 60,
-    paddingHorizontal: spacing.xs,
-    paddingTop: spacing.xs,
+    height: 75,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xs,
+    alignItems: 'center',
   },
   tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    maxWidth: 100,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   tabGradient: {
     width: '100%',
     borderRadius: borderRadius.lg,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    minHeight: 56,
   },
   tabContent: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.xs,
+    gap: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   iconContainer: {
     position: 'relative',
   },
   label: {
-    ...typography.textStyles.caption,
-    color: colors.text.secondary,
-    fontSize: typography.fontSize.xs,
+    ...textStyles.caption,
+    color: colors.text.primary,
+    fontSize: 13,
+    fontWeight: typography.fontWeight.semibold,
+    marginTop: spacing.xs,
+    lineHeight: 16,
+    textAlign: 'center',
   },
   activeLabel: {
     color: colors.background.default,
-    fontWeight: typography.fontWeight.semibold,
+    fontWeight: typography.fontWeight.bold,
+    fontSize: 13,
+    marginTop: spacing.xs,
+    lineHeight: 16,
+    textAlign: 'center',
   },
   badge: {
     position: 'absolute',
@@ -188,7 +252,36 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: colors.background.default,
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: typography.fontWeight.bold,
+  },
+  quickActionsContainer: {
+    paddingLeft: spacing.xs,
+    borderLeftWidth: 1,
+    borderLeftColor: colors.border.light,
+  },
+  quickActionButton: {
+    width: 48,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  quickActionGradient: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.full,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: colors.gray[900],
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
 });

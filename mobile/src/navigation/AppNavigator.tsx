@@ -9,6 +9,19 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { colors } from '@/theme';
 import { LoginScreen, RegisterScreen, ForgotPasswordScreen } from '@/screens';
 import DashboardScreen from '@/screens/dashboard/DashboardScreen';
+import CustomerListScreen from '@/screens/commerce/crm/CustomerListScreen';
+import CustomerDetailScreen from '@/screens/commerce/crm/CustomerDetailScreen';
+import CustomerFormScreen from '@/screens/commerce/crm/CustomerFormScreen';
+import SalesHomeScreen from '@/screens/commerce/sales/SalesHomeScreen';
+import QuoteListScreen from '@/screens/commerce/sales/QuoteListScreen';
+import QuoteDetailScreen from '@/screens/commerce/sales/QuoteDetailScreen';
+import QuoteFormScreen from '@/screens/commerce/sales/QuoteFormScreen';
+import ContractListScreen from '@/screens/commerce/sales/ContractListScreen';
+import ContractDetailScreen from '@/screens/commerce/sales/ContractDetailScreen';
+import InvoiceListScreen from '@/screens/commerce/sales/InvoiceListScreen';
+import InvoiceDetailScreen from '@/screens/commerce/sales/InvoiceDetailScreen';
+import AnalyticsScreen from '@/screens/commerce/sales/AnalyticsScreen';
+import { DrawerMenu } from '@/components/layout/DrawerMenu';
 import {
   RootStackParamList,
   AuthStackParamList,
@@ -47,13 +60,63 @@ function CommerceNavigator() {
       />
       <CommerceStack.Screen
         name="CRM"
-        component={PlaceholderScreen}
-        options={{ title: 'CRM' }}
+        component={CustomerListScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="CustomerDetail"
+        component={CustomerDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="CustomerForm"
+        component={CustomerFormScreen}
+        options={{ headerShown: false }}
       />
       <CommerceStack.Screen
         name="Sales"
-        component={PlaceholderScreen}
-        options={{ title: 'Sales' }}
+        component={SalesHomeScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="QuoteList"
+        component={QuoteListScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="QuoteDetail"
+        component={QuoteDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="QuoteForm"
+        component={QuoteFormScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="ContractList"
+        component={ContractListScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="ContractDetail"
+        component={ContractDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="InvoiceList"
+        component={InvoiceListScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="InvoiceDetail"
+        component={InvoiceDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="Analytics"
+        component={AnalyticsScreen}
+        options={{ headerShown: false }}
       />
       <CommerceStack.Screen
         name="POS"
@@ -168,65 +231,13 @@ function MainTabNavigator() {
     <MainTab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.primary.main,
-        tabBarInactiveTintColor: colors.text.secondary,
-        tabBarStyle: {
-          backgroundColor: colors.background.default,
-          borderTopColor: colors.border.default,
-          borderTopWidth: 1,
-        },
+        tabBarStyle: { display: 'none' },
       }}
     >
-      <MainTab.Screen
-        name="Dashboard"
-        component={DashboardScreen}
-        options={{
-          tabBarLabel: 'Dashboard',
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="home" size={size} color={color} />
-          ),
-        }}
-      />
-      <MainTab.Screen
-        name="Commerce"
-        component={CommerceNavigator}
-        options={{
-          tabBarLabel: 'Commerce',
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="shopping-cart" size={size} color={color} />
-          ),
-        }}
-      />
-      <MainTab.Screen
-        name="Healthcare"
-        component={HealthcareNavigator}
-        options={{
-          tabBarLabel: 'Healthcare',
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="medical-bag" size={size} color={color} />
-          ),
-        }}
-      />
-      <MainTab.Screen
-        name="Workshop"
-        component={WorkshopNavigator}
-        options={{
-          tabBarLabel: 'Workshop',
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="build" size={size} color={color} />
-          ),
-        }}
-      />
-      <MainTab.Screen
-        name="Profile"
-        component={PlaceholderScreen}
-        options={{
-          tabBarLabel: 'Profile',
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="person" size={size} color={color} />
-          ),
-        }}
-      />
+      <MainTab.Screen name="Dashboard" component={DashboardScreen} />
+      <MainTab.Screen name="Commerce" component={CommerceNavigator} />
+      <MainTab.Screen name="Healthcare" component={HealthcareNavigator} />
+      <MainTab.Screen name="Workshop" component={WorkshopNavigator} />
     </MainTab.Navigator>
   );
 }
@@ -234,6 +245,7 @@ function MainTabNavigator() {
 function DrawerNavigator() {
   return (
     <Drawer.Navigator
+      drawerContent={(props) => <DrawerMenu {...props} />}
       screenOptions={{
         headerStyle: {
           backgroundColor: colors.primary.main,
@@ -345,6 +357,7 @@ function Icon({ name, size, color }: { name: string; size: number; color: string
     person: 'person',
     settings: 'settings',
     notifications: 'notifications',
+    'ellipsis-horizontal': 'ellipsis-horizontal',
   };
   return <Ionicons name={iconMap[name] || 'help'} size={size} color={color} />;
 }

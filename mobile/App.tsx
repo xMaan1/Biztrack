@@ -6,6 +6,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { RBACProvider } from '@/contexts/RBACContext';
 import { CurrencyProvider } from '@/contexts/CurrencyContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
+import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
 import { AppNavigator } from '@/navigation';
 import { useAppFonts } from '@/theme';
 
@@ -29,14 +30,16 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <RBACProvider>
-            <CurrencyProvider>
-              <NotificationProvider>
-                <AppNavigator />
-                <StatusBar style="auto" />
-              </NotificationProvider>
-            </CurrencyProvider>
-          </RBACProvider>
+          <SubscriptionProvider>
+            <RBACProvider>
+              <CurrencyProvider>
+                <NotificationProvider>
+                  <AppNavigator />
+                  <StatusBar style="auto" />
+                </NotificationProvider>
+              </CurrencyProvider>
+            </RBACProvider>
+          </SubscriptionProvider>
         </AuthProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>

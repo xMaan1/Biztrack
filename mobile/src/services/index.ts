@@ -2,3 +2,6 @@ export { ApiService, apiService, type ApiResponse, type PaginatedResponse } from
 export { SessionManager, type SessionData } from "./SessionManager";
 export { default as InvoiceCustomizationService } from "./InvoiceCustomizationService";
 export { default as NotificationService } from "./NotificationService";
+export { default as CRMService } from "./CRMService";
+export { default as SalesService } from "./SalesService";
+export { default as InvoiceService } from "./InvoiceService";
