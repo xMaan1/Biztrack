@@ -55,6 +55,9 @@ import ReceivingListScreen from '@/screens/commerce/inventory/ReceivingListScree
 import ReceivingDetailScreen from '@/screens/commerce/inventory/ReceivingDetailScreen';
 import ReceivingFormScreen from '@/screens/commerce/inventory/ReceivingFormScreen';
 import { DrawerMenu } from '@/components/layout/DrawerMenu';
+import PatientListScreen from '@/screens/healthcare/patients/PatientListScreen';
+import PatientDetailScreen from '@/screens/healthcare/patients/PatientDetailScreen';
+import PatientFormScreen from '@/screens/healthcare/patients/PatientFormScreen';
 import {
   RootStackParamList,
   AuthStackParamList,
@@ -355,8 +358,23 @@ function HealthcareNavigator() {
       />
       <HealthcareStack.Screen
         name="Patients"
-        component={PlaceholderScreen}
-        options={{ title: 'Patients' }}
+        component={PatientListScreen}
+        options={{ headerShown: false }}
+      />
+      <HealthcareStack.Screen
+        name="PatientList"
+        component={PatientListScreen}
+        options={{ headerShown: false }}
+      />
+      <HealthcareStack.Screen
+        name="PatientDetail"
+        component={PatientDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <HealthcareStack.Screen
+        name="PatientForm"
+        component={PatientFormScreen}
+        options={{ headerShown: false }}
       />
       <HealthcareStack.Screen
         name="Appointments"

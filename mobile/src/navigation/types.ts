@@ -72,6 +72,9 @@ export type CommerceStackParamList = {
 export type HealthcareStackParamList = {
   HealthcareHome: undefined;
   Patients: undefined;
+  PatientList: undefined;
+  PatientDetail: { id: string };
+  PatientForm: { id?: string; patient?: any };
   Appointments: undefined;
   MedicalRecords: undefined;
   MedicalSupplies: undefined;

@@ -5,3 +5,4 @@ export { default as NotificationService } from "./NotificationService";
 export { default as CRMService } from "./CRMService";
 export { default as SalesService } from "./SalesService";
 export { default as InvoiceService } from "./InvoiceService";
+export { default as PatientService } from "./PatientService";
