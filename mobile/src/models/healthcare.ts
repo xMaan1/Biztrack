@@ -213,3 +213,66 @@ export interface MedicalRecordsResponse {
   records: MedicalRecord[];
   total: number;
 }
+
+export interface MedicalSupply {
+  id: string;
+  supplyId: string;
+  tenant_id: string;
+  name: string;
+  category?: string;
+  description?: string;
+  unit?: string;
+  stockQuantity: number;
+  minStockLevel: number;
+  maxStockLevel?: number;
+  unitPrice: number;
+  expiryDate?: string;
+  batchNumber?: string;
+  supplier?: string;
+  location?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MedicalSupplyCreate {
+  name: string;
+  category?: string;
+  description?: string;
+  unit?: string;
+  stockQuantity?: number;
+  minStockLevel?: number;
+  maxStockLevel?: number;
+  unitPrice?: number;
+  expiryDate?: string;
+  batchNumber?: string;
+  supplier?: string;
+  location?: string;
+}
+
+export interface MedicalSupplyUpdate {
+  name?: string;
+  category?: string;
+  description?: string;
+  unit?: string;
+  stockQuantity?: number;
+  minStockLevel?: number;
+  maxStockLevel?: number;
+  unitPrice?: number;
+  expiryDate?: string;
+  batchNumber?: string;
+  supplier?: string;
+  location?: string;
+}
+
+export interface MedicalSupplyStats {
+  total: number;
+  lowStock: number;
+  byCategory: Record<string, number>;
+  totalValue: number;
+}
+
+export interface MedicalSuppliesResponse {
+  supplies: MedicalSupply[];
+  total: number;
+}

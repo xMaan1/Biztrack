@@ -99,6 +99,9 @@ export type HealthcareStackParamList = {
   MedicalRecordDetail: { id: string };
   MedicalRecordForm: { id?: string; record?: any };
   MedicalSupplies: undefined;
+  SupplyList: undefined;
+  SupplyDetail: { id: string };
+  SupplyForm: { id?: string; supply?: any };
   Consultations: undefined;
   LabReports: undefined;
   Invoicing: undefined;

@@ -78,6 +78,9 @@ import AppointmentFormScreen from '@/screens/healthcare/appointments/Appointment
 import MedicalRecordListScreen from '@/screens/healthcare/records/MedicalRecordListScreen';
 import MedicalRecordDetailScreen from '@/screens/healthcare/records/MedicalRecordDetailScreen';
 import MedicalRecordFormScreen from '@/screens/healthcare/records/MedicalRecordFormScreen';
+import SupplyListScreen from '@/screens/healthcare/supplies/SupplyListScreen';
+import SupplyDetailScreen from '@/screens/healthcare/supplies/SupplyDetailScreen';
+import SupplyFormScreen from '@/screens/healthcare/supplies/SupplyFormScreen';
 import {
   RootStackParamList,
   AuthStackParamList,
@@ -513,8 +516,23 @@ function HealthcareNavigator() {
       />
       <HealthcareStack.Screen
         name="MedicalSupplies"
-        component={PlaceholderScreen}
-        options={{ title: 'Medical Supplies' }}
+        component={SupplyListScreen}
+        options={{ headerShown: false }}
+      />
+      <HealthcareStack.Screen
+        name="SupplyList"
+        component={SupplyListScreen}
+        options={{ headerShown: false }}
+      />
+      <HealthcareStack.Screen
+        name="SupplyDetail"
+        component={SupplyDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <HealthcareStack.Screen
+        name="SupplyForm"
+        component={SupplyFormScreen}
+        options={{ headerShown: false }}
       />
       <HealthcareStack.Screen
         name="Consultations"
