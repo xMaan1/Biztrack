@@ -317,6 +317,18 @@ export class ApiService {
   async healthCheck() {
     return this.get("/health");
   }
+
+  async getUsers() {
+    const tenantId = await this.getTenantId();
+    if (tenantId) {
+      return this.getTenantUsers(tenantId);
+    }
+    return this.get('/users');
+  }
+
+  async getTenantUsers(tenantId: string) {
+    return this.get(`/tenants/${tenantId}/users`);
+  }
 }
 
 export const apiService = new ApiService();

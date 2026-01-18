@@ -103,6 +103,9 @@ export type HealthcareStackParamList = {
   SupplyDetail: { id: string };
   SupplyForm: { id?: string; supply?: any };
   Consultations: undefined;
+  ConsultationList: undefined;
+  ConsultationDetail: { id: string };
+  ConsultationForm: { id?: string; consultation?: any };
   LabReports: undefined;
   Invoicing: undefined;
 };

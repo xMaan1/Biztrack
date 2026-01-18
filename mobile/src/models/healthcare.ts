@@ -276,3 +276,70 @@ export interface MedicalSuppliesResponse {
   supplies: MedicalSupply[];
   total: number;
 }
+
+export interface Consultation {
+  id: string;
+  tenant_id: string;
+  patient_id: string;
+  appointment_id?: string;
+  consultationDate: string;
+  consultationTime: string;
+  doctorId: string;
+  chiefComplaint?: string;
+  historyOfPresentIllness?: string;
+  physicalExamination?: string;
+  assessment?: string;
+  plan?: string;
+  prescriptions?: Array<Record<string, any>>;
+  followUpDate?: string;
+  followUpNotes?: string;
+  vitalSigns?: Record<string, any>;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ConsultationCreate {
+  patient_id: string;
+  appointment_id?: string;
+  consultationDate: string;
+  consultationTime: string;
+  doctorId: string;
+  chiefComplaint?: string;
+  historyOfPresentIllness?: string;
+  physicalExamination?: string;
+  assessment?: string;
+  plan?: string;
+  prescriptions?: Array<Record<string, any>>;
+  followUpDate?: string;
+  followUpNotes?: string;
+  vitalSigns?: Record<string, any>;
+}
+
+export interface ConsultationUpdate {
+  patient_id?: string;
+  appointment_id?: string;
+  consultationDate?: string;
+  consultationTime?: string;
+  doctorId?: string;
+  chiefComplaint?: string;
+  historyOfPresentIllness?: string;
+  physicalExamination?: string;
+  assessment?: string;
+  plan?: string;
+  prescriptions?: Array<Record<string, any>>;
+  followUpDate?: string;
+  followUpNotes?: string;
+  vitalSigns?: Record<string, any>;
+}
+
+export interface ConsultationStats {
+  total: number;
+  today: number;
+  thisMonth: number;
+}
+
+export interface ConsultationsResponse {
+  consultations: Consultation[];
+  total: number;
+}

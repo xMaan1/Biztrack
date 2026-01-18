@@ -11,4 +11,7 @@ export { default as AppointmentFormScreen } from './healthcare/appointments/Appo
 export { default as MedicalRecordListScreen } from './healthcare/records/MedicalRecordListScreen';
 export { default as MedicalRecordDetailScreen } from './healthcare/records/MedicalRecordDetailScreen';
 export { default as MedicalRecordFormScreen } from './healthcare/records/MedicalRecordFormScreen';
+export { default as ConsultationListScreen } from './healthcare/consultations/ConsultationListScreen';
+export { default as ConsultationDetailScreen } from './healthcare/consultations/ConsultationDetailScreen';
+export { default as ConsultationFormScreen } from './healthcare/consultations/ConsultationFormScreen';
 
