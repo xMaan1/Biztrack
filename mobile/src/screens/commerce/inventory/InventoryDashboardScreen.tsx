@@ -103,11 +103,22 @@ export default function InventoryDashboardScreen() {
               <View style={styles.sectionHeader}>
                 <Ionicons name="alert-circle-outline" size={20} color={colors.red[600]} />
                 <Text style={styles.sectionTitle}>Stock Alerts</Text>
+                <Pressable
+                  style={styles.viewAllButton}
+                  onPress={() => navigation.navigate('InventoryAlerts' as never)}
+                >
+                  <Text style={styles.viewAllText}>View All</Text>
+                  <Ionicons name="chevron-forward" size={16} color={colors.primary.main} />
+                </Pressable>
               </View>
               {stats.lowStockAlerts && stats.lowStockAlerts.length > 0 ? (
                 <View style={styles.alertsList}>
                   {stats.lowStockAlerts.slice(0, 5).map((alert, index) => (
-                    <View key={index} style={styles.alertCard}>
+                    <Pressable
+                      key={index}
+                      style={styles.alertCard}
+                      onPress={() => navigation.navigate('InventoryAlerts' as never)}
+                    >
                       <View style={styles.alertHeader}>
                         <Text style={styles.alertProductName}>{alert.productName}</Text>
                         <View
@@ -124,7 +135,7 @@ export default function InventoryDashboardScreen() {
                         </View>
                       </View>
                       <Text style={styles.alertSku}>SKU: {alert.sku}</Text>
-                    </View>
+                    </Pressable>
                   ))}
                 </View>
               ) : (
@@ -139,6 +150,16 @@ export default function InventoryDashboardScreen() {
             <View style={styles.quickActionsSection}>
               <Text style={styles.sectionTitle}>Quick Actions</Text>
               <View style={styles.quickActionsGrid}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.quickActionCard,
+                    pressed && styles.quickActionCardPressed,
+                  ]}
+                  onPress={() => navigation.navigate('InventoryProductList' as never)}
+                >
+                  <Ionicons name="cube-outline" size={32} color={colors.primary.main} />
+                  <Text style={styles.quickActionText}>Products</Text>
+                </Pressable>
                 <Pressable
                   style={({ pressed }) => [
                     styles.quickActionCard,
@@ -178,6 +199,46 @@ export default function InventoryDashboardScreen() {
                 >
                   <Ionicons name="cube-outline" size={32} color={colors.primary.main} />
                   <Text style={styles.quickActionText}>Receiving</Text>
+                </Pressable>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.quickActionCard,
+                    pressed && styles.quickActionCardPressed,
+                  ]}
+                  onPress={() => navigation.navigate('InventoryAlerts' as never)}
+                >
+                  <Ionicons name="alert-circle-outline" size={32} color={colors.red[600]} />
+                  <Text style={styles.quickActionText}>Alerts</Text>
+                </Pressable>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.quickActionCard,
+                    pressed && styles.quickActionCardPressed,
+                  ]}
+                  onPress={() => navigation.navigate('CustomerReturns' as never)}
+                >
+                  <Ionicons name="arrow-back-outline" size={32} color={colors.green[600]} />
+                  <Text style={styles.quickActionText}>Customer Returns</Text>
+                </Pressable>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.quickActionCard,
+                    pressed && styles.quickActionCardPressed,
+                  ]}
+                  onPress={() => navigation.navigate('SupplierReturns' as never)}
+                >
+                  <Ionicons name="arrow-forward-outline" size={32} color={colors.orange[600]} />
+                  <Text style={styles.quickActionText}>Supplier Returns</Text>
+                </Pressable>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.quickActionCard,
+                    pressed && styles.quickActionCardPressed,
+                  ]}
+                  onPress={() => navigation.navigate('Dumps' as never)}
+                >
+                  <Ionicons name="trash-outline" size={32} color={colors.red[600]} />
+                  <Text style={styles.quickActionText}>Damaged Items</Text>
                 </Pressable>
               </View>
             </View>
@@ -239,8 +300,18 @@ const styles = StyleSheet.create({
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
+    justifyContent: 'space-between',
     marginBottom: spacing.md,
+  },
+  viewAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  viewAllText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.primary.main,
   },
   sectionTitle: {
     fontSize: 16,

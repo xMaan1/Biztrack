@@ -207,7 +207,7 @@ export default function InvoiceListScreen() {
         title="Invoices"
         rightIcon="add"
         gradient={false}
-        onRightPress={() => navigation.navigate('Sales' as never)}
+        onRightPress={() => navigation.navigate('InvoiceForm' as never, {} as never)}
       />
       <FlatList
         data={invoices}

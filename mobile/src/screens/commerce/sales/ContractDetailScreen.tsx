@@ -101,9 +101,18 @@ export default function ContractDetailScreen() {
     );
   }
 
+  const handleEdit = () => {
+    navigation.navigate('ContractForm' as never, { id, contract } as never);
+  };
+
   return (
     <Container safeArea>
-      <Header title="Contract Details" gradient={false} />
+      <Header
+        title="Contract Details"
+        gradient={false}
+        rightIcon="create-outline"
+        onRightPress={handleEdit}
+      />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[
@@ -179,6 +188,10 @@ export default function ContractDetailScreen() {
         </View>
 
         <View style={styles.actionsContainer}>
+          <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
+            <Ionicons name="create-outline" size={20} color={colors.background.default} />
+            <Text style={styles.editButtonText}>Edit Contract</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
             <Ionicons name="trash-outline" size={20} color={colors.background.default} />
             <Text style={styles.deleteButtonText}>Delete Contract</Text>
@@ -296,6 +309,20 @@ const styles = StyleSheet.create({
   actionsContainer: {
     marginTop: spacing.md,
     gap: spacing.sm,
+  },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primary.main,
+    padding: spacing.md,
+    borderRadius: 12,
+    gap: spacing.sm,
+  },
+  editButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.background.default,
   },
   deleteButton: {
     flexDirection: 'row',

@@ -95,3 +95,121 @@ export interface PatientsResponse {
   patients: Patient[];
   total: number;
 }
+
+export interface Appointment {
+  id: string;
+  tenant_id: string;
+  patient_id: string;
+  appointmentDate: string;
+  appointmentTime: string;
+  duration: number;
+  type: string;
+  status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
+  reason?: string;
+  notes?: string;
+  doctorId?: string;
+  createdById: string;
+  reminderSent: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AppointmentCreate {
+  patient_id: string;
+  appointmentDate: string;
+  appointmentTime: string;
+  duration?: number;
+  type: string;
+  status?: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
+  reason?: string;
+  notes?: string;
+  doctorId?: string;
+}
+
+export interface AppointmentUpdate {
+  patient_id?: string;
+  appointmentDate?: string;
+  appointmentTime?: string;
+  duration?: number;
+  type?: string;
+  status?: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
+  reason?: string;
+  notes?: string;
+  doctorId?: string;
+}
+
+export interface AppointmentStats {
+  total: number;
+  scheduled: number;
+  completed: number;
+  cancelled: number;
+  today: number;
+}
+
+export interface AppointmentsResponse {
+  appointments: Appointment[];
+  total: number;
+}
+
+export interface MedicalRecord {
+  id: string;
+  tenant_id: string;
+  patient_id: string;
+  recordType: string;
+  title: string;
+  description?: string;
+  diagnosis?: string;
+  treatment?: string;
+  medications?: string[];
+  vitalSigns?: Record<string, any>;
+  labResults?: Record<string, any>;
+  attachments?: string[];
+  visitDate: string;
+  doctorId?: string;
+  createdById: string;
+  isConfidential: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MedicalRecordCreate {
+  patient_id: string;
+  recordType: string;
+  title: string;
+  description?: string;
+  diagnosis?: string;
+  treatment?: string;
+  medications?: string[];
+  vitalSigns?: Record<string, any>;
+  labResults?: Record<string, any>;
+  attachments?: string[];
+  visitDate: string;
+  doctorId?: string;
+  isConfidential?: boolean;
+}
+
+export interface MedicalRecordUpdate {
+  patient_id?: string;
+  recordType?: string;
+  title?: string;
+  description?: string;
+  diagnosis?: string;
+  treatment?: string;
+  medications?: string[];
+  vitalSigns?: Record<string, any>;
+  labResults?: Record<string, any>;
+  attachments?: string[];
+  visitDate?: string;
+  doctorId?: string;
+  isConfidential?: boolean;
+}
+
+export interface MedicalRecordStats {
+  total: number;
+  byType: Record<string, number>;
+}
+
+export interface MedicalRecordsResponse {
+  records: MedicalRecord[];
+  total: number;
+}

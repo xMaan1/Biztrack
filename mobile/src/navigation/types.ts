@@ -20,23 +20,33 @@ export type MainTabParamList = {
 export type CommerceStackParamList = {
   CommerceHome: undefined;
   CRM: undefined;
+  CRMDashboard: undefined;
   CustomerList: undefined;
   CustomerDetail: { id: string };
   CustomerForm: { id?: string; customer?: any };
   LeadList: undefined;
+  LeadDetail: { id: string };
+  LeadForm: { id?: string; lead?: any };
   OpportunityList: undefined;
+  OpportunityDetail: { id: string };
   OpportunityForm: { id?: string; opportunity?: any };
   ContactList: undefined;
+  ContactDetail: { id: string };
+  ContactForm: { id?: string; contact?: any };
   CompanyList: undefined;
+  CompanyDetail: { id: string };
   CompanyForm: { id?: string; company?: any };
   Sales: undefined;
+  SalesDashboard: undefined;
   QuoteList: undefined;
   QuoteDetail: { id: string };
   QuoteForm: { id?: string; quote?: any };
   ContractList: undefined;
   ContractDetail: { id: string };
+  ContractForm: { id?: string; contract?: any };
   InvoiceList: undefined;
   InvoiceDetail: { id: string };
+  InvoiceForm: { id?: string; invoice?: any };
   Analytics: undefined;
   POS: undefined;
   POSDashboard: undefined;
@@ -51,6 +61,7 @@ export type CommerceStackParamList = {
   Reports: undefined;
   Inventory: undefined;
   InventoryDashboard: undefined;
+  InventoryProductList: undefined;
   WarehouseList: undefined;
   WarehouseDetail: { id: string };
   WarehouseForm: { id?: string; warehouse?: any };
@@ -66,6 +77,10 @@ export type CommerceStackParamList = {
   ReceivingList: undefined;
   ReceivingDetail: { id: string };
   ReceivingForm: { id?: string; receiving?: any };
+  InventoryAlerts: undefined;
+  CustomerReturns: undefined;
+  SupplierReturns: undefined;
+  Dumps: undefined;
   Invoicing: undefined;
 };
 
@@ -76,7 +91,13 @@ export type HealthcareStackParamList = {
   PatientDetail: { id: string };
   PatientForm: { id?: string; patient?: any };
   Appointments: undefined;
+  AppointmentList: undefined;
+  AppointmentDetail: { id: string };
+  AppointmentForm: { id?: string; appointment?: any };
   MedicalRecords: undefined;
+  MedicalRecordList: undefined;
+  MedicalRecordDetail: { id: string };
+  MedicalRecordForm: { id?: string; record?: any };
   MedicalSupplies: undefined;
   Consultations: undefined;
   LabReports: undefined;

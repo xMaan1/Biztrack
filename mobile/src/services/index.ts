@@ -6,3 +6,5 @@ export { default as CRMService } from "./CRMService";
 export { default as SalesService } from "./SalesService";
 export { default as InvoiceService } from "./InvoiceService";
 export { default as PatientService } from "./PatientService";
+export { default as AppointmentService } from "./AppointmentService";
+export { default as MedicalRecordService } from "./MedicalRecordService";

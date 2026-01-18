@@ -203,7 +203,7 @@ export default function ContractListScreen() {
         title="Contracts"
         rightIcon="add"
         gradient={false}
-        onRightPress={() => navigation.navigate('Sales' as never)}
+        onRightPress={() => navigation.navigate('ContractForm' as never)}
       />
       <FlatList
         data={contracts}

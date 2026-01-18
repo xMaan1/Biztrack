@@ -333,3 +333,26 @@ export interface InvoiceDashboard {
     value: number;
   }[];
 }
+
+export interface SalesMetrics {
+  totalLeads: number;
+  activeLeads: number;
+  totalOpportunities: number;
+  openOpportunities: number;
+  totalRevenue: number;
+  projectedRevenue: number;
+  conversionRate: number;
+  averageDealSize: number;
+}
+
+export interface SalesPipeline {
+  stage: string;
+  count: number;
+  value: number;
+  probability: number;
+}
+
+export interface SalesDashboard {
+  metrics: SalesMetrics;
+  pipeline: SalesPipeline[];
+}

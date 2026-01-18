@@ -19,6 +19,12 @@ export default function CRMHomeScreen() {
 
   const menuItems = [
     {
+      title: 'Dashboard',
+      icon: 'stats-chart',
+      route: 'CRMDashboard',
+      color: colors.primary.main,
+    },
+    {
       title: 'Customers',
       icon: 'people',
       route: 'CustomerList',

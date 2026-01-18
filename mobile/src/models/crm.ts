@@ -430,3 +430,27 @@ export interface CRMOpportunityFilters {
   assignedTo?: string;
   search?: string;
 }
+
+export interface CRMMetrics {
+  totalLeads: number;
+  activeLeads: number;
+  totalContacts: number;
+  totalRevenue: number;
+  projectedRevenue: number;
+  conversionRate: number;
+}
+
+export interface CRMPipeline {
+  stage: string;
+  count: number;
+  value: number;
+  probability: number;
+}
+
+export interface CRMDashboard {
+  metrics: CRMMetrics;
+  pipeline: CRMPipeline[];
+  recentActivities: any[];
+  topOpportunities: Opportunity[];
+  recentLeads: Lead[];
+}

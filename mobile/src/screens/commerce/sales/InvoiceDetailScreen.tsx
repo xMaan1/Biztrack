@@ -114,9 +114,18 @@ export default function InvoiceDetailScreen() {
     );
   }
 
+  const handleEdit = () => {
+    navigation.navigate('InvoiceForm' as never, { id, invoice } as never);
+  };
+
   return (
     <Container safeArea>
-      <Header title="Invoice Details" gradient={false} />
+      <Header
+        title="Invoice Details"
+        gradient={false}
+        rightIcon="create-outline"
+        onRightPress={handleEdit}
+      />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[

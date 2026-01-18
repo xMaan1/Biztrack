@@ -10,16 +10,24 @@ import { colors } from '@/theme';
 import { LoginScreen, RegisterScreen, ForgotPasswordScreen } from '@/screens';
 import DashboardScreen from '@/screens/dashboard/DashboardScreen';
 import CRMHomeScreen from '@/screens/commerce/crm/CRMHomeScreen';
+import CRMDashboardScreen from '@/screens/commerce/crm/CRMDashboardScreen';
 import CustomerListScreen from '@/screens/commerce/crm/CustomerListScreen';
 import CustomerDetailScreen from '@/screens/commerce/crm/CustomerDetailScreen';
 import CustomerFormScreen from '@/screens/commerce/crm/CustomerFormScreen';
 import LeadListScreen from '@/screens/commerce/crm/LeadListScreen';
+import LeadDetailScreen from '@/screens/commerce/crm/LeadDetailScreen';
+import LeadFormScreen from '@/screens/commerce/crm/LeadFormScreen';
 import OpportunityListScreen from '@/screens/commerce/crm/OpportunityListScreen';
+import OpportunityDetailScreen from '@/screens/commerce/crm/OpportunityDetailScreen';
 import OpportunityFormScreen from '@/screens/commerce/crm/OpportunityFormScreen';
 import ContactListScreen from '@/screens/commerce/crm/ContactListScreen';
+import ContactDetailScreen from '@/screens/commerce/crm/ContactDetailScreen';
+import ContactFormScreen from '@/screens/commerce/crm/ContactFormScreen';
 import CompanyListScreen from '@/screens/commerce/crm/CompanyListScreen';
+import CompanyDetailScreen from '@/screens/commerce/crm/CompanyDetailScreen';
 import CompanyFormScreen from '@/screens/commerce/crm/CompanyFormScreen';
 import SalesHomeScreen from '@/screens/commerce/sales/SalesHomeScreen';
+import SalesDashboardScreen from '@/screens/commerce/sales/SalesDashboardScreen';
 import QuoteListScreen from '@/screens/commerce/sales/QuoteListScreen';
 import QuoteDetailScreen from '@/screens/commerce/sales/QuoteDetailScreen';
 import QuoteFormScreen from '@/screens/commerce/sales/QuoteFormScreen';
@@ -27,6 +35,7 @@ import ContractListScreen from '@/screens/commerce/sales/ContractListScreen';
 import ContractDetailScreen from '@/screens/commerce/sales/ContractDetailScreen';
 import InvoiceListScreen from '@/screens/commerce/sales/InvoiceListScreen';
 import InvoiceDetailScreen from '@/screens/commerce/sales/InvoiceDetailScreen';
+import InvoiceFormScreen from '@/screens/commerce/sales/InvoiceFormScreen';
 import AnalyticsScreen from '@/screens/commerce/sales/AnalyticsScreen';
 import POSDashboardScreen from '@/screens/commerce/pos/POSDashboardScreen';
 import POSSaleScreen from '@/screens/commerce/pos/POSSaleScreen';
@@ -54,10 +63,21 @@ import PurchaseOrderFormScreen from '@/screens/commerce/inventory/PurchaseOrderF
 import ReceivingListScreen from '@/screens/commerce/inventory/ReceivingListScreen';
 import ReceivingDetailScreen from '@/screens/commerce/inventory/ReceivingDetailScreen';
 import ReceivingFormScreen from '@/screens/commerce/inventory/ReceivingFormScreen';
+import InventoryProductListScreen from '@/screens/commerce/inventory/ProductListScreen';
+import AlertsScreen from '@/screens/commerce/inventory/AlertsScreen';
+import CustomerReturnsScreen from '@/screens/commerce/inventory/CustomerReturnsScreen';
+import SupplierReturnsScreen from '@/screens/commerce/inventory/SupplierReturnsScreen';
+import DumpsScreen from '@/screens/commerce/inventory/DumpsScreen';
 import { DrawerMenu } from '@/components/layout/DrawerMenu';
 import PatientListScreen from '@/screens/healthcare/patients/PatientListScreen';
 import PatientDetailScreen from '@/screens/healthcare/patients/PatientDetailScreen';
 import PatientFormScreen from '@/screens/healthcare/patients/PatientFormScreen';
+import AppointmentListScreen from '@/screens/healthcare/appointments/AppointmentListScreen';
+import AppointmentDetailScreen from '@/screens/healthcare/appointments/AppointmentDetailScreen';
+import AppointmentFormScreen from '@/screens/healthcare/appointments/AppointmentFormScreen';
+import MedicalRecordListScreen from '@/screens/healthcare/records/MedicalRecordListScreen';
+import MedicalRecordDetailScreen from '@/screens/healthcare/records/MedicalRecordDetailScreen';
+import MedicalRecordFormScreen from '@/screens/healthcare/records/MedicalRecordFormScreen';
 import {
   RootStackParamList,
   AuthStackParamList,
@@ -100,6 +120,11 @@ function CommerceNavigator() {
         options={{ headerShown: false }}
       />
       <CommerceStack.Screen
+        name="CRMDashboard"
+        component={CRMDashboardScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
         name="CustomerList"
         component={CustomerListScreen}
         options={{ headerShown: false }}
@@ -120,8 +145,23 @@ function CommerceNavigator() {
         options={{ headerShown: false }}
       />
       <CommerceStack.Screen
+        name="LeadDetail"
+        component={LeadDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="LeadForm"
+        component={LeadFormScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
         name="OpportunityList"
         component={OpportunityListScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="OpportunityDetail"
+        component={OpportunityDetailScreen}
         options={{ headerShown: false }}
       />
       <CommerceStack.Screen
@@ -135,8 +175,23 @@ function CommerceNavigator() {
         options={{ headerShown: false }}
       />
       <CommerceStack.Screen
+        name="ContactDetail"
+        component={ContactDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="ContactForm"
+        component={ContactFormScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
         name="CompanyList"
         component={CompanyListScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="CompanyDetail"
+        component={CompanyDetailScreen}
         options={{ headerShown: false }}
       />
       <CommerceStack.Screen
@@ -147,6 +202,11 @@ function CommerceNavigator() {
       <CommerceStack.Screen
         name="Sales"
         component={SalesHomeScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="SalesDashboard"
+        component={SalesDashboardScreen}
         options={{ headerShown: false }}
       />
       <CommerceStack.Screen
@@ -175,6 +235,11 @@ function CommerceNavigator() {
         options={{ headerShown: false }}
       />
       <CommerceStack.Screen
+        name="ContractForm"
+        component={ContractFormScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
         name="InvoiceList"
         component={InvoiceListScreen}
         options={{ headerShown: false }}
@@ -182,6 +247,11 @@ function CommerceNavigator() {
       <CommerceStack.Screen
         name="InvoiceDetail"
         component={InvoiceDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="InvoiceForm"
+        component={InvoiceFormScreen}
         options={{ headerShown: false }}
       />
       <CommerceStack.Screen
@@ -330,6 +400,31 @@ function CommerceNavigator() {
         options={{ headerShown: false }}
       />
       <CommerceStack.Screen
+        name="InventoryProductList"
+        component={InventoryProductListScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="InventoryAlerts"
+        component={AlertsScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="CustomerReturns"
+        component={CustomerReturnsScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="SupplierReturns"
+        component={SupplierReturnsScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
+        name="Dumps"
+        component={DumpsScreen}
+        options={{ headerShown: false }}
+      />
+      <CommerceStack.Screen
         name="Invoicing"
         component={InvoiceListScreen}
         options={{ headerShown: false }}
@@ -378,13 +473,43 @@ function HealthcareNavigator() {
       />
       <HealthcareStack.Screen
         name="Appointments"
-        component={PlaceholderScreen}
-        options={{ title: 'Appointments' }}
+        component={AppointmentListScreen}
+        options={{ headerShown: false }}
+      />
+      <HealthcareStack.Screen
+        name="AppointmentList"
+        component={AppointmentListScreen}
+        options={{ headerShown: false }}
+      />
+      <HealthcareStack.Screen
+        name="AppointmentDetail"
+        component={AppointmentDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <HealthcareStack.Screen
+        name="AppointmentForm"
+        component={AppointmentFormScreen}
+        options={{ headerShown: false }}
       />
       <HealthcareStack.Screen
         name="MedicalRecords"
-        component={PlaceholderScreen}
-        options={{ title: 'Medical Records' }}
+        component={MedicalRecordListScreen}
+        options={{ headerShown: false }}
+      />
+      <HealthcareStack.Screen
+        name="MedicalRecordList"
+        component={MedicalRecordListScreen}
+        options={{ headerShown: false }}
+      />
+      <HealthcareStack.Screen
+        name="MedicalRecordDetail"
+        component={MedicalRecordDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <HealthcareStack.Screen
+        name="MedicalRecordForm"
+        component={MedicalRecordFormScreen}
+        options={{ headerShown: false }}
       />
       <HealthcareStack.Screen
         name="MedicalSupplies"

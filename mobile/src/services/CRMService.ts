@@ -299,6 +299,10 @@ class CRMService {
     );
     return response;
   }
+
+  async getDashboard(): Promise<any> {
+    return apiService.get(`${this.baseUrl}/dashboard`);
+  }
 }
 
 export default new CRMService();

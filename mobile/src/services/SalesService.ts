@@ -161,6 +161,10 @@ class SalesService {
       day: 'numeric',
     });
   }
+
+  async getDashboard(): Promise<any> {
+    return apiService.get(`${this.baseUrl}/dashboard`);
+  }
 }
 
 export default new SalesService();

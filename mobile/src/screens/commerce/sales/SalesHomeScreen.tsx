@@ -19,6 +19,12 @@ export default function SalesHomeScreen() {
 
   const menuItems = [
     {
+      title: 'Dashboard',
+      icon: 'stats-chart',
+      route: 'SalesDashboard',
+      color: colors.primary.main,
+    },
+    {
       title: 'Quotes',
       icon: 'document-text',
       route: 'QuoteList',
