@@ -73,7 +73,7 @@ export default function ContactListScreen() {
   const renderContactItem = ({ item }: { item: Contact }) => (
     <TouchableOpacity
       style={styles.contactCard}
-      onPress={() => navigation.navigate('ContactDetail' as never, { id: item.id } as never)}
+      onPress={() => (navigation as any).navigate('ContactDetail', { id: item.id })}
     >
       <View style={styles.contactHeader}>
         <View style={styles.contactInfo}>
@@ -215,7 +215,7 @@ export default function ContactListScreen() {
         title="Contacts"
         rightIcon="add"
         gradient={false}
-        onRightPress={() => navigation.navigate('ContactForm' as never, {} as never)}
+        onRightPress={() => (navigation as any).navigate('ContactForm', {})}
       />
       <FlatList
         data={contacts}

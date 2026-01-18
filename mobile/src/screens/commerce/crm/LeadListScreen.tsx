@@ -73,7 +73,7 @@ export default function LeadListScreen() {
   const renderLeadItem = ({ item }: { item: Lead }) => (
     <TouchableOpacity
       style={styles.leadCard}
-      onPress={() => navigation.navigate('LeadDetail' as never, { id: item.id } as never)}
+      onPress={() => (navigation as any).navigate('LeadDetail', { id: item.id })}
     >
       <View style={styles.leadHeader}>
         <View style={styles.leadInfo}>
@@ -237,7 +237,7 @@ export default function LeadListScreen() {
         title="Leads"
         rightIcon="add"
         gradient={false}
-        onRightPress={() => navigation.navigate('LeadForm' as never, {} as never)}
+        onRightPress={() => (navigation as any).navigate('LeadForm', {})}
       />
       <FlatList
         data={leads}

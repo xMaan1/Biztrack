@@ -75,7 +75,7 @@ export default function OpportunityListScreen() {
   const renderOpportunityItem = ({ item }: { item: Opportunity }) => (
     <TouchableOpacity
       style={styles.opportunityCard}
-      onPress={() => navigation.navigate('OpportunityDetail' as never, { id: item.id } as never)}
+      onPress={() => (navigation as any).navigate('OpportunityDetail', { id: item.id })}
     >
       <View style={styles.opportunityHeader}>
         <View style={styles.opportunityInfo}>
@@ -208,7 +208,7 @@ export default function OpportunityListScreen() {
         title="Opportunities"
         rightIcon="add"
         gradient={false}
-        onRightPress={() => navigation.navigate('OpportunityForm' as never, {} as never)}
+        onRightPress={() => (navigation as any).navigate('OpportunityForm', {})}
       />
       <FlatList
         data={opportunities}

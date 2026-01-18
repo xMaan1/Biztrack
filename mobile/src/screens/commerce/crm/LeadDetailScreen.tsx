@@ -70,7 +70,7 @@ export default function LeadDetailScreen() {
   };
 
   const handleEdit = () => {
-    navigation.navigate('LeadForm' as never, { id, lead } as never);
+    (navigation as any).navigate('LeadForm', { id, lead });
   };
 
   const handleCall = (phone: string) => {
@@ -381,16 +381,16 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   tag: {
-    backgroundColor: colors.primary[100],
+    backgroundColor: colors.blue[100],
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.primary[300],
+    borderColor: colors.blue[300],
   },
   tagText: {
     fontSize: 12,
-    color: colors.primary[700],
+    color: colors.blue[700],
   },
   actionsContainer: {
     flexDirection: 'row',

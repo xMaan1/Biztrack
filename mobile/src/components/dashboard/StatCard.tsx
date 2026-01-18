@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
   statCardValue: {
     ...textStyles.h4,
     color: colors.background.default,
-    fontWeight: typography.fontWeight.bold as any,
+    fontWeight: typography.fontWeight.bold as '700',
     lineHeight: 32,
   },
 });

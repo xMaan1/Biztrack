@@ -14,6 +14,8 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
@@ -113,7 +115,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         return null;
       }
 
-      const token = await Notifications.getExpoPushTokenAsync();
+      const token = await Notifications.getExpoPushTokenAsync({ projectId: undefined });
       return token.data;
     } catch (error) {
       return null;

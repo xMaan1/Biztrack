@@ -55,7 +55,7 @@ export default function RegisterScreen() {
     handleSubmit,
     formState: { errors },
   } = useForm<RegisterFormData>({
-    resolver: yupResolver(registerSchema),
+    resolver: yupResolver(registerSchema) as any,
     defaultValues: {
       userName: '',
       email: '',
@@ -271,7 +271,7 @@ export default function RegisterScreen() {
               ) : null}
 
               <TouchableOpacity
-                onPress={handleSubmit(onSubmit)}
+                onPress={handleSubmit(onSubmit as any)}
                 disabled={loading}
                 style={[styles.button, loading && styles.buttonDisabled]}
               >
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: typography.fontSize['3xl'],
-    fontWeight: typography.fontWeight.bold,
+    fontWeight: typography.fontWeight.bold as '700',
     color: colors.text.primary,
     marginBottom: spacing.sm,
   },
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.medium as any,
+    fontWeight: typography.fontWeight.medium as '500',
     color: colors.text.primary,
     marginBottom: spacing.xs,
   },
@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: typography.fontSize.base,
-    fontWeight: typography.fontWeight.semibold as any,
+    fontWeight: typography.fontWeight.semibold as '600',
     color: '#fff',
   },
   loginContainer: {
@@ -426,6 +426,6 @@ const styles = StyleSheet.create({
   loginLink: {
     fontSize: typography.fontSize.sm,
     color: colors.primary.main,
-    fontWeight: typography.fontWeight.semibold as any,
+    fontWeight: typography.fontWeight.semibold as '600',
   },
 });

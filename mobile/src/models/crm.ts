@@ -185,6 +185,7 @@ export interface Company {
   size?: CompanySize;
   website?: string;
   phone?: string;
+  email?: string;
   address?: string;
   city?: string;
   state?: string;

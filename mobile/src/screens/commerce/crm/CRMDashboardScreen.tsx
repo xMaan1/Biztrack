@@ -187,9 +187,9 @@ export default function CRMDashboardScreen() {
                 key={opportunity.id}
                 style={styles.opportunityItem}
                 onPress={() =>
-                  navigation.navigate('OpportunityDetail' as never, {
+                  (navigation as any).navigate('OpportunityDetail', {
                     id: opportunity.id,
-                  } as never)
+                  })
                 }
               >
                 <View style={styles.opportunityInfo}>
@@ -245,7 +245,7 @@ export default function CRMDashboardScreen() {
                 key={lead.id}
                 style={styles.leadItem}
                 onPress={() =>
-                  navigation.navigate('LeadDetail' as never, { id: lead.id } as never)
+                  (navigation as any).navigate('LeadDetail', { id: lead.id })
                 }
               >
                 <View style={styles.leadInfo}>
@@ -334,7 +334,7 @@ export default function CRMDashboardScreen() {
               style={styles.quickActionCard}
               onPress={() => navigation.navigate('OpportunityList' as never)}
             >
-              <Ionicons name="target-outline" size={32} color={colors.indigo[600]} />
+              <Ionicons name="flag-outline" size={32} color={colors.indigo[600]} />
               <Text style={styles.quickActionText}>Manage Opportunities</Text>
             </TouchableOpacity>
           </View>

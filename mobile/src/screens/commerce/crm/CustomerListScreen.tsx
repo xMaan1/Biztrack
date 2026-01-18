@@ -98,7 +98,7 @@ export default function CustomerListScreen() {
   const renderCustomerItem = ({ item }: { item: Customer }) => (
     <TouchableOpacity
       style={styles.customerCard}
-      onPress={() => navigation.navigate('CustomerDetail' as never, { id: item.id } as never)}
+      onPress={() => (navigation as any).navigate('CustomerDetail', { id: item.id })}
     >
       <View style={styles.customerHeader}>
         <View style={styles.customerInfo}>
@@ -290,7 +290,7 @@ export default function CustomerListScreen() {
         title="Customers"
         rightIcon="add"
         gradient={false}
-        onRightPress={() => navigation.navigate('CustomerForm' as never, {} as never)}
+        onRightPress={() => (navigation as any).navigate('CustomerForm', {})}
       />
       <FlatList
         data={customers}

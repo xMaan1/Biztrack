@@ -242,7 +242,7 @@ function CommerceNavigator() {
       />
       <CommerceStack.Screen
         name="ContractForm"
-        component={ContractFormScreen}
+        component={ContactFormScreen}
         options={{ headerShown: false }}
       />
       <CommerceStack.Screen

@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     ...textStyles.h5,
     flex: 1,
     fontSize: 20,
-    fontWeight: typography.fontWeight.bold,
+    fontWeight: typography.fontWeight.bold as '700',
     lineHeight: 24,
   },
   tenantInfo: {
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   },
   tenantName: {
     ...textStyles.h5,
-    fontWeight: typography.fontWeight.semibold,
+    fontWeight: typography.fontWeight.semibold as '600',
   },
   rightSection: {
     flexDirection: 'row',
@@ -217,6 +217,6 @@ const styles = StyleSheet.create({
   badgeText: {
     color: colors.background.default,
     fontSize: typography.fontSize.xs,
-    fontWeight: typography.fontWeight.bold,
+    fontWeight: typography.fontWeight.bold as '700',
   },
 });

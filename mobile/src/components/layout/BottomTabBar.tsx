@@ -32,11 +32,11 @@ export function BottomTabBar({ state, descriptors, navigation }: BottomTabBarPro
   const handleQuickAction = (route: string) => {
     if (route === 'QuickAction') {
       if (planType === 'commerce') {
-        nav.navigate('Commerce' as never, { screen: 'CRM' } as never);
+        (nav as any).navigate('Commerce', { screen: 'CRM' });
       } else if (planType === 'healthcare') {
-        nav.navigate('Healthcare' as never, { screen: 'Patients' } as never);
+        (nav as any).navigate('Healthcare', { screen: 'Patients' });
       } else if (planType === 'workshop') {
-        nav.navigate('Workshop' as never, { screen: 'WorkOrders' } as never);
+        (nav as any).navigate('Workshop', { screen: 'WorkOrders' });
       }
     } else if (route === 'Search') {
     } else if (route === 'Scan') {
@@ -96,7 +96,7 @@ export function BottomTabBar({ state, descriptors, navigation }: BottomTabBarPro
               accessibilityRole="button"
               accessibilityState={isFocused ? { selected: true } : {}}
               accessibilityLabel={options.tabBarAccessibilityLabel}
-              testID={options.tabBarTestID}
+              testID={(options as any).tabBarTestID}
               onPress={onPress}
               onLongPress={onLongPress}
               style={styles.tab}
@@ -115,7 +115,7 @@ export function BottomTabBar({ state, descriptors, navigation }: BottomTabBarPro
                       color={colors.background.default}
                     />
                     <Text style={[styles.label, styles.activeLabel]} numberOfLines={1}>
-                      {label}
+                      {typeof label === 'string' ? label : (label as any)({ focused: true, color: colors.background.default, position: 'below-icon' as any, children: route.name })}
                     </Text>
                   </View>
                 </LinearGradient>
@@ -136,7 +136,7 @@ export function BottomTabBar({ state, descriptors, navigation }: BottomTabBarPro
                     )}
                   </View>
                   <Text style={styles.label} numberOfLines={1}>
-                    {label}
+                    {typeof label === 'string' ? label : (label as any)({ focused: false, color: colors.text.primary, position: 'below-icon' as any, children: route.name })}
                   </Text>
                 </View>
               )}
@@ -223,14 +223,14 @@ const styles = StyleSheet.create({
     ...textStyles.caption,
     color: colors.text.primary,
     fontSize: 13,
-    fontWeight: typography.fontWeight.semibold,
+    fontWeight: typography.fontWeight.semibold as '600',
     marginTop: spacing.xs,
     lineHeight: 16,
     textAlign: 'center',
   },
   activeLabel: {
     color: colors.background.default,
-    fontWeight: typography.fontWeight.bold,
+    fontWeight: typography.fontWeight.bold as '700',
     fontSize: 13,
     marginTop: spacing.xs,
     lineHeight: 16,
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
   badgeText: {
     color: colors.background.default,
     fontSize: 9,
-    fontWeight: typography.fontWeight.bold,
+    fontWeight: typography.fontWeight.bold as '700',
   },
   quickActionsContainer: {
     paddingLeft: spacing.xs,

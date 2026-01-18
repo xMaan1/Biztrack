@@ -49,5 +49,6 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     lineHeight: 24,
     letterSpacing: 0.1,
+    fontWeight: textStyles.body1.fontWeight as any,
   },
 });

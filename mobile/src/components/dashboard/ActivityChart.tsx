@@ -42,6 +42,8 @@ export function ActivityChart({ data }: ActivityChartProps) {
           }}
           style={styles.chart}
           verticalLabelRotation={0}
+          yAxisLabel=""
+          yAxisSuffix=""
         />
       </View>
     </View>
@@ -57,7 +59,7 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     marginBottom: spacing.lg,
     marginTop: spacing.xs,
-    fontWeight: typography.fontWeight.semibold as any,
+    fontWeight: typography.fontWeight.semibold as '600',
     lineHeight: 24,
   },
   chartCard: {

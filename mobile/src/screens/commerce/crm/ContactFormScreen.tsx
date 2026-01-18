@@ -248,7 +248,7 @@ export default function ContactFormScreen() {
               <Switch
                 value={formData.isActive}
                 onValueChange={(value) => setFormData({ ...formData, isActive: value })}
-                trackColor={{ false: colors.gray[300], true: colors.primary[300] }}
+                trackColor={{ false: colors.gray[300], true: colors.blue[300] }}
                 thumbColor={formData.isActive ? colors.primary.main : colors.gray[500]}
               />
             </View>

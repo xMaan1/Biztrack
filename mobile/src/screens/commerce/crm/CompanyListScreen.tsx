@@ -73,7 +73,7 @@ export default function CompanyListScreen() {
   const renderCompanyItem = ({ item }: { item: Company }) => (
     <TouchableOpacity
       style={styles.companyCard}
-      onPress={() => navigation.navigate('CompanyDetail' as never, { id: item.id } as never)}
+      onPress={() => (navigation as any).navigate('CompanyDetail', { id: item.id })}
     >
       <View style={styles.companyHeader}>
         <View style={styles.companyInfo}>
@@ -229,7 +229,7 @@ export default function CompanyListScreen() {
         title="Companies"
         rightIcon="add"
         gradient={false}
-        onRightPress={() => navigation.navigate('CompanyForm' as never, {} as never)}
+        onRightPress={() => (navigation as any).navigate('CompanyForm', {})}
       />
       <FlatList
         data={companies}
