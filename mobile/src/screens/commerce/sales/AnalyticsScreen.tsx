@@ -221,7 +221,7 @@ export default function AnalyticsScreen() {
 
           <View style={styles.metricCard}>
             <View style={styles.metricHeader}>
-              <Ionicons name="target-outline" size={24} color={colors.purple[600]} />
+              <Ionicons name="flag-outline" size={24} color={colors.purple[600]} />
               <Text style={styles.metricLabel}>Weighted Pipeline</Text>
             </View>
             <Text style={[styles.metricValue, { color: colors.purple[600] }]}>
@@ -571,14 +571,14 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.primary[100],
+    backgroundColor: colors.blue[100],
     justifyContent: 'center',
     alignItems: 'center',
   },
   rankText: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: colors.primary[700],
+    color: colors.blue[700],
   },
   opportunityDetails: {
     flex: 1,

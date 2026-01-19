@@ -730,17 +730,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: colors.primary[50],
+    backgroundColor: colors.blue[50],
     padding: spacing.md,
     borderRadius: 8,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.primary[300],
+    borderColor: colors.blue[300],
   },
   selectedCustomerText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.primary[700],
+    color: colors.blue[700],
     flex: 1,
   },
   customersList: {
@@ -910,7 +910,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border.default,
   },
   selectOptionActive: {
-    backgroundColor: colors.primary[50],
+    backgroundColor: colors.blue[50],
     borderColor: colors.primary.main,
   },
   selectOptionPressed: {

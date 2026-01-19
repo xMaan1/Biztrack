@@ -83,7 +83,7 @@ export default function ContractListScreen() {
   const renderContractItem = ({ item }: { item: Contract }) => (
     <TouchableOpacity
       style={styles.contractCard}
-      onPress={() => navigation.navigate('ContractDetail' as never, { id: item.id } as never)}
+      onPress={() => (navigation.navigate as any)('ContractDetail', { id: item.id })}
     >
       <View style={styles.contractHeader}>
         <View style={styles.contractInfo}>

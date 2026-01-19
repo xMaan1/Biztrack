@@ -115,7 +115,7 @@ export default function InvoiceDetailScreen() {
   }
 
   const handleEdit = () => {
-    navigation.navigate('InvoiceForm' as never, { id, invoice } as never);
+    (navigation.navigate as any)('InvoiceForm', { id, invoice });
   };
 
   return (

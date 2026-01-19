@@ -116,7 +116,7 @@ export default function DumpsScreen() {
         styles.dumpCard,
         pressed && styles.dumpCardPressed,
       ]}
-      onPress={() => navigation.navigate('StockMovementDetail' as never, { id: item.id } as never)}
+      onPress={() => (navigation.navigate as any)('StockMovementDetail', { id: item.id })}
     >
       <View style={styles.dumpHeader}>
         <View style={styles.dumpInfo}>
@@ -154,7 +154,7 @@ export default function DumpsScreen() {
             styles.actionButton,
             pressed && styles.actionButtonPressed,
           ]}
-          onPress={() => navigation.navigate('StockMovementForm' as never, { id: item.id, movement: item } as never)}
+          onPress={() => (navigation.navigate as any)('StockMovementForm', { id: item.id, movement: item })}
         >
           <Ionicons name="create-outline" size={18} color={colors.primary.main} />
         </Pressable>
@@ -258,12 +258,12 @@ export default function DumpsScreen() {
         title="Damaged Items (Dumps)"
         gradient={false}
         rightIcon="add"
-        onRightPress={() => navigation.navigate('StockMovementForm' as never, {
+        onRightPress={() => (navigation.navigate as any)('StockMovementForm', {
           movement: {
             movementType: 'damage',
             referenceType: 'damage',
           },
-        } as never)}
+        })}
       />
       <FlatList
         data={dumps}

@@ -126,7 +126,7 @@ export default function AppointmentListScreen() {
   const renderAppointmentItem = ({ item }: { item: Appointment }) => (
     <TouchableOpacity
       style={styles.appointmentCard}
-      onPress={() => navigation.navigate('AppointmentDetail' as never, { id: item.id } as never)}
+      onPress={() => (navigation.navigate as any)('AppointmentDetail', { id: item.id })}
     >
       <View style={styles.appointmentHeader}>
         <View style={styles.appointmentInfo}>
@@ -287,7 +287,7 @@ export default function AppointmentListScreen() {
         title="Appointments"
         rightIcon="add"
         gradient={false}
-        onRightPress={() => navigation.navigate('AppointmentForm' as never, {} as never)}
+        onRightPress={() => (navigation.navigate as any)('AppointmentForm', {})}
       />
       <FlatList
         data={appointments}

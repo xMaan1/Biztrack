@@ -69,7 +69,7 @@ export default function StockMovementDetailScreen() {
   };
 
   const handleEdit = () => {
-    navigation.navigate('StockMovementForm' as never, { id, movement } as never);
+    (navigation.navigate as any)('StockMovementForm', { id, movement });
   };
 
   const getTypeBadgeStyle = (type: StockMovementType) => {

@@ -83,7 +83,7 @@ export default function ProductListScreen() {
   const renderProductItem = ({ item }: { item: Product }) => (
     <TouchableOpacity
       style={styles.productCard}
-      onPress={() => navigation.navigate('ProductDetail' as never, { id: item.id } as never)}
+      onPress={() => (navigation.navigate as any)('ProductDetail', { id: item.id })}
     >
       <View style={styles.productHeader}>
         <View style={styles.productInfo}>
@@ -136,7 +136,7 @@ export default function ProductListScreen() {
         </View>
         <TouchableOpacity
           style={styles.filterButton}
-          onPress={() => navigation.navigate('ProductForm' as never, {} as never)}
+          onPress={() => (navigation.navigate as any)('ProductForm', {})}
         >
           <Ionicons name="add" size={24} color={colors.primary.main} />
         </TouchableOpacity>
@@ -203,7 +203,7 @@ export default function ProductListScreen() {
       <Text style={styles.emptyText}>No products found</Text>
       <TouchableOpacity
         style={styles.addButton}
-        onPress={() => navigation.navigate('ProductForm' as never, {} as never)}
+        onPress={() => (navigation.navigate as any)('ProductForm', {})}
       >
         <Ionicons name="add-circle" size={20} color={colors.background.default} />
         <Text style={styles.addButtonText}>Add Product</Text>
@@ -217,7 +217,7 @@ export default function ProductListScreen() {
         title="Products"
         rightIcon="add"
         gradient={false}
-        onRightPress={() => navigation.navigate('ProductForm' as never, {} as never)}
+        onRightPress={() => (navigation.navigate as any)('ProductForm', {})}
       />
       <FlatList
         data={products}

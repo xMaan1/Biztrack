@@ -108,7 +108,7 @@ export default function ShiftListScreen() {
   const renderShiftItem = ({ item }: { item: POSShift }) => (
     <TouchableOpacity
       style={styles.shiftCard}
-      onPress={() => navigation.navigate('ShiftDetail' as never, { id: item.id } as never)}
+      onPress={() => (navigation.navigate as any)('ShiftDetail', { id: item.id })}
     >
       <View style={styles.shiftHeader}>
         <View style={styles.shiftInfo}>

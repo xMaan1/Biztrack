@@ -69,7 +69,7 @@ export default function ReceivingDetailScreen() {
   };
 
   const handleEdit = () => {
-    navigation.navigate('ReceivingForm' as never, { id, receiving } as never);
+    (navigation.navigate as any)('ReceivingForm', { id, receiving });
   };
 
   const getStatusBadgeStyle = (status: ReceivingStatus) => {

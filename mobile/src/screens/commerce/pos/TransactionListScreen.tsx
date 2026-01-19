@@ -98,7 +98,7 @@ export default function TransactionListScreen() {
   const renderTransactionItem = ({ item }: { item: POSTransaction }) => (
     <TouchableOpacity
       style={styles.transactionCard}
-      onPress={() => navigation.navigate('TransactionDetail' as never, { id: item.id } as never)}
+      onPress={() => (navigation.navigate as any)('TransactionDetail', { id: item.id })}
     >
       <View style={styles.transactionHeader}>
         <View style={styles.transactionInfo}>

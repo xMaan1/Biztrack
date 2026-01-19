@@ -151,7 +151,7 @@ export default function SupplyListScreen() {
   const renderSupplyItem = ({ item }: { item: MedicalSupply }) => (
     <TouchableOpacity
       style={styles.supplyCard}
-      onPress={() => navigation.navigate('SupplyDetail' as never, { id: item.id } as never)}
+      onPress={() => (navigation.navigate as any)('SupplyDetail', { id: item.id })}
     >
       <View style={styles.supplyHeader}>
         <View style={styles.supplyInfo}>
@@ -357,7 +357,7 @@ export default function SupplyListScreen() {
         title="Medical Supplies"
         rightIcon="add"
         gradient={false}
-        onRightPress={() => navigation.navigate('SupplyForm' as never, {} as never)}
+        onRightPress={() => (navigation.navigate as any)('SupplyForm', {})}
       />
       <FlatList
         data={supplies}

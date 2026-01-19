@@ -77,7 +77,7 @@ export default function AppointmentDetailScreen() {
   };
 
   const handleEdit = () => {
-    navigation.navigate('AppointmentForm' as never, { id, appointment } as never);
+    (navigation.navigate as any)('AppointmentForm', { id, appointment });
   };
 
   const handleCall = (phone: string) => {

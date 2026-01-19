@@ -68,7 +68,7 @@ export default function WarehouseDetailScreen() {
   };
 
   const handleEdit = () => {
-    navigation.navigate('WarehouseForm' as never, { id, warehouse } as never);
+    (navigation.navigate as any)('WarehouseForm', { id, warehouse });
   };
 
   const handleCall = (phone: string) => {

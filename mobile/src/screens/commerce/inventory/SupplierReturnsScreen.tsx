@@ -115,7 +115,7 @@ export default function SupplierReturnsScreen() {
         styles.returnCard,
         pressed && styles.returnCardPressed,
       ]}
-      onPress={() => navigation.navigate('StockMovementDetail' as never, { id: item.id } as never)}
+      onPress={() => (navigation.navigate as any)('StockMovementDetail', { id: item.id })}
     >
       <View style={styles.returnHeader}>
         <View style={styles.returnInfo}>
@@ -153,7 +153,7 @@ export default function SupplierReturnsScreen() {
             styles.actionButton,
             pressed && styles.actionButtonPressed,
           ]}
-          onPress={() => navigation.navigate('StockMovementForm' as never, { id: item.id, movement: item } as never)}
+          onPress={() => (navigation.navigate as any)('StockMovementForm', { id: item.id, movement: item })}
         >
           <Ionicons name="create-outline" size={18} color={colors.primary.main} />
         </Pressable>
@@ -257,12 +257,12 @@ export default function SupplierReturnsScreen() {
         title="Supplier Returns"
         gradient={false}
         rightIcon="add"
-        onRightPress={() => navigation.navigate('StockMovementForm' as never, {
+        onRightPress={() => (navigation.navigate as any)('StockMovementForm', {
           movement: {
             movementType: 'return',
             referenceType: 'supplier_return',
           },
-        } as never)}
+        })}
       />
       <FlatList
         data={returns}

@@ -287,7 +287,7 @@ export default function POSDashboardScreen() {
               <TouchableOpacity
                 key={transaction.id}
                 style={styles.transactionCard}
-                onPress={() => navigation.navigate('TransactionDetail' as never, { id: transaction.id } as never)}
+                onPress={() => (navigation.navigate as any)('TransactionDetail', { id: transaction.id })}
               >
                 <View style={styles.transactionInfo}>
                   <Text style={styles.transactionNumber}>#{transaction.transactionNumber}</Text>

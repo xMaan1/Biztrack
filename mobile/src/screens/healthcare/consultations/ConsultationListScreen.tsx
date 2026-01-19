@@ -125,7 +125,7 @@ export default function ConsultationListScreen() {
   const renderConsultationItem = ({ item }: { item: Consultation }) => (
     <TouchableOpacity
       style={styles.consultationCard}
-      onPress={() => navigation.navigate('ConsultationDetail' as never, { id: item.id } as never)}
+      onPress={() => (navigation.navigate as any)('ConsultationDetail', { id: item.id })}
     >
       <View style={styles.consultationHeader}>
         <View style={styles.consultationInfo}>
@@ -327,7 +327,7 @@ export default function ConsultationListScreen() {
         title="Consultations"
         rightIcon="add"
         gradient={false}
-        onRightPress={() => navigation.navigate('ConsultationForm' as never, {} as never)}
+        onRightPress={() => (navigation.navigate as any)('ConsultationForm', {})}
       />
       <FlatList
         data={consultations}

@@ -576,7 +576,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border.default,
   },
   selectOptionActive: {
-    backgroundColor: colors.primary[50],
+    backgroundColor: colors.blue[50],
     borderColor: colors.primary.main,
   },
   selectOptionText: {

@@ -197,7 +197,7 @@ export default function OpportunityListScreen() {
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Ionicons name="target-outline" size={64} color={colors.text.secondary} />
+      <Ionicons name="flag-outline" size={64} color={colors.text.secondary} />
       <Text style={styles.emptyText}>No opportunities found</Text>
     </View>
   );

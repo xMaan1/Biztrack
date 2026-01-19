@@ -93,6 +93,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: spacing.sm,
     lineHeight: 20,
+    fontWeight: textStyles.body2.fontWeight as '400',
   },
   statCardValue: {
     ...textStyles.h4,

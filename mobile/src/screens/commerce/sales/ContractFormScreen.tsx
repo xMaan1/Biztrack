@@ -328,7 +328,7 @@ export default function ContractFormScreen() {
               <Switch
                 value={formData.autoRenew}
                 onValueChange={(value) => updateField('autoRenew', value)}
-                trackColor={{ false: colors.gray[300], true: colors.primary[300] }}
+                trackColor={{ false: colors.gray[300], true: colors.blue[300] }}
                 thumbColor={formData.autoRenew ? colors.primary.main : colors.gray[500]}
               />
             </View>

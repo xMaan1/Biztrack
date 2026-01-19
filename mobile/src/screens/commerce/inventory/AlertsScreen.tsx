@@ -98,7 +98,7 @@ export default function AlertsScreen() {
     return (
       <TouchableOpacity
         style={[styles.alertCard, { borderLeftColor: badgeStyle.borderColor }]}
-        onPress={() => navigation.navigate('ProductDetail' as never, { id: item.productId } as never)}
+        onPress={() => (navigation.navigate as any)('ProductDetail', { id: item.productId })}
       >
         <View style={styles.alertHeader}>
           <View style={styles.alertIconContainer}>

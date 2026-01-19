@@ -87,7 +87,7 @@ export default function ConsultationDetailScreen() {
   };
 
   const handleEdit = () => {
-    navigation.navigate('ConsultationForm' as never, { id, consultation } as never);
+    (navigation.navigate as any)('ConsultationForm', { id, consultation });
   };
 
   const getDoctorName = () => {

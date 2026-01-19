@@ -59,28 +59,28 @@ export default function SalesDashboardScreen() {
   };
 
   const getStatusColor = (status: string) => {
-    const colorsMap: Record<string, { bg: string; border: string }> = {
-      new: { bg: colors.blue[100], border: colors.blue[500] },
-      contacted: { bg: colors.yellow[100], border: colors.yellow[500] },
-      qualified: { bg: colors.green[100], border: colors.green[500] },
-      proposal: { bg: colors.purple[100], border: colors.purple[500] },
-      negotiation: { bg: colors.orange[100], border: colors.orange[500] },
-      won: { bg: colors.green[100], border: colors.green[500] },
-      lost: { bg: colors.red[100], border: colors.red[500] },
+    const colorsMap: Record<string, { backgroundColor: string; borderColor: string }> = {
+      new: { backgroundColor: colors.blue[100], borderColor: colors.blue[500] },
+      contacted: { backgroundColor: colors.yellow[100], borderColor: colors.yellow[500] },
+      qualified: { backgroundColor: colors.green[100], borderColor: colors.green[500] },
+      proposal: { backgroundColor: colors.purple[100], borderColor: colors.purple[500] },
+      negotiation: { backgroundColor: colors.orange[100], borderColor: colors.orange[500] },
+      won: { backgroundColor: colors.green[100], borderColor: colors.green[500] },
+      lost: { backgroundColor: colors.red[100], borderColor: colors.red[500] },
     };
-    return colorsMap[status] || { bg: colors.gray[100], border: colors.gray[500] };
+    return colorsMap[status] || { backgroundColor: colors.gray[100], borderColor: colors.gray[500] };
   };
 
   const getStageColor = (stage: string) => {
-    const colorsMap: Record<string, { bg: string; border: string }> = {
-      prospecting: { bg: colors.blue[100], border: colors.blue[500] },
-      qualification: { bg: colors.yellow[100], border: colors.yellow[500] },
-      proposal: { bg: colors.purple[100], border: colors.purple[500] },
-      negotiation: { bg: colors.orange[100], border: colors.orange[500] },
-      closed_won: { bg: colors.green[100], border: colors.green[500] },
-      closed_lost: { bg: colors.red[100], border: colors.red[500] },
+    const colorsMap: Record<string, { backgroundColor: string; borderColor: string }> = {
+      prospecting: { backgroundColor: colors.blue[100], borderColor: colors.blue[500] },
+      qualification: { backgroundColor: colors.yellow[100], borderColor: colors.yellow[500] },
+      proposal: { backgroundColor: colors.purple[100], borderColor: colors.purple[500] },
+      negotiation: { backgroundColor: colors.orange[100], borderColor: colors.orange[500] },
+      closed_won: { backgroundColor: colors.green[100], borderColor: colors.green[500] },
+      closed_lost: { backgroundColor: colors.red[100], borderColor: colors.red[500] },
     };
-    return colorsMap[stage] || { bg: colors.gray[100], border: colors.gray[500] };
+    return colorsMap[stage] || { backgroundColor: colors.gray[100], borderColor: colors.gray[500] };
   };
 
   if (loading && !dashboard) {
@@ -141,7 +141,7 @@ export default function SalesDashboardScreen() {
 
           <View style={styles.metricCard}>
             <View style={styles.metricHeader}>
-              <Ionicons name="target-outline" size={24} color={colors.purple[600]} />
+              <Ionicons name="flag-outline" size={24} color={colors.purple[600]} />
               <Text style={styles.metricLabel}>Opportunities</Text>
             </View>
             <Text style={styles.metricValue}>
@@ -214,7 +214,7 @@ export default function SalesDashboardScreen() {
                   key={lead.id}
                   style={styles.leadItem}
                   onPress={() =>
-                    navigation.navigate('LeadDetail' as never, { id: lead.id } as never)
+                    (navigation.navigate as any)('LeadDetail', { id: lead.id })
                   }
                 >
                   <View style={styles.leadIcon}>
@@ -268,13 +268,13 @@ export default function SalesDashboardScreen() {
                   key={opportunity.id}
                   style={styles.opportunityItem}
                   onPress={() =>
-                    navigation.navigate('OpportunityDetail' as never, {
+                    (navigation.navigate as any)('OpportunityDetail', {
                       id: opportunity.id,
-                    } as never)
+                    })
                   }
                 >
                   <View style={styles.opportunityIcon}>
-                    <Ionicons name="target-outline" size={20} color={colors.blue[600]} />
+                    <Ionicons name="flag-outline" size={20} color={colors.blue[600]} />
                   </View>
                   <View style={styles.opportunityInfo}>
                     <Text style={styles.opportunityTitle}>{opportunity.title}</Text>

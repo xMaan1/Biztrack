@@ -64,7 +64,7 @@ export default function WorkOrderFormScreen() {
       formData.description.trim() !== '' &&
       formData.planned_start_date !== '' &&
       formData.planned_end_date !== '' &&
-      formData.estimated_hours > 0
+      (formData.estimated_hours ?? 0) > 0
     );
   };
 

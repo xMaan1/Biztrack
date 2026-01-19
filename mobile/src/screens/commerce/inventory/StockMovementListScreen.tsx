@@ -96,7 +96,7 @@ export default function StockMovementListScreen() {
         styles.movementCard,
         pressed && styles.movementCardPressed,
       ]}
-      onPress={() => navigation.navigate('StockMovementDetail' as never, { id: item.id } as never)}
+      onPress={() => (navigation.navigate as any)('StockMovementDetail', { id: item.id })}
     >
       <View style={styles.movementHeader}>
         <View style={styles.movementInfo}>
@@ -133,7 +133,7 @@ export default function StockMovementListScreen() {
             styles.actionButton,
             pressed && styles.actionButtonPressed,
           ]}
-          onPress={() => navigation.navigate('StockMovementForm' as never, { id: item.id, movement: item } as never)}
+          onPress={() => (navigation.navigate as any)('StockMovementForm', { id: item.id, movement: item })}
         >
           <Ionicons name="create-outline" size={18} color={colors.primary.main} />
         </Pressable>
@@ -224,7 +224,7 @@ export default function StockMovementListScreen() {
         title="Stock Movements"
         rightIcon="add"
         gradient={false}
-        onRightPress={() => navigation.navigate('StockMovementForm' as never, {} as never)}
+        onRightPress={() => (navigation.navigate as any)('StockMovementForm', {})}
       />
       <FlatList
         data={movements}

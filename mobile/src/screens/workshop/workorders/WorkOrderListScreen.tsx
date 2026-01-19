@@ -144,7 +144,7 @@ export default function WorkOrderListScreen() {
     return (
       <TouchableOpacity
         style={styles.workOrderCard}
-        onPress={() => navigation.navigate('WorkOrderDetail' as never, { id: item.id } as never)}
+        onPress={() => (navigation.navigate as any)('WorkOrderDetail', { id: item.id })}
       >
         <View style={styles.workOrderHeader}>
           <View style={styles.workOrderInfo}>
@@ -408,7 +408,7 @@ export default function WorkOrderListScreen() {
       {!searchTerm && activeTab === 'all' && statusFilter === 'all' && priorityFilter === 'all' && typeFilter === 'all' && (
         <TouchableOpacity
           style={styles.createButton}
-          onPress={() => navigation.navigate('WorkOrderForm' as never, {} as never)}
+          onPress={() => (navigation.navigate as any)('WorkOrderForm', {})}
         >
           <Ionicons name="add" size={20} color={colors.background.default} />
           <Text style={styles.createButtonText}>Create Work Order</Text>
@@ -423,7 +423,7 @@ export default function WorkOrderListScreen() {
         title="Work Orders"
         rightIcon="add"
         gradient={false}
-        onRightPress={() => navigation.navigate('WorkOrderForm' as never, {} as never)}
+        onRightPress={() => (navigation.navigate as any)('WorkOrderForm', {})}
       />
       <FlatList
         data={workOrders}

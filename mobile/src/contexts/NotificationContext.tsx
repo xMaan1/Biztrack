@@ -50,8 +50,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const [error, setError] = useState<string | null>(null);
   const [preferences, setPreferences] = useState<NotificationPreference[]>([]);
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
-  const notificationListener = useRef<Notifications.Subscription>();
-  const responseListener = useRef<Notifications.Subscription>();
+  const notificationListener = useRef<Notifications.Subscription | undefined>(undefined);
+  const responseListener = useRef<Notifications.Subscription | undefined>(undefined);
 
   useEffect(() => {
     registerForPushNotificationsAsync().then((token) => {

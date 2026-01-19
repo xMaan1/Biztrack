@@ -88,7 +88,7 @@ export default function StorageLocationListScreen() {
         styles.locationCard,
         pressed && styles.locationCardPressed,
       ]}
-      onPress={() => navigation.navigate('StorageLocationDetail' as never, { id: item.id } as never)}
+      onPress={() => (navigation.navigate as any)('StorageLocationDetail', { id: item.id })}
     >
       <View style={styles.locationHeader}>
         <View style={styles.locationInfo}>
@@ -128,7 +128,7 @@ export default function StorageLocationListScreen() {
             styles.actionButton,
             pressed && styles.actionButtonPressed,
           ]}
-          onPress={() => navigation.navigate('StorageLocationForm' as never, { id: item.id, storageLocation: item } as never)}
+          onPress={() => (navigation.navigate as any)('StorageLocationForm', { id: item.id, storageLocation: item })}
         >
           <Ionicons name="create-outline" size={18} color={colors.primary.main} />
         </Pressable>
@@ -237,7 +237,7 @@ export default function StorageLocationListScreen() {
         title="Storage Locations"
         rightIcon="add"
         gradient={false}
-        onRightPress={() => navigation.navigate('StorageLocationForm' as never, {} as never)}
+        onRightPress={() => (navigation.navigate as any)('StorageLocationForm', {})}
       />
       <FlatList
         data={locations}

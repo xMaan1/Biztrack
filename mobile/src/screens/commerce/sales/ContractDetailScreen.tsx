@@ -102,7 +102,7 @@ export default function ContractDetailScreen() {
   }
 
   const handleEdit = () => {
-    navigation.navigate('ContractForm' as never, { id, contract } as never);
+    (navigation.navigate as any)('ContractForm', { id, contract });
   };
 
   return (

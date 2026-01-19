@@ -76,7 +76,7 @@ export default function MedicalRecordDetailScreen() {
   };
 
   const handleEdit = () => {
-    navigation.navigate('MedicalRecordForm' as never, { id, record } as never);
+    (navigation.navigate as any)('MedicalRecordForm', { id, record });
   };
 
   if (loading) {
@@ -312,14 +312,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: 12,
-    backgroundColor: colors.primary[100],
+    backgroundColor: colors.blue[100],
     borderWidth: 1,
-    borderColor: colors.primary[300],
+    borderColor: colors.blue[300],
   },
   typeText: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.primary[700],
+    color: colors.blue[700],
   },
   confidentialBadge: {
     flexDirection: 'row',
@@ -392,16 +392,16 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   tag: {
-    backgroundColor: colors.primary[100],
+    backgroundColor: colors.blue[100],
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.primary[300],
+    borderColor: colors.blue[300],
   },
   tagText: {
     fontSize: 12,
-    color: colors.primary[700],
+    color: colors.blue[700],
   },
   actionsContainer: {
     marginTop: spacing.md,

@@ -67,7 +67,7 @@ export default function WorkOrderDetailScreen() {
   };
 
   const handleEdit = () => {
-    navigation.navigate('WorkOrderForm' as never, { id, workOrder } as never);
+    (navigation.navigate as any)('WorkOrderForm', { id, workOrder });
   };
 
   if (loading) {

@@ -91,7 +91,7 @@ export default function ProductListScreen() {
     return (
       <TouchableOpacity
         style={styles.productCard}
-        onPress={() => navigation.navigate('ProductDetail' as never, { id: item.id } as never)}
+        onPress={() => (navigation.navigate as any)('ProductDetail', { id: item.id })}
       >
         <View style={styles.productHeader}>
           <View style={styles.productInfo}>

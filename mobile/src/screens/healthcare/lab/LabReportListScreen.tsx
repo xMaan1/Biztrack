@@ -142,7 +142,7 @@ export default function LabReportListScreen() {
   const renderLabReportItem = ({ item }: { item: LabReport }) => (
     <TouchableOpacity
       style={styles.reportCard}
-      onPress={() => navigation.navigate('LabReportDetail' as never, { id: item.id } as never)}
+      onPress={() => (navigation.navigate as any)('LabReportDetail', { id: item.id })}
     >
       <View style={styles.reportHeader}>
         <View style={styles.reportInfo}>

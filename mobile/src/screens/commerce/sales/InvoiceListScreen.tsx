@@ -82,7 +82,7 @@ export default function InvoiceListScreen() {
   const renderInvoiceItem = ({ item }: { item: Invoice }) => (
     <TouchableOpacity
       style={styles.invoiceCard}
-      onPress={() => navigation.navigate('InvoiceDetail' as never, { id: item.id } as never)}
+      onPress={() => (navigation.navigate as any)('InvoiceDetail', { id: item.id })}
     >
       <View style={styles.invoiceHeader}>
         <View style={styles.invoiceInfo}>
@@ -207,7 +207,7 @@ export default function InvoiceListScreen() {
         title="Invoices"
         rightIcon="add"
         gradient={false}
-        onRightPress={() => navigation.navigate('InvoiceForm' as never, {} as never)}
+        onRightPress={() => (navigation.navigate as any)('InvoiceForm', {})}
       />
       <FlatList
         data={invoices}

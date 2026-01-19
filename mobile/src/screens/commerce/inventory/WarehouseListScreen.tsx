@@ -102,7 +102,7 @@ export default function WarehouseListScreen() {
         styles.warehouseCard,
         pressed && styles.warehouseCardPressed,
       ]}
-      onPress={() => navigation.navigate('WarehouseDetail' as never, { id: item.id } as never)}
+      onPress={() => (navigation.navigate as any)('WarehouseDetail', { id: item.id })}
     >
       <View style={styles.warehouseHeader}>
         <View style={styles.warehouseInfo}>
@@ -147,7 +147,7 @@ export default function WarehouseListScreen() {
             styles.actionButton,
             pressed && styles.actionButtonPressed,
           ]}
-          onPress={() => navigation.navigate('WarehouseForm' as never, { id: item.id } as never)}
+          onPress={() => (navigation.navigate as any)('WarehouseForm', { id: item.id })}
         >
           <Ionicons name="create-outline" size={18} color={colors.primary.main} />
         </Pressable>
@@ -251,7 +251,7 @@ export default function WarehouseListScreen() {
         title="Warehouses"
         rightIcon="add"
         gradient={false}
-        onRightPress={() => navigation.navigate('WarehouseForm' as never, {} as never)}
+        onRightPress={() => (navigation.navigate as any)('WarehouseForm', {})}
       />
       <FlatList
         data={warehouses}

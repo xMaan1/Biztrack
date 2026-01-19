@@ -43,6 +43,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     lineHeight: 36,
     letterSpacing: -0.5,
+    fontWeight: textStyles.h2.fontWeight as '700',
   },
   subtitle: {
     ...textStyles.body1,

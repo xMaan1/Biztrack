@@ -46,7 +46,7 @@ export default function ProductDetailScreen() {
 
   const handleEdit = () => {
     if (product) {
-      navigation.navigate('ProductForm' as never, { id: product.id, product } as never);
+      (navigation.navigate as any)('ProductForm', { id: product.id, product });
     }
   };
 

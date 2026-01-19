@@ -68,7 +68,7 @@ export default function QuoteDetailScreen() {
   };
 
   const handleEdit = () => {
-    navigation.navigate('QuoteForm' as never, { id, quote } as never);
+    (navigation.navigate as any)('QuoteForm', { id, quote });
   };
 
   const getStatusBadgeStyle = (status: string) => {

@@ -91,7 +91,7 @@ export default function PurchaseOrderListScreen() {
         styles.orderCard,
         pressed && styles.orderCardPressed,
       ]}
-      onPress={() => navigation.navigate('PurchaseOrderDetail' as never, { id: item.id } as never)}
+      onPress={() => (navigation.navigate as any)('PurchaseOrderDetail', { id: item.id })}
     >
       <View style={styles.orderHeader}>
         <View style={styles.orderInfo}>
@@ -120,7 +120,7 @@ export default function PurchaseOrderListScreen() {
             styles.actionButton,
             pressed && styles.actionButtonPressed,
           ]}
-          onPress={() => navigation.navigate('PurchaseOrderForm' as never, { id: item.id, order: item } as never)}
+          onPress={() => (navigation.navigate as any)('PurchaseOrderForm', { id: item.id, order: item })}
         >
           <Ionicons name="create-outline" size={18} color={colors.primary.main} />
         </Pressable>
@@ -211,7 +211,7 @@ export default function PurchaseOrderListScreen() {
         title="Purchase Orders"
         rightIcon="add"
         gradient={false}
-        onRightPress={() => navigation.navigate('PurchaseOrderForm' as never, {} as never)}
+        onRightPress={() => (navigation.navigate as any)('PurchaseOrderForm', {})}
       />
       <FlatList
         data={orders}

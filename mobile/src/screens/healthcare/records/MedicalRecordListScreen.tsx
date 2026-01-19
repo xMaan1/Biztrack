@@ -121,7 +121,7 @@ export default function MedicalRecordListScreen() {
   const renderRecordItem = ({ item }: { item: MedicalRecord }) => (
     <TouchableOpacity
       style={styles.recordCard}
-      onPress={() => navigation.navigate('MedicalRecordDetail' as never, { id: item.id } as never)}
+      onPress={() => (navigation.navigate as any)('MedicalRecordDetail', { id: item.id })}
     >
       <View style={styles.recordHeader}>
         <View style={styles.recordInfo}>
@@ -269,7 +269,7 @@ export default function MedicalRecordListScreen() {
         title="Medical Records"
         rightIcon="add"
         gradient={false}
-        onRightPress={() => navigation.navigate('MedicalRecordForm' as never, {} as never)}
+        onRightPress={() => (navigation.navigate as any)('MedicalRecordForm', {})}
       />
       <FlatList
         data={records}
@@ -434,14 +434,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: 12,
-    backgroundColor: colors.primary[100],
+    backgroundColor: colors.blue[100],
     borderWidth: 1,
-    borderColor: colors.primary[300],
+    borderColor: colors.blue[300],
   },
   typeText: {
     fontSize: 11,
     fontWeight: '600',
-    color: colors.primary[700],
+    color: colors.blue[700],
   },
   confidentialBadge: {
     padding: spacing.xs,

@@ -88,7 +88,7 @@ export default function ReceivingListScreen() {
         styles.receivingCard,
         pressed && styles.receivingCardPressed,
       ]}
-      onPress={() => navigation.navigate('ReceivingDetail' as never, { id: item.id } as never)}
+      onPress={() => (navigation.navigate as any)('ReceivingDetail', { id: item.id })}
     >
       <View style={styles.receivingHeader}>
         <View style={styles.receivingInfo}>
@@ -119,7 +119,7 @@ export default function ReceivingListScreen() {
             styles.actionButton,
             pressed && styles.actionButtonPressed,
           ]}
-          onPress={() => navigation.navigate('ReceivingForm' as never, { id: item.id, receiving: item } as never)}
+          onPress={() => (navigation.navigate as any)('ReceivingForm', { id: item.id, receiving: item })}
         >
           <Ionicons name="create-outline" size={18} color={colors.primary.main} />
         </Pressable>
@@ -210,7 +210,7 @@ export default function ReceivingListScreen() {
         title="Receiving"
         rightIcon="add"
         gradient={false}
-        onRightPress={() => navigation.navigate('ReceivingForm' as never, {} as never)}
+        onRightPress={() => (navigation.navigate as any)('ReceivingForm', {})}
       />
       <FlatList
         data={receivings}

@@ -146,7 +146,7 @@ export default function SupplyDetailScreen() {
         title="Supply Details"
         gradient={false}
         rightIcon="create-outline"
-        onRightPress={() => navigation.navigate('SupplyForm' as never, { id, supply } as never)}
+        onRightPress={() => (navigation.navigate as any)('SupplyForm', { id, supply })}
       />
       <ScrollView
         style={styles.scrollView}
@@ -381,7 +381,7 @@ export default function SupplyDetailScreen() {
         <View style={styles.actionsContainer}>
           <TouchableOpacity
             style={styles.editButton}
-            onPress={() => navigation.navigate('SupplyForm' as never, { id, supply } as never)}
+            onPress={() => (navigation.navigate as any)('SupplyForm', { id, supply })}
           >
             <Ionicons name="create-outline" size={20} color={colors.background.default} />
             <Text style={styles.editButtonText}>Edit Supply</Text>

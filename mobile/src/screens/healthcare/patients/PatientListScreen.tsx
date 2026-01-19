@@ -96,7 +96,7 @@ export default function PatientListScreen() {
   const renderPatientItem = ({ item }: { item: Patient }) => (
     <TouchableOpacity
       style={styles.patientCard}
-      onPress={() => navigation.navigate('PatientDetail' as never, { id: item.id } as never)}
+      onPress={() => (navigation.navigate as any)('PatientDetail', { id: item.id })}
     >
       <View style={styles.patientHeader}>
         <View style={styles.patientInfo}>
@@ -268,7 +268,7 @@ export default function PatientListScreen() {
         title="Patients"
         rightIcon="add"
         gradient={false}
-        onRightPress={() => navigation.navigate('PatientForm' as never, {} as never)}
+        onRightPress={() => (navigation.navigate as any)('PatientForm', {})}
       />
       <FlatList
         data={patients}

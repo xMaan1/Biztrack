@@ -91,7 +91,7 @@ export default function QuoteListScreen() {
   const renderQuoteItem = ({ item }: { item: Quote }) => (
     <TouchableOpacity
       style={styles.quoteCard}
-      onPress={() => navigation.navigate('QuoteDetail' as never, { id: item.id } as never)}
+      onPress={() => (navigation.navigate as any)('QuoteDetail', { id: item.id })}
     >
       <View style={styles.quoteHeader}>
         <View style={styles.quoteInfo}>
@@ -213,7 +213,7 @@ export default function QuoteListScreen() {
       <Header
         title="Quotes"
         rightIcon="add"
-        onRightPress={() => navigation.navigate('QuoteForm' as never, {} as never)}
+        onRightPress={() => (navigation.navigate as any)('QuoteForm', {})}
         gradient={false}
       />
       <FlatList

@@ -76,7 +76,7 @@ export default function StorageLocationDetailScreen() {
   };
 
   const handleEdit = () => {
-    navigation.navigate('StorageLocationForm' as never, { id, storageLocation: location } as never);
+    (navigation.navigate as any)('StorageLocationForm', { id, storageLocation: location });
   };
 
   if (loading) {
