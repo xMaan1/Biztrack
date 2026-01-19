@@ -89,6 +89,9 @@ import LabReportDetailScreen from '@/screens/healthcare/lab/LabReportDetailScree
 import WorkOrderListScreen from '@/screens/workshop/workorders/WorkOrderListScreen';
 import WorkOrderDetailScreen from '@/screens/workshop/workorders/WorkOrderDetailScreen';
 import WorkOrderFormScreen from '@/screens/workshop/workorders/WorkOrderFormScreen';
+import ProductionPlanListScreen from '@/screens/workshop/production/ProductionPlanListScreen';
+import ProductionPlanDetailScreen from '@/screens/workshop/production/ProductionPlanDetailScreen';
+import ProductionPlanFormScreen from '@/screens/workshop/production/ProductionPlanFormScreen';
 import {
   RootStackParamList,
   AuthStackParamList,
@@ -636,8 +639,23 @@ function WorkshopNavigator() {
       />
       <WorkshopStack.Screen
         name="Production"
-        component={PlaceholderScreen}
-        options={{ title: 'Production' }}
+        component={ProductionPlanListScreen}
+        options={{ headerShown: false }}
+      />
+      <WorkshopStack.Screen
+        name="ProductionPlanList"
+        component={ProductionPlanListScreen}
+        options={{ headerShown: false }}
+      />
+      <WorkshopStack.Screen
+        name="ProductionPlanDetail"
+        component={ProductionPlanDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <WorkshopStack.Screen
+        name="ProductionPlanForm"
+        component={ProductionPlanFormScreen}
+        options={{ headerShown: false }}
       />
       <WorkshopStack.Screen
         name="QualityControl"

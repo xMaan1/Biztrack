@@ -121,6 +121,9 @@ export type WorkshopStackParamList = {
   WorkOrderDetail: { id: string };
   WorkOrderForm: { id?: string; workOrder?: any };
   Production: undefined;
+  ProductionPlanList: undefined;
+  ProductionPlanDetail: { id: string };
+  ProductionPlanForm: { id?: string; productionPlan?: any };
   QualityControl: undefined;
   Maintenance: undefined;
   CustomerList: undefined;
