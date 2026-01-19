@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Pressable,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,20 +18,25 @@ import { Header } from '@/components/layout/Header';
 import { colors, spacing } from '@/theme';
 import InvoiceService from '@/services/InvoiceService';
 import CRMService from '@/services/CRMService';
+import POSService from '@/services/POSService';
 import { Invoice, InvoiceCreate, InvoiceItemCreate } from '@/models/sales';
 import { Customer } from '@/models/crm';
+import { Product } from '@/models/pos';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
 export default function InvoiceFormScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const insets = useSafeAreaInsets();
-  const { formatCurrency } = useCurrency();
+  const { formatCurrency, currency: defaultCurrency } = useCurrency();
   const { id, invoice } = route.params as { id?: string; invoice?: Invoice };
   const isEdit = !!id;
   const [loading, setLoading] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showPaymentTermsPicker, setShowPaymentTermsPicker] = useState(false);
+  const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
   const [formData, setFormData] = useState<InvoiceCreate>({
     customerId: invoice?.customerId || '',
     customerName: invoice?.customerName || '',
@@ -43,9 +49,9 @@ export default function InvoiceFormScreen() {
       ? new Date(invoice.dueDate).toISOString().split('T')[0]
       : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     orderNumber: invoice?.orderNumber || '',
-    orderTime: invoice?.orderTime || '',
-    paymentTerms: invoice?.paymentTerms || 'Net 30',
-    currency: invoice?.currency || 'USD',
+    orderTime: invoice?.orderTime || new Date().toISOString().slice(0, 16),
+    paymentTerms: invoice?.paymentTerms || 'Cash',
+    currency: invoice?.currency || defaultCurrency || 'USD',
     taxRate: invoice?.taxRate || 0,
     discount: invoice?.discount || 0,
     notes: invoice?.notes || '',
@@ -56,14 +62,24 @@ export default function InvoiceFormScreen() {
       unitPrice: item.unitPrice,
       discount: item.discount,
       taxRate: item.taxRate,
+      productId: item.productId,
     })) || [],
     opportunityId: invoice?.opportunityId,
     quoteId: invoice?.quoteId,
     projectId: invoice?.projectId,
   });
 
+  const paymentTermsOptions = ['Cash', 'Credit', 'Card', 'Due Payments', 'Net 15', 'Net 30', 'Net 60'];
+  const currencyOptions = [
+    { value: 'USD', label: 'USD ($)' },
+    { value: 'EUR', label: 'EUR (€)' },
+    { value: 'GBP', label: 'GBP (£)' },
+    { value: 'CAD', label: 'CAD (C$)' },
+  ];
+
   useEffect(() => {
     loadCustomers();
+    loadProducts();
   }, []);
 
   useEffect(() => {
@@ -92,13 +108,38 @@ export default function InvoiceFormScreen() {
     }
   };
 
+  const loadProducts = async () => {
+    try {
+      const response = await POSService.getProducts({}, 1, 100);
+      setProducts(response.products || []);
+    } catch (error: any) {
+      console.error('Error loading products:', error);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!formData.customerId || !formData.customerName || !formData.customerEmail) {
       Alert.alert('Validation Error', 'Please select a customer');
       return;
     }
+    if (!formData.issueDate) {
+      Alert.alert('Validation Error', 'Issue date is required');
+      return;
+    }
+    if (!formData.dueDate) {
+      Alert.alert('Validation Error', 'Due date is required');
+      return;
+    }
     if (!formData.items || formData.items.length === 0) {
       Alert.alert('Validation Error', 'Please add at least one item');
+      return;
+    }
+
+    const invalidItems = formData.items.filter(
+      (item) => !item.description.trim() || item.quantity <= 0 || item.unitPrice < 0
+    );
+    if (invalidItems.length > 0) {
+      Alert.alert('Validation Error', 'Please ensure all items have valid description, quantity > 0, and unit price >= 0');
       return;
     }
 
@@ -152,6 +193,7 @@ export default function InvoiceFormScreen() {
           unitPrice: 0,
           discount: 0,
           taxRate: prev.taxRate || 0,
+          productId: '',
         },
       ],
     }));
@@ -294,14 +336,106 @@ export default function InvoiceFormScreen() {
                 />
               </View>
               <View style={[styles.inputGroup, { flex: 1, marginLeft: spacing.sm }]}>
-                <Text style={styles.label}>Payment Terms</Text>
+                <Text style={styles.label}>Order Time</Text>
                 <TextInput
                   style={styles.input}
-                  value={formData.paymentTerms}
-                  onChangeText={(text) => setFormData({ ...formData, paymentTerms: text })}
-                  placeholder="Net 30"
+                  value={formData.orderTime}
+                  onChangeText={(text) => setFormData({ ...formData, orderTime: text })}
+                  placeholder="YYYY-MM-DDTHH:MM"
                   placeholderTextColor={colors.text.secondary}
                 />
+              </View>
+            </View>
+            <View style={styles.row}>
+              <View style={[styles.inputGroup, { flex: 1 }]}>
+                <Text style={styles.label}>Payment Terms</Text>
+                <TouchableOpacity
+                  style={styles.pickerButton}
+                  onPress={() => setShowPaymentTermsPicker(!showPaymentTermsPicker)}
+                >
+                  <Text
+                    style={[
+                      styles.pickerText,
+                      !formData.paymentTerms && styles.pickerPlaceholder,
+                    ]}
+                  >
+                    {formData.paymentTerms || 'Select payment terms'}
+                  </Text>
+                  <Ionicons name="chevron-down" size={20} color={colors.text.secondary} />
+                </TouchableOpacity>
+                {showPaymentTermsPicker && (
+                  <View style={styles.pickerContainer}>
+                    <ScrollView style={styles.pickerScrollView} nestedScrollEnabled>
+                      {paymentTermsOptions.map((term) => (
+                        <TouchableOpacity
+                          key={term}
+                          style={styles.pickerOption}
+                          onPress={() => {
+                            setFormData({ ...formData, paymentTerms: term });
+                            setShowPaymentTermsPicker(false);
+                          }}
+                        >
+                          <Text
+                            style={[
+                              styles.pickerOptionText,
+                              formData.paymentTerms === term && styles.pickerOptionTextActive,
+                            ]}
+                          >
+                            {term}
+                          </Text>
+                          {formData.paymentTerms === term && (
+                            <Ionicons name="checkmark" size={20} color={colors.primary.main} />
+                          )}
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                )}
+              </View>
+              <View style={[styles.inputGroup, { flex: 1, marginLeft: spacing.sm }]}>
+                <Text style={styles.label}>Currency</Text>
+                <TouchableOpacity
+                  style={styles.pickerButton}
+                  onPress={() => setShowCurrencyPicker(!showCurrencyPicker)}
+                >
+                  <Text
+                    style={[
+                      styles.pickerText,
+                      !formData.currency && styles.pickerPlaceholder,
+                    ]}
+                  >
+                    {currencyOptions.find((c) => c.value === formData.currency)?.label || formData.currency || 'Select currency'}
+                  </Text>
+                  <Ionicons name="chevron-down" size={20} color={colors.text.secondary} />
+                </TouchableOpacity>
+                {showCurrencyPicker && (
+                  <View style={styles.pickerContainer}>
+                    <ScrollView style={styles.pickerScrollView} nestedScrollEnabled>
+                      {currencyOptions.map((currency) => (
+                        <TouchableOpacity
+                          key={currency.value}
+                          style={styles.pickerOption}
+                          onPress={() => {
+                            setFormData({ ...formData, currency: currency.value });
+                            setShowCurrencyPicker(false);
+                          }}
+                        >
+                          <Text
+                            style={[
+                              styles.pickerOptionText,
+                              formData.currency === currency.value && styles.pickerOptionTextActive,
+                            ]}
+                          >
+                            {currency.label}
+                          </Text>
+                          {formData.currency === currency.value && (
+                            <Ionicons name="checkmark" size={20} color={colors.primary.main} />
+                          )}
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                )}
               </View>
             </View>
             <View style={styles.row}>
@@ -363,7 +497,45 @@ export default function InvoiceFormScreen() {
                   </TouchableOpacity>
                 </View>
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Description</Text>
+                  <Text style={styles.label}>Product</Text>
+                  <View style={styles.selectContainer}>
+                    {products.length > 0 ? (
+                      products.map((product) => (
+                        <Pressable
+                          key={product.id}
+                          style={({ pressed }) => [
+                            styles.selectOption,
+                            item.productId === product.id && styles.selectOptionActive,
+                            pressed && styles.selectOptionPressed,
+                          ]}
+                          onPress={() => {
+                            updateItem(index, 'productId', product.id);
+                            updateItem(index, 'description', product.name);
+                            updateItem(index, 'unitPrice', product.unitPrice);
+                          }}
+                        >
+                          <Text
+                            style={[
+                              styles.selectOptionText,
+                              item.productId === product.id && styles.selectOptionTextActive,
+                            ]}
+                          >
+                            {product.name} ({product.sku})
+                          </Text>
+                          {item.productId === product.id && (
+                            <Ionicons name="checkmark" size={20} color={colors.primary.main} />
+                          )}
+                        </Pressable>
+                      ))
+                    ) : (
+                      <View style={styles.selectOption}>
+                        <Text style={styles.selectOptionText}>No products available</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Description *</Text>
                   <TextInput
                     style={styles.input}
                     value={item.description}
@@ -374,7 +546,7 @@ export default function InvoiceFormScreen() {
                 </View>
                 <View style={styles.row}>
                   <View style={[styles.inputGroup, { flex: 1 }]}>
-                    <Text style={styles.label}>Quantity</Text>
+                    <Text style={styles.label}>Quantity *</Text>
                     <TextInput
                       style={styles.input}
                       value={item.quantity.toString()}
@@ -386,7 +558,7 @@ export default function InvoiceFormScreen() {
                     />
                   </View>
                   <View style={[styles.inputGroup, { flex: 1, marginLeft: spacing.sm }]}>
-                    <Text style={styles.label}>Unit Price</Text>
+                    <Text style={styles.label}>Unit Price *</Text>
                     <TextInput
                       style={styles.input}
                       value={item.unitPrice.toString()}
@@ -411,6 +583,15 @@ export default function InvoiceFormScreen() {
                       placeholderTextColor={colors.text.secondary}
                     />
                   </View>
+                  <View style={[styles.inputGroup, { flex: 1, marginLeft: spacing.sm }]}>
+                    <Text style={styles.label}>Item Total</Text>
+                    <Text style={styles.itemTotalText}>
+                      {formatCurrency(
+                        item.quantity * item.unitPrice * (1 - (item.discount || 0) / 100),
+                        formData.currency
+                      )}
+                    </Text>
+                  </View>
                 </View>
               </View>
             ))}
@@ -422,19 +603,19 @@ export default function InvoiceFormScreen() {
           <View style={styles.formCard}>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Subtotal:</Text>
-              <Text style={styles.summaryValue}>{formatCurrency(totals.subtotal)}</Text>
+              <Text style={styles.summaryValue}>{formatCurrency(totals.subtotal, formData.currency)}</Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Discount:</Text>
-              <Text style={styles.summaryValue}>-{formatCurrency(totals.discount)}</Text>
+              <Text style={styles.summaryLabel}>Discount ({formData.discount}%):</Text>
+              <Text style={styles.summaryValue}>-{formatCurrency(totals.discount, formData.currency)}</Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Tax:</Text>
-              <Text style={styles.summaryValue}>{formatCurrency(totals.taxAmount)}</Text>
+              <Text style={styles.summaryLabel}>Tax ({formData.taxRate}%):</Text>
+              <Text style={styles.summaryValue}>{formatCurrency(totals.taxAmount, formData.currency)}</Text>
             </View>
             <View style={[styles.summaryRow, styles.totalRow]}>
               <Text style={styles.totalLabel}>Total:</Text>
-              <Text style={styles.totalValue}>{formatCurrency(totals.total)}</Text>
+              <Text style={styles.totalValue}>{formatCurrency(totals.total, formData.currency)}</Text>
             </View>
           </View>
         </View>
@@ -669,5 +850,88 @@ const styles = StyleSheet.create({
     color: colors.background.default,
     fontSize: 16,
     fontWeight: '600',
+  },
+  pickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.background.paper,
+    borderRadius: 8,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border.default,
+  },
+  pickerText: {
+    fontSize: 16,
+    color: colors.text.primary,
+  },
+  pickerPlaceholder: {
+    color: colors.text.secondary,
+  },
+  pickerContainer: {
+    marginTop: spacing.xs,
+    backgroundColor: colors.background.paper,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border.default,
+    maxHeight: 200,
+  },
+  pickerScrollView: {
+    maxHeight: 200,
+  },
+  pickerOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border.light,
+  },
+  pickerOptionText: {
+    fontSize: 14,
+    color: colors.text.primary,
+  },
+  pickerOptionTextActive: {
+    color: colors.primary.main,
+    fontWeight: '600',
+  },
+  selectContainer: {
+    marginTop: spacing.xs,
+  },
+  selectOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: spacing.md,
+    backgroundColor: colors.background.paper,
+    borderRadius: 8,
+    marginBottom: spacing.xs,
+    borderWidth: 1,
+    borderColor: colors.border.default,
+  },
+  selectOptionActive: {
+    backgroundColor: colors.primary[50],
+    borderColor: colors.primary.main,
+  },
+  selectOptionPressed: {
+    opacity: 0.7,
+  },
+  selectOptionText: {
+    fontSize: 14,
+    color: colors.text.primary,
+    flex: 1,
+  },
+  selectOptionTextActive: {
+    color: colors.primary.main,
+    fontWeight: '600',
+  },
+  itemTotalText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.primary.main,
+    padding: spacing.md,
+    backgroundColor: colors.background.paper,
+    borderRadius: 8,
+    textAlign: 'right',
   },
 });

@@ -10,3 +10,4 @@ export { default as AppointmentService } from "./AppointmentService";
 export { default as MedicalRecordService } from "./MedicalRecordService";
 export { default as MedicalSupplyService } from "./MedicalSupplyService";
 export { default as ConsultationService } from "./ConsultationService";
+export { default as WorkOrderService } from "./WorkOrderService";

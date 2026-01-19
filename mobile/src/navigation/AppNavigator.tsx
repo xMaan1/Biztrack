@@ -84,6 +84,11 @@ import SupplyFormScreen from '@/screens/healthcare/supplies/SupplyFormScreen';
 import ConsultationListScreen from '@/screens/healthcare/consultations/ConsultationListScreen';
 import ConsultationDetailScreen from '@/screens/healthcare/consultations/ConsultationDetailScreen';
 import ConsultationFormScreen from '@/screens/healthcare/consultations/ConsultationFormScreen';
+import LabReportListScreen from '@/screens/healthcare/lab/LabReportListScreen';
+import LabReportDetailScreen from '@/screens/healthcare/lab/LabReportDetailScreen';
+import WorkOrderListScreen from '@/screens/workshop/workorders/WorkOrderListScreen';
+import WorkOrderDetailScreen from '@/screens/workshop/workorders/WorkOrderDetailScreen';
+import WorkOrderFormScreen from '@/screens/workshop/workorders/WorkOrderFormScreen';
 import {
   RootStackParamList,
   AuthStackParamList,
@@ -559,12 +564,32 @@ function HealthcareNavigator() {
       />
       <HealthcareStack.Screen
         name="LabReports"
-        component={PlaceholderScreen}
-        options={{ title: 'Lab Reports' }}
+        component={LabReportListScreen}
+        options={{ headerShown: false }}
+      />
+      <HealthcareStack.Screen
+        name="LabReportList"
+        component={LabReportListScreen}
+        options={{ headerShown: false }}
+      />
+      <HealthcareStack.Screen
+        name="LabReportDetail"
+        component={LabReportDetailScreen}
+        options={{ headerShown: false }}
       />
       <HealthcareStack.Screen
         name="Invoicing"
         component={InvoiceListScreen}
+        options={{ headerShown: false }}
+      />
+      <HealthcareStack.Screen
+        name="InvoiceDetail"
+        component={InvoiceDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <HealthcareStack.Screen
+        name="InvoiceForm"
+        component={InvoiceFormScreen}
         options={{ headerShown: false }}
       />
     </HealthcareStack.Navigator>
@@ -591,8 +616,23 @@ function WorkshopNavigator() {
       />
       <WorkshopStack.Screen
         name="WorkOrders"
-        component={PlaceholderScreen}
-        options={{ title: 'Work Orders' }}
+        component={WorkOrderListScreen}
+        options={{ headerShown: false }}
+      />
+      <WorkshopStack.Screen
+        name="WorkOrderList"
+        component={WorkOrderListScreen}
+        options={{ headerShown: false }}
+      />
+      <WorkshopStack.Screen
+        name="WorkOrderDetail"
+        component={WorkOrderDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <WorkshopStack.Screen
+        name="WorkOrderForm"
+        component={WorkOrderFormScreen}
+        options={{ headerShown: false }}
       />
       <WorkshopStack.Screen
         name="Production"
@@ -615,8 +655,28 @@ function WorkshopNavigator() {
         options={{ headerShown: false }}
       />
       <WorkshopStack.Screen
+        name="CustomerDetail"
+        component={CustomerDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <WorkshopStack.Screen
+        name="CustomerForm"
+        component={CustomerFormScreen}
+        options={{ headerShown: false }}
+      />
+      <WorkshopStack.Screen
         name="Invoicing"
         component={InvoiceListScreen}
+        options={{ headerShown: false }}
+      />
+      <WorkshopStack.Screen
+        name="InvoiceDetail"
+        component={InvoiceDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <WorkshopStack.Screen
+        name="InvoiceForm"
+        component={InvoiceFormScreen}
         options={{ headerShown: false }}
       />
     </WorkshopStack.Navigator>

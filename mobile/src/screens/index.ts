@@ -14,4 +14,9 @@ export { default as MedicalRecordFormScreen } from './healthcare/records/Medical
 export { default as ConsultationListScreen } from './healthcare/consultations/ConsultationListScreen';
 export { default as ConsultationDetailScreen } from './healthcare/consultations/ConsultationDetailScreen';
 export { default as ConsultationFormScreen } from './healthcare/consultations/ConsultationFormScreen';
+export { default as LabReportListScreen } from './healthcare/lab/LabReportListScreen';
+export { default as LabReportDetailScreen } from './healthcare/lab/LabReportDetailScreen';
+export { default as WorkOrderListScreen } from './workshop/workorders/WorkOrderListScreen';
+export { default as WorkOrderDetailScreen } from './workshop/workorders/WorkOrderDetailScreen';
+export { default as WorkOrderFormScreen } from './workshop/workorders/WorkOrderFormScreen';
 

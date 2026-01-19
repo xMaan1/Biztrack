@@ -107,17 +107,28 @@ export type HealthcareStackParamList = {
   ConsultationDetail: { id: string };
   ConsultationForm: { id?: string; consultation?: any };
   LabReports: undefined;
+  LabReportList: undefined;
+  LabReportDetail: { id: string };
   Invoicing: undefined;
+  InvoiceDetail: { id: string };
+  InvoiceForm: { id?: string; invoice?: any };
 };
 
 export type WorkshopStackParamList = {
   WorkshopHome: undefined;
   WorkOrders: undefined;
+  WorkOrderList: undefined;
+  WorkOrderDetail: { id: string };
+  WorkOrderForm: { id?: string; workOrder?: any };
   Production: undefined;
   QualityControl: undefined;
   Maintenance: undefined;
   CustomerList: undefined;
+  CustomerDetail: { id: string };
+  CustomerForm: { id?: string; customer?: any };
   Invoicing: undefined;
+  InvoiceDetail: { id: string };
+  InvoiceForm: { id?: string; invoice?: any };
 };
 
 export type DrawerParamList = {

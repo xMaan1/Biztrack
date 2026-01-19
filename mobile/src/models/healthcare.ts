@@ -343,3 +343,74 @@ export interface ConsultationsResponse {
   consultations: Consultation[];
   total: number;
 }
+
+export interface LabReport {
+  id: string;
+  tenant_id: string;
+  patient_id: string;
+  appointment_id?: string;
+  reportNumber: string;
+  reportDate: string;
+  orderedBy: string;
+  testName: string;
+  testCategory?: string;
+  testResults?: Array<Record<string, any>>;
+  labName?: string;
+  labAddress?: string;
+  technicianName?: string;
+  notes?: string;
+  attachments?: string[];
+  isVerified: boolean;
+  verifiedBy?: string;
+  verifiedAt?: string;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LabReportCreate {
+  patient_id: string;
+  appointment_id?: string;
+  reportNumber: string;
+  reportDate: string;
+  orderedBy: string;
+  testName: string;
+  testCategory?: string;
+  testResults?: Array<Record<string, any>>;
+  labName?: string;
+  labAddress?: string;
+  technicianName?: string;
+  notes?: string;
+  attachments?: string[];
+  isVerified?: boolean;
+}
+
+export interface LabReportUpdate {
+  patient_id?: string;
+  appointment_id?: string;
+  reportNumber?: string;
+  reportDate?: string;
+  orderedBy?: string;
+  testName?: string;
+  testCategory?: string;
+  testResults?: Array<Record<string, any>>;
+  labName?: string;
+  labAddress?: string;
+  technicianName?: string;
+  notes?: string;
+  attachments?: string[];
+  isVerified?: boolean;
+}
+
+export interface LabReportStats {
+  total: number;
+  verified: number;
+  unverified: number;
+  today: number;
+  byCategory: Record<string, number>;
+}
+
+export interface LabReportsResponse {
+  labReports: LabReport[];
+  total: number;
+}
