@@ -228,7 +228,8 @@ async def create_tenant_from_landing(
         tenant_id=str(tenant.id),
         user_email=current_user.email,
         success_url=success_url,
-        cancel_url=cancel_url
+        cancel_url=cancel_url,
+        billing_cycle=plan.billingCycle
     )
     
     if not checkout_result.get('success'):

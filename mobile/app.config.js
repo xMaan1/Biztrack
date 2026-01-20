@@ -16,6 +16,7 @@ module.exports = {
       supportsTablet: true,
     },
     android: {
+      package: "com.biztrack.mobile",
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
         backgroundColor: "#ffffff",
@@ -28,6 +29,9 @@ module.exports = {
     },
     extra: {
       apiUrl: process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000",
+      eas: {
+        projectId: "5f25ccf5-3dcb-46f9-9aef-3fb37633cd77",
+      },
     },
   },
 };

@@ -24,10 +24,17 @@ class StripeService:
         tenant_id: str,
         user_email: str,
         success_url: str,
-        cancel_url: str
+        cancel_url: str,
+        billing_cycle: str = 'monthly'
     ) -> Dict[str, Any]:
         try:
             price_amount = int(plan_price * 100)
+            
+            interval_map = {
+                'monthly': 'month',
+                'yearly': 'year'
+            }
+            interval = interval_map.get(billing_cycle.lower(), 'month')
             
             session = stripe.checkout.Session.create(
                 payment_method_types=['card'],
@@ -40,7 +47,7 @@ class StripeService:
                         },
                         'unit_amount': price_amount,
                         'recurring': {
-                            'interval': 'month',
+                            'interval': interval,
                         },
                     },
                     'quantity': 1,

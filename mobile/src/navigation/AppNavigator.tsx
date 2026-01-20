@@ -92,6 +92,19 @@ import WorkOrderFormScreen from '@/screens/workshop/workorders/WorkOrderFormScre
 import ProductionPlanListScreen from '@/screens/workshop/production/ProductionPlanListScreen';
 import ProductionPlanDetailScreen from '@/screens/workshop/production/ProductionPlanDetailScreen';
 import ProductionPlanFormScreen from '@/screens/workshop/production/ProductionPlanFormScreen';
+import QualityControlDashboardScreen from '@/screens/workshop/quality/QualityControlDashboardScreen';
+import QualityCheckListScreen from '@/screens/workshop/quality/QualityCheckListScreen';
+import QualityCheckDetailScreen from '@/screens/workshop/quality/QualityCheckDetailScreen';
+import QualityCheckFormScreen from '@/screens/workshop/quality/QualityCheckFormScreen';
+import QualityInspectionListScreen from '@/screens/workshop/quality/QualityInspectionListScreen';
+import QualityInspectionDetailScreen from '@/screens/workshop/quality/QualityInspectionDetailScreen';
+import QualityInspectionFormScreen from '@/screens/workshop/quality/QualityInspectionFormScreen';
+import QualityDefectListScreen from '@/screens/workshop/quality/QualityDefectListScreen';
+import QualityDefectDetailScreen from '@/screens/workshop/quality/QualityDefectDetailScreen';
+import QualityDefectFormScreen from '@/screens/workshop/quality/QualityDefectFormScreen';
+import QualityReportListScreen from '@/screens/workshop/quality/QualityReportListScreen';
+import QualityReportDetailScreen from '@/screens/workshop/quality/QualityReportDetailScreen';
+import QualityReportFormScreen from '@/screens/workshop/quality/QualityReportFormScreen';
 import {
   RootStackParamList,
   AuthStackParamList,
@@ -659,8 +672,73 @@ function WorkshopNavigator() {
       />
       <WorkshopStack.Screen
         name="QualityControl"
-        component={PlaceholderScreen}
-        options={{ title: 'Quality Control' }}
+        component={QualityControlDashboardScreen}
+        options={{ headerShown: false }}
+      />
+      <WorkshopStack.Screen
+        name="QualityControlDashboard"
+        component={QualityControlDashboardScreen}
+        options={{ headerShown: false }}
+      />
+      <WorkshopStack.Screen
+        name="QualityCheckList"
+        component={QualityCheckListScreen}
+        options={{ headerShown: false }}
+      />
+      <WorkshopStack.Screen
+        name="QualityCheckDetail"
+        component={QualityCheckDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <WorkshopStack.Screen
+        name="QualityCheckForm"
+        component={QualityCheckFormScreen}
+        options={{ headerShown: false }}
+      />
+      <WorkshopStack.Screen
+        name="QualityInspectionList"
+        component={QualityInspectionListScreen}
+        options={{ headerShown: false }}
+      />
+      <WorkshopStack.Screen
+        name="QualityInspectionDetail"
+        component={QualityInspectionDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <WorkshopStack.Screen
+        name="QualityInspectionForm"
+        component={QualityInspectionFormScreen}
+        options={{ headerShown: false }}
+      />
+      <WorkshopStack.Screen
+        name="QualityDefectList"
+        component={QualityDefectListScreen}
+        options={{ headerShown: false }}
+      />
+      <WorkshopStack.Screen
+        name="QualityDefectDetail"
+        component={QualityDefectDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <WorkshopStack.Screen
+        name="QualityDefectForm"
+        component={QualityDefectFormScreen}
+        options={{ headerShown: false }}
+      />
+      <WorkshopStack.Screen
+        name="QualityReportList"
+        component={QualityReportListScreen}
+        options={{ headerShown: false }}
+      />
+      <WorkshopStack.Screen
+        name="QualityReportDetail"
+        component={QualityReportDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <WorkshopStack.Screen
+        name="QualityReportForm"
+        component={QualityReportFormScreen}
+        options={{ headerShown: false }}
       />
       <WorkshopStack.Screen
         name="Maintenance"
