@@ -556,31 +556,50 @@ def get_crm_dashboard_data(db: Session, tenant_id: str) -> Dict[str, Any]:
     ).count()
     
     total_opportunities = db.query(Opportunity).filter(Opportunity.tenant_id == tenant_id).count()
-    active_opportunities = db.query(Opportunity).filter(
+    open_opportunities = db.query(Opportunity).filter(
         Opportunity.tenant_id == tenant_id,
         Opportunity.stage.in_(["prospecting", "qualification", "proposal", "negotiation"])
-    ).count()
-    won_opportunities = db.query(Opportunity).filter(
-        Opportunity.tenant_id == tenant_id,
-        Opportunity.stage == "closed_won"
     ).count()
     
     total_contacts = db.query(Contact).filter(Contact.tenant_id == tenant_id).count()
     total_companies = db.query(Company).filter(Company.tenant_id == tenant_id).count()
     
+    won_opportunities_query = db.query(Opportunity).filter(
+        Opportunity.tenant_id == tenant_id,
+        Opportunity.stage == "closed_won"
+    )
+    total_revenue_result = db.query(func.sum(Opportunity.amount)).filter(
+        Opportunity.tenant_id == tenant_id,
+        Opportunity.stage == "closed_won",
+        Opportunity.amount.isnot(None)
+    ).scalar()
+    total_revenue = float(total_revenue_result) if total_revenue_result else 0.0
+    
+    won_opportunities_count = won_opportunities_query.count()
+    average_deal_size = 0.0
+    if won_opportunities_count > 0:
+        average_deal_size = total_revenue / won_opportunities_count
+    
+    all_opportunities = db.query(Opportunity).filter(
+        Opportunity.tenant_id == tenant_id,
+        Opportunity.amount.isnot(None)
+    ).all()
+    projected_revenue = sum(
+        (opp.amount or 0) * (opp.probability or 0) / 100.0
+        for opp in all_opportunities
+    )
+    
+    conversion_rate = (converted_leads / total_leads * 100) if total_leads > 0 else 0.0
+    
     return {
-        "leads": {
-            "total": total_leads,
-            "active": active_leads,
-            "converted": converted_leads,
-            "conversion_rate": (converted_leads / total_leads * 100) if total_leads > 0 else 0
-        },
-        "opportunities": {
-            "total": total_opportunities,
-            "active": active_opportunities,
-            "won": won_opportunities,
-            "win_rate": (won_opportunities / total_opportunities * 100) if total_opportunities > 0 else 0
-        },
-        "contacts": total_contacts,
-        "companies": total_companies
+        "totalLeads": total_leads,
+        "activeLeads": active_leads,
+        "totalContacts": total_contacts,
+        "totalCompanies": total_companies,
+        "totalOpportunities": total_opportunities,
+        "openOpportunities": open_opportunities,
+        "totalRevenue": float(total_revenue),
+        "projectedRevenue": float(projected_revenue),
+        "conversionRate": float(conversion_rate),
+        "averageDealSize": float(average_deal_size)
     }
