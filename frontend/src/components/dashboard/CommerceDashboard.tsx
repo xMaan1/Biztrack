@@ -96,7 +96,7 @@ export default function CommerceDashboard({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {getCurrencySymbol()}{stats.totalSales.toLocaleString()}
+              {getCurrencySymbol()}{(stats.totalSales ?? 0).toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">This month</p>
           </CardContent>
@@ -109,7 +109,7 @@ export default function CommerceDashboard({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {stats.totalOrders}
+              {stats.totalOrders ?? 0}
             </div>
             <p className="text-xs text-muted-foreground">Orders processed</p>
           </CardContent>
@@ -124,7 +124,7 @@ export default function CommerceDashboard({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              {getCurrencySymbol()}{stats.averageOrderValue}
+              {getCurrencySymbol()}{stats.averageOrderValue ?? 0}
             </div>
             <p className="text-xs text-muted-foreground">Per transaction</p>
           </CardContent>
@@ -139,7 +139,7 @@ export default function CommerceDashboard({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">
-              {stats.customerSatisfaction}%
+              {stats.customerSatisfaction ?? 0}%
             </div>
             <p className="text-xs text-muted-foreground">Rating score</p>
           </CardContent>
@@ -166,13 +166,13 @@ export default function CommerceDashboard({
             <div className="grid grid-cols-2 gap-4 mt-4">
               <div className="text-center p-3 bg-green-50 rounded-lg">
                 <div className="text-2xl font-bold text-green-600">
-                  {stats.activeProjects}
+                  {stats.activeProjects ?? 0}
                 </div>
                 <div className="text-xs text-gray-600">Active Campaigns</div>
               </div>
               <div className="text-center p-3 bg-blue-50 rounded-lg">
                 <div className="text-2xl font-bold text-blue-600">
-                  {stats.totalTeamMembers}
+                  {stats.totalTeamMembers ?? 0}
                 </div>
                 <div className="text-xs text-gray-600">Sales Team</div>
               </div>
