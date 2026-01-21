@@ -26,7 +26,7 @@ export default function SubscriptionSuccessPage() {
 
       try {
         let attempts = 0;
-        const maxAttempts = 30;
+        const maxAttempts = 10;
         const pollInterval = 2000;
 
         const verifySubscription = async (): Promise<boolean> => {
@@ -40,13 +40,14 @@ export default function SubscriptionSuccessPage() {
               
               try {
                 const subscriptionResponse = await apiService.get('/tenants/current/subscription');
-                const status = subscriptionResponse?.subscription?.status;
+                const status = subscriptionResponse?.subscription?.status?.toLowerCase();
                 if (status === 'active' || status === 'trial') {
                   return true;
                 }
               } catch (subErr) {
-                console.log('Subscription not yet active, waiting...');
+                console.log('Subscription check failed, but tenant exists. Proceeding...', subErr);
               }
+              return true;
             }
             return false;
           } catch (err) {
@@ -92,7 +93,7 @@ export default function SubscriptionSuccessPage() {
               router.push('/dashboard');
             }, 1500);
           } else {
-            setError('Subscription is processing. This may take a few minutes. You can check your subscription status from the dashboard.');
+            setError('Tenant created but not found. Please try logging in again or contact support.');
             setLoading(false);
           }
         };
