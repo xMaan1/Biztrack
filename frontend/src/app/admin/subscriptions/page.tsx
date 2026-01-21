@@ -293,7 +293,7 @@ function AdminSubscriptionsContent() {
                         </TableCell>
                         <TableCell>{getStatusBadge(sub.status)}</TableCell>
                         <TableCell>
-                          {formatCurrency(sub.plan.price)}/{sub.plan.billingCycle === 'monthly' ? 'mo' : 'yr'}
+                          {sub.plan?.price != null ? formatCurrency(sub.plan.price) : 'N/A'}/{sub.plan?.billingCycle === 'monthly' ? 'mo' : 'yr'}
                         </TableCell>
                         <TableCell>
                           {new Date(sub.startDate).toLocaleDateString()}

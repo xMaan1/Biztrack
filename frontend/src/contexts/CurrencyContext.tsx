@@ -50,6 +50,9 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   };
 
   const formatCurrency = (amount: number, customCurrency?: string): string => {
+    if (amount == null || isNaN(amount)) {
+      return 'N/A';
+    }
     const currencyToUse = customCurrency || currency;
     return new Intl.NumberFormat('en-US', {
       style: 'currency',

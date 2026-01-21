@@ -278,7 +278,7 @@ export default function SubscriptionManagePage() {
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Price</span>
                       <span className="font-semibold">
-                        {formatCurrency(subscription.plan.price)}/{subscription.plan.billingCycle === 'monthly' ? 'month' : 'year'}
+                        {subscription.plan.price != null ? formatCurrency(subscription.plan.price) : 'N/A'}/{subscription.plan.billingCycle === 'monthly' ? 'month' : 'year'}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -509,7 +509,7 @@ export default function SubscriptionManagePage() {
                         <p className="font-semibold">{plan.name}</p>
                         <p className="text-sm text-muted-foreground">{plan.planType}</p>
                         <p className="text-sm mt-1">
-                          {formatCurrency(plan.price)}/{plan.billingCycle === 'monthly' ? 'month' : 'year'}
+                          {plan.price != null ? formatCurrency(plan.price) : 'N/A'}/{plan.billingCycle === 'monthly' ? 'month' : 'year'}
                         </p>
                       </div>
                       {selectedPlanId === plan.id && (
