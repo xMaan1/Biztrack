@@ -94,7 +94,7 @@ export default function ContractsPage() {
           CRMService.getContacts({}, 1, 100),
           CRMService.getCompanies({}, 1, 100),
         ]);
-      setContracts(contractsData);
+      setContracts(contractsData.contracts || []);
       setOpportunities(opportunitiesData.opportunities || []);
       setContacts(contactsData.contacts || []);
       setCompanies(companiesData.companies || []);
