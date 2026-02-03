@@ -53,11 +53,14 @@ import { InvoiceDashboard as InvoiceDashboardComponent } from '../../../componen
 import { InvoiceCustomizationDialog } from '../../../components/sales/InvoiceCustomizationDialog';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { usePermissions } from '@/src/hooks/usePermissions';
+import { usePlanInfo } from '@/src/hooks/usePlanInfo';
 import { extractErrorMessage } from '@/src/utils/errorUtils';
 
 export default function InvoicesPage() {
   const { formatCurrency } = useCurrency();
   const { isOwner, canViewInvoices } = usePermissions();
+  const { planInfo } = usePlanInfo();
+  const isCommerce = planInfo?.planType === 'commerce';
   const [dashboard, setDashboard] = useState<InvoiceDashboard | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -283,9 +286,13 @@ export default function InvoicesPage() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Invoices</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {isCommerce ? 'Sales Invoices' : 'Invoices'}
+            </h1>
             <p className="text-gray-600">
-              Manage your invoices, track payments, and monitor revenue
+              {isCommerce
+                ? 'Create and manage sales invoices, track payments, and monitor revenue'
+                : 'Manage your invoices, track payments, and monitor revenue'}
             </p>
           </div>
           <div className="flex space-x-2">

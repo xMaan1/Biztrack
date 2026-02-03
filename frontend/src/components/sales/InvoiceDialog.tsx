@@ -56,6 +56,7 @@ export function InvoiceDialog({
   const { currency, formatCurrency } = useCurrency();
   const { planInfo } = usePlanInfo();
   const isHealthcare = planInfo?.planType === 'healthcare';
+  const isWorkshop = planInfo?.planType === 'workshop';
   const [formData, setFormData] = useState<InvoiceCreate>({
     customerId: '',
     customerName: '',
@@ -596,8 +597,7 @@ export function InvoiceDialog({
             </CardContent>
           </Card>
 
-          {/* Vehicle Details for Workshop - Only show for non-healthcare plans */}
-          {!isHealthcare && (
+          {isWorkshop && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
