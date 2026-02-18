@@ -76,7 +76,7 @@ class ProductBase(BaseModel):
     name: str
     sku: str
     description: Optional[str] = None
-    category: ProductCategory
+    category: str
     unitPrice: float
     costPrice: float
     stockQuantity: int
@@ -107,7 +107,7 @@ class ProductCreate(BaseModel):
     name: str
     sku: str
     description: Optional[str] = None
-    category: ProductCategory
+    category: str
     unitPrice: float
     costPrice: float
     stockQuantity: int
@@ -125,7 +125,7 @@ class ProductUpdate(BaseModel):
     name: Optional[str] = None
     sku: Optional[str] = None
     description: Optional[str] = None
-    category: Optional[ProductCategory] = None
+    category: Optional[str] = None
     unitPrice: Optional[float] = None
     costPrice: Optional[float] = None
     stockQuantity: Optional[int] = None

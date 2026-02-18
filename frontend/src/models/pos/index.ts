@@ -64,7 +64,7 @@ export interface Product {
   costPrice: number;
   stockQuantity: number;
   minStockLevel: number;
-  category: ProductCategory;
+  category: string;
   unitOfMeasure: UnitOfMeasure;
   barcode?: string;
   expiryDate?: string;
@@ -84,7 +84,7 @@ export interface ProductCreate {
   costPrice: number;
   stockQuantity: number;
   minStockLevel: number;
-  category: ProductCategory;
+  category: string;
   unitOfMeasure: UnitOfMeasure;
   barcode?: string;
   expiryDate?: string;
@@ -100,12 +100,17 @@ export interface ProductUpdate {
   costPrice?: number;
   stockQuantity?: number;
   minStockLevel?: number;
-  category?: ProductCategory;
+  category?: string;
   unitOfMeasure?: UnitOfMeasure;
   barcode?: string;
   expiryDate?: string;
   batchNumber?: string;
   serialNumber?: string;
+}
+
+export interface POSCategoriesResponse {
+  categories: string[];
+  customCategories: { id: string; name: string }[];
 }
 
 // POS Transaction Types

@@ -33,6 +33,7 @@ import {
   Product,
   ProductCategory,
   UnitOfMeasure,
+  POSCategoriesResponse,
 } from '@/src/models/pos';
 import {
   Package,
@@ -42,6 +43,7 @@ import {
   Trash2,
   AlertTriangle,
   Eye,
+  FolderPlus,
 } from 'lucide-react';
 import { DashboardLayout } from '../../../components/layout';
 import { useCurrency } from '../../../contexts/CurrencyContext';
@@ -50,7 +52,7 @@ interface ProductFormData {
   name: string;
   sku: string;
   description: string;
-  category: ProductCategory;
+  category: string;
   unitPrice: number;
   costPrice: number;
   stockQuantity: number;
@@ -68,12 +70,14 @@ const POSProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<ProductCategory>(
-    ProductCategory.OTHER,
-  );
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showLowStock, setShowLowStock] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [addCategoryLoading, setAddCategoryLoading] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
@@ -81,7 +85,7 @@ const POSProducts = () => {
     name: '',
     sku: '',
     description: '',
-    category: ProductCategory.OTHER,
+    category: 'other',
     unitPrice: 0,
     costPrice: 0,
     stockQuantity: 0,
@@ -93,11 +97,18 @@ const POSProducts = () => {
     serialNumber: '',
   });
 
-  const categories = Object.values(ProductCategory);
-
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const data: POSCategoriesResponse = await apiService.get('/pos/categories');
+      setCategories(data.categories || []);
+    } catch {
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -128,7 +139,7 @@ const POSProducts = () => {
         name: '',
         sku: '',
         description: '',
-        category: ProductCategory.OTHER,
+        category: 'other',
         unitPrice: 0,
         costPrice: 0,
         stockQuantity: 0,
@@ -195,7 +206,7 @@ const POSProducts = () => {
       name: '',
       sku: '',
       description: '',
-      category: ProductCategory.OTHER,
+      category: 'other',
       unitPrice: 0,
       costPrice: 0,
       stockQuantity: 0,
@@ -206,6 +217,22 @@ const POSProducts = () => {
       batchNumber: '',
       serialNumber: '',
     });
+  };
+
+  const handleAddCategory = async () => {
+    const name = newCategoryName.trim();
+    if (!name) return;
+    setAddCategoryLoading(true);
+    try {
+      await apiService.post('/pos/categories', { name });
+      await fetchCategories();
+      setFormData((prev) => ({ ...prev, category: name }));
+      setNewCategoryName('');
+      setIsAddCategoryOpen(false);
+    } catch {
+    } finally {
+      setAddCategoryLoading(false);
+    }
   };
 
   const handleDialogClose = (open: boolean) => {
@@ -231,8 +258,7 @@ const POSProducts = () => {
         product.barcode.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const matchesCategory =
-      selectedCategory === ProductCategory.OTHER ||
-      product.category === selectedCategory;
+      selectedCategory === 'all' || product.category === selectedCategory;
 
     const matchesLowStock =
       !showLowStock || product.stockQuantity <= product.minStockLevel;
@@ -302,20 +328,16 @@ const POSProducts = () => {
                 <Label htmlFor="category">Category</Label>
                 <Select
                   value={selectedCategory}
-                  onValueChange={(value: string) =>
-                    setSelectedCategory(value as ProductCategory)
-                  }
+                  onValueChange={(value: string) => setSelectedCategory(value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={ProductCategory.OTHER}>
-                      All Categories
-                    </SelectItem>
-                    {categories.map((category) => (
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {(categories.length ? categories : Object.values(ProductCategory)).map((category) => (
                       <SelectItem key={category} value={category}>
-                        {category.charAt(0).toUpperCase() + category.slice(1)}
+                        {category.charAt(0).toUpperCase() + category.replace(/_/g, ' ')}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -343,7 +365,7 @@ const POSProducts = () => {
                   variant="outline"
                   onClick={() => {
                     setSearchTerm('');
-                    setSelectedCategory(ProductCategory.OTHER);
+                    setSelectedCategory('all');
                     setShowLowStock(false);
                   }}
                 >
@@ -440,11 +462,11 @@ const POSProducts = () => {
             <Package className="mx-auto h-12 w-12 text-muted-foreground" />
             <h3 className="mt-4 text-lg font-semibold">No products found</h3>
             <p className="mt-2 text-muted-foreground">
-              {searchTerm || selectedCategory || showLowStock
+              {searchTerm || selectedCategory !== 'all' || showLowStock
                 ? 'Try adjusting your filters or search terms.'
                 : 'Get started by adding your first product.'}
             </p>
-            {!searchTerm && !selectedCategory && !showLowStock && (
+            {!searchTerm && selectedCategory === 'all' && !showLowStock && (
               <Button onClick={openNewProductDialog} className="mt-4">
                 <Plus className="mr-2 h-4 w-4" />
                 Add Product
@@ -508,27 +530,37 @@ const POSProducts = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="category">Category *</Label>
-                  <Select
-                    value={formData.category}
-                    onValueChange={(value: string) =>
-                      setFormData({
-                        ...formData,
-                        category: value as ProductCategory,
-                      })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category.charAt(0).toUpperCase() + category.slice(1)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex items-end gap-2">
+                    <div className="flex-1 space-y-2">
+                      <Label htmlFor="category">Category *</Label>
+                      <Select
+                        value={formData.category}
+                        onValueChange={(value: string) =>
+                          setFormData({ ...formData, category: value })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(categories.length ? categories : Object.values(ProductCategory)).map((category) => (
+                            <SelectItem key={category} value={category}>
+                              {category.charAt(0).toUpperCase() + category.replace(/_/g, ' ')}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setIsAddCategoryOpen(true)}
+                      title="Add category"
+                    >
+                      <FolderPlus className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
 
@@ -852,6 +884,48 @@ const POSProducts = () => {
               }}>
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Product
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isAddCategoryOpen} onOpenChange={setIsAddCategoryOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Add Category</DialogTitle>
+              <DialogDescription>
+                Add a new category for your products. It will be available only for your tenant.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-category-name">Category name</Label>
+                <Input
+                  id="new-category-name"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  placeholder="e.g. Snacks"
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsAddCategoryOpen(false);
+                  setNewCategoryName('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleAddCategory}
+                disabled={!newCategoryName.trim() || addCategoryLoading}
+              >
+                {addCategoryLoading ? 'Adding...' : 'Add Category'}
               </Button>
             </DialogFooter>
           </DialogContent>

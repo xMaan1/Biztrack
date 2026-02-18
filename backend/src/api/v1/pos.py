@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime, timedelta
 
 from ...models.inventory_models import (
-    Product, ProductCreate, ProductUpdate, ProductsResponse, ProductResponse
+    Product, ProductCreate, ProductUpdate, ProductsResponse, ProductResponse, ProductCategory
 )
 from ...models.pos_models import (
     POSShift, POSShiftCreate, POSShiftUpdate, POSShiftsResponse, POSShiftResponse,
@@ -18,7 +18,8 @@ from ...config.database import (
     get_products, get_product_by_id, create_product, update_product, delete_product,
     get_pos_shifts, get_pos_shift_by_id, get_open_pos_shift, create_pos_shift, update_pos_shift,
     get_pos_transactions, get_pos_transaction_by_id, create_pos_transaction, update_pos_transaction,
-    get_pos_dashboard_data
+    get_pos_dashboard_data,
+    get_pos_categories, get_pos_category_by_name, create_pos_category, delete_pos_category
 )
 from ...api.dependencies import get_current_user, get_tenant_context, require_permission
 from ...models.common import ModulePermission
@@ -36,7 +37,7 @@ def generate_shift_number():
 
 def convert_db_product_to_pydantic(db_product):
     """Convert database Product model to Pydantic Product model"""
-    from ...models.inventory_models import Product as PydanticProduct, UnitOfMeasure, ProductCategory
+    from ...models.inventory_models import Product as PydanticProduct, UnitOfMeasure
     
     return PydanticProduct(
         id=str(db_product.id),
@@ -44,7 +45,7 @@ def convert_db_product_to_pydantic(db_product):
         name=db_product.name,
         sku=db_product.sku,
         description=db_product.description,
-        category=ProductCategory(db_product.category) if db_product.category else ProductCategory.OTHER,
+        category=db_product.category or "other",
         unitPrice=db_product.unitPrice,
         costPrice=db_product.costPrice,
         stockQuantity=db_product.stockQuantity,
@@ -89,6 +90,13 @@ def calculate_transaction_totals(items: List[dict], discount: float = 0.0, tax_r
         "taxAmount": round(tax_amount, 2),
         "total": round(total, 2)
     }
+
+
+def get_allowed_category_values(db, tenant_id: str) -> List[str]:
+    default = [e.value for e in ProductCategory]
+    custom = [c.name for c in get_pos_categories(db, tenant_id)]
+    return default + custom
+
 
 # Product endpoints
 @router.get("/products", response_model=ProductsResponse)
@@ -189,8 +197,10 @@ async def create_pos_product(
     """Create a new product"""
     if not tenant_context:
         raise HTTPException(status_code=400, detail="Tenant context required")
+    allowed = get_allowed_category_values(db, tenant_context["tenant_id"])
+    if product_data.category not in allowed:
+        raise HTTPException(status_code=400, detail="Invalid category")
     try:
-        # Map Pydantic model fields to database model fields
         product_dict = product_data.dict()
         
         # Map fields that exist in both models
@@ -246,11 +256,12 @@ async def update_pos_product(
     """Update an existing product"""
     if not tenant_context:
         raise HTTPException(status_code=400, detail="Tenant context required")
+    if 'category' in product_data.dict(exclude_unset=True):
+        allowed = get_allowed_category_values(db, tenant_context["tenant_id"])
+        if product_data.category not in allowed:
+            raise HTTPException(status_code=400, detail="Invalid category")
     try:
-        # Map Pydantic model fields to database model fields
         product_dict = product_data.dict(exclude_unset=True)
-        
-        # Map fields that exist in both models
         mapped_data = {}
         if 'name' in product_dict:
             mapped_data['name'] = product_dict['name']
@@ -324,6 +335,58 @@ async def delete_pos_product(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error deleting product: {str(e)}")
+
+
+@router.get("/categories")
+async def get_pos_categories_list(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
+):
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    default = [e.value for e in ProductCategory]
+    custom_list = get_pos_categories(db, tenant_context["tenant_id"])
+    custom_names = [c.name for c in custom_list]
+    return {"categories": default + custom_names, "customCategories": [{"id": str(c.id), "name": c.name} for c in custom_list]}
+
+
+@router.post("/categories")
+async def create_pos_category_endpoint(
+    body: dict,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_CREATE.value))
+):
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    name = (body.get("name") or "").strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Category name is required")
+    existing = get_pos_category_by_name(name, db, tenant_context["tenant_id"])
+    if existing:
+        raise HTTPException(status_code=400, detail="Category already exists")
+    cat = create_pos_category(tenant_context["tenant_id"], name, db)
+    return {"id": str(cat.id), "name": cat.name}
+
+
+@router.delete("/categories/{category_id}")
+async def delete_pos_category_endpoint(
+    category_id: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_DELETE.value))
+):
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    success = delete_pos_category(category_id, db, tenant_context["tenant_id"])
+    if not success:
+        raise HTTPException(status_code=404, detail="Category not found")
+    return {"message": "Category deleted"}
+
 
 # POS Shift endpoints
 @router.get("/shifts", response_model=POSShiftsResponse)

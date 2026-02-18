@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from .pos_models import POSShift, POSTransaction
+from .pos_models import POSShift, POSTransaction, PosProductCategory
 
 # POS Shift functions
 def get_pos_shift_by_id(shift_id: str, db: Session, tenant_id: str = None) -> Optional[POSShift]:
@@ -114,6 +114,42 @@ def get_pos_shifts(db: Session, tenant_id: str = None, skip: int = 0, limit: int
 def get_pos_transactions(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[POSTransaction]:
     """Get all POS transactions (alias for get_all_pos_transactions)"""
     return get_all_pos_transactions(db, tenant_id, skip, limit)
+
+
+def get_pos_categories(db: Session, tenant_id: str) -> List[PosProductCategory]:
+    return db.query(PosProductCategory).filter(PosProductCategory.tenant_id == tenant_id).order_by(PosProductCategory.name).all()
+
+
+def get_pos_category_by_id(category_id: str, db: Session, tenant_id: str) -> Optional[PosProductCategory]:
+    return db.query(PosProductCategory).filter(
+        PosProductCategory.id == category_id,
+        PosProductCategory.tenant_id == tenant_id
+    ).first()
+
+
+def get_pos_category_by_name(name: str, db: Session, tenant_id: str) -> Optional[PosProductCategory]:
+    return db.query(PosProductCategory).filter(
+        PosProductCategory.tenant_id == tenant_id,
+        func.lower(PosProductCategory.name) == name.strip().lower()
+    ).first()
+
+
+def create_pos_category(tenant_id: str, name: str, db: Session) -> PosProductCategory:
+    cat = PosProductCategory(tenant_id=tenant_id, name=name.strip())
+    db.add(cat)
+    db.commit()
+    db.refresh(cat)
+    return cat
+
+
+def delete_pos_category(category_id: str, db: Session, tenant_id: str) -> bool:
+    cat = get_pos_category_by_id(category_id, db, tenant_id)
+    if cat:
+        db.delete(cat)
+        db.commit()
+        return True
+    return False
+
 
 # POS Dashboard functions
 def get_pos_dashboard_data(db: Session, tenant_id: str) -> Dict[str, Any]:

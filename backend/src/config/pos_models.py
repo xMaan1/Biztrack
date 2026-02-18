@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, DateTime, Float, Text, Boolean, ForeignKey, Integer, JSON
+from sqlalchemy import Column, String, DateTime, Float, Text, Boolean, ForeignKey, Integer, JSON, Index
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -52,3 +52,14 @@ class POSTransaction(Base):
     # Relationships
     shift = relationship("POSShift", back_populates="transactions")
     tenant = relationship("Tenant", back_populates="pos_transactions")
+
+
+class PosProductCategory(Base):
+    __tablename__ = "pos_product_categories"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
+    name = Column(String(255), nullable=False)
+    createdAt = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (Index("ix_pos_product_categories_tenant_name", "tenant_id", "name", unique=True),)

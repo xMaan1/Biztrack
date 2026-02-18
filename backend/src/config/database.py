@@ -67,7 +67,7 @@ from .investment_models import (
 )
 
 from .pos_models import (
-    POSShift, POSTransaction
+    POSShift, POSTransaction, PosProductCategory
 )
 
 from .custom_options_models import (
@@ -255,6 +255,10 @@ from .pos_crud import (
     get_pos_transactions_by_shift, get_pos_transactions_by_date_range,
     create_pos_transaction, update_pos_transaction, delete_pos_transaction,
     
+    # POS Product Category functions
+    get_pos_categories, get_pos_category_by_id, get_pos_category_by_name,
+    create_pos_category, delete_pos_category,
+    
     # POS Dashboard functions
     get_pos_dashboard_data
 )
@@ -366,7 +370,7 @@ __all__ = [
     'Product', 'Warehouse', 'Supplier', 'PurchaseOrder', 'Receiving',
     'StorageLocation', 'StockMovement',
     'Invoice', 'Payment',
-    'POSShift', 'POSTransaction',
+    'POSShift', 'POSTransaction', 'PosProductCategory',
     'WorkOrder', 'WorkOrderTask', 'WorkOrderStatus', 'WorkOrderPriority', 'WorkOrderType',
     'ProductionPlan', 'ProductionStep', 'ProductionSchedule', 'ProductionStatus', 'ProductionPriority', 'ProductionType',
     'CustomEventType', 'CustomDepartment', 'CustomLeaveType', 'CustomLeadSource',
