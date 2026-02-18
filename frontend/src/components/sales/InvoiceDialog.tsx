@@ -553,6 +553,8 @@ export function InvoiceDialog({
                     <SelectItem value="EUR">EUR (€)</SelectItem>
                     <SelectItem value="GBP">GBP (£)</SelectItem>
                     <SelectItem value="CAD">CAD (C$)</SelectItem>
+                    <SelectItem value="PKR">PKR (Rs)</SelectItem>
+                    <SelectItem value="INR">INR (₹)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
