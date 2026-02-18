@@ -183,6 +183,13 @@ const allMenuItems: MenuItem[] = [
         roles: ['*'],
         planTypes: ['commerce'],
       },
+      {
+        text: 'Sub Installments',
+        icon: Calendar,
+        path: '/sales/installments',
+        roles: ['*'],
+        planTypes: ['commerce'],
+      },
     ],
   },
   {
@@ -452,6 +459,13 @@ const allMenuItems: MenuItem[] = [
         text: 'Work Orders',
         icon: Wrench,
         path: '/workshop-management/work-orders',
+        roles: ['*'],
+        planTypes: ['workshop'],
+      },
+      {
+        text: 'Job Cards',
+        icon: ClipboardList,
+        path: '/workshop-management/job-cards',
         roles: ['*'],
         planTypes: ['workshop'],
       },

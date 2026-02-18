@@ -47,7 +47,7 @@ import {
   InvoiceFilters,
   InvoiceDashboard,
 } from '../../../models/sales';
-import { InvoiceDialog } from '../../../components/sales/InvoiceDialog';
+import { InvoiceDialog, InstallmentPlanCreateOption } from '../../../components/sales/InvoiceDialog';
 import { InvoiceList } from '../../../components/sales/InvoiceList';
 import { InvoiceDashboard as InvoiceDashboardComponent } from '../../../components/sales/InvoiceDashboard';
 import { InvoiceCustomizationDialog } from '../../../components/sales/InvoiceCustomizationDialog';
@@ -135,9 +135,18 @@ export default function InvoicesPage() {
     loadData();
   }, [activeTab, currentPage, filtersString, searchTerm, statusFilter, loadData, hasViewPermission, userIsOwner]);
 
-  const handleCreateInvoice = async (invoiceData: InvoiceCreate) => {
+  const handleCreateInvoice = async (
+    invoiceData: InvoiceCreate,
+    options?: { installmentPlan?: InstallmentPlanCreateOption }
+  ) => {
     try {
-      await InvoiceService.createInvoice(invoiceData);
+      const created = await InvoiceService.createInvoice(invoiceData);
+      if (options?.installmentPlan) {
+        await InvoiceService.createInstallmentPlan({
+          ...options.installmentPlan,
+          invoice_id: created.id,
+        });
+      }
       setShowCreateDialog(false);
       loadData();
     } catch (err) {

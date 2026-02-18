@@ -41,12 +41,18 @@ from .workshop_models import (
     WorkOrder, WorkOrderTask, WorkOrderStatus, WorkOrderPriority, WorkOrderType
 )
 
+from .job_card_models import JobCard
+
 from .production_models import (
     ProductionPlan, ProductionStep, ProductionSchedule, ProductionStatus, ProductionPriority, ProductionType
 )
 
 from .invoice_models import (
     Invoice, Payment
+)
+
+from .installment_models import (
+    InstallmentPlan, Installment
 )
 
 from .invoice_customization_models import (

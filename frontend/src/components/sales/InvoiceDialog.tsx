@@ -27,6 +27,7 @@ import {
   Invoice,
   InvoiceCreate,
   InvoiceItemCreate,
+  InstallmentPlanCreate,
 } from '../../models/sales';
 import InvoiceService from '../../services/InvoiceService';
 import { useCurrency } from '../../contexts/CurrencyContext';
@@ -36,10 +37,12 @@ import { Product } from '../../models/pos';
 import { apiService } from '../../services/ApiService';
 import { usePlanInfo } from '../../hooks/usePlanInfo';
 
+export type InstallmentPlanCreateOption = Omit<InstallmentPlanCreate, 'invoice_id'>;
+
 interface InvoiceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: InvoiceCreate) => void;
+  onSubmit: (data: InvoiceCreate, options?: { installmentPlan?: InstallmentPlanCreateOption }) => void;
   mode: 'create' | 'edit';
   invoice?: Invoice | null;
   error?: string | null;
@@ -57,6 +60,11 @@ export function InvoiceDialog({
   const { planInfo } = usePlanInfo();
   const isHealthcare = planInfo?.planType === 'healthcare';
   const isWorkshop = planInfo?.planType === 'workshop';
+  const isCommerce = planInfo?.planType === 'commerce';
+  const [createInstallmentPlan, setCreateInstallmentPlan] = useState(false);
+  const [installmentCount, setInstallmentCount] = useState(3);
+  const [installmentFrequency, setInstallmentFrequency] = useState('monthly');
+  const [installmentFirstDueDate, setInstallmentFirstDueDate] = useState('');
   const [formData, setFormData] = useState<InvoiceCreate>({
     customerId: '',
     customerName: '',
@@ -131,6 +139,12 @@ export function InvoiceDialog({
   }, [currency, mode]);
 
   // Fetch products when dialog opens
+  useEffect(() => {
+    if (open && mode === 'create' && !installmentFirstDueDate) {
+      setInstallmentFirstDueDate(formData.dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+    }
+  }, [open, mode, formData.dueDate]);
+
   useEffect(() => {
     if (open) {
       fetchProducts();
@@ -409,11 +423,23 @@ export function InvoiceDialog({
         ...formData,
         items: items,
       };
-
-      await onSubmit(submitData);
+      const totals = calculateTotals();
+      const options =
+        mode === 'create' && createInstallmentPlan && totals.total > 0
+          ? {
+              installmentPlan: {
+                total_amount: totals.total,
+                number_of_installments: installmentCount,
+                frequency: installmentFrequency,
+                first_due_date: (installmentFirstDueDate || formData.dueDate) + 'T00:00:00Z',
+                currency: formData.currency,
+              } as InstallmentPlanCreateOption,
+            }
+          : undefined;
+      await onSubmit(submitData, options);
       onOpenChange(false);
     } catch {
-      } finally {
+    } finally {
       setLoading(false);
     }
   };
@@ -1141,6 +1167,63 @@ export function InvoiceDialog({
               </div>
             </CardContent>
           </Card>
+
+          {isCommerce && mode === 'create' && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">Sub Installments</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="createInstallmentPlan"
+                    checked={createInstallmentPlan}
+                    onChange={(e) => setCreateInstallmentPlan(e.target.checked)}
+                    className="rounded border-gray-300"
+                  />
+                  <Label htmlFor="createInstallmentPlan">Create installment plan for this invoice</Label>
+                </div>
+                {createInstallmentPlan && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="installmentCount">Number of installments</Label>
+                      <Input
+                        id="installmentCount"
+                        type="number"
+                        min={1}
+                        max={60}
+                        value={installmentCount}
+                        onChange={(e) => setInstallmentCount(parseInt(e.target.value, 10) || 1)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="installmentFrequency">Frequency</Label>
+                      <Select value={installmentFrequency} onValueChange={setInstallmentFrequency}>
+                        <SelectTrigger id="installmentFrequency">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="weekly">Weekly</SelectItem>
+                          <SelectItem value="monthly">Monthly</SelectItem>
+                          <SelectItem value="quarterly">Quarterly</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="installmentFirstDueDate">First due date</Label>
+                      <Input
+                        id="installmentFirstDueDate"
+                        type="date"
+                        value={installmentFirstDueDate}
+                        onChange={(e) => setInstallmentFirstDueDate(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {error && (
             <Alert variant="destructive">

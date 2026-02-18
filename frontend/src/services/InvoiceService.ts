@@ -8,6 +8,10 @@ import {
   PaymentCreate,
   PaymentFilters,
   InvoiceDashboard,
+  InstallmentPlan,
+  InstallmentPlanCreate,
+  InstallmentPlanUpdate,
+  ApplyPaymentToInstallmentRequest,
 } from '../models/sales';
 import { Customer, CustomerCreate, CustomerUpdate, CustomersResponse, CustomerService } from './CustomerService';
 
@@ -116,7 +120,48 @@ class InvoiceService {
     return response;
   }
 
-  // Dashboard
+  async createInstallmentPlan(data: InstallmentPlanCreate): Promise<InstallmentPlan> {
+    const response = await apiService.post('/installments/installment-plans', data);
+    return response;
+  }
+
+  async getInstallmentPlansByInvoice(invoiceId: string): Promise<InstallmentPlan[]> {
+    const response = await apiService.get(`/installments/installment-plans?invoice_id=${encodeURIComponent(invoiceId)}`);
+    return response;
+  }
+
+  async getAllInstallmentPlans(skip: number = 0, limit: number = 100): Promise<InstallmentPlan[]> {
+    const response = await apiService.get(`/installments/installment-plans?skip=${skip}&limit=${limit}`);
+    return response;
+  }
+
+  async getInstallmentPlan(planId: string): Promise<InstallmentPlan> {
+    const response = await apiService.get(`/installments/installment-plans/${planId}`);
+    return response;
+  }
+
+  async getInvoiceInstallmentPlan(invoiceId: string): Promise<InstallmentPlan | null> {
+    const response = await apiService.get(`/installments/invoices/${invoiceId}/installment-plan`);
+    return response ?? null;
+  }
+
+  async updateInstallmentPlan(planId: string, data: InstallmentPlanUpdate): Promise<InstallmentPlan> {
+    const response = await apiService.patch(`/installments/installment-plans/${planId}`, data);
+    return response;
+  }
+
+  async applyPaymentToInstallment(
+    planId: string,
+    installmentId: string,
+    data: ApplyPaymentToInstallmentRequest
+  ): Promise<any> {
+    const response = await apiService.post(
+      `/installments/installment-plans/${planId}/installments/${installmentId}/apply-payment`,
+      data
+    );
+    return response;
+  }
+
   async getDashboard(): Promise<InvoiceDashboard> {
     const response = await apiService.get(`${this.baseUrl}/dashboard/overview`);
     return response;
