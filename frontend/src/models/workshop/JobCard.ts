@@ -7,6 +7,7 @@ export interface JobCard {
   status: string;
   priority: string;
   work_order_id?: string;
+  customer_id?: string;
   customer_name?: string;
   customer_phone?: string;
   vehicle_info?: Record<string, unknown>;
@@ -30,6 +31,7 @@ export interface JobCardCreate {
   status?: string;
   priority?: string;
   work_order_id?: string;
+  customer_id?: string;
   customer_name?: string;
   customer_phone?: string;
   vehicle_info?: Record<string, unknown>;
@@ -48,6 +50,7 @@ export interface JobCardUpdate {
   status?: string;
   priority?: string;
   work_order_id?: string;
+  customer_id?: string;
   customer_name?: string;
   customer_phone?: string;
   vehicle_info?: Record<string, unknown>;

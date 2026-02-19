@@ -19,7 +19,9 @@ import {
   SelectValue,
 } from '../ui/select';
 import { Alert, AlertDescription } from '../ui/alert';
+import { CustomerSearch } from '../ui/customer-search';
 import { apiService } from '../../services/ApiService';
+import { Customer } from '../../services/CustomerService';
 import { JobCard, JobCardCreate, JobCardUpdate } from '../../models/workshop';
 
 interface JobCardDialogProps {
@@ -41,14 +43,13 @@ export default function JobCardDialog({
   const [errorMessage, setErrorMessage] = useState('');
   const [workOrders, setWorkOrders] = useState<{ id: string; work_order_number: string; title: string }[]>([]);
   const [users, setUsers] = useState<{ id: string; name?: string; username?: string }[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     status: 'draft',
     priority: 'medium',
     work_order_id: '',
-    customer_name: '',
-    customer_phone: '',
     vehicle_make: '',
     vehicle_model: '',
     vehicle_year: '',
@@ -69,8 +70,13 @@ export default function JobCardDialog({
         const list = res?.data ?? res ?? [];
         setUsers(Array.isArray(list) ? list : []);
       }).catch(() => setUsers([]));
+      if (mode === 'edit' && jobCard?.customer_id) {
+        apiService.get(`/invoices/customers/${jobCard.customer_id}`).then((c: Customer) => setSelectedCustomer(c)).catch(() => setSelectedCustomer(null));
+      } else {
+        setSelectedCustomer(null);
+      }
     }
-  }, [open]);
+  }, [open, mode, jobCard?.customer_id]);
 
   useEffect(() => {
     if (jobCard && (mode === 'edit')) {
@@ -81,8 +87,6 @@ export default function JobCardDialog({
         status: jobCard.status || 'draft',
         priority: jobCard.priority || 'medium',
         work_order_id: jobCard.work_order_id || '',
-        customer_name: jobCard.customer_name || '',
-        customer_phone: jobCard.customer_phone || '',
         vehicle_make: vi.make || '',
         vehicle_model: vi.model || '',
         vehicle_year: vi.year || '',
@@ -100,8 +104,6 @@ export default function JobCardDialog({
         status: 'draft',
         priority: 'medium',
         work_order_id: '',
-        customer_name: '',
-        customer_phone: '',
         vehicle_make: '',
         vehicle_model: '',
         vehicle_year: '',
@@ -131,8 +133,7 @@ export default function JobCardDialog({
         status: formData.status,
         priority: formData.priority,
         work_order_id: formData.work_order_id || undefined,
-        customer_name: formData.customer_name || undefined,
-        customer_phone: formData.customer_phone || undefined,
+        customer_id: selectedCustomer?.id || undefined,
         vehicle_info: {
           make: formData.vehicle_make || undefined,
           model: formData.vehicle_model || undefined,
@@ -216,13 +217,13 @@ export default function JobCardDialog({
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label>Customer name</Label>
-              <Input value={formData.customer_name} onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })} />
-            </div>
-            <div>
-              <Label>Customer phone</Label>
-              <Input value={formData.customer_phone} onChange={(e) => setFormData({ ...formData, customer_phone: e.target.value })} />
+            <div className="md:col-span-2">
+              <CustomerSearch
+                label="Customer"
+                value={selectedCustomer}
+                onSelect={setSelectedCustomer}
+                placeholder="Search by name, email, phone..."
+              />
             </div>
             <div>
               <Label>Vehicle make</Label>

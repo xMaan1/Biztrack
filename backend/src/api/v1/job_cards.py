@@ -30,6 +30,7 @@ def _job_card_to_response(jc) -> JobCardResponse:
         status=jc.status,
         priority=jc.priority,
         work_order_id=str(jc.work_order_id) if jc.work_order_id else None,
+        customer_id=str(jc.customer_id) if jc.customer_id else None,
         customer_name=jc.customer_name,
         customer_phone=jc.customer_phone,
         vehicle_info=jc.vehicle_info or {},
@@ -108,7 +109,7 @@ def create_job_card_endpoint(
     data["job_card_number"] = job_card_number
     data["attachments"] = data.get("attachments") or []
     data["items"] = data.get("items") or []
-    jc = create_job_card(data, db)
+    jc = create_job_card(data, db, tenant_id)
     return _job_card_to_response(jc)
 
 
@@ -129,7 +130,8 @@ def update_job_card_endpoint(
         data["planned_date"] = datetime.fromisoformat(data["planned_date"].replace("Z", "+00:00"))
     if data.get("completed_at") and isinstance(data["completed_at"], str):
         data["completed_at"] = datetime.fromisoformat(data["completed_at"].replace("Z", "+00:00"))
-    update_job_card(job_card_id, data, db, tenant_id)
+    update_data = {k: v for k, v in data.items() if hasattr(jc, k)}
+    update_job_card(job_card_id, update_data, db, tenant_id)
     jc = get_job_card_by_id(job_card_id, db, tenant_id)
     return _job_card_to_response(jc)
 

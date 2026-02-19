@@ -17,6 +17,7 @@ class JobCard(Base):
     status = Column(String, default="draft")
     priority = Column(String, default="medium")
     work_order_id = Column(UUID(as_uuid=True), ForeignKey("work_orders.id"), nullable=True)
+    customer_id = Column(UUID(as_uuid=True), ForeignKey("customers.id"), nullable=True)
     customer_name = Column(String)
     customer_phone = Column(String)
     vehicle_info = Column(JSON, default=dict)
@@ -35,6 +36,7 @@ class JobCard(Base):
 
     tenant = relationship("Tenant")
     work_order = relationship("WorkOrder", foreign_keys=[work_order_id])
+    customer = relationship("Customer", foreign_keys=[customer_id])
     assigned_to = relationship("User", foreign_keys=[assigned_to_id])
     created_by = relationship("User", foreign_keys=[created_by_id])
 
@@ -42,6 +44,7 @@ class JobCard(Base):
         Index("idx_job_cards_tenant_id", "tenant_id"),
         Index("idx_job_cards_status", "status"),
         Index("idx_job_cards_work_order_id", "work_order_id"),
+        Index("idx_job_cards_customer_id", "customer_id"),
         Index("idx_job_cards_job_card_number", "job_card_number"),
         Index("idx_job_cards_assigned_to", "assigned_to_id"),
     )

@@ -50,8 +50,19 @@ def get_next_job_card_number(db: Session, tenant_id: str) -> str:
     return f"JC-{year}-{next_number:03d}"
 
 
-def create_job_card(job_card_data: dict, db: Session) -> JobCard:
-    db_job_card = JobCard(**job_card_data)
+def create_job_card(job_card_data: dict, db: Session, tenant_id: str = None) -> JobCard:
+    data = dict(job_card_data)
+    customer_id = data.get("customer_id")
+    if customer_id and tenant_id:
+        try:
+            from .crm_crud import get_customer_by_id
+            customer = get_customer_by_id(db, str(customer_id), tenant_id)
+            if customer:
+                data["customer_name"] = f"{getattr(customer, 'firstName', '') or ''} {getattr(customer, 'lastName', '') or ''}".strip() or None
+                data["customer_phone"] = getattr(customer, "phone", None) or getattr(customer, "mobile", None)
+        except Exception:
+            pass
+    db_job_card = JobCard(**data)
     db.add(db_job_card)
     db.commit()
     db.refresh(db_job_card)
@@ -62,6 +73,20 @@ def update_job_card(job_card_id: str, update_data: dict, db: Session, tenant_id:
     job_card = get_job_card_by_id(job_card_id, db, tenant_id)
     if not job_card:
         return None
+    customer_id = update_data.get("customer_id")
+    if customer_id is not None and tenant_id:
+        if customer_id:
+            try:
+                from .crm_crud import get_customer_by_id
+                customer = get_customer_by_id(db, str(customer_id), tenant_id)
+                if customer:
+                    update_data["customer_name"] = f"{getattr(customer, 'firstName', '') or ''} {getattr(customer, 'lastName', '') or ''}".strip() or None
+                    update_data["customer_phone"] = getattr(customer, "phone", None) or getattr(customer, "mobile", None)
+            except Exception:
+                pass
+        else:
+            update_data["customer_name"] = None
+            update_data["customer_phone"] = None
     for key, value in update_data.items():
         if hasattr(job_card, key):
             setattr(job_card, key, value)
