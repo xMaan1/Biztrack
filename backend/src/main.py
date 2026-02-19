@@ -19,7 +19,7 @@ from .core.security import security_middleware as security_middleware_instance
 from fastapi.exceptions import RequestValidationError
 from sqlalchemy.orm import Session
 
-app = FastAPI(title="BizTrack - Project Management & Sales API", version="1.0.0", redirect_slashes=False)
+app = FastAPI(title="BizTrack - Project Management & Sales API", version="1.0.0")
 
 # Ensure tables are created at startup
 @app.on_event("startup")
