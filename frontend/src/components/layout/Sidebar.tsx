@@ -52,6 +52,7 @@ import {
   CheckCircle,
   ArrowRight,
   Bell,
+  Car,
 } from 'lucide-react';
 
 interface SubMenuItem {
@@ -466,6 +467,13 @@ const allMenuItems: MenuItem[] = [
         text: 'Job Cards',
         icon: ClipboardList,
         path: '/workshop-management/job-cards',
+        roles: ['*'],
+        planTypes: ['workshop'],
+      },
+      {
+        text: 'Vehicles',
+        icon: Car,
+        path: '/workshop-management/vehicles',
         roles: ['*'],
         planTypes: ['workshop'],
       },

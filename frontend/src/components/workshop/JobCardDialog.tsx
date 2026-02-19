@@ -20,9 +20,10 @@ import {
 } from '../ui/select';
 import { Alert, AlertDescription } from '../ui/alert';
 import { CustomerSearch } from '../ui/customer-search';
+import { VehicleSearch } from '../ui/vehicle-search';
 import { apiService } from '../../services/ApiService';
 import { Customer } from '../../services/CustomerService';
-import { JobCard, JobCardCreate, JobCardUpdate } from '../../models/workshop';
+import { JobCard, JobCardCreate, JobCardUpdate, Vehicle } from '../../models/workshop';
 
 interface JobCardDialogProps {
   open: boolean;
@@ -44,6 +45,7 @@ export default function JobCardDialog({
   const [workOrders, setWorkOrders] = useState<{ id: string; work_order_number: string; title: string }[]>([]);
   const [users, setUsers] = useState<{ id: string; name?: string; username?: string }[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -54,6 +56,9 @@ export default function JobCardDialog({
     vehicle_model: '',
     vehicle_year: '',
     vehicle_vin: '',
+    vehicle_color: '',
+    vehicle_reg: '',
+    vehicle_mileage: '',
     assigned_to_id: '',
     planned_date: '',
     labor_estimate: 0,
@@ -91,12 +96,16 @@ export default function JobCardDialog({
         vehicle_model: vi.model || '',
         vehicle_year: vi.year || '',
         vehicle_vin: vi.vin || '',
+        vehicle_color: vi.color || '',
+        vehicle_reg: vi.registration_number || '',
+        vehicle_mileage: vi.mileage || '',
         assigned_to_id: jobCard.assigned_to_id || '',
         planned_date: jobCard.planned_date ? jobCard.planned_date.split('T')[0] : '',
         labor_estimate: jobCard.labor_estimate ?? 0,
         parts_estimate: jobCard.parts_estimate ?? 0,
         notes: jobCard.notes || '',
       });
+      setSelectedVehicle(null);
     } else if (mode === 'create') {
       setFormData({
         title: '',
@@ -108,12 +117,16 @@ export default function JobCardDialog({
         vehicle_model: '',
         vehicle_year: '',
         vehicle_vin: '',
+        vehicle_color: '',
+        vehicle_reg: '',
+        vehicle_mileage: '',
         assigned_to_id: '',
         planned_date: '',
         labor_estimate: 0,
         parts_estimate: 0,
         notes: '',
       });
+      setSelectedVehicle(null);
     }
     setErrorMessage('');
   }, [jobCard, mode]);
@@ -139,6 +152,9 @@ export default function JobCardDialog({
           model: formData.vehicle_model || undefined,
           year: formData.vehicle_year || undefined,
           vin: formData.vehicle_vin || undefined,
+          color: formData.vehicle_color || undefined,
+          registration_number: formData.vehicle_reg || undefined,
+          mileage: formData.vehicle_mileage || undefined,
         },
         assigned_to_id: formData.assigned_to_id || undefined,
         planned_date: formData.planned_date ? formData.planned_date + 'T12:00:00Z' : undefined,
@@ -223,6 +239,28 @@ export default function JobCardDialog({
                 value={selectedCustomer}
                 onSelect={setSelectedCustomer}
                 placeholder="Search by name, email, phone..."
+              />
+            </div>
+            <div className="md:col-span-2">
+              <VehicleSearch
+                label="Vehicle"
+                value={selectedVehicle}
+                onSelect={(v) => {
+                  setSelectedVehicle(v);
+                  if (v) {
+                    setFormData((prev) => ({
+                      ...prev,
+                      vehicle_make: v.make ?? '',
+                      vehicle_model: v.model ?? '',
+                      vehicle_year: v.year ?? '',
+                      vehicle_vin: v.vin ?? '',
+                      vehicle_color: v.color ?? '',
+                      vehicle_reg: v.registration_number ?? '',
+                      vehicle_mileage: v.mileage ?? '',
+                    }));
+                  }
+                }}
+                placeholder="Search by reg, VIN, make, model..."
               />
             </div>
             <div>

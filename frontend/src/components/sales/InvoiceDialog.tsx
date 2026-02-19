@@ -32,7 +32,9 @@ import {
 import InvoiceService from '../../services/InvoiceService';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { CustomerSearch } from '../ui/customer-search';
+import { VehicleSearch } from '../ui/vehicle-search';
 import { Customer } from '../../services/CustomerService';
+import { Vehicle } from '../../models/workshop';
 import { Product } from '../../models/pos';
 import { apiService } from '../../services/ApiService';
 import { usePlanInfo } from '../../hooks/usePlanInfo';
@@ -114,6 +116,7 @@ export function InvoiceDialog({
   });
 
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
 
   const [items, setItems] = useState<InvoiceItemCreate[]>([]);
@@ -247,6 +250,7 @@ export function InvoiceDialog({
             });
           });
       }
+      setSelectedVehicle(null);
     } else {
       // Reset form for create mode
       setFormData({
@@ -298,6 +302,7 @@ export function InvoiceDialog({
       });
       setItems([]);
       setSelectedCustomer(null);
+      setSelectedVehicle(null);
     }
     setErrors({});
   }, [invoice, mode, open]);
@@ -634,6 +639,25 @@ export function InvoiceDialog({
                 </CardTitle>
               </CardHeader>
               <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <VehicleSearch
+                  label="Vehicle"
+                  value={selectedVehicle}
+                  onSelect={(v) => {
+                    setSelectedVehicle(v);
+                    if (v) {
+                      handleInputChange('vehicleMake', v.make ?? '');
+                      handleInputChange('vehicleModel', v.model ?? '');
+                      handleInputChange('vehicleYear', v.year ?? '');
+                      handleInputChange('vehicleColor', v.color ?? '');
+                      handleInputChange('vehicleVin', v.vin ?? '');
+                      handleInputChange('vehicleReg', v.registration_number ?? '');
+                      handleInputChange('vehicleMileage', v.mileage ?? '');
+                    }
+                  }}
+                  placeholder="Search by reg, VIN, make, model..."
+                />
+              </div>
               <div>
                 <Label htmlFor="vehicleMake">Vehicle Make</Label>
                 <Input

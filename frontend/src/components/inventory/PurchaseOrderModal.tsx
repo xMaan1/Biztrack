@@ -34,6 +34,8 @@ import { toast } from 'sonner';
 import { Alert, AlertDescription } from '../ui/alert';
 import { apiService } from '../../services/ApiService';
 import { usePlanInfo } from '../../hooks/usePlanInfo';
+import { VehicleSearch } from '../ui/vehicle-search';
+import { Vehicle } from '../../models/workshop';
 
 interface PurchaseOrderModalProps {
   isOpen: boolean;
@@ -67,6 +69,7 @@ export default function PurchaseOrderModal({
   const [warehouses, setWarehouses] = useState<any[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [newOrder, setNewOrder] = useState<PurchaseOrderCreate>({
     orderNumber: '',
     batchNumber: '',
@@ -426,20 +429,38 @@ export default function PurchaseOrderModal({
           
           {/* Vehicle Registration - Only show for non-healthcare plans */}
           {!isHealthcare && (
-            <div className="space-y-2">
-              <Label htmlFor="vehicleReg">Vehicle Registration</Label>
-              <Input
-                id="vehicleReg"
-                value={newOrder.vehicleReg}
-                onChange={(e) =>
-                  setNewOrder((prev) => ({
-                    ...prev,
-                    vehicleReg: e.target.value,
-                  }))
-                }
-                placeholder="Enter vehicle registration or driver info"
-              />
-            </div>
+            <>
+              <div className="space-y-2">
+                <VehicleSearch
+                  label="Vehicle"
+                  value={selectedVehicle}
+                  onSelect={(v) => {
+                    setSelectedVehicle(v);
+                    if (v) {
+                      setNewOrder((prev) => ({
+                        ...prev,
+                        vehicleReg: v.registration_number ?? '',
+                      }));
+                    }
+                  }}
+                  placeholder="Search by reg, VIN, make, model..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="vehicleReg">Vehicle Registration</Label>
+                <Input
+                  id="vehicleReg"
+                  value={newOrder.vehicleReg}
+                  onChange={(e) =>
+                    setNewOrder((prev) => ({
+                      ...prev,
+                      vehicleReg: e.target.value,
+                    }))
+                  }
+                  placeholder="Enter vehicle registration or driver info"
+                />
+              </div>
+            </>
           )}
 
           {/* Healthcare Fields - Only show for healthcare plan */}

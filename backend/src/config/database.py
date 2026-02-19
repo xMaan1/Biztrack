@@ -42,6 +42,7 @@ from .workshop_models import (
 )
 
 from .job_card_models import JobCard
+from .vehicle_models import Vehicle
 
 from .production_models import (
     ProductionPlan, ProductionStep, ProductionSchedule, ProductionStatus, ProductionPriority, ProductionType
@@ -378,6 +379,7 @@ __all__ = [
     'Invoice', 'Payment',
     'POSShift', 'POSTransaction', 'PosProductCategory',
     'WorkOrder', 'WorkOrderTask', 'WorkOrderStatus', 'WorkOrderPriority', 'WorkOrderType',
+    'Vehicle',
     'ProductionPlan', 'ProductionStep', 'ProductionSchedule', 'ProductionStatus', 'ProductionPriority', 'ProductionType',
     'CustomEventType', 'CustomDepartment', 'CustomLeaveType', 'CustomLeadSource',
     'CustomContactSource', 'CustomCompanyIndustry', 'CustomContactType', 'CustomIndustry',
