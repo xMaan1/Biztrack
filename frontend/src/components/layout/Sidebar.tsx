@@ -184,7 +184,7 @@ const allMenuItems: MenuItem[] = [
         planTypes: ['commerce'],
       },
       {
-        text: 'Sub Installments',
+        text: 'Installments',
         icon: Calendar,
         path: '/sales/installments',
         roles: ['*'],

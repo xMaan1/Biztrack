@@ -75,9 +75,17 @@ export default function AuthForm({ mode, onSuccess }: AuthFormProps) {
         }
       }
     } catch (err: any) {
-      const errorMessage = err.request && !err.response
-        ? 'No response from server. Please check your connection.'
-        : extractErrorMessage(err, 'An error occurred');
+      let errorMessage = 'An error occurred';
+      if (err?.request && !err?.response) {
+        errorMessage = 'No response from server. Please check your connection.';
+      } else if (err?.response?.data) {
+        const data = err.response.data;
+        if (typeof data.detail === 'string') errorMessage = data.detail;
+        else if (typeof data.message === 'string') errorMessage = data.message;
+        else errorMessage = extractErrorMessage(err, errorMessage);
+      } else {
+        errorMessage = extractErrorMessage(err, errorMessage);
+      }
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -101,6 +109,13 @@ export default function AuthForm({ mode, onSuccess }: AuthFormProps) {
 
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <Alert className="border-red-300 bg-red-50" variant="destructive">
+                <AlertDescription className="text-red-800 font-medium">
+                  {error}
+                </AlertDescription>
+              </Alert>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -180,14 +195,6 @@ export default function AuthForm({ mode, onSuccess }: AuthFormProps) {
                   Forgot your password?
                 </Link>
               </div>
-            )}
-
-            {error && (
-              <Alert className="border-red-200 bg-red-50">
-                <AlertDescription className="text-red-800">
-                  {error}
-                </AlertDescription>
-              </Alert>
             )}
 
             <Button

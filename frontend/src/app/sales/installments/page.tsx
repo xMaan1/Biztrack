@@ -151,7 +151,7 @@ export default function InstallmentsPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
             <Calendar className="h-8 w-8" />
-            Sub Installments
+            Installments
           </h1>
           <p className="text-gray-600">
             View and manage installment plans linked to invoices.
@@ -177,7 +177,7 @@ export default function InstallmentsPage() {
           <CardContent>
             {plans.length === 0 ? (
               <p className="text-gray-500 py-8 text-center">
-                No installment plans yet. Create one from an invoice (Invoices → Create Invoice → Sub Installments).
+                No installment plans yet. Create one from an invoice (Invoices → Create Invoice → Installments section).
               </p>
             ) : (
               <div className="overflow-x-auto">

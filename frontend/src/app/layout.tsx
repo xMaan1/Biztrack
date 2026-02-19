@@ -6,6 +6,7 @@ import { AuthProvider } from '@/src/contexts/AuthContext';
 import { RBACProvider } from '@/src/contexts/RBACContext';
 import { CurrencyProvider } from '@/src/contexts/CurrencyContext';
 import { NotificationProvider } from '@/src/contexts/NotificationContext';
+import { Toaster } from 'sonner';
 
 const inter = Inter({
   variable: '--font-inter',
@@ -38,6 +39,7 @@ export default function RootLayout({
             <CurrencyProvider>
               <NotificationProvider>
                 <AuthGuard>{children}</AuthGuard>
+                <Toaster position="top-center" richColors closeButton />
               </NotificationProvider>
             </CurrencyProvider>
           </RBACProvider>

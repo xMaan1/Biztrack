@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from dateutil.relativedelta import relativedelta
 from sqlalchemy.orm import Session
@@ -73,6 +73,8 @@ def create_installment_plan(
     currency: str = "USD",
     db: Session = None,
 ) -> InstallmentPlan:
+    if isinstance(first_due_date, datetime) and first_due_date.tzinfo:
+        first_due_date = first_due_date.astimezone(timezone.utc).replace(tzinfo=None)
     plan = InstallmentPlan(
         tenant_id=tenant_id,
         invoice_id=invoice_id,
@@ -87,17 +89,19 @@ def create_installment_plan(
     db.flush()
     per_installment = round(total_amount / number_of_installments, 2)
     remainder = round(total_amount - per_installment * number_of_installments, 2)
-    now = datetime.utcnow()
+    now_utc = datetime.now(timezone.utc)
     for i in range(1, number_of_installments + 1):
         due = _next_due_date(first_due_date, frequency, i)
+        due_utc = due.astimezone(timezone.utc) if due.tzinfo else due.replace(tzinfo=timezone.utc)
+        due_naive = due_utc.replace(tzinfo=None)
         amt = per_installment + (remainder if i == number_of_installments else 0)
         inst = Installment(
             tenant_id=tenant_id,
             installment_plan_id=plan.id,
             sequence_number=i,
-            due_date=due,
+            due_date=due_naive,
             amount=amt,
-            status="overdue" if due < now else "pending",
+            status="overdue" if due_utc < now_utc else "pending",
             paid_amount=0.0,
         )
         db.add(inst)

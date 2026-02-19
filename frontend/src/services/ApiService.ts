@@ -202,8 +202,12 @@ export class ApiService {
         }
 
         if (error.response?.status === 401) {
+          const requestUrl = String(error.config?.url ?? '');
+          const isLoginRequest = requestUrl.includes('auth/login');
+          if (isLoginRequest) {
+            return Promise.reject(error);
+          }
           console.warn('401 Unauthorized error:', error.config?.url);
-          
           if (error.config._retry) {
             console.error('Token refresh failed, clearing session');
             this.sessionManager.clearSession();

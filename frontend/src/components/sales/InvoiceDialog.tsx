@@ -1171,7 +1171,7 @@ export function InvoiceDialog({
           {isCommerce && mode === 'create' && (
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">Sub Installments</CardTitle>
+                <CardTitle className="flex items-center gap-2">Installments</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center space-x-2">
