@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../../components/ui/select';
-import { Plus, Search, Edit, ClipboardList } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, ClipboardList } from 'lucide-react';
 import { apiService } from '../../../services/ApiService';
 import { DashboardLayout } from '../../../components/layout';
 import { JobCard } from '../../../models/workshop';
@@ -26,6 +26,8 @@ function JobCardsContent() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedJobCard, setSelectedJobCard] = useState<JobCard | null>(null);
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [jobCardToDelete, setJobCardToDelete] = useState<JobCard | null>(null);
 
   const fetchJobCards = useCallback(async () => {
     try {
@@ -63,6 +65,24 @@ function JobCardsContent() {
     setSelectedJobCard(jc);
     setDialogMode('edit');
     setDialogOpen(true);
+  };
+
+  const handleDeleteJobCard = (jc: JobCard) => {
+    setJobCardToDelete(jc);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteJobCard = async () => {
+    if (!jobCardToDelete) return;
+    try {
+      await apiService.delete(`/job-cards/${jobCardToDelete.id}`);
+      setJobCards(jobCards.filter((jc) => jc.id !== jobCardToDelete.id));
+      setDeleteDialogOpen(false);
+      setJobCardToDelete(null);
+    } catch {
+      setDeleteDialogOpen(false);
+      setJobCardToDelete(null);
+    }
   };
 
   const formatDate = (d: string | undefined) =>
@@ -166,6 +186,10 @@ function JobCardsContent() {
                             <Edit className="h-4 w-4 mr-1" />
                             Edit
                           </Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleDeleteJobCard(jc)} className="text-red-600 hover:text-red-700">
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Delete
+                          </Button>
                         </td>
                       </tr>
                     ))}
@@ -183,6 +207,30 @@ function JobCardsContent() {
           jobCard={selectedJobCard}
           onSuccess={fetchJobCards}
         />
+        {deleteDialogOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-lg font-semibold mb-4">Delete Job Card</h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete &quot;{jobCardToDelete?.title}&quot;? This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setDeleteDialogOpen(false);
+                    setJobCardToDelete(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button variant="destructive" onClick={confirmDeleteJobCard}>
+                  Delete
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );
