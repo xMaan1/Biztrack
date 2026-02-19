@@ -15,7 +15,7 @@ from ...config.invoice_customization_models import InvoiceCustomization as Invoi
 
 router = APIRouter(prefix="/invoice-customization", tags=["Invoice Customization"])
 
-@router.get("/", response_model=InvoiceCustomizationResponse)
+@router.get("", response_model=InvoiceCustomizationResponse)
 def get_invoice_customization(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -98,7 +98,7 @@ def get_invoice_customization(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get invoice customization: {str(e)}")
 
-@router.post("/", response_model=InvoiceCustomizationResponse)
+@router.post("", response_model=InvoiceCustomizationResponse)
 def create_invoice_customization(
     customization_data: InvoiceCustomizationCreate,
     db: Session = Depends(get_db),

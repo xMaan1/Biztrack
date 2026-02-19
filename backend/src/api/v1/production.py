@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/production", tags=["Production Planning"])
 
 # Production Plan endpoints
-@router.get("/", response_model=List[ProductionPlanResponse])
+@router.get("", response_model=List[ProductionPlanResponse])
 async def get_production_plans(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -178,7 +178,7 @@ async def get_production_plan(
         logger.error(f"Error getting production plan: {str(e)}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get production plan")
 
-@router.post("/", response_model=ProductionPlanResponse)
+@router.post("", response_model=ProductionPlanResponse)
 async def create_new_production_plan(
     production_plan_data: ProductionPlanCreate,
     current_user = Depends(get_current_user),

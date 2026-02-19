@@ -41,7 +41,7 @@ def get_or_create_investment_accounts(db: Session, tenant_id: str, created_by: s
     
     return cash_account, equity_account, equipment_account
 
-@router.post("/", response_model=InvestmentResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=InvestmentResponse, status_code=status.HTTP_201_CREATED)
 async def create_investment(
     investment: InvestmentCreate,
     db: Session = Depends(get_db),
@@ -94,7 +94,7 @@ async def create_investment(
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to create investment: {str(e)}")
 
-@router.get("/", response_model=InvestmentsListResponse)
+@router.get("", response_model=InvestmentsListResponse)
 async def get_investments(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),

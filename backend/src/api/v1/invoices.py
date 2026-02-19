@@ -589,7 +589,7 @@ def test_email_configuration(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to test email configuration: {str(e)}")
 
-@router.post("/", response_model=InvoiceResponse)
+@router.post("", response_model=InvoiceResponse)
 def create_invoice(
     invoice_data: InvoiceCreate,
     db: Session = Depends(get_db),
@@ -825,7 +825,7 @@ def create_invoice(
         print(f"Error creating invoice: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to create invoice: {str(e)}")
 
-@router.get("/", response_model=InvoicesResponse)
+@router.get("", response_model=InvoicesResponse)
 def get_invoices(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),

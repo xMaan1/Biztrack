@@ -49,7 +49,7 @@ def _job_card_to_response(jc) -> JobCardResponse:
     )
 
 
-@router.get("/", response_model=List[JobCardResponse])
+@router.get("", response_model=List[JobCardResponse])
 def list_job_cards(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
@@ -92,7 +92,7 @@ def get_job_card(
     return _job_card_to_response(jc)
 
 
-@router.post("/", response_model=JobCardResponse)
+@router.post("", response_model=JobCardResponse)
 def create_job_card_endpoint(
     body: JobCardCreate,
     db: Session = Depends(get_db),

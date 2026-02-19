@@ -18,7 +18,7 @@ from ...config.workshop_models import WorkOrder, WorkOrderTask, WorkOrderStatus,
 
 router = APIRouter(prefix="/work-orders", tags=["Work Orders"])
 
-@router.get("/", response_model=List[WorkOrderResponse])
+@router.get("", response_model=List[WorkOrderResponse])
 def get_work_orders(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -159,7 +159,7 @@ def get_work_order(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get work order: {str(e)}")
 
-@router.post("/", response_model=WorkOrderResponse)
+@router.post("", response_model=WorkOrderResponse)
 def create_work_order_endpoint(
     work_order: WorkOrderCreate,
     current_user: User = Depends(get_current_user),
