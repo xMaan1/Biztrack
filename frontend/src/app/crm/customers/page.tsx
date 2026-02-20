@@ -133,6 +133,9 @@ function CustomersContent() {
     relation: '',
   });
   const [editingGuarantorId, setEditingGuarantorId] = useState<string | null>(null);
+  const [createGuarantors, setCreateGuarantors] = useState<GuarantorCreate[]>([]);
+  const [guarantorDialogSource, setGuarantorDialogSource] = useState<'create' | 'edit'>('edit');
+  const [editingCreateGuarantorIndex, setEditingCreateGuarantorIndex] = useState<number | null>(null);
   const [photoRemoved, setPhotoRemoved] = useState(false);
   const customerPhotoInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -186,6 +189,13 @@ function CustomersContent() {
           await CustomerService.uploadCustomerPhoto(created.id, customerPhotoPreview);
         } catch (photoErr) {
           toast.warning(extractErrorMessage(photoErr, 'Customer created but photo upload failed'));
+        }
+      }
+      for (const g of createGuarantors) {
+        try {
+          await CRMService.createGuarantor(created.id, g);
+        } catch (guarErr) {
+          toast.warning(extractErrorMessage(guarErr, 'Customer created but one or more guarantors could not be added'));
         }
       }
       toast.success('Customer created successfully');
@@ -273,6 +283,7 @@ function CustomersContent() {
     setCustomerPhotoPreview(null);
     setPhotoRemoved(false);
     setGuarantors([]);
+    setCreateGuarantors([]);
   };
 
   const openEditDialog = async (customer: Customer) => {
@@ -321,7 +332,7 @@ function CustomersContent() {
     try {
       const g = await CRMService.createGuarantor(selectedCustomer.id, guarantorForm);
       setGuarantors((prev) => [...prev, g]);
-      setGuarantorForm({ name: '', mobile: '', cnic: '', residential_address: '', official_address: '', occupation: '', relation: '' });
+      setGuarantorForm(emptyGuarantorForm);
       setGuarantorDialogOpen(false);
       toast.success('Guarantor added');
     } catch (err) {
@@ -335,7 +346,7 @@ function CustomersContent() {
       const updated = await CRMService.updateGuarantor(editingGuarantorId, guarantorForm);
       setGuarantors((prev) => prev.map((g) => (g.id === editingGuarantorId ? updated : g)));
       setEditingGuarantorId(null);
-      setGuarantorForm({ name: '', mobile: '', cnic: '', residential_address: '', official_address: '', occupation: '', relation: '' });
+      setGuarantorForm(emptyGuarantorForm);
       setGuarantorDialogOpen(false);
       toast.success('Guarantor updated');
     } catch (err) {
@@ -353,13 +364,19 @@ function CustomersContent() {
     }
   };
 
+  const emptyGuarantorForm: GuarantorCreate = { name: '', mobile: '', cnic: '', residential_address: '', official_address: '', occupation: '', relation: '' };
+
   const openAddGuarantor = () => {
-    setGuarantorForm({ name: '', mobile: '', cnic: '', residential_address: '', official_address: '', occupation: '', relation: '' });
+    setGuarantorDialogSource('edit');
+    setEditingCreateGuarantorIndex(null);
+    setGuarantorForm(emptyGuarantorForm);
     setEditingGuarantorId(null);
     setGuarantorDialogOpen(true);
   };
 
   const openEditGuarantor = (g: Guarantor) => {
+    setGuarantorDialogSource('edit');
+    setEditingCreateGuarantorIndex(null);
     setGuarantorForm({
       name: g.name,
       mobile: g.mobile || '',
@@ -371,6 +388,44 @@ function CustomersContent() {
     });
     setEditingGuarantorId(g.id);
     setGuarantorDialogOpen(true);
+  };
+
+  const openAddGuarantorForCreate = () => {
+    setGuarantorDialogSource('create');
+    setEditingCreateGuarantorIndex(null);
+    setGuarantorForm(emptyGuarantorForm);
+    setEditingGuarantorId(null);
+    setGuarantorDialogOpen(true);
+  };
+
+  const openEditGuarantorForCreate = (g: GuarantorCreate, index: number) => {
+    setGuarantorDialogSource('create');
+    setEditingCreateGuarantorIndex(index);
+    setGuarantorForm({ ...g });
+    setEditingGuarantorId(null);
+    setGuarantorDialogOpen(true);
+  };
+
+  const handleDeleteCreateGuarantor = (index: number) => {
+    setCreateGuarantors((prev) => prev.filter((_, i) => i !== index));
+    toast.success('Guarantor removed');
+  };
+
+  const handleGuarantorDialogSubmit = () => {
+    if (guarantorDialogSource === 'create') {
+      if (editingCreateGuarantorIndex !== null && editingCreateGuarantorIndex >= 0) {
+        setCreateGuarantors((prev) => prev.map((item, idx) => (idx === editingCreateGuarantorIndex ? guarantorForm : item)));
+      } else {
+        setCreateGuarantors((prev) => [...prev, guarantorForm]);
+      }
+      setGuarantorForm(emptyGuarantorForm);
+      setEditingCreateGuarantorIndex(null);
+      setGuarantorDialogOpen(false);
+      toast.success(editingCreateGuarantorIndex !== null ? 'Guarantor updated' : 'Guarantor added');
+    } else {
+      if (editingGuarantorId) handleUpdateGuarantor();
+      else handleAddGuarantor();
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -689,6 +744,49 @@ function CustomersContent() {
                     placeholder="vip, regular, premium"
                   />
                 </div>
+              </div>
+              <div className="border-t pt-4 mt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="text-sm font-medium">Guarantors / Friends</Label>
+                  <Button type="button" variant="outline" size="sm" onClick={openAddGuarantorForCreate}>
+                    <UserPlus className="h-4 w-4 mr-1" /> Add
+                  </Button>
+                </div>
+                {createGuarantors.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-2">No guarantors added.</p>
+                ) : (
+                  <div className="border rounded overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Mobile</TableHead>
+                          <TableHead>CNIC</TableHead>
+                          <TableHead>Relation</TableHead>
+                          <TableHead className="w-24">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {createGuarantors.map((g, idx) => (
+                          <TableRow key={idx}>
+                            <TableCell className="font-medium">{g.name}</TableCell>
+                            <TableCell>{g.mobile || '-'}</TableCell>
+                            <TableCell>{g.cnic || '-'}</TableCell>
+                            <TableCell>{g.relation || '-'}</TableCell>
+                            <TableCell>
+                              <Button variant="ghost" size="sm" onClick={() => openEditGuarantorForCreate(g, idx)}>
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                              <Button variant="ghost" size="sm" onClick={() => handleDeleteCreateGuarantor(idx)}>
+                                <Trash2 className="h-3 w-3 text-red-600" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
               </div>
               <DialogFooter>
                 <Button
@@ -1319,7 +1417,7 @@ function CustomersContent() {
         <Dialog open={guarantorDialogOpen} onOpenChange={setGuarantorDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{editingGuarantorId ? 'Edit Guarantor' : 'Add Guarantor'}</DialogTitle>
+              <DialogTitle>{(editingGuarantorId ?? (editingCreateGuarantorIndex !== null && editingCreateGuarantorIndex >= 0)) ? 'Edit Guarantor' : 'Add Guarantor'}</DialogTitle>
             </DialogHeader>
             <div className="grid gap-3">
               <div>
@@ -1353,7 +1451,7 @@ function CustomersContent() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setGuarantorDialogOpen(false)}>Cancel</Button>
-              <Button onClick={editingGuarantorId ? handleUpdateGuarantor : handleAddGuarantor} disabled={!guarantorForm.name.trim()}>
+              <Button onClick={handleGuarantorDialogSubmit} disabled={!guarantorForm.name.trim()}>
                 {editingGuarantorId ? 'Update' : 'Add'}
               </Button>
             </DialogFooter>
