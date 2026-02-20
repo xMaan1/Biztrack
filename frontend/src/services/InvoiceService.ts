@@ -162,6 +162,14 @@ class InvoiceService {
     return response;
   }
 
+  async getCustomerInfoPdf(planId: string): Promise<Blob> {
+    const blob = await apiService.get<Blob>(
+      `/installments/installment-plans/${planId}/customer-info-pdf`,
+      { responseType: 'blob' }
+    );
+    return blob;
+  }
+
   async getDashboard(): Promise<InvoiceDashboard> {
     const response = await apiService.get(`${this.baseUrl}/dashboard/overview`);
     return response;

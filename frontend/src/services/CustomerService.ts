@@ -25,6 +25,7 @@ export interface Customer {
   assignedToId?: string;
   notes?: string;
   tags: string[];
+  image_url?: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -131,6 +132,24 @@ export class CustomerService {
   ): Promise<Customer[]> {
     const response = await apiService.get(
       `${this.baseUrl}/search?q=${encodeURIComponent(query)}&limit=${limit}`,
+    );
+    return response;
+  }
+
+  static async uploadCustomerPhoto(
+    customerId: string,
+    imageBase64: string,
+  ): Promise<Customer> {
+    const response = await apiService.patch(
+      `${this.baseUrl}/${customerId}/photo`,
+      { image: imageBase64 },
+    );
+    return response;
+  }
+
+  static async deleteCustomerPhoto(customerId: string): Promise<Customer> {
+    const response = await apiService.delete(
+      `${this.baseUrl}/${customerId}/photo`,
     );
     return response;
   }

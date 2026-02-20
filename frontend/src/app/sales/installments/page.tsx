@@ -32,9 +32,10 @@ import {
   PaymentMethod,
 } from '../../../models/sales';
 import { useCurrency } from '../../../contexts/CurrencyContext';
-import { Calendar, Eye, DollarSign } from 'lucide-react';
+import { Calendar, Eye, DollarSign, FileDown } from 'lucide-react';
 import { extractErrorMessage } from '../../../utils/errorUtils';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 export default function InstallmentsPage() {
   const { formatCurrency } = useCurrency();
@@ -50,6 +51,28 @@ export default function InstallmentsPage() {
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   const [paymentSubmitting, setPaymentSubmitting] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [pdfDownloading, setPdfDownloading] = useState(false);
+
+  const handleDownloadCustomerInfoPdf = useCallback(async () => {
+    if (!selectedPlan) return;
+    setPdfDownloading(true);
+    try {
+      const blob = await InvoiceService.getCustomerInfoPdf(selectedPlan.id);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `customer-info-${selectedPlan.invoice_id}-${selectedPlan.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success('PDF downloaded');
+    } catch (err) {
+      toast.error(extractErrorMessage(err, 'Failed to download PDF'));
+    } finally {
+      setPdfDownloading(false);
+    }
+  }, [selectedPlan]);
 
   const loadPlans = useCallback(async () => {
     try {
@@ -243,18 +266,29 @@ export default function InstallmentsPage() {
             </DialogHeader>
             {selectedPlan && (
               <div className="space-y-4">
-                <p>
-                  Invoice:{' '}
-                  <Link
-                    href={`/sales/invoices?invoice=${selectedPlan.invoice_id}`}
-                    className="text-blue-600 hover:underline"
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p>
+                    Invoice:{' '}
+                    <Link
+                      href={`/sales/invoices?invoice=${selectedPlan.invoice_id}`}
+                      className="text-blue-600 hover:underline"
+                    >
+                      {selectedPlan.invoice_id}
+                    </Link>
+                    {' · '}
+                    {formatCurrency(selectedPlan.total_amount, selectedPlan.currency)} ·{' '}
+                    {selectedPlan.number_of_installments} installments ({selectedPlan.frequency})
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDownloadCustomerInfoPdf}
+                    disabled={pdfDownloading}
                   >
-                    {selectedPlan.invoice_id}
-                  </Link>
-                  {' · '}
-                  {formatCurrency(selectedPlan.total_amount, selectedPlan.currency)} ·{' '}
-                  {selectedPlan.number_of_installments} installments ({selectedPlan.frequency})
-                </p>
+                    <FileDown className="h-4 w-4 mr-1" />
+                    {pdfDownloading ? 'Downloading...' : 'Download PDF'}
+                  </Button>
+                </div>
                 <div className="border rounded overflow-hidden">
                   <table className="w-full">
                     <thead>

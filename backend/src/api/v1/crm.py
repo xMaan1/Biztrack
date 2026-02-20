@@ -3,10 +3,16 @@ from sqlalchemy.orm import Session
 from typing import Optional, List
 import json
 import uuid
+import base64
+import logging
 from datetime import datetime, timedelta
+from pydantic import BaseModel as PydanticBaseModel
+
+from ...services.s3_service import s3_service
 
 from ...models.crm import (
-    CustomerCreate, CustomerUpdate, CustomerResponse, CustomerStatsResponse
+    CustomerCreate, CustomerUpdate, CustomerResponse, CustomerStatsResponse,
+    GuarantorCreate, GuarantorUpdate, GuarantorResponse,
 )
 from ...models.crm_models import (
     Lead, LeadCreate, LeadUpdate,
@@ -27,13 +33,70 @@ from ...config.crm_crud import (
     create_opportunity, get_opportunity_by_id, get_opportunities, update_opportunity, delete_opportunity,
     create_customer, get_customer_by_id, get_customers, update_customer, delete_customer,
     get_customer_stats, search_customers, get_sales_activities, get_crm_dashboard_data,
-    get_sales_activity_by_id, update_sales_activity, delete_sales_activity
+    get_sales_activity_by_id, update_sales_activity, delete_sales_activity,
+    create_guarantor, get_guarantors_by_customer, get_guarantor_by_id, update_guarantor, delete_guarantor,
 )
 from ...api.dependencies import get_current_user, get_tenant_context, require_permission
 from ...models.common import ModulePermission
 
 
 router = APIRouter(prefix="/crm", tags=["crm"])
+logger = logging.getLogger(__name__)
+
+
+class CustomerPhotoUpload(PydanticBaseModel):
+    image: str
+
+
+def process_customer_photo_upload(image_data: str, tenant_id: str, customer_id: str) -> Optional[str]:
+    if not image_data:
+        return None
+    if image_data.startswith("data:image"):
+        try:
+            if "," not in image_data:
+                raise ValueError("Invalid base64 data format")
+            header, encoded = image_data.split(",", 1)
+            if not encoded or len(encoded) < 100:
+                raise ValueError("Base64 data is too short or empty")
+            try:
+                raw = base64.b64decode(encoded, validate=True)
+            except Exception as e:
+                logger.error(f"Base64 decode error: {str(e)}")
+                raise ValueError("Invalid base64 encoding")
+            if len(raw) > 5 * 1024 * 1024:
+                raise ValueError("Image size exceeds 5MB limit")
+            if len(raw) < 100:
+                raise ValueError("Image file is too small")
+            file_ext = ".png"
+            if "jpeg" in header.lower() or "jpg" in header.lower():
+                file_ext = ".jpg"
+            elif "gif" in header.lower():
+                file_ext = ".gif"
+            elif "webp" in header.lower():
+                file_ext = ".webp"
+            filename = f"customer_{customer_id}_{uuid.uuid4().hex}{file_ext}"
+            try:
+                result = s3_service.upload_file(
+                    file_content=raw,
+                    tenant_id=str(tenant_id),
+                    folder="customer-photos",
+                    original_filename=filename,
+                )
+            except ValueError as e:
+                raise HTTPException(status_code=503, detail="File upload service is not configured. Please contact administrator.")
+            if not result or "file_url" not in result:
+                raise ValueError("S3 upload failed - no file URL returned")
+            return result["file_url"]
+        except ValueError as ve:
+            logger.error(f"Validation error processing customer photo: {str(ve)}")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid image: {str(ve)}")
+        except Exception as e:
+            logger.error(f"Error processing customer photo: {str(e)}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"Failed to upload image: {str(e)}")
+    if image_data.startswith("http://") or image_data.startswith("https://"):
+        return image_data
+    return None
+
 
 # Customer endpoints
 @router.post("/customers", response_model=CustomerResponse)
@@ -204,6 +267,119 @@ async def delete_customer_endpoint(
     if not success:
         raise HTTPException(status_code=404, detail="Customer not found")
     return {"message": "Customer deleted successfully"}
+
+
+@router.patch("/customers/{customer_id}/photo", response_model=CustomerResponse)
+async def upload_customer_photo(
+    customer_id: str,
+    body: CustomerPhotoUpload,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_UPDATE.value)),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    customer = get_customer_by_id(db, customer_id, str(tenant_context["tenant_id"]))
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    try:
+        url = process_customer_photo_upload(body.image, tenant_context["tenant_id"], customer_id)
+        if url:
+            customer = update_customer(db, customer_id, {"image_url": url}, str(tenant_context["tenant_id"]))
+        return CustomerResponse.from_orm(customer)
+    except HTTPException:
+        raise
+
+
+@router.delete("/customers/{customer_id}/photo", response_model=CustomerResponse)
+async def delete_customer_photo(
+    customer_id: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_UPDATE.value)),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    customer = get_customer_by_id(db, customer_id, str(tenant_context["tenant_id"]))
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    if customer.image_url and (customer.image_url.startswith("http://") or customer.image_url.startswith("https://")):
+        try:
+            s3_key = s3_service.extract_s3_key_from_url(customer.image_url)
+            if s3_key:
+                s3_service.delete_file(s3_key)
+        except Exception as e:
+            logger.warning(f"Failed to delete customer photo from S3: {e}")
+    customer = update_customer(db, customer_id, {"image_url": None}, str(tenant_context["tenant_id"]))
+    return CustomerResponse.from_orm(customer)
+
+
+@router.get("/customers/{customer_id}/guarantors", response_model=List[GuarantorResponse])
+async def get_customer_guarantors(
+    customer_id: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value)),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    guarantors = get_guarantors_by_customer(db, customer_id, str(tenant_context["tenant_id"]))
+    return [GuarantorResponse.model_validate(g) for g in guarantors]
+
+
+@router.post("/customers/{customer_id}/guarantors", response_model=GuarantorResponse)
+async def create_guarantor_endpoint(
+    customer_id: str,
+    data: GuarantorCreate,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_CREATE.value)),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    try:
+        guarantor = create_guarantor(db, customer_id, data.model_dump(), str(tenant_context["tenant_id"]))
+        return GuarantorResponse.model_validate(guarantor)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.put("/guarantors/{guarantor_id}", response_model=GuarantorResponse)
+async def update_guarantor_endpoint(
+    guarantor_id: str,
+    data: GuarantorUpdate,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_UPDATE.value)),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    guarantor = update_guarantor(db, guarantor_id, data.model_dump(exclude_unset=True), str(tenant_context["tenant_id"]))
+    if not guarantor:
+        raise HTTPException(status_code=404, detail="Guarantor not found")
+    return GuarantorResponse.model_validate(guarantor)
+
+
+@router.delete("/guarantors/{guarantor_id}")
+async def delete_guarantor_endpoint(
+    guarantor_id: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_DELETE.value)),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    success = delete_guarantor(db, guarantor_id, str(tenant_context["tenant_id"]))
+    if not success:
+        raise HTTPException(status_code=404, detail="Guarantor not found")
+    return {"message": "Guarantor deleted successfully"}
+
 
 # Lead endpoints
 @router.get("/leads", response_model=CRMLeadsResponse)

@@ -65,11 +65,16 @@ import {
   Customer,
   CustomerCreate,
   CustomerStats,
+  CRMService,
+  Guarantor,
+  GuarantorCreate,
 } from '@/src/services/CRMService';
 import { DashboardLayout } from '../../../components/layout';
 import { toast } from 'sonner';
 import CustomerImportDialog from '../../../components/crm/CustomerImportDialog';
 import { extractErrorMessage } from '@/src/utils/errorUtils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar';
+import { Camera, X, UserPlus } from 'lucide-react';
 
 export default function CustomersPage() {
   return (
@@ -115,6 +120,21 @@ function CustomersContent() {
       paymentTerms: 'Cash',
     tags: [],
   });
+  const [customerPhotoPreview, setCustomerPhotoPreview] = useState<string | null>(null);
+  const [guarantors, setGuarantors] = useState<Guarantor[]>([]);
+  const [guarantorDialogOpen, setGuarantorDialogOpen] = useState(false);
+  const [guarantorForm, setGuarantorForm] = useState<GuarantorCreate>({
+    name: '',
+    mobile: '',
+    cnic: '',
+    residential_address: '',
+    official_address: '',
+    occupation: '',
+    relation: '',
+  });
+  const [editingGuarantorId, setEditingGuarantorId] = useState<string | null>(null);
+  const [photoRemoved, setPhotoRemoved] = useState(false);
+  const customerPhotoInputRef = React.useRef<HTMLInputElement>(null);
 
   const itemsPerPage = 10;
 
@@ -156,13 +176,18 @@ function CustomersContent() {
 
   const handleCreateCustomer = async () => {
     try {
-      // Validate required fields
       if (!formData.firstName || !formData.lastName || !formData.email) {
         toast.error('Please fill in all required fields (First Name, Last Name, Email)');
         return;
       }
-
-      await CustomerService.createCustomer(formData);
+      const created = await CustomerService.createCustomer(formData);
+      if (customerPhotoPreview) {
+        try {
+          await CustomerService.uploadCustomerPhoto(created.id, customerPhotoPreview);
+        } catch (photoErr) {
+          toast.warning(extractErrorMessage(photoErr, 'Customer created but photo upload failed'));
+        }
+      }
       toast.success('Customer created successfully');
       setIsCreateDialogOpen(false);
       resetForm();
@@ -176,6 +201,20 @@ function CustomersContent() {
   const handleUpdateCustomer = async () => {
     if (!selectedCustomer) return;
     try {
+      if (photoRemoved && selectedCustomer.image_url) {
+        try {
+          await CustomerService.deleteCustomerPhoto(selectedCustomer.id);
+        } catch (e) {
+          toast.warning(extractErrorMessage(e, 'Photo could not be removed'));
+        }
+      }
+      if (customerPhotoPreview) {
+        try {
+          await CustomerService.uploadCustomerPhoto(selectedCustomer.id, customerPhotoPreview);
+        } catch (e) {
+          toast.warning(extractErrorMessage(e, 'Photo upload failed'));
+        }
+      }
       await CustomerService.updateCustomer(selectedCustomer.id, formData);
       toast.success('Customer updated successfully');
       setIsEditDialogOpen(false);
@@ -231,9 +270,12 @@ function CustomersContent() {
       tags: [],
     });
     setSelectedCustomer(null);
+    setCustomerPhotoPreview(null);
+    setPhotoRemoved(false);
+    setGuarantors([]);
   };
 
-  const openEditDialog = (customer: Customer) => {
+  const openEditDialog = async (customer: Customer) => {
     setSelectedCustomer(customer);
     setFormData({
       firstName: customer.firstName,
@@ -254,7 +296,81 @@ function CustomersContent() {
       paymentTerms: customer.paymentTerms,
       tags: customer.tags,
     });
+    setCustomerPhotoPreview(null);
+    setPhotoRemoved(false);
     setIsEditDialogOpen(true);
+    try {
+      const list = await CRMService.getGuarantors(customer.id);
+      setGuarantors(list || []);
+    } catch {
+      setGuarantors([]);
+    }
+  };
+
+  const handleCustomerPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = () => setCustomerPhotoPreview(reader.result as string);
+    reader.readAsDataURL(file);
+    setPhotoRemoved(false);
+  };
+
+  const handleAddGuarantor = async () => {
+    if (!selectedCustomer || !guarantorForm.name.trim()) return;
+    try {
+      const g = await CRMService.createGuarantor(selectedCustomer.id, guarantorForm);
+      setGuarantors((prev) => [...prev, g]);
+      setGuarantorForm({ name: '', mobile: '', cnic: '', residential_address: '', official_address: '', occupation: '', relation: '' });
+      setGuarantorDialogOpen(false);
+      toast.success('Guarantor added');
+    } catch (err) {
+      toast.error(extractErrorMessage(err, 'Failed to add guarantor'));
+    }
+  };
+
+  const handleUpdateGuarantor = async () => {
+    if (!editingGuarantorId) return;
+    try {
+      const updated = await CRMService.updateGuarantor(editingGuarantorId, guarantorForm);
+      setGuarantors((prev) => prev.map((g) => (g.id === editingGuarantorId ? updated : g)));
+      setEditingGuarantorId(null);
+      setGuarantorForm({ name: '', mobile: '', cnic: '', residential_address: '', official_address: '', occupation: '', relation: '' });
+      setGuarantorDialogOpen(false);
+      toast.success('Guarantor updated');
+    } catch (err) {
+      toast.error(extractErrorMessage(err, 'Failed to update guarantor'));
+    }
+  };
+
+  const handleDeleteGuarantor = async (id: string) => {
+    try {
+      await CRMService.deleteGuarantor(id);
+      setGuarantors((prev) => prev.filter((g) => g.id !== id));
+      toast.success('Guarantor removed');
+    } catch (err) {
+      toast.error(extractErrorMessage(err, 'Failed to remove guarantor'));
+    }
+  };
+
+  const openAddGuarantor = () => {
+    setGuarantorForm({ name: '', mobile: '', cnic: '', residential_address: '', official_address: '', occupation: '', relation: '' });
+    setEditingGuarantorId(null);
+    setGuarantorDialogOpen(true);
+  };
+
+  const openEditGuarantor = (g: Guarantor) => {
+    setGuarantorForm({
+      name: g.name,
+      mobile: g.mobile || '',
+      cnic: g.cnic || '',
+      residential_address: g.residential_address || '',
+      official_address: g.official_address || '',
+      occupation: g.occupation || '',
+      relation: g.relation || '',
+    });
+    setEditingGuarantorId(g.id);
+    setGuarantorDialogOpen(true);
   };
 
   const getStatusBadge = (status: string) => {
@@ -327,6 +443,31 @@ function CustomersContent() {
                   Add a new customer to your CRM system
                 </DialogDescription>
               </DialogHeader>
+              <div className="flex items-center gap-4 pb-4 border-b">
+                <div
+                  className="w-20 h-20 rounded-full border-2 border-dashed flex items-center justify-center bg-muted cursor-pointer overflow-hidden"
+                  onClick={() => customerPhotoInputRef.current?.click()}
+                >
+                  {customerPhotoPreview ? (
+                    <img src={customerPhotoPreview} alt="Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <Camera className="h-8 w-8 text-muted-foreground" />
+                  )}
+                </div>
+                <div>
+                  <Label className="text-sm text-muted-foreground">Customer photo (optional)</Label>
+                  <input
+                    ref={customerPhotoInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleCustomerPhotoChange}
+                  />
+                  <Button type="button" variant="outline" size="sm" className="mt-1" onClick={() => customerPhotoInputRef.current?.click()}>
+                    Choose image
+                  </Button>
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="firstName">First Name *</Label>
@@ -862,6 +1003,42 @@ function CustomersContent() {
               <DialogTitle>Edit Customer</DialogTitle>
               <DialogDescription>Update customer information</DialogDescription>
             </DialogHeader>
+            <div className="flex items-center gap-4 pb-4 border-b">
+              <div
+                className="w-20 h-20 rounded-full border-2 border-dashed flex items-center justify-center bg-muted cursor-pointer overflow-hidden"
+                onClick={() => customerPhotoInputRef.current?.click()}
+              >
+                {customerPhotoPreview ? (
+                  <img src={customerPhotoPreview} alt="Preview" className="w-full h-full object-cover" />
+                ) : photoRemoved ? (
+                  <Camera className="h-8 w-8 text-muted-foreground" />
+                ) : selectedCustomer?.image_url ? (
+                  <img src={selectedCustomer.image_url} alt="Customer" className="w-full h-full object-cover" />
+                ) : (
+                  <Camera className="h-8 w-8 text-muted-foreground" />
+                )}
+              </div>
+              <div>
+                <Label className="text-sm text-muted-foreground">Customer photo</Label>
+                <input
+                  ref={customerPhotoInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleCustomerPhotoChange}
+                />
+                <div className="flex gap-2 mt-1">
+                  <Button type="button" variant="outline" size="sm" onClick={() => customerPhotoInputRef.current?.click()}>
+                    Change
+                  </Button>
+                  {(selectedCustomer?.image_url || customerPhotoPreview) && !photoRemoved && (
+                    <Button type="button" variant="outline" size="sm" onClick={() => { setCustomerPhotoPreview(null); setPhotoRemoved(true); }}>
+                      <X className="h-3 w-3 mr-1" /> Remove
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="editFirstName">First Name *</Label>
@@ -1084,6 +1261,49 @@ function CustomersContent() {
                 />
               </div>
             </div>
+            <div className="border-t pt-4 mt-4">
+              <div className="flex items-center justify-between mb-2">
+                <Label className="text-sm font-medium">Guarantors / Friends</Label>
+                <Button type="button" variant="outline" size="sm" onClick={openAddGuarantor}>
+                  <UserPlus className="h-4 w-4 mr-1" /> Add
+                </Button>
+              </div>
+              {guarantors.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-2">No guarantors added.</p>
+              ) : (
+                <div className="border rounded overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Mobile</TableHead>
+                        <TableHead>CNIC</TableHead>
+                        <TableHead>Relation</TableHead>
+                        <TableHead className="w-24">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {guarantors.map((g) => (
+                        <TableRow key={g.id}>
+                          <TableCell className="font-medium">{g.name}</TableCell>
+                          <TableCell>{g.mobile || '-'}</TableCell>
+                          <TableCell>{g.cnic || '-'}</TableCell>
+                          <TableCell>{g.relation || '-'}</TableCell>
+                          <TableCell>
+                            <Button variant="ghost" size="sm" onClick={() => openEditGuarantor(g)}>
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => handleDeleteGuarantor(g.id)}>
+                              <Trash2 className="h-3 w-3 text-red-600" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
             <DialogFooter>
               <Button
                 variant="outline"
@@ -1092,6 +1312,50 @@ function CustomersContent() {
                 Cancel
               </Button>
               <Button onClick={handleUpdateCustomer}>Update Customer</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={guarantorDialogOpen} onOpenChange={setGuarantorDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{editingGuarantorId ? 'Edit Guarantor' : 'Add Guarantor'}</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-3">
+              <div>
+                <Label>Name *</Label>
+                <Input value={guarantorForm.name} onChange={(e) => setGuarantorForm((p) => ({ ...p, name: e.target.value }))} placeholder="Full name" />
+              </div>
+              <div>
+                <Label>Mobile</Label>
+                <Input value={guarantorForm.mobile} onChange={(e) => setGuarantorForm((p) => ({ ...p, mobile: e.target.value }))} placeholder="03XX-XXXXXXX" />
+              </div>
+              <div>
+                <Label>CNIC</Label>
+                <Input value={guarantorForm.cnic} onChange={(e) => setGuarantorForm((p) => ({ ...p, cnic: e.target.value }))} placeholder="XXXXX-XXXXXXX-X" />
+              </div>
+              <div>
+                <Label>Residential Address</Label>
+                <Input value={guarantorForm.residential_address} onChange={(e) => setGuarantorForm((p) => ({ ...p, residential_address: e.target.value }))} placeholder="Address" />
+              </div>
+              <div>
+                <Label>Official Address</Label>
+                <Input value={guarantorForm.official_address} onChange={(e) => setGuarantorForm((p) => ({ ...p, official_address: e.target.value }))} placeholder="Office address" />
+              </div>
+              <div>
+                <Label>Occupation</Label>
+                <Input value={guarantorForm.occupation} onChange={(e) => setGuarantorForm((p) => ({ ...p, occupation: e.target.value }))} placeholder="Job" />
+              </div>
+              <div>
+                <Label>Relation</Label>
+                <Input value={guarantorForm.relation} onChange={(e) => setGuarantorForm((p) => ({ ...p, relation: e.target.value }))} placeholder="e.g. FRIEND" />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setGuarantorDialogOpen(false)}>Cancel</Button>
+              <Button onClick={editingGuarantorId ? handleUpdateGuarantor : handleAddGuarantor} disabled={!guarantorForm.name.trim()}>
+                {editingGuarantorId ? 'Update' : 'Add'}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

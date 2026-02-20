@@ -26,6 +26,7 @@ class CustomerBase(BaseModel):
     assignedToId: Optional[UUID] = None
     notes: Optional[str] = None
     tags: Optional[List[str]] = Field(default_factory=list)
+    image_url: Optional[str] = None
 
 class CustomerCreate(CustomerBase):
     pass
@@ -52,6 +53,7 @@ class CustomerUpdate(BaseModel):
     assignedToId: Optional[UUID] = None
     notes: Optional[str] = None
     tags: Optional[List[str]] = None
+    image_url: Optional[str] = None
 
 class CustomerResponse(CustomerBase):
     id: UUID
@@ -72,5 +74,42 @@ class CustomerStatsResponse(BaseModel):
     individual_customers: int
     business_customers: int
     recent_customers: int
+
+
+class GuarantorBase(BaseModel):
+    name: str
+    mobile: Optional[str] = None
+    cnic: Optional[str] = None
+    residential_address: Optional[str] = None
+    official_address: Optional[str] = None
+    occupation: Optional[str] = None
+    relation: Optional[str] = None
+    display_order: Optional[int] = 0
+
+
+class GuarantorCreate(GuarantorBase):
+    pass
+
+
+class GuarantorUpdate(BaseModel):
+    name: Optional[str] = None
+    mobile: Optional[str] = None
+    cnic: Optional[str] = None
+    residential_address: Optional[str] = None
+    official_address: Optional[str] = None
+    occupation: Optional[str] = None
+    relation: Optional[str] = None
+    display_order: Optional[int] = None
+
+
+class GuarantorResponse(GuarantorBase):
+    id: UUID
+    tenant_id: UUID
+    customer_id: UUID
+    createdAt: datetime
+    updatedAt: datetime
+    
+    class Config:
+        from_attributes = True
 
 

@@ -1,5 +1,4 @@
 .vscode
 *.pem
 *.ppk
-frontend/.env
 *.md

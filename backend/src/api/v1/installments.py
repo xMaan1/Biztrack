@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
@@ -116,6 +117,29 @@ def list_plans(
         installments = get_installments_by_plan(str(plan.id), db, tenant_id)
         result.append(_plan_to_response(plan, installments))
     return result
+
+
+@router.get("/installment-plans/{plan_id}/customer-info-pdf")
+def download_customer_info_pdf(
+    plan_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_VIEW.value)),
+):
+    tenant_id = str(tenant_context["tenant_id"])
+    try:
+        from .customer_info_pdf import generate_customer_info_pdf
+        pdf_bytes = generate_customer_info_pdf(plan_id, db, tenant_id)
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename=customer-info-{plan_id}.pdf"},
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate PDF: {str(e)}")
 
 
 @router.get("/installment-plans/{plan_id}", response_model=InstallmentPlanResponse)

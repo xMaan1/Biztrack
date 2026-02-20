@@ -55,6 +55,7 @@ class Customer(Base):
     assignedToId = Column(UUID(as_uuid=True), ForeignKey("users.id"))
     notes = Column(Text)
     tags = Column(JSON, default=[])  # Store tags as JSON array
+    image_url = Column(Text, nullable=True)
     isActive = Column(Boolean, default=True)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -62,6 +63,7 @@ class Customer(Base):
     # Relationships
     tenant = relationship("Tenant", back_populates="customers")
     assignedTo = relationship("User", foreign_keys=[assignedToId])
+    guarantors = relationship("CustomerGuarantor", back_populates="customer", cascade="all, delete-orphan")
     
     # Indexes for search optimization
     __table_args__ = (
@@ -71,6 +73,33 @@ class Customer(Base):
         Index('idx_customer_email_search', 'tenant_id', 'email'),
         Index('idx_customer_id_unique', 'tenant_id', 'customerId', unique=True),  # Unique customerId per tenant
     )
+
+
+class CustomerGuarantor(Base):
+    __tablename__ = "customer_guarantors"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
+    customer_id = Column(UUID(as_uuid=True), ForeignKey("customers.id"), nullable=False)
+    name = Column(String, nullable=False)
+    mobile = Column(String, nullable=True)
+    cnic = Column(String, nullable=True)
+    residential_address = Column(Text, nullable=True)
+    official_address = Column(Text, nullable=True)
+    occupation = Column(String, nullable=True)
+    relation = Column(String, nullable=True)
+    display_order = Column(Integer, default=0)
+    createdAt = Column(DateTime, default=datetime.utcnow)
+    updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    tenant = relationship("Tenant")
+    customer = relationship("Customer", back_populates="guarantors")
+    
+    __table_args__ = (
+        Index("idx_customer_guarantors_tenant_id", "tenant_id"),
+        Index("idx_customer_guarantors_customer_id", "customer_id"),
+    )
+
 
 class Contact(Base):
     __tablename__ = "contacts"

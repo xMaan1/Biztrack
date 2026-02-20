@@ -4,7 +4,7 @@ from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func, desc
 from sqlalchemy.exc import IntegrityError
-from .crm_models import Lead, Contact, Company, Opportunity, SalesActivity, Customer
+from .crm_models import Lead, Contact, Company, Opportunity, SalesActivity, Customer, CustomerGuarantor
 from .core_models import User
 from .database_config import get_db
 
@@ -19,7 +19,7 @@ def create_customer(db: Session, customer_data: Dict[str, Any], tenant_id: str) 
         customer_data["updatedAt"] = datetime.utcnow()
         
         # Convert empty strings to None for optional fields to avoid unique constraint violations
-        optional_fields = ['cnic', 'phone', 'mobile', 'address', 'city', 'state', 'postalCode', 'notes']
+        optional_fields = ['cnic', 'phone', 'mobile', 'address', 'city', 'state', 'postalCode', 'notes', 'image_url']
         for field in optional_fields:
             if field in customer_data and customer_data[field] == '':
                 customer_data[field] = None
@@ -125,7 +125,7 @@ def update_customer(db: Session, customer_id: str, customer_data: Dict[str, Any]
         customer_data["updatedAt"] = datetime.utcnow()
         
         # Convert empty strings to None for optional fields to avoid unique constraint violations
-        optional_fields = ['cnic', 'phone', 'mobile', 'address', 'city', 'state', 'postalCode', 'notes']
+        optional_fields = ['cnic', 'phone', 'mobile', 'address', 'city', 'state', 'postalCode', 'notes', 'image_url']
         for field in optional_fields:
             if field in customer_data and customer_data[field] == '':
                 customer_data[field] = None
@@ -279,6 +279,57 @@ def search_customers(
     )
     
     return query.filter(search_filter).limit(limit).all()
+
+
+def create_guarantor(db: Session, customer_id: str, guarantor_data: Dict[str, Any], tenant_id: str) -> CustomerGuarantor:
+    customer = get_customer_by_id(db, customer_id, tenant_id)
+    if not customer:
+        raise ValueError("Customer not found")
+    data = dict(guarantor_data)
+    data["tenant_id"] = tenant_id
+    data["customer_id"] = customer_id
+    data["createdAt"] = datetime.utcnow()
+    data["updatedAt"] = datetime.utcnow()
+    guarantor = CustomerGuarantor(**data)
+    db.add(guarantor)
+    db.commit()
+    db.refresh(guarantor)
+    return guarantor
+
+
+def get_guarantors_by_customer(db: Session, customer_id: str, tenant_id: str) -> List[CustomerGuarantor]:
+    return db.query(CustomerGuarantor).filter(
+        and_(CustomerGuarantor.customer_id == customer_id, CustomerGuarantor.tenant_id == tenant_id)
+    ).order_by(CustomerGuarantor.display_order.asc(), CustomerGuarantor.createdAt.asc()).all()
+
+
+def get_guarantor_by_id(db: Session, guarantor_id: str, tenant_id: str) -> Optional[CustomerGuarantor]:
+    return db.query(CustomerGuarantor).filter(
+        and_(CustomerGuarantor.id == guarantor_id, CustomerGuarantor.tenant_id == tenant_id)
+    ).first()
+
+
+def update_guarantor(db: Session, guarantor_id: str, guarantor_data: Dict[str, Any], tenant_id: str) -> Optional[CustomerGuarantor]:
+    guarantor = get_guarantor_by_id(db, guarantor_id, tenant_id)
+    if not guarantor:
+        return None
+    guarantor_data["updatedAt"] = datetime.utcnow()
+    for field, value in guarantor_data.items():
+        if hasattr(guarantor, field):
+            setattr(guarantor, field, value)
+    db.commit()
+    db.refresh(guarantor)
+    return guarantor
+
+
+def delete_guarantor(db: Session, guarantor_id: str, tenant_id: str) -> bool:
+    guarantor = get_guarantor_by_id(db, guarantor_id, tenant_id)
+    if not guarantor:
+        return False
+    db.delete(guarantor)
+    db.commit()
+    return True
+
 
 # Existing Lead CRUD Operations
 def get_lead_by_id(lead_id: str, db: Session, tenant_id: str = None) -> Optional[Lead]:

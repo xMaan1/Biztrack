@@ -38,6 +38,35 @@ export type {
 
 export { CustomerService } from './CustomerService';
 
+export interface Guarantor {
+  id: string;
+  tenant_id: string;
+  customer_id: string;
+  name: string;
+  mobile?: string;
+  cnic?: string;
+  residential_address?: string;
+  official_address?: string;
+  occupation?: string;
+  relation?: string;
+  display_order?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GuarantorCreate {
+  name: string;
+  mobile?: string;
+  cnic?: string;
+  residential_address?: string;
+  official_address?: string;
+  occupation?: string;
+  relation?: string;
+  display_order?: number;
+}
+
+export interface GuarantorUpdate extends Partial<GuarantorCreate> {}
+
 // Existing Lead Types
 export interface Lead {
   id: string;
@@ -236,7 +265,31 @@ export class CRMService {
     return this.apiService.delete(`/crm/activities/${id}`);
   }
 
-  // Dashboard
+  async getGuarantors(customerId: string): Promise<Guarantor[]> {
+    return this.apiService.get(`/crm/customers/${customerId}/guarantors`);
+  }
+
+  async createGuarantor(
+    customerId: string,
+    data: GuarantorCreate,
+  ): Promise<Guarantor> {
+    return this.apiService.post(
+      `/crm/customers/${customerId}/guarantors`,
+      data,
+    );
+  }
+
+  async updateGuarantor(
+    guarantorId: string,
+    data: GuarantorUpdate,
+  ): Promise<Guarantor> {
+    return this.apiService.put(`/crm/guarantors/${guarantorId}`, data);
+  }
+
+  async deleteGuarantor(guarantorId: string): Promise<void> {
+    return this.apiService.delete(`/crm/guarantors/${guarantorId}`);
+  }
+
   async getDashboard(): Promise<CRMDashboard> {
     return this.apiService.get('/crm/dashboard');
   }
