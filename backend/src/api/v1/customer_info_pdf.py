@@ -119,7 +119,7 @@ def generate_customer_info_pdf(plan_id: str, db: Session, tenant_id: str) -> byt
         header_row.append(customer_img)
     else:
         header_row.append(Paragraph("", body_style))
-    header_table = Table(header_row, colWidths=[4*inch, 1.5*inch])
+    header_table = Table([header_row], colWidths=[4*inch, 1.5*inch])
     header_table.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
@@ -199,7 +199,7 @@ def generate_customer_info_pdf(plan_id: str, db: Session, tenant_id: str) -> byt
     for inst in installments:
         pay = payments_by_id.get(str(inst.id))
         date_str = pay.paymentDate.strftime('%d-%b-%Y') if pay and pay.paymentDate else (inst.due_date.strftime('%d-%b-%Y') if inst.due_date else "-")
-        receipt = (pay.reference or (str(pay.id)[:8] if pay else "")) or "-"
+        receipt = (pay.reference if pay and pay.reference else (str(pay.id)[:8] if pay else "")) or "-"
         pre_bal = running_bal
         inst_amt = float(inst.amount or 0)
         paid_amt = float(inst.paid_amount or 0)
