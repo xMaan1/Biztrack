@@ -119,4 +119,4 @@ celerybeat.pid
 dmypy.json
 token.pickle
 tokens/
-*.pyc
+__pycache__/
