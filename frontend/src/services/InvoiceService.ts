@@ -20,7 +20,7 @@ class InvoiceService {
 
   // Invoice CRUD operations
   async createInvoice(invoiceData: InvoiceCreate): Promise<Invoice> {
-    const response = await apiService.post(`${this.baseUrl}/`, invoiceData);
+    const response = await apiService.post(this.baseUrl, invoiceData);
     return response.invoice;
   }
 
@@ -40,7 +40,7 @@ class InvoiceService {
       }
     });
 
-    const response = await apiService.get(`${this.baseUrl}/?${params}`);
+    const response = await apiService.get(`${this.baseUrl}?${params}`);
     return response;
   }
 
