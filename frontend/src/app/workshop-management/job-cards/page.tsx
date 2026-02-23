@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../../components/ui/select';
-import { Plus, Search, Edit, Trash2, ClipboardList } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, ClipboardList, FileDown } from 'lucide-react';
 import { apiService } from '../../../services/ApiService';
 import { DashboardLayout } from '../../../components/layout';
 import { JobCard } from '../../../models/workshop';
@@ -28,6 +28,25 @@ function JobCardsContent() {
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [jobCardToDelete, setJobCardToDelete] = useState<JobCard | null>(null);
+  const [downloadingPdfId, setDownloadingPdfId] = useState<string | null>(null);
+
+  const handleDownloadPdf = useCallback(async (jc: JobCard) => {
+    setDownloadingPdfId(jc.id);
+    try {
+      const blob = await apiService.get<Blob>(`/job-cards/${jc.id}/pdf`, { responseType: 'blob' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `job-card-${jc.job_card_number || jc.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+    } finally {
+      setDownloadingPdfId(null);
+    }
+  }, []);
 
   const fetchJobCards = useCallback(async () => {
     try {
@@ -182,6 +201,10 @@ function JobCardsContent() {
                         <td className="py-2">{vehicleSummary(jc.vehicle_info)}</td>
                         <td className="py-2">{formatDate(jc.planned_date)}</td>
                         <td className="py-2 text-right">
+                          <Button variant="ghost" size="sm" onClick={() => handleDownloadPdf(jc)} disabled={downloadingPdfId === jc.id}>
+                            <FileDown className="h-4 w-4 mr-1" />
+                            {downloadingPdfId === jc.id ? 'Downloading...' : 'Download PDF'}
+                          </Button>
                           <Button variant="ghost" size="sm" onClick={() => openEdit(jc)}>
                             <Edit className="h-4 w-4 mr-1" />
                             Edit

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
@@ -76,6 +77,28 @@ def get_stats(
 ):
     tenant_id = str(tenant_context["tenant_id"])
     return get_job_card_stats(db, tenant_id)
+
+
+@router.get("/{job_card_id}/pdf")
+def download_job_card_pdf(
+    job_card_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context),
+):
+    tenant_id = str(tenant_context["tenant_id"])
+    try:
+        from .job_card_pdf import generate_job_card_pdf
+        pdf_bytes = generate_job_card_pdf(job_card_id, db, tenant_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate PDF: {str(e)}")
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=job-card-{job_card_id}.pdf"},
+    )
 
 
 @router.get("/{job_card_id}", response_model=JobCardResponse)
