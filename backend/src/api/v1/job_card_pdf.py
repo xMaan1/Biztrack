@@ -62,6 +62,10 @@ def _job_card_styles():
             "JobCardSmall", parent=styles["Normal"],
             fontSize=7, textColor=hex_to_color("#6b7280"), fontName="Helvetica", spaceAfter=2
         ),
+        "footer_center": ParagraphStyle(
+            "JobCardFooterCenter", parent=styles["Normal"],
+            fontSize=7, textColor=hex_to_color("#6b7280"), fontName="Helvetica", alignment=TA_CENTER, spaceAfter=0
+        ),
     }
 
 
@@ -243,6 +247,8 @@ def generate_job_card_pdf(job_card_id: str, db: Session, tenant_id: str) -> byte
     story.append(footer_t)
     story.append(Spacer(1, 8))
     story.append(Paragraph("This is not an invoice; all estimates are valid for 30 days.", styles["small"]))
+    story.append(Spacer(1, 6))
+    story.append(Paragraph("Powered by Biztrack.uk", styles["footer_center"]))
 
     doc.build(story)
     pdf_bytes = buffer.getvalue()

@@ -93,6 +93,12 @@ def draw_footer(canvas, doc, footer_content):
         y_payment = 0.5*inch + 0.3*inch
         canvas.drawString(x_payment, y_payment, payment_text)
 
+    powered_by = "Powered by Biztrack.uk"
+    canvas.setFont('Helvetica', 8)
+    powered_width = canvas.stringWidth(powered_by, 'Helvetica', 8)
+    x_powered = (page_width - powered_width) / 2
+    canvas.drawString(x_powered, 0.5*inch + 0.15*inch, powered_by)
+
 def get_customization_colors(customization: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     if not customization:
         return {
@@ -661,6 +667,10 @@ def create_footer(customization: Optional[Dict[str, Any]], styles: Dict[str, Par
     ]))
     
     elements.append(footer_table)
+    powered_style = ParagraphStyle(
+        'PoweredBy', parent=styles['footer'], fontSize=8, alignment=TA_CENTER, spaceBefore=6
+    )
+    elements.append(Paragraph("Powered by Biztrack.uk", powered_style))
     
     return elements
 

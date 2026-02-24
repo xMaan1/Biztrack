@@ -228,6 +228,11 @@ def generate_customer_info_pdf(plan_id: str, db: Session, tenant_id: str) -> byt
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
     ]))
     story.append(hist_table)
+    story.append(Spacer(1, 12))
+    footer_style = ParagraphStyle(
+        'CustInfoFooter', parent=styles['Normal'], fontSize=7, textColor=hex_to_color(FRONTEND_COLORS['text_secondary']), fontName='Helvetica', alignment=TA_CENTER
+    )
+    story.append(Paragraph("Powered by Biztrack.uk", footer_style))
 
     doc.build(story)
     pdf_bytes = buffer.getvalue()
