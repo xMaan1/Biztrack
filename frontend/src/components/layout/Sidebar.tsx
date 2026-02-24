@@ -7,6 +7,7 @@ import { cn } from '../../lib/utils';
 import { usePlanInfo } from '../../hooks/usePlanInfo';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePermissions } from '../../hooks/usePermissions';
+import { apiService } from '../../services/ApiService';
 import {
   LayoutDashboard,
   FolderOpen,
@@ -786,10 +787,9 @@ export default function Sidebar() {
     return subItemModuleMap[itemText] || null;
   };
 
-  // Filter menu items based on user role and plan type
   const filteredItems = useMemo(() => {
-    // If user is super admin, only show super admin menu items
-    if (user?.userRole === 'super_admin') {
+    const currentTenantId = apiService.getTenantId();
+    if (user?.userRole === 'super_admin' && !currentTenantId) {
       return superAdminMenuItems.filter((item) => {
         // If searching, check if main item matches
         if (searchQuery.trim()) {
