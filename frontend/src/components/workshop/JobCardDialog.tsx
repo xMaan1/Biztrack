@@ -59,10 +59,13 @@ export default function JobCardDialog({
     vehicle_color: '',
     vehicle_reg: '',
     vehicle_mileage: '',
+    vehicle_engine_number: '',
     assigned_to_id: '',
     planned_date: '',
+    date_time_out: '',
     labor_estimate: 0,
     parts_estimate: 0,
+    vat_rate: 15,
     notes: '',
   });
 
@@ -86,6 +89,8 @@ export default function JobCardDialog({
   useEffect(() => {
     if (jobCard && (mode === 'edit')) {
       const vi = (jobCard.vehicle_info || {}) as Record<string, string>;
+      const completedAt = jobCard.completed_at;
+      const dateTimeOut = completedAt ? completedAt.slice(0, 16) : '';
       setFormData({
         title: jobCard.title || '',
         description: jobCard.description || '',
@@ -99,10 +104,13 @@ export default function JobCardDialog({
         vehicle_color: vi.color || '',
         vehicle_reg: vi.registration_number || '',
         vehicle_mileage: vi.mileage || '',
+        vehicle_engine_number: (vi.engine_number as string) || '',
         assigned_to_id: jobCard.assigned_to_id || '',
         planned_date: jobCard.planned_date ? jobCard.planned_date.split('T')[0] : '',
+        date_time_out: dateTimeOut,
         labor_estimate: jobCard.labor_estimate ?? 0,
         parts_estimate: jobCard.parts_estimate ?? 0,
+        vat_rate: jobCard.vat_rate != null ? Math.round((jobCard.vat_rate as number) * 100) : 15,
         notes: jobCard.notes || '',
       });
       setSelectedVehicle(null);
@@ -120,10 +128,13 @@ export default function JobCardDialog({
         vehicle_color: '',
         vehicle_reg: '',
         vehicle_mileage: '',
+        vehicle_engine_number: '',
         assigned_to_id: '',
         planned_date: '',
+        date_time_out: '',
         labor_estimate: 0,
         parts_estimate: 0,
+        vat_rate: 15,
         notes: '',
       });
       setSelectedVehicle(null);
@@ -155,11 +166,14 @@ export default function JobCardDialog({
           color: formData.vehicle_color || undefined,
           registration_number: formData.vehicle_reg || undefined,
           mileage: formData.vehicle_mileage || undefined,
+          engine_number: formData.vehicle_engine_number || undefined,
         },
         assigned_to_id: formData.assigned_to_id || undefined,
         planned_date: formData.planned_date ? formData.planned_date + 'T12:00:00Z' : undefined,
+        completed_at: formData.date_time_out ? formData.date_time_out + ':00Z' : (mode === 'edit' ? null : undefined),
         labor_estimate: formData.labor_estimate,
         parts_estimate: formData.parts_estimate,
+        vat_rate: formData.vat_rate / 100,
         notes: formData.notes || undefined,
       };
       if (mode === 'create') {
@@ -280,6 +294,18 @@ export default function JobCardDialog({
               <Input value={formData.vehicle_vin} onChange={(e) => setFormData({ ...formData, vehicle_vin: e.target.value })} />
             </div>
             <div>
+              <Label>Registration Number</Label>
+              <Input value={formData.vehicle_reg} onChange={(e) => setFormData({ ...formData, vehicle_reg: e.target.value })} placeholder="Reg. no." />
+            </div>
+            <div>
+              <Label>Mileage</Label>
+              <Input value={formData.vehicle_mileage} onChange={(e) => setFormData({ ...formData, vehicle_mileage: e.target.value })} placeholder="e.g. 45000" />
+            </div>
+            <div>
+              <Label>Engine Number</Label>
+              <Input value={formData.vehicle_engine_number} onChange={(e) => setFormData({ ...formData, vehicle_engine_number: e.target.value })} placeholder="Engine no." />
+            </div>
+            <div>
               <Label>Assigned to</Label>
               <Select value={formData.assigned_to_id || 'none'} onValueChange={(v) => setFormData({ ...formData, assigned_to_id: v === 'none' ? '' : v })}>
                 <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
@@ -296,12 +322,20 @@ export default function JobCardDialog({
               <Input type="date" value={formData.planned_date} onChange={(e) => setFormData({ ...formData, planned_date: e.target.value })} />
             </div>
             <div>
+              <Label>Date/Time out</Label>
+              <Input type="datetime-local" value={formData.date_time_out} onChange={(e) => setFormData({ ...formData, date_time_out: e.target.value })} />
+            </div>
+            <div>
               <Label>Labor estimate</Label>
               <Input type="number" step="0.01" min={0} value={formData.labor_estimate} onChange={(e) => setFormData({ ...formData, labor_estimate: parseFloat(e.target.value) || 0 })} />
             </div>
             <div>
               <Label>Parts estimate</Label>
               <Input type="number" step="0.01" min={0} value={formData.parts_estimate} onChange={(e) => setFormData({ ...formData, parts_estimate: parseFloat(e.target.value) || 0 })} />
+            </div>
+            <div>
+              <Label>VAT %</Label>
+              <Input type="number" step="0.01" min={0} max={100} value={formData.vat_rate} onChange={(e) => setFormData({ ...formData, vat_rate: parseFloat(e.target.value) || 0 })} placeholder="15" />
             </div>
           </div>
           <div>

@@ -22,6 +22,10 @@ router = APIRouter(prefix="/job-cards", tags=["Job Cards"])
 
 
 def _job_card_to_response(jc) -> JobCardResponse:
+    assigned_to_name = None
+    if getattr(jc, "assigned_to", None):
+        u = jc.assigned_to
+        assigned_to_name = f"{getattr(u, 'firstName', '') or ''} {getattr(u, 'lastName', '') or ''}".strip() or getattr(u, "userName", "")
     return JobCardResponse(
         id=str(jc.id),
         tenant_id=str(jc.tenant_id),
@@ -36,11 +40,13 @@ def _job_card_to_response(jc) -> JobCardResponse:
         customer_phone=jc.customer_phone,
         vehicle_info=jc.vehicle_info or {},
         assigned_to_id=str(jc.assigned_to_id) if jc.assigned_to_id else None,
+        assigned_to_name=assigned_to_name,
         created_by_id=str(jc.created_by_id),
         planned_date=jc.planned_date,
         completed_at=jc.completed_at,
         labor_estimate=jc.labor_estimate or 0.0,
         parts_estimate=jc.parts_estimate or 0.0,
+        vat_rate=getattr(jc, "vat_rate", None),
         notes=jc.notes,
         attachments=jc.attachments or [],
         items=jc.items or [],
@@ -127,11 +133,15 @@ def create_job_card_endpoint(
     data = body.model_dump(exclude_unset=True)
     if data.get("planned_date") and isinstance(data["planned_date"], str):
         data["planned_date"] = datetime.fromisoformat(data["planned_date"].replace("Z", "+00:00"))
+    if data.get("completed_at") and isinstance(data["completed_at"], str):
+        data["completed_at"] = datetime.fromisoformat(data["completed_at"].replace("Z", "+00:00"))
     data["tenant_id"] = tenant_id
     data["created_by_id"] = str(current_user.id)
     data["job_card_number"] = job_card_number
     data["attachments"] = data.get("attachments") or []
     data["items"] = data.get("items") or []
+    if "vat_rate" not in data:
+        data["vat_rate"] = 0.15
     jc = create_job_card(data, db, tenant_id)
     return _job_card_to_response(jc)
 

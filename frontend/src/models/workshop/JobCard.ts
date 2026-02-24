@@ -12,11 +12,13 @@ export interface JobCard {
   customer_phone?: string;
   vehicle_info?: Record<string, unknown>;
   assigned_to_id?: string;
+  assigned_to_name?: string;
   created_by_id: string;
   planned_date?: string;
   completed_at?: string;
   labor_estimate: number;
   parts_estimate: number;
+  vat_rate?: number;
   notes?: string;
   attachments: string[];
   items: Record<string, unknown>[];
@@ -37,8 +39,10 @@ export interface JobCardCreate {
   vehicle_info?: Record<string, unknown>;
   assigned_to_id?: string;
   planned_date?: string;
+  completed_at?: string;
   labor_estimate?: number;
   parts_estimate?: number;
+  vat_rate?: number;
   notes?: string;
   attachments?: string[];
   items?: Record<string, unknown>[];
@@ -59,6 +63,7 @@ export interface JobCardUpdate {
   completed_at?: string;
   labor_estimate?: number;
   parts_estimate?: number;
+  vat_rate?: number;
   notes?: string;
   attachments?: string[];
   items?: Record<string, unknown>[];

@@ -72,7 +72,7 @@ def _info_table(jc: Any, styles: Dict) -> Table:
         ["Job No.", safe_str(jc.job_card_number), "Job Date", (job_date or "")[:16]],
         ["Reg. No.", vi("registration_number"), "Year", vi("year")],
         ["Mileage", vi("mileage"), "Make", vi("make")],
-        ["Model", vi("model"), "Engine No.", vi("engine_no")],
+        ["Model", vi("model"), "Engine No.", vi("engine_number") or vi("engine_no")],
         ["VIN", vi("vin"), "", ""],
         ["Date/Time In", (format_date(getattr(jc, "created_at", None)) or "")[:16], "Date/Time Out", (format_date(getattr(jc, "completed_at", None)) or "")[:16]],
         ["Customer", safe_str(getattr(jc, "customer_name", None)), "Contact", safe_str(getattr(jc, "customer_phone", None))],
@@ -158,9 +158,10 @@ def _totals_table(subtotal: float, labour_total: float, vat_rate: float = 0.15) 
     before_vat = subtotal + labour_total
     vat_val = before_vat * vat_rate
     total_val = before_vat + vat_val
+    vat_pct = f"VAT ({int(round(vat_rate * 100))}%)"
     data = [
         ["Sub Total", format_currency(before_vat, "USD")],
-        ["VAT (15%)", format_currency(vat_val, "USD")],
+        [vat_pct, format_currency(vat_val, "USD")],
         ["TOTAL", format_currency(total_val, "USD")],
     ]
     t = Table(data, colWidths=[1.2 * inch, 1.2 * inch])
@@ -216,7 +217,10 @@ def generate_job_card_pdf(job_card_id: str, db: Session, tenant_id: str) -> byte
     story.append(parts_tbl)
     story.append(Spacer(1, 12))
 
-    totals_tbl, before_vat, vat_val, total_val = _totals_table(subtotal, labour_total)
+    vat_rate = getattr(jc, "vat_rate", None)
+    if vat_rate is None:
+        vat_rate = 0.15
+    totals_tbl, before_vat, vat_val, total_val = _totals_table(subtotal, labour_total, vat_rate)
     story.append(totals_tbl)
     story.append(Spacer(1, 16))
 

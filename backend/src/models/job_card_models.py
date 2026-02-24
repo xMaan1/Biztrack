@@ -15,8 +15,10 @@ class JobCardCreate(BaseModel):
     vehicle_info: Optional[Dict[str, Any]] = None
     assigned_to_id: Optional[str] = None
     planned_date: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
     labor_estimate: float = 0.0
     parts_estimate: float = 0.0
+    vat_rate: Optional[float] = 0.15
     notes: Optional[str] = None
     attachments: Optional[List[str]] = None
     items: Optional[List[Dict[str, Any]]] = None
@@ -37,6 +39,7 @@ class JobCardUpdate(BaseModel):
     completed_at: Optional[datetime] = None
     labor_estimate: Optional[float] = None
     parts_estimate: Optional[float] = None
+    vat_rate: Optional[float] = None
     notes: Optional[str] = None
     attachments: Optional[List[str]] = None
     items: Optional[List[Dict[str, Any]]] = None
@@ -61,7 +64,9 @@ class JobCardResponse(BaseModel):
     completed_at: Optional[datetime] = None
     labor_estimate: float
     parts_estimate: float
+    vat_rate: Optional[float] = 0.15
     notes: Optional[str] = None
+    assigned_to_name: Optional[str] = None
     attachments: List[str]
     items: List[Dict[str, Any]]
     is_active: bool

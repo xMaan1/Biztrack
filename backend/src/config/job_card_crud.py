@@ -1,12 +1,12 @@
 from datetime import datetime
 from typing import List, Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 from .job_card_models import JobCard
 
 
 def get_job_card_by_id(job_card_id: str, db: Session, tenant_id: str = None) -> Optional[JobCard]:
-    query = db.query(JobCard).filter(JobCard.id == job_card_id)
+    query = db.query(JobCard).options(joinedload(JobCard.assigned_to)).filter(JobCard.id == job_card_id)
     if tenant_id:
         query = query.filter(JobCard.tenant_id == tenant_id)
     return query.first()
@@ -28,7 +28,7 @@ def get_all_job_cards(
         query = query.filter(JobCard.work_order_id == work_order_id)
     if assigned_to_id:
         query = query.filter(JobCard.assigned_to_id == assigned_to_id)
-    return query.order_by(JobCard.created_at.desc()).offset(skip).limit(limit).all()
+    return query.options(joinedload(JobCard.assigned_to)).order_by(JobCard.created_at.desc()).offset(skip).limit(limit).all()
 
 
 def get_next_job_card_number(db: Session, tenant_id: str) -> str:

@@ -183,6 +183,7 @@ function JobCardsContent() {
                       <th className="text-left py-2">Status</th>
                       <th className="text-left py-2">Customer</th>
                       <th className="text-left py-2">Vehicle</th>
+                      <th className="text-left py-2">Assigned to</th>
                       <th className="text-left py-2">Planned</th>
                       <th className="text-right py-2">Actions</th>
                     </tr>
@@ -199,6 +200,7 @@ function JobCardsContent() {
                         </td>
                         <td className="py-2">{jc.customer_name || '–'}</td>
                         <td className="py-2">{vehicleSummary(jc.vehicle_info)}</td>
+                        <td className="py-2">{jc.assigned_to_name || '–'}</td>
                         <td className="py-2">{formatDate(jc.planned_date)}</td>
                         <td className="py-2 text-right">
                           <Button variant="ghost" size="sm" onClick={() => handleDownloadPdf(jc)} disabled={downloadingPdfId === jc.id}>
