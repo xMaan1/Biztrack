@@ -527,3 +527,4 @@ export * from './Invoice';
 export * from './Payment';
 export * from './InvoiceDashboard';
 export * from './Installment';
+export * from './DeliveryNote';

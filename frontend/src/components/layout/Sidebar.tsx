@@ -192,6 +192,13 @@ const allMenuItems: MenuItem[] = [
         roles: ['*'],
         planTypes: ['commerce'],
       },
+      {
+        text: 'Delivery Notes',
+        icon: Truck,
+        path: '/sales/delivery-notes',
+        roles: ['*'],
+        planTypes: ['commerce'],
+      },
     ],
   },
   {
@@ -775,6 +782,8 @@ export default function Sidebar() {
       'Opportunities': 'crm',
       'Quotes': 'sales',
       'Invoices': 'sales',
+      'Installments': 'sales',
+      'Delivery Notes': 'sales',
       'Payment Receipts': 'sales',
       'Products': 'inventory',
       'Orders': 'inventory',

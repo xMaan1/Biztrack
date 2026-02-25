@@ -9,7 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 from .config.database import create_tables, get_plans
-from .api.v1 import auth, users, projects, tasks, tenants, plans, sales, crm, hrm, custom_options, invoices, invoice_customization, installments, pos, inventory, subscriptions, work_orders, job_cards, vehicles, production, quality_control, maintenance, ledger, admin, file_upload, deduct_stock, customer_import, dashboard, investments, reports, notifications, banking, rbac_users, events, profile, patients, appointments, medical_records, medical_supplies, consultations, lab_reports
+from .api.v1 import auth, users, projects, tasks, tenants, plans, sales, crm, hrm, custom_options, invoices, invoice_customization, installments, delivery_notes, pos, inventory, subscriptions, work_orders, job_cards, vehicles, production, quality_control, maintenance, ledger, admin, file_upload, deduct_stock, customer_import, dashboard, investments, reports, notifications, banking, rbac_users, events, profile, patients, appointments, medical_records, medical_supplies, consultations, lab_reports
 from .core.security import security_middleware
 from .core.tenant_middleware import tenant_middleware
 from .core.audit import audit_logger
@@ -180,6 +180,7 @@ app.include_router(custom_options.router)
 app.include_router(invoices.router)
 app.include_router(invoice_customization.router)
 app.include_router(installments.router)
+app.include_router(delivery_notes.router)
 app.include_router(pos.router)
 app.include_router(inventory.router)
 app.include_router(deduct_stock.router)

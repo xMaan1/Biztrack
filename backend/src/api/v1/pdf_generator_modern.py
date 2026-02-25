@@ -770,3 +770,129 @@ def generate_modern_invoice_pdf(invoice, db: Session) -> bytes:
         
     except Exception as e:
         raise ValueError(f"Failed to generate invoice PDF: {str(e)}")
+
+
+def generate_delivery_note_pdf(delivery_note, invoice, db: Session) -> bytes:
+    try:
+        from ...config.invoice_customization_models import InvoiceCustomization
+        customization_obj = db.query(InvoiceCustomization).filter(
+            InvoiceCustomization.tenant_id == invoice.tenant_id,
+            InvoiceCustomization.is_active == True
+        ).first()
+        customization = None
+        if customization_obj:
+            customization = {
+                'company_name': customization_obj.company_name,
+                'company_address': customization_obj.company_address,
+                'company_phone': customization_obj.company_phone,
+                'company_email': customization_obj.company_email,
+            }
+        company_name = (customization or {}).get('company_name', 'Company')
+        company_address = (customization or {}).get('company_address', '')
+        company_phone = (customization or {}).get('company_phone', '')
+        company_email = (customization or {}).get('company_email', '')
+        customer_type = 'cash'
+        try:
+            from ...config.crm_crud import get_customer_by_id
+            if invoice.customerId:
+                customer = get_customer_by_id(db, invoice.customerId, str(invoice.tenant_id))
+                if customer and getattr(customer, 'paymentTerms', None):
+                    customer_type = (customer.paymentTerms or 'cash').lower()
+                elif customer and getattr(customer, 'customerType', None):
+                    customer_type = (customer.customerType or 'individual').lower()
+        except Exception:
+            pass
+        delivery_date = delivery_note.created_at if hasattr(delivery_note, 'created_at') and delivery_note.created_at else datetime.now()
+        if hasattr(delivery_date, 'strftime'):
+            delivery_date_str = delivery_date.strftime('%d/%m/%Y')
+        else:
+            delivery_date_str = str(delivery_date)[:10]
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=A4,
+            rightMargin=0.5*inch,
+            leftMargin=0.5*inch,
+            topMargin=0.5*inch,
+            bottomMargin=0.75*inch
+        )
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'DeliveryTitle', parent=styles['Heading1'], fontSize=14, textColor=hex_to_color(FRONTEND_COLORS['primary']), alignment=TA_LEFT, fontName='Helvetica-Bold'
+        )
+        body_style = ParagraphStyle(
+            'DeliveryBody', parent=styles['Normal'], fontSize=9, textColor=hex_to_color(FRONTEND_COLORS['text_primary']), fontName='Helvetica'
+        )
+        small_style = ParagraphStyle(
+            'DeliverySmall', parent=styles['Normal'], fontSize=8, textColor=hex_to_color(FRONTEND_COLORS['text_secondary']), fontName='Helvetica'
+        )
+        story = []
+        story.append(Paragraph(company_name, title_style))
+        if company_address:
+            story.append(Paragraph(company_address.replace('\n', '<br/>'), small_style))
+        contact_parts = []
+        if company_phone:
+            contact_parts.append(f"T: {company_phone}")
+        if company_email:
+            contact_parts.append(f"E: {company_email}")
+        if contact_parts:
+            story.append(Paragraph(' | '.join(contact_parts), small_style))
+        story.append(Spacer(1, 10))
+        story.append(Paragraph("Customer :", body_style))
+        customer_lines = [invoice.customerName or '']
+        if getattr(invoice, 'billingAddress', None) and invoice.billingAddress:
+            customer_lines.append(invoice.billingAddress)
+        if getattr(invoice, 'customerCity', None) and invoice.customerCity:
+            customer_lines.append(invoice.customerCity)
+        story.append(Paragraph('<br/>'.join(customer_lines), body_style))
+        story.append(Spacer(1, 8))
+        story.append(Paragraph("DELIVERY NOTE", title_style))
+        story.append(Spacer(1, 6))
+        meta_data = [
+            f"Date: {delivery_date_str}",
+            f"Invoice No: {invoice.invoiceNumber}",
+            f"Customer type: {customer_type}",
+        ]
+        story.append(Paragraph('<br/>'.join(meta_data), small_style))
+        story.append(Spacer(1, 8))
+        items = getattr(invoice, 'items', None) or []
+        if isinstance(items, str):
+            import json
+            try:
+                items = json.loads(items)
+            except Exception:
+                items = []
+        table_data = [['Qty', 'Product']]
+        total_qty = 0
+        for item in items:
+            if isinstance(item, dict):
+                qty = float(item.get('quantity', 0))
+                desc = item.get('description', '')
+            else:
+                qty = float(getattr(item, 'quantity', 0))
+                desc = getattr(item, 'description', '')
+            total_qty += qty
+            table_data.append([str(int(qty) if qty == int(qty) else qty), desc])
+        if table_data:
+            items_table = Table(table_data, colWidths=[0.8*inch, 4.5*inch])
+            items_table.setStyle(TableStyle([
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                ('GRID', (0, 0), (-1, -1), 0.5, hex_to_color(FRONTEND_COLORS['border'])),
+                ('LEFTPADDING', (0, 0), (-1, -1), 6),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+            ]))
+            story.append(items_table)
+        story.append(Spacer(1, 6))
+        num_items = len(table_data) - 1
+        story.append(Paragraph(f"{int(total_qty)} &nbsp;&nbsp;&nbsp; {num_items} Items", body_style))
+        story.append(Spacer(1, 12))
+        story.append(Paragraph("Powered by www.Biztrack.uk", small_style))
+        doc.build(story)
+        pdf_bytes = buffer.getvalue()
+        buffer.close()
+        return pdf_bytes
+    except Exception as e:
+        raise ValueError(f"Failed to generate delivery note PDF: {str(e)}")

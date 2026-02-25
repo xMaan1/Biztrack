@@ -12,6 +12,8 @@ import {
   InstallmentPlanCreate,
   InstallmentPlanUpdate,
   ApplyPaymentToInstallmentRequest,
+  DeliveryNote,
+  DeliveryNoteCreate,
 } from '../models/sales';
 import { Customer, CustomerCreate, CustomerUpdate, CustomersResponse, CustomerService } from './CustomerService';
 
@@ -167,6 +169,29 @@ class InvoiceService {
       `/installments/installment-plans/${planId}/customer-info-pdf`,
       { responseType: 'blob' }
     );
+    return blob;
+  }
+
+  async createDeliveryNote(data: DeliveryNoteCreate): Promise<DeliveryNote> {
+    const response = await apiService.post('/delivery-notes', data);
+    return response;
+  }
+
+  async getDeliveryNotes(invoiceId?: string, skip: number = 0, limit: number = 100): Promise<DeliveryNote[]> {
+    const params = new URLSearchParams();
+    params.append('skip', skip.toString());
+    params.append('limit', limit.toString());
+    if (invoiceId) params.append('invoice_id', invoiceId);
+    const response = await apiService.get(`/delivery-notes?${params}`);
+    return response ?? [];
+  }
+
+  async getDeliveryNote(id: string): Promise<DeliveryNote> {
+    return apiService.get(`/delivery-notes/${id}`);
+  }
+
+  async downloadDeliveryNotePdf(id: string): Promise<Blob> {
+    const blob = await apiService.get<Blob>(`/delivery-notes/${id}/download`, { responseType: 'blob' });
     return blob;
   }
 
