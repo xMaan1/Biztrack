@@ -828,7 +828,7 @@ def create_invoice(
 @router.get("", response_model=InvoicesResponse)
 def get_invoices(
     page: int = Query(1, ge=1),
-    limit: int = Query(10, ge=1, le=100),
+    limit: int = Query(10, ge=1, le=500),
     status: Optional[str] = None,
     customer_id: Optional[str] = None,
     date_from: Optional[str] = None,
