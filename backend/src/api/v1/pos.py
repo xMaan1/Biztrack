@@ -56,6 +56,9 @@ def convert_db_product_to_pydantic(db_product):
         expiryDate=db_product.expiryDate.isoformat() if db_product.expiryDate else None,
         batchNumber=db_product.batchNumber,
         serialNumber=db_product.serialNumber,
+        mfgDate=db_product.mfgDate.isoformat() if getattr(db_product, 'mfgDate', None) else None,
+        dateOfPurchase=db_product.dateOfPurchase.isoformat() if getattr(db_product, 'dateOfPurchase', None) else None,
+        modelNo=getattr(db_product, 'modelNo', None),
         isActive=db_product.isActive,
         imageUrl=None,
         weight=None,
@@ -202,26 +205,35 @@ async def create_pos_product(
         raise HTTPException(status_code=400, detail="Invalid category")
     try:
         product_dict = product_data.dict()
-        
-        # Map fields that exist in both models
+        def opt(v):
+            return None if v is None or v == '' else v
+        def opt_date(v):
+            if v is None or v == '':
+                return None
+            if hasattr(v, 'isoformat'):
+                return v
+            return v
         mapped_data = {
             'name': product_dict.get('name'),
             'sku': product_dict.get('sku'),
-            'description': product_dict.get('description'),
+            'description': opt(product_dict.get('description')),
             'category': product_dict.get('category'),
-            'brand': None,  # Add brand field with default None
+            'brand': None,
             'costPrice': product_dict.get('costPrice'),
             'unitPrice': product_dict.get('unitPrice', 0),
             'stockQuantity': product_dict.get('stockQuantity', 0),
             'minStockLevel': product_dict.get('minStockLevel', 0),
             'maxStockLevel': product_dict.get('maxStockLevel'),
             'unit': product_dict.get('unitOfMeasure', 'piece'),
-            'weight': None,  # Add weight field with default None
-            'dimensions': None,  # Add dimensions field with default None
-            'barcode': product_dict.get('barcode'),
-            'expiryDate': product_dict.get('expiryDate'),
-            'batchNumber': product_dict.get('batchNumber'),
-            'serialNumber': product_dict.get('serialNumber'),
+            'weight': None,
+            'dimensions': None,
+            'barcode': opt(product_dict.get('barcode')),
+            'expiryDate': opt_date(product_dict.get('expiryDate')),
+            'batchNumber': opt(product_dict.get('batchNumber')),
+            'serialNumber': opt(product_dict.get('serialNumber')),
+            'mfgDate': opt_date(product_dict.get('mfgDate')),
+            'dateOfPurchase': opt_date(product_dict.get('dateOfPurchase')),
+            'modelNo': opt(product_dict.get('modelNo')),
             'isActive': product_dict.get('isActive', True)
         }
         
@@ -284,16 +296,25 @@ async def update_pos_product(
         if 'unitOfMeasure' in product_dict:
             mapped_data['unit'] = product_dict['unitOfMeasure']  # Map unitOfMeasure to unit
         if 'barcode' in product_dict:
-            mapped_data['barcode'] = product_dict['barcode']
+            mapped_data['barcode'] = product_dict['barcode'] or None
         if 'expiryDate' in product_dict:
-            mapped_data['expiryDate'] = product_dict['expiryDate']
+            v = product_dict['expiryDate']
+            mapped_data['expiryDate'] = None if v is None or v == '' else v
         if 'batchNumber' in product_dict:
-            mapped_data['batchNumber'] = product_dict['batchNumber']
+            mapped_data['batchNumber'] = product_dict['batchNumber'] or None
         if 'serialNumber' in product_dict:
-            mapped_data['serialNumber'] = product_dict['serialNumber']
+            mapped_data['serialNumber'] = product_dict['serialNumber'] or None
         if 'isActive' in product_dict:
             mapped_data['isActive'] = product_dict['isActive']
-        
+        if 'mfgDate' in product_dict:
+            v = product_dict['mfgDate']
+            mapped_data['mfgDate'] = None if v is None or v == '' else v
+        if 'dateOfPurchase' in product_dict:
+            v = product_dict['dateOfPurchase']
+            mapped_data['dateOfPurchase'] = None if v is None or v == '' else v
+        if 'modelNo' in product_dict:
+            mapped_data['modelNo'] = product_dict['modelNo'] or None
+
         # Add updated timestamp
         mapped_data['updatedAt'] = datetime.now()
         

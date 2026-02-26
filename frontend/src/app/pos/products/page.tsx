@@ -62,6 +62,9 @@ interface ProductFormData {
   expiryDate: string;
   batchNumber: string;
   serialNumber: string;
+  mfgDate: string;
+  dateOfPurchase: string;
+  modelNo: string;
 }
 
 const POSProducts = () => {
@@ -81,6 +84,7 @@ const POSProducts = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
+  const getDefaultDateOfPurchase = () => new Date().toISOString().split('T')[0];
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     sku: '',
@@ -95,6 +99,9 @@ const POSProducts = () => {
     expiryDate: '',
     batchNumber: '',
     serialNumber: '',
+    mfgDate: '',
+    dateOfPurchase: getDefaultDateOfPurchase(),
+    modelNo: '',
   });
 
   useEffect(() => {
@@ -122,14 +129,29 @@ const POSProducts = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+    const payload = {
+      name: formData.name,
+      sku: formData.sku,
+      description: formData.description || undefined,
+      category: formData.category,
+      unitPrice: formData.unitPrice,
+      costPrice: formData.costPrice,
+      stockQuantity: formData.stockQuantity,
+      minStockLevel: formData.minStockLevel,
+      unitOfMeasure: formData.unitOfMeasure,
+      barcode: formData.barcode || undefined,
+      expiryDate: formData.expiryDate || undefined,
+      batchNumber: formData.batchNumber || undefined,
+      serialNumber: formData.serialNumber || undefined,
+      mfgDate: formData.mfgDate || undefined,
+      dateOfPurchase: formData.dateOfPurchase || undefined,
+      modelNo: formData.modelNo || undefined,
+    };
     try {
       if (editingProduct && editingProduct.id) {
-        // Update existing product
-        await apiService.put(`/pos/products/${editingProduct.id}`, formData);
+        await apiService.put(`/pos/products/${editingProduct.id}`, payload);
       } else {
-        // Create new product
-        await apiService.post('/pos/products', formData);
+        await apiService.post('/pos/products', payload);
       }
 
       // Close dialog and reset state
@@ -149,6 +171,9 @@ const POSProducts = () => {
         expiryDate: '',
         batchNumber: '',
         serialNumber: '',
+        mfgDate: '',
+        dateOfPurchase: getDefaultDateOfPurchase(),
+        modelNo: '',
       });
       fetchProducts();
     } catch (error) {
@@ -171,6 +196,9 @@ const POSProducts = () => {
       expiryDate: product.expiryDate || '',
       batchNumber: product.batchNumber || '',
       serialNumber: product.serialNumber || '',
+      mfgDate: product.mfgDate || '',
+      dateOfPurchase: product.dateOfPurchase || getDefaultDateOfPurchase(),
+      modelNo: product.modelNo || '',
     });
     setIsDialogOpen(true);
   };
@@ -216,6 +244,9 @@ const POSProducts = () => {
       expiryDate: '',
       batchNumber: '',
       serialNumber: '',
+      mfgDate: '',
+      dateOfPurchase: getDefaultDateOfPurchase(),
+      modelNo: '',
     });
   };
 
@@ -713,6 +744,42 @@ const POSProducts = () => {
                     placeholder="Serial number..."
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="modelNo">Model No.</Label>
+                  <Input
+                    id="modelNo"
+                    value={formData.modelNo}
+                    onChange={(e) =>
+                      setFormData({ ...formData, modelNo: e.target.value })
+                    }
+                    placeholder="Model number..."
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="mfgDate">Mfg. Date</Label>
+                  <Input
+                    id="mfgDate"
+                    type="date"
+                    value={formData.mfgDate}
+                    onChange={(e) =>
+                      setFormData({ ...formData, mfgDate: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="dateOfPurchase">Date of Purchase</Label>
+                  <Input
+                    id="dateOfPurchase"
+                    type="date"
+                    value={formData.dateOfPurchase}
+                    onChange={(e) =>
+                      setFormData({ ...formData, dateOfPurchase: e.target.value })
+                    }
+                  />
+                </div>
               </div>
 
               <DialogFooter>
@@ -851,6 +918,18 @@ const POSProducts = () => {
                     <div>
                       <Label className="text-sm font-medium text-gray-600">Expiry Date</Label>
                       <p className="text-gray-900 mt-1">{viewingProduct.expiryDate ? formatDate(viewingProduct.expiryDate) : 'Not set'}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600">Model No.</Label>
+                      <p className="text-gray-900 mt-1">{viewingProduct.modelNo || 'Not set'}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600">Mfg. Date</Label>
+                      <p className="text-gray-900 mt-1">{viewingProduct.mfgDate ? formatDate(viewingProduct.mfgDate) : 'Not set'}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600">Date of Purchase</Label>
+                      <p className="text-gray-900 mt-1">{viewingProduct.dateOfPurchase ? formatDate(viewingProduct.dateOfPurchase) : 'Not set'}</p>
                     </div>
                   </div>
                 </div>

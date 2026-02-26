@@ -70,6 +70,9 @@ export interface Product {
   expiryDate?: string;
   batchNumber?: string;
   serialNumber?: string;
+  mfgDate?: string;
+  dateOfPurchase?: string;
+  modelNo?: string;
   tenantId: string;
   createdBy: string;
   createdAt: string;
@@ -90,6 +93,9 @@ export interface ProductCreate {
   expiryDate?: string;
   batchNumber?: string;
   serialNumber?: string;
+  mfgDate?: string;
+  dateOfPurchase?: string;
+  modelNo?: string;
 }
 
 export interface ProductUpdate {
@@ -106,6 +112,9 @@ export interface ProductUpdate {
   expiryDate?: string;
   batchNumber?: string;
   serialNumber?: string;
+  mfgDate?: string;
+  dateOfPurchase?: string;
+  modelNo?: string;
 }
 
 export interface POSCategoriesResponse {

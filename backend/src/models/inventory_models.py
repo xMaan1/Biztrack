@@ -87,6 +87,9 @@ class ProductBase(BaseModel):
     expiryDate: Optional[str] = None
     batchNumber: Optional[str] = None
     serialNumber: Optional[str] = None
+    mfgDate: Optional[str] = None
+    dateOfPurchase: Optional[str] = None
+    modelNo: Optional[str] = None
     isActive: bool = True
     imageUrl: Optional[str] = None
     weight: Optional[float] = None
@@ -118,6 +121,9 @@ class ProductCreate(BaseModel):
     expiryDate: Optional[str] = None
     batchNumber: Optional[str] = None
     serialNumber: Optional[str] = None
+    mfgDate: Optional[str] = None
+    dateOfPurchase: Optional[str] = None
+    modelNo: Optional[str] = None
     isActive: bool = True
     imageUrl: Optional[str] = None
 
@@ -136,6 +142,9 @@ class ProductUpdate(BaseModel):
     expiryDate: Optional[str] = None
     batchNumber: Optional[str] = None
     serialNumber: Optional[str] = None
+    mfgDate: Optional[str] = None
+    dateOfPurchase: Optional[str] = None
+    modelNo: Optional[str] = None
     isActive: Optional[bool] = None
     imageUrl: Optional[str] = None
 

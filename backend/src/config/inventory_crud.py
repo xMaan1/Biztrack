@@ -55,7 +55,9 @@ def update_product(product_id: str, update_data: dict, db: Session, tenant_id: s
     product = get_product_by_id(product_id, db, tenant_id)
     if product:
         for key, value in update_data.items():
-            if hasattr(product, key) and value is not None:
+            if key == 'updatedAt':
+                continue
+            if hasattr(product, key):
                 setattr(product, key, value)
         product.updatedAt = datetime.utcnow()
         db.commit()

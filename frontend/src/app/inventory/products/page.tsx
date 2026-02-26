@@ -504,6 +504,18 @@ function ProductsContent() {
                       <Label className="text-sm font-medium text-gray-600">Expiry Date</Label>
                       <p className="text-gray-900 mt-1">{viewingProduct.expiryDate ? new Date(viewingProduct.expiryDate).toLocaleDateString('en-US') : 'Not set'}</p>
                     </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600">Model No.</Label>
+                      <p className="text-gray-900 mt-1">{viewingProduct.modelNo || 'Not set'}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600">Mfg. Date</Label>
+                      <p className="text-gray-900 mt-1">{viewingProduct.mfgDate ? new Date(viewingProduct.mfgDate).toLocaleDateString('en-US') : 'Not set'}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600">Date of Purchase</Label>
+                      <p className="text-gray-900 mt-1">{viewingProduct.dateOfPurchase ? new Date(viewingProduct.dateOfPurchase).toLocaleDateString('en-US') : 'Not set'}</p>
+                    </div>
                   </div>
                 </div>
 
