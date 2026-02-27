@@ -158,8 +158,6 @@ function AdminPlansContent() {
         return <TrendingUp className="h-5 w-5 text-green-600" />;
       case 'workshop':
         return <Settings className="h-5 w-5 text-orange-500" />;
-      case 'healthcare':
-        return <Activity className="h-5 w-5 text-blue-600" />;
       default:
         return <CreditCard className="h-5 w-5 text-gray-500" />;
     }
@@ -177,8 +175,6 @@ function AdminPlansContent() {
         return 'bg-emerald-100 text-emerald-800';
       case 'workshop':
         return 'bg-orange-100 text-orange-800';
-      case 'healthcare':
-        return 'bg-cyan-100 text-cyan-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }

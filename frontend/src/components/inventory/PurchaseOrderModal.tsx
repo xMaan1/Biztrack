@@ -33,7 +33,6 @@ import { useCurrency } from '../../contexts/CurrencyContext';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '../ui/alert';
 import { apiService } from '../../services/ApiService';
-import { usePlanInfo } from '../../hooks/usePlanInfo';
 import { VehicleSearch } from '../ui/vehicle-search';
 import { Vehicle } from '../../models/workshop';
 
@@ -62,8 +61,6 @@ export default function PurchaseOrderModal({
 }: PurchaseOrderModalProps) {
   const { formatCurrency } = useCurrency();
   const router = useRouter();
-  const { planInfo } = usePlanInfo();
-  const isHealthcare = planInfo?.planType === 'healthcare';
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [warehouses, setWarehouses] = useState<any[]>([]);
@@ -82,11 +79,6 @@ export default function PurchaseOrderModal({
     vatRate: 0,
     notes: '',
     items: [],
-    // Healthcare specific fields
-    patientId: '',
-    patientName: '',
-    medicalRecordNumber: '',
-    department: '',
     ...initialData,
   });
   const [newItem, setNewItem] = useState<PurchaseOrderItemCreate>({
@@ -253,11 +245,6 @@ export default function PurchaseOrderModal({
       vatRate: 0,
       notes: '',
       items: [],
-      // Healthcare specific fields
-      patientId: initialData?.patientId || '',
-      patientName: initialData?.patientName || '',
-      medicalRecordNumber: initialData?.medicalRecordNumber || '',
-      department: initialData?.department || '',
       ...initialData,
     });
     setNewItem({
@@ -426,104 +413,37 @@ export default function PurchaseOrderModal({
               </SelectContent>
             </Select>
           </div>
-          
-          {/* Vehicle Registration - Only show for non-healthcare plans */}
-          {!isHealthcare && (
-            <>
-              <div className="space-y-2">
-                <VehicleSearch
-                  label="Vehicle"
-                  value={selectedVehicle}
-                  onSelect={(v) => {
-                    setSelectedVehicle(v);
-                    if (v) {
-                      setNewOrder((prev) => ({
-                        ...prev,
-                        vehicleReg: v.registration_number ?? '',
-                      }));
-                    }
-                  }}
-                  placeholder="Search by reg, VIN, make, model..."
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="vehicleReg">Vehicle Registration</Label>
-                <Input
-                  id="vehicleReg"
-                  value={newOrder.vehicleReg}
-                  onChange={(e) =>
-                    setNewOrder((prev) => ({
-                      ...prev,
-                      vehicleReg: e.target.value,
-                    }))
-                  }
-                  placeholder="Enter vehicle registration or driver info"
-                />
-              </div>
-            </>
-          )}
 
-          {/* Healthcare Fields - Only show for healthcare plan */}
-          {isHealthcare && (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="patientId">Patient ID</Label>
-                <Input
-                  id="patientId"
-                  value={newOrder.patientId}
-                  onChange={(e) =>
-                    setNewOrder((prev) => ({
-                      ...prev,
-                      patientId: e.target.value,
-                    }))
-                  }
-                  placeholder="Patient ID"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="patientName">Patient Name</Label>
-                <Input
-                  id="patientName"
-                  value={newOrder.patientName}
-                  onChange={(e) =>
-                    setNewOrder((prev) => ({
-                      ...prev,
-                      patientName: e.target.value,
-                    }))
-                  }
-                  placeholder="Patient name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="medicalRecordNumber">Medical Record Number</Label>
-                <Input
-                  id="medicalRecordNumber"
-                  value={newOrder.medicalRecordNumber}
-                  onChange={(e) =>
-                    setNewOrder((prev) => ({
-                      ...prev,
-                      medicalRecordNumber: e.target.value,
-                    }))
-                  }
-                  placeholder="MRN"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="department">Department</Label>
-                <Input
-                  id="department"
-                  value={newOrder.department}
-                  onChange={(e) =>
-                    setNewOrder((prev) => ({
-                      ...prev,
-                      department: e.target.value,
-                    }))
-                  }
-                  placeholder="Department name"
-                />
-              </div>
-            </div>
-          )}
+          <div className="space-y-2">
+            <VehicleSearch
+              label="Vehicle"
+              value={selectedVehicle}
+              onSelect={(v) => {
+                setSelectedVehicle(v);
+                if (v) {
+                  setNewOrder((prev) => ({
+                    ...prev,
+                    vehicleReg: v.registration_number ?? '',
+                  }));
+                }
+              }}
+              placeholder="Search by reg, VIN, make, model..."
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="vehicleReg">Vehicle Registration</Label>
+            <Input
+              id="vehicleReg"
+              value={newOrder.vehicleReg}
+              onChange={(e) =>
+                setNewOrder((prev) => ({
+                  ...prev,
+                  vehicleReg: e.target.value,
+                }))
+              }
+              placeholder="Enter vehicle registration or driver info"
+            />
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="vatRate">VAT Rate (%)</Label>

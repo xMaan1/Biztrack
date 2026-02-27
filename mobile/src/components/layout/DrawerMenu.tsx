@@ -66,15 +66,6 @@ const getModuleMenuItems = (
     );
   }
 
-  if (hasModuleAccess('patients') || accessibleModules.includes('healthcare') || planType === 'healthcare') {
-    items.push(
-      { label: 'Patients', icon: 'medical', route: 'Patients', module: 'patients', section: 'modules' },
-      { label: 'Appointments', icon: 'calendar', route: 'Appointments', module: 'appointments', section: 'modules' },
-      { label: 'Medical Records', icon: 'document-text', route: 'MedicalRecords', module: 'medical_records', section: 'modules' },
-      { label: 'Consultations', icon: 'chatbubbles', route: 'Consultations', module: 'consultations', section: 'modules' },
-    );
-  }
-
   if (hasModuleAccess('work_orders') || accessibleModules.includes('workshop') || planType === 'workshop') {
     items.push(
       { label: 'Work Orders', icon: 'construct', route: 'WorkOrders', module: 'work_orders', section: 'modules' },
@@ -137,12 +128,12 @@ export function DrawerMenu(props: DrawerContentComponentProps) {
           );
         }
       } else if (route === 'Invoicing') {
-        if (planType === 'workshop' || planType === 'healthcare') {
+        if (planType === 'workshop') {
           props.navigation.dispatch(
             CommonActions.navigate({
               name: 'MainTabs',
               params: {
-                screen: planType === 'workshop' ? 'Workshop' : 'Healthcare',
+                screen: 'Workshop',
                 params: {
                   screen: 'Invoicing',
                 },
@@ -162,18 +153,6 @@ export function DrawerMenu(props: DrawerContentComponentProps) {
             })
           );
         }
-      } else if (route === 'Patients' || route === 'Appointments' || route === 'MedicalRecords' || route === 'Consultations' || route === 'MedicalSupplies' || route === 'LabReports') {
-        props.navigation.dispatch(
-          CommonActions.navigate({
-            name: 'MainTabs',
-            params: {
-              screen: 'Healthcare',
-              params: {
-                screen: route,
-              },
-            },
-          })
-        );
       } else if (route === 'WorkOrders' || route === 'Production' || route === 'QualityControl' || route === 'Maintenance') {
         props.navigation.dispatch(
           CommonActions.navigate({

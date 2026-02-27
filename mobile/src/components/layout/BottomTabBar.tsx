@@ -34,7 +34,7 @@ export function BottomTabBar({ state, descriptors, navigation }: BottomTabBarPro
       if (planType === 'commerce') {
         (nav as any).navigate('Commerce', { screen: 'CRM' });
       } else if (planType === 'healthcare') {
-        (nav as any).navigate('Healthcare', { screen: 'Patients' });
+        (nav as any).navigate('Healthcare');
       } else if (planType === 'workshop') {
         (nav as any).navigate('Workshop', { screen: 'WorkOrders' });
       }

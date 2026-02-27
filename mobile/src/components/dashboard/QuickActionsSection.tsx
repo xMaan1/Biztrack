@@ -35,28 +35,6 @@ export function QuickActionsSection({ planType, onNavigate }: QuickActionsSectio
           />
         </>
       )}
-      {planType === 'healthcare' && (
-        <>
-          <QuickActionButton
-            icon="medical"
-            label="Patients"
-            onPress={() => onNavigate('Patients')}
-            gradient="success"
-          />
-          <QuickActionButton
-            icon="calendar"
-            label="Appointments"
-            onPress={() => onNavigate('Appointments')}
-            gradient="primary"
-          />
-          <QuickActionButton
-            icon="document-text"
-            label="Records"
-            onPress={() => onNavigate('MedicalRecords')}
-            gradient="warning"
-          />
-        </>
-      )}
       {planType === 'workshop' && (
         <>
           <QuickActionButton

@@ -99,18 +99,6 @@ export interface Invoice {
   partsDescription?: string;
   labourTotal?: number;
   partsTotal?: number;
-
-  // Healthcare specific fields
-  patientId?: string;
-  patientName?: string;
-  patientDateOfBirth?: string;
-  medicalRecordNumber?: string;
-  diagnosis?: string;
-  treatment?: string;
-  physicianName?: string;
-  appointmentDate?: string;
-  insuranceProvider?: string;
-  insurancePolicyNumber?: string;
 }
 
 export interface InvoiceCreate {
@@ -148,18 +136,6 @@ export interface InvoiceCreate {
   partsDescription?: string;
   labourTotal?: number;
   partsTotal?: number;
-
-  // Healthcare specific fields
-  patientId?: string;
-  patientName?: string;
-  patientDateOfBirth?: string;
-  medicalRecordNumber?: string;
-  diagnosis?: string;
-  treatment?: string;
-  physicianName?: string;
-  appointmentDate?: string;
-  insuranceProvider?: string;
-  insurancePolicyNumber?: string;
 }
 
 export interface InvoiceUpdate {

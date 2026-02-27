@@ -628,10 +628,6 @@ def read_purchase_orders(
             "notes": order.notes,
             "items": order.items if order.items else [],
             "vehicleReg": order.vehicleReg if hasattr(order, 'vehicleReg') else None,
-            "patientId": order.patientId if hasattr(order, 'patientId') else None,
-            "patientName": order.patientName if hasattr(order, 'patientName') else None,
-            "medicalRecordNumber": order.medicalRecordNumber if hasattr(order, 'medicalRecordNumber') else None,
-            "department": order.department if hasattr(order, 'department') else None,
             "createdBy": str(order.createdBy) if hasattr(order, 'createdBy') else "",
             "createdAt": order.createdAt,
             "updatedAt": order.updatedAt
@@ -672,10 +668,6 @@ def read_purchase_order(
             "notes": order.notes,
             "items": order.items if order.items else [],
             "vehicleReg": order.vehicleReg if hasattr(order, 'vehicleReg') else None,
-            "patientId": order.patientId if hasattr(order, 'patientId') else None,
-            "patientName": order.patientName if hasattr(order, 'patientName') else None,
-            "medicalRecordNumber": order.medicalRecordNumber if hasattr(order, 'medicalRecordNumber') else None,
-            "department": order.department if hasattr(order, 'department') else None,
             "createdBy": str(order.createdBy) if hasattr(order, 'createdBy') else "",
         "createdAt": order.createdAt,
         "updatedAt": order.updatedAt
@@ -747,10 +739,6 @@ def create_purchase_order_endpoint(
         "notes": db_order.notes,
         "items": db_order.items if db_order.items else [],
         "vehicleReg": db_order.vehicleReg if hasattr(db_order, 'vehicleReg') else None,
-        "patientId": db_order.patientId if hasattr(db_order, 'patientId') else None,
-        "patientName": db_order.patientName if hasattr(db_order, 'patientName') else None,
-        "medicalRecordNumber": db_order.medicalRecordNumber if hasattr(db_order, 'medicalRecordNumber') else None,
-        "department": db_order.department if hasattr(db_order, 'department') else None,
         "createdBy": str(db_order.createdBy),
         "createdAt": db_order.createdAt,
         "updatedAt": db_order.updatedAt
@@ -820,10 +808,6 @@ def update_purchase_order_endpoint(
         "notes": db_order.notes,
         "items": db_order.items if db_order.items else [],
         "vehicleReg": db_order.vehicleReg if hasattr(db_order, 'vehicleReg') else None,
-        "patientId": db_order.patientId if hasattr(db_order, 'patientId') else None,
-        "patientName": db_order.patientName if hasattr(db_order, 'patientName') else None,
-        "medicalRecordNumber": db_order.medicalRecordNumber if hasattr(db_order, 'medicalRecordNumber') else None,
-        "department": db_order.department if hasattr(db_order, 'department') else None,
         "createdBy": str(db_order.createdBy) if hasattr(db_order, 'createdBy') else "",
         "createdAt": db_order.createdAt,
         "updatedAt": db_order.updatedAt

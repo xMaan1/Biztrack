@@ -86,32 +86,6 @@ export type CommerceStackParamList = {
 
 export type HealthcareStackParamList = {
   HealthcareHome: undefined;
-  Patients: undefined;
-  PatientList: undefined;
-  PatientDetail: { id: string };
-  PatientForm: { id?: string; patient?: any };
-  Appointments: undefined;
-  AppointmentList: undefined;
-  AppointmentDetail: { id: string };
-  AppointmentForm: { id?: string; appointment?: any };
-  MedicalRecords: undefined;
-  MedicalRecordList: undefined;
-  MedicalRecordDetail: { id: string };
-  MedicalRecordForm: { id?: string; record?: any };
-  MedicalSupplies: undefined;
-  SupplyList: undefined;
-  SupplyDetail: { id: string };
-  SupplyForm: { id?: string; supply?: any };
-  Consultations: undefined;
-  ConsultationList: undefined;
-  ConsultationDetail: { id: string };
-  ConsultationForm: { id?: string; consultation?: any };
-  LabReports: undefined;
-  LabReportList: undefined;
-  LabReportDetail: { id: string };
-  Invoicing: undefined;
-  InvoiceDetail: { id: string };
-  InvoiceForm: { id?: string; invoice?: any };
 };
 
 export type WorkshopStackParamList = {

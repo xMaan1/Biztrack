@@ -3,7 +3,6 @@
 import React from 'react';
 import WorkshopDashboard from './WorkshopDashboard';
 import CommerceDashboard from './CommerceDashboard';
-import HealthcareDashboard from './HealthcareDashboard';
 
 interface PlanAwareDashboardProps {
   planType: string;
@@ -30,11 +29,6 @@ export default function PlanAwareDashboard({
     case 'commerce':
       return (
         <CommerceDashboard stats={enhancedStats} onNavigate={onNavigate} />
-      );
-
-    case 'healthcare':
-      return (
-        <HealthcareDashboard stats={enhancedStats} onNavigate={onNavigate} />
       );
 
     default:

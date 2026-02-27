@@ -13,14 +13,14 @@ export function DashboardHeader({ planType }: DashboardHeaderProps) {
     planType === 'commerce'
       ? 'Commerce Dashboard'
       : planType === 'healthcare'
-      ? 'Healthcare Dashboard'
+      ? 'Healthcare'
       : 'Workshop Dashboard';
 
   const subtitle =
     planType === 'commerce'
       ? 'Retail & E-commerce Overview'
       : planType === 'healthcare'
-      ? 'Medical Practice Overview'
+      ? 'Coming soon'
       : 'Production & Manufacturing Overview';
 
   return (

@@ -69,23 +69,6 @@ import CustomerReturnsScreen from '@/screens/commerce/inventory/CustomerReturnsS
 import SupplierReturnsScreen from '@/screens/commerce/inventory/SupplierReturnsScreen';
 import DumpsScreen from '@/screens/commerce/inventory/DumpsScreen';
 import { DrawerMenu } from '@/components/layout/DrawerMenu';
-import PatientListScreen from '@/screens/healthcare/patients/PatientListScreen';
-import PatientDetailScreen from '@/screens/healthcare/patients/PatientDetailScreen';
-import PatientFormScreen from '@/screens/healthcare/patients/PatientFormScreen';
-import AppointmentListScreen from '@/screens/healthcare/appointments/AppointmentListScreen';
-import AppointmentDetailScreen from '@/screens/healthcare/appointments/AppointmentDetailScreen';
-import AppointmentFormScreen from '@/screens/healthcare/appointments/AppointmentFormScreen';
-import MedicalRecordListScreen from '@/screens/healthcare/records/MedicalRecordListScreen';
-import MedicalRecordDetailScreen from '@/screens/healthcare/records/MedicalRecordDetailScreen';
-import MedicalRecordFormScreen from '@/screens/healthcare/records/MedicalRecordFormScreen';
-import SupplyListScreen from '@/screens/healthcare/supplies/SupplyListScreen';
-import SupplyDetailScreen from '@/screens/healthcare/supplies/SupplyDetailScreen';
-import SupplyFormScreen from '@/screens/healthcare/supplies/SupplyFormScreen';
-import ConsultationListScreen from '@/screens/healthcare/consultations/ConsultationListScreen';
-import ConsultationDetailScreen from '@/screens/healthcare/consultations/ConsultationDetailScreen';
-import ConsultationFormScreen from '@/screens/healthcare/consultations/ConsultationFormScreen';
-import LabReportListScreen from '@/screens/healthcare/lab/LabReportListScreen';
-import LabReportDetailScreen from '@/screens/healthcare/lab/LabReportDetailScreen';
 import WorkOrderListScreen from '@/screens/workshop/workorders/WorkOrderListScreen';
 import WorkOrderDetailScreen from '@/screens/workshop/workorders/WorkOrderDetailScreen';
 import WorkOrderFormScreen from '@/screens/workshop/workorders/WorkOrderFormScreen';
@@ -476,137 +459,7 @@ function HealthcareNavigator() {
       <HealthcareStack.Screen
         name="HealthcareHome"
         component={HealthcarePlaceholder}
-        options={{ title: 'Healthcare' }}
-      />
-      <HealthcareStack.Screen
-        name="Patients"
-        component={PatientListScreen}
-        options={{ headerShown: false }}
-      />
-      <HealthcareStack.Screen
-        name="PatientList"
-        component={PatientListScreen}
-        options={{ headerShown: false }}
-      />
-      <HealthcareStack.Screen
-        name="PatientDetail"
-        component={PatientDetailScreen}
-        options={{ headerShown: false }}
-      />
-      <HealthcareStack.Screen
-        name="PatientForm"
-        component={PatientFormScreen}
-        options={{ headerShown: false }}
-      />
-      <HealthcareStack.Screen
-        name="Appointments"
-        component={AppointmentListScreen}
-        options={{ headerShown: false }}
-      />
-      <HealthcareStack.Screen
-        name="AppointmentList"
-        component={AppointmentListScreen}
-        options={{ headerShown: false }}
-      />
-      <HealthcareStack.Screen
-        name="AppointmentDetail"
-        component={AppointmentDetailScreen}
-        options={{ headerShown: false }}
-      />
-      <HealthcareStack.Screen
-        name="AppointmentForm"
-        component={AppointmentFormScreen}
-        options={{ headerShown: false }}
-      />
-      <HealthcareStack.Screen
-        name="MedicalRecords"
-        component={MedicalRecordListScreen}
-        options={{ headerShown: false }}
-      />
-      <HealthcareStack.Screen
-        name="MedicalRecordList"
-        component={MedicalRecordListScreen}
-        options={{ headerShown: false }}
-      />
-      <HealthcareStack.Screen
-        name="MedicalRecordDetail"
-        component={MedicalRecordDetailScreen}
-        options={{ headerShown: false }}
-      />
-      <HealthcareStack.Screen
-        name="MedicalRecordForm"
-        component={MedicalRecordFormScreen}
-        options={{ headerShown: false }}
-      />
-      <HealthcareStack.Screen
-        name="MedicalSupplies"
-        component={SupplyListScreen}
-        options={{ headerShown: false }}
-      />
-      <HealthcareStack.Screen
-        name="SupplyList"
-        component={SupplyListScreen}
-        options={{ headerShown: false }}
-      />
-      <HealthcareStack.Screen
-        name="SupplyDetail"
-        component={SupplyDetailScreen}
-        options={{ headerShown: false }}
-      />
-      <HealthcareStack.Screen
-        name="SupplyForm"
-        component={SupplyFormScreen}
-        options={{ headerShown: false }}
-      />
-      <HealthcareStack.Screen
-        name="Consultations"
-        component={ConsultationListScreen}
-        options={{ headerShown: false }}
-      />
-      <HealthcareStack.Screen
-        name="ConsultationList"
-        component={ConsultationListScreen}
-        options={{ headerShown: false }}
-      />
-      <HealthcareStack.Screen
-        name="ConsultationDetail"
-        component={ConsultationDetailScreen}
-        options={{ headerShown: false }}
-      />
-      <HealthcareStack.Screen
-        name="ConsultationForm"
-        component={ConsultationFormScreen}
-        options={{ headerShown: false }}
-      />
-      <HealthcareStack.Screen
-        name="LabReports"
-        component={LabReportListScreen}
-        options={{ headerShown: false }}
-      />
-      <HealthcareStack.Screen
-        name="LabReportList"
-        component={LabReportListScreen}
-        options={{ headerShown: false }}
-      />
-      <HealthcareStack.Screen
-        name="LabReportDetail"
-        component={LabReportDetailScreen}
-        options={{ headerShown: false }}
-      />
-      <HealthcareStack.Screen
-        name="Invoicing"
-        component={InvoiceListScreen}
-        options={{ headerShown: false }}
-      />
-      <HealthcareStack.Screen
-        name="InvoiceDetail"
-        component={InvoiceDetailScreen}
-        options={{ headerShown: false }}
-      />
-      <HealthcareStack.Screen
-        name="InvoiceForm"
-        component={InvoiceFormScreen}
-        options={{ headerShown: false }}
+        options={{ title: 'Healthcare – coming soon' }}
       />
     </HealthcareStack.Navigator>
   );
@@ -956,12 +809,6 @@ export function AppNavigator() {
               path: 'healthcare',
               screens: {
                 HealthcareHome: '',
-                Patients: 'patients',
-                Appointments: 'appointments',
-                MedicalRecords: 'medical-records',
-                MedicalSupplies: 'medical-supplies',
-                Consultations: 'consultations',
-                LabReports: 'lab-reports',
               },
             },
             Workshop: {

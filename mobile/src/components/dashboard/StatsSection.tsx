@@ -64,34 +64,6 @@ export function StatsSection({ planType, stats }: StatsSectionProps) {
           />
         </>
       )}
-      {planType === 'healthcare' && (
-        <>
-          <StatCard
-            title="Total Patients"
-            value={stats.totalPatients?.toLocaleString() || '0'}
-            icon="people"
-            gradient="success"
-          />
-          <StatCard
-            title="Appointments"
-            value={stats.totalAppointments?.toLocaleString() || '0'}
-            icon="calendar"
-            gradient="primary"
-          />
-          <StatCard
-            title="Upcoming"
-            value={stats.upcomingAppointments?.toLocaleString() || '0'}
-            icon="time"
-            gradient="warning"
-          />
-          <StatCard
-            title="Medical Records"
-            value={stats.medicalRecords?.toLocaleString() || '0'}
-            icon="document-text"
-            gradient="secondary"
-          />
-        </>
-      )}
       {planType === 'workshop' && (
         <>
           <StatCard

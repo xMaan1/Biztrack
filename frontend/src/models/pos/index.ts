@@ -26,7 +26,6 @@ export enum ProductCategory {
   CLOTHING = 'clothing',
   FOOD = 'food',
   BEVERAGES = 'beverages',
-  HEALTHCARE = 'healthcare',
   BEAUTY = 'beauty',
   HOME = 'home',
   AUTOMOTIVE = 'automotive',
