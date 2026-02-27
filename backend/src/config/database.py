@@ -90,22 +90,6 @@ from .event_models import (
     Event, EventType, EventStatus, RecurrenceType
 )
 
-from .patient_models import (
-    Patient
-)
-
-from .appointment_models import (
-    Appointment
-)
-
-from .medical_record_models import (
-    MedicalRecord
-)
-
-from .medical_supply_models import (
-    MedicalSupply
-)
-
 # Import all CRUD functions
 from .core_crud import (
     # User functions
@@ -388,7 +372,6 @@ __all__ = [
     'ChartOfAccounts', 'LedgerTransaction', 'JournalEntry', 
     'FinancialPeriod', 'Budget', 'BudgetItem',
     'Investment', 'EquipmentInvestment', 'InvestmentTransaction',
-    'Patient', 'Appointment', 'MedicalRecord', 'MedicalSupply',
     
     # All CRUD functions are also exported
 ]

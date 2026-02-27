@@ -9,7 +9,6 @@ class ProductCategory(str, Enum):
     CLOTHING = "clothing"
     FOOD = "food"
     BEVERAGES = "beverages"
-    HEALTHCARE = "healthcare"
     PHARMACEUTICALS = "pharmaceuticals"
     OFFICE_SUPPLIES = "office_supplies"
     AUTOMOTIVE = "automotive"
