@@ -175,8 +175,7 @@ def seed_plans(engine):
                 "Barcode Scanning",
                 "Customer Portal",
                 "Email Marketing"
-            ],
-            "modules": ["inventory", "pos", "crm", "sales", "purchasing", "warehouse", "finance"]
+            ]
         },
         {
             "name": "Workshop Master",
@@ -199,8 +198,7 @@ def seed_plans(engine):
                 "Supplier Management",
                 "Workforce Management",
                 "Safety Compliance"
-            ],
-            "modules": ["projects", "production", "inventory", "hrm", "maintenance", "quality", "finance"]
+            ]
         },
         {
             "name": "Healthcare Suite",
@@ -223,8 +221,7 @@ def seed_plans(engine):
                 "Lab Management",
                 "Pharmacy Integration",
                 "Medical Device Tracking"
-            ],
-            "modules": ["patients", "appointments", "ehr", "billing", "inventory", "hrm", "compliance"]
+            ]
         }
     ]
     
@@ -273,7 +270,6 @@ def seed_plans(engine):
                 
                 returned_id = result.scalar()
                 print(f"    ✓ Plan created with ID: {returned_id}")
-                print(f"    ✓ Modules: {', '.join(plan['modules'])}")
             
             conn.commit()
             
@@ -282,7 +278,6 @@ def seed_plans(engine):
         for plan in plans:
             print(f"  • {plan['name']} (${plan['price']}/month)")
             print(f"    Type: {plan['planType']}")
-            print(f"    Modules: {', '.join(plan['modules'])}")
             print()
         
         print("🎯 You can now:")
