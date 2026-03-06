@@ -8,6 +8,10 @@ from ...models.healthcare_models import (
     DoctorUpdate,
     DoctorAvailabilitySlot,
     DoctorsResponse,
+    HealthcareStaff as HealthcareStaffPydantic,
+    HealthcareStaffCreate,
+    HealthcareStaffUpdate,
+    HealthcareStaffResponse,
 )
 from ...config.database import (
     get_db,
@@ -18,8 +22,21 @@ from ...config.database import (
     create_doctor,
     update_doctor,
     delete_doctor,
+    get_healthcare_staff_by_id,
+    get_healthcare_staff,
+    get_healthcare_staff_count,
+    create_healthcare_staff,
+    update_healthcare_staff,
+    get_user_by_email,
+    create_user,
 )
-from ...api.dependencies import get_current_user, get_tenant_context
+from ...api.dependencies import get_current_user, get_tenant_context, require_permission
+from ...models.common import ModulePermission
+from ...services.rbac_service import RBACService
+from ...config.core_models import User as UserModel, TenantUser as TenantUserModel, Role as RoleModel
+from ...core.auth import get_password_hash
+from uuid import UUID
+from sqlalchemy import and_
 
 router = APIRouter(prefix="/healthcare", tags=["healthcare"])
 
@@ -164,3 +181,251 @@ async def delete_doctor_endpoint(
     deleted = delete_doctor(doctor_id, db, tenant_context["tenant_id"])
     if not deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Doctor not found")
+
+
+HEALTHCARE_PERMISSION_SET = {
+    ModulePermission.HEALTHCARE_VIEW.value,
+    ModulePermission.HEALTHCARE_CREATE.value,
+    ModulePermission.HEALTHCARE_UPDATE.value,
+    ModulePermission.HEALTHCARE_DELETE.value,
+}
+
+
+def _normalize_healthcare_permissions(perms: Optional[List[str]]) -> List[str]:
+    items = [p for p in (perms or []) if isinstance(p, str)]
+    filtered = [p for p in items if p in HEALTHCARE_PERMISSION_SET]
+    deduped = list(dict.fromkeys(filtered))
+    if not deduped:
+        deduped = [ModulePermission.HEALTHCARE_VIEW.value]
+    return deduped
+
+
+def _merge_healthcare_permissions(existing: Optional[List[str]], healthcare_perms: List[str]) -> List[str]:
+    base = [p for p in (existing or []) if isinstance(p, str) and not p.startswith("healthcare:")]
+    merged = base + healthcare_perms
+    return list(dict.fromkeys(merged))
+
+
+def _ensure_healthcare_staff_role(db: Session, tenant_id: str) -> RoleModel:
+    role = db.query(RoleModel).filter(
+        and_(
+            RoleModel.tenant_id == tenant_id,
+            RoleModel.name == "healthcare_staff",
+            RoleModel.isActive == True,
+        )
+    ).first()
+    if role:
+        return role
+    role = RoleModel(
+        tenant_id=tenant_id,
+        name="healthcare_staff",
+        display_name="Healthcare Staff",
+        description="Healthcare module staff",
+        permissions=[],
+        isActive=True,
+    )
+    db.add(role)
+    db.commit()
+    db.refresh(role)
+    return role
+
+
+def _db_staff_to_pydantic(db_staff, db_user: UserModel, tenant_id: str, permissions: List[str]) -> HealthcareStaffPydantic:
+    return HealthcareStaffPydantic(
+        id=str(db_staff.id),
+        tenant_id=str(db_staff.tenant_id),
+        user_id=str(db_staff.user_id),
+        username=db_user.userName,
+        email=db_user.email,
+        first_name=db_user.firstName,
+        last_name=db_user.lastName,
+        phone=db_staff.phone,
+        role=db_staff.role,
+        permissions=permissions,
+        is_active=db_staff.is_active if hasattr(db_staff, "is_active") else True,
+        createdAt=db_staff.createdAt,
+        updatedAt=db_staff.updatedAt,
+    )
+
+
+@router.get("/staff", response_model=HealthcareStaffResponse)
+async def list_healthcare_staff(
+    search: Optional[str] = Query(None),
+    is_active: Optional[bool] = Query(None),
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _=Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    tenant_id = tenant_context["tenant_id"]
+    skip = (page - 1) * limit
+    db_staff = get_healthcare_staff(db, tenant_id, skip=skip, limit=limit, search=search, is_active=is_active)
+    total = get_healthcare_staff_count(db, tenant_id, search=search, is_active=is_active)
+
+    out: List[HealthcareStaffPydantic] = []
+    for s in db_staff:
+        u = db.query(UserModel).filter(UserModel.id == s.user_id).first()
+        if not u:
+            continue
+        perms = RBACService.get_user_permissions(db, str(u.id), tenant_id)
+        healthcare_perms = [p for p in perms if p.startswith("healthcare:")]
+        out.append(_db_staff_to_pydantic(s, u, tenant_id, healthcare_perms))
+
+    return HealthcareStaffResponse(staff=out, total=total)
+
+
+@router.post("/staff", response_model=HealthcareStaffPydantic, status_code=status.HTTP_201_CREATED)
+async def create_healthcare_staff_endpoint(
+    body: HealthcareStaffCreate,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    current_user=Depends(require_permission(ModulePermission.USERS_CREATE.value)),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    tenant_id = tenant_context["tenant_id"]
+
+    existing = get_user_by_email(body.email, db)
+    if existing:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A user with this email already exists")
+
+    if not RBACService.validate_username_uniqueness(db, body.username, tenant_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already taken in this tenant")
+
+    role = _ensure_healthcare_staff_role(db, tenant_id)
+    healthcare_perms = _normalize_healthcare_permissions(body.permissions)
+
+    user_dict = {
+        "tenant_id": UUID(tenant_id),
+        "userName": body.username,
+        "email": body.email,
+        "firstName": body.first_name,
+        "lastName": body.last_name,
+        "hashedPassword": get_password_hash(body.password),
+        "isActive": True,
+    }
+    db_user = create_user(user_dict, db)
+
+    tenant_user = TenantUserModel(
+        tenant_id=UUID(tenant_id),
+        userId=UUID(str(db_user.id)),
+        role_id=UUID(str(role.id)),
+        role=role.name,
+        custom_permissions=healthcare_perms,
+        isActive=True,
+        invitedBy=UUID(str(current_user.id)),
+    )
+    db.add(tenant_user)
+    db.commit()
+    db.refresh(tenant_user)
+
+    staff_dict = {
+        "tenant_id": UUID(tenant_id),
+        "user_id": UUID(str(db_user.id)),
+        "phone": body.phone,
+        "role": body.role,
+        "is_active": True,
+    }
+    db_staff = create_healthcare_staff(staff_dict, db)
+    return _db_staff_to_pydantic(db_staff, db_user, tenant_id, healthcare_perms)
+
+
+@router.put("/staff/{staff_id}", response_model=HealthcareStaffPydantic)
+async def update_healthcare_staff_endpoint(
+    staff_id: str,
+    body: HealthcareStaffUpdate,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    current_user=Depends(require_permission(ModulePermission.USERS_UPDATE.value)),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    tenant_id = tenant_context["tenant_id"]
+
+    db_staff = get_healthcare_staff_by_id(staff_id, db, tenant_id)
+    if not db_staff:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Staff not found")
+
+    db_user = db.query(UserModel).filter(UserModel.id == db_staff.user_id).first()
+    if not db_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    if body.email is not None and body.email != db_user.email:
+        if get_user_by_email(body.email, db):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+        db_user.email = body.email
+
+    if body.username is not None and body.username != db_user.userName:
+        if not RBACService.validate_username_uniqueness(db, body.username, tenant_id, exclude_user_id=str(db_user.id)):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already taken in this tenant")
+        db_user.userName = body.username
+
+    if body.first_name is not None:
+        db_user.firstName = body.first_name
+    if body.last_name is not None:
+        db_user.lastName = body.last_name
+    if body.password is not None and body.password.strip():
+        db_user.hashedPassword = get_password_hash(body.password)
+
+    staff_update = {}
+    if body.phone is not None:
+        staff_update["phone"] = body.phone
+    if body.role is not None:
+        staff_update["role"] = body.role
+    if body.is_active is not None:
+        staff_update["is_active"] = body.is_active
+    if staff_update:
+        db_staff = update_healthcare_staff(staff_id, staff_update, db, tenant_id)
+
+    if body.permissions is not None:
+        healthcare_perms = _normalize_healthcare_permissions(body.permissions)
+        tenant_user = db.query(TenantUserModel).filter(
+            and_(
+                TenantUserModel.tenant_id == tenant_id,
+                TenantUserModel.userId == db_user.id,
+                TenantUserModel.isActive == True,
+            )
+        ).first()
+        if tenant_user:
+            tenant_user.custom_permissions = _merge_healthcare_permissions(tenant_user.custom_permissions, healthcare_perms)
+            db.commit()
+        perms = RBACService.get_user_permissions(db, str(db_user.id), tenant_id)
+        effective = [p for p in perms if p.startswith("healthcare:")]
+        return _db_staff_to_pydantic(db_staff, db_user, tenant_id, effective)
+
+    perms = RBACService.get_user_permissions(db, str(db_user.id), tenant_id)
+    effective = [p for p in perms if p.startswith("healthcare:")]
+    db.commit()
+    db.refresh(db_user)
+    return _db_staff_to_pydantic(db_staff, db_user, tenant_id, effective)
+
+
+@router.delete("/staff/{staff_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_healthcare_staff_endpoint(
+    staff_id: str,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _=Depends(require_permission(ModulePermission.USERS_DELETE.value)),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    tenant_id = tenant_context["tenant_id"]
+
+    db_staff = get_healthcare_staff_by_id(staff_id, db, tenant_id)
+    if not db_staff:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Staff not found")
+
+    db_staff.is_active = False
+    tenant_user = db.query(TenantUserModel).filter(
+        and_(
+            TenantUserModel.tenant_id == tenant_id,
+            TenantUserModel.userId == db_staff.user_id,
+            TenantUserModel.isActive == True,
+        )
+    ).first()
+    if tenant_user:
+        tenant_user.custom_permissions = _merge_healthcare_permissions(tenant_user.custom_permissions, [])
+    db.commit()

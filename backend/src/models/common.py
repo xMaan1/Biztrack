@@ -78,6 +78,10 @@ class ModulePermission(str, Enum):
     USERS_DELETE = "users:delete"
     REPORTS_VIEW = "reports:view"
     REPORTS_EXPORT = "reports:export"
+    HEALTHCARE_VIEW = "healthcare:view"
+    HEALTHCARE_CREATE = "healthcare:create"
+    HEALTHCARE_UPDATE = "healthcare:update"
+    HEALTHCARE_DELETE = "healthcare:delete"
 
 class ProjectStatus(str, Enum):
     PLANNING = "planning"

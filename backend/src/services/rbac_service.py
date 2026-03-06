@@ -25,7 +25,8 @@ class RBACService:
             ModulePermission.BANKING_VIEW, ModulePermission.BANKING_CREATE, ModulePermission.BANKING_UPDATE, ModulePermission.BANKING_DELETE,
             ModulePermission.EVENTS_VIEW, ModulePermission.EVENTS_CREATE, ModulePermission.EVENTS_UPDATE, ModulePermission.EVENTS_DELETE,
             ModulePermission.USERS_VIEW, ModulePermission.USERS_CREATE, ModulePermission.USERS_UPDATE, ModulePermission.USERS_DELETE,
-            ModulePermission.REPORTS_VIEW, ModulePermission.REPORTS_EXPORT
+            ModulePermission.REPORTS_VIEW, ModulePermission.REPORTS_EXPORT,
+            ModulePermission.HEALTHCARE_VIEW, ModulePermission.HEALTHCARE_CREATE, ModulePermission.HEALTHCARE_UPDATE, ModulePermission.HEALTHCARE_DELETE
         ],
         TenantRole.CRM_MANAGER: [
             ModulePermission.CRM_VIEW, ModulePermission.CRM_CREATE, ModulePermission.CRM_UPDATE, ModulePermission.CRM_DELETE,
@@ -156,7 +157,7 @@ class RBACService:
         """Get list of modules user has access to"""
         # Owners have access to all modules
         if RBACService.is_owner(db, user_id, tenant_id):
-            all_modules = ['crm', 'sales', 'pos', 'inventory', 'hrm', 'projects', 'reports', 'events', 'work-orders', 'production', 'quality', 'maintenance', 'banking', 'ledger', 'finance', 'settings', 'notifications', 'users', 'dashboard']
+            all_modules = ['crm', 'sales', 'pos', 'inventory', 'hrm', 'projects', 'reports', 'events', 'work-orders', 'production', 'quality', 'maintenance', 'banking', 'ledger', 'finance', 'settings', 'notifications', 'users', 'dashboard', 'healthcare']
             return all_modules
 
         user_permissions = RBACService.get_user_permissions(db, user_id, tenant_id)

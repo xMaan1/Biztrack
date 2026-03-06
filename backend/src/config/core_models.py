@@ -247,6 +247,7 @@ class Tenant(Base):
     account_receivables = relationship("AccountReceivable", back_populates="tenant")
 
     doctors = relationship("Doctor", back_populates="tenant")
+    healthcare_staff = relationship("HealthcareStaff", back_populates="tenant")
 
 class Plan(Base):
     __tablename__ = "plans"
