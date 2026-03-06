@@ -90,6 +90,8 @@ from .event_models import (
     Event, EventType, EventStatus, RecurrenceType
 )
 
+from .healthcare_models import Doctor
+
 # Import all CRUD functions
 from .core_crud import (
     # User functions
@@ -193,6 +195,16 @@ from .hrm_crud import (
     
     # HRM Dashboard functions
     get_hrm_dashboard_data
+)
+
+from .healthcare_crud import (
+    get_doctor_by_id,
+    get_doctor_by_pmdc,
+    get_doctors,
+    get_doctors_count,
+    create_doctor,
+    update_doctor,
+    delete_doctor,
 )
 
 from .inventory_crud import (
