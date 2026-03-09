@@ -27,6 +27,7 @@ module.exports = {
     web: {
       favicon: "./assets/favicon.png",
     },
+    plugins: ["expo-font", "expo-secure-store"],
     extra: {
       apiUrl: process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000",
       eas: {

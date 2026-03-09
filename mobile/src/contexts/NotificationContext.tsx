@@ -1,5 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import * as Notifications from 'expo-notifications';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import NotificationService from '@/services/NotificationService';
 import {
@@ -9,23 +8,13 @@ import {
   NotificationPreferenceUpdate,
 } from '@/models/notifications';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
-
 interface NotificationContextType {
   notifications: Notification[];
   unreadCount: number;
   loading: boolean;
   error: string | null;
   preferences: NotificationPreference[];
-  expoPushToken: string | null;
+  pushToken: string | null;
   loadNotifications: (filters?: NotificationFilters) => Promise<void>;
   loadUnreadCount: () => Promise<void>;
   loadPreferences: () => Promise<void>;
@@ -49,85 +38,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [preferences, setPreferences] = useState<NotificationPreference[]>([]);
-  const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
-  const notificationListener = useRef<Notifications.Subscription | undefined>(undefined);
-  const responseListener = useRef<Notifications.Subscription | undefined>(undefined);
-
-  useEffect(() => {
-    registerForPushNotificationsAsync().then((token) => {
-      if (token) {
-        setExpoPushToken(token);
-      }
-    });
-
-    notificationListener.current = Notifications.addNotificationReceivedListener((notification) => {
-      const data = notification.request.content.data as any;
-      if (data.notification) {
-        addNotification(data.notification as Notification);
-      }
-    });
-
-    responseListener.current = Notifications.addNotificationResponseReceivedListener((response) => {
-      const data = response.notification.request.content.data as any;
-      if (data.notificationId) {
-        markAsRead(data.notificationId);
-      }
-      if (data.actionUrl) {
-      }
-    });
-
-    return () => {
-      if (notificationListener.current) {
-        notificationListener.current.remove();
-      }
-      if (responseListener.current) {
-        responseListener.current.remove();
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (user && currentTenant) {
-      loadNotifications();
-      loadUnreadCount();
-      loadPreferences();
-      updateBadgeCount();
-    }
-  }, [user, currentTenant]);
-
-  useEffect(() => {
-    if (unreadCount >= 0) {
-      updateBadgeCount();
-    }
-  }, [unreadCount]);
-
-  const registerForPushNotificationsAsync = async (): Promise<string | null> => {
-    try {
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-
-      if (finalStatus !== 'granted') {
-        return null;
-      }
-
-      const token = await Notifications.getExpoPushTokenAsync({ projectId: undefined });
-      return token.data;
-    } catch (error) {
-      return null;
-    }
-  };
-
-  const updateBadgeCount = async () => {
-    try {
-      await Notifications.setBadgeCountAsync(unreadCount);
-    } catch (error) {
-    }
-  };
+  const [pushToken] = useState<string | null>(null);
 
   const loadNotifications = useCallback(
     async (filters: NotificationFilters = {}) => {
@@ -168,6 +79,14 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     } catch (err: any) {
     }
   }, [user, currentTenant]);
+
+  useEffect(() => {
+    if (user && currentTenant) {
+      loadNotifications();
+      loadUnreadCount();
+      loadPreferences();
+    }
+  }, [user, currentTenant, loadNotifications, loadUnreadCount, loadPreferences]);
 
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
@@ -320,7 +239,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     loading,
     error,
     preferences,
-    expoPushToken,
+    pushToken,
     loadNotifications,
     loadUnreadCount,
     loadPreferences,
