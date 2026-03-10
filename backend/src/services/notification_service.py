@@ -336,3 +336,50 @@ def create_event_notification_for_all_tenant_users(
     return service.create_notification_for_all_tenant_users(
         tenant_id, title, message, NotificationCategory.SYSTEM, type, action_url, notification_data
     )
+
+
+def send_assignment_notification(
+    db: Session,
+    tenant_id: str,
+    assignee_user: Any,
+    assigner_name: str,
+    entity_type: str,
+    entity_name: str,
+    action_url: Optional[str] = None,
+    category: NotificationCategory = NotificationCategory.PROJECTS
+) -> None:
+    if not assignee_user or not getattr(assignee_user, 'email', None):
+        return
+    assignee_id = str(assignee_user.id)
+    assignee_name = (
+        f"{(getattr(assignee_user, 'firstName') or '')} {(getattr(assignee_user, 'lastName') or '')}".strip()
+        or getattr(assignee_user, 'userName', '') or 'there'
+    )
+    title = f"Assigned: {entity_type} - {entity_name[:60]}{'...' if len(entity_name) > 60 else ''}"
+    message = f"{assigner_name} assigned you to {entity_type}: {entity_name}"
+    if is_notification_enabled(db, tenant_id, assignee_id, category, 'email'):
+        try:
+            from .email_service import EmailService
+            email_service = EmailService()
+            email_service.send_assignment_email(
+                to_email=assignee_user.email,
+                assignee_name=assignee_name,
+                assigner_name=assigner_name,
+                entity_type=entity_type,
+                entity_name=entity_name,
+                action_url=action_url
+            )
+        except Exception:
+            pass
+    if is_notification_enabled(db, tenant_id, assignee_id, category, 'in_app'):
+        service = NotificationService(db)
+        service.create_notification(
+            tenant_id=tenant_id,
+            user_id=assignee_id,
+            title=title,
+            message=message,
+            category=category,
+            type=NotificationType.INFO,
+            action_url=action_url,
+            notification_data={"entity_type": entity_type, "entity_name": entity_name}
+        )

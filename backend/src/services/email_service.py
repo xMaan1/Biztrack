@@ -241,6 +241,51 @@ Best regards,
             logger.error(f"Failed to send report email to {to_email}: {str(e)}")
             return False
     
+    def send_assignment_email(
+        self,
+        to_email: str,
+        assignee_name: str,
+        assigner_name: str,
+        entity_type: str,
+        entity_name: str,
+        action_url: Optional[str] = None
+    ) -> bool:
+        try:
+            if not to_email:
+                logger.error("Recipient email is required for assignment notification")
+                return False
+            if not self.smtp_username or not self.smtp_password:
+                logger.warning("SMTP credentials not configured. Assignment email not sent.")
+                return False
+            msg = MIMEMultipart()
+            msg['From'] = f"{self.from_name} <{self.from_email}>"
+            msg['To'] = to_email
+            msg['Subject'] = f"You have been assigned: {entity_type} - {entity_name[:50]}{'...' if len(entity_name) > 50 else ''}"
+            link_line = f"\n\nOpen it here: {action_url}" if action_url else ""
+            body = f"""
+Dear {assignee_name},
+
+{assigner_name} has assigned you to the following:
+
+Type: {entity_type}
+Name: {entity_name}
+{link_line}
+
+Best regards,
+{self.from_name}
+            """
+            msg.attach(MIMEText(body.strip(), 'plain'))
+            server = smtplib.SMTP(self.smtp_server, self.smtp_port)
+            server.starttls()
+            server.login(self.smtp_username, self.smtp_password)
+            server.sendmail(self.from_email, to_email, msg.as_string())
+            server.quit()
+            logger.info(f"Assignment email sent to {to_email} for {entity_type}: {entity_name[:30]}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to send assignment email to {to_email}: {str(e)}")
+            return False
+
     def test_email_connection(self) -> bool:
         """Test email connection"""
         try:

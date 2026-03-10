@@ -5,7 +5,7 @@ from datetime import datetime
 import uuid
 
 from ..dependencies import get_current_user, get_tenant_context
-from ...config.database import get_db
+from ...config.database import get_db, get_user_by_id
 from ...models.user_models import User
 from ...models.project_models import WorkOrderBase, WorkOrderCreate, WorkOrderUpdate, WorkOrderResponse
 from ...config.workshop_crud import (
@@ -199,8 +199,21 @@ def create_work_order_endpoint(
         })
         
         db_work_order = create_work_order(work_order_data, db)
-        
-        # Convert SQLAlchemy model to Pydantic model
+        if work_order_data.get("assigned_to_id"):
+            try:
+                from ...services.notification_service import send_assignment_notification
+                from ...config.notification_models import NotificationCategory
+                assignee = get_user_by_id(work_order_data["assigned_to_id"], db)
+                assigner_name = f"{getattr(current_user, 'firstName', '') or ''} {getattr(current_user, 'lastName', '') or ''}".strip() or getattr(current_user, "userName", "A user")
+                if assignee:
+                    send_assignment_notification(
+                        db, tenant_id, assignee, assigner_name,
+                        "Work Order", db_work_order.title,
+                        action_url=f"/work-orders/{db_work_order.id}",
+                        category=NotificationCategory.PROJECTS
+                    )
+            except Exception:
+                pass
         work_order_dict = {
             "id": str(db_work_order.id),
             "work_order_number": db_work_order.work_order_number,
@@ -276,8 +289,23 @@ def update_work_order_endpoint(
                 work_order_update['actual_end_date'] = datetime.fromisoformat(work_order_update['actual_end_date'])
         
         work_order_update["updated_at"] = datetime.utcnow()
-        
+        had_assignment = "assigned_to_id" in work_order_update and work_order_update.get("assigned_to_id")
         db_work_order = update_work_order(work_order_id, work_order_update, db, tenant_id)
+        if had_assignment and db_work_order and db_work_order.assigned_to_id:
+            try:
+                from ...services.notification_service import send_assignment_notification
+                from ...config.notification_models import NotificationCategory
+                assignee = get_user_by_id(str(db_work_order.assigned_to_id), db)
+                assigner_name = f"{getattr(current_user, 'firstName', '') or ''} {getattr(current_user, 'lastName', '') or ''}".strip() or getattr(current_user, "userName", "A user")
+                if assignee:
+                    send_assignment_notification(
+                        db, tenant_id, assignee, assigner_name,
+                        "Work Order", db_work_order.title,
+                        action_url=f"/work-orders/{work_order_id}",
+                        category=NotificationCategory.PROJECTS
+                    )
+            except Exception:
+                pass
         if not db_work_order:
             raise HTTPException(status_code=404, detail="Work order not found")
         

@@ -760,7 +760,21 @@ def create_hrm_application(
         "createdAt": db_application.createdAt.isoformat() if db_application.createdAt else None,
         "updatedAt": db_application.updatedAt.isoformat() if db_application.updatedAt else None
     }
-    
+    if db_application.assignedTo:
+        try:
+            from ...services.notification_service import send_assignment_notification
+            from ...config.notification_models import NotificationCategory
+            assignee = get_user_by_id(str(db_application.assignedTo), db)
+            assigner_name = f"{getattr(current_user, 'firstName', '') or ''} {getattr(current_user, 'lastName', '') or ''}".strip() or getattr(current_user, "userName", "A user")
+            if assignee:
+                send_assignment_notification(
+                    db, str(tenant_id), assignee, assigner_name,
+                    "Application", f"{db_application.firstName} {db_application.lastName}",
+                    action_url=f"/hrm/applications/{db_application.id}",
+                    category=NotificationCategory.HRM
+                )
+        except Exception:
+            pass
     return Application(**response_data)
 
 # Performance Review endpoints

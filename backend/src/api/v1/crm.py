@@ -25,7 +25,7 @@ from ...models.crm_models import (
     CRMDashboard, CRMMetrics, CRMPipeline
 )
 from ...config.crm_models import Opportunity
-from ...config.database import get_db
+from ...config.database import get_db, get_user_by_id
 from ...config.crm_crud import (
     create_lead, get_lead_by_id, get_leads, update_lead, delete_lead,
     create_contact, get_contact_by_id, get_contacts, update_contact, delete_contact,
@@ -449,25 +449,25 @@ async def create_crm_lead(
 ):
     """Create a new lead"""
     try:
+        lead_dict = lead_data.dict()
+        if lead_dict.get("assignedTo"):
+            lead_dict["assignedToId"] = lead_dict.pop("assignedTo", None)
         lead = Lead(
             id=str(uuid.uuid4()),
-            **lead_data.dict(),
+            **lead_dict,
             tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
             createdBy=str(current_user.id),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
         )
-        
         db.add(lead)
         db.commit()
         db.refresh(lead)
         
         try:
-            from ...services.notification_service import create_crm_notification_for_all_tenant_users
-            from ...config.notification_models import NotificationType
-            
+            from ...services.notification_service import create_crm_notification_for_all_tenant_users, send_assignment_notification
+            from ...config.notification_models import NotificationType, NotificationCategory
             user_name = f"{current_user.firstName} {current_user.lastName}".strip() if hasattr(current_user, 'firstName') else current_user.userName if hasattr(current_user, 'userName') else "A user"
-            
             create_crm_notification_for_all_tenant_users(
                 db,
                 str(tenant_context["tenant_id"]) if tenant_context else str(uuid.uuid4()),
@@ -477,11 +477,19 @@ async def create_crm_lead(
                 f"/crm/leads/{str(lead.id)}",
                 {"lead_id": str(lead.id), "created_by": str(current_user.id)}
             )
+            if tenant_context and getattr(lead, 'assignedToId', None):
+                assignee = get_user_by_id(str(lead.assignedToId), db)
+                if assignee:
+                    send_assignment_notification(
+                        db, str(tenant_context["tenant_id"]), assignee, user_name,
+                        "Lead", f"{getattr(lead_data, 'firstName', '')} {getattr(lead_data, 'lastName', '')}".strip() or "Lead",
+                        action_url=f"/crm/leads/{str(lead.id)}",
+                        category=NotificationCategory.CRM
+                    )
         except Exception as notification_error:
             import logging
             logger = logging.getLogger(__name__)
             logger.error(f"Failed to create notification: {notification_error}", exc_info=True)
-        
         return lead
     except Exception as e:
         db.rollback()
@@ -520,15 +528,13 @@ async def update_crm_lead(
         
         update_data = lead_data.dict(exclude_unset=True)
         update_data["updatedAt"] = datetime.now()
-        
+        if "assignedTo" in update_data:
+            update_data["assignedToId"] = update_data.pop("assignedTo", None)
         updated_lead = update_lead(lead_id, update_data, db, tenant_context["tenant_id"] if tenant_context else None)
-        
         try:
-            from ...services.notification_service import create_crm_notification_for_all_tenant_users
-            from ...config.notification_models import NotificationType
-            
+            from ...services.notification_service import create_crm_notification_for_all_tenant_users, send_assignment_notification
+            from ...config.notification_models import NotificationType, NotificationCategory
             user_name = f"{current_user.firstName} {current_user.lastName}".strip() if hasattr(current_user, 'firstName') else current_user.userName if hasattr(current_user, 'userName') else "A user"
-            
             create_crm_notification_for_all_tenant_users(
                 db,
                 str(tenant_context["tenant_id"]) if tenant_context else str(uuid.uuid4()),
@@ -538,11 +544,19 @@ async def update_crm_lead(
                 f"/crm/leads/{lead_id}",
                 {"lead_id": lead_id, "updated_by": str(current_user.id)}
             )
+            if tenant_context and getattr(updated_lead, 'assignedToId', None):
+                assignee = get_user_by_id(str(updated_lead.assignedToId), db)
+                if assignee:
+                    send_assignment_notification(
+                        db, str(tenant_context["tenant_id"]), assignee, user_name,
+                        "Lead", f"{getattr(updated_lead, 'firstName', '')} {getattr(updated_lead, 'lastName', '')}".strip() or "Lead",
+                        action_url=f"/crm/leads/{lead_id}",
+                        category=NotificationCategory.CRM
+                    )
         except Exception as notification_error:
             import logging
             logger = logging.getLogger(__name__)
             logger.error(f"Failed to create notification: {notification_error}", exc_info=True)
-        
         return updated_lead
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating lead: {str(e)}")
@@ -976,7 +990,21 @@ async def create_crm_opportunity(
         db.add(opportunity)
         db.commit()
         db.refresh(opportunity)
-        
+        if tenant_context and getattr(opportunity, 'assignedToId', None):
+            try:
+                from ...services.notification_service import send_assignment_notification
+                from ...config.notification_models import NotificationCategory
+                assignee = get_user_by_id(str(opportunity.assignedToId), db)
+                user_name = f"{getattr(current_user, 'firstName', '') or ''} {getattr(current_user, 'lastName', '') or ''}".strip() or getattr(current_user, 'userName', 'A user')
+                if assignee:
+                    send_assignment_notification(
+                        db, str(tenant_context["tenant_id"]), assignee, user_name,
+                        "Opportunity", getattr(opportunity, 'name', data.get('title', 'Opportunity')),
+                        action_url=f"/crm/opportunities/{opportunity.id}",
+                        category=NotificationCategory.CRM
+                    )
+            except Exception:
+                pass
         return OpportunityPydantic.model_validate(opportunity)
     except Exception as e:
         db.rollback()
@@ -1041,11 +1069,24 @@ async def update_crm_opportunity(
             opportunity.assignedToId = uuid.UUID(data['assignedTo'])
         if 'notes' in data:
             opportunity.notes = data['notes']
-        
         opportunity.updatedAt = datetime.now()
         db.commit()
         db.refresh(opportunity)
-        
+        if tenant_context and getattr(opportunity, 'assignedToId', None):
+            try:
+                from ...services.notification_service import send_assignment_notification
+                from ...config.notification_models import NotificationCategory
+                assignee = get_user_by_id(str(opportunity.assignedToId), db)
+                user_name = f"{getattr(current_user, 'firstName', '') or ''} {getattr(current_user, 'lastName', '') or ''}".strip() or getattr(current_user, 'userName', 'A user')
+                if assignee:
+                    send_assignment_notification(
+                        db, str(tenant_context["tenant_id"]), assignee, user_name,
+                        "Opportunity", getattr(opportunity, 'name', opportunity.name or 'Opportunity'),
+                        action_url=f"/crm/opportunities/{opportunity_id}",
+                        category=NotificationCategory.CRM
+                    )
+            except Exception:
+                pass
         return OpportunityPydantic.model_validate(opportunity)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating opportunity: {str(e)}")

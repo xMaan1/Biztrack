@@ -782,11 +782,9 @@ async def create_new_project(
         db.refresh(db_project)
         
         try:
-            from ...services.notification_service import create_project_notification_for_all_tenant_users
-            from ...config.notification_models import NotificationType
-            
+            from ...services.notification_service import create_project_notification_for_all_tenant_users, send_assignment_notification
+            from ...config.notification_models import NotificationType, NotificationCategory
             user_name = f"{current_user.firstName} {current_user.lastName}".strip() if hasattr(current_user, 'firstName') else current_user.userName if hasattr(current_user, 'userName') else "A user"
-            
             create_project_notification_for_all_tenant_users(
                 db,
                 str(tenant_id),
@@ -796,11 +794,25 @@ async def create_new_project(
                 f"/projects/{str(db_project.id)}",
                 {"project_id": str(db_project.id), "created_by": str(current_user.id)}
             )
+            if project_manager:
+                send_assignment_notification(
+                    db, str(tenant_id), project_manager, user_name,
+                    "Project (Manager)", project_data.name,
+                    action_url=f"/projects/{str(db_project.id)}",
+                    category=NotificationCategory.PROJECTS
+                )
+            for member in team_members:
+                if member.id != project_manager.id:
+                    send_assignment_notification(
+                        db, str(tenant_id), member, user_name,
+                        "Project (Team)", project_data.name,
+                        action_url=f"/projects/{str(db_project.id)}",
+                        category=NotificationCategory.PROJECTS
+                    )
         except Exception as notification_error:
             import logging
             logger = logging.getLogger(__name__)
             logger.error(f"Failed to create notification: {notification_error}", exc_info=True)
-        
         return transform_project_to_response(db_project)
     except HTTPException:
         raise
@@ -824,14 +836,7 @@ async def update_existing_project(
         raise HTTPException(status_code=404, detail="Project not found")
     
     update_dict = project_data.model_dump(exclude_unset=True)
-    
-    # Convert enum values to strings for database
-    if 'status' in update_dict and hasattr(update_dict['status'], 'value'):
-        update_dict['status'] = update_dict['status'].value
-    if 'priority' in update_dict and hasattr(update_dict['priority'], 'value'):
-        update_dict['priority'] = update_dict['priority'].value
-    
-    # Handle team members update
+    updated_team_members = None
     if 'teamMemberIds' in update_dict:
         team_member_ids = update_dict.pop('teamMemberIds')
         team_members = []
@@ -843,17 +848,18 @@ async def update_existing_project(
             if tenant_context and str(member.tenant_id) != tenant_context["tenant_id"]:
                 raise HTTPException(status_code=400, detail=f"Team member {member_id} not in tenant")
             team_members.append(member)
+        updated_team_members = team_members
         project.teamMembers = team_members
-    
+    if 'status' in update_dict and hasattr(update_dict['status'], 'value'):
+        update_dict['status'] = update_dict['status'].value
+    if 'priority' in update_dict and hasattr(update_dict['priority'], 'value'):
+        update_dict['priority'] = update_dict['priority'].value
     # Update other fields
     updated_project = update_project(project_id, update_dict, db, tenant_id=tenant_id)
-    
     try:
-        from ...services.notification_service import create_project_notification_for_all_tenant_users
-        from ...config.notification_models import NotificationType
-        
+        from ...services.notification_service import create_project_notification_for_all_tenant_users, send_assignment_notification
+        from ...config.notification_models import NotificationType, NotificationCategory
         user_name = f"{current_user.firstName} {current_user.lastName}".strip() if hasattr(current_user, 'firstName') else current_user.userName if hasattr(current_user, 'userName') else "A user"
-        
         create_project_notification_for_all_tenant_users(
             db,
             str(tenant_id),
@@ -863,11 +869,27 @@ async def update_existing_project(
             f"/projects/{project_id}",
             {"project_id": project_id, "updated_by": str(current_user.id)}
         )
+        if tenant_id and 'projectManagerId' in update_dict and update_dict.get('projectManagerId'):
+            new_pm = get_user_by_id(update_dict['projectManagerId'], db)
+            if new_pm:
+                send_assignment_notification(
+                    db, str(tenant_id), new_pm, user_name,
+                    "Project (Manager)", updated_project.name,
+                    action_url=f"/projects/{project_id}",
+                    category=NotificationCategory.PROJECTS
+                )
+        if tenant_id and updated_team_members is not None:
+            for member in updated_team_members:
+                send_assignment_notification(
+                    db, str(tenant_id), member, user_name,
+                    "Project (Team)", updated_project.name,
+                    action_url=f"/projects/{project_id}",
+                    category=NotificationCategory.PROJECTS
+                )
     except Exception as notification_error:
         import logging
         logger = logging.getLogger(__name__)
         logger.error(f"Failed to create notification: {notification_error}", exc_info=True)
-    
     return transform_project_to_response(updated_project)
 
 @router.delete("/{project_id}")

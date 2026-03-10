@@ -213,7 +213,21 @@ async def create_new_task(
         db_task = create_task(task_dict, db)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error creating task: {str(e)}")
-    
+    if task_data.assignedToId and tenant_context:
+        try:
+            from ...services.notification_service import send_assignment_notification
+            from ...config.notification_models import NotificationCategory
+            assignee = get_user_by_id(task_data.assignedToId, db)
+            assigner_name = f"{getattr(current_user, 'firstName', '') or ''} {getattr(current_user, 'lastName', '') or ''}".strip() or getattr(current_user, 'userName', 'A user')
+            if assignee:
+                send_assignment_notification(
+                    db, str(tenant_context["tenant_id"]), assignee, assigner_name,
+                    "Task", db_task.title,
+                    action_url=f"/projects/{db_task.projectId}",
+                    category=NotificationCategory.PROJECTS
+                )
+        except Exception:
+            pass
     return transform_task_to_response(db_task, include_subtasks=False)
 
 @router.put("/{task_id}", response_model=SubTask, dependencies=[Depends(require_tenant_admin_or_super_admin)])
@@ -232,18 +246,18 @@ async def update_existing_task(
     
     update_dict = task_data.dict(exclude_unset=True)
     
-    # Handle assignee update
+    assignee_for_notification = None
     if 'assignedTo' in update_dict:
         assignee_id = update_dict.pop('assignedTo')
         if assignee_id:
             assignee = get_user_by_id(assignee_id, db)
             if not assignee:
                 raise HTTPException(status_code=400, detail="Assignee not found")
-            # Check tenant access for assignee
             if tenant_context and str(assignee.tenant_id) != tenant_context["tenant_id"]:
                 raise HTTPException(status_code=400, detail="Assignee not in tenant")
+            assignee_for_notification = assignee
         update_dict['assignedToId'] = assignee_id
-    
+
     # Handle tags
     if 'tags' in update_dict:
         update_dict['tags'] = json.dumps(update_dict['tags'])
@@ -263,7 +277,19 @@ async def update_existing_task(
         update_dict['completedAt'] = datetime.utcnow()
     
     updated_task = update_task(task_id, update_dict, db, tenant_id=tenant_id)
-    
+    if assignee_for_notification and tenant_context:
+        try:
+            from ...services.notification_service import send_assignment_notification
+            from ...config.notification_models import NotificationCategory
+            assigner_name = f"{getattr(current_user, 'firstName', '') or ''} {getattr(current_user, 'lastName', '') or ''}".strip() or getattr(current_user, 'userName', 'A user')
+            send_assignment_notification(
+                db, str(tenant_context["tenant_id"]), assignee_for_notification, assigner_name,
+                "Task", updated_task.title,
+                action_url=f"/projects/{updated_task.projectId}",
+                category=NotificationCategory.PROJECTS
+            )
+        except Exception:
+            pass
     return transform_task_to_response(updated_task)
 
 @router.delete("/{task_id}", dependencies=[Depends(require_tenant_admin_or_super_admin)])
@@ -338,5 +364,19 @@ async def create_subtask(
         task_dict['tenant_id'] = tenant_context["tenant_id"]
     
     db_subtask = create_task(task_dict, db)
-    
+    if subtask_data.assignedTo and tenant_context:
+        try:
+            from ...services.notification_service import send_assignment_notification
+            from ...config.notification_models import NotificationCategory
+            assignee = get_user_by_id(subtask_data.assignedTo, db)
+            assigner_name = f"{getattr(current_user, 'firstName', '') or ''} {getattr(current_user, 'lastName', '') or ''}".strip() or getattr(current_user, 'userName', 'A user')
+            if assignee:
+                send_assignment_notification(
+                    db, str(tenant_context["tenant_id"]), assignee, assigner_name,
+                    "Subtask", db_subtask.title,
+                    action_url=f"/projects/{db_subtask.projectId}",
+                    category=NotificationCategory.PROJECTS
+                )
+        except Exception:
+            pass
     return transform_subtask_to_response(db_subtask)

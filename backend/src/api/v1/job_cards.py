@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
 
-from ...config.database import get_db
+from ...config.database import get_db, get_user_by_id
 from ...api.dependencies import get_current_user, get_tenant_context
 from ...models.user_models import User
 from ...models.job_card_models import JobCardCreate, JobCardUpdate, JobCardResponse
@@ -143,6 +143,21 @@ def create_job_card_endpoint(
     if "vat_rate" not in data:
         data["vat_rate"] = 0.15
     jc = create_job_card(data, db, tenant_id)
+    if data.get("assigned_to_id"):
+        try:
+            from ...services.notification_service import send_assignment_notification
+            from ...config.notification_models import NotificationCategory
+            assignee = get_user_by_id(data["assigned_to_id"], db)
+            assigner_name = f"{getattr(current_user, 'firstName', '') or ''} {getattr(current_user, 'lastName', '') or ''}".strip() or getattr(current_user, "userName", "A user")
+            if assignee:
+                send_assignment_notification(
+                    db, tenant_id, assignee, assigner_name,
+                    "Job Card", jc.title,
+                    action_url=f"/job-cards/{jc.id}",
+                    category=NotificationCategory.PROJECTS
+                )
+        except Exception:
+            pass
     return _job_card_to_response(jc)
 
 
@@ -166,6 +181,21 @@ def update_job_card_endpoint(
     update_data = {k: v for k, v in data.items() if hasattr(jc, k)}
     update_job_card(job_card_id, update_data, db, tenant_id)
     jc = get_job_card_by_id(job_card_id, db, tenant_id)
+    if "assigned_to_id" in data and data.get("assigned_to_id") and jc:
+        try:
+            from ...services.notification_service import send_assignment_notification
+            from ...config.notification_models import NotificationCategory
+            assignee = get_user_by_id(str(jc.assigned_to_id), db)
+            assigner_name = f"{getattr(current_user, 'firstName', '') or ''} {getattr(current_user, 'lastName', '') or ''}".strip() or getattr(current_user, "userName", "A user")
+            if assignee:
+                send_assignment_notification(
+                    db, tenant_id, assignee, assigner_name,
+                    "Job Card", jc.title,
+                    action_url=f"/job-cards/{job_card_id}",
+                    category=NotificationCategory.PROJECTS
+                )
+        except Exception:
+            pass
     return _job_card_to_response(jc)
 
 

@@ -20,6 +20,7 @@ class NotificationCategory(enum.Enum):
     QUALITY = "quality"
     MAINTENANCE = "maintenance"
     LEDGER = "ledger"
+    PROJECTS = "projects"
     SYSTEM = "system"
 
 class Notification(Base):
