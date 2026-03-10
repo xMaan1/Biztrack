@@ -66,6 +66,10 @@ class CustomerResponse(CustomerBase):
     class Config:
         from_attributes = True
 
+class CustomersListResponse(BaseModel):
+    customers: List[CustomerResponse]
+    total: int
+
 class CustomerStatsResponse(BaseModel):
     total_customers: int
     active_customers: int

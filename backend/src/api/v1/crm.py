@@ -11,7 +11,7 @@ from pydantic import BaseModel as PydanticBaseModel
 from ...services.s3_service import s3_service
 
 from ...models.crm import (
-    CustomerCreate, CustomerUpdate, CustomerResponse, CustomerStatsResponse,
+    CustomerCreate, CustomerUpdate, CustomerResponse, CustomerStatsResponse, CustomersListResponse,
     GuarantorCreate, GuarantorUpdate, GuarantorResponse,
 )
 from ...models.crm_models import (
@@ -144,7 +144,7 @@ async def create_customer_endpoint(
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to create customer: {str(e)}")
 
-@router.get("/customers", response_model=List[CustomerResponse])
+@router.get("/customers", response_model=CustomersListResponse)
 async def get_customers_endpoint(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -159,16 +159,19 @@ async def get_customers_endpoint(
     """Get customers with optional filtering and search"""
     if not tenant_context:
         raise HTTPException(status_code=400, detail="Tenant context required")
-    customers = get_customers(
-        db, 
-        tenant_context["tenant_id"], 
-        skip, 
-        limit, 
-        search, 
-        status, 
+    customers, total = get_customers(
+        db,
+        tenant_context["tenant_id"],
+        skip,
+        limit,
+        search,
+        status,
         customer_type
     )
-    return [CustomerResponse.from_orm(customer) for customer in customers]
+    return CustomersListResponse(
+        customers=[CustomerResponse.from_orm(c) for c in customers],
+        total=total
+    )
 
 @router.get("/customers/stats", response_model=CustomerStatsResponse)
 async def get_customer_stats_endpoint(

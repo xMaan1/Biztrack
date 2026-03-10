@@ -65,15 +65,14 @@ import {
   Customer,
   CustomerCreate,
   CustomerStats,
-  CRMService,
   Guarantor,
   GuarantorCreate,
 } from '@/src/services/CRMService';
+import crmService from '@/src/services/CRMService';
 import { DashboardLayout } from '../../../components/layout';
 import { toast } from 'sonner';
 import CustomerImportDialog from '../../../components/crm/CustomerImportDialog';
 import { extractErrorMessage } from '@/src/utils/errorUtils';
-import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar';
 import { Camera, X, UserPlus } from 'lucide-react';
 
 export default function CustomersPage() {
@@ -93,6 +92,7 @@ function CustomersContent() {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
@@ -142,6 +142,10 @@ function CustomersContent() {
   const itemsPerPage = 10;
 
   useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, typeFilter]);
+
+  useEffect(() => {
     loadCustomers();
     loadStats();
   }, [currentPage, searchTerm, statusFilter, typeFilter]);
@@ -157,11 +161,11 @@ function CustomersContent() {
         statusFilter === 'all' ? undefined : statusFilter,
         typeFilter === 'all' ? undefined : typeFilter,
       );
-      const customersData = response.customers || response;
+      const customersData = response.customers ?? [];
+      const total = response.total ?? 0;
       setCustomers(customersData);
-      setTotalPages(
-        Math.ceil((response.total || customersData.length) / itemsPerPage),
-      );
+      setTotalCount(total);
+      setTotalPages(Math.max(1, Math.ceil(total / itemsPerPage)));
     } catch (error) {
       toast.error(extractErrorMessage(error, 'Failed to load customers'));
     } finally {
@@ -193,7 +197,7 @@ function CustomersContent() {
       }
       for (const g of createGuarantors) {
         try {
-          await CRMService.createGuarantor(created.id, g);
+          await crmService.createGuarantor(created.id, g);
         } catch (guarErr) {
           toast.warning(extractErrorMessage(guarErr, 'Customer created but one or more guarantors could not be added'));
         }
@@ -311,7 +315,7 @@ function CustomersContent() {
     setPhotoRemoved(false);
     setIsEditDialogOpen(true);
     try {
-      const list = await CRMService.getGuarantors(customer.id);
+      const list = await crmService.getGuarantors(customer.id);
       setGuarantors(list || []);
     } catch {
       setGuarantors([]);
@@ -330,7 +334,7 @@ function CustomersContent() {
   const handleAddGuarantor = async () => {
     if (!selectedCustomer || !guarantorForm.name.trim()) return;
     try {
-      const g = await CRMService.createGuarantor(selectedCustomer.id, guarantorForm);
+      const g = await crmService.createGuarantor(selectedCustomer.id, guarantorForm);
       setGuarantors((prev) => [...prev, g]);
       setGuarantorForm(emptyGuarantorForm);
       setGuarantorDialogOpen(false);
@@ -343,7 +347,7 @@ function CustomersContent() {
   const handleUpdateGuarantor = async () => {
     if (!editingGuarantorId) return;
     try {
-      const updated = await CRMService.updateGuarantor(editingGuarantorId, guarantorForm);
+      const updated = await crmService.updateGuarantor(editingGuarantorId, guarantorForm);
       setGuarantors((prev) => prev.map((g) => (g.id === editingGuarantorId ? updated : g)));
       setEditingGuarantorId(null);
       setGuarantorForm(emptyGuarantorForm);
@@ -356,7 +360,7 @@ function CustomersContent() {
 
   const handleDeleteGuarantor = async (id: string) => {
     try {
-      await CRMService.deleteGuarantor(id);
+      await crmService.deleteGuarantor(id);
       setGuarantors((prev) => prev.filter((g) => g.id !== id));
       toast.success('Guarantor removed');
     } catch (err) {
@@ -940,7 +944,9 @@ function CustomersContent() {
           <CardHeader>
             <CardTitle>Customer List</CardTitle>
             <CardDescription>
-              {customers.length} customers found
+              {totalCount > 0
+                ? `Showing ${(currentPage - 1) * itemsPerPage + 1}-${Math.min(currentPage * itemsPerPage, totalCount)} of ${totalCount} customers`
+                : 'No customers found'}
             </CardDescription>
           </CardHeader>
           <CardContent>

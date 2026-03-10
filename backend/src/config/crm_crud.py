@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timedelta
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Tuple
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func, desc
 from sqlalchemy.exc import IntegrityError
@@ -87,14 +87,12 @@ def get_customers(
     search: Optional[str] = None,
     status: Optional[str] = None,
     customer_type: Optional[str] = None
-) -> List[Customer]:
-    """Get customers with optional filtering and search"""
+) -> Tuple[List[Customer], int]:
+    """Get customers with optional filtering and search. Returns (customers, total_count)."""
     query = db.query(Customer).filter(Customer.tenant_id == tenant_id)
     
     if search:
-        # Normalize search term by replacing multiple spaces with single space
         normalized_search = ' '.join(search.split())
-        
         search_filter = or_(
             func.regexp_replace(Customer.firstName, r'\s+', ' ', 'g').ilike(f"%{normalized_search}%"),
             func.regexp_replace(Customer.lastName, r'\s+', ' ', 'g').ilike(f"%{normalized_search}%"),
@@ -113,7 +111,9 @@ def get_customers(
     if customer_type:
         query = query.filter(Customer.customerType == customer_type)
     
-    return query.offset(skip).limit(limit).all()
+    total = query.count()
+    customers = query.offset(skip).limit(limit).all()
+    return (customers, total)
 
 def update_customer(db: Session, customer_id: str, customer_data: Dict[str, Any], tenant_id: str) -> Optional[Customer]:
     """Update customer"""

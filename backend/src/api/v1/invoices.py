@@ -1824,13 +1824,13 @@ async def get_customers_endpoint(
     """Get customers with optional filtering and search - delegates to CRM module"""
     if not tenant_context:
         raise HTTPException(status_code=400, detail="Tenant context required")
-    customers = get_customers(
-        db, 
-        tenant_context["tenant_id"], 
-        skip, 
-        limit, 
-        search, 
-        status, 
+    customers, _ = get_customers(
+        db,
+        tenant_context["tenant_id"],
+        skip,
+        limit,
+        search,
+        status,
         customer_type
     )
     return [CustomerResponse.from_orm(customer) for customer in customers]
