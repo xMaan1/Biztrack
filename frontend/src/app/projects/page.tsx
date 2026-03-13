@@ -1,406 +1,179 @@
 'use client';
 
-
-
 import React, { useState, useEffect, useCallback } from 'react';
-
 import { useRouter } from 'next/navigation';
-
-import {
-
-  Card,
-
-  CardContent,
-
-  CardHeader,
-
-  CardTitle,
-
-} from '../../components/ui/card';
-
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-
 import { Badge } from '../../components/ui/badge';
-
 import { Input } from '../../components/ui/input';
-
 import { Progress } from '../../components/ui/progress';
-
 import { Separator } from '../../components/ui/separator';
-
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
-
 import { Label } from '../../components/ui/label';
-
 import { Textarea } from '../../components/ui/textarea';
-
-import {
-
-  Select,
-
-  SelectContent,
-
-  SelectItem,
-
-  SelectTrigger,
-
-  SelectValue,
-
-} from '../../components/ui/select';
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { UserSearch, type UserSearchItem } from '../../components/ui/user-search';
+import { UserMultiSearch, type UserMultiSearchItem } from '../../components/ui/user-multi-search';
 import { DashboardLayout } from '../../components/layout';
-
 import { useAuth } from '../../contexts/AuthContext';
 import { usePermissions } from '../../hooks/usePermissions';
-
 import { apiService } from '../../services/ApiService';
-
 import { Project, User } from '../../models';
-
-import {
-
-  Plus,
-
-  Search,
-
-  Star,
-
-  MoreVertical,
-
-  Calendar,
-
-  Eye,
-
-  Edit,
-
-  Trash2,
-
-  FolderOpen,
-
-  CheckSquare,
-
-  RefreshCw,
-
-} from 'lucide-react';
-
+import { Plus, Search, Star, MoreVertical, Calendar, Eye, Edit, Trash2, FolderOpen, CheckSquare, RefreshCw } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '../../components/ui/dropdown-menu';
 
-
-
-const ProjectCard = React.memo(({ 
-
-  project, 
-
-  isStarred, 
-
-  onToggleStarred, 
-
-  onEditProject, 
-
-  onDeleteProject, 
-
-  onViewProject, 
-
-  onViewTasks, 
-
-  canEdit 
-
+const ProjectCard = React.memo(({
+  project,
+  isStarred,
+  onToggleStarred,
+  onEditProject,
+  onDeleteProject,
+  onViewProject,
+  onViewTasks,
+  canEdit
 }: {
-
   project: Project;
-
   isStarred: boolean;
-
   onToggleStarred: (projectId: string) => void;
-
   onEditProject: (project: Project) => void;
-
   onDeleteProject: (project: Project) => void;
-
   onViewProject: (projectId: string) => void;
-
   onViewTasks: (projectId: string) => void;
-
   canEdit: boolean;
-
 }) => {
-
   const handleStarClick = useCallback(() => {
-
     onToggleStarred(project.id);
-
   }, [project.id, onToggleStarred]);
-
-
-
   const handleEditClick = useCallback(() => {
-
     onEditProject(project);
-
   }, [project, onEditProject]);
-
-
-
   const handleDeleteClick = useCallback(() => {
-
     onDeleteProject(project);
-
   }, [project, onDeleteProject]);
-
-
-
   const handleViewClick = useCallback(() => {
-
     onViewProject(project.id);
-
   }, [project.id, onViewProject]);
-
-
-
   const handleTasksClick = useCallback(() => {
-
     onViewTasks(project.id);
-
   }, [project.id, onViewTasks]);
-
-
-
   return (
-
     <Card className="modern-card card-hover group">
-
                     <CardHeader className="pb-3">
-
                       <div className="flex justify-between items-start">
-
                         <CardTitle className="text-lg font-semibold text-gray-900 flex-1 pr-2 group-hover:text-blue-600 transition-colors line-clamp-1">
-
                           {project.name}
-
                         </CardTitle>
-
                         <div className="flex items-center gap-1">
-
                           <Button
-
                             variant="ghost"
-
                             size="icon"
-
               onClick={handleStarClick}
-
                             className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-
                           >
-
                             <Star
-
                               className={cn(
-
                                 'h-4 w-4',
-
                   isStarred ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400'
-
                               )}
-
                             />
-
                           </Button>
-
                           {canEdit && (
-
-                            <div className="relative">
-
-                              <Button
-
-                                variant="ghost"
-
-                                size="icon"
-
-                                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-
-                              >
-
-                                <MoreVertical className="h-4 w-4" />
-
-                              </Button>
-
-                              <div className="absolute right-0 top-8 bg-white rounded-md shadow-lg border py-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
                                 <Button
-
                                   variant="ghost"
-
-                                  size="sm"
-
-                                  onClick={handleEditClick}
-
-                                  className="w-full justify-start px-3 py-2 text-sm"
-
+                                  size="icon"
+                                  className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
                                 >
-
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="min-w-[120px]">
+                                <DropdownMenuItem onClick={handleEditClick}>
                                   <Edit className="h-3 w-3 mr-2" />
-
                                   Edit
-
-                                </Button>
-
-                                <Button
-
-                                  variant="ghost"
-
-                                  size="sm"
-
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
                                   onClick={handleDeleteClick}
-
-                                  className="w-full justify-start px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50"
-
+                                  className="text-red-600 focus:text-red-600 focus:bg-red-50"
                                 >
-
                                   <Trash2 className="h-3 w-3 mr-2" />
-
                                   Delete
-
-                                </Button>
-
-                              </div>
-
-                            </div>
-
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           )}
-
                         </div>
-
                       </div>
-
                       <p className="text-sm text-gray-600 line-clamp-2 mt-1">
-
                         {project.description || 'No description provided'}
-
                       </p>
-
                     </CardHeader>
-
                     <CardContent className="pt-0 space-y-4">
-
                       <div className="flex items-center justify-between">
-
                         <div className="flex items-center gap-2">
-
                           <Badge variant={
-
                             project.status === 'completed' ? 'default' :
-
                             project.status === 'in_progress' ? 'secondary' :
-
                             project.status === 'on_hold' ? 'outline' : 'destructive'
-
                           }>
-
                             {project.status.replace('_', ' ')}
-
                           </Badge>
-
                           <Badge variant={
-
                             project.priority === 'high' ? 'destructive' :
-
                             project.priority === 'medium' ? 'secondary' : 'outline'
-
                           }>
-
                             {project.priority}
-
                           </Badge>
-
                         </div>
-
                         <div className="text-sm text-gray-500">
-
                           {project.completionPercent}%
-
                         </div>
-
                       </div>
-
                       <Progress value={project.completionPercent} className="h-2" />
-
                       <div className="flex items-center justify-between text-sm text-gray-600">
-
                         <div className="flex items-center gap-4">
-
                           <div className="flex items-center gap-1">
-
                             <Calendar className="h-3 w-3" />
-
                             <span>
-
                               {project.startDate ? new Date(project.startDate).toLocaleDateString() : 'No start date'}
-
                             </span>
-
                           </div>
-
                           <div className="flex items-center gap-1">
-
                             <FolderOpen className="h-3 w-3" />
-
                             <span>
-
                               {project.budget ? `$${project.budget.toLocaleString()}` : 'No budget'}
-
                             </span>
-
                           </div>
-
                         </div>
-
                       </div>
-
                       <div className="flex items-center justify-between">
-
                         <div className="flex items-center gap-2">
-
                           <Avatar className="h-6 w-6">
-
                             <AvatarImage src={project.projectManager.name} />
-
                             <AvatarFallback className="text-xs bg-gradient-secondary text-white">
-
                               {project.projectManager.name.charAt(0)}
-
                             </AvatarFallback>
-
                           </Avatar>
-
                           <span className="text-sm text-gray-600">
-
                             PM: {project.projectManager.name}
-
                           </span>
-
                         </div>
-
-
-
                         <div className="flex -space-x-2">
-
                           {project.teamMembers.slice(0, 3).map((member) => (
-
               <Avatar key={member.id} className="h-6 w-6 border-2 border-white">
-
                               <AvatarImage src={member.name} />
-
                               <AvatarFallback className="text-xs bg-gradient-secondary text-white">
-
                   {member.name.charAt(0)}
-
                               </AvatarFallback>
-
                             </Avatar>
-
                           ))}
-
                           {project.teamMembers.length > 3 && (
 
                             <div className="h-6 w-6 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center">
@@ -469,11 +242,7 @@ const ProjectCard = React.memo(({
 
 });
 
-
-
 ProjectCard.displayName = 'ProjectCard';
-
-
 
 export default function ProjectsPage() {
 
@@ -481,8 +250,6 @@ export default function ProjectsPage() {
   const { canManageProjects } = usePermissions();
 
   const router = useRouter();
-
-  
 
   const [mounted, setMounted] = useState(false);
 
@@ -542,8 +309,6 @@ export default function ProjectsPage() {
 
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 
-
-
   useEffect(() => {
 
     setMounted(true);
@@ -553,8 +318,6 @@ export default function ProjectsPage() {
     fetchUsers();
 
   }, []);
-
-
 
   const fetchProjects = useCallback(async () => {
 
@@ -575,8 +338,6 @@ export default function ProjectsPage() {
     }
 
   }, []);
-
-
 
   const fetchUsers = useCallback(async () => {
 
@@ -616,8 +377,6 @@ export default function ProjectsPage() {
 
   }, []);
 
-
-
   const filteredProjects = projects.filter(project => {
 
     const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -632,20 +391,14 @@ export default function ProjectsPage() {
 
   });
 
-
-
   const canCreateProject = useCallback(() => {
     return canManageProjects() || user?.userRole === 'super_admin';
   }, [canManageProjects, user]);
 
-
-
   const canEditProject = useCallback((project: Project) => {
-    return canManageProjects() || user?.userRole === 'super_admin' || 
+    return canManageProjects() || user?.userRole === 'super_admin' ||
            project.projectManager.id === user?.id;
   }, [canManageProjects, user]);
-
-
 
   const handleCreateProject = useCallback(() => {
 
@@ -685,8 +438,6 @@ export default function ProjectsPage() {
 
   }, [users]);
 
-
-
   const handleEditProject = useCallback((project: Project) => {
 
     setDialogMode('edit');
@@ -725,8 +476,6 @@ export default function ProjectsPage() {
 
   }, []);
 
-
-
   const handleDeleteProject = useCallback((project: Project) => {
 
     setProjectToDelete(project);
@@ -734,8 +483,6 @@ export default function ProjectsPage() {
     setDeleteDialogOpen(true);
 
   }, []);
-
-
 
   const confirmDeleteProject = useCallback(async () => {
 
@@ -763,38 +510,38 @@ export default function ProjectsPage() {
 
   }, [projectToDelete, fetchProjects]);
 
-
-
   const handleFormSubmit = useCallback(async (e: React.FormEvent) => {
 
     e.preventDefault();
 
-    
-
     try {
-
-      setFormLoading(true);
 
       setFormError(null);
 
-      
-
+      if (!formData.startDate || !formData.startDate.trim()) {
+        setFormError('Start date is required');
+        return;
+      }
+      if (!formData.endDate || !formData.endDate.trim()) {
+        setFormError('End date is required');
+        return;
+      }
+      if (new Date(formData.endDate) < new Date(formData.startDate)) {
+        setFormError('End date must be on or after start date');
+        return;
+      }
       if (dialogMode === 'create') {
-        // Validate required fields
         if (!formData.projectManagerId || formData.projectManagerId === '') {
           setFormError('Please select a project manager');
           return;
         }
-        
-        await apiService.createProject(formData);
-
-      } else if (selectedProject) {
-
-        await apiService.updateProject(selectedProject.id, formData);
-
       }
-
-      
+      setFormLoading(true);
+      if (dialogMode === 'create') {
+        await apiService.createProject(formData);
+      } else if (selectedProject) {
+        await apiService.updateProject(selectedProject.id, formData);
+      }
 
       await fetchProjects();
 
@@ -812,25 +559,14 @@ export default function ProjectsPage() {
 
   }, [formData, dialogMode, selectedProject, fetchProjects]);
 
+  const selectedProjectManager = React.useMemo((): UserSearchItem | null => {
+    if (!formData.projectManagerId) return null;
+    return users.find((u) => (u.id || u.userId) === formData.projectManagerId) ?? null;
+  }, [users, formData.projectManagerId]);
 
-
-  const handleTeamMemberToggle = useCallback((userId: string) => {
-
-    setFormData(prev => ({
-
-      ...prev,
-
-      teamMemberIds: prev.teamMemberIds.includes(userId)
-
-        ? prev.teamMemberIds.filter(id => id !== userId)
-
-        : [...prev.teamMemberIds, userId]
-
-    }));
-
-  }, []);
-
-
+  const selectedTeamMembers = React.useMemo((): UserMultiSearchItem[] => {
+    return users.filter((u) => formData.teamMemberIds.includes(u.id || u.userId || ''));
+  }, [users, formData.teamMemberIds]);
 
   const toggleStarred = useCallback((projectId: string) => {
 
@@ -846,23 +582,17 @@ export default function ProjectsPage() {
 
   }, []);
 
-
-
   const handleViewProject = useCallback((projectId: string) => {
 
     router.push(`/projects/${projectId}`);
 
   }, [router]);
 
-
-
   const handleViewTasks = useCallback((projectId: string) => {
 
     router.push(`/projects/${projectId}/tasks`);
 
   }, [router]);
-
-
 
   const clearFilters = useCallback(() => {
 
@@ -874,15 +604,11 @@ export default function ProjectsPage() {
 
   }, []);
 
-
-
   if (!mounted) {
 
     return null;
 
   }
-
-
 
   return (
 
@@ -905,8 +631,6 @@ export default function ProjectsPage() {
           </p>
 
         </div>
-
-
 
         <div className="flex justify-between items-center">
 
@@ -1002,8 +726,6 @@ export default function ProjectsPage() {
 
         </div>
 
-
-
         {loading ? (
 
           <div className="flex items-center justify-center h-64">
@@ -1066,8 +788,6 @@ export default function ProjectsPage() {
 
         )}
 
-
-
         {!loading && !error && filteredProjects.length === 0 && (
 
           <Card className="modern-card">
@@ -1109,8 +829,6 @@ export default function ProjectsPage() {
           </Card>
 
         )}
-
-
 
         {dialogOpen && (
 
@@ -1186,17 +904,17 @@ export default function ProjectsPage() {
 
                   </div>
 
-                  
-
                   <div>
 
-                    <Label htmlFor="startDate">Start Date</Label>
+                    <Label htmlFor="startDate">Start Date *</Label>
 
                     <Input
 
                       id="startDate"
 
                       type="date"
+
+                      required
 
                       value={formData.startDate || ''}
 
@@ -1206,11 +924,9 @@ export default function ProjectsPage() {
 
                   </div>
 
-                  
-
                   <div>
 
-                    <Label htmlFor="endDate">End Date</Label>
+                    <Label htmlFor="endDate">End Date *</Label>
 
                     <Input
 
@@ -1218,15 +934,17 @@ export default function ProjectsPage() {
 
                       type="date"
 
+                      required
+
                       value={formData.endDate || ''}
 
                       onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
 
+                      min={formData.startDate || undefined}
+
                     />
 
                   </div>
-
-                  
 
                   <div>
 
@@ -1274,8 +992,6 @@ export default function ProjectsPage() {
 
                 </div>
 
-                
-
                 <div>
 
                   <Label htmlFor="description">Description</Label>
@@ -1293,8 +1009,6 @@ export default function ProjectsPage() {
                   />
 
                 </div>
-
-                
 
                 <div>
 
@@ -1314,8 +1028,6 @@ export default function ProjectsPage() {
 
                 </div>
 
-                
-
                 <div>
 
                   <Label htmlFor="notes">Notes</Label>
@@ -1334,86 +1046,50 @@ export default function ProjectsPage() {
 
                 </div>
 
-                
-
                 <div>
 
-                  <Label htmlFor="projectManager">Project Manager</Label>
+                  <UserSearch
 
-                  <Select value={formData.projectManagerId} onValueChange={(value) => setFormData({ ...formData, projectManagerId: value })}>
+                    users={users}
 
-                    <SelectTrigger>
+                    value={selectedProjectManager}
 
-                      <SelectValue placeholder="Select project manager" />
+                    onSelect={(user) => setFormData({ ...formData, projectManagerId: user ? (user.id || user.userId || '') : '' })}
 
-                    </SelectTrigger>
+                    placeholder="Search by name or email..."
 
-                    <SelectContent>
+                    label="Project Manager *"
 
-                      {users.map((user) => (
+                    required
 
-                        <SelectItem key={user.id} value={user.id || user.userId || ''}>
+                    error={formError === 'Please select a project manager' ? formError : undefined}
 
-                          {user.firstName} {user.lastName}
-
-                        </SelectItem>
-
-                      ))}
-
-                    </SelectContent>
-
-                  </Select>
+                  />
 
                 </div>
 
-                
-
                 <div>
 
-                  <Label>Team Members</Label>
+                  <UserMultiSearch
 
-                  <div className="space-y-2 max-h-32 overflow-y-auto border rounded-md p-2">
+                    users={users}
 
-                    {users.map((user) => (
+                    value={selectedTeamMembers}
 
-                      <div key={user.id} className="flex items-center space-x-2">
+                    onChange={(selected) => setFormData({ ...formData, teamMemberIds: selected.map((u) => u.id || u.userId || '') })}
 
-                        <input
+                    placeholder="Search to add team members..."
 
-                          type="checkbox"
+                    label="Team Members"
 
-                          id={`member-${user.id}`}
-
-                          checked={formData.teamMemberIds.includes(user.id || '')}
-
-                          onChange={() => handleTeamMemberToggle(user.id || '')}
-
-                          className="rounded"
-
-                        />
-
-                        <Label htmlFor={`member-${user.id}`} className="text-sm">
-
-                          {user.firstName} {user.lastName}
-
-                        </Label>
-
-                      </div>
-
-                    ))}
-
-                  </div>
+                  />
 
                 </div>
-
-                
 
                 <div className="flex justify-end gap-2 pt-4">
 
                   <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-
                     Cancel
-
                   </Button>
                   <Button type="submit" disabled={formLoading} className="modern-button">
                     {formLoading ? 'Saving...' : dialogMode === 'create' ? 'Create Project' : 'Update Project'}
