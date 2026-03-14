@@ -25,6 +25,7 @@ from ...models.healthcare_models import (
     PrescriptionUpdate,
     PrescriptionsResponse,
     AppointmentInvoiceCreate,
+    PatientHistoryResponse,
     ExpenseCategory as ExpenseCategoryPydantic,
     ExpenseCategoryCreate,
     ExpenseCategoryUpdate,
@@ -49,6 +50,7 @@ from ...healthcare.queries import (
     list_prescriptions_handler,
     get_prescription_handler,
     list_healthcare_staff_handler,
+    get_patient_history_handler,
     list_expense_categories_handler,
     get_expense_category_handler,
     list_daily_expenses_handler,
@@ -173,6 +175,18 @@ async def get_patient(
     return get_patient_handler(tenant_context["tenant_id"], patient_id, db)
 
 
+@router.get("/patients/{patient_id}/history", response_model=PatientHistoryResponse)
+async def get_patient_history(
+    patient_id: str,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    return get_patient_history_handler(tenant_context["tenant_id"], patient_id, db)
+
+
 @router.post("/patients", response_model=PatientPydantic, status_code=status.HTTP_201_CREATED)
 async def create_patient_endpoint(
     body: PatientCreate,
@@ -213,6 +227,7 @@ async def delete_patient_endpoint(
 @router.get("/appointments", response_model=AppointmentsResponse)
 async def list_appointments(
     doctor_id: Optional[str] = Query(None),
+    patient_id: Optional[str] = Query(None),
     date_from: Optional[str] = Query(None),
     date_to: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
@@ -229,6 +244,7 @@ async def list_appointments(
         tenant_context["tenant_id"],
         db,
         doctor_id=doctor_id,
+        patient_id=patient_id,
         date_from=date_from,
         date_to=date_to,
         search=search,
@@ -331,6 +347,7 @@ async def create_appointment_invoice_endpoint(
 async def list_prescriptions(
     appointment_id: Optional[str] = Query(None),
     doctor_id: Optional[str] = Query(None),
+    patient_id: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=200),
@@ -345,6 +362,7 @@ async def list_prescriptions(
         db,
         appointment_id=appointment_id,
         doctor_id=doctor_id,
+        patient_id=patient_id,
         search=search,
         page=page,
         limit=limit,

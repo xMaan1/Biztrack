@@ -1,5 +1,5 @@
 from .doctors import list_doctors_handler, get_doctor_handler
-from .patients import list_patients_handler, get_patient_handler
+from .patients import list_patients_handler, get_patient_handler, get_patient_history_handler
 from .appointments import (
     list_appointments_handler,
     list_appointments_calendar_handler,
@@ -15,6 +15,7 @@ __all__ = [
     "get_doctor_handler",
     "list_patients_handler",
     "get_patient_handler",
+    "get_patient_history_handler",
     "list_appointments_handler",
     "list_appointments_calendar_handler",
     "get_appointment_handler",

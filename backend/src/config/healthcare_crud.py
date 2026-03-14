@@ -255,6 +255,7 @@ def get_appointments(
     skip: int = 0,
     limit: int = 500,
     doctor_id: Optional[str] = None,
+    patient_id: Optional[str] = None,
     date_from: Optional[date] = None,
     date_to: Optional[date] = None,
     search: Optional[str] = None,
@@ -265,6 +266,8 @@ def get_appointments(
         query = query.filter(Appointment.is_active == is_active)
     if doctor_id:
         query = query.filter(Appointment.doctor_id == doctor_id)
+    if patient_id:
+        query = query.filter(Appointment.patient_id == patient_id)
     if date_from is not None:
         query = query.filter(Appointment.appointment_date >= date_from)
     if date_to is not None:
@@ -275,13 +278,14 @@ def get_appointments(
             Appointment.patient_name.ilike(search_lower) |
             or_(Appointment.patient_phone.is_(None), Appointment.patient_phone.ilike(search_lower))
         )
-    return query.order_by(Appointment.appointment_date.asc(), Appointment.start_time.asc()).offset(skip).limit(limit).all()
+    return query.order_by(Appointment.appointment_date.desc(), Appointment.start_time.asc()).offset(skip).limit(limit).all()
 
 
 def get_appointments_count(
     db: Session,
     tenant_id: str,
     doctor_id: Optional[str] = None,
+    patient_id: Optional[str] = None,
     date_from: Optional[date] = None,
     date_to: Optional[date] = None,
     search: Optional[str] = None,
@@ -292,6 +296,8 @@ def get_appointments_count(
         query = query.filter(Appointment.is_active == is_active)
     if doctor_id:
         query = query.filter(Appointment.doctor_id == doctor_id)
+    if patient_id:
+        query = query.filter(Appointment.patient_id == patient_id)
     if date_from is not None:
         query = query.filter(Appointment.appointment_date >= date_from)
     if date_to is not None:
@@ -348,6 +354,7 @@ def get_prescriptions(
     limit: int = 200,
     appointment_id: Optional[str] = None,
     doctor_id: Optional[str] = None,
+    patient_id: Optional[str] = None,
     search: Optional[str] = None,
 ) -> List[Prescription]:
     query = db.query(Prescription).filter(Prescription.tenant_id == tenant_id)
@@ -355,6 +362,10 @@ def get_prescriptions(
         query = query.filter(Prescription.appointment_id == appointment_id)
     if doctor_id:
         query = query.filter(Prescription.doctor_id == doctor_id)
+    if patient_id:
+        query = query.join(Appointment, Prescription.appointment_id == Appointment.id).filter(
+            Appointment.patient_id == patient_id,
+        )
     if search:
         search_lower = f"%{search.lower()}%"
         query = query.filter(Prescription.patient_name.ilike(search_lower))
@@ -366,6 +377,7 @@ def get_prescriptions_count(
     tenant_id: str,
     appointment_id: Optional[str] = None,
     doctor_id: Optional[str] = None,
+    patient_id: Optional[str] = None,
     search: Optional[str] = None,
 ) -> int:
     query = db.query(Prescription).filter(Prescription.tenant_id == tenant_id)
@@ -373,6 +385,10 @@ def get_prescriptions_count(
         query = query.filter(Prescription.appointment_id == appointment_id)
     if doctor_id:
         query = query.filter(Prescription.doctor_id == doctor_id)
+    if patient_id:
+        query = query.join(Appointment, Prescription.appointment_id == Appointment.id).filter(
+            Appointment.patient_id == patient_id,
+        )
     if search:
         search_lower = f"%{search.lower()}%"
         query = query.filter(Prescription.patient_name.ilike(search_lower))

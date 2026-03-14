@@ -28,6 +28,7 @@ import type {
   DailyExpenseCreate,
   DailyExpenseUpdate,
   DailyExpensesResponse,
+  PatientHistoryResponse,
 } from '../models/healthcare';
 
 const apiService = new ApiService();
@@ -72,6 +73,10 @@ export class HealthcareQueries {
     return apiService.get<Patient>(`/healthcare/patients/${id}`);
   }
 
+  async getPatientHistory(patientId: string): Promise<PatientHistoryResponse> {
+    return apiService.get<PatientHistoryResponse>(`/healthcare/patients/${patientId}/history`);
+  }
+
   async getStaff(params?: {
     search?: string;
     is_active?: boolean;
@@ -90,6 +95,7 @@ export class HealthcareQueries {
 
   async getAppointments(params?: {
     doctor_id?: string;
+    patient_id?: string;
     date_from?: string;
     date_to?: string;
     search?: string;
@@ -99,6 +105,7 @@ export class HealthcareQueries {
   }): Promise<AppointmentsResponse> {
     const searchParams = new URLSearchParams();
     if (params?.doctor_id) searchParams.set('doctor_id', params.doctor_id);
+    if (params?.patient_id) searchParams.set('patient_id', params.patient_id);
     if (params?.date_from) searchParams.set('date_from', params.date_from);
     if (params?.date_to) searchParams.set('date_to', params.date_to);
     if (params?.search) searchParams.set('search', params.search);
@@ -303,6 +310,7 @@ export class HealthcareService {
   getDoctor = healthcareQueries.getDoctor.bind(healthcareQueries);
   getPatients = healthcareQueries.getPatients.bind(healthcareQueries);
   getPatient = healthcareQueries.getPatient.bind(healthcareQueries);
+  getPatientHistory = healthcareQueries.getPatientHistory.bind(healthcareQueries);
   getStaff = healthcareQueries.getStaff.bind(healthcareQueries);
   getAppointments = healthcareQueries.getAppointments.bind(healthcareQueries);
   getAppointmentsCalendar = healthcareQueries.getAppointmentsCalendar.bind(healthcareQueries);

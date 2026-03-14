@@ -204,6 +204,12 @@ export interface PatientsResponse {
   total: number;
 }
 
+export interface PatientHistoryResponse {
+  patient: Patient;
+  appointments: Appointment[];
+  prescriptions: Prescription[];
+}
+
 export type PrescriptionItemType = 'medicine' | 'vitals' | 'test';
 
 export interface PrescriptionItem {

@@ -136,6 +136,12 @@ class PatientsResponse(BaseModel):
     total: int
 
 
+class PatientHistoryResponse(BaseModel):
+    patient: Patient
+    appointments: List["Appointment"]
+    prescriptions: List["Prescription"]
+
+
 class AppointmentBase(BaseModel):
     doctor_id: str
     patient_id: Optional[str] = None

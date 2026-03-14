@@ -29,7 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/src/components/ui/table';
-import { UserPlus, Edit, Trash2, ChevronRight, ChevronLeft } from 'lucide-react';
+import { UserPlus, Edit, Trash2, ChevronRight, ChevronLeft, History } from 'lucide-react';
 import healthcareService from '@/src/services/HealthcareService';
 import type { Patient, PatientCreate } from '@/src/models/healthcare';
 import { toast } from 'sonner';
@@ -271,6 +271,12 @@ function PatientsContent() {
                     <TableCell>{p.email || '—'}</TableCell>
                     <TableCell>{p.date_of_birth || '—'}</TableCell>
                     <TableCell className="text-right">
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link href={`/healthcare/patients/${p.id}`}>
+                          <History className="w-4 h-4 mr-1" />
+                          View history
+                        </Link>
+                      </Button>
                       <Button variant="ghost" size="sm" onClick={() => openEdit(p)}>
                         <Edit className="w-4 h-4 mr-1" />
                         Edit

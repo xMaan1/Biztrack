@@ -19,6 +19,7 @@ def list_prescriptions_handler(
     db: Session,
     appointment_id: Optional[str] = None,
     doctor_id: Optional[str] = None,
+    patient_id: Optional[str] = None,
     search: Optional[str] = None,
     page: int = 1,
     limit: int = 50,
@@ -31,10 +32,11 @@ def list_prescriptions_handler(
         limit=limit,
         appointment_id=appointment_id,
         doctor_id=doctor_id,
+        patient_id=patient_id,
         search=search,
     )
     total = get_prescriptions_count(
-        db, tenant_id, appointment_id=appointment_id, doctor_id=doctor_id, search=search
+        db, tenant_id, appointment_id=appointment_id, doctor_id=doctor_id, patient_id=patient_id, search=search
     )
     doctors_map = {}
     appointments_map = {}
