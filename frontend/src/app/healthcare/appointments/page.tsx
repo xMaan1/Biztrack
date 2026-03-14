@@ -51,6 +51,7 @@ import {
   XCircle,
   Plus,
   X,
+  Download,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -68,6 +69,7 @@ import type {
   Prescription,
   PrescriptionCreate,
   PrescriptionItem,
+  PrescriptionItemType,
 } from '@/src/models/healthcare';
 import { APPOINTMENT_STATUSES } from '@/src/models/healthcare';
 import { PatientSearch } from '@/src/components/ui/patient-search';
@@ -112,6 +114,11 @@ function AppointmentsContent() {
   const [viewPrescriptionsAppointment, setViewPrescriptionsAppointment] = useState<Appointment | null>(null);
   const [prescriptionsList, setPrescriptionsList] = useState<Prescription[]>([]);
   const [prescriptionsListLoading, setPrescriptionsListLoading] = useState(false);
+  const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
+  const [invoiceAppointment, setInvoiceAppointment] = useState<Appointment | null>(null);
+  const [invoiceLineItems, setInvoiceLineItems] = useState<Array<{ description: string; amount: number }>>([]);
+  const [invoiceLoading, setInvoiceLoading] = useState(false);
+  const [invoicePrescriptionsLoading, setInvoicePrescriptionsLoading] = useState(false);
 
   const [formData, setFormData] = useState<AppointmentCreate & { patient_id?: string }>({
     doctor_id: '',
@@ -330,7 +337,7 @@ function AppointmentsContent() {
       patient_phone: a.patient_phone ?? '',
       prescription_date: a.appointment_date,
       notes: '',
-      items: [{ medicine_name: '', dosage: '', frequency: '', duration: '' }],
+      items: [{ type: 'medicine', medicine_name: '', dosage: '', frequency: '', duration: '' }],
     });
     setPrescriptionDialogOpen(true);
   };
@@ -354,12 +361,17 @@ function AppointmentsContent() {
     loadPrescriptionsForAppointment(a.id);
   };
 
-  const addPrescriptionItem = () => {
-    setPrescriptionFormData((prev) =>
-      prev
-        ? { ...prev, items: [...prev.items, { medicine_name: '', dosage: '', frequency: '', duration: '' }] }
-        : prev
-    );
+  const addPrescriptionItem = (type: PrescriptionItemType = 'medicine') => {
+    setPrescriptionFormData((prev) => {
+      if (!prev) return prev;
+      const newItem: PrescriptionItem =
+        type === 'medicine'
+          ? { type: 'medicine', medicine_name: '', dosage: '', frequency: '', duration: '' }
+          : type === 'vitals'
+            ? { type: 'vitals', vital_name: '', vital_value: '', vital_unit: '' }
+            : { type: 'test', test_name: '', test_instructions: '' };
+      return { ...prev, items: [...prev.items, newItem] };
+    });
   };
 
   const updatePrescriptionItem = (index: number, field: keyof PrescriptionItem, value: string) => {
@@ -367,6 +379,20 @@ function AppointmentsContent() {
       if (!prev) return prev;
       const next = [...prev.items];
       next[index] = { ...next[index], [field]: value };
+      return { ...prev, items: next };
+    });
+  };
+
+  const setPrescriptionItemType = (index: number, type: PrescriptionItemType) => {
+    setPrescriptionFormData((prev) => {
+      if (!prev) return prev;
+      const next = [...prev.items];
+      const base = type === 'medicine'
+        ? { type: 'medicine' as const, medicine_name: '', dosage: '', frequency: '', duration: '' }
+        : type === 'vitals'
+          ? { type: 'vitals' as const, vital_name: '', vital_value: '', vital_unit: '' }
+          : { type: 'test' as const, test_name: '', test_instructions: '' };
+      next[index] = base;
       return { ...prev, items: next };
     });
   };
@@ -384,21 +410,43 @@ function AppointmentsContent() {
       toast.error('Patient name is required');
       return;
     }
-    const validItems = prescriptionFormData.items.filter((i) => i.medicine_name.trim());
+    const validItems = prescriptionFormData.items.filter((i) => {
+      const t = i.type || 'medicine';
+      if (t === 'medicine') return (i.medicine_name ?? '').trim();
+      if (t === 'vitals') return (i.vital_name ?? '').trim();
+      return (i.test_name ?? '').trim();
+    });
     if (validItems.length === 0) {
-      toast.error('Add at least one medicine');
+      toast.error('Add at least one item (medicine, vitals, or test)');
       return;
     }
     try {
       setPrescriptionSubmitLoading(true);
       await healthcareService.createPrescription({
         ...prescriptionFormData,
-        items: validItems.map((i) => ({
-          medicine_name: i.medicine_name.trim(),
-          dosage: i.dosage?.trim() || undefined,
-          frequency: i.frequency?.trim() || undefined,
-          duration: i.duration?.trim() || undefined,
-        })),
+        items: validItems.map((i) => {
+          const t = i.type || 'medicine';
+          if (t === 'medicine')
+            return {
+              type: 'medicine' as const,
+              medicine_name: (i.medicine_name ?? '').trim(),
+              dosage: i.dosage?.trim() || undefined,
+              frequency: i.frequency?.trim() || undefined,
+              duration: i.duration?.trim() || undefined,
+            };
+          if (t === 'vitals')
+            return {
+              type: 'vitals' as const,
+              vital_name: (i.vital_name ?? '').trim(),
+              vital_value: i.vital_value?.trim() || undefined,
+              vital_unit: i.vital_unit?.trim() || undefined,
+            };
+          return {
+            type: 'test' as const,
+            test_name: (i.test_name ?? '').trim(),
+            test_instructions: i.test_instructions?.trim() || undefined,
+          };
+        }),
       });
       toast.success('Prescription created');
       setPrescriptionDialogOpen(false);
@@ -414,6 +462,20 @@ function AppointmentsContent() {
       toast.error(typeof msg === 'string' ? msg : JSON.stringify(msg));
     } finally {
       setPrescriptionSubmitLoading(false);
+    }
+  };
+
+  const handleDownloadPrescription = async (prescriptionId: string) => {
+    try {
+      const blob = await healthcareService.getPrescriptionDownload(prescriptionId);
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `prescription-${prescriptionId}.pdf`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      toast.success('Prescription downloaded');
+    } catch {
+      toast.error('Failed to download prescription');
     }
   };
 
@@ -433,8 +495,75 @@ function AppointmentsContent() {
     }
   };
 
-  const handleGenerateInvoice = (a: Appointment) => {
-    toast.info(`Generate invoice for ${a.patient_name} – coming soon`);
+  const openInvoiceDialog = async (a: Appointment) => {
+    setInvoiceAppointment(a);
+    setInvoiceDialogOpen(true);
+    setInvoicePrescriptionsLoading(true);
+    setInvoiceLineItems([]);
+    try {
+      const res = await healthcareService.getPrescriptions({ appointment_id: a.id, limit: 100 });
+      const items: Array<{ description: string; amount: number }> = [];
+      for (const rx of res.prescriptions) {
+        for (const it of rx.items) {
+          const t = it.type || 'medicine';
+          if (t === 'medicine' && (it.medicine_name ?? '').trim())
+            items.push({ description: `Medicine: ${it.medicine_name}${it.dosage ? ` (${it.dosage})` : ''}`, amount: 0 });
+          else if (t === 'vitals' && (it.vital_name ?? '').trim())
+            items.push({ description: `Vitals: ${it.vital_name}${it.vital_value != null ? ` ${it.vital_value}` : ''}${it.vital_unit ? ` ${it.vital_unit}` : ''}`, amount: 0 });
+          else if (t === 'test' && (it.test_name ?? '').trim())
+            items.push({ description: `Test: ${it.test_name}${it.test_instructions ? ` – ${it.test_instructions}` : ''}`, amount: 0 });
+        }
+      }
+      if (items.length === 0) items.push({ description: 'Consultation / General', amount: 0 });
+      setInvoiceLineItems(items);
+    } catch {
+      setInvoiceLineItems([{ description: 'Consultation / General', amount: 0 }]);
+    } finally {
+      setInvoicePrescriptionsLoading(false);
+    }
+  };
+
+  const addInvoiceLineItem = () => {
+    setInvoiceLineItems((prev) => [...prev, { description: '', amount: 0 }]);
+  };
+
+  const updateInvoiceLineItem = (index: number, field: 'description' | 'amount', value: string | number) => {
+    setInvoiceLineItems((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+  };
+
+  const removeInvoiceLineItem = (index: number) => {
+    setInvoiceLineItems((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleGenerateInvoice = async () => {
+    if (!invoiceAppointment) return;
+    const valid = invoiceLineItems.filter((i) => (i.description ?? '').trim());
+    if (valid.length === 0) {
+      toast.error('Add at least one line item with description');
+      return;
+    }
+    try {
+      setInvoiceLoading(true);
+      const res = await healthcareService.createAppointmentInvoice(invoiceAppointment.id, {
+        line_items: valid.map((i) => ({ description: i.description.trim(), amount: Number(i.amount) || 0 })),
+      });
+      toast.success(`Invoice ${res.invoice_number} created`);
+      setInvoiceDialogOpen(false);
+      setInvoiceAppointment(null);
+      setInvoiceLineItems([]);
+    } catch (e: unknown) {
+      const msg =
+        e && typeof e === 'object' && 'response' in e && e.response && typeof e.response === 'object' && 'data' in e.response
+          ? (e.response as { data?: { detail?: string } }).data?.detail
+          : e instanceof Error ? e.message : 'Failed to create invoice';
+      toast.error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+    } finally {
+      setInvoiceLoading(false);
+    }
   };
 
   const handleAdmitPatient = (a: Appointment) => {
@@ -637,7 +766,7 @@ function AppointmentsContent() {
                             <FileText className="w-4 h-4 mr-2" />
                             View prescriptions
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleGenerateInvoice(a)}>
+                          <DropdownMenuItem onClick={() => openInvoiceDialog(a)}>
                             <Receipt className="w-4 h-4 mr-2" />
                             Generate invoice
                           </DropdownMenuItem>
@@ -860,54 +989,114 @@ function AppointmentsContent() {
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <Label>Medicines</Label>
-                  <Button type="button" variant="outline" size="sm" onClick={addPrescriptionItem}>
-                    <Plus className="w-4 h-4 mr-1" />
-                    Add
-                  </Button>
+                  <Label>Items (Medicine / Vitals / Tests)</Label>
+                  <div className="flex gap-1">
+                    <Button type="button" variant="outline" size="sm" onClick={() => addPrescriptionItem('medicine')}>
+                      Medicine
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => addPrescriptionItem('vitals')}>
+                      Vitals
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => addPrescriptionItem('test')}>
+                      Test
+                    </Button>
+                  </div>
                 </div>
-                <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                  {prescriptionFormData.items.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="grid grid-cols-12 gap-2 p-2 border rounded items-center"
-                    >
-                      <Input
-                        placeholder="Medicine"
-                        value={item.medicine_name}
-                        onChange={(e) => updatePrescriptionItem(idx, 'medicine_name', e.target.value)}
-                        className="col-span-3"
-                      />
-                      <Input
-                        placeholder="Dosage"
-                        value={item.dosage ?? ''}
-                        onChange={(e) => updatePrescriptionItem(idx, 'dosage', e.target.value)}
-                        className="col-span-2"
-                      />
-                      <Input
-                        placeholder="Frequency"
-                        value={item.frequency ?? ''}
-                        onChange={(e) => updatePrescriptionItem(idx, 'frequency', e.target.value)}
-                        className="col-span-2"
-                      />
-                      <Input
-                        placeholder="Duration"
-                        value={item.duration ?? ''}
-                        onChange={(e) => updatePrescriptionItem(idx, 'duration', e.target.value)}
-                        className="col-span-2"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removePrescriptionItem(idx)}
-                        disabled={prescriptionFormData.items.length <= 1}
-                        className="col-span-1"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
+                <div className="space-y-2 max-h-[280px] overflow-y-auto">
+                  {prescriptionFormData.items.map((item, idx) => {
+                    const typ = (item.type || 'medicine') as PrescriptionItemType;
+                    return (
+                      <div key={idx} className="p-2 border rounded space-y-2">
+                        <div className="flex gap-2 items-center flex-wrap">
+                          <Select value={typ} onValueChange={(v) => setPrescriptionItemType(idx, v as PrescriptionItemType)}>
+                            <SelectTrigger className="w-[100px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="medicine">Medicine</SelectItem>
+                              <SelectItem value="vitals">Vitals</SelectItem>
+                              <SelectItem value="test">Test</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removePrescriptionItem(idx)}
+                            disabled={prescriptionFormData.items.length <= 1}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        {typ === 'medicine' && (
+                          <div className="grid grid-cols-12 gap-2 items-center">
+                            <Input
+                              placeholder="Medicine"
+                              value={item.medicine_name ?? ''}
+                              onChange={(e) => updatePrescriptionItem(idx, 'medicine_name', e.target.value)}
+                              className="col-span-3"
+                            />
+                            <Input
+                              placeholder="Dosage"
+                              value={item.dosage ?? ''}
+                              onChange={(e) => updatePrescriptionItem(idx, 'dosage', e.target.value)}
+                              className="col-span-2"
+                            />
+                            <Input
+                              placeholder="Frequency"
+                              value={item.frequency ?? ''}
+                              onChange={(e) => updatePrescriptionItem(idx, 'frequency', e.target.value)}
+                              className="col-span-2"
+                            />
+                            <Input
+                              placeholder="Duration"
+                              value={item.duration ?? ''}
+                              onChange={(e) => updatePrescriptionItem(idx, 'duration', e.target.value)}
+                              className="col-span-2"
+                            />
+                          </div>
+                        )}
+                        {typ === 'vitals' && (
+                          <div className="grid grid-cols-12 gap-2 items-center">
+                            <Input
+                              placeholder="Name (e.g. BP, Temp)"
+                              value={item.vital_name ?? ''}
+                              onChange={(e) => updatePrescriptionItem(idx, 'vital_name', e.target.value)}
+                              className="col-span-3"
+                            />
+                            <Input
+                              placeholder="Value"
+                              value={item.vital_value ?? ''}
+                              onChange={(e) => updatePrescriptionItem(idx, 'vital_value', e.target.value)}
+                              className="col-span-2"
+                            />
+                            <Input
+                              placeholder="Unit"
+                              value={item.vital_unit ?? ''}
+                              onChange={(e) => updatePrescriptionItem(idx, 'vital_unit', e.target.value)}
+                              className="col-span-2"
+                            />
+                          </div>
+                        )}
+                        {typ === 'test' && (
+                          <div className="grid grid-cols-12 gap-2 items-center">
+                            <Input
+                              placeholder="Test name"
+                              value={item.test_name ?? ''}
+                              onChange={(e) => updatePrescriptionItem(idx, 'test_name', e.target.value)}
+                              className="col-span-5"
+                            />
+                            <Input
+                              placeholder="Instructions"
+                              value={item.test_instructions ?? ''}
+                              onChange={(e) => updatePrescriptionItem(idx, 'test_instructions', e.target.value)}
+                              className="col-span-5"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -947,25 +1136,52 @@ function AppointmentsContent() {
                         {formatDate(rx.prescription_date)} · {rx.doctor_first_name} {rx.doctor_last_name}
                       </p>
                       <ul className="text-xs text-gray-600 mt-1">
-                        {rx.items.map((it, i) => (
-                          <li key={i}>
-                            {it.medicine_name}
-                            {it.dosage ? ` ${it.dosage}` : ''}
-                            {it.frequency ? `, ${it.frequency}` : ''}
-                            {it.duration ? `, ${it.duration}` : ''}
-                          </li>
-                        ))}
+                        {rx.items.map((it, i) => {
+                          const t = it.type || 'medicine';
+                          if (t === 'medicine')
+                            return (
+                              <li key={i}>
+                                Medicine: {it.medicine_name}
+                                {it.dosage ? ` ${it.dosage}` : ''}
+                                {it.frequency ? `, ${it.frequency}` : ''}
+                                {it.duration ? `, ${it.duration}` : ''}
+                              </li>
+                            );
+                          if (t === 'vitals')
+                            return (
+                              <li key={i}>
+                                Vitals: {it.vital_name}
+                                {it.vital_value != null ? ` ${it.vital_value}` : ''}
+                                {it.vital_unit ? ` ${it.vital_unit}` : ''}
+                              </li>
+                            );
+                          return (
+                            <li key={i}>
+                              Test: {it.test_name}
+                              {it.test_instructions ? ` – ${it.test_instructions}` : ''}
+                            </li>
+                          );
+                        })}
                       </ul>
                       {rx.notes && <p className="text-xs text-gray-500 mt-1">{rx.notes}</p>}
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-red-600"
-                      onClick={() => handleDeletePrescription(rx)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDownloadPrescription(rx.id)}
+                      >
+                        <Download className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-600"
+                        onClick={() => handleDeletePrescription(rx)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))
@@ -983,6 +1199,85 @@ function AppointmentsContent() {
                 Add prescription
               </Button>
             )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={invoiceDialogOpen} onOpenChange={setInvoiceDialogOpen}>
+        <DialogContent className="sm:max-w-[520px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Generate invoice</DialogTitle>
+            <DialogDescription>
+              {invoiceAppointment
+                ? `Invoice for ${invoiceAppointment.patient_name} (${formatDate(invoiceAppointment.appointment_date)})`
+                : ''}
+            </DialogDescription>
+          </DialogHeader>
+          {invoicePrescriptionsLoading ? (
+            <p className="text-sm text-gray-500 py-4">Loading prescription items...</p>
+          ) : (
+            <div className="space-y-4 py-4">
+              <div className="flex justify-between items-center">
+                <Label>Line items (tests, medicines, etc.)</Label>
+                <Button type="button" variant="outline" size="sm" onClick={addInvoiceLineItem}>
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add row
+                </Button>
+              </div>
+              <div className="space-y-2 max-h-[240px] overflow-y-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Description</TableHead>
+                      <TableHead className="w-[100px]">Amount</TableHead>
+                      <TableHead className="w-[40px]"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {invoiceLineItems.map((row, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell>
+                          <Input
+                            placeholder="Description"
+                            value={row.description}
+                            onChange={(e) => updateInvoiceLineItem(idx, 'description', e.target.value)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min={0}
+                            step={0.01}
+                            placeholder="0"
+                            value={row.amount || ''}
+                            onChange={(e) => updateInvoiceLineItem(idx, 'amount', e.target.value)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeInvoiceLineItem(idx)}
+                            disabled={invoiceLineItems.length <= 1}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInvoiceDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleGenerateInvoice} disabled={invoiceLoading || invoicePrescriptionsLoading}>
+              {invoiceLoading ? 'Creating...' : 'Generate invoice'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -204,11 +204,19 @@ export interface PatientsResponse {
   total: number;
 }
 
+export type PrescriptionItemType = 'medicine' | 'vitals' | 'test';
+
 export interface PrescriptionItem {
-  medicine_name: string;
+  type?: PrescriptionItemType;
+  medicine_name?: string;
   dosage?: string;
   frequency?: string;
   duration?: string;
+  vital_name?: string;
+  vital_value?: string;
+  vital_unit?: string;
+  test_name?: string;
+  test_instructions?: string;
 }
 
 export interface Prescription {

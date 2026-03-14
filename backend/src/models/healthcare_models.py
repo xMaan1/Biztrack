@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Literal
 from datetime import datetime, date
 
 
@@ -185,10 +185,16 @@ class AppointmentsResponse(BaseModel):
 
 
 class PrescriptionItem(BaseModel):
-    medicine_name: str
+    type: Literal["medicine", "vitals", "test"] = "medicine"
+    medicine_name: Optional[str] = None
     dosage: Optional[str] = None
     frequency: Optional[str] = None
     duration: Optional[str] = None
+    vital_name: Optional[str] = None
+    vital_value: Optional[str] = None
+    vital_unit: Optional[str] = None
+    test_name: Optional[str] = None
+    test_instructions: Optional[str] = None
 
 
 class PrescriptionBase(BaseModel):
@@ -230,3 +236,15 @@ class Prescription(PrescriptionBase):
 class PrescriptionsResponse(BaseModel):
     prescriptions: List[Prescription]
     total: int
+
+
+class AppointmentInvoiceLineItem(BaseModel):
+    description: str
+    amount: float
+
+
+class AppointmentInvoiceCreate(BaseModel):
+    line_items: List[AppointmentInvoiceLineItem]
+    currency: str = "USD"
+    tax_rate: float = 0.0
+    discount: float = 0.0

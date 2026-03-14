@@ -135,6 +135,10 @@ export class HealthcareQueries {
   async getPrescription(id: string): Promise<Prescription> {
     return apiService.get<Prescription>(`/healthcare/prescriptions/${id}`);
   }
+
+  async getPrescriptionDownload(id: string): Promise<Blob> {
+    return apiService.getBlob(`/healthcare/prescriptions/${id}/download`);
+  }
 }
 
 export class HealthcareCommands {
@@ -197,6 +201,21 @@ export class HealthcareCommands {
   async deletePrescription(id: string): Promise<void> {
     return apiService.delete(`/healthcare/prescriptions/${id}`);
   }
+
+  async createAppointmentInvoice(
+    appointmentId: string,
+    data: { line_items: Array<{ description: string; amount: number }>; currency?: string; tax_rate?: number; discount?: number }
+  ): Promise<{ invoice_id: string; invoice_number: string }> {
+    return apiService.post<{ invoice_id: string; invoice_number: string }>(
+      `/healthcare/appointments/${appointmentId}/invoice`,
+      {
+        line_items: data.line_items,
+        currency: data.currency ?? 'USD',
+        tax_rate: data.tax_rate ?? 0,
+        discount: data.discount ?? 0,
+      }
+    );
+  }
 }
 
 export const healthcareQueries = new HealthcareQueries();
@@ -216,6 +235,9 @@ export class HealthcareService {
   getAppointment = healthcareQueries.getAppointment.bind(healthcareQueries);
   getPrescriptions = healthcareQueries.getPrescriptions.bind(healthcareQueries);
   getPrescription = healthcareQueries.getPrescription.bind(healthcareQueries);
+  getPrescriptionDownload = healthcareQueries.getPrescriptionDownload.bind(healthcareQueries);
+
+  createAppointmentInvoice = healthcareCommands.createAppointmentInvoice.bind(healthcareCommands);
 
   createDoctor = healthcareCommands.createDoctor.bind(healthcareCommands);
   updateDoctor = healthcareCommands.updateDoctor.bind(healthcareCommands);

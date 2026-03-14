@@ -243,6 +243,11 @@ export class ApiService {
     return response.data;
   }
 
+  async getBlob(url: string): Promise<Blob> {
+    const response = await this.client.get(url, { responseType: 'blob' });
+    return response.data;
+  }
+
   async post<T = any>(
     url: string,
     data?: any,

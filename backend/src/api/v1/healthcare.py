@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, Depends, Query
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 from typing import Optional
 
@@ -23,9 +24,11 @@ from ...models.healthcare_models import (
     PrescriptionCreate,
     PrescriptionUpdate,
     PrescriptionsResponse,
+    AppointmentInvoiceCreate,
 )
 from ...config.database import get_db
 from ...api.dependencies import get_current_user, get_tenant_context, require_permission
+from ...config.database import User
 from ...models.common import ModulePermission
 from ...healthcare.queries import (
     list_doctors_handler,
@@ -56,6 +59,7 @@ from ...healthcare.commands import (
     update_healthcare_staff_handler,
     delete_healthcare_staff_handler,
 )
+from ...healthcare.commands.appointment_invoice import create_appointment_invoice_handler
 
 router = APIRouter(prefix="/healthcare", tags=["healthcare"])
 
@@ -281,6 +285,30 @@ async def delete_appointment_endpoint(
     delete_appointment_handler(tenant_context["tenant_id"], appointment_id, db)
 
 
+@router.post("/appointments/{appointment_id}/invoice", status_code=status.HTTP_201_CREATED)
+async def create_appointment_invoice_endpoint(
+    appointment_id: str,
+    body: AppointmentInvoiceCreate,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    current_user: User = Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    line_items = [{"description": i.description, "amount": i.amount} for i in body.line_items]
+    inv = create_appointment_invoice_handler(
+        tenant_context["tenant_id"],
+        appointment_id,
+        line_items,
+        str(current_user.id),
+        db,
+        currency=body.currency,
+        tax_rate=body.tax_rate,
+        discount=body.discount,
+    )
+    return {"invoice_id": str(inv.id), "invoice_number": inv.invoiceNumber}
+
+
 @router.get("/prescriptions", response_model=PrescriptionsResponse)
 async def list_prescriptions(
     appointment_id: Optional[str] = Query(None),
@@ -352,6 +380,29 @@ async def delete_prescription_endpoint(
     if not tenant_context:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
     delete_prescription_handler(tenant_context["tenant_id"], prescription_id, db)
+
+
+@router.get("/prescriptions/{prescription_id}/download")
+async def download_prescription_pdf(
+    prescription_id: str,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    from ...config.database import get_prescription_by_id, get_doctor_by_id, get_appointment_by_id
+    from .prescription_pdf import generate_prescription_pdf
+    db_rx = get_prescription_by_id(prescription_id, db, tenant_context["tenant_id"])
+    if not db_rx:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Prescription not found")
+    db_doctor = get_doctor_by_id(str(db_rx.doctor_id), db, tenant_context["tenant_id"])
+    pdf_bytes = generate_prescription_pdf(db_rx, db_doctor, None)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=prescription-{prescription_id}.pdf"},
+    )
 
 
 @router.get("/staff", response_model=HealthcareStaffResponse)
