@@ -1,76 +1,63 @@
 from fastapi import APIRouter, HTTPException, status, Depends, Query
 from sqlalchemy.orm import Session
-from typing import Optional, List
+from typing import Optional
 
 from ...models.healthcare_models import (
     Doctor as DoctorPydantic,
     DoctorCreate,
     DoctorUpdate,
-    DoctorAvailabilitySlot,
     DoctorsResponse,
+    Patient as PatientPydantic,
+    PatientCreate,
+    PatientUpdate,
+    PatientsResponse,
     HealthcareStaff as HealthcareStaffPydantic,
     HealthcareStaffCreate,
     HealthcareStaffUpdate,
     HealthcareStaffResponse,
+    Appointment as AppointmentPydantic,
+    AppointmentCreate,
+    AppointmentUpdate,
+    AppointmentsResponse,
+    Prescription as PrescriptionPydantic,
+    PrescriptionCreate,
+    PrescriptionUpdate,
+    PrescriptionsResponse,
 )
-from ...config.database import (
-    get_db,
-    get_doctor_by_id,
-    get_doctor_by_pmdc,
-    get_doctors,
-    get_doctors_count,
-    create_doctor,
-    update_doctor,
-    delete_doctor,
-    get_healthcare_staff_by_id,
-    get_healthcare_staff,
-    get_healthcare_staff_count,
-    create_healthcare_staff,
-    update_healthcare_staff,
-    get_user_by_email,
-    create_user,
-)
+from ...config.database import get_db
 from ...api.dependencies import get_current_user, get_tenant_context, require_permission
 from ...models.common import ModulePermission
-from ...services.rbac_service import RBACService
-from ...config.core_models import User as UserModel, TenantUser as TenantUserModel, Role as RoleModel
-from ...core.auth import get_password_hash
-from uuid import UUID
-from sqlalchemy import and_
+from ...healthcare.queries import (
+    list_doctors_handler,
+    get_doctor_handler,
+    list_patients_handler,
+    get_patient_handler,
+    list_appointments_handler,
+    list_appointments_calendar_handler,
+    get_appointment_handler,
+    list_prescriptions_handler,
+    get_prescription_handler,
+    list_healthcare_staff_handler,
+)
+from ...healthcare.commands import (
+    create_doctor_handler,
+    update_doctor_handler,
+    delete_doctor_handler,
+    create_patient_handler,
+    update_patient_handler,
+    delete_patient_handler,
+    create_appointment_handler,
+    update_appointment_handler,
+    delete_appointment_handler,
+    create_prescription_handler,
+    update_prescription_handler,
+    delete_prescription_handler,
+    create_healthcare_staff_handler,
+    update_healthcare_staff_handler,
+    delete_healthcare_staff_handler,
+)
 
 router = APIRouter(prefix="/healthcare", tags=["healthcare"])
-
-
-def _db_doctor_to_pydantic(db_doctor) -> DoctorPydantic:
-    availability = db_doctor.availability or []
-    slots = [
-        DoctorAvailabilitySlot(
-            day=s.get("day", ""),
-            start_time=s.get("start_time", ""),
-            end_time=s.get("end_time", ""),
-        )
-        for s in (availability if isinstance(availability, list) else [])
-    ]
-    return DoctorPydantic(
-        id=str(db_doctor.id),
-        tenant_id=str(db_doctor.tenant_id),
-        pmdc_number=db_doctor.pmdc_number,
-        phone=db_doctor.phone,
-        first_name=db_doctor.first_name,
-        last_name=db_doctor.last_name,
-        email=db_doctor.email,
-        specialization=db_doctor.specialization,
-        qualification=db_doctor.qualification,
-        address=db_doctor.address,
-        availability=slots,
-        is_active=db_doctor.is_active if hasattr(db_doctor, "is_active") else True,
-        createdAt=db_doctor.createdAt,
-        updatedAt=db_doctor.updatedAt,
-    )
-
-
-def _availability_to_db(availability: List[DoctorAvailabilitySlot]) -> list:
-    return [{"day": s.day, "start_time": s.start_time, "end_time": s.end_time} for s in (availability or [])]
 
 
 @router.get("/doctors", response_model=DoctorsResponse)
@@ -78,19 +65,14 @@ async def list_doctors(
     search: Optional[str] = Query(None),
     is_active: Optional[bool] = Query(None),
     page: int = Query(1, ge=1),
-    limit: int = Query(20, ge=1, le=100),
+    limit: int = Query(20, ge=1, le=500),
     db: Session = Depends(get_db),
     tenant_context: dict = Depends(get_tenant_context),
     _= Depends(get_current_user),
 ):
     if not tenant_context:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
-    tenant_id = tenant_context["tenant_id"]
-    skip = (page - 1) * limit
-    db_doctors = get_doctors(db, tenant_id, skip=skip, limit=limit, search=search, is_active=is_active)
-    total = get_doctors_count(db, tenant_id, search=search, is_active=is_active)
-    doctors = [_db_doctor_to_pydantic(d) for d in db_doctors]
-    return DoctorsResponse(doctors=doctors, total=total)
+    return list_doctors_handler(tenant_context["tenant_id"], db, search=search, is_active=is_active, page=page, limit=limit)
 
 
 @router.get("/doctors/{doctor_id}", response_model=DoctorPydantic)
@@ -102,10 +84,7 @@ async def get_doctor(
 ):
     if not tenant_context:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
-    db_doctor = get_doctor_by_id(doctor_id, db, tenant_context["tenant_id"])
-    if not db_doctor:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Doctor not found")
-    return _db_doctor_to_pydantic(db_doctor)
+    return get_doctor_handler(tenant_context["tenant_id"], doctor_id, db)
 
 
 @router.post("/doctors", response_model=DoctorPydantic, status_code=status.HTTP_201_CREATED)
@@ -117,28 +96,7 @@ async def create_doctor_endpoint(
 ):
     if not tenant_context:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
-    tenant_id = tenant_context["tenant_id"]
-    existing = get_doctor_by_pmdc(tenant_id, body.pmdc_number, db)
-    if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="A doctor with this PMDC number already exists for this tenant",
-        )
-    doctor_data = {
-        "tenant_id": tenant_id,
-        "pmdc_number": body.pmdc_number,
-        "phone": body.phone,
-        "first_name": body.first_name,
-        "last_name": body.last_name,
-        "email": body.email,
-        "specialization": body.specialization,
-        "qualification": body.qualification,
-        "address": body.address,
-        "availability": _availability_to_db(body.availability),
-        "is_active": True,
-    }
-    db_doctor = create_doctor(doctor_data, db)
-    return _db_doctor_to_pydantic(db_doctor)
+    return create_doctor_handler(tenant_context["tenant_id"], body, db)
 
 
 @router.put("/doctors/{doctor_id}", response_model=DoctorPydantic)
@@ -151,22 +109,7 @@ async def update_doctor_endpoint(
 ):
     if not tenant_context:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
-    tenant_id = tenant_context["tenant_id"]
-    db_doctor = get_doctor_by_id(doctor_id, db, tenant_id)
-    if not db_doctor:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Doctor not found")
-    if body.pmdc_number is not None and body.pmdc_number != db_doctor.pmdc_number:
-        existing = get_doctor_by_pmdc(tenant_id, body.pmdc_number, db)
-        if existing:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="A doctor with this PMDC number already exists for this tenant",
-            )
-    update_data = body.model_dump(exclude_unset=True)
-    if "availability" in update_data and update_data["availability"] is not None:
-        update_data["availability"] = _availability_to_db(update_data["availability"])
-    updated = update_doctor(doctor_id, update_data, db, tenant_id)
-    return _db_doctor_to_pydantic(updated)
+    return update_doctor_handler(tenant_context["tenant_id"], doctor_id, body, db)
 
 
 @router.delete("/doctors/{doctor_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -178,74 +121,237 @@ async def delete_doctor_endpoint(
 ):
     if not tenant_context:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
-    deleted = delete_doctor(doctor_id, db, tenant_context["tenant_id"])
-    if not deleted:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Doctor not found")
+    delete_doctor_handler(tenant_context["tenant_id"], doctor_id, db)
 
 
-HEALTHCARE_PERMISSION_SET = {
-    ModulePermission.HEALTHCARE_VIEW.value,
-    ModulePermission.HEALTHCARE_CREATE.value,
-    ModulePermission.HEALTHCARE_UPDATE.value,
-    ModulePermission.HEALTHCARE_DELETE.value,
-}
+@router.get("/patients", response_model=PatientsResponse)
+async def list_patients(
+    search: Optional[str] = Query(None),
+    is_active: Optional[bool] = Query(None),
+    page: int = Query(1, ge=1),
+    limit: int = Query(50, ge=1, le=500),
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    return list_patients_handler(tenant_context["tenant_id"], db, search=search, is_active=is_active, page=page, limit=limit)
 
 
-def _normalize_healthcare_permissions(perms: Optional[List[str]]) -> List[str]:
-    items = [p for p in (perms or []) if isinstance(p, str)]
-    filtered = [p for p in items if p in HEALTHCARE_PERMISSION_SET]
-    deduped = list(dict.fromkeys(filtered))
-    if not deduped:
-        deduped = [ModulePermission.HEALTHCARE_VIEW.value]
-    return deduped
+@router.get("/patients/{patient_id}", response_model=PatientPydantic)
+async def get_patient(
+    patient_id: str,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    return get_patient_handler(tenant_context["tenant_id"], patient_id, db)
 
 
-def _merge_healthcare_permissions(existing: Optional[List[str]], healthcare_perms: List[str]) -> List[str]:
-    base = [p for p in (existing or []) if isinstance(p, str) and not p.startswith("healthcare:")]
-    merged = base + healthcare_perms
-    return list(dict.fromkeys(merged))
+@router.post("/patients", response_model=PatientPydantic, status_code=status.HTTP_201_CREATED)
+async def create_patient_endpoint(
+    body: PatientCreate,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    return create_patient_handler(tenant_context["tenant_id"], body, db)
 
 
-def _ensure_healthcare_staff_role(db: Session, tenant_id: str) -> RoleModel:
-    role = db.query(RoleModel).filter(
-        and_(
-            RoleModel.tenant_id == tenant_id,
-            RoleModel.name == "healthcare_staff",
-            RoleModel.isActive == True,
-        )
-    ).first()
-    if role:
-        return role
-    role = RoleModel(
-        tenant_id=tenant_id,
-        name="healthcare_staff",
-        display_name="Healthcare Staff",
-        description="Healthcare module staff",
-        permissions=[],
-        isActive=True,
+@router.put("/patients/{patient_id}", response_model=PatientPydantic)
+async def update_patient_endpoint(
+    patient_id: str,
+    body: PatientUpdate,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    return update_patient_handler(tenant_context["tenant_id"], patient_id, body, db)
+
+
+@router.delete("/patients/{patient_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_patient_endpoint(
+    patient_id: str,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    delete_patient_handler(tenant_context["tenant_id"], patient_id, db)
+
+
+@router.get("/appointments", response_model=AppointmentsResponse)
+async def list_appointments(
+    doctor_id: Optional[str] = Query(None),
+    date_from: Optional[str] = Query(None),
+    date_to: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    is_active: Optional[bool] = Query(None),
+    page: int = Query(1, ge=1),
+    limit: int = Query(100, ge=1, le=500),
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    return list_appointments_handler(
+        tenant_context["tenant_id"],
+        db,
+        doctor_id=doctor_id,
+        date_from=date_from,
+        date_to=date_to,
+        search=search,
+        is_active=is_active,
+        page=page,
+        limit=limit,
     )
-    db.add(role)
-    db.commit()
-    db.refresh(role)
-    return role
 
 
-def _db_staff_to_pydantic(db_staff, db_user: UserModel, tenant_id: str, permissions: List[str]) -> HealthcareStaffPydantic:
-    return HealthcareStaffPydantic(
-        id=str(db_staff.id),
-        tenant_id=str(db_staff.tenant_id),
-        user_id=str(db_staff.user_id),
-        username=db_user.userName,
-        email=db_user.email,
-        first_name=db_user.firstName,
-        last_name=db_user.lastName,
-        phone=db_staff.phone,
-        role=db_staff.role,
-        permissions=permissions,
-        is_active=db_staff.is_active if hasattr(db_staff, "is_active") else True,
-        createdAt=db_staff.createdAt,
-        updatedAt=db_staff.updatedAt,
+@router.get("/appointments/calendar", response_model=AppointmentsResponse)
+async def list_appointments_calendar(
+    date_from: str = Query(..., description="YYYY-MM-DD"),
+    date_to: str = Query(..., description="YYYY-MM-DD"),
+    doctor_id: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    return list_appointments_calendar_handler(
+        tenant_context["tenant_id"], db, date_from, date_to, doctor_id=doctor_id
     )
+
+
+@router.get("/appointments/{appointment_id}", response_model=AppointmentPydantic)
+async def get_appointment(
+    appointment_id: str,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    return get_appointment_handler(tenant_context["tenant_id"], appointment_id, db)
+
+
+@router.post("/appointments", response_model=AppointmentPydantic, status_code=status.HTTP_201_CREATED)
+async def create_appointment_endpoint(
+    body: AppointmentCreate,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    return create_appointment_handler(tenant_context["tenant_id"], body, db)
+
+
+@router.put("/appointments/{appointment_id}", response_model=AppointmentPydantic)
+async def update_appointment_endpoint(
+    appointment_id: str,
+    body: AppointmentUpdate,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    return update_appointment_handler(tenant_context["tenant_id"], appointment_id, body, db)
+
+
+@router.delete("/appointments/{appointment_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_appointment_endpoint(
+    appointment_id: str,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    delete_appointment_handler(tenant_context["tenant_id"], appointment_id, db)
+
+
+@router.get("/prescriptions", response_model=PrescriptionsResponse)
+async def list_prescriptions(
+    appointment_id: Optional[str] = Query(None),
+    doctor_id: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    page: int = Query(1, ge=1),
+    limit: int = Query(50, ge=1, le=200),
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    return list_prescriptions_handler(
+        tenant_context["tenant_id"],
+        db,
+        appointment_id=appointment_id,
+        doctor_id=doctor_id,
+        search=search,
+        page=page,
+        limit=limit,
+    )
+
+
+@router.get("/prescriptions/{prescription_id}", response_model=PrescriptionPydantic)
+async def get_prescription(
+    prescription_id: str,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    return get_prescription_handler(tenant_context["tenant_id"], prescription_id, db)
+
+
+@router.post("/prescriptions", response_model=PrescriptionPydantic, status_code=status.HTTP_201_CREATED)
+async def create_prescription_endpoint(
+    body: PrescriptionCreate,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    return create_prescription_handler(tenant_context["tenant_id"], body, db)
+
+
+@router.put("/prescriptions/{prescription_id}", response_model=PrescriptionPydantic)
+async def update_prescription_endpoint(
+    prescription_id: str,
+    body: PrescriptionUpdate,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    return update_prescription_handler(tenant_context["tenant_id"], prescription_id, body, db)
+
+
+@router.delete("/prescriptions/{prescription_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_prescription_endpoint(
+    prescription_id: str,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    delete_prescription_handler(tenant_context["tenant_id"], prescription_id, db)
 
 
 @router.get("/staff", response_model=HealthcareStaffResponse)
@@ -256,25 +362,13 @@ async def list_healthcare_staff(
     limit: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
     tenant_context: dict = Depends(get_tenant_context),
-    _=Depends(get_current_user),
+    _= Depends(get_current_user),
 ):
     if not tenant_context:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
-    tenant_id = tenant_context["tenant_id"]
-    skip = (page - 1) * limit
-    db_staff = get_healthcare_staff(db, tenant_id, skip=skip, limit=limit, search=search, is_active=is_active)
-    total = get_healthcare_staff_count(db, tenant_id, search=search, is_active=is_active)
-
-    out: List[HealthcareStaffPydantic] = []
-    for s in db_staff:
-        u = db.query(UserModel).filter(UserModel.id == s.user_id).first()
-        if not u:
-            continue
-        perms = RBACService.get_user_permissions(db, str(u.id), tenant_id)
-        healthcare_perms = [p for p in perms if p.startswith("healthcare:")]
-        out.append(_db_staff_to_pydantic(s, u, tenant_id, healthcare_perms))
-
-    return HealthcareStaffResponse(staff=out, total=total)
+    return list_healthcare_staff_handler(
+        tenant_context["tenant_id"], db, search=search, is_active=is_active, page=page, limit=limit
+    )
 
 
 @router.post("/staff", response_model=HealthcareStaffPydantic, status_code=status.HTTP_201_CREATED)
@@ -286,51 +380,9 @@ async def create_healthcare_staff_endpoint(
 ):
     if not tenant_context:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
-    tenant_id = tenant_context["tenant_id"]
-
-    existing = get_user_by_email(body.email, db)
-    if existing:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A user with this email already exists")
-
-    if not RBACService.validate_username_uniqueness(db, body.username, tenant_id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already taken in this tenant")
-
-    role = _ensure_healthcare_staff_role(db, tenant_id)
-    healthcare_perms = _normalize_healthcare_permissions(body.permissions)
-
-    user_dict = {
-        "tenant_id": UUID(tenant_id),
-        "userName": body.username,
-        "email": body.email,
-        "firstName": body.first_name,
-        "lastName": body.last_name,
-        "hashedPassword": get_password_hash(body.password),
-        "isActive": True,
-    }
-    db_user = create_user(user_dict, db)
-
-    tenant_user = TenantUserModel(
-        tenant_id=UUID(tenant_id),
-        userId=UUID(str(db_user.id)),
-        role_id=UUID(str(role.id)),
-        role=role.name,
-        custom_permissions=healthcare_perms,
-        isActive=True,
-        invitedBy=UUID(str(current_user.id)),
+    return create_healthcare_staff_handler(
+        tenant_context["tenant_id"], body, db, str(current_user.id)
     )
-    db.add(tenant_user)
-    db.commit()
-    db.refresh(tenant_user)
-
-    staff_dict = {
-        "tenant_id": UUID(tenant_id),
-        "user_id": UUID(str(db_user.id)),
-        "phone": body.phone,
-        "role": body.role,
-        "is_active": True,
-    }
-    db_staff = create_healthcare_staff(staff_dict, db)
-    return _db_staff_to_pydantic(db_staff, db_user, tenant_id, healthcare_perms)
 
 
 @router.put("/staff/{staff_id}", response_model=HealthcareStaffPydantic)
@@ -343,64 +395,7 @@ async def update_healthcare_staff_endpoint(
 ):
     if not tenant_context:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
-    tenant_id = tenant_context["tenant_id"]
-
-    db_staff = get_healthcare_staff_by_id(staff_id, db, tenant_id)
-    if not db_staff:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Staff not found")
-
-    db_user = db.query(UserModel).filter(UserModel.id == db_staff.user_id).first()
-    if not db_user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-
-    if body.email is not None and body.email != db_user.email:
-        if get_user_by_email(body.email, db):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
-        db_user.email = body.email
-
-    if body.username is not None and body.username != db_user.userName:
-        if not RBACService.validate_username_uniqueness(db, body.username, tenant_id, exclude_user_id=str(db_user.id)):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already taken in this tenant")
-        db_user.userName = body.username
-
-    if body.first_name is not None:
-        db_user.firstName = body.first_name
-    if body.last_name is not None:
-        db_user.lastName = body.last_name
-    if body.password is not None and body.password.strip():
-        db_user.hashedPassword = get_password_hash(body.password)
-
-    staff_update = {}
-    if body.phone is not None:
-        staff_update["phone"] = body.phone
-    if body.role is not None:
-        staff_update["role"] = body.role
-    if body.is_active is not None:
-        staff_update["is_active"] = body.is_active
-    if staff_update:
-        db_staff = update_healthcare_staff(staff_id, staff_update, db, tenant_id)
-
-    if body.permissions is not None:
-        healthcare_perms = _normalize_healthcare_permissions(body.permissions)
-        tenant_user = db.query(TenantUserModel).filter(
-            and_(
-                TenantUserModel.tenant_id == tenant_id,
-                TenantUserModel.userId == db_user.id,
-                TenantUserModel.isActive == True,
-            )
-        ).first()
-        if tenant_user:
-            tenant_user.custom_permissions = _merge_healthcare_permissions(tenant_user.custom_permissions, healthcare_perms)
-            db.commit()
-        perms = RBACService.get_user_permissions(db, str(db_user.id), tenant_id)
-        effective = [p for p in perms if p.startswith("healthcare:")]
-        return _db_staff_to_pydantic(db_staff, db_user, tenant_id, effective)
-
-    perms = RBACService.get_user_permissions(db, str(db_user.id), tenant_id)
-    effective = [p for p in perms if p.startswith("healthcare:")]
-    db.commit()
-    db.refresh(db_user)
-    return _db_staff_to_pydantic(db_staff, db_user, tenant_id, effective)
+    return update_healthcare_staff_handler(tenant_context["tenant_id"], staff_id, body, db)
 
 
 @router.delete("/staff/{staff_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -408,24 +403,8 @@ async def delete_healthcare_staff_endpoint(
     staff_id: str,
     db: Session = Depends(get_db),
     tenant_context: dict = Depends(get_tenant_context),
-    _=Depends(require_permission(ModulePermission.USERS_DELETE.value)),
+    _= Depends(require_permission(ModulePermission.USERS_DELETE.value)),
 ):
     if not tenant_context:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
-    tenant_id = tenant_context["tenant_id"]
-
-    db_staff = get_healthcare_staff_by_id(staff_id, db, tenant_id)
-    if not db_staff:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Staff not found")
-
-    db_staff.is_active = False
-    tenant_user = db.query(TenantUserModel).filter(
-        and_(
-            TenantUserModel.tenant_id == tenant_id,
-            TenantUserModel.userId == db_staff.user_id,
-            TenantUserModel.isActive == True,
-        )
-    ).first()
-    if tenant_user:
-        tenant_user.custom_permissions = _merge_healthcare_permissions(tenant_user.custom_permissions, [])
-    db.commit()
+    delete_healthcare_staff_handler(tenant_context["tenant_id"], staff_id, db)

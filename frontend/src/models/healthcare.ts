@@ -113,3 +113,141 @@ export const DAYS_OF_WEEK = [
   'Saturday',
   'Sunday',
 ] as const;
+
+export const APPOINTMENT_STATUSES = ['scheduled', 'completed', 'cancelled', 'no_show'] as const;
+export type AppointmentStatus = (typeof APPOINTMENT_STATUSES)[number];
+
+export interface Appointment {
+  id: string;
+  tenant_id: string;
+  doctor_id: string;
+  patient_id?: string;
+  patient_name: string;
+  patient_phone?: string;
+  appointment_date: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+  notes?: string;
+  is_active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  doctor_first_name?: string;
+  doctor_last_name?: string;
+}
+
+export interface AppointmentCreate {
+  doctor_id: string;
+  patient_id?: string;
+  patient_name?: string;
+  patient_phone?: string;
+  appointment_date: string;
+  start_time: string;
+  end_time: string;
+  status?: string;
+  notes?: string;
+}
+
+export interface AppointmentUpdate {
+  doctor_id?: string;
+  patient_id?: string;
+  patient_name?: string;
+  patient_phone?: string;
+  appointment_date?: string;
+  start_time?: string;
+  end_time?: string;
+  status?: string;
+  notes?: string;
+  is_active?: boolean;
+}
+
+export interface AppointmentsResponse {
+  appointments: Appointment[];
+  total: number;
+}
+
+export interface Patient {
+  id: string;
+  tenant_id: string;
+  full_name: string;
+  phone?: string;
+  email?: string;
+  date_of_birth?: string;
+  address?: string;
+  notes?: string;
+  is_active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface PatientCreate {
+  full_name: string;
+  phone?: string;
+  email?: string;
+  date_of_birth?: string;
+  address?: string;
+  notes?: string;
+}
+
+export interface PatientUpdate {
+  full_name?: string;
+  phone?: string;
+  email?: string;
+  date_of_birth?: string;
+  address?: string;
+  notes?: string;
+  is_active?: boolean;
+}
+
+export interface PatientsResponse {
+  patients: Patient[];
+  total: number;
+}
+
+export interface PrescriptionItem {
+  medicine_name: string;
+  dosage?: string;
+  frequency?: string;
+  duration?: string;
+}
+
+export interface Prescription {
+  id: string;
+  tenant_id: string;
+  appointment_id: string;
+  doctor_id: string;
+  patient_name: string;
+  patient_phone?: string;
+  prescription_date: string;
+  notes?: string;
+  items: PrescriptionItem[];
+  createdAt?: string;
+  updatedAt?: string;
+  doctor_first_name?: string;
+  doctor_last_name?: string;
+  appointment_date?: string;
+}
+
+export interface PrescriptionCreate {
+  appointment_id: string;
+  doctor_id: string;
+  patient_name: string;
+  patient_phone?: string;
+  prescription_date: string;
+  notes?: string;
+  items: PrescriptionItem[];
+}
+
+export interface PrescriptionUpdate {
+  doctor_id?: string;
+  patient_name?: string;
+  patient_phone?: string;
+  prescription_date?: string;
+  notes?: string;
+  items?: PrescriptionItem[];
+}
+
+export interface PrescriptionsResponse {
+  prescriptions: Prescription[];
+  total: number;
+}

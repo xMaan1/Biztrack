@@ -248,6 +248,9 @@ class Tenant(Base):
 
     doctors = relationship("Doctor", back_populates="tenant")
     healthcare_staff = relationship("HealthcareStaff", back_populates="tenant")
+    appointments = relationship("Appointment", back_populates="tenant")
+    prescriptions = relationship("Prescription", back_populates="tenant")
+    patients = relationship("Patient", back_populates="tenant")
 
 class Plan(Base):
     __tablename__ = "plans"

@@ -103,6 +103,13 @@ const allMenuItems: MenuItem[] = [
         planTypes: ['healthcare'],
       },
       {
+        text: 'Patients',
+        icon: Users,
+        path: '/healthcare/patients',
+        roles: ['*'],
+        planTypes: ['healthcare'],
+      },
+      {
         text: 'Staff',
         icon: Users,
         path: '/healthcare/staff',

@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional, List, Any
-from datetime import datetime
+from datetime import datetime, date
 
 
 class DoctorAvailabilitySlot(BaseModel):
@@ -94,4 +94,139 @@ class HealthcareStaff(HealthcareStaffBase):
 
 class HealthcareStaffResponse(BaseModel):
     staff: List[HealthcareStaff]
+    total: int
+
+
+class PatientBase(BaseModel):
+    full_name: str
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    date_of_birth: Optional[date] = None
+    address: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class PatientCreate(PatientBase):
+    pass
+
+
+class PatientUpdate(BaseModel):
+    full_name: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    date_of_birth: Optional[date] = None
+    address: Optional[str] = None
+    notes: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class Patient(PatientBase):
+    id: str
+    tenant_id: str
+    is_active: bool = True
+    createdAt: Optional[datetime] = None
+    updatedAt: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class PatientsResponse(BaseModel):
+    patients: List[Patient]
+    total: int
+
+
+class AppointmentBase(BaseModel):
+    doctor_id: str
+    patient_id: Optional[str] = None
+    patient_name: Optional[str] = None
+    patient_phone: Optional[str] = None
+    appointment_date: date
+    start_time: str
+    end_time: str
+    status: str = "scheduled"
+    notes: Optional[str] = None
+
+
+class AppointmentCreate(AppointmentBase):
+    pass
+
+
+class AppointmentUpdate(BaseModel):
+    doctor_id: Optional[str] = None
+    patient_id: Optional[str] = None
+    patient_name: Optional[str] = None
+    patient_phone: Optional[str] = None
+    appointment_date: Optional[date] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    status: Optional[str] = None
+    notes: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class Appointment(AppointmentBase):
+    id: str
+    tenant_id: str
+    patient_id: Optional[str] = None
+    is_active: bool = True
+    createdAt: Optional[datetime] = None
+    updatedAt: Optional[datetime] = None
+    doctor_first_name: Optional[str] = None
+    doctor_last_name: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class AppointmentsResponse(BaseModel):
+    appointments: List[Appointment]
+    total: int
+
+
+class PrescriptionItem(BaseModel):
+    medicine_name: str
+    dosage: Optional[str] = None
+    frequency: Optional[str] = None
+    duration: Optional[str] = None
+
+
+class PrescriptionBase(BaseModel):
+    appointment_id: str
+    doctor_id: str
+    patient_name: str
+    patient_phone: Optional[str] = None
+    prescription_date: date
+    notes: Optional[str] = None
+    items: List[PrescriptionItem] = []
+
+
+class PrescriptionCreate(PrescriptionBase):
+    pass
+
+
+class PrescriptionUpdate(BaseModel):
+    doctor_id: Optional[str] = None
+    patient_name: Optional[str] = None
+    patient_phone: Optional[str] = None
+    prescription_date: Optional[date] = None
+    notes: Optional[str] = None
+    items: Optional[List[PrescriptionItem]] = None
+
+
+class Prescription(PrescriptionBase):
+    id: str
+    tenant_id: str
+    createdAt: Optional[datetime] = None
+    updatedAt: Optional[datetime] = None
+    doctor_first_name: Optional[str] = None
+    doctor_last_name: Optional[str] = None
+    appointment_date: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class PrescriptionsResponse(BaseModel):
+    prescriptions: List[Prescription]
     total: int
