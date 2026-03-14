@@ -74,6 +74,7 @@ class Doctor(Base):
     tenant = relationship("Tenant", back_populates="doctors")
     appointments = relationship("Appointment", back_populates="doctor")
     prescriptions = relationship("Prescription", back_populates="doctor")
+    admissions = relationship("Admission", back_populates="doctor")
 
 
 class Patient(Base):
@@ -97,6 +98,7 @@ class Patient(Base):
 
     tenant = relationship("Tenant", back_populates="patients")
     appointments = relationship("Appointment", back_populates="patient")
+    admissions = relationship("Admission", back_populates="patient")
 
 
 class HealthcareStaff(Base):
@@ -172,3 +174,34 @@ class Prescription(Base):
     tenant = relationship("Tenant", back_populates="prescriptions")
     appointment = relationship("Appointment", back_populates="prescriptions")
     doctor = relationship("Doctor", back_populates="prescriptions")
+
+
+class Admission(Base):
+    __tablename__ = "healthcare_admissions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    patient_id = Column(UUID(as_uuid=True), ForeignKey("healthcare_patients.id", ondelete="CASCADE"), nullable=False)
+    doctor_id = Column(UUID(as_uuid=True), ForeignKey("healthcare_doctors.id", ondelete="CASCADE"), nullable=False)
+    admit_date = Column(Date, nullable=False)
+    discharge_date = Column(Date, nullable=True)
+    status = Column(String(50), default="admitted")
+    ward = Column(String(255), nullable=False)
+    room_or_bed = Column(String(100), nullable=True)
+    diagnosis = Column(Text, nullable=True)
+    notes = Column(Text, nullable=True)
+    is_active = Column(Boolean, default=True)
+    createdAt = Column(DateTime, default=datetime.utcnow)
+    updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        Index("ix_healthcare_admissions_tenant_id", "tenant_id"),
+        Index("ix_healthcare_admissions_tenant_status", "tenant_id", "status"),
+        Index("ix_healthcare_admissions_tenant_admit_date", "tenant_id", "admit_date"),
+        Index("ix_healthcare_admissions_patient_id", "patient_id"),
+        Index("ix_healthcare_admissions_doctor_id", "doctor_id"),
+    )
+
+    tenant = relationship("Tenant", back_populates="admissions")
+    patient = relationship("Patient", back_populates="admissions")
+    doctor = relationship("Doctor", back_populates="admissions")

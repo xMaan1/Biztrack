@@ -20,11 +20,11 @@ from ...models.healthcare_models import (
     AppointmentCreate,
     AppointmentUpdate,
     AppointmentsResponse,
+    AppointmentInvoiceCreate,
     Prescription as PrescriptionPydantic,
     PrescriptionCreate,
     PrescriptionUpdate,
     PrescriptionsResponse,
-    AppointmentInvoiceCreate,
     PatientHistoryResponse,
     ExpenseCategory as ExpenseCategoryPydantic,
     ExpenseCategoryCreate,
@@ -34,8 +34,15 @@ from ...models.healthcare_models import (
     DailyExpenseCreate,
     DailyExpenseUpdate,
     DailyExpensesResponse,
+    Admission as AdmissionPydantic,
+    AdmissionCreate,
+    AdmissionUpdate,
+    AdmissionsResponse,
+    AdmissionInvoiceSummary,
+    AdmissionInvoicesResponse,
 )
 from ...config.database import get_db
+from ...config.invoice_crud import get_invoices_by_order_prefix, get_invoices_by_order_prefix_count
 from ...api.dependencies import get_current_user, get_tenant_context, require_permission
 from ...config.database import User
 from ...models.common import ModulePermission
@@ -55,6 +62,8 @@ from ...healthcare.queries import (
     get_expense_category_handler,
     list_daily_expenses_handler,
     get_daily_expense_handler,
+    list_admissions_handler,
+    get_admission_handler,
 )
 from ...healthcare.commands import (
     create_doctor_handler,
@@ -78,8 +87,12 @@ from ...healthcare.commands import (
     create_daily_expense_handler,
     update_daily_expense_handler,
     delete_daily_expense_handler,
+    create_admission_handler,
+    update_admission_handler,
+    delete_admission_handler,
 )
 from ...healthcare.commands.appointment_invoice import create_appointment_invoice_handler
+from ...healthcare.commands.admission_invoice import create_admission_invoice_handler
 
 router = APIRouter(prefix="/healthcare", tags=["healthcare"])
 
@@ -341,6 +354,141 @@ async def create_appointment_invoice_endpoint(
         discount=body.discount,
     )
     return {"invoice_id": str(inv.id), "invoice_number": inv.invoiceNumber}
+
+
+@router.get("/admissions", response_model=AdmissionsResponse)
+async def list_admissions(
+    status: Optional[str] = Query(None),
+    patient_id: Optional[str] = Query(None),
+    doctor_id: Optional[str] = Query(None),
+    date_from: Optional[str] = Query(None),
+    date_to: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    is_active: Optional[bool] = Query(None),
+    page: int = Query(1, ge=1),
+    limit: int = Query(100, ge=1, le=500),
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    return list_admissions_handler(
+        tenant_context["tenant_id"],
+        db,
+        status=status,
+        patient_id=patient_id,
+        doctor_id=doctor_id,
+        date_from=date_from,
+        date_to=date_to,
+        search=search,
+        is_active=is_active,
+        page=page,
+        limit=limit,
+    )
+
+
+@router.get("/admissions/{admission_id}", response_model=AdmissionPydantic)
+async def get_admission(
+    admission_id: str,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    return get_admission_handler(tenant_context["tenant_id"], admission_id, db)
+
+
+@router.post("/admissions", response_model=AdmissionPydantic, status_code=status.HTTP_201_CREATED)
+async def create_admission_endpoint(
+    body: AdmissionCreate,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    return create_admission_handler(tenant_context["tenant_id"], body, db)
+
+
+@router.put("/admissions/{admission_id}", response_model=AdmissionPydantic)
+async def update_admission_endpoint(
+    admission_id: str,
+    body: AdmissionUpdate,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    return update_admission_handler(tenant_context["tenant_id"], admission_id, body, db)
+
+
+@router.delete("/admissions/{admission_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_admission_endpoint(
+    admission_id: str,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    delete_admission_handler(tenant_context["tenant_id"], admission_id, db)
+
+
+@router.post("/admissions/{admission_id}/invoice", status_code=status.HTTP_201_CREATED)
+async def create_admission_invoice_endpoint(
+    admission_id: str,
+    body: AppointmentInvoiceCreate,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    current_user: User = Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    line_items = [{"description": i.description, "amount": i.amount} for i in body.line_items]
+    inv = create_admission_invoice_handler(
+        tenant_context["tenant_id"],
+        admission_id,
+        line_items,
+        str(current_user.id),
+        db,
+        currency=body.currency,
+        tax_rate=body.tax_rate,
+        discount=body.discount,
+    )
+    return {"invoice_id": str(inv.id), "invoice_number": inv.invoiceNumber}
+
+
+@router.get("/admission-invoices", response_model=AdmissionInvoicesResponse)
+async def list_admission_invoices(
+    page: int = Query(1, ge=1),
+    limit: int = Query(50, ge=1, le=500),
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    tenant_id = tenant_context["tenant_id"]
+    skip = (page - 1) * limit
+    db_invoices = get_invoices_by_order_prefix(db, tenant_id, "ADM-", skip=skip, limit=limit)
+    total = get_invoices_by_order_prefix_count(db, tenant_id, "ADM-")
+    invoices = [
+        AdmissionInvoiceSummary(
+            id=str(inv.id),
+            invoice_number=inv.invoiceNumber or "",
+            order_number=inv.orderNumber,
+            customer_name=inv.customerName or "",
+            total=float(inv.total or 0),
+            total_paid=float(inv.totalPaid or 0),
+            balance=float(inv.balance or 0),
+            status=inv.status or "draft",
+        )
+        for inv in db_invoices
+    ]
+    return AdmissionInvoicesResponse(invoices=invoices, total=total)
 
 
 @router.get("/prescriptions", response_model=PrescriptionsResponse)

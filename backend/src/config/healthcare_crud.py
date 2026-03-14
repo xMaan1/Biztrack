@@ -2,7 +2,7 @@ from typing import List, Optional
 from datetime import date
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_, and_
-from .healthcare_models import Doctor, HealthcareStaff, Appointment, Prescription, Patient, ExpenseCategory, DailyExpense
+from .healthcare_models import Doctor, HealthcareStaff, Appointment, Prescription, Patient, ExpenseCategory, DailyExpense, Admission
 from .core_models import User
 
 
@@ -583,6 +583,108 @@ def delete_daily_expense(expense_id: str, db: Session, tenant_id: Optional[str] 
     expense = get_daily_expense_by_id(expense_id, db, tenant_id)
     if expense:
         db.delete(expense)
+        db.commit()
+        return True
+    return False
+
+
+def get_admission_by_id(admission_id: str, db: Session, tenant_id: Optional[str] = None) -> Optional[Admission]:
+    query = db.query(Admission).filter(Admission.id == admission_id)
+    if tenant_id:
+        query = query.filter(Admission.tenant_id == tenant_id)
+    return query.first()
+
+
+def get_admissions(
+    db: Session,
+    tenant_id: str,
+    skip: int = 0,
+    limit: int = 500,
+    status: Optional[str] = None,
+    patient_id: Optional[str] = None,
+    doctor_id: Optional[str] = None,
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
+    search: Optional[str] = None,
+    is_active: Optional[bool] = None,
+) -> List[Admission]:
+    query = db.query(Admission).filter(Admission.tenant_id == tenant_id)
+    if is_active is not None:
+        query = query.filter(Admission.is_active == is_active)
+    if status:
+        query = query.filter(Admission.status == status)
+    if patient_id:
+        query = query.filter(Admission.patient_id == patient_id)
+    if doctor_id:
+        query = query.filter(Admission.doctor_id == doctor_id)
+    if date_from is not None:
+        query = query.filter(Admission.admit_date >= date_from)
+    if date_to is not None:
+        query = query.filter(Admission.admit_date <= date_to)
+    if search:
+        search_lower = f"%{search.lower()}%"
+        query = query.join(Patient, Admission.patient_id == Patient.id).filter(
+            Patient.full_name.ilike(search_lower)
+        )
+    return query.order_by(Admission.admit_date.desc(), Admission.createdAt.desc()).offset(skip).limit(limit).all()
+
+
+def get_admissions_count(
+    db: Session,
+    tenant_id: str,
+    status: Optional[str] = None,
+    patient_id: Optional[str] = None,
+    doctor_id: Optional[str] = None,
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
+    search: Optional[str] = None,
+    is_active: Optional[bool] = None,
+) -> int:
+    query = db.query(Admission).filter(Admission.tenant_id == tenant_id)
+    if is_active is not None:
+        query = query.filter(Admission.is_active == is_active)
+    if status:
+        query = query.filter(Admission.status == status)
+    if patient_id:
+        query = query.filter(Admission.patient_id == patient_id)
+    if doctor_id:
+        query = query.filter(Admission.doctor_id == doctor_id)
+    if date_from is not None:
+        query = query.filter(Admission.admit_date >= date_from)
+    if date_to is not None:
+        query = query.filter(Admission.admit_date <= date_to)
+    if search:
+        search_lower = f"%{search.lower()}%"
+        query = query.join(Patient, Admission.patient_id == Patient.id).filter(
+            Patient.full_name.ilike(search_lower)
+        )
+    return query.count()
+
+
+def create_admission(admission_data: dict, db: Session) -> Admission:
+    db_admission = Admission(**admission_data)
+    db.add(db_admission)
+    db.commit()
+    db.refresh(db_admission)
+    return db_admission
+
+
+def update_admission(admission_id: str, update_data: dict, db: Session, tenant_id: Optional[str] = None) -> Optional[Admission]:
+    admission = get_admission_by_id(admission_id, db, tenant_id)
+    if not admission:
+        return None
+    for key, value in update_data.items():
+        if hasattr(admission, key):
+            setattr(admission, key, value)
+    db.commit()
+    db.refresh(admission)
+    return admission
+
+
+def delete_admission(admission_id: str, db: Session, tenant_id: Optional[str] = None) -> bool:
+    admission = get_admission_by_id(admission_id, db, tenant_id)
+    if admission:
+        db.delete(admission)
         db.commit()
         return True
     return False

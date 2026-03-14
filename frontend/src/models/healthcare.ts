@@ -324,3 +324,70 @@ export interface DailyExpensesResponse {
   expenses: DailyExpense[];
   total: number;
 }
+
+export const ADMISSION_STATUSES = ['admitted', 'discharged'] as const;
+export type AdmissionStatus = (typeof ADMISSION_STATUSES)[number];
+
+export interface Admission {
+  id: string;
+  tenant_id: string;
+  patient_id: string;
+  doctor_id: string;
+  admit_date: string;
+  discharge_date?: string;
+  status: string;
+  ward: string;
+  room_or_bed?: string;
+  diagnosis?: string;
+  notes?: string;
+  is_active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  patient_name?: string;
+  doctor_first_name?: string;
+  doctor_last_name?: string;
+}
+
+export interface AdmissionCreate {
+  patient_id: string;
+  doctor_id: string;
+  admit_date: string;
+  discharge_date?: string;
+  status?: string;
+  ward: string;
+  room_or_bed?: string;
+  diagnosis?: string;
+  notes?: string;
+}
+
+export interface AdmissionUpdate {
+  doctor_id?: string;
+  discharge_date?: string;
+  status?: string;
+  ward?: string;
+  room_or_bed?: string;
+  diagnosis?: string;
+  notes?: string;
+  is_active?: boolean;
+}
+
+export interface AdmissionsResponse {
+  admissions: Admission[];
+  total: number;
+}
+
+export interface AdmissionInvoiceSummary {
+  id: string;
+  invoice_number: string;
+  order_number?: string;
+  customer_name: string;
+  total: number;
+  total_paid: number;
+  balance: number;
+  status: string;
+}
+
+export interface AdmissionInvoicesResponse {
+  invoices: AdmissionInvoiceSummary[];
+  total: number;
+}

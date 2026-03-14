@@ -29,6 +29,11 @@ import type {
   DailyExpenseUpdate,
   DailyExpensesResponse,
   PatientHistoryResponse,
+  Admission,
+  AdmissionCreate,
+  AdmissionUpdate,
+  AdmissionsResponse,
+  AdmissionInvoicesResponse,
 } from '../models/healthcare';
 
 const apiService = new ApiService();
@@ -196,6 +201,41 @@ export class HealthcareQueries {
   async getDailyExpense(id: string): Promise<DailyExpense> {
     return apiService.get<DailyExpense>(`/healthcare/daily-expenses/${id}`);
   }
+
+  async getAdmissions(params?: {
+    status?: string;
+    patient_id?: string;
+    doctor_id?: string;
+    date_from?: string;
+    date_to?: string;
+    search?: string;
+    is_active?: boolean;
+    page?: number;
+    limit?: number;
+  }): Promise<AdmissionsResponse> {
+    const searchParams = new URLSearchParams();
+    if (params?.status) searchParams.set('status', params.status);
+    if (params?.patient_id) searchParams.set('patient_id', params.patient_id);
+    if (params?.doctor_id) searchParams.set('doctor_id', params.doctor_id);
+    if (params?.date_from) searchParams.set('date_from', params.date_from);
+    if (params?.date_to) searchParams.set('date_to', params.date_to);
+    if (params?.search) searchParams.set('search', params.search);
+    if (params?.is_active !== undefined) searchParams.set('is_active', String(params.is_active));
+    searchParams.set('page', String(params?.page ?? 1));
+    searchParams.set('limit', String(params?.limit ?? 100));
+    return apiService.get<AdmissionsResponse>(`/healthcare/admissions?${searchParams.toString()}`);
+  }
+
+  async getAdmission(id: string): Promise<Admission> {
+    return apiService.get<Admission>(`/healthcare/admissions/${id}`);
+  }
+
+  async getAdmissionInvoices(params?: { page?: number; limit?: number }): Promise<AdmissionInvoicesResponse> {
+    const searchParams = new URLSearchParams();
+    searchParams.set('page', String(params?.page ?? 1));
+    searchParams.set('limit', String(params?.limit ?? 50));
+    return apiService.get<AdmissionInvoicesResponse>(`/healthcare/admission-invoices?${searchParams.toString()}`);
+  }
 }
 
 export class HealthcareCommands {
@@ -274,6 +314,33 @@ export class HealthcareCommands {
     );
   }
 
+  async createAdmission(data: AdmissionCreate): Promise<Admission> {
+    return apiService.post<Admission>('/healthcare/admissions', data);
+  }
+
+  async updateAdmission(id: string, data: AdmissionUpdate): Promise<Admission> {
+    return apiService.put<Admission>(`/healthcare/admissions/${id}`, data);
+  }
+
+  async deleteAdmission(id: string): Promise<void> {
+    return apiService.delete(`/healthcare/admissions/${id}`);
+  }
+
+  async createAdmissionInvoice(
+    admissionId: string,
+    data: { line_items: Array<{ description: string; amount: number }>; currency?: string; tax_rate?: number; discount?: number }
+  ): Promise<{ invoice_id: string; invoice_number: string }> {
+    return apiService.post<{ invoice_id: string; invoice_number: string }>(
+      `/healthcare/admissions/${admissionId}/invoice`,
+      {
+        line_items: data.line_items,
+        currency: data.currency ?? 'USD',
+        tax_rate: data.tax_rate ?? 0,
+        discount: data.discount ?? 0,
+      }
+    );
+  }
+
   async createExpenseCategory(data: ExpenseCategoryCreate): Promise<ExpenseCategory> {
     return apiService.post<ExpenseCategory>('/healthcare/expense-categories', data);
   }
@@ -322,8 +389,14 @@ export class HealthcareService {
   getExpenseCategory = healthcareQueries.getExpenseCategory.bind(healthcareQueries);
   getDailyExpenses = healthcareQueries.getDailyExpenses.bind(healthcareQueries);
   getDailyExpense = healthcareQueries.getDailyExpense.bind(healthcareQueries);
+  getAdmissions = healthcareQueries.getAdmissions.bind(healthcareQueries);
+  getAdmission = healthcareQueries.getAdmission.bind(healthcareQueries);
 
   createAppointmentInvoice = healthcareCommands.createAppointmentInvoice.bind(healthcareCommands);
+  createAdmission = healthcareCommands.createAdmission.bind(healthcareCommands);
+  updateAdmission = healthcareCommands.updateAdmission.bind(healthcareCommands);
+  deleteAdmission = healthcareCommands.deleteAdmission.bind(healthcareCommands);
+  createAdmissionInvoice = healthcareCommands.createAdmissionInvoice.bind(healthcareCommands);
   createExpenseCategory = healthcareCommands.createExpenseCategory.bind(healthcareCommands);
   updateExpenseCategory = healthcareCommands.updateExpenseCategory.bind(healthcareCommands);
   deleteExpenseCategory = healthcareCommands.deleteExpenseCategory.bind(healthcareCommands);

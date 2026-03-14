@@ -9,6 +9,7 @@ from .prescriptions import list_prescriptions_handler, get_prescription_handler
 from .staff import list_healthcare_staff_handler
 from .expense_categories import list_expense_categories_handler, get_expense_category_handler
 from .expenses import list_daily_expenses_handler, get_daily_expense_handler
+from .admissions import list_admissions_handler, get_admission_handler
 
 __all__ = [
     "list_doctors_handler",
@@ -26,4 +27,6 @@ __all__ = [
     "get_expense_category_handler",
     "list_daily_expenses_handler",
     "get_daily_expense_handler",
+    "list_admissions_handler",
+    "get_admission_handler",
 ]

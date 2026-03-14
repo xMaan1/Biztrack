@@ -25,6 +25,11 @@ from .expenses import (
     update_daily_expense_handler,
     delete_daily_expense_handler,
 )
+from .admissions import (
+    create_admission_handler,
+    update_admission_handler,
+    delete_admission_handler,
+)
 
 __all__ = [
     "create_doctor_handler",
@@ -48,4 +53,7 @@ __all__ = [
     "create_daily_expense_handler",
     "update_daily_expense_handler",
     "delete_daily_expense_handler",
+    "create_admission_handler",
+    "update_admission_handler",
+    "delete_admission_handler",
 ]

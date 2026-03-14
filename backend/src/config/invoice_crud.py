@@ -127,6 +127,25 @@ def get_invoices(db: Session, tenant_id: str = None, skip: int = 0, limit: int =
     """Get all invoices (alias for get_all_invoices)"""
     return get_all_invoices(db, tenant_id, skip, limit)
 
+def get_invoices_by_order_prefix(
+    db: Session,
+    tenant_id: str,
+    order_prefix: str,
+    skip: int = 0,
+    limit: int = 100,
+) -> List[Invoice]:
+    query = db.query(Invoice).filter(
+        Invoice.tenant_id == tenant_id,
+        Invoice.orderNumber.like(f"{order_prefix}%"),
+    )
+    return query.order_by(Invoice.createdAt.desc()).offset(skip).limit(limit).all()
+
+def get_invoices_by_order_prefix_count(db: Session, tenant_id: str, order_prefix: str) -> int:
+    return db.query(Invoice).filter(
+        Invoice.tenant_id == tenant_id,
+        Invoice.orderNumber.like(f"{order_prefix}%"),
+    ).count()
+
 def get_payments(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Payment]:
     """Get all payments (alias for get_all_payments)"""
     return get_all_payments(db, tenant_id, skip, limit)
