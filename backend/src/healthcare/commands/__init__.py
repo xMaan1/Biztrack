@@ -15,6 +15,16 @@ from .staff import (
     update_healthcare_staff_handler,
     delete_healthcare_staff_handler,
 )
+from .expense_categories import (
+    create_expense_category_handler,
+    update_expense_category_handler,
+    delete_expense_category_handler,
+)
+from .expenses import (
+    create_daily_expense_handler,
+    update_daily_expense_handler,
+    delete_daily_expense_handler,
+)
 
 __all__ = [
     "create_doctor_handler",
@@ -32,4 +42,10 @@ __all__ = [
     "create_healthcare_staff_handler",
     "update_healthcare_staff_handler",
     "delete_healthcare_staff_handler",
+    "create_expense_category_handler",
+    "update_expense_category_handler",
+    "delete_expense_category_handler",
+    "create_daily_expense_handler",
+    "update_daily_expense_handler",
+    "delete_daily_expense_handler",
 ]

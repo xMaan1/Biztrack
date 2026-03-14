@@ -1,8 +1,8 @@
 from typing import List, Optional
 from datetime import date
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_, and_
-from .healthcare_models import Doctor, HealthcareStaff, Appointment, Prescription, Patient
+from .healthcare_models import Doctor, HealthcareStaff, Appointment, Prescription, Patient, ExpenseCategory, DailyExpense
 from .core_models import User
 
 
@@ -403,6 +403,170 @@ def delete_prescription(prescription_id: str, db: Session, tenant_id: Optional[s
     prescription = get_prescription_by_id(prescription_id, db, tenant_id)
     if prescription:
         db.delete(prescription)
+        db.commit()
+        return True
+    return False
+
+
+def get_expense_category_by_id(category_id: str, db: Session, tenant_id: Optional[str] = None) -> Optional[ExpenseCategory]:
+    query = db.query(ExpenseCategory).filter(ExpenseCategory.id == category_id)
+    if tenant_id:
+        query = query.filter(ExpenseCategory.tenant_id == tenant_id)
+    return query.first()
+
+
+def get_expense_categories(
+    db: Session,
+    tenant_id: str,
+    skip: int = 0,
+    limit: int = 500,
+    search: Optional[str] = None,
+    is_active: Optional[bool] = None,
+) -> List[ExpenseCategory]:
+    query = db.query(ExpenseCategory).filter(ExpenseCategory.tenant_id == tenant_id)
+    if is_active is not None:
+        query = query.filter(ExpenseCategory.is_active == is_active)
+    if search:
+        search_lower = f"%{search.lower()}%"
+        query = query.filter(
+            ExpenseCategory.name.ilike(search_lower) |
+            or_(ExpenseCategory.description.is_(None), ExpenseCategory.description.ilike(search_lower))
+        )
+    return query.order_by(ExpenseCategory.name.asc()).offset(skip).limit(limit).all()
+
+
+def get_expense_categories_count(
+    db: Session,
+    tenant_id: str,
+    search: Optional[str] = None,
+    is_active: Optional[bool] = None,
+) -> int:
+    query = db.query(ExpenseCategory).filter(ExpenseCategory.tenant_id == tenant_id)
+    if is_active is not None:
+        query = query.filter(ExpenseCategory.is_active == is_active)
+    if search:
+        search_lower = f"%{search.lower()}%"
+        query = query.filter(
+            ExpenseCategory.name.ilike(search_lower) |
+            or_(ExpenseCategory.description.is_(None), ExpenseCategory.description.ilike(search_lower))
+        )
+    return query.count()
+
+
+def create_expense_category(category_data: dict, db: Session) -> ExpenseCategory:
+    db_category = ExpenseCategory(**category_data)
+    db.add(db_category)
+    db.commit()
+    db.refresh(db_category)
+    return db_category
+
+
+def update_expense_category(category_id: str, update_data: dict, db: Session, tenant_id: Optional[str] = None) -> Optional[ExpenseCategory]:
+    category = get_expense_category_by_id(category_id, db, tenant_id)
+    if not category:
+        return None
+    for key, value in update_data.items():
+        if hasattr(category, key):
+            setattr(category, key, value)
+    db.commit()
+    db.refresh(category)
+    return category
+
+
+def delete_expense_category(category_id: str, db: Session, tenant_id: Optional[str] = None) -> bool:
+    category = get_expense_category_by_id(category_id, db, tenant_id)
+    if category:
+        db.delete(category)
+        db.commit()
+        return True
+    return False
+
+
+def get_daily_expense_by_id(expense_id: str, db: Session, tenant_id: Optional[str] = None) -> Optional[DailyExpense]:
+    query = db.query(DailyExpense).options(joinedload(DailyExpense.category)).filter(DailyExpense.id == expense_id)
+    if tenant_id:
+        query = query.filter(DailyExpense.tenant_id == tenant_id)
+    return query.first()
+
+
+def get_daily_expenses(
+    db: Session,
+    tenant_id: str,
+    skip: int = 0,
+    limit: int = 500,
+    category_id: Optional[str] = None,
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
+    search: Optional[str] = None,
+    is_active: Optional[bool] = None,
+) -> List[DailyExpense]:
+    query = db.query(DailyExpense).filter(DailyExpense.tenant_id == tenant_id)
+    if is_active is not None:
+        query = query.filter(DailyExpense.is_active == is_active)
+    if category_id:
+        query = query.filter(DailyExpense.category_id == category_id)
+    if date_from is not None:
+        query = query.filter(DailyExpense.expense_date >= date_from)
+    if date_to is not None:
+        query = query.filter(DailyExpense.expense_date <= date_to)
+    if search:
+        search_lower = f"%{search.lower()}%"
+        query = query.filter(
+            or_(DailyExpense.description.is_(None), DailyExpense.description.ilike(search_lower))
+        )
+    return query.options(joinedload(DailyExpense.category)).order_by(DailyExpense.expense_date.desc(), DailyExpense.createdAt.desc()).offset(skip).limit(limit).all()
+
+
+def get_daily_expenses_count(
+    db: Session,
+    tenant_id: str,
+    category_id: Optional[str] = None,
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
+    search: Optional[str] = None,
+    is_active: Optional[bool] = None,
+) -> int:
+    query = db.query(DailyExpense).filter(DailyExpense.tenant_id == tenant_id)
+    if is_active is not None:
+        query = query.filter(DailyExpense.is_active == is_active)
+    if category_id:
+        query = query.filter(DailyExpense.category_id == category_id)
+    if date_from is not None:
+        query = query.filter(DailyExpense.expense_date >= date_from)
+    if date_to is not None:
+        query = query.filter(DailyExpense.expense_date <= date_to)
+    if search:
+        search_lower = f"%{search.lower()}%"
+        query = query.filter(
+            or_(DailyExpense.description.is_(None), DailyExpense.description.ilike(search_lower))
+        )
+    return query.count()
+
+
+def create_daily_expense(expense_data: dict, db: Session) -> DailyExpense:
+    db_expense = DailyExpense(**expense_data)
+    db.add(db_expense)
+    db.commit()
+    db.refresh(db_expense)
+    return db_expense
+
+
+def update_daily_expense(expense_id: str, update_data: dict, db: Session, tenant_id: Optional[str] = None) -> Optional[DailyExpense]:
+    expense = get_daily_expense_by_id(expense_id, db, tenant_id)
+    if not expense:
+        return None
+    for key, value in update_data.items():
+        if hasattr(expense, key):
+            setattr(expense, key, value)
+    db.commit()
+    db.refresh(expense)
+    return expense
+
+
+def delete_daily_expense(expense_id: str, db: Session, tenant_id: Optional[str] = None) -> bool:
+    expense = get_daily_expense_by_id(expense_id, db, tenant_id)
+    if expense:
+        db.delete(expense)
         db.commit()
         return True
     return False

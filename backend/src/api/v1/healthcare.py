@@ -25,6 +25,14 @@ from ...models.healthcare_models import (
     PrescriptionUpdate,
     PrescriptionsResponse,
     AppointmentInvoiceCreate,
+    ExpenseCategory as ExpenseCategoryPydantic,
+    ExpenseCategoryCreate,
+    ExpenseCategoryUpdate,
+    ExpenseCategoriesResponse,
+    DailyExpense as DailyExpensePydantic,
+    DailyExpenseCreate,
+    DailyExpenseUpdate,
+    DailyExpensesResponse,
 )
 from ...config.database import get_db
 from ...api.dependencies import get_current_user, get_tenant_context, require_permission
@@ -41,6 +49,10 @@ from ...healthcare.queries import (
     list_prescriptions_handler,
     get_prescription_handler,
     list_healthcare_staff_handler,
+    list_expense_categories_handler,
+    get_expense_category_handler,
+    list_daily_expenses_handler,
+    get_daily_expense_handler,
 )
 from ...healthcare.commands import (
     create_doctor_handler,
@@ -58,6 +70,12 @@ from ...healthcare.commands import (
     create_healthcare_staff_handler,
     update_healthcare_staff_handler,
     delete_healthcare_staff_handler,
+    create_expense_category_handler,
+    update_expense_category_handler,
+    delete_expense_category_handler,
+    create_daily_expense_handler,
+    update_daily_expense_handler,
+    delete_daily_expense_handler,
 )
 from ...healthcare.commands.appointment_invoice import create_appointment_invoice_handler
 
@@ -459,3 +477,149 @@ async def delete_healthcare_staff_endpoint(
     if not tenant_context:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
     delete_healthcare_staff_handler(tenant_context["tenant_id"], staff_id, db)
+
+
+@router.get("/expense-categories", response_model=ExpenseCategoriesResponse)
+async def list_expense_categories(
+    search: Optional[str] = Query(None),
+    is_active: Optional[bool] = Query(None),
+    page: int = Query(1, ge=1),
+    limit: int = Query(500, ge=1, le=500),
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    return list_expense_categories_handler(
+        tenant_context["tenant_id"], db, search=search, is_active=is_active, page=page, limit=limit
+    )
+
+
+@router.get("/expense-categories/{category_id}", response_model=ExpenseCategoryPydantic)
+async def get_expense_category(
+    category_id: str,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    return get_expense_category_handler(tenant_context["tenant_id"], category_id, db)
+
+
+@router.post("/expense-categories", response_model=ExpenseCategoryPydantic, status_code=status.HTTP_201_CREATED)
+async def create_expense_category_endpoint(
+    body: ExpenseCategoryCreate,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    return create_expense_category_handler(tenant_context["tenant_id"], body, db)
+
+
+@router.put("/expense-categories/{category_id}", response_model=ExpenseCategoryPydantic)
+async def update_expense_category_endpoint(
+    category_id: str,
+    body: ExpenseCategoryUpdate,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    return update_expense_category_handler(tenant_context["tenant_id"], category_id, body, db)
+
+
+@router.delete("/expense-categories/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_expense_category_endpoint(
+    category_id: str,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    delete_expense_category_handler(tenant_context["tenant_id"], category_id, db)
+
+
+@router.get("/daily-expenses", response_model=DailyExpensesResponse)
+async def list_daily_expenses(
+    category_id: Optional[str] = Query(None),
+    date_from: Optional[str] = Query(None),
+    date_to: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    is_active: Optional[bool] = Query(None),
+    page: int = Query(1, ge=1),
+    limit: int = Query(500, ge=1, le=500),
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    from datetime import date as date_type
+    date_from_parsed = date_type.fromisoformat(date_from) if date_from else None
+    date_to_parsed = date_type.fromisoformat(date_to) if date_to else None
+    return list_daily_expenses_handler(
+        tenant_context["tenant_id"],
+        db,
+        category_id=category_id,
+        date_from=date_from_parsed,
+        date_to=date_to_parsed,
+        search=search,
+        is_active=is_active,
+        page=page,
+        limit=limit,
+    )
+
+
+@router.get("/daily-expenses/{expense_id}", response_model=DailyExpensePydantic)
+async def get_daily_expense(
+    expense_id: str,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    return get_daily_expense_handler(tenant_context["tenant_id"], expense_id, db)
+
+
+@router.post("/daily-expenses", response_model=DailyExpensePydantic, status_code=status.HTTP_201_CREATED)
+async def create_daily_expense_endpoint(
+    body: DailyExpenseCreate,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    return create_daily_expense_handler(tenant_context["tenant_id"], body, db)
+
+
+@router.put("/daily-expenses/{expense_id}", response_model=DailyExpensePydantic)
+async def update_daily_expense_endpoint(
+    expense_id: str,
+    body: DailyExpenseUpdate,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    return update_daily_expense_handler(tenant_context["tenant_id"], expense_id, body, db)
+
+
+@router.delete("/daily-expenses/{expense_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_daily_expense_endpoint(
+    expense_id: str,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    _= Depends(get_current_user),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    delete_daily_expense_handler(tenant_context["tenant_id"], expense_id, db)

@@ -20,6 +20,14 @@ import type {
   PrescriptionCreate,
   PrescriptionUpdate,
   PrescriptionsResponse,
+  ExpenseCategory,
+  ExpenseCategoryCreate,
+  ExpenseCategoryUpdate,
+  ExpenseCategoriesResponse,
+  DailyExpense,
+  DailyExpenseCreate,
+  DailyExpenseUpdate,
+  DailyExpensesResponse,
 } from '../models/healthcare';
 
 const apiService = new ApiService();
@@ -139,6 +147,48 @@ export class HealthcareQueries {
   async getPrescriptionDownload(id: string): Promise<Blob> {
     return apiService.getBlob(`/healthcare/prescriptions/${id}/download`);
   }
+
+  async getExpenseCategories(params?: {
+    search?: string;
+    is_active?: boolean;
+    page?: number;
+    limit?: number;
+  }): Promise<ExpenseCategoriesResponse> {
+    const searchParams = new URLSearchParams();
+    if (params?.search) searchParams.set('search', params.search);
+    if (params?.is_active !== undefined) searchParams.set('is_active', String(params.is_active));
+    searchParams.set('page', String(params?.page ?? 1));
+    searchParams.set('limit', String(params?.limit ?? 500));
+    return apiService.get<ExpenseCategoriesResponse>(`/healthcare/expense-categories?${searchParams.toString()}`);
+  }
+
+  async getExpenseCategory(id: string): Promise<ExpenseCategory> {
+    return apiService.get<ExpenseCategory>(`/healthcare/expense-categories/${id}`);
+  }
+
+  async getDailyExpenses(params?: {
+    category_id?: string;
+    date_from?: string;
+    date_to?: string;
+    search?: string;
+    is_active?: boolean;
+    page?: number;
+    limit?: number;
+  }): Promise<DailyExpensesResponse> {
+    const searchParams = new URLSearchParams();
+    if (params?.category_id) searchParams.set('category_id', params.category_id);
+    if (params?.date_from) searchParams.set('date_from', params.date_from);
+    if (params?.date_to) searchParams.set('date_to', params.date_to);
+    if (params?.search) searchParams.set('search', params.search);
+    if (params?.is_active !== undefined) searchParams.set('is_active', String(params.is_active));
+    searchParams.set('page', String(params?.page ?? 1));
+    searchParams.set('limit', String(params?.limit ?? 500));
+    return apiService.get<DailyExpensesResponse>(`/healthcare/daily-expenses?${searchParams.toString()}`);
+  }
+
+  async getDailyExpense(id: string): Promise<DailyExpense> {
+    return apiService.get<DailyExpense>(`/healthcare/daily-expenses/${id}`);
+  }
 }
 
 export class HealthcareCommands {
@@ -216,6 +266,30 @@ export class HealthcareCommands {
       }
     );
   }
+
+  async createExpenseCategory(data: ExpenseCategoryCreate): Promise<ExpenseCategory> {
+    return apiService.post<ExpenseCategory>('/healthcare/expense-categories', data);
+  }
+
+  async updateExpenseCategory(id: string, data: ExpenseCategoryUpdate): Promise<ExpenseCategory> {
+    return apiService.put<ExpenseCategory>(`/healthcare/expense-categories/${id}`, data);
+  }
+
+  async deleteExpenseCategory(id: string): Promise<void> {
+    return apiService.delete(`/healthcare/expense-categories/${id}`);
+  }
+
+  async createDailyExpense(data: DailyExpenseCreate): Promise<DailyExpense> {
+    return apiService.post<DailyExpense>('/healthcare/daily-expenses', data);
+  }
+
+  async updateDailyExpense(id: string, data: DailyExpenseUpdate): Promise<DailyExpense> {
+    return apiService.put<DailyExpense>(`/healthcare/daily-expenses/${id}`, data);
+  }
+
+  async deleteDailyExpense(id: string): Promise<void> {
+    return apiService.delete(`/healthcare/daily-expenses/${id}`);
+  }
 }
 
 export const healthcareQueries = new HealthcareQueries();
@@ -236,8 +310,18 @@ export class HealthcareService {
   getPrescriptions = healthcareQueries.getPrescriptions.bind(healthcareQueries);
   getPrescription = healthcareQueries.getPrescription.bind(healthcareQueries);
   getPrescriptionDownload = healthcareQueries.getPrescriptionDownload.bind(healthcareQueries);
+  getExpenseCategories = healthcareQueries.getExpenseCategories.bind(healthcareQueries);
+  getExpenseCategory = healthcareQueries.getExpenseCategory.bind(healthcareQueries);
+  getDailyExpenses = healthcareQueries.getDailyExpenses.bind(healthcareQueries);
+  getDailyExpense = healthcareQueries.getDailyExpense.bind(healthcareQueries);
 
   createAppointmentInvoice = healthcareCommands.createAppointmentInvoice.bind(healthcareCommands);
+  createExpenseCategory = healthcareCommands.createExpenseCategory.bind(healthcareCommands);
+  updateExpenseCategory = healthcareCommands.updateExpenseCategory.bind(healthcareCommands);
+  deleteExpenseCategory = healthcareCommands.deleteExpenseCategory.bind(healthcareCommands);
+  createDailyExpense = healthcareCommands.createDailyExpense.bind(healthcareCommands);
+  updateDailyExpense = healthcareCommands.updateDailyExpense.bind(healthcareCommands);
+  deleteDailyExpense = healthcareCommands.deleteDailyExpense.bind(healthcareCommands);
 
   createDoctor = healthcareCommands.createDoctor.bind(healthcareCommands);
   updateDoctor = healthcareCommands.updateDoctor.bind(healthcareCommands);

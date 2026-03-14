@@ -259,3 +259,62 @@ export interface PrescriptionsResponse {
   prescriptions: Prescription[];
   total: number;
 }
+
+export interface ExpenseCategory {
+  id: string;
+  tenant_id: string;
+  name: string;
+  description?: string;
+  is_active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ExpenseCategoryCreate {
+  name: string;
+  description?: string;
+}
+
+export interface ExpenseCategoryUpdate {
+  name?: string;
+  description?: string;
+  is_active?: boolean;
+}
+
+export interface ExpenseCategoriesResponse {
+  categories: ExpenseCategory[];
+  total: number;
+}
+
+export interface DailyExpense {
+  id: string;
+  tenant_id: string;
+  category_id: string;
+  category_name?: string;
+  expense_date: string;
+  amount: number;
+  description?: string;
+  is_active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface DailyExpenseCreate {
+  category_id: string;
+  expense_date: string;
+  amount: number;
+  description?: string;
+}
+
+export interface DailyExpenseUpdate {
+  category_id?: string;
+  expense_date?: string;
+  amount?: number;
+  description?: string;
+  is_active?: boolean;
+}
+
+export interface DailyExpensesResponse {
+  expenses: DailyExpense[];
+  total: number;
+}

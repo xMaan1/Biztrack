@@ -90,7 +90,7 @@ from .event_models import (
     Event, EventType, EventStatus, RecurrenceType
 )
 
-from .healthcare_models import Doctor, HealthcareStaff, Appointment, Prescription, Patient
+from .healthcare_models import Doctor, HealthcareStaff, Appointment, Prescription, Patient, ExpenseCategory, DailyExpense
 
 # Import all CRUD functions
 from .core_crud import (
@@ -228,6 +228,18 @@ from .healthcare_crud import (
     create_prescription,
     update_prescription,
     delete_prescription,
+    get_expense_category_by_id,
+    get_expense_categories,
+    get_expense_categories_count,
+    create_expense_category,
+    update_expense_category,
+    delete_expense_category,
+    get_daily_expense_by_id,
+    get_daily_expenses,
+    get_daily_expenses_count,
+    create_daily_expense,
+    update_daily_expense,
+    delete_daily_expense,
 )
 
 from .inventory_crud import (

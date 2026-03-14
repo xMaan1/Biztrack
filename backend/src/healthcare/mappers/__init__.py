@@ -8,6 +8,7 @@ from .staff import (
     merge_healthcare_permissions,
     ensure_healthcare_staff_role,
 )
+from .expenses import db_expense_category_to_pydantic, db_daily_expense_to_pydantic
 
 __all__ = [
     "db_doctor_to_pydantic",
@@ -20,4 +21,6 @@ __all__ = [
     "normalize_healthcare_permissions",
     "merge_healthcare_permissions",
     "ensure_healthcare_staff_role",
+    "db_expense_category_to_pydantic",
+    "db_daily_expense_to_pydantic",
 ]

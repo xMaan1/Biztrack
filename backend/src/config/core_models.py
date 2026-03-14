@@ -251,6 +251,8 @@ class Tenant(Base):
     appointments = relationship("Appointment", back_populates="tenant")
     prescriptions = relationship("Prescription", back_populates="tenant")
     patients = relationship("Patient", back_populates="tenant")
+    expense_categories = relationship("ExpenseCategory", back_populates="tenant")
+    daily_expenses = relationship("DailyExpense", back_populates="tenant")
 
 class Plan(Base):
     __tablename__ = "plans"
