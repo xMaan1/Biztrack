@@ -156,7 +156,7 @@ class Opportunity(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
     name = Column(String, nullable=False)
-    companyId = Column(UUID(as_uuid=True), ForeignKey("companies.id"), nullable=False)
+    companyId = Column(UUID(as_uuid=True), ForeignKey("companies.id"), nullable=True)
     contactId = Column(UUID(as_uuid=True), ForeignKey("contacts.id"))
     assignedToId = Column(UUID(as_uuid=True), ForeignKey("users.id"))
     stage = Column(String, nullable=False, default="prospecting")  # prospecting, qualification, proposal, negotiation, closed_won, closed_lost

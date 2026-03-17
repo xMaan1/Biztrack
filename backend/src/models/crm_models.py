@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from uuid import UUID
@@ -154,7 +154,7 @@ class CompanyUpdate(BaseModel):
 class Company(CompanyBase):
     id: str
     tenant_id: str
-    createdBy: str
+    createdBy: Optional[str] = None
     annualRevenue: Optional[float] = None
     employeeCount: Optional[int] = None
     foundedYear: Optional[int] = None
@@ -162,6 +162,13 @@ class Company(CompanyBase):
     opportunities: List[Dict[str, Any]] = []
     createdAt: datetime
     updatedAt: datetime
+
+    @field_validator("id", "tenant_id", mode="before")
+    @classmethod
+    def coerce_uuid_to_str(cls, v):
+        if v is None:
+            return v
+        return str(v) if hasattr(v, "hex") else v
 
     class Config:
         from_attributes = True

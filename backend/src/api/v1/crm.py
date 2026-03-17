@@ -820,19 +820,27 @@ async def create_crm_company(
 ):
     """Create a new company"""
     try:
-        company = Company(
-            id=str(uuid.uuid4()),
-            **company_data.dict(),
-            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
-            createdBy=str(current_user.id),
-            createdAt=datetime.now(),
-            updatedAt=datetime.now()
-        )
-        
-        db.add(company)
-        db.commit()
-        db.refresh(company)
-        
+        data = company_data.dict()
+        payload = {
+            "id": uuid.uuid4(),
+            "tenant_id": uuid.UUID(tenant_context["tenant_id"]) if tenant_context else uuid.uuid4(),
+            "name": data.get("name", ""),
+            "industry": data.get("industry"),
+            "website": data.get("website"),
+            "phone": data.get("phone"),
+            "address": data.get("address"),
+            "city": data.get("city"),
+            "state": data.get("state"),
+            "country": data.get("country"),
+            "postalCode": data.get("postalCode"),
+            "annualRevenue": data.get("annualRevenue"),
+            "employeeCount": data.get("employeeCount"),
+            "isActive": data.get("isActive", True),
+            "notes": data.get("notes"),
+            "createdAt": datetime.now(),
+            "updatedAt": datetime.now(),
+        }
+        company = create_company(payload, db)
         return company
     except Exception as e:
         db.rollback()
@@ -955,8 +963,7 @@ async def create_crm_opportunity(
     try:
         data = opportunity_data.dict()
         
-        if not data.get('companyId'):
-            raise HTTPException(status_code=400, detail="companyId is required to create an opportunity")
+        company_id_raw = (data.get('companyId') and str(data['companyId']).strip()) or None
         
         expected_close_date = None
         if data.get('expectedCloseDate'):
@@ -968,6 +975,24 @@ async def create_crm_opportunity(
                 except:
                     pass
         
+        def _safe_uuid(v):
+            if v is None: return None
+            s = str(v).strip()
+            if not s: return None
+            try:
+                return uuid.UUID(s)
+            except (ValueError, TypeError):
+                return None
+        
+        company_uuid = _safe_uuid(company_id_raw) if company_id_raw else None
+        if company_id_raw and company_uuid is None:
+            raise HTTPException(status_code=400, detail="companyId must be a valid UUID")
+        
+        try:
+            tenant_uuid = uuid.UUID(str(tenant_context["tenant_id"])) if tenant_context else uuid.uuid4()
+        except (ValueError, TypeError):
+            tenant_uuid = uuid.uuid4()
+        
         opportunity = Opportunity(
             id=uuid.uuid4(),
             name=data.get('title', ''),
@@ -976,11 +1001,11 @@ async def create_crm_opportunity(
             amount=data.get('amount'),
             probability=data.get('probability', 50),
             expectedCloseDate=expected_close_date,
-            companyId=uuid.UUID(data['companyId']),
-            contactId=uuid.UUID(data['contactId']) if data.get('contactId') else None,
-            assignedToId=uuid.UUID(data['assignedTo']) if data.get('assignedTo') else None,
+            companyId=company_uuid,
+            contactId=_safe_uuid(data.get('contactId')),
+            assignedToId=_safe_uuid(data.get('assignedTo')),
             notes=data.get('notes'),
-            tenant_id=uuid.UUID(tenant_context["tenant_id"]) if tenant_context else uuid.uuid4(),
+            tenant_id=tenant_uuid,
             createdAt=datetime.now(),
             updatedAt=datetime.now()
         )
@@ -1059,12 +1084,18 @@ async def update_crm_opportunity(
                     opportunity.expectedCloseDate = datetime.strptime(data['expectedCloseDate'], '%Y-%m-%d')
                 except:
                     pass
-        if 'companyId' in data and data['companyId']:
-            opportunity.companyId = uuid.UUID(data['companyId'])
-        if 'contactId' in data and data['contactId']:
-            opportunity.contactId = uuid.UUID(data['contactId'])
-        if 'assignedTo' in data and data['assignedTo']:
-            opportunity.assignedToId = uuid.UUID(data['assignedTo'])
+        def _safe_uuid(v):
+            if v is None: return None
+            s = str(v).strip()
+            return uuid.UUID(s) if s else None
+        if 'companyId' in data:
+            u = _safe_uuid(data['companyId'])
+            if u is not None:
+                opportunity.companyId = u
+        if 'contactId' in data:
+            opportunity.contactId = _safe_uuid(data['contactId'])
+        if 'assignedTo' in data:
+            opportunity.assignedToId = _safe_uuid(data['assignedTo'])
         if 'notes' in data:
             opportunity.notes = data['notes']
         opportunity.updatedAt = datetime.now()

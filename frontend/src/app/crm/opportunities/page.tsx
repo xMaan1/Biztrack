@@ -89,10 +89,17 @@ function CRMOpportunitiesContent() {
     notes: '',
     tags: [],
   });
+  const [companies, setCompanies] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     loadOpportunities();
   }, [filters]);
+
+  useEffect(() => {
+    if (showCreateDialog) {
+      CRMService.getCompanies({}, 1, 100).then((r) => setCompanies(r.companies || [])).catch(() => setCompanies([]));
+    }
+  }, [showCreateDialog]);
 
   const loadOpportunities = useCallback(async () => {
     try {
@@ -617,18 +624,28 @@ function CRMOpportunitiesContent() {
                 />
               </div>
               <div>
-                <Label htmlFor="companyId">Company ID</Label>
-                <Input
-                  id="companyId"
-                  value={formData.companyId}
-                  onChange={(e) =>
+                <Label htmlFor="companyId">Company</Label>
+                <Select
+                  value={formData.companyId || 'none'}
+                  onValueChange={(value) =>
                     setFormData((prev) => ({
                       ...prev,
-                      companyId: e.target.value,
+                      companyId: value === 'none' ? '' : value,
                     }))
                   }
-                  placeholder="Optional"
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select company (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {companies.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="assignedTo">Assigned To</Label>
