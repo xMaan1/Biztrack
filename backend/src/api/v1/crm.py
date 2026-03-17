@@ -458,6 +458,8 @@ async def create_crm_lead(
         lead_dict["id"] = uuid.uuid4()
         lead_dict["createdAt"] = datetime.utcnow()
         lead_dict["updatedAt"] = datetime.utcnow()
+        orm_lead_keys = {"id", "tenant_id", "firstName", "lastName", "email", "phone", "company", "jobTitle", "leadSource", "status", "priority", "assignedToId", "notes", "createdAt", "updatedAt"}
+        lead_dict = {k: v for k, v in lead_dict.items() if k in orm_lead_keys}
         lead = create_lead(lead_dict, db)
         try:
             from ...services.notification_service import create_crm_notification_for_all_tenant_users, send_assignment_notification
