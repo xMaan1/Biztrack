@@ -77,7 +77,8 @@ export interface Lead {
   company?: string;
   jobTitle?: string;
   leadSource?: string;
-  status: 'new' | 'contacted' | 'qualified' | 'proposal' | 'won' | 'lost';
+  source?: string;
+  status?: 'new' | 'contacted' | 'qualified' | 'proposal' | 'won' | 'lost';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   assignedToId?: string;
   notes?: string;

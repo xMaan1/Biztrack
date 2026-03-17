@@ -326,14 +326,19 @@ function CRMLeadsContent() {
                     </div>
                     <div className="flex items-center space-x-2 mt-2">
                       <Badge
-                        className={CRMService.getLeadStatusColor(lead.status)}
+                        className={CRMService.getLeadStatusColor(lead.status ?? 'new')}
                       >
-                        {lead.status.charAt(0).toUpperCase() +
-                          lead.status.slice(1)}
+                        {(lead.status ?? 'new').charAt(0).toUpperCase() +
+                          (lead.status ?? 'new').slice(1)}
                       </Badge>
                       <Badge variant="outline">
-                        {lead.source.replace('_', ' ').charAt(0).toUpperCase() +
-                          lead.source.replace('_', ' ').slice(1)}
+                        {((lead.leadSource ?? lead.source) ?? '')
+                          .replace('_', ' ')
+                          .charAt(0)
+                          .toUpperCase() +
+                          ((lead.leadSource ?? lead.source) ?? '')
+                            .replace('_', ' ')
+                            .slice(1)}
                       </Badge>
                       {lead.score > 0 && (
                         <Badge variant="secondary">Score: {lead.score}</Badge>
@@ -391,7 +396,7 @@ function CRMLeadsContent() {
                           company: lead.company || '',
                           jobTitle: lead.jobTitle || '',
                           status: lead.status,
-                          source: lead.source,
+                          source: lead.leadSource ?? lead.source,
                           notes: lead.notes || '',
                           tags: lead.tags,
                           score: lead.score,
@@ -865,21 +870,23 @@ function CRMLeadsContent() {
                     <Label className="font-medium">Status</Label>
                     <Badge
                       className={CRMService.getLeadStatusColor(
-                        selectedLead.status,
+                        selectedLead.status ?? 'new',
                       )}
                     >
-                      {selectedLead.status.charAt(0).toUpperCase() +
-                        selectedLead.status.slice(1)}
+                      {(selectedLead.status ?? 'new').charAt(0).toUpperCase() +
+                        (selectedLead.status ?? 'new').slice(1)}
                     </Badge>
                   </div>
                   <div>
                     <Label className="font-medium">Source</Label>
                     <Badge variant="outline">
-                      {selectedLead.source
+                      {((selectedLead.leadSource ?? selectedLead.source) ?? '')
                         .replace('_', ' ')
                         .charAt(0)
                         .toUpperCase() +
-                        selectedLead.source.replace('_', ' ').slice(1)}
+                        ((selectedLead.leadSource ?? selectedLead.source) ?? '')
+                          .replace('_', ' ')
+                          .slice(1)}
                     </Badge>
                   </div>
                   <div>
