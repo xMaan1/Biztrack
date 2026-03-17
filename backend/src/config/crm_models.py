@@ -36,7 +36,7 @@ class Customer(Base):
     customerId = Column(String, nullable=False)  # Custom customer ID like CUST001
     firstName = Column(String, nullable=False)
     lastName = Column(String, nullable=False)
-    email = Column(String, nullable=False)
+    email = Column(String, nullable=True)
     phone = Column(String)
     mobile = Column(String)
     cnic = Column(String, unique=True, nullable=True)  # CNIC for Pakistani customers

@@ -183,8 +183,8 @@ function CustomersContent() {
 
   const handleCreateCustomer = async () => {
     try {
-      if (!formData.firstName || !formData.lastName || !formData.email) {
-        toast.error('Please fill in all required fields (First Name, Last Name, Email)');
+      if (!formData.firstName || !formData.lastName) {
+        toast.error('Please fill in all required fields (First Name, Last Name)');
         return;
       }
       const created = await CustomerService.createCustomer(formData);
@@ -551,7 +551,7 @@ function CustomersContent() {
                   />
                 </div>
                 <div className="col-span-2">
-                  <Label htmlFor="email">Email *</Label>
+                  <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
                     type="email"
@@ -1167,7 +1167,7 @@ function CustomersContent() {
                 />
               </div>
               <div className="col-span-2">
-                <Label htmlFor="editEmail">Email *</Label>
+                <Label htmlFor="editEmail">Email</Label>
                 <Input
                   id="editEmail"
                   type="email"

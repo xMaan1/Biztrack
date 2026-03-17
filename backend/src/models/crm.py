@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 from datetime import datetime
 from uuid import UUID
@@ -7,8 +7,15 @@ from uuid import UUID
 class CustomerBase(BaseModel):
     firstName: str = Field(..., min_length=1, max_length=100)
     lastName: str = Field(..., min_length=1, max_length=100)
-    email: str = Field(..., pattern=r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+    email: Optional[str] = Field(None, pattern=r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
     phone: Optional[str] = Field(None, max_length=20)
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def empty_email_to_none(cls, v):
+        if v == "" or v is None:
+            return None
+        return v
     mobile: Optional[str] = Field(None, max_length=20)
     cnic: Optional[str] = Field(None, max_length=15)
     dateOfBirth: Optional[datetime] = None

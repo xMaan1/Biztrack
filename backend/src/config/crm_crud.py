@@ -19,7 +19,7 @@ def create_customer(db: Session, customer_data: Dict[str, Any], tenant_id: str) 
         customer_data["updatedAt"] = datetime.utcnow()
         
         # Convert empty strings to None for optional fields to avoid unique constraint violations
-        optional_fields = ['cnic', 'phone', 'mobile', 'address', 'city', 'state', 'postalCode', 'notes', 'image_url']
+        optional_fields = ['cnic', 'phone', 'mobile', 'address', 'city', 'state', 'postalCode', 'notes', 'image_url', 'email']
         for field in optional_fields:
             if field in customer_data and customer_data[field] == '':
                 customer_data[field] = None
@@ -125,7 +125,7 @@ def update_customer(db: Session, customer_id: str, customer_data: Dict[str, Any]
         customer_data["updatedAt"] = datetime.utcnow()
         
         # Convert empty strings to None for optional fields to avoid unique constraint violations
-        optional_fields = ['cnic', 'phone', 'mobile', 'address', 'city', 'state', 'postalCode', 'notes', 'image_url']
+        optional_fields = ['cnic', 'phone', 'mobile', 'address', 'city', 'state', 'postalCode', 'notes', 'image_url', 'email']
         for field in optional_fields:
             if field in customer_data and customer_data[field] == '':
                 customer_data[field] = None
