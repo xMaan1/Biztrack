@@ -1,6 +1,7 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List, Dict, Any
 from datetime import datetime
+from uuid import UUID
 from .common import (
     LeadStatus,
     LeadSource,
@@ -54,9 +55,9 @@ class LeadUpdate(BaseModel):
     timeline: Optional[str] = None
 
 class Lead(LeadBase):
-    id: str
-    tenant_id: str
-    createdBy: str
+    id: UUID
+    tenant_id: UUID
+    createdBy: Optional[str] = None
     assignedToUser: Optional[Dict[str, str]] = None
     convertedToContact: Optional[str] = None
     convertedToOpportunity: Optional[str] = None
@@ -103,9 +104,9 @@ class ContactUpdate(BaseModel):
     isActive: Optional[bool] = None
 
 class Contact(ContactBase):
-    id: str
-    tenant_id: str
-    createdBy: str
+    id: UUID
+    tenant_id: UUID
+    createdBy: Optional[str] = None
     lastContactDate: Optional[datetime] = None
     nextFollowUpDate: Optional[datetime] = None
     activities: List[Dict[str, Any]] = []
