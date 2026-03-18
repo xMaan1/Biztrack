@@ -346,7 +346,8 @@ def send_assignment_notification(
     entity_type: str,
     entity_name: str,
     action_url: Optional[str] = None,
-    category: NotificationCategory = NotificationCategory.PROJECTS
+    category: NotificationCategory = NotificationCategory.PROJECTS,
+    extra_details: Optional[dict] = None
 ) -> None:
     if not assignee_user or not getattr(assignee_user, 'email', None):
         return
@@ -367,7 +368,8 @@ def send_assignment_notification(
                 assigner_name=assigner_name,
                 entity_type=entity_type,
                 entity_name=entity_name,
-                action_url=action_url
+                action_url=action_url,
+                extra_details=extra_details
             )
         except Exception:
             pass

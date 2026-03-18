@@ -248,7 +248,8 @@ Best regards,
         assigner_name: str,
         entity_type: str,
         entity_name: str,
-        action_url: Optional[str] = None
+        action_url: Optional[str] = None,
+        extra_details: Optional[Dict[str, str]] = None
     ) -> bool:
         try:
             if not to_email:
@@ -262,6 +263,9 @@ Best regards,
             msg['To'] = to_email
             msg['Subject'] = f"You have been assigned: {entity_type} - {entity_name[:50]}{'...' if len(entity_name) > 50 else ''}"
             link_line = f"\n\nOpen it here: {action_url}" if action_url else ""
+            details_block = ""
+            if extra_details:
+                details_block = "\n".join(f"{k}: {v}" for k, v in extra_details.items() if v) + "\n\n" if any(extra_details.values()) else ""
             body = f"""
 Dear {assignee_name},
 
@@ -269,7 +273,7 @@ Dear {assignee_name},
 
 Type: {entity_type}
 Name: {entity_name}
-{link_line}
+{details_block}{link_line}
 
 Best regards,
 {self.from_name}

@@ -220,11 +220,21 @@ async def create_new_task(
             assignee = get_user_by_id(task_data.assignedToId, db)
             assigner_name = f"{getattr(current_user, 'firstName', '') or ''} {getattr(current_user, 'lastName', '') or ''}".strip() or getattr(current_user, 'userName', 'A user')
             if assignee:
+                extra = {}
+                extra["Project"] = project.name
+                if db_task.description:
+                    desc = (db_task.description or "").replace("\r\n", " ").replace("\n", " ").strip()
+                    extra["Description"] = desc[:400] + ("..." if len(desc) > 400 else "")
+                if db_task.dueDate:
+                    extra["Due date"] = str(db_task.dueDate)
+                extra["Priority"] = getattr(db_task.priority, "value", str(db_task.priority))
+                extra["Status"] = getattr(db_task.status, "value", str(db_task.status))
                 send_assignment_notification(
                     db, str(tenant_context["tenant_id"]), assignee, assigner_name,
                     "Task", db_task.title,
                     action_url=f"/projects/{db_task.projectId}",
-                    category=NotificationCategory.PROJECTS
+                    category=NotificationCategory.PROJECTS,
+                    extra_details=extra
                 )
         except Exception:
             pass
@@ -282,11 +292,23 @@ async def update_existing_task(
             from ...services.notification_service import send_assignment_notification
             from ...config.notification_models import NotificationCategory
             assigner_name = f"{getattr(current_user, 'firstName', '') or ''} {getattr(current_user, 'lastName', '') or ''}".strip() or getattr(current_user, 'userName', 'A user')
+            project_for_task = get_project_by_id(updated_task.projectId, db, tenant_id=tenant_id)
+            extra = {}
+            if project_for_task:
+                extra["Project"] = project_for_task.name
+            if updated_task.description:
+                desc = (updated_task.description or "").replace("\r\n", " ").replace("\n", " ").strip()
+                extra["Description"] = desc[:400] + ("..." if len(desc) > 400 else "")
+            if updated_task.dueDate:
+                extra["Due date"] = str(updated_task.dueDate)
+            extra["Priority"] = getattr(updated_task.priority, "value", str(updated_task.priority))
+            extra["Status"] = getattr(updated_task.status, "value", str(updated_task.status))
             send_assignment_notification(
                 db, str(tenant_context["tenant_id"]), assignee_for_notification, assigner_name,
                 "Task", updated_task.title,
                 action_url=f"/projects/{updated_task.projectId}",
-                category=NotificationCategory.PROJECTS
+                category=NotificationCategory.PROJECTS,
+                extra_details=extra
             )
         except Exception:
             pass
