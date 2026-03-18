@@ -200,6 +200,15 @@ def get_tenant_context(
         "is_owner": RBACService.is_owner(db, str(current_user.id), x_tenant_id)
     }
 
+def can_see_all_tasks(tenant_context: dict) -> bool:
+    if not tenant_context:
+        return False
+    if tenant_context.get("is_owner"):
+        return True
+    role = tenant_context.get("user_role")
+    role_name = getattr(role, "name", None) if role else None
+    return bool(role_name and (role_name == "owner" or role_name.endswith("_manager")))
+
 def require_permission(permission: str):
     """Dependency to require specific permission"""
     def permission_checker(

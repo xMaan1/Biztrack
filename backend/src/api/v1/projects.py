@@ -18,7 +18,7 @@ from ...config.database import (
     User, Project as DBProject, Task as DBTask
 )
 from ...config.hrm_models import TimeEntry as DBTimeEntry, Employee as DBEmployee
-from ...api.dependencies import get_current_user, get_tenant_context, require_permission
+from ...api.dependencies import get_current_user, get_tenant_context, require_permission, can_see_all_tasks
 from ...models.common import ModulePermission
 
 router = APIRouter(prefix="/projects", tags=["projects"])
@@ -92,10 +92,8 @@ async def get_projects(
     skip = (page - 1) * limit
     tenant_id = tenant_context["tenant_id"] if tenant_context else None
     
-    # Build query with database-level filtering instead of Python filtering
     query = db.query(DBProject).filter(DBProject.tenant_id == tenant_id)
     
-    # Apply database-level filters
     if status:
         query = query.filter(DBProject.status == status)
     if priority:
@@ -109,10 +107,8 @@ async def get_projects(
             )
         )
     
-    # Get total count for pagination
     total = query.count()
     
-    # Apply pagination and ordering
     projects = query.order_by(DBProject.createdAt.desc()).offset(skip).limit(limit).all()
     
     project_list = [transform_project_to_response(project) for project in projects]
@@ -127,7 +123,6 @@ async def get_projects(
         }
     )
 
-# Time Tracking endpoints
 @router.get("/time-entries", response_model=HRMTimeEntriesResponse)
 async def get_project_time_entries(
     employee_id: Optional[str] = Query(None),
@@ -145,7 +140,6 @@ async def get_project_time_entries(
         skip = (page - 1) * limit
         time_entries = get_time_entries(db, tenant_context["tenant_id"] if tenant_context else None, skip, limit)
         
-        # Apply additional filters if provided
         if employee_id or start_date or end_date or project_id:
             filtered_entries = []
             for entry in time_entries:
@@ -160,10 +154,8 @@ async def get_project_time_entries(
                 filtered_entries.append(entry)
             time_entries = filtered_entries
         
-        # Get total count for pagination
         total = len(time_entries)
         
-        # Transform SQLAlchemy objects to Pydantic models
         transformed_entries = [transform_db_time_entry_to_pydantic(entry) for entry in time_entries]
         
         return HRMTimeEntriesResponse(
@@ -947,16 +939,18 @@ def transform_task_to_response(task: DBTask):
 async def get_project_tasks(
     project_id: str, 
     db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
     _: dict = Depends(require_permission(ModulePermission.PROJECTS_VIEW.value))
 ):
-    """Get all tasks for a specific project"""
     tenant_id = tenant_context["tenant_id"] if tenant_context else None
     project = get_project_by_id(project_id, db, tenant_id=tenant_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     
     tasks = get_tasks_by_project(project_id, db, tenant_id=tenant_id)
+    if not can_see_all_tasks(tenant_context or {}):
+        tasks = [t for t in tasks if t.assignedToId and str(t.assignedToId) == str(current_user.id)]
     task_list = [transform_task_to_response(task) for task in tasks]
     
     return TasksResponse(

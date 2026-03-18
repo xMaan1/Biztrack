@@ -12,12 +12,11 @@ from ...config.database import (
     get_subtasks_by_parent, get_main_tasks_by_project, get_task_with_subtasks,
     Task as DBTask
 )
-from ...api.dependencies import get_current_user, get_tenant_context, require_tenant_admin_or_super_admin
+from ...api.dependencies import get_current_user, get_tenant_context, require_tenant_admin_or_super_admin, can_see_all_tasks
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
 def transform_subtask_to_response(task: DBTask) -> SubTask:
-    """Transform database task to subtask response format"""
     return SubTask(
         id=str(task.id),
         title=task.title,
@@ -44,7 +43,6 @@ def transform_subtask_to_response(task: DBTask) -> SubTask:
     )
 
 def transform_task_to_response(task: DBTask, include_subtasks: bool = True) -> SubTask:
-    """Transform database task to response format"""
     subtasks = []
     subtask_count = 0
     completed_subtask_count = 0
@@ -97,9 +95,9 @@ async def get_tasks(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context)
 ):
-    """Get all tasks with optional filtering (tenant-scoped)"""
     skip = (page - 1) * limit
     tenant_id = tenant_context["tenant_id"] if tenant_context else None
     
@@ -113,16 +111,17 @@ async def get_tasks(
         if main_tasks_only:
             tasks = [t for t in tasks if not t.parentTaskId]
     
-    # Apply filters
+    if not can_see_all_tasks(tenant_context or {}):
+        tasks = [t for t in tasks if t.assignedToId and str(t.assignedToId) == str(current_user.id)]
+    
     if status:
         tasks = [t for t in tasks if t.status == status]
     if assignedTo:
         tasks = [t for t in tasks if str(t.assignedToId) == assignedTo]
     
-    # Load subtasks if requested
     if include_subtasks:
         for task in tasks:
-            if not task.parentTaskId:  # Only load subtasks for main tasks
+            if not task.parentTaskId:
                 task.subtasks = get_subtasks_by_parent(str(task.id), db, tenant_id)
     
     task_list = [transform_task_to_response(task, include_subtasks) for task in tasks]
@@ -142,9 +141,9 @@ async def get_task(
     task_id: str, 
     include_subtasks: bool = Query(True),
     db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context)
 ):
-    """Get a specific task"""
     tenant_id = tenant_context["tenant_id"] if tenant_context else None
     
     if include_subtasks:
@@ -154,6 +153,10 @@ async def get_task(
     
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
+    
+    if not can_see_all_tasks(tenant_context or {}):
+        if not task.assignedToId or str(task.assignedToId) != str(current_user.id):
+            raise HTTPException(status_code=404, detail="Task not found")
     
     return transform_task_to_response(task, include_subtasks)
 
@@ -167,12 +170,10 @@ async def create_new_task(
     """Create a new task or subtask"""
     tenant_id = tenant_context["tenant_id"] if tenant_context else None
     
-    # Verify project exists
     project = get_project_by_id(task_data.projectId, db, tenant_id=tenant_id)
     if not project:
         raise HTTPException(status_code=400, detail="Project not found")
     
-    # Verify parent task exists if this is a subtask
     if task_data.parentTaskId:
         parent_task = get_task_by_id(task_data.parentTaskId, db, tenant_id=tenant_id)
         if not parent_task:
@@ -180,12 +181,10 @@ async def create_new_task(
         if parent_task.parentTaskId:
             raise HTTPException(status_code=400, detail="Cannot create subtask of a subtask")
     
-    # Verify assignee exists if provided
     if task_data.assignedToId:
         assignee = get_user_by_id(task_data.assignedToId, db)
         if not assignee:
             raise HTTPException(status_code=400, detail="Assignee not found")
-        # Check tenant access for assignee
         if tenant_context:
             from ...config.database import TenantUser
             tenant_user = db.query(TenantUser).filter(
@@ -195,17 +194,13 @@ async def create_new_task(
             if not tenant_user:
                 raise HTTPException(status_code=400, detail="Assignee not in tenant")
     
-    # Create task
     task_dict = task_data.model_dump()
     task_dict['createdById'] = current_user.id
     task_dict['tags'] = json.dumps(task_dict.get('tags', []))
     
-    # Handle parentTaskId for subtasks
     if 'parentTaskId' in task_dict and task_dict['parentTaskId']:
-        # This is handled in the validation above
         pass
     
-    # Set tenant_id if tenant context is provided
     if tenant_context:
         task_dict['tenant_id'] = tenant_context["tenant_id"]
     
@@ -248,7 +243,6 @@ async def update_existing_task(
     db: Session = Depends(get_db),
     tenant_context: Optional[dict] = Depends(get_tenant_context)
 ):
-    """Update a task"""
     tenant_id = tenant_context["tenant_id"] if tenant_context else None
     task = get_task_by_id(task_id, db, tenant_id=tenant_id)
     if not task:
@@ -268,11 +262,9 @@ async def update_existing_task(
             assignee_for_notification = assignee
         update_dict['assignedToId'] = assignee_id
 
-    # Handle tags
     if 'tags' in update_dict:
         update_dict['tags'] = json.dumps(update_dict['tags'])
     
-    # Handle parentTaskId updates (if needed)
     if 'parentTaskId' in update_dict:
         parent_id = update_dict['parentTaskId']
         if parent_id:
@@ -282,7 +274,6 @@ async def update_existing_task(
             if parent_task.parentTaskId:
                 raise HTTPException(status_code=400, detail="Cannot make subtask of a subtask")
     
-    # Handle completion
     if update_dict.get('status') == 'completed' and task.status != 'completed':
         update_dict['completedAt'] = datetime.utcnow()
     
@@ -321,7 +312,6 @@ async def delete_existing_task(
     db: Session = Depends(get_db),
     tenant_context: Optional[dict] = Depends(get_tenant_context)
 ):
-    """Delete a task"""
     tenant_id = tenant_context["tenant_id"] if tenant_context else None
     success = delete_task(task_id, db, tenant_id=tenant_id)
     if not success:
@@ -329,17 +319,14 @@ async def delete_existing_task(
     
     return {"message": "Task deleted successfully"}
 
-# Subtask specific endpoints
 @router.get("/{task_id}/subtasks", response_model=List[SubTask])
 async def get_subtasks(
     task_id: str,
     db: Session = Depends(get_db),
     tenant_context: Optional[dict] = Depends(get_tenant_context)
 ):
-    """Get all subtasks for a specific task"""
     tenant_id = tenant_context["tenant_id"] if tenant_context else None
     
-    # Verify parent task exists
     parent_task = get_task_by_id(task_id, db, tenant_id=tenant_id)
     if not parent_task:
         raise HTTPException(status_code=404, detail="Parent task not found")
@@ -355,10 +342,8 @@ async def create_subtask(
     db: Session = Depends(get_db),
     tenant_context: Optional[dict] = Depends(get_tenant_context)
 ):
-    """Create a subtask for a specific task"""
     tenant_id = tenant_context["tenant_id"] if tenant_context else None
     
-    # Verify parent task exists
     parent_task = get_task_by_id(task_id, db, tenant_id=tenant_id)
     if not parent_task:
         raise HTTPException(status_code=404, detail="Parent task not found")
@@ -366,7 +351,6 @@ async def create_subtask(
     if parent_task.parentTaskId:
         raise HTTPException(status_code=400, detail="Cannot create subtask of a subtask")
     
-    # Verify assignee exists if provided
     if subtask_data.assignedTo:
         assignee = get_user_by_id(subtask_data.assignedTo, db)
         if not assignee:
@@ -374,7 +358,6 @@ async def create_subtask(
         if tenant_context and str(assignee.tenant_id) != tenant_context["tenant_id"]:
             raise HTTPException(status_code=400, detail="Assignee not in tenant")
     
-    # Create subtask
     task_dict = subtask_data.dict()
     task_dict['projectId'] = task_dict.pop('project')
     task_dict['assignedToId'] = task_dict.pop('assignedTo', None)
