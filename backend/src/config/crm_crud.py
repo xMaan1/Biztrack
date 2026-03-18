@@ -18,25 +18,24 @@ def create_customer(db: Session, customer_data: Dict[str, Any], tenant_id: str) 
         customer_data["createdAt"] = datetime.utcnow()
         customer_data["updatedAt"] = datetime.utcnow()
         
-        # Convert empty strings to None for optional fields to avoid unique constraint violations
         optional_fields = ['cnic', 'phone', 'mobile', 'address', 'city', 'state', 'postalCode', 'notes', 'image_url', 'email']
         for field in optional_fields:
             if field in customer_data and customer_data[field] == '':
                 customer_data[field] = None
+        email_val = customer_data.get('email')
+        if email_val is not None and isinstance(email_val, str) and not email_val.strip():
+            customer_data['email'] = None
         
-        # Handle UUID fields properly - remove None values for UUID fields
         uuid_fields = ['assignedToId']
         for field in uuid_fields:
             if field in customer_data and customer_data[field] is None:
                 del customer_data[field]
         
-        # Check for existing customer with same CNIC if CNIC is provided
         if customer_data.get('cnic'):
             existing_customer = get_customer_by_cnic(db, customer_data['cnic'], tenant_id)
             if existing_customer:
                 raise ValueError(f"Customer with CNIC '{customer_data['cnic']}' already exists")
         
-        # Check for existing customer with same email
         if customer_data.get('email'):
             existing_customer = get_customer_by_email(db, customer_data['email'], tenant_id)
             if existing_customer:
@@ -74,9 +73,10 @@ def get_customer_by_cnic(db: Session, cnic: str, tenant_id: str) -> Optional[Cus
     ).first()
 
 def get_customer_by_email(db: Session, email: str, tenant_id: str) -> Optional[Customer]:
-    """Get customer by email"""
+    if email is None or (isinstance(email, str) and not email.strip()):
+        return None
     return db.query(Customer).filter(
-        and_(Customer.email == email.lower(), Customer.tenant_id == tenant_id)
+        and_(Customer.email == email.strip().lower(), Customer.tenant_id == tenant_id)
     ).first()
 
 def get_customers(
@@ -124,25 +124,25 @@ def update_customer(db: Session, customer_id: str, customer_data: Dict[str, Any]
         
         customer_data["updatedAt"] = datetime.utcnow()
         
-        # Convert empty strings to None for optional fields to avoid unique constraint violations
         optional_fields = ['cnic', 'phone', 'mobile', 'address', 'city', 'state', 'postalCode', 'notes', 'image_url', 'email']
         for field in optional_fields:
             if field in customer_data and customer_data[field] == '':
                 customer_data[field] = None
+        if 'email' in customer_data:
+            email_val = customer_data.get('email')
+            if email_val is not None and isinstance(email_val, str) and not email_val.strip():
+                customer_data['email'] = None
         
-        # Handle UUID fields properly - remove None values for UUID fields
         uuid_fields = ['assignedToId']
         for field in uuid_fields:
             if field in customer_data and customer_data[field] is None:
                 del customer_data[field]
         
-        # Check for existing customer with same CNIC if CNIC is being updated
         if customer_data.get('cnic') and customer_data['cnic'] != customer.cnic:
             existing_customer = get_customer_by_cnic(db, customer_data['cnic'], tenant_id)
             if existing_customer and existing_customer.id != customer_id:
                 raise ValueError(f"Customer with CNIC '{customer_data['cnic']}' already exists")
         
-        # Check for existing customer with same email if email is being updated
         if customer_data.get('email') and customer_data['email'] != customer.email:
             existing_customer = get_customer_by_email(db, customer_data['email'], tenant_id)
             if existing_customer and existing_customer.id != customer_id:
@@ -192,7 +192,6 @@ def get_customer_stats(db: Session, tenant_id: str) -> Dict[str, Any]:
         and_(Customer.tenant_id == tenant_id, Customer.customerStatus == "blocked")
     ).count()
     
-    # Customer type distribution
     individual_customers = db.query(Customer).filter(
         and_(Customer.tenant_id == tenant_id, Customer.customerType == "individual")
     ).count()
@@ -200,7 +199,6 @@ def get_customer_stats(db: Session, tenant_id: str) -> Dict[str, Any]:
         and_(Customer.tenant_id == tenant_id, Customer.customerType == "business")
     ).count()
     
-    # Recent customers (last 30 days)
     thirty_days_ago = datetime.utcnow() - timedelta(days=30)
     recent_customers = db.query(Customer).filter(
         and_(Customer.tenant_id == tenant_id, Customer.createdAt >= thirty_days_ago)
@@ -218,14 +216,12 @@ def get_customer_stats(db: Session, tenant_id: str) -> Dict[str, Any]:
 
 def generate_customer_id(db: Session, tenant_id: str) -> str:
     """Generate unique customer ID"""
-    # Get the highest customer ID number for this tenant
     last_customer = db.query(Customer).filter(
         Customer.tenant_id == tenant_id
     ).order_by(desc(Customer.customerId)).first()
     
     if last_customer and last_customer.customerId:
         try:
-            # Extract number from last ID (e.g., CUST001 -> 1)
             last_number = int(last_customer.customerId.replace("CUST", ""))
             new_number = last_number + 1
         except ValueError:
@@ -233,14 +229,12 @@ def generate_customer_id(db: Session, tenant_id: str) -> str:
     else:
         new_number = 1
     
-    # Ensure the generated ID is unique by checking if it exists
-    max_attempts = 1000  # Prevent infinite loop
+    max_attempts = 1000
     attempts = 0
     
     while attempts < max_attempts:
         candidate_id = f"CUST{new_number:03d}"
         
-        # Check if this ID already exists for this tenant
         existing_customer = db.query(Customer).filter(
             Customer.tenant_id == tenant_id,
             Customer.customerId == candidate_id
@@ -252,7 +246,6 @@ def generate_customer_id(db: Session, tenant_id: str) -> str:
         new_number += 1
         attempts += 1
     
-    # Fallback: use UUID-based ID if we can't find a unique sequential ID
     return f"CUST{str(uuid.uuid4())[:8].upper()}"
 
 def search_customers(
@@ -264,7 +257,6 @@ def search_customers(
     """Search customers by name, ID, CNIC, phone, or email"""
     query = db.query(Customer).filter(Customer.tenant_id == tenant_id)
     
-    # Normalize search term by replacing multiple spaces with single space
     normalized_search = ' '.join(search_term.split())
     
     search_filter = or_(
@@ -331,7 +323,6 @@ def delete_guarantor(db: Session, guarantor_id: str, tenant_id: str) -> bool:
     return True
 
 
-# Existing Lead CRUD Operations
 def get_lead_by_id(lead_id: str, db: Session, tenant_id: str = None) -> Optional[Lead]:
     query = db.query(Lead).filter(Lead.id == lead_id)
     if tenant_id:
@@ -344,7 +335,6 @@ def get_all_leads(db: Session, tenant_id: str = None, skip: int = 0, limit: int 
         query = query.filter(Lead.tenant_id == tenant_id)
     return query.order_by(Lead.createdAt.desc()).offset(skip).limit(limit).all()
 
-# Alias functions for backward compatibility
 def get_leads(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Lead]:
     """Get all leads (alias for get_all_leads)"""
     return get_all_leads(db, tenant_id, skip, limit)
@@ -387,7 +377,6 @@ def delete_lead(lead_id: str, db: Session, tenant_id: str = None) -> bool:
         return True
     return False
 
-# Contact functions
 def get_contact_by_id(contact_id: str, db: Session, tenant_id: str = None) -> Optional[Contact]:
     query = db.query(Contact).filter(Contact.id == contact_id)
     if tenant_id:
@@ -400,7 +389,6 @@ def get_all_contacts(db: Session, tenant_id: str = None, skip: int = 0, limit: i
         query = query.filter(Contact.tenant_id == tenant_id)
     return query.order_by(Contact.createdAt.desc()).offset(skip).limit(limit).all()
 
-# Alias functions for backward compatibility
 def get_contacts(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Contact]:
     """Get all contacts (alias for get_all_contacts)"""
     return get_all_contacts(db, tenant_id, skip, limit)
@@ -437,7 +425,6 @@ def delete_contact(contact_id: str, db: Session, tenant_id: str = None) -> bool:
         return True
     return False
 
-# Company functions
 def get_company_by_id(company_id: str, db: Session, tenant_id: str = None) -> Optional[Company]:
     query = db.query(Company).filter(Company.id == company_id)
     if tenant_id:
@@ -450,7 +437,6 @@ def get_all_companies(db: Session, tenant_id: str = None, skip: int = 0, limit: 
         query = query.filter(Company.tenant_id == tenant_id)
     return query.order_by(Company.createdAt.desc()).offset(skip).limit(limit).all()
 
-# Alias functions for backward compatibility
 def get_companies(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Company]:
     """Get all companies (alias for get_all_companies)"""
     return get_all_companies(db, tenant_id, skip, limit)
