@@ -82,7 +82,8 @@ async def create_role(
     tenant_context: dict = Depends(get_tenant_context),
     current_user = Depends(require_permission(ModulePermission.USERS_CREATE.value))
 ):
-    """Create a new role"""
+    if role_data.name and role_data.name.lower() == TenantRole.OWNER.value:
+        raise HTTPException(status_code=400, detail="Role name 'owner' is reserved")
     role = RoleModel(
         tenant_id=tenant_context["tenant_id"],
         name=role_data.name,
@@ -116,7 +117,6 @@ async def update_role(
     tenant_context: dict = Depends(get_tenant_context),
     current_user = Depends(require_permission(ModulePermission.USERS_UPDATE.value))
 ):
-    """Update a role"""
     role = db.query(RoleModel).filter(
         and_(
             RoleModel.id == role_id,
@@ -126,6 +126,8 @@ async def update_role(
     
     if not role:
         raise HTTPException(status_code=404, detail="Role not found")
+    if role.name == TenantRole.OWNER.value:
+        raise HTTPException(status_code=400, detail="Cannot modify the owner role")
     
     update_dict = role_data.dict(exclude_unset=True)
     for key, value in update_dict.items():
@@ -268,6 +270,8 @@ async def create_tenant_user(
             
             if not role:
                 raise HTTPException(status_code=404, detail="Role not found")
+            if role.name == TenantRole.OWNER.value and not RBACService.is_owner(db, str(current_user.id), tenant_context["tenant_id"]):
+                raise HTTPException(status_code=403, detail="Only tenant owner can assign the owner role")
             
             existing_tenant_user.isActive = True
             existing_tenant_user.role_id = user_data.role_id
@@ -317,6 +321,8 @@ async def create_tenant_user(
     
     if not role:
         raise HTTPException(status_code=404, detail="Role not found")
+    if role.name == TenantRole.OWNER.value and not RBACService.is_owner(db, str(current_user.id), tenant_context["tenant_id"]):
+        raise HTTPException(status_code=403, detail="Only tenant owner can assign the owner role")
     
     tenant_user = TenantUserModel(
         tenant_id=tenant_context["tenant_id"],
@@ -418,6 +424,8 @@ async def update_tenant_user(
         
         if not role:
             raise HTTPException(status_code=404, detail="Role not found")
+        if role.name == TenantRole.OWNER.value and not RBACService.is_owner(db, str(current_user.id), tenant_context["tenant_id"]):
+            raise HTTPException(status_code=403, detail="Only tenant owner can assign the owner role")
     
     update_dict = user_data.dict(exclude_unset=True)
     logger.info(f"Update data: {update_dict}")
@@ -563,6 +571,8 @@ async def create_user_for_tenant(
     
     if not role:
         raise HTTPException(status_code=404, detail="Role not found")
+    if role.name == TenantRole.OWNER.value and not RBACService.is_owner(db, str(current_user.id), tenant_context["tenant_id"]):
+        raise HTTPException(status_code=403, detail="Only tenant owner can assign the owner role")
     
     hashed_password = get_password_hash(user_data.password)
     user_dict = user_data.dict()

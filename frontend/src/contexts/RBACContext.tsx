@@ -277,9 +277,8 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
         const updatedUser = response as TenantUser;
         const roleId = updatedUser.role_id || userData.role_id;
         const role = roles.find(r => r.id === roleId);
-        
         const updatedUserWithRole: UserWithPermissions = {
-          id: updatedUser.id,
+          id: updatedUser.userId ?? updatedUser.id,
           tenant_user_id: updatedUser.id,
           userName: updatedUser.user?.userName || '',
           email: updatedUser.user?.email || '',
@@ -306,9 +305,8 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
         const updatedUser = response.data;
         const roleId = updatedUser.role_id || userData.role_id;
         const role = roles.find(r => r.id === roleId);
-        
         const updatedUserWithRole: UserWithPermissions = {
-          id: updatedUser.id,
+          id: updatedUser.userId ?? updatedUser.id,
           tenant_user_id: updatedUser.id,
           userName: updatedUser.user?.userName || '',
           email: updatedUser.user?.email || '',
@@ -340,11 +338,9 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
 
   const removeTenantUser = async (userId: string): Promise<void> => {
     try {
-      const response = await apiService.delete(`/rbac/tenant-users/${userId}`);
+      const response = await apiService.delete(`/rbac/remove-user/${userId}`);
       if (response.success || response.message) {
-        setTenantUsers(prev => prev.filter(user => 
-          user.id !== userId && user.tenant_user_id !== userId
-        ));
+        setTenantUsers(prev => prev.filter(user => user.id !== userId));
       } else {
         throw new Error(response.message || 'Failed to remove user');
       }
@@ -371,7 +367,6 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
   };
 
   const refreshPermissions = async () => {
-    // Force refresh by clearing current permissions first, then fetching new ones
     setUserPermissions(null);
     await fetchUserPermissions();
   };

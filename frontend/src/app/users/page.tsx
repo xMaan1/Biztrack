@@ -64,8 +64,7 @@ export default function UserManagementPage() {
     
     setIsDeleting(true);
     try {
-      const userId = userToDelete.tenant_user_id || userToDelete.id;
-      await removeTenantUser(userId);
+      await removeTenantUser(userToDelete.id);
       setShowDeleteModal(false);
       setUserToDelete(null);
     } catch (error) {
