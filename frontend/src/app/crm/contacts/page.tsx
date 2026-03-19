@@ -50,6 +50,13 @@ import { DashboardLayout } from '../../../components/layout';
 import { useCustomOptions } from '../../../hooks/useCustomOptions';
 import { CustomOptionDialog } from '../../../components/common/CustomOptionDialog';
 
+function contactTypeDisplayLabel(contact: Contact): string {
+  const raw = contact.contactType ?? ContactType.CUSTOMER;
+  const s = String(raw);
+  if (!s) return 'Customer';
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 export default function CRMContactsPage() {
   return (
     <ModuleGuard module="crm" fallback={<div>You don't have access to CRM module</div>}>
@@ -90,7 +97,7 @@ function CRMContactsContent() {
     jobTitle: '',
     department: '',
     companyId: '',
-    type: ContactType.CUSTOMER,
+    contactType: ContactType.CUSTOMER,
     notes: '',
     tags: [],
     isActive: true,
@@ -150,7 +157,7 @@ function CRMContactsContent() {
       jobTitle: '',
       department: '',
       companyId: '',
-      type: ContactType.CUSTOMER,
+      contactType: ContactType.CUSTOMER,
       notes: '',
       tags: [],
       isActive: true,
@@ -202,7 +209,7 @@ function CRMContactsContent() {
       jobTitle: contact.jobTitle || '',
       department: contact.department || '',
       companyId: contact.companyId || '',
-      type: contact.type,
+      contactType: contact.contactType ?? ContactType.CUSTOMER,
       notes: contact.notes || '',
       tags: contact.tags || [],
       isActive: contact.isActive,
@@ -377,8 +384,7 @@ function CRMContactsContent() {
                     </div>
                     <div className="flex items-center space-x-2 mt-2">
                       <Badge variant="outline">
-                        {contact.type.charAt(0).toUpperCase() +
-                          contact.type.slice(1)}
+                        {contactTypeDisplayLabel(contact)}
                       </Badge>
                       <Badge
                         variant={contact.isActive ? 'default' : 'secondary'}
@@ -568,16 +574,16 @@ function CRMContactsContent() {
                 </div>
 
                 <div>
-                  <Label htmlFor="type">Contact Type</Label>
+                  <Label htmlFor="contactType">Contact Type</Label>
                   <Select
-                    value={formData.type}
+                    value={formData.contactType}
                     onValueChange={(value) => {
                       if (value === 'create_new') {
                         setShowCustomContactTypeDialog(true);
                       } else {
                         setFormData({
                           ...formData,
-                          type: value as ContactType,
+                          contactType: value as ContactType,
                         });
                       }
                     }}
@@ -769,10 +775,7 @@ function CRMContactsContent() {
                     <Label className="text-sm font-medium text-gray-500">
                       Contact Type
                     </Label>
-                    <p>
-                      {viewingContact.type.charAt(0).toUpperCase() +
-                        viewingContact.type.slice(1)}
-                    </p>
+                    <p>{contactTypeDisplayLabel(viewingContact)}</p>
                   </div>
 
                   <div>

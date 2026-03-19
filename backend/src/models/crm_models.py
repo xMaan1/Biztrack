@@ -85,6 +85,15 @@ class ContactBase(BaseModel):
     tags: List[str] = []
     isActive: bool = True
 
+    @field_validator("companyId", mode="before")
+    @classmethod
+    def company_id_to_str(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, UUID):
+            return str(v)
+        return v
+
 class ContactCreate(ContactBase):
     pass
 
@@ -97,6 +106,15 @@ class ContactUpdate(BaseModel):
     jobTitle: Optional[str] = None
     department: Optional[str] = None
     companyId: Optional[str] = None
+
+    @field_validator("companyId", mode="before")
+    @classmethod
+    def company_id_to_str(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, UUID):
+            return str(v)
+        return v
     contactType: Optional[ContactType] = None
     isPrimary: Optional[bool] = None
     notes: Optional[str] = None

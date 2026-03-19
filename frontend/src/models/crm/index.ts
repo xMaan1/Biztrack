@@ -138,14 +138,15 @@ export interface Contact {
   jobTitle?: string;
   department?: string;
   companyId?: string;
-  type: ContactType;
+  contactType?: ContactType;
   notes?: string;
   tags: string[];
   isActive: boolean;
   lastContactDate?: string;
   nextFollowUpDate?: string;
-  tenantId: string;
-  createdBy: string;
+  tenantId?: string;
+  tenant_id?: string;
+  createdBy?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -159,7 +160,7 @@ export interface ContactCreate {
   jobTitle?: string;
   department?: string;
   companyId?: string;
-  type?: ContactType;
+  contactType?: ContactType;
   notes?: string;
   tags?: string[];
   isActive?: boolean;
@@ -174,7 +175,7 @@ export interface ContactUpdate {
   jobTitle?: string;
   department?: string;
   companyId?: string;
-  type?: ContactType;
+  contactType?: ContactType;
   notes?: string;
   tags?: string[];
   isActive?: boolean;

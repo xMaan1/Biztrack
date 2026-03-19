@@ -124,6 +124,18 @@ class Contact(Base):
     tenant = relationship("Tenant", back_populates="contacts")
     company = relationship("Company", back_populates="contacts")
 
+    @property
+    def contactType(self):
+        return self.contactSource or "customer"
+
+    @property
+    def tags(self):
+        return []
+
+    @property
+    def isPrimary(self):
+        return False
+
 class Company(Base):
     __tablename__ = "companies"
     

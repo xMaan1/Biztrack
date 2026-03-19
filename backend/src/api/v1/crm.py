@@ -44,6 +44,43 @@ router = APIRouter(prefix="/crm", tags=["crm"])
 logger = logging.getLogger(__name__)
 
 
+def _contact_create_to_orm_dict(contact_data: ContactCreate, tenant_id) -> dict:
+    raw = contact_data.dict()
+    company_id = raw.get("companyId")
+    if company_id:
+        try:
+            company_id = uuid.UUID(str(company_id))
+        except (ValueError, TypeError):
+            company_id = None
+    else:
+        company_id = None
+    ct = raw.get("contactType")
+    if ct is not None and hasattr(ct, "value"):
+        contact_source = ct.value
+    elif ct is not None:
+        contact_source = str(ct)
+    else:
+        contact_source = None
+    now = datetime.utcnow()
+    return {
+        "id": uuid.uuid4(),
+        "tenant_id": tenant_id,
+        "firstName": raw["firstName"],
+        "lastName": raw["lastName"],
+        "email": raw["email"],
+        "phone": raw.get("phone"),
+        "mobile": raw.get("mobile"),
+        "jobTitle": raw.get("jobTitle"),
+        "department": raw.get("department"),
+        "companyId": company_id,
+        "contactSource": contact_source,
+        "isActive": raw.get("isActive", True),
+        "notes": raw.get("notes"),
+        "createdAt": now,
+        "updatedAt": now,
+    }
+
+
 class CustomerPhotoUpload(PydanticBaseModel):
     image: str
 
@@ -597,7 +634,7 @@ async def get_crm_contacts(
         if type or company_id or search:
             filtered_contacts = []
             for contact in contacts:
-                if type and contact.type != type:
+                if type and contact.contactType != type:
                     continue
                 if company_id and contact.companyId != company_id:
                     continue
@@ -640,30 +677,22 @@ async def create_crm_contact(
         if not tenant_context:
             raise HTTPException(status_code=400, detail="Tenant context required")
         
-        contact = Contact(
-            id=str(uuid.uuid4()),
-            **contact_data.dict(),
-            tenant_id=tenant_context["tenant_id"],
-            createdBy=str(current_user.id),
-            createdAt=datetime.now(),
-            updatedAt=datetime.now()
+        contact = create_contact(
+            _contact_create_to_orm_dict(contact_data, tenant_context["tenant_id"]),
+            db,
         )
-        
-        db.add(contact)
-        db.commit()
-        db.refresh(contact)
         
         try:
             from ...services.notification_service import create_crm_notification_for_all_tenant_users
             from ...config.notification_models import NotificationType
             
             user_name = f"{current_user.firstName} {current_user.lastName}".strip() if hasattr(current_user, 'firstName') else current_user.userName if hasattr(current_user, 'userName') else "A user"
-            
+            contact_label = f"{getattr(contact_data, 'firstName', '')} {getattr(contact_data, 'lastName', '')}".strip() or "Contact"
             create_crm_notification_for_all_tenant_users(
                 db,
                 str(tenant_context["tenant_id"]),
                 "New Contact Created",
-                f"{user_name} created a new contact: {contact_data.name}",
+                f"{user_name} created a new contact: {contact_label}",
                 NotificationType.INFO,
                 f"/crm/contacts/{str(contact.id)}",
                 {"contact_id": str(contact.id), "created_by": str(current_user.id)}
@@ -715,7 +744,18 @@ async def update_crm_contact(
             raise HTTPException(status_code=404, detail="Contact not found")
         
         update_data = contact_data.dict(exclude_unset=True)
-        update_data["updatedAt"] = datetime.now()
+        for k in ("tags", "isPrimary"):
+            update_data.pop(k, None)
+        if "contactType" in update_data:
+            ct = update_data.pop("contactType")
+            if ct is not None:
+                update_data["contactSource"] = ct.value if hasattr(ct, "value") else str(ct)
+        if update_data.get("companyId"):
+            try:
+                update_data["companyId"] = uuid.UUID(str(update_data["companyId"]))
+            except (ValueError, TypeError):
+                update_data["companyId"] = None
+        update_data["updatedAt"] = datetime.utcnow()
         
         updated_contact = update_contact(contact_id, update_data, db, tenant_context["tenant_id"] if tenant_context else None)
         
@@ -725,11 +765,12 @@ async def update_crm_contact(
             
             user_name = f"{current_user.firstName} {current_user.lastName}".strip() if hasattr(current_user, 'firstName') else current_user.userName if hasattr(current_user, 'userName') else "A user"
             
+            contact_label = f"{getattr(updated_contact, 'firstName', '')} {getattr(updated_contact, 'lastName', '')}".strip() or "Contact"
             create_crm_notification_for_all_tenant_users(
                 db,
                 str(tenant_context["tenant_id"]) if tenant_context else str(uuid.uuid4()),
                 "Contact Updated",
-                f"{user_name} updated contact: {updated_contact.name}",
+                f"{user_name} updated contact: {contact_label}",
                 NotificationType.INFO,
                 f"/crm/contacts/{contact_id}",
                 {"contact_id": contact_id, "updated_by": str(current_user.id)}
@@ -1346,25 +1387,17 @@ async def convert_lead_to_contact(
         if not lead:
             raise HTTPException(status_code=404, detail="Lead not found")
         
-        # Create contact
-        contact = Contact(
-            id=str(uuid.uuid4()),
-            **contact_data.dict(),
-            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
-            createdBy=str(current_user.id),
-            createdAt=datetime.now(),
-            updatedAt=datetime.now()
-        )
+        tid = tenant_context["tenant_id"] if tenant_context else None
+        if not tid:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+        contact = create_contact(_contact_create_to_orm_dict(contact_data, tid), db)
         
-        db.add(contact)
-        
-        # Update lead status
         lead.status = "converted"
-        lead.convertedToContact = contact.id
-        lead.updatedAt = datetime.now()
+        lead.updatedAt = datetime.utcnow()
         
         db.commit()
         db.refresh(contact)
+        db.refresh(lead)
         
         return {"message": "Lead converted successfully", "contact": contact}
     except Exception as e:
