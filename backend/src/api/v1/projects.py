@@ -14,6 +14,7 @@ from ...models.hrm_models import TimeEntry, TimeEntryCreate, TimeEntryUpdate, HR
 from ...config.database import (
     get_db, get_user_by_id, create_project, get_project_by_id,
     get_all_projects, update_project, delete_project, get_tasks_by_project,
+    get_project_ids_with_tasks_assigned_to,
     get_time_entries, get_time_entry_by_id, create_time_entry, update_time_entry, delete_time_entry,
     User, Project as DBProject, Task as DBTask
 )
@@ -85,15 +86,20 @@ async def get_projects(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
     _: dict = Depends(require_permission(ModulePermission.PROJECTS_VIEW.value))
 ):
-    """Get all projects with optional filtering (tenant-scoped)"""
+    """Get all projects with optional filtering (tenant-scoped). Team members only see projects that have tasks assigned to them."""
     skip = (page - 1) * limit
     tenant_id = tenant_context["tenant_id"] if tenant_context else None
-    
+
     query = db.query(DBProject).filter(DBProject.tenant_id == tenant_id)
-    
+
+    if not can_see_all_tasks(tenant_context or {}):
+        allowed_project_ids = get_project_ids_with_tasks_assigned_to(str(current_user.id), db, tenant_id)
+        query = query.filter(DBProject.id.in_(allowed_project_ids))
+
     if status:
         query = query.filter(DBProject.status == status)
     if priority:
@@ -106,9 +112,9 @@ async def get_projects(
                 func.lower(DBProject.description).like(search_lower)
             )
         )
-    
+
     total = query.count()
-    
+
     projects = query.order_by(DBProject.createdAt.desc()).offset(skip).limit(limit).all()
     
     project_list = [transform_project_to_response(project) for project in projects]
@@ -682,15 +688,15 @@ async def resume_project_time_session(
 
 @router.get("/{project_id}", response_model=Project)
 async def get_project(
-    project_id: str, 
+    project_id: str,
     db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
     _: dict = Depends(require_permission(ModulePermission.PROJECTS_VIEW.value))
 ):
-    """Get a specific project"""
+    """Get a specific project. Team members only see projects that have tasks assigned to them."""
     import uuid
     tenant_id = tenant_context["tenant_id"] if tenant_context else None
-    # Validate project_id is a valid UUID
     try:
         uuid.UUID(str(project_id))
     except Exception:
@@ -698,6 +704,10 @@ async def get_project(
     project = get_project_by_id(project_id, db, tenant_id=tenant_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
+    if not can_see_all_tasks(tenant_context or {}):
+        allowed_project_ids = get_project_ids_with_tasks_assigned_to(str(current_user.id), db, tenant_id)
+        if project.id not in allowed_project_ids:
+            raise HTTPException(status_code=404, detail="Project not found")
     return transform_project_to_response(project)
 
 @router.post("", response_model=Project)
@@ -937,7 +947,7 @@ def transform_task_to_response(task: DBTask):
 
 @router.get("/{project_id}/tasks", response_model=TasksResponse)
 async def get_project_tasks(
-    project_id: str, 
+    project_id: str,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
@@ -947,7 +957,10 @@ async def get_project_tasks(
     project = get_project_by_id(project_id, db, tenant_id=tenant_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-    
+    if not can_see_all_tasks(tenant_context or {}):
+        allowed_project_ids = get_project_ids_with_tasks_assigned_to(str(current_user.id), db, tenant_id)
+        if project.id not in allowed_project_ids:
+            raise HTTPException(status_code=404, detail="Project not found")
     tasks = get_tasks_by_project(project_id, db, tenant_id=tenant_id)
     if not can_see_all_tasks(tenant_context or {}):
         tasks = [t for t in tasks if t.assignedToId and str(t.assignedToId) == str(current_user.id)]

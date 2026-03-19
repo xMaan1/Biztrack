@@ -24,6 +24,12 @@ def get_projects_by_manager(manager_id: str, db: Session, tenant_id: str = None,
         query = query.filter(Project.tenant_id == tenant_id)
     return query.order_by(Project.createdAt.desc()).offset(skip).limit(limit).all()
 
+def get_project_ids_with_tasks_assigned_to(assignee_id: str, db: Session, tenant_id: str = None) -> List[Any]:
+    query = db.query(Task.projectId).filter(Task.assignedToId == assignee_id).distinct()
+    if tenant_id:
+        query = query.filter(Task.tenant_id == tenant_id)
+    return [row[0] for row in query.all()]
+
 def create_project(project_data: dict, db: Session) -> Project:
     db_project = Project(**project_data)
     db.add(db_project)

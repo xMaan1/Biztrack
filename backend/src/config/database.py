@@ -115,7 +115,7 @@ from .core_crud import (
 
 from .project_crud import (
     # Project functions
-    get_project_by_id, get_all_projects, get_projects_by_manager,
+    get_project_by_id, get_all_projects, get_projects_by_manager, get_project_ids_with_tasks_assigned_to,
     create_project, update_project, delete_project, get_project_stats,
     
     # Task functions
