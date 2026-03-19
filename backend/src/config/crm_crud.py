@@ -23,9 +23,12 @@ def create_customer(db: Session, customer_data: Dict[str, Any], tenant_id: str) 
             if field in customer_data and customer_data[field] == '':
                 customer_data[field] = None
         email_val = customer_data.get('email')
-        if email_val is not None and isinstance(email_val, str) and not email_val.strip():
-            customer_data['email'] = None
-        
+        if email_val is not None and isinstance(email_val, str):
+            email_val = email_val.strip() or None
+        else:
+            email_val = None
+        customer_data['email'] = email_val if email_val else ''
+
         uuid_fields = ['assignedToId']
         for field in uuid_fields:
             if field in customer_data and customer_data[field] is None:
@@ -36,11 +39,11 @@ def create_customer(db: Session, customer_data: Dict[str, Any], tenant_id: str) 
             if existing_customer:
                 raise ValueError(f"Customer with CNIC '{customer_data['cnic']}' already exists")
         
-        if customer_data.get('email'):
+        if email_val:
             existing_customer = get_customer_by_email(db, customer_data['email'], tenant_id)
             if existing_customer:
                 raise ValueError(f"Customer with email '{customer_data['email']}' already exists")
-        
+
         customer = Customer(**customer_data)
         db.add(customer)
         db.commit()
@@ -49,13 +52,18 @@ def create_customer(db: Session, customer_data: Dict[str, Any], tenant_id: str) 
         
     except IntegrityError as e:
         db.rollback()
-        error_msg = str(e.orig)
+        err = e.orig
+        error_msg = str(err)
+        pgcode = getattr(err, 'pgcode', None) or getattr(err, 'sqlstate', None)
         if "cnic" in error_msg.lower():
             raise ValueError("Customer with this CNIC already exists")
-        elif "email" in error_msg.lower():
+        if "email" in error_msg.lower():
+            if pgcode == '23502':
+                raise ValueError("Database requires customer email. Update the customers table to allow NULL on the email column.")
+            if pgcode == '23505':
+                raise ValueError("Customer with this email already exists")
             raise ValueError("Customer with this email already exists")
-        else:
-            raise ValueError(f"Database constraint violation: {error_msg}")
+        raise ValueError(f"Database constraint violation: {error_msg}")
     except Exception as e:
         db.rollback()
         raise
@@ -130,9 +138,12 @@ def update_customer(db: Session, customer_id: str, customer_data: Dict[str, Any]
                 customer_data[field] = None
         if 'email' in customer_data:
             email_val = customer_data.get('email')
-            if email_val is not None and isinstance(email_val, str) and not email_val.strip():
-                customer_data['email'] = None
-        
+            if email_val is not None and isinstance(email_val, str):
+                email_val = email_val.strip() or None
+            else:
+                email_val = None
+            customer_data['email'] = email_val if email_val else ''
+
         uuid_fields = ['assignedToId']
         for field in uuid_fields:
             if field in customer_data and customer_data[field] is None:

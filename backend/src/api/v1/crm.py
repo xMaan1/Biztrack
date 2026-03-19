@@ -124,7 +124,7 @@ async def create_customer_endpoint(
                 db,
                 str(tenant_context["tenant_id"]),
                 "New Customer Created",
-                f"{user_name} created a new customer: {customer_data.name}",
+                f"{user_name} created a new customer: {customer_data.firstName} {customer_data.lastName}".strip(),
                 NotificationType.INFO,
                 f"/crm/customers/{str(customer.id)}",
                 {"customer_id": str(customer.id), "created_by": str(current_user.id)}
