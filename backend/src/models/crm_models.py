@@ -73,7 +73,7 @@ class Lead(LeadBase):
 class ContactBase(BaseModel):
     firstName: str
     lastName: str
-    email: EmailStr
+    email: Optional[EmailStr] = None
     phone: Optional[str] = None
     mobile: Optional[str] = None
     jobTitle: Optional[str] = None
@@ -84,6 +84,15 @@ class ContactBase(BaseModel):
     notes: Optional[str] = None
     tags: List[str] = []
     isActive: bool = True
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def empty_email_to_none(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str) and not v.strip():
+            return None
+        return v
 
     @field_validator("companyId", mode="before")
     @classmethod
@@ -106,6 +115,20 @@ class ContactUpdate(BaseModel):
     jobTitle: Optional[str] = None
     department: Optional[str] = None
     companyId: Optional[str] = None
+    contactType: Optional[ContactType] = None
+    isPrimary: Optional[bool] = None
+    notes: Optional[str] = None
+    tags: Optional[List[str]] = None
+    isActive: Optional[bool] = None
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def empty_email_to_none(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str) and not v.strip():
+            return None
+        return v
 
     @field_validator("companyId", mode="before")
     @classmethod
@@ -115,11 +138,6 @@ class ContactUpdate(BaseModel):
         if isinstance(v, UUID):
             return str(v)
         return v
-    contactType: Optional[ContactType] = None
-    isPrimary: Optional[bool] = None
-    notes: Optional[str] = None
-    tags: Optional[List[str]] = None
-    isActive: Optional[bool] = None
 
 class Contact(ContactBase):
     id: UUID

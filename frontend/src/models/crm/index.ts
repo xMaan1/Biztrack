@@ -132,7 +132,7 @@ export interface Contact {
   id: string;
   firstName: string;
   lastName: string;
-  email: string;
+  email?: string | null;
   phone?: string;
   mobile?: string;
   jobTitle?: string;
@@ -154,7 +154,7 @@ export interface Contact {
 export interface ContactCreate {
   firstName: string;
   lastName: string;
-  email: string;
+  email?: string | null;
   phone?: string;
   mobile?: string;
   jobTitle?: string;

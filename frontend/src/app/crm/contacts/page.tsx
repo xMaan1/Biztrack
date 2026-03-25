@@ -167,12 +167,8 @@ function CRMContactsContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (
-      !formData.firstName.trim() ||
-      !formData.lastName.trim() ||
-      !formData.email.trim()
-    ) {
-      alert('First name, last name, and email are required');
+    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+      alert('First name and last name are required');
       return;
     }
 
@@ -203,7 +199,7 @@ function CRMContactsContent() {
     setFormData({
       firstName: contact.firstName,
       lastName: contact.lastName,
-      email: contact.email,
+      email: contact.email ?? '',
       phone: contact.phone || '',
       mobile: contact.mobile || '',
       jobTitle: contact.jobTitle || '',
@@ -366,7 +362,9 @@ function CRMContactsContent() {
                             {contact.firstName} {contact.lastName}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {contact.email}
+                            {contact.email?.trim()
+                              ? contact.email
+                              : 'No email'}
                           </div>
                         </div>
                       </div>
@@ -487,16 +485,15 @@ function CRMContactsContent() {
                 </div>
 
                 <div>
-                  <Label htmlFor="email">Email *</Label>
+                  <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
-                    value={formData.email}
+                    value={formData.email ?? ''}
                     onChange={(e) =>
                       setFormData({ ...formData, email: e.target.value })
                     }
                     placeholder="Enter email address"
                     type="email"
-                    required
                   />
                 </div>
 
@@ -727,7 +724,7 @@ function CRMContactsContent() {
                     <Label className="text-sm font-medium text-gray-500">
                       Email
                     </Label>
-                    <p>{viewingContact.email}</p>
+                    <p>{viewingContact.email?.trim() || 'Not specified'}</p>
                   </div>
 
                   <div>

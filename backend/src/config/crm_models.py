@@ -108,7 +108,7 @@ class Contact(Base):
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
     firstName = Column(String, nullable=False)
     lastName = Column(String, nullable=False)
-    email = Column(String, nullable=False)
+    email = Column(String, nullable=True)
     phone = Column(String)
     mobile = Column(String)
     jobTitle = Column(String)

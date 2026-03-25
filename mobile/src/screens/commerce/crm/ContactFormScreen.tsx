@@ -56,8 +56,8 @@ export default function ContactFormScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!formData.firstName || !formData.lastName || !formData.email) {
-      Alert.alert('Validation Error', 'Please fill in all required fields');
+    if (!formData.firstName || !formData.lastName) {
+      Alert.alert('Validation Error', 'First name and last name are required');
       return;
     }
 
@@ -118,7 +118,7 @@ export default function ContactFormScreen() {
               />
             </View>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email *</Text>
+              <Text style={styles.label}>Email</Text>
               <TextInput
                 style={styles.input}
                 value={formData.email}

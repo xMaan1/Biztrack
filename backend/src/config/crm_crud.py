@@ -421,7 +421,9 @@ def update_contact(contact_id: str, update_data: dict, db: Session, tenant_id: s
     contact = get_contact_by_id(contact_id, db, tenant_id)
     if contact:
         for key, value in update_data.items():
-            if hasattr(contact, key) and value is not None:
+            if not hasattr(contact, key):
+                continue
+            if value is not None or key == "email":
                 setattr(contact, key, value)
         contact.updatedAt = datetime.utcnow()
         db.commit()

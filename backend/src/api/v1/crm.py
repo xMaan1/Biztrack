@@ -67,7 +67,7 @@ def _contact_create_to_orm_dict(contact_data: ContactCreate, tenant_id) -> dict:
         "tenant_id": tenant_id,
         "firstName": raw["firstName"],
         "lastName": raw["lastName"],
-        "email": raw["email"],
+        "email": raw.get("email"),
         "phone": raw.get("phone"),
         "mobile": raw.get("mobile"),
         "jobTitle": raw.get("jobTitle"),
