@@ -8,8 +8,138 @@ from sqlalchemy.orm import Session
 from typing import Optional, List
 from ..models.common import ModulePermission
 import logging
+import re
 
 logger = logging.getLogger(__name__)
+
+HTTP_METHOD_TO_ACTION = {
+    "GET": "view",
+    "POST": "create",
+    "PUT": "update",
+    "PATCH": "update",
+    "DELETE": "delete",
+}
+
+PATH_MODULE_MAP = {
+    "crm": "crm",
+    "hrm": "hrm",
+    "inventory": "inventory",
+    "projects": "projects",
+    "tasks": "projects",
+    "sales": "sales",
+    "invoices": "sales",
+    "installments": "sales",
+    "delivery-notes": "sales",
+    "pos": "pos",
+    "production": "production",
+    "work-orders": "production",
+    "job-cards": "production",
+    "vehicles": "production",
+    "quality-control": "quality",
+    "maintenance": "maintenance",
+    "banking": "banking",
+    "ledger": "ledger",
+    "reports": "reports",
+    "events": "events",
+    "healthcare": "healthcare",
+    "users": "users",
+    "dashboard": "dashboard",
+}
+
+KNOWN_GENERIC_SEGMENTS = {
+    "stats", "search", "download", "calendar", "dashboard", "overview",
+    "bulk", "send", "send-whatsapp", "mark-as-paid", "mark-as-unpaid",
+    "payments", "reports", "history", "approve", "reject", "start", "stop",
+    "pause", "resume", "convert", "photo", "invoice", "reconcile", "summary",
+    "seed-accounts", "seed-accounts-simple", "test"
+}
+
+UUID_RE = re.compile(
+    r"^[0-9a-fA-F]{8}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{12}$"
+)
+
+
+def _is_dynamic_segment(segment: str) -> bool:
+    if not segment:
+        return True
+    if segment.isdigit():
+        return True
+    if UUID_RE.match(segment):
+        return True
+    return False
+
+
+def _normalize_segment(segment: str) -> str:
+    return segment.replace("-", "_").lower()
+
+
+def _build_permission_candidates(path: str, method: str) -> List[str]:
+    action = HTTP_METHOD_TO_ACTION.get(method.upper())
+    if not action:
+        return []
+
+    segments = [s for s in path.strip("/").split("/") if s]
+    if not segments:
+        return []
+
+    base_index = 0
+    module_key = segments[base_index].lower()
+    if module_key == "api" and len(segments) > 1:
+        base_index = 1
+        module_key = segments[base_index].lower()
+    module = PATH_MODULE_MAP.get(module_key)
+    if not module:
+        return []
+
+    static_segments: List[str] = []
+    for segment in segments[base_index + 1:]:
+        normalized = _normalize_segment(segment)
+        if _is_dynamic_segment(normalized):
+            continue
+        static_segments.append(normalized)
+
+    candidates: List[str] = [f"{module}:{action}"]
+
+    if static_segments:
+        for seg in reversed(static_segments):
+            if seg in KNOWN_GENERIC_SEGMENTS:
+                candidates.append(f"{module}:{seg}:{action}")
+                continue
+            candidates.append(f"{module}:{seg}:{action}")
+
+    if f"{module}:dashboard:{action}" not in candidates and (not static_segments or static_segments[0] == "dashboard"):
+        candidates.append(f"{module}:dashboard:{action}")
+
+    deduped: List[str] = []
+    for candidate in candidates:
+        if candidate not in deduped:
+            deduped.append(candidate)
+    return deduped
+
+
+def _enforce_granular_permission(
+    request: Request,
+    current_user,
+    tenant_context: dict
+):
+    if not tenant_context:
+        return
+
+    if tenant_context.get("is_owner"):
+        return
+
+    candidates = _build_permission_candidates(request.url.path, request.method)
+    if not candidates:
+        return
+
+    user_permissions = tenant_context.get("permissions", [])
+    if any(permission in user_permissions for permission in candidates):
+        return
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail=f"Permission denied: one of {candidates} is required"
+    )
 
 class CustomHTTPBearer(HTTPBearer):
     def __init__(self, auto_error: bool = True):
@@ -191,14 +321,18 @@ def get_tenant_context(
         f"Role: {user_role} | "
         f"Permissions count: {len(user_permissions)}"
     )
-    
-    return {
+
+    tenant_context = {
         "tenant": tenant,
         "user_role": user_role,
         "permissions": user_permissions,
         "tenant_id": x_tenant_id,
         "is_owner": RBACService.is_owner(db, str(current_user.id), x_tenant_id)
     }
+
+    _enforce_granular_permission(request, current_user, tenant_context)
+
+    return tenant_context
 
 def can_see_all_tasks(tenant_context: dict) -> bool:
     if not tenant_context:

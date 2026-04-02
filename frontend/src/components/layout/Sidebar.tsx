@@ -8,6 +8,7 @@ import { usePlanInfo } from '../../hooks/usePlanInfo';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePermissions } from '../../hooks/usePermissions';
 import { apiService } from '../../services/ApiService';
+import { SIDEBAR_PATH_PERMISSIONS } from '@/src/constants/rbacPermissions';
 import {
   LayoutDashboard,
   FolderOpen,
@@ -757,7 +758,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { planInfo, loading: planLoading } = usePlanInfo();
   const { user } = useAuth();
-  const { accessibleModules, hasModuleAccess, isOwner } = usePermissions();
+  const { accessibleModules, hasModuleAccess, hasPermission, isOwner } = usePermissions();
 
   const toggleExpanded = (itemText: string) => {
     const newExpanded = new Set(expandedItems);
@@ -796,29 +797,11 @@ export default function Sidebar() {
     return moduleMap[item.text] || null;
   };
 
-  // Map sub-item text to module name for permission checking
-  const getModuleForSubItem = (itemText: string): string | null => {
-    const subItemModuleMap: Record<string, string | undefined> = {
-      'Dashboard': undefined,
-      'Customers': 'crm',
-      'Companies': 'crm',
-      'Contacts': 'crm',
-      'Leads': 'crm',
-      'Opportunities': 'crm',
-      'Quotes': 'sales',
-      'Invoices': 'sales',
-      'Installments': 'sales',
-      'Delivery Notes': 'sales',
-      'Payment Receipts': 'sales',
-      'Products': 'inventory',
-      'Orders': 'inventory',
-      'Categories': 'inventory',
-      'Projects': 'projects',
-      'Tasks': 'projects',
-      'Team Members': 'projects',
-      'Time Tracking': 'projects',
-    };
-    return subItemModuleMap[itemText] || null;
+  const hasPathPermission = (path?: string) => {
+    if (!path || isOwner()) return true;
+    const requiredPermission = SIDEBAR_PATH_PERMISSIONS[path];
+    if (!requiredPermission) return true;
+    return hasPermission(requiredPermission);
   };
 
   const filteredItems = useMemo(() => {
@@ -849,6 +832,9 @@ export default function Sidebar() {
 
       // Check user permissions - owners see everything
       if (!isOwner()) {
+        if (item.path && !hasPathPermission(item.path)) {
+          return false;
+        }
         const module = getModuleForMenuItem(item);
         if (module && !hasModuleAccess(module)) {
           return false;
@@ -881,7 +867,7 @@ export default function Sidebar() {
 
       return true;
     });
-  }, [searchQuery, planInfo, planLoading, user, accessibleModules, hasModuleAccess, isOwner]);
+  }, [searchQuery, planInfo, planLoading, user, accessibleModules, hasModuleAccess, hasPermission, isOwner]);
 
   // Handle auto-expanding items when searching
   useEffect(() => {
@@ -1115,8 +1101,7 @@ export default function Sidebar() {
 
                     if (!subItemAvailable) return null;
 
-                    const subItemModule = getModuleForSubItem(subItem.text);
-                    if (!isOwner() && subItemModule && !hasModuleAccess(subItemModule)) {
+                    if (!hasPathPermission(subItem.path)) {
                       return null;
                     }
 

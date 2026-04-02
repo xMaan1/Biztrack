@@ -19,26 +19,13 @@ import { Badge } from '@/src/components/ui/badge';
 import { Alert, AlertDescription } from '@/src/components/ui/alert';
 import { Loader2, Plus, Edit, Trash2 } from 'lucide-react';
 import { Checkbox } from '@/src/components/ui/checkbox';
+import { RBAC_PERMISSION_MODULES } from '@/src/constants/rbacPermissions';
 
 interface RoleManagementModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }
-
-const MODULE_PERMISSIONS = [
-  { module: 'CRM', permissions: ['crm:view', 'crm:create', 'crm:update', 'crm:delete'] },
-  { module: 'Sales', permissions: ['sales:view', 'sales:create', 'sales:update', 'sales:delete'] },
-  { module: 'HRM', permissions: ['hrm:view', 'hrm:create', 'hrm:update', 'hrm:delete'] },
-  { module: 'Inventory', permissions: ['inventory:view', 'inventory:create', 'inventory:update', 'inventory:delete'] },
-  { module: 'Finance', permissions: ['finance:view', 'finance:create', 'finance:update', 'finance:delete'] },
-  { module: 'Projects', permissions: ['projects:view', 'projects:create', 'projects:update', 'projects:delete'] },
-  { module: 'Production', permissions: ['production:view', 'production:create', 'production:update', 'production:delete'] },
-  { module: 'Quality', permissions: ['quality:view', 'quality:create', 'quality:update', 'quality:delete'] },
-  { module: 'Maintenance', permissions: ['maintenance:view', 'maintenance:create', 'maintenance:update', 'maintenance:delete'] },
-  { module: 'Users', permissions: ['users:view', 'users:create', 'users:update', 'users:delete'] },
-  { module: 'Reports', permissions: ['reports:view', 'reports:export'] },
-];
 
 export function RoleManagementModal({ open, onOpenChange, onSuccess }: RoleManagementModalProps) {
   const { roles, createRole, updateRole, deleteRole } = useRBAC();
@@ -136,17 +123,29 @@ export function RoleManagementModal({ open, onOpenChange, onSuccess }: RoleManag
     }));
   };
 
+  const handleGroupToggle = (permissions: string[]) => {
+    const allSelected = permissions.every(p => formData.permissions.includes(p));
+    if (allSelected) {
+      setFormData(prev => ({
+        ...prev,
+        permissions: prev.permissions.filter(p => !permissions.includes(p))
+      }));
+      return;
+    }
+    setFormData(prev => ({
+      ...prev,
+      permissions: Array.from(new Set([...prev.permissions, ...permissions]))
+    }));
+  };
+
   const handleModuleToggle = (modulePermissions: string[]) => {
     const allSelected = modulePermissions.every(p => formData.permissions.includes(p));
-    
     if (allSelected) {
-      // Remove all permissions for this module
       setFormData(prev => ({
         ...prev,
         permissions: prev.permissions.filter(p => !modulePermissions.includes(p))
       }));
     } else {
-      // Add all permissions for this module
       setFormData(prev => ({
         ...prev,
         permissions: Array.from(new Set([...prev.permissions, ...modulePermissions]))
@@ -273,28 +272,61 @@ export function RoleManagementModal({ open, onOpenChange, onSuccess }: RoleManag
 
               <div className="space-y-4">
                 <Label>Permissions</Label>
-                {MODULE_PERMISSIONS.map((module) => (
-                  <div key={module.module} className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        checked={module.permissions.every(p => formData.permissions.includes(p))}
-                        onCheckedChange={() => handleModuleToggle(module.permissions)}
-                      />
-                      <Label className="font-medium">{module.module}</Label>
-                    </div>
-                    <div className="ml-6 space-y-1">
-                      {module.permissions.map((permission) => (
-                        <div key={permission} className="flex items-center space-x-2">
+                {RBAC_PERMISSION_MODULES.map((module) => {
+                  const moduleSubPermissions = module.submodules.flatMap(sub => sub.permissions.map(p => p.value));
+                  const allModulePermissions = [...module.permissions.map(p => p.value), ...moduleSubPermissions];
+                  return (
+                    <details key={module.label} className="rounded-md border px-3 py-2">
+                      <summary className="cursor-pointer list-none">
+                        <div className="flex items-center space-x-2">
                           <Checkbox
-                            checked={formData.permissions.includes(permission)}
-                            onCheckedChange={() => handlePermissionToggle(permission)}
+                            checked={allModulePermissions.every(p => formData.permissions.includes(p))}
+                            onCheckedChange={() => handleModuleToggle(allModulePermissions)}
                           />
-                          <Label className="text-sm">{permission}</Label>
+                          <Label className="font-medium cursor-pointer">{module.label}</Label>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+                      </summary>
+                      <div className="ml-6 mt-3 space-y-3">
+                        <div className="space-y-1">
+                          {module.permissions.map((permission) => (
+                            <div key={permission.value} className="flex items-center space-x-2">
+                              <Checkbox
+                                checked={formData.permissions.includes(permission.value)}
+                                onCheckedChange={() => handlePermissionToggle(permission.value)}
+                              />
+                              <Label className="text-sm cursor-pointer">{permission.label} ({permission.value})</Label>
+                            </div>
+                          ))}
+                        </div>
+                        {module.submodules.map((submodule) => {
+                          const subPermissions = submodule.permissions.map(p => p.value);
+                          return (
+                            <div key={submodule.label} className="rounded border p-2 space-y-1">
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                  checked={subPermissions.every(p => formData.permissions.includes(p))}
+                                  onCheckedChange={() => handleGroupToggle(subPermissions)}
+                                />
+                                <Label className="text-sm font-medium cursor-pointer">{submodule.label}</Label>
+                              </div>
+                              <div className="ml-5 space-y-1">
+                                {submodule.permissions.map((permission) => (
+                                  <div key={permission.value} className="flex items-center space-x-2">
+                                    <Checkbox
+                                      checked={formData.permissions.includes(permission.value)}
+                                      onCheckedChange={() => handlePermissionToggle(permission.value)}
+                                    />
+                                    <Label className="text-sm cursor-pointer">{permission.label} ({permission.value})</Label>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </details>
+                  );
+                })}
               </div>
 
               <DialogFooter>

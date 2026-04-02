@@ -373,12 +373,21 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
 
   const hasPermission = (permission: string): boolean => {
     if (!userPermissions) return false;
-    return userPermissions.permissions.includes(permission);
+    if (userPermissions.permissions.includes(permission)) return true;
+    const segments = permission.split(':');
+    if (segments.length >= 3) {
+      const module = segments[0];
+      const action = segments[segments.length - 1];
+      const legacyPermission = `${module}:${action}`;
+      return userPermissions.permissions.includes(legacyPermission);
+    }
+    return false;
   };
 
   const hasModuleAccess = (module: string): boolean => {
     if (!userPermissions) return false;
-    return userPermissions.accessible_modules.includes(module);
+    if (userPermissions.accessible_modules.includes(module)) return true;
+    return userPermissions.permissions.some(permission => permission.startsWith(`${module}:`));
   };
 
   const isOwner = (): boolean => {
