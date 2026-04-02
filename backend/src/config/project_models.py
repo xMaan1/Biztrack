@@ -47,6 +47,7 @@ class Project(Base):
     budget = Column(Float)
     actualCost = Column(Float, default=0.0)
     projectManagerId = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    createdById = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     notes = Column(Text)
     clientEmail = Column(String)
     createdAt = Column(DateTime, default=datetime.utcnow)
@@ -55,6 +56,7 @@ class Project(Base):
     # Relationships
     tenant = relationship("Tenant", back_populates="projects")
     projectManager = relationship("User", foreign_keys=[projectManagerId], back_populates="managed_projects")
+    creator = relationship("User", foreign_keys=[createdById], back_populates="projects_created")
     teamMembers = relationship("User", secondary=project_team_members, back_populates="team_projects")
     tasks = relationship("Task", back_populates="project")
     work_orders = relationship("WorkOrder", back_populates="project")
@@ -72,6 +74,7 @@ class Project(Base):
         Index("idx_projects_priority", "priority"),
         Index("idx_projects_created_at", "createdAt"),
         Index("idx_projects_manager", "projectManagerId"),
+        Index("idx_projects_created_by", "createdById"),
         Index("idx_projects_tenant_status", "tenant_id", "status"),
     )
 

@@ -112,6 +112,7 @@ class Project(BaseModel):
     notes: Optional[str] = None
     clientEmail: Optional[str] = None
     projectManagerId: str
+    createdById: Optional[str] = None
     projectManager: TeamMember
     teamMembers: List[TeamMember] = []
     createdAt: datetime

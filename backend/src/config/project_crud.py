@@ -1,8 +1,9 @@
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
-from sqlalchemy import func, case
+from sqlalchemy import func, case, or_
 from .project_models import Project, Task
+from .core_models import project_team_members
 from ..core.cache import cached_sync
 
 # Project functions
@@ -24,11 +25,33 @@ def get_projects_by_manager(manager_id: str, db: Session, tenant_id: str = None,
         query = query.filter(Project.tenant_id == tenant_id)
     return query.order_by(Project.createdAt.desc()).offset(skip).limit(limit).all()
 
-def get_project_ids_with_tasks_assigned_to(assignee_id: str, db: Session, tenant_id: str = None) -> List[Any]:
-    query = db.query(Task.projectId).filter(Task.assignedToId == assignee_id).distinct()
+def get_project_ids_with_tasks_assigned_to(user_id: str, db: Session, tenant_id: str = None) -> List[Any]:
+    ids = set()
+    task_q = db.query(Task.projectId).filter(
+        or_(Task.assignedToId == user_id, Task.createdById == user_id)
+    )
     if tenant_id:
-        query = query.filter(Task.tenant_id == tenant_id)
-    return [row[0] for row in query.all()]
+        task_q = task_q.filter(Task.tenant_id == tenant_id)
+    for row in task_q.distinct().all():
+        ids.add(row[0])
+    pm_q = db.query(Project.id).filter(Project.projectManagerId == user_id)
+    if tenant_id:
+        pm_q = pm_q.filter(Project.tenant_id == tenant_id)
+    for row in pm_q.all():
+        ids.add(row[0])
+    team_q = db.query(project_team_members.c.project_id).join(
+        Project, Project.id == project_team_members.c.project_id
+    ).filter(project_team_members.c.user_id == user_id)
+    if tenant_id:
+        team_q = team_q.filter(Project.tenant_id == tenant_id)
+    for row in team_q.all():
+        ids.add(row[0])
+    created_q = db.query(Project.id).filter(Project.createdById == user_id)
+    if tenant_id:
+        created_q = created_q.filter(Project.tenant_id == tenant_id)
+    for row in created_q.all():
+        ids.add(row[0])
+    return list(ids)
 
 def create_project(project_data: dict, db: Session) -> Project:
     db_project = Project(**project_data)

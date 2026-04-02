@@ -43,6 +43,7 @@ export interface Project {
   actualCost?: number;
   notes?: string;
   clientEmail?: string;
+  createdById?: string;
   projectManager: TeamMember;
   teamMembers: TeamMember[];
   createdAt: string;

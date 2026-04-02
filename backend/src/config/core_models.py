@@ -34,6 +34,7 @@ class User(Base):
     tenant = relationship("Tenant", back_populates="users")
     tenant_users = relationship("TenantUser", back_populates="user")
     managed_projects = relationship("Project", foreign_keys="Project.projectManagerId", back_populates="projectManager")
+    projects_created = relationship("Project", foreign_keys="Project.createdById", back_populates="creator")
     assigned_tasks = relationship("Task", foreign_keys="Task.assignedToId", back_populates="assignedTo")
     created_tasks = relationship("Task", foreign_keys="Task.createdById", back_populates="createdBy")
     team_projects = relationship("Project", secondary=project_team_members, back_populates="teamMembers")

@@ -71,6 +71,7 @@ def transform_project_to_response(project: DBProject) -> Project:
         notes=project.notes,
         clientEmail=project.clientEmail,
         projectManagerId=str(project.projectManagerId),
+        createdById=str(project.createdById) if project.createdById else None,
         projectManager=transform_user_to_team_member(project.projectManager),
         teamMembers=[transform_user_to_team_member(member) for member in project.teamMembers],
         createdAt=project.createdAt,
@@ -771,6 +772,7 @@ async def create_new_project(
         project_dict.update({
             "id": str(uuid.uuid4()),
             "tenant_id": tenant_id,
+            "createdById": created_by,
             "createdAt": datetime.utcnow(),
             "updatedAt": datetime.utcnow()
         })
@@ -963,7 +965,11 @@ async def get_project_tasks(
             raise HTTPException(status_code=404, detail="Project not found")
     tasks = get_tasks_by_project(project_id, db, tenant_id=tenant_id)
     if not can_see_all_tasks(tenant_context or {}):
-        tasks = [t for t in tasks if t.assignedToId and str(t.assignedToId) == str(current_user.id)]
+        uid = str(current_user.id)
+        tasks = [
+            t for t in tasks
+            if (t.assignedToId and str(t.assignedToId) == uid) or str(t.createdById) == uid
+        ]
     task_list = [transform_task_to_response(task) for task in tasks]
     
     return TasksResponse(

@@ -112,7 +112,11 @@ async def get_tasks(
             tasks = [t for t in tasks if not t.parentTaskId]
     
     if not can_see_all_tasks(tenant_context or {}):
-        tasks = [t for t in tasks if t.assignedToId and str(t.assignedToId) == str(current_user.id)]
+        uid = str(current_user.id)
+        tasks = [
+            t for t in tasks
+            if (t.assignedToId and str(t.assignedToId) == uid) or str(t.createdById) == uid
+        ]
     
     if status:
         tasks = [t for t in tasks if t.status == status]
@@ -155,7 +159,8 @@ async def get_task(
         raise HTTPException(status_code=404, detail="Task not found")
     
     if not can_see_all_tasks(tenant_context or {}):
-        if not task.assignedToId or str(task.assignedToId) != str(current_user.id):
+        uid = str(current_user.id)
+        if (not task.assignedToId or str(task.assignedToId) != uid) and str(task.createdById) != uid:
             raise HTTPException(status_code=404, detail="Task not found")
     
     return transform_task_to_response(task, include_subtasks)
