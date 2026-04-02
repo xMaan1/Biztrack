@@ -7,12 +7,116 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+def _crud(prefix: str) -> List[str]:
+    return [f"{prefix}:view", f"{prefix}:create", f"{prefix}:update", f"{prefix}:delete"]
+
+
+GRANULAR_PERMISSIONS = {
+    "crm": [
+        "crm:dashboard:view",
+        *_crud("crm:customers"),
+        *_crud("crm:companies"),
+        *_crud("crm:contacts"),
+        *_crud("crm:leads"),
+        *_crud("crm:opportunities"),
+        *_crud("crm:activities"),
+    ],
+    "sales": [
+        *_crud("sales:quotes"),
+        *_crud("sales:contracts"),
+        "sales:analytics:view",
+        *_crud("sales:invoices"),
+        *_crud("sales:installments"),
+        *_crud("sales:delivery_notes"),
+    ],
+    "hrm": [
+        *_crud("hrm:employees"),
+        *_crud("hrm:jobs"),
+        *_crud("hrm:reviews"),
+        *_crud("hrm:leave_requests"),
+        *_crud("hrm:training"),
+        *_crud("hrm:payroll"),
+        *_crud("hrm:suppliers"),
+    ],
+    "inventory": [
+        *_crud("inventory:warehouses"),
+        *_crud("inventory:storage_locations"),
+        *_crud("inventory:stock_movements"),
+        *_crud("inventory:purchase_orders"),
+        *_crud("inventory:receiving"),
+        *_crud("inventory:products"),
+        *_crud("inventory:alerts"),
+        *_crud("inventory:dumps"),
+        *_crud("inventory:customer_returns"),
+        *_crud("inventory:supplier_returns"),
+    ],
+    "projects": [
+        *_crud("projects:projects"),
+        *_crud("projects:tasks"),
+        *_crud("projects:team_members"),
+        *_crud("projects:time_tracking"),
+    ],
+    "production": [
+        *_crud("production:work_orders"),
+        *_crud("production:job_cards"),
+        *_crud("production:vehicles"),
+    ],
+    "quality": [
+        *_crud("quality:quality_control"),
+    ],
+    "maintenance": [
+        *_crud("maintenance:schedules"),
+        *_crud("maintenance:work_orders"),
+        *_crud("maintenance:equipment"),
+        *_crud("maintenance:reports"),
+    ],
+    "banking": [
+        *_crud("banking:accounts"),
+        *_crud("banking:transactions"),
+        *_crud("banking:reconciliation"),
+        *_crud("banking:tills"),
+        *_crud("banking:till_transactions"),
+    ],
+    "ledger": [
+        *_crud("ledger:chart_of_accounts"),
+        *_crud("ledger:transactions"),
+        *_crud("ledger:journal_entries"),
+        *_crud("ledger:budgets"),
+        *_crud("ledger:account_receivables"),
+        "ledger:reports:view",
+        "ledger:profit_loss:view",
+    ],
+    "pos": [
+        *_crud("pos:sale"),
+        *_crud("pos:products"),
+        *_crud("pos:transactions"),
+        *_crud("pos:shifts"),
+        "pos:reports:view",
+    ],
+    "healthcare": [
+        *_crud("healthcare:appointments"),
+        *_crud("healthcare:patients"),
+        *_crud("healthcare:doctors"),
+        *_crud("healthcare:staff"),
+        *_crud("healthcare:admissions"),
+        *_crud("healthcare:expenses"),
+    ],
+}
+
+
+def _merge_permissions(*groups: List[str]) -> List[str]:
+    merged: List[str] = []
+    for group in groups:
+        for permission in group:
+            value = permission.value if isinstance(permission, ModulePermission) else permission
+            if value not in merged:
+                merged.append(value)
+    return merged
+
 class RBACService:
     
-    # Default role permissions mapping
     DEFAULT_ROLE_PERMISSIONS = {
-        TenantRole.OWNER: [
-            # Full access to all modules
+        TenantRole.OWNER: _merge_permissions([
             ModulePermission.CRM_VIEW, ModulePermission.CRM_CREATE, ModulePermission.CRM_UPDATE, ModulePermission.CRM_DELETE,
             ModulePermission.HRM_VIEW, ModulePermission.HRM_CREATE, ModulePermission.HRM_UPDATE, ModulePermission.HRM_DELETE,
             ModulePermission.INVENTORY_VIEW, ModulePermission.INVENTORY_CREATE, ModulePermission.INVENTORY_UPDATE, ModulePermission.INVENTORY_DELETE,
@@ -27,42 +131,42 @@ class RBACService:
             ModulePermission.USERS_VIEW, ModulePermission.USERS_CREATE, ModulePermission.USERS_UPDATE, ModulePermission.USERS_DELETE,
             ModulePermission.REPORTS_VIEW, ModulePermission.REPORTS_EXPORT,
             ModulePermission.HEALTHCARE_VIEW, ModulePermission.HEALTHCARE_CREATE, ModulePermission.HEALTHCARE_UPDATE, ModulePermission.HEALTHCARE_DELETE
-        ],
-        TenantRole.CRM_MANAGER: [
+        ], *[permissions for permissions in GRANULAR_PERMISSIONS.values()]),
+        TenantRole.CRM_MANAGER: _merge_permissions([
             ModulePermission.CRM_VIEW, ModulePermission.CRM_CREATE, ModulePermission.CRM_UPDATE, ModulePermission.CRM_DELETE,
             ModulePermission.EVENTS_VIEW, ModulePermission.EVENTS_CREATE, ModulePermission.EVENTS_UPDATE, ModulePermission.EVENTS_DELETE,
             ModulePermission.REPORTS_VIEW
-        ],
-        TenantRole.HRM_MANAGER: [
+        ], GRANULAR_PERMISSIONS["crm"]),
+        TenantRole.HRM_MANAGER: _merge_permissions([
             ModulePermission.HRM_VIEW, ModulePermission.HRM_CREATE, ModulePermission.HRM_UPDATE, ModulePermission.HRM_DELETE,
             ModulePermission.REPORTS_VIEW
-        ],
-        TenantRole.INVENTORY_MANAGER: [
+        ], GRANULAR_PERMISSIONS["hrm"]),
+        TenantRole.INVENTORY_MANAGER: _merge_permissions([
             ModulePermission.INVENTORY_VIEW, ModulePermission.INVENTORY_CREATE, ModulePermission.INVENTORY_UPDATE, ModulePermission.INVENTORY_DELETE,
             ModulePermission.REPORTS_VIEW
-        ],
-        TenantRole.FINANCE_MANAGER: [
+        ], GRANULAR_PERMISSIONS["inventory"]),
+        TenantRole.FINANCE_MANAGER: _merge_permissions([
             ModulePermission.FINANCE_VIEW, ModulePermission.FINANCE_CREATE, ModulePermission.FINANCE_UPDATE, ModulePermission.FINANCE_DELETE,
             ModulePermission.BANKING_VIEW, ModulePermission.BANKING_CREATE, ModulePermission.BANKING_UPDATE, ModulePermission.BANKING_DELETE,
             ModulePermission.REPORTS_VIEW, ModulePermission.REPORTS_EXPORT
-        ],
-        TenantRole.PROJECT_MANAGER: [
+        ], GRANULAR_PERMISSIONS["banking"], GRANULAR_PERMISSIONS["ledger"]),
+        TenantRole.PROJECT_MANAGER: _merge_permissions([
             ModulePermission.PROJECTS_VIEW, ModulePermission.PROJECTS_CREATE, ModulePermission.PROJECTS_UPDATE, ModulePermission.PROJECTS_DELETE,
             ModulePermission.EVENTS_VIEW, ModulePermission.EVENTS_CREATE, ModulePermission.EVENTS_UPDATE, ModulePermission.EVENTS_DELETE,
             ModulePermission.REPORTS_VIEW
-        ],
-        TenantRole.PRODUCTION_MANAGER: [
+        ], GRANULAR_PERMISSIONS["projects"]),
+        TenantRole.PRODUCTION_MANAGER: _merge_permissions([
             ModulePermission.PRODUCTION_VIEW, ModulePermission.PRODUCTION_CREATE, ModulePermission.PRODUCTION_UPDATE, ModulePermission.PRODUCTION_DELETE,
             ModulePermission.REPORTS_VIEW
-        ],
-        TenantRole.QUALITY_MANAGER: [
+        ], GRANULAR_PERMISSIONS["production"]),
+        TenantRole.QUALITY_MANAGER: _merge_permissions([
             ModulePermission.QUALITY_VIEW, ModulePermission.QUALITY_CREATE, ModulePermission.QUALITY_UPDATE, ModulePermission.QUALITY_DELETE,
             ModulePermission.REPORTS_VIEW
-        ],
-        TenantRole.MAINTENANCE_MANAGER: [
+        ], GRANULAR_PERMISSIONS["quality"]),
+        TenantRole.MAINTENANCE_MANAGER: _merge_permissions([
             ModulePermission.MAINTENANCE_VIEW, ModulePermission.MAINTENANCE_CREATE, ModulePermission.MAINTENANCE_UPDATE, ModulePermission.MAINTENANCE_DELETE,
             ModulePermission.REPORTS_VIEW
-        ]
+        ], GRANULAR_PERMISSIONS["maintenance"])
     }
     
     @staticmethod
@@ -76,7 +180,7 @@ class RBACService:
                 name=role_name.value,
                 display_name=role_name.value.replace('_', ' ').title(),
                 description=f"Default {role_name.value.replace('_', ' ')} role",
-                permissions=[p.value for p in permissions],
+                permissions=[p.value if isinstance(p, ModulePermission) else p for p in permissions],
                 isActive=True
             )
             db.add(role)

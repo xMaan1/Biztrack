@@ -46,6 +46,76 @@ PATH_MODULE_MAP = {
     "dashboard": "dashboard",
 }
 
+RESOURCE_PATH_MAP = {
+    "/crm/customers": "crm:customers",
+    "/crm/companies": "crm:companies",
+    "/crm/contacts": "crm:contacts",
+    "/crm/leads": "crm:leads",
+    "/crm/opportunities": "crm:opportunities",
+    "/crm/activities": "crm:activities",
+    "/crm/dashboard": "crm:dashboard",
+    "/sales/quotes": "sales:quotes",
+    "/sales/contracts": "sales:contracts",
+    "/sales/analytics": "sales:analytics",
+    "/invoices": "sales:invoices",
+    "/installments": "sales:installments",
+    "/delivery-notes": "sales:delivery_notes",
+    "/inventory/warehouses": "inventory:warehouses",
+    "/inventory/storage-locations": "inventory:storage_locations",
+    "/inventory/stock-movements": "inventory:stock_movements",
+    "/inventory/purchase-orders": "inventory:purchase_orders",
+    "/inventory/receiving": "inventory:receiving",
+    "/inventory/products": "inventory:products",
+    "/inventory/alerts": "inventory:alerts",
+    "/inventory/dumps": "inventory:dumps",
+    "/inventory/customer-returns": "inventory:customer_returns",
+    "/inventory/supplier-returns": "inventory:supplier_returns",
+    "/projects/time-tracking": "projects:time_tracking",
+    "/projects/team-members": "projects:team_members",
+    "/tasks": "projects:tasks",
+    "/work-orders": "production:work_orders",
+    "/job-cards": "production:job_cards",
+    "/vehicles": "production:vehicles",
+    "/quality-control": "quality:quality_control",
+    "/maintenance/schedules": "maintenance:schedules",
+    "/maintenance/work-orders": "maintenance:work_orders",
+    "/maintenance/equipment": "maintenance:equipment",
+    "/maintenance/reports": "maintenance:reports",
+    "/banking/accounts": "banking:accounts",
+    "/banking/transactions": "banking:transactions",
+    "/banking/reconciliation": "banking:reconciliation",
+    "/banking/tills": "banking:tills",
+    "/banking/till-transactions": "banking:till_transactions",
+    "/ledger/chart-of-accounts": "ledger:chart_of_accounts",
+    "/ledger/transactions": "ledger:transactions",
+    "/ledger/journal-entries": "ledger:journal_entries",
+    "/ledger/budgets": "ledger:budgets",
+    "/ledger/account-receivables": "ledger:account_receivables",
+    "/ledger/reports/trial-balance": "ledger:reports",
+    "/ledger/reports/income-statement": "ledger:reports",
+    "/ledger/reports/balance-sheet": "ledger:reports",
+    "/ledger/profit-loss-dashboard": "ledger:profit_loss",
+    "/pos/sale": "pos:sale",
+    "/pos/products": "pos:products",
+    "/pos/transactions": "pos:transactions",
+    "/pos/shifts": "pos:shifts",
+    "/pos/reports": "pos:reports",
+    "/hrm/employees": "hrm:employees",
+    "/hrm/jobs": "hrm:jobs",
+    "/hrm/reviews": "hrm:reviews",
+    "/hrm/leave-requests": "hrm:leave_requests",
+    "/hrm/training": "hrm:training",
+    "/hrm/payroll": "hrm:payroll",
+    "/hrm/suppliers": "hrm:suppliers",
+    "/healthcare/appointments": "healthcare:appointments",
+    "/healthcare/patients": "healthcare:patients",
+    "/healthcare/doctors": "healthcare:doctors",
+    "/healthcare/staff": "healthcare:staff",
+    "/healthcare/admissions": "healthcare:admissions",
+    "/healthcare/daily-expenses": "healthcare:expenses",
+    "/healthcare/expense-categories": "healthcare:expenses",
+}
+
 KNOWN_GENERIC_SEGMENTS = {
     "stats", "search", "download", "calendar", "dashboard", "overview",
     "bulk", "send", "send-whatsapp", "mark-as-paid", "mark-as-unpaid",
@@ -81,6 +151,12 @@ def _build_permission_candidates(path: str, method: str) -> List[str]:
     segments = [s for s in path.strip("/").split("/") if s]
     if not segments:
         return []
+
+    normalized_path = "/" + "/".join(segments)
+    for prefix, resource in sorted(RESOURCE_PATH_MAP.items(), key=lambda item: len(item[0]), reverse=True):
+        if normalized_path.startswith(prefix):
+            explicit = [f"{resource}:{action}", f"{resource.split(':')[0]}:{action}"]
+            return list(dict.fromkeys(explicit))
 
     base_index = 0
     module_key = segments[base_index].lower()
