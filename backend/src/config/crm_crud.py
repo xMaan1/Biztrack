@@ -9,6 +9,23 @@ from .core_models import User
 from .database_config import get_db
 from ..services.s3_service import s3_service
 
+
+def _crm_user_scope_filter(query, model, user_id_str: Optional[str]):
+    if not user_id_str:
+        return query
+    try:
+        uid = uuid.UUID(str(user_id_str))
+    except (ValueError, TypeError):
+        return query.filter(False)
+    has_a = hasattr(model, "assignedToId")
+    has_c = hasattr(model, "createdById")
+    if has_a and has_c:
+        return query.filter(or_(model.createdById == uid, model.assignedToId == uid))
+    if has_c:
+        return query.filter(model.createdById == uid)
+    return query
+
+
 def _attachment_url_from_stored(item: Any) -> Optional[str]:
     if isinstance(item, dict):
         u = item.get("url")
@@ -160,7 +177,7 @@ def create_customer(db: Session, customer_data: Dict[str, Any], tenant_id: str) 
 
         _prepare_labeled_contact_dict(customer_data, customer_email_blank_string=True)
 
-        uuid_fields = ['assignedToId']
+        uuid_fields = ['assignedToId', 'createdById']
         for field in uuid_fields:
             if field in customer_data and customer_data[field] is None:
                 del customer_data[field]
@@ -234,10 +251,12 @@ def get_customers(
     limit: int = 100,
     search: Optional[str] = None,
     status: Optional[str] = None,
-    customer_type: Optional[str] = None
+    customer_type: Optional[str] = None,
+    scope_user_id: Optional[str] = None,
 ) -> Tuple[List[Customer], int]:
     """Get customers with optional filtering and search. Returns (customers, total_count)."""
     query = db.query(Customer).filter(Customer.tenant_id == tenant_id)
+    query = _crm_user_scope_filter(query, Customer, scope_user_id)
     
     if search:
         normalized_search = ' '.join(search.split())
@@ -301,7 +320,7 @@ def update_customer(db: Session, customer_id: str, customer_data: Dict[str, Any]
             for k in ('emails', 'phones', 'email', 'phone', 'mobile'):
                 customer_data[k] = merged[k]
 
-        uuid_fields = ['assignedToId']
+        uuid_fields = ['assignedToId', 'createdById']
         for field in uuid_fields:
             if field in customer_data and customer_data[field] is None:
                 del customer_data[field]
@@ -354,30 +373,20 @@ def delete_customer(db: Session, customer_id: str, tenant_id: str) -> bool:
     db.commit()
     return True
 
-def get_customer_stats(db: Session, tenant_id: str) -> Dict[str, Any]:
+def get_customer_stats(db: Session, tenant_id: str, scope_user_id: Optional[str] = None) -> Dict[str, Any]:
     """Get customer statistics"""
-    total_customers = db.query(Customer).filter(Customer.tenant_id == tenant_id).count()
-    active_customers = db.query(Customer).filter(
-        and_(Customer.tenant_id == tenant_id, Customer.customerStatus == "active")
-    ).count()
-    inactive_customers = db.query(Customer).filter(
-        and_(Customer.tenant_id == tenant_id, Customer.customerStatus == "inactive")
-    ).count()
-    blocked_customers = db.query(Customer).filter(
-        and_(Customer.tenant_id == tenant_id, Customer.customerStatus == "blocked")
-    ).count()
-    
-    individual_customers = db.query(Customer).filter(
-        and_(Customer.tenant_id == tenant_id, Customer.customerType == "individual")
-    ).count()
-    business_customers = db.query(Customer).filter(
-        and_(Customer.tenant_id == tenant_id, Customer.customerType == "business")
-    ).count()
-    
+    def _cq():
+        q = db.query(Customer).filter(Customer.tenant_id == tenant_id)
+        return _crm_user_scope_filter(q, Customer, scope_user_id)
+
+    total_customers = _cq().count()
+    active_customers = _cq().filter(Customer.customerStatus == "active").count()
+    inactive_customers = _cq().filter(Customer.customerStatus == "inactive").count()
+    blocked_customers = _cq().filter(Customer.customerStatus == "blocked").count()
+    individual_customers = _cq().filter(Customer.customerType == "individual").count()
+    business_customers = _cq().filter(Customer.customerType == "business").count()
     thirty_days_ago = datetime.utcnow() - timedelta(days=30)
-    recent_customers = db.query(Customer).filter(
-        and_(Customer.tenant_id == tenant_id, Customer.createdAt >= thirty_days_ago)
-    ).count()
+    recent_customers = _cq().filter(Customer.createdAt >= thirty_days_ago).count()
     
     return {
         "total_customers": total_customers,
@@ -427,10 +436,12 @@ def search_customers(
     db: Session, 
     tenant_id: str, 
     search_term: str, 
-    limit: int = 20
+    limit: int = 20,
+    scope_user_id: Optional[str] = None,
 ) -> List[Customer]:
     """Search customers by name, ID, CNIC, phone, or email"""
     query = db.query(Customer).filter(Customer.tenant_id == tenant_id)
+    query = _crm_user_scope_filter(query, Customer, scope_user_id)
     
     normalized_search = ' '.join(search_term.split())
     
@@ -806,7 +817,9 @@ def update_sales_activity(activity_id: str, update_data: dict, db: Session, tena
     activity = get_sales_activity_by_id(activity_id, db, tenant_id)
     if activity:
         for key, value in update_data.items():
-            if hasattr(activity, key) and value is not None:
+            if not hasattr(activity, key):
+                continue
+            if value is not None or key in ("completedAt", "description", "notes", "status"):
                 setattr(activity, key, value)
         activity.updatedAt = datetime.utcnow()
         db.commit()
@@ -822,54 +835,56 @@ def delete_sales_activity(activity_id: str, db: Session, tenant_id: str = None) 
     return False
 
 # CRM Dashboard functions
-def get_crm_dashboard_data(db: Session, tenant_id: str) -> Dict[str, Any]:
+def get_crm_dashboard_data(db: Session, tenant_id: str, scope_user_id: Optional[str] = None) -> Dict[str, Any]:
     """Get CRM dashboard statistics"""
-    total_leads = db.query(Lead).filter(Lead.tenant_id == tenant_id).count()
-    active_leads = db.query(Lead).filter(
-        Lead.tenant_id == tenant_id,
-        Lead.status.in_(["new", "contacted", "qualified"])
-    ).count()
-    converted_leads = db.query(Lead).filter(
-        Lead.tenant_id == tenant_id,
-        Lead.status == "converted"
-    ).count()
-    
-    total_opportunities = db.query(Opportunity).filter(Opportunity.tenant_id == tenant_id).count()
-    open_opportunities = db.query(Opportunity).filter(
-        Opportunity.tenant_id == tenant_id,
+    def lq():
+        q = db.query(Lead).filter(Lead.tenant_id == tenant_id)
+        return _crm_user_scope_filter(q, Lead, scope_user_id)
+
+    def oq():
+        q = db.query(Opportunity).filter(Opportunity.tenant_id == tenant_id)
+        return _crm_user_scope_filter(q, Opportunity, scope_user_id)
+
+    def cq():
+        q = db.query(Contact).filter(Contact.tenant_id == tenant_id)
+        return _crm_user_scope_filter(q, Contact, scope_user_id)
+
+    def compq():
+        q = db.query(Company).filter(Company.tenant_id == tenant_id)
+        return _crm_user_scope_filter(q, Company, scope_user_id)
+
+    total_leads = lq().count()
+    active_leads = lq().filter(Lead.status.in_(["new", "contacted", "qualified"])).count()
+    converted_leads = lq().filter(Lead.status == "converted").count()
+
+    total_opportunities = oq().count()
+    open_opportunities = oq().filter(
         Opportunity.stage.in_(["prospecting", "qualification", "proposal", "negotiation"])
     ).count()
-    
-    total_contacts = db.query(Contact).filter(Contact.tenant_id == tenant_id).count()
-    total_companies = db.query(Company).filter(Company.tenant_id == tenant_id).count()
-    
-    won_opportunities_query = db.query(Opportunity).filter(
-        Opportunity.tenant_id == tenant_id,
-        Opportunity.stage == "closed_won"
-    )
-    total_revenue_result = db.query(func.sum(Opportunity.amount)).filter(
-        Opportunity.tenant_id == tenant_id,
+
+    total_contacts = cq().count()
+    total_companies = compq().count()
+
+    won_opportunities_query = oq().filter(Opportunity.stage == "closed_won")
+    total_revenue_result = oq().filter(
         Opportunity.stage == "closed_won",
-        Opportunity.amount.isnot(None)
-    ).scalar()
+        Opportunity.amount.isnot(None),
+    ).with_entities(func.sum(Opportunity.amount)).scalar()
     total_revenue = float(total_revenue_result) if total_revenue_result else 0.0
-    
+
     won_opportunities_count = won_opportunities_query.count()
     average_deal_size = 0.0
     if won_opportunities_count > 0:
         average_deal_size = total_revenue / won_opportunities_count
-    
-    all_opportunities = db.query(Opportunity).filter(
-        Opportunity.tenant_id == tenant_id,
-        Opportunity.amount.isnot(None)
-    ).all()
+
+    all_opportunities = oq().filter(Opportunity.amount.isnot(None)).all()
     projected_revenue = sum(
         (opp.amount or 0) * (opp.probability or 0) / 100.0
         for opp in all_opportunities
     )
-    
+
     conversion_rate = (converted_leads / total_leads * 100) if total_leads > 0 else 0.0
-    
+
     return {
         "totalLeads": total_leads,
         "activeLeads": active_leads,

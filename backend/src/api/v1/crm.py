@@ -36,8 +36,10 @@ from ...config.crm_crud import (
     get_customer_stats, search_customers, get_sales_activities, get_crm_dashboard_data,
     get_sales_activity_by_id, update_sales_activity, delete_sales_activity,
     create_guarantor, get_guarantors_by_customer, get_guarantor_by_id, update_guarantor, delete_guarantor,
+    create_sales_activity,
 )
 from ...api.dependencies import get_current_user, get_tenant_context, require_permission
+from ...api.crm_access import filter_crm_rows, crm_record_visible, can_see_all_crm_records
 from ...models.common import ModulePermission
 
 
@@ -45,7 +47,17 @@ router = APIRouter(prefix="/crm", tags=["crm"])
 logger = logging.getLogger(__name__)
 
 
-def _contact_create_to_orm_dict(contact_data: ContactCreate, tenant_id) -> dict:
+def _crm_scope_user_id(tenant_context: Optional[dict], current_user) -> Optional[str]:
+    if not tenant_context or can_see_all_crm_records(tenant_context):
+        return None
+    return str(current_user.id)
+
+
+def _contact_create_to_orm_dict(
+    contact_data: ContactCreate,
+    tenant_id,
+    created_by_user_id: Optional[str] = None,
+) -> dict:
     raw = contact_data.dict()
     company_id = raw.get("companyId")
     if company_id:
@@ -74,6 +86,12 @@ def _contact_create_to_orm_dict(contact_data: ContactCreate, tenant_id) -> dict:
             assigned_to_id = uuid.UUID(str(raw["assignedTo"]))
         except (ValueError, TypeError):
             assigned_to_id = None
+    created_by_uuid = None
+    if created_by_user_id:
+        try:
+            created_by_uuid = uuid.UUID(str(created_by_user_id))
+        except (ValueError, TypeError):
+            created_by_uuid = None
     return {
         "id": uuid.uuid4(),
         "tenant_id": tenant_id,
@@ -99,6 +117,7 @@ def _contact_create_to_orm_dict(contact_data: ContactCreate, tenant_id) -> dict:
         "addresses": raw.get("addresses") or [],
         "socialLinks": raw.get("socialLinks"),
         "assignedToId": assigned_to_id,
+        "createdById": created_by_uuid,
         "createdAt": now,
         "updatedAt": now,
     }
@@ -172,7 +191,12 @@ async def create_customer_endpoint(
         if not tenant_context:
             raise HTTPException(status_code=400, detail="Tenant context required")
         
-        customer = create_customer(db, customer_data.dict(), tenant_context["tenant_id"])
+        payload = customer_data.dict()
+        try:
+            payload["createdById"] = uuid.UUID(str(current_user.id))
+        except (ValueError, TypeError):
+            pass
+        customer = create_customer(db, payload, tenant_context["tenant_id"])
         
         try:
             from ...services.notification_service import create_crm_notification_for_all_tenant_users
@@ -219,6 +243,7 @@ async def get_customers_endpoint(
     """Get customers with optional filtering and search"""
     if not tenant_context:
         raise HTTPException(status_code=400, detail="Tenant context required")
+    scope = _crm_scope_user_id(tenant_context, current_user)
     customers, total = get_customers(
         db,
         tenant_context["tenant_id"],
@@ -226,7 +251,8 @@ async def get_customers_endpoint(
         limit,
         search,
         status,
-        customer_type
+        customer_type,
+        scope_user_id=scope,
     )
     return CustomersListResponse(
         customers=[CustomerResponse.from_orm(c) for c in customers],
@@ -243,7 +269,8 @@ async def get_customer_stats_endpoint(
     """Get customer statistics"""
     if not tenant_context:
         raise HTTPException(status_code=400, detail="Tenant context required")
-    stats = get_customer_stats(db, tenant_context["tenant_id"])
+    scope = _crm_scope_user_id(tenant_context, current_user)
+    stats = get_customer_stats(db, tenant_context["tenant_id"], scope_user_id=scope)
     return CustomerStatsResponse(**stats)
 
 @router.get("/customers/search", response_model=List[CustomerResponse])
@@ -258,7 +285,8 @@ async def search_customers_endpoint(
     """Search customers by name, ID, CNIC, phone, or email"""
     if not tenant_context:
         raise HTTPException(status_code=400, detail="Tenant context required")
-    customers = search_customers(db, tenant_context["tenant_id"], q, limit)
+    scope = _crm_scope_user_id(tenant_context, current_user)
+    customers = search_customers(db, tenant_context["tenant_id"], q, limit, scope_user_id=scope)
     return [CustomerResponse.from_orm(customer) for customer in customers]
 
 @router.get("/customers/{customer_id}", response_model=CustomerResponse)
@@ -275,6 +303,13 @@ async def get_customer_endpoint(
     customer = get_customer_by_id(db, customer_id, tenant_context["tenant_id"])
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
+    if not crm_record_visible(
+        tenant_context,
+        str(current_user.id),
+        getattr(customer, "assignedToId", None),
+        getattr(customer, "createdById", None),
+    ):
+        raise HTTPException(status_code=404, detail="Customer not found")
     return CustomerResponse.from_orm(customer)
 
 @router.put("/customers/{customer_id}", response_model=CustomerResponse)
@@ -289,6 +324,16 @@ async def update_customer_endpoint(
     """Update customer"""
     if not tenant_context:
         raise HTTPException(status_code=400, detail="Tenant context required")
+    existing = get_customer_by_id(db, customer_id, tenant_context["tenant_id"])
+    if not existing:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    if not crm_record_visible(
+        tenant_context,
+        str(current_user.id),
+        getattr(existing, "assignedToId", None),
+        getattr(existing, "createdById", None),
+    ):
+        raise HTTPException(status_code=404, detail="Customer not found")
     customer = update_customer(db, customer_id, customer_data.dict(exclude_unset=True), tenant_context["tenant_id"])
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
@@ -326,6 +371,16 @@ async def delete_customer_endpoint(
     """Delete customer"""
     if not tenant_context:
         raise HTTPException(status_code=400, detail="Tenant context required")
+    existing = get_customer_by_id(db, customer_id, tenant_context["tenant_id"])
+    if not existing:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    if not crm_record_visible(
+        tenant_context,
+        str(current_user.id),
+        getattr(existing, "assignedToId", None),
+        getattr(existing, "createdById", None),
+    ):
+        raise HTTPException(status_code=404, detail="Customer not found")
     success = delete_customer(db, customer_id, tenant_context["tenant_id"])
     if not success:
         raise HTTPException(status_code=404, detail="Customer not found")
@@ -345,6 +400,13 @@ async def upload_customer_photo(
         raise HTTPException(status_code=400, detail="Tenant context required")
     customer = get_customer_by_id(db, customer_id, str(tenant_context["tenant_id"]))
     if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    if not crm_record_visible(
+        tenant_context,
+        str(current_user.id),
+        getattr(customer, "assignedToId", None),
+        getattr(customer, "createdById", None),
+    ):
         raise HTTPException(status_code=404, detail="Customer not found")
     try:
         url = process_customer_photo_upload(body.image, tenant_context["tenant_id"], customer_id)
@@ -368,6 +430,13 @@ async def delete_customer_photo(
     customer = get_customer_by_id(db, customer_id, str(tenant_context["tenant_id"]))
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
+    if not crm_record_visible(
+        tenant_context,
+        str(current_user.id),
+        getattr(customer, "assignedToId", None),
+        getattr(customer, "createdById", None),
+    ):
+        raise HTTPException(status_code=404, detail="Customer not found")
     if customer.image_url and (customer.image_url.startswith("http://") or customer.image_url.startswith("https://")):
         try:
             s3_key = s3_service.extract_s3_key_from_url(customer.image_url)
@@ -389,6 +458,16 @@ async def get_customer_guarantors(
 ):
     if not tenant_context:
         raise HTTPException(status_code=400, detail="Tenant context required")
+    cust = get_customer_by_id(db, customer_id, str(tenant_context["tenant_id"]))
+    if not cust:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    if not crm_record_visible(
+        tenant_context,
+        str(current_user.id),
+        getattr(cust, "assignedToId", None),
+        getattr(cust, "createdById", None),
+    ):
+        raise HTTPException(status_code=404, detail="Customer not found")
     guarantors = get_guarantors_by_customer(db, customer_id, str(tenant_context["tenant_id"]))
     return [GuarantorResponse.model_validate(g) for g in guarantors]
 
@@ -404,6 +483,16 @@ async def create_guarantor_endpoint(
 ):
     if not tenant_context:
         raise HTTPException(status_code=400, detail="Tenant context required")
+    cust = get_customer_by_id(db, customer_id, str(tenant_context["tenant_id"]))
+    if not cust:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    if not crm_record_visible(
+        tenant_context,
+        str(current_user.id),
+        getattr(cust, "assignedToId", None),
+        getattr(cust, "createdById", None),
+    ):
+        raise HTTPException(status_code=404, detail="Customer not found")
     try:
         guarantor = create_guarantor(db, customer_id, data.model_dump(), str(tenant_context["tenant_id"]))
         return GuarantorResponse.model_validate(guarantor)
@@ -422,6 +511,17 @@ async def update_guarantor_endpoint(
 ):
     if not tenant_context:
         raise HTTPException(status_code=400, detail="Tenant context required")
+    g = get_guarantor_by_id(db, guarantor_id, str(tenant_context["tenant_id"]))
+    if not g:
+        raise HTTPException(status_code=404, detail="Guarantor not found")
+    cust = get_customer_by_id(db, str(g.customer_id), str(tenant_context["tenant_id"]))
+    if not cust or not crm_record_visible(
+        tenant_context,
+        str(current_user.id),
+        getattr(cust, "assignedToId", None),
+        getattr(cust, "createdById", None),
+    ):
+        raise HTTPException(status_code=404, detail="Guarantor not found")
     guarantor = update_guarantor(db, guarantor_id, data.model_dump(exclude_unset=True), str(tenant_context["tenant_id"]))
     if not guarantor:
         raise HTTPException(status_code=404, detail="Guarantor not found")
@@ -438,6 +538,17 @@ async def delete_guarantor_endpoint(
 ):
     if not tenant_context:
         raise HTTPException(status_code=400, detail="Tenant context required")
+    g = get_guarantor_by_id(db, guarantor_id, str(tenant_context["tenant_id"]))
+    if not g:
+        raise HTTPException(status_code=404, detail="Guarantor not found")
+    cust = get_customer_by_id(db, str(g.customer_id), str(tenant_context["tenant_id"]))
+    if not cust or not crm_record_visible(
+        tenant_context,
+        str(current_user.id),
+        getattr(cust, "assignedToId", None),
+        getattr(cust, "createdById", None),
+    ):
+        raise HTTPException(status_code=404, detail="Guarantor not found")
     success = delete_guarantor(db, guarantor_id, str(tenant_context["tenant_id"]))
     if not success:
         raise HTTPException(status_code=404, detail="Guarantor not found")
@@ -454,6 +565,7 @@ async def get_crm_leads(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
     _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
@@ -468,9 +580,9 @@ async def get_crm_leads(
             for lead in leads:
                 if status and lead.status != status:
                     continue
-                if source and lead.source != source:
+                if source and (lead.leadSource or "") != source:
                     continue
-                if assigned_to and lead.assignedTo != assigned_to:
+                if assigned_to and str(lead.assignedToId or "") != str(assigned_to):
                     continue
                 if search:
                     search_lower = search.lower()
@@ -483,6 +595,8 @@ async def get_crm_leads(
                         continue
                 filtered_leads.append(lead)
             leads = filtered_leads
+        
+        leads = filter_crm_rows(leads, tenant_context, str(current_user.id))
         
         # Get total count for pagination
         total = len(leads)
@@ -516,9 +630,13 @@ async def create_crm_lead(
             lead_dict["assignedToId"] = lead_dict.pop("assignedTo", None)
         lead_dict["tenant_id"] = tenant_context["tenant_id"]
         lead_dict["id"] = uuid.uuid4()
+        try:
+            lead_dict["createdById"] = uuid.UUID(str(current_user.id))
+        except (ValueError, TypeError):
+            pass
         lead_dict["createdAt"] = datetime.utcnow()
         lead_dict["updatedAt"] = datetime.utcnow()
-        orm_lead_keys = {"id", "tenant_id", "firstName", "lastName", "email", "phone", "company", "jobTitle", "leadSource", "status", "priority", "assignedToId", "notes", "createdAt", "updatedAt"}
+        orm_lead_keys = {"id", "tenant_id", "firstName", "lastName", "email", "phone", "company", "jobTitle", "leadSource", "status", "priority", "assignedToId", "createdById", "notes", "createdAt", "updatedAt"}
         lead_dict = {k: v for k, v in lead_dict.items() if k in orm_lead_keys}
         lead = create_lead(lead_dict, db)
         try:
@@ -557,6 +675,7 @@ async def create_crm_lead(
 async def get_crm_lead(
     lead_id: str,
     db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
     _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
@@ -564,6 +683,13 @@ async def get_crm_lead(
     try:
         lead = get_lead_by_id(lead_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not lead:
+            raise HTTPException(status_code=404, detail="Lead not found")
+        if not crm_record_visible(
+            tenant_context,
+            str(current_user.id),
+            getattr(lead, "assignedToId", None),
+            getattr(lead, "createdById", None),
+        ):
             raise HTTPException(status_code=404, detail="Lead not found")
         return lead
     except Exception as e:
@@ -582,6 +708,13 @@ async def update_crm_lead(
     try:
         lead = get_lead_by_id(lead_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not lead:
+            raise HTTPException(status_code=404, detail="Lead not found")
+        if not crm_record_visible(
+            tenant_context,
+            str(current_user.id),
+            getattr(lead, "assignedToId", None),
+            getattr(lead, "createdById", None),
+        ):
             raise HTTPException(status_code=404, detail="Lead not found")
         
         update_data = lead_data.dict(exclude_unset=True)
@@ -629,6 +762,16 @@ async def delete_crm_lead(
 ):
     """Delete a lead"""
     try:
+        lead = get_lead_by_id(lead_id, db, tenant_context["tenant_id"] if tenant_context else None)
+        if not lead:
+            raise HTTPException(status_code=404, detail="Lead not found")
+        if not crm_record_visible(
+            tenant_context,
+            str(current_user.id),
+            getattr(lead, "assignedToId", None),
+            getattr(lead, "createdById", None),
+        ):
+            raise HTTPException(status_code=404, detail="Lead not found")
         success = delete_lead(lead_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not success:
             raise HTTPException(status_code=404, detail="Lead not found")
@@ -646,6 +789,7 @@ async def get_crm_contacts(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
     _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
@@ -690,6 +834,8 @@ async def get_crm_contacts(
                 filtered_contacts.append(contact)
             contacts = filtered_contacts
         
+        contacts = filter_crm_rows(contacts, tenant_context, str(current_user.id))
+        
         total = len(contacts)
         
         return CRMContactsResponse(
@@ -718,7 +864,11 @@ async def create_crm_contact(
             raise HTTPException(status_code=400, detail="Tenant context required")
         
         contact = create_contact(
-            _contact_create_to_orm_dict(contact_data, tenant_context["tenant_id"]),
+            _contact_create_to_orm_dict(
+                contact_data,
+                tenant_context["tenant_id"],
+                str(current_user.id),
+            ),
             db,
         )
         
@@ -756,6 +906,7 @@ async def create_crm_contact(
 async def get_crm_contact(
     contact_id: str,
     db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
     _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
@@ -763,6 +914,13 @@ async def get_crm_contact(
     try:
         contact = get_contact_by_id(contact_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not contact:
+            raise HTTPException(status_code=404, detail="Contact not found")
+        if not crm_record_visible(
+            tenant_context,
+            str(current_user.id),
+            getattr(contact, "assignedToId", None),
+            getattr(contact, "createdById", None),
+        ):
             raise HTTPException(status_code=404, detail="Contact not found")
         return contact
     except Exception as e:
@@ -781,6 +939,13 @@ async def update_crm_contact(
     try:
         contact = get_contact_by_id(contact_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not contact:
+            raise HTTPException(status_code=404, detail="Contact not found")
+        if not crm_record_visible(
+            tenant_context,
+            str(current_user.id),
+            getattr(contact, "assignedToId", None),
+            getattr(contact, "createdById", None),
+        ):
             raise HTTPException(status_code=404, detail="Contact not found")
         
         update_data = contact_data.dict(exclude_unset=True)
@@ -843,6 +1008,16 @@ async def delete_crm_contact(
 ):
     """Delete a contact"""
     try:
+        contact = get_contact_by_id(contact_id, db, tenant_context["tenant_id"] if tenant_context else None)
+        if not contact:
+            raise HTTPException(status_code=404, detail="Contact not found")
+        if not crm_record_visible(
+            tenant_context,
+            str(current_user.id),
+            getattr(contact, "assignedToId", None),
+            getattr(contact, "createdById", None),
+        ):
+            raise HTTPException(status_code=404, detail="Contact not found")
         success = delete_contact(contact_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not success:
             raise HTTPException(status_code=404, detail="Contact not found")
@@ -859,6 +1034,7 @@ async def get_crm_companies(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
     _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
@@ -885,6 +1061,8 @@ async def get_crm_companies(
                         continue
                 filtered_companies.append(company)
             companies = filtered_companies
+        
+        companies = filter_crm_rows(companies, tenant_context, str(current_user.id))
         
         total = len(companies)
         
@@ -914,6 +1092,7 @@ async def create_crm_company(
         payload = {
             "id": uuid.uuid4(),
             "tenant_id": uuid.UUID(tenant_context["tenant_id"]) if tenant_context else uuid.uuid4(),
+            "createdById": uuid.UUID(str(current_user.id)),
             "name": data.get("name", ""),
             "industry": data.get("industry"),
             "website": data.get("website"),
@@ -940,6 +1119,7 @@ async def create_crm_company(
 async def get_crm_company(
     company_id: str,
     db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
     _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
@@ -947,6 +1127,13 @@ async def get_crm_company(
     try:
         company = get_company_by_id(company_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not company:
+            raise HTTPException(status_code=404, detail="Company not found")
+        if not crm_record_visible(
+            tenant_context,
+            str(current_user.id),
+            getattr(company, "assignedToId", None),
+            getattr(company, "createdById", None),
+        ):
             raise HTTPException(status_code=404, detail="Company not found")
         return company
     except Exception as e:
@@ -965,6 +1152,13 @@ async def update_crm_company(
     try:
         company = get_company_by_id(company_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not company:
+            raise HTTPException(status_code=404, detail="Company not found")
+        if not crm_record_visible(
+            tenant_context,
+            str(current_user.id),
+            getattr(company, "assignedToId", None),
+            getattr(company, "createdById", None),
+        ):
             raise HTTPException(status_code=404, detail="Company not found")
         
         update_data = company_data.dict(exclude_unset=True)
@@ -985,6 +1179,16 @@ async def delete_crm_company(
 ):
     """Delete a company"""
     try:
+        company = get_company_by_id(company_id, db, tenant_context["tenant_id"] if tenant_context else None)
+        if not company:
+            raise HTTPException(status_code=404, detail="Company not found")
+        if not crm_record_visible(
+            tenant_context,
+            str(current_user.id),
+            getattr(company, "assignedToId", None),
+            getattr(company, "createdById", None),
+        ):
+            raise HTTPException(status_code=404, detail="Company not found")
         success = delete_company(company_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not success:
             raise HTTPException(status_code=404, detail="Company not found")
@@ -1001,6 +1205,7 @@ async def get_crm_opportunities(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
     _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
@@ -1015,17 +1220,19 @@ async def get_crm_opportunities(
             for opportunity in opportunities:
                 if stage and opportunity.stage != stage:
                     continue
-                if assigned_to and opportunity.assignedTo != assigned_to:
+                if assigned_to and str(opportunity.assignedToId or "") != str(assigned_to):
                     continue
                 if search:
                     search_lower = search.lower()
                     if not any([
-                        search_lower in (opportunity.title or "").lower(),
+                        search_lower in (opportunity.name or "").lower(),
                         search_lower in (opportunity.description or "").lower()
                     ]):
                         continue
                 filtered_opportunities.append(opportunity)
             opportunities = filtered_opportunities
+        
+        opportunities = filter_crm_rows(opportunities, tenant_context, str(current_user.id))
         
         total = len(opportunities)
         
@@ -1094,6 +1301,7 @@ async def create_crm_opportunity(
             companyId=company_uuid,
             contactId=_safe_uuid(data.get('contactId')),
             assignedToId=_safe_uuid(data.get('assignedTo')),
+            createdById=_safe_uuid(str(current_user.id)),
             notes=data.get('notes'),
             tenant_id=tenant_uuid,
             createdAt=datetime.now(),
@@ -1127,6 +1335,7 @@ async def create_crm_opportunity(
 async def get_crm_opportunity(
     opportunity_id: str,
     db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
     _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
@@ -1134,6 +1343,13 @@ async def get_crm_opportunity(
     try:
         opportunity = get_opportunity_by_id(opportunity_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not opportunity:
+            raise HTTPException(status_code=404, detail="Opportunity not found")
+        if not crm_record_visible(
+            tenant_context,
+            str(current_user.id),
+            getattr(opportunity, "assignedToId", None),
+            getattr(opportunity, "createdById", None),
+        ):
             raise HTTPException(status_code=404, detail="Opportunity not found")
         return OpportunityPydantic.model_validate(opportunity)
     except Exception as e:
@@ -1152,6 +1368,13 @@ async def update_crm_opportunity(
     try:
         opportunity = get_opportunity_by_id(opportunity_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not opportunity:
+            raise HTTPException(status_code=404, detail="Opportunity not found")
+        if not crm_record_visible(
+            tenant_context,
+            str(current_user.id),
+            getattr(opportunity, "assignedToId", None),
+            getattr(opportunity, "createdById", None),
+        ):
             raise HTTPException(status_code=404, detail="Opportunity not found")
         
         data = opportunity_data.dict(exclude_unset=True)
@@ -1220,6 +1443,16 @@ async def delete_crm_opportunity(
 ):
     """Delete an opportunity"""
     try:
+        opportunity = get_opportunity_by_id(opportunity_id, db, tenant_context["tenant_id"] if tenant_context else None)
+        if not opportunity:
+            raise HTTPException(status_code=404, detail="Opportunity not found")
+        if not crm_record_visible(
+            tenant_context,
+            str(current_user.id),
+            getattr(opportunity, "assignedToId", None),
+            getattr(opportunity, "createdById", None),
+        ):
+            raise HTTPException(status_code=404, detail="Opportunity not found")
         success = delete_opportunity(opportunity_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not success:
             raise HTTPException(status_code=404, detail="Opportunity not found")
@@ -1236,6 +1469,7 @@ async def get_crm_activities(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
     _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
@@ -1250,8 +1484,12 @@ async def get_crm_activities(
             for activity in activities:
                 if type and activity.type != type:
                     continue
-                if completed is not None and activity.completed != completed:
-                    continue
+                if completed is not None:
+                    is_done = (getattr(activity, "status", None) == "completed") or (
+                        getattr(activity, "completedAt", None) is not None
+                    )
+                    if completed != is_done:
+                        continue
                 if search:
                     search_lower = search.lower()
                     if not any([
@@ -1261,6 +1499,8 @@ async def get_crm_activities(
                         continue
                 filtered_activities.append(activity)
             activities = filtered_activities
+        
+        activities = filter_crm_rows(activities, tenant_context, str(current_user.id))
         
         total = len(activities)
         
@@ -1286,20 +1526,67 @@ async def create_crm_activity(
 ):
     """Create a new sales activity"""
     try:
-        activity = SalesActivity(
-            id=str(uuid.uuid4()),
-            **activity_data.dict(),
-            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
-            createdBy=str(current_user.id),
-            createdAt=datetime.now(),
-            updatedAt=datetime.now()
-        )
-        
-        db.add(activity)
-        db.commit()
-        db.refresh(activity)
-        
-        return activity
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+        d = activity_data.dict()
+        rel_type = None
+        rel_id = None
+        if d.get("leadId"):
+            rel_type, rel_id = "lead", d["leadId"]
+        elif d.get("opportunityId"):
+            rel_type, rel_id = "opportunity", d["opportunityId"]
+        elif d.get("contactId"):
+            rel_type, rel_id = "contact", d["contactId"]
+        elif d.get("companyId"):
+            rel_type, rel_id = "company", d["companyId"]
+
+        def _uuid(v):
+            if v is None:
+                return None
+            try:
+                return uuid.UUID(str(v).strip())
+            except (ValueError, TypeError):
+                return None
+
+        due = None
+        if d.get("dueDate"):
+            try:
+                due = datetime.fromisoformat(str(d["dueDate"]).replace("Z", "+00:00"))
+            except Exception:
+                pass
+
+        typ = d["type"]
+        typ_s = typ.value if hasattr(typ, "value") else str(typ)
+        st = "completed" if d.get("completed") else "pending"
+        comp_at = datetime.utcnow() if d.get("completed") else None
+
+        uid = _uuid(current_user.id)
+        tenant_u = _uuid(tenant_context["tenant_id"])
+        if not tenant_u or not uid:
+            raise HTTPException(status_code=400, detail="Invalid tenant or user")
+
+        activity_dict = {
+            "id": uuid.uuid4(),
+            "tenant_id": tenant_u,
+            "type": typ_s,
+            "subject": d["subject"],
+            "description": d.get("description"),
+            "relatedToType": rel_type,
+            "relatedToId": _uuid(rel_id),
+            "assignedToId": uid,
+            "createdById": uid,
+            "dueDate": due,
+            "completedAt": comp_at,
+            "status": st,
+            "priority": "medium",
+            "notes": d.get("notes"),
+            "createdAt": datetime.utcnow(),
+            "updatedAt": datetime.utcnow(),
+        }
+        db_activity = create_sales_activity(activity_dict, db)
+        return SalesActivity.model_validate(db_activity)
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error creating activity: {str(e)}")
@@ -1308,6 +1595,7 @@ async def create_crm_activity(
 async def get_crm_activity(
     activity_id: str,
     db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
     _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
@@ -1316,7 +1604,14 @@ async def get_crm_activity(
         activity = get_sales_activity_by_id(activity_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not activity:
             raise HTTPException(status_code=404, detail="Activity not found")
-        return activity
+        if not crm_record_visible(
+            tenant_context,
+            str(current_user.id),
+            getattr(activity, "assignedToId", None),
+            getattr(activity, "createdById", None),
+        ):
+            raise HTTPException(status_code=404, detail="Activity not found")
+        return SalesActivity.model_validate(activity)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching activity: {str(e)}")
 
@@ -1334,16 +1629,28 @@ async def update_crm_activity(
         activity = get_sales_activity_by_id(activity_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not activity:
             raise HTTPException(status_code=404, detail="Activity not found")
+        if not crm_record_visible(
+            tenant_context,
+            str(current_user.id),
+            getattr(activity, "assignedToId", None),
+            getattr(activity, "createdById", None),
+        ):
+            raise HTTPException(status_code=404, detail="Activity not found")
         
         update_data = activity_data.dict(exclude_unset=True)
         update_data["updatedAt"] = datetime.now()
         
-        # If marking as completed, set completedAt
-        if update_data.get("completed") and not activity.completed:
-            update_data["completedAt"] = datetime.now()
+        if "completed" in update_data:
+            c = update_data.pop("completed")
+            if c:
+                update_data["status"] = "completed"
+                update_data["completedAt"] = datetime.now()
+            else:
+                update_data["status"] = "pending"
+                update_data["completedAt"] = None
         
         updated_activity = update_sales_activity(activity_id, update_data, db, tenant_context["tenant_id"] if tenant_context else None)
-        return updated_activity
+        return SalesActivity.model_validate(updated_activity)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating activity: {str(e)}")
 
@@ -1357,6 +1664,16 @@ async def delete_crm_activity(
 ):
     """Delete a sales activity"""
     try:
+        activity = get_sales_activity_by_id(activity_id, db, tenant_context["tenant_id"] if tenant_context else None)
+        if not activity:
+            raise HTTPException(status_code=404, detail="Activity not found")
+        if not crm_record_visible(
+            tenant_context,
+            str(current_user.id),
+            getattr(activity, "assignedToId", None),
+            getattr(activity, "createdById", None),
+        ):
+            raise HTTPException(status_code=404, detail="Activity not found")
         success = delete_sales_activity(activity_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not success:
             raise HTTPException(status_code=404, detail="Activity not found")
@@ -1368,6 +1685,7 @@ async def delete_crm_activity(
 @router.get("/dashboard", response_model=CRMDashboard)
 async def get_crm_dashboard(
     db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
     _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value))
 ):
@@ -1376,18 +1694,27 @@ async def get_crm_dashboard(
         if not tenant_context:
             raise HTTPException(status_code=400, detail="Tenant context required")
         
-        # Get dashboard metrics
-        metrics_data = get_crm_dashboard_data(db, tenant_context["tenant_id"])
+        scope = _crm_scope_user_id(tenant_context, current_user)
+        metrics_data = get_crm_dashboard_data(db, tenant_context["tenant_id"], scope_user_id=scope)
         
-        # Get recent activities
-        recent_activities = get_sales_activities(db, tenant_context["tenant_id"], 0, 10)
+        recent_activities = filter_crm_rows(
+            get_sales_activities(db, tenant_context["tenant_id"], 0, 10),
+            tenant_context,
+            str(current_user.id),
+        )
         
-        # Get top opportunities
-        opportunities = get_opportunities(db, tenant_context["tenant_id"], 0, 10)
+        opportunities = filter_crm_rows(
+            get_opportunities(db, tenant_context["tenant_id"], 0, 10),
+            tenant_context,
+            str(current_user.id),
+        )
         top_opportunities = sorted(opportunities, key=lambda x: x.amount or 0, reverse=True)[:5]
         
-        # Get recent leads
-        recent_leads = get_leads(db, tenant_context["tenant_id"], 0, 10)
+        recent_leads = filter_crm_rows(
+            get_leads(db, tenant_context["tenant_id"], 0, 10),
+            tenant_context,
+            str(current_user.id),
+        )
         
         # Create pipeline data
         pipeline_stages = ["prospecting", "qualification", "proposal", "negotiation", "closed_won", "closed_lost"]
@@ -1435,11 +1762,21 @@ async def convert_lead_to_contact(
         lead = get_lead_by_id(lead_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not lead:
             raise HTTPException(status_code=404, detail="Lead not found")
+        if not crm_record_visible(
+            tenant_context,
+            str(current_user.id),
+            getattr(lead, "assignedToId", None),
+            getattr(lead, "createdById", None),
+        ):
+            raise HTTPException(status_code=404, detail="Lead not found")
         
         tid = tenant_context["tenant_id"] if tenant_context else None
         if not tid:
             raise HTTPException(status_code=400, detail="Tenant context required")
-        contact = create_contact(_contact_create_to_orm_dict(contact_data, tid), db)
+        contact = create_contact(
+            _contact_create_to_orm_dict(contact_data, tid, str(current_user.id)),
+            db,
+        )
         
         lead.status = "converted"
         lead.updatedAt = datetime.utcnow()

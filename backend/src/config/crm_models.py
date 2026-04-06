@@ -20,6 +20,7 @@ class Lead(Base):
     status = Column(String, nullable=False, default="new")  # new, contacted, qualified, proposal, won, lost
     priority = Column(String, default="medium")  # low, medium, high, urgent
     assignedToId = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    createdById = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     notes = Column(Text)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -27,6 +28,11 @@ class Lead(Base):
     # Relationships
     tenant = relationship("Tenant", back_populates="leads")
     assignedTo = relationship("User")
+
+    @property
+    def createdBy(self):
+        x = getattr(self, "createdById", None)
+        return str(x) if x is not None else None
 
 class Customer(Base):
     __tablename__ = "customers"
@@ -55,6 +61,7 @@ class Customer(Base):
     currentBalance = Column(Float, default=0.0)
     paymentTerms = Column(String, default="Cash")  # Credit, Card, Cash, Due Payments
     assignedToId = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    createdById = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     notes = Column(Text)
     description = Column(Text, nullable=True)
     tags = Column(JSON, default=[])  # Store tags as JSON array
@@ -68,6 +75,11 @@ class Customer(Base):
     tenant = relationship("Tenant", back_populates="customers")
     assignedTo = relationship("User", foreign_keys=[assignedToId])
     guarantors = relationship("CustomerGuarantor", back_populates="customer", cascade="all, delete-orphan")
+
+    @property
+    def createdBy(self):
+        x = getattr(self, "createdById", None)
+        return str(x) if x is not None else None
     
     # Indexes for search optimization
     __table_args__ = (
@@ -132,6 +144,7 @@ class Contact(Base):
     addresses = Column(JSON, default=list)
     socialLinks = Column(JSON, default=dict)
     assignedToId = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    createdById = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -151,11 +164,17 @@ class Contact(Base):
     def isPrimary(self):
         return False
 
+    @property
+    def createdBy(self):
+        x = getattr(self, "createdById", None)
+        return str(x) if x is not None else None
+
 class Company(Base):
     __tablename__ = "companies"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
+    createdById = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     name = Column(String, nullable=False)
     industry = Column(String)
     website = Column(String)
@@ -177,6 +196,11 @@ class Company(Base):
     contacts = relationship("Contact", back_populates="company")
     opportunities = relationship("Opportunity", back_populates="company")
 
+    @property
+    def createdBy(self):
+        x = getattr(self, "createdById", None)
+        return str(x) if x is not None else None
+
 class Opportunity(Base):
     __tablename__ = "opportunities"
     
@@ -186,6 +210,7 @@ class Opportunity(Base):
     companyId = Column(UUID(as_uuid=True), ForeignKey("companies.id"), nullable=True)
     contactId = Column(UUID(as_uuid=True), ForeignKey("contacts.id"))
     assignedToId = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    createdById = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     stage = Column(String, nullable=False, default="prospecting")  # prospecting, qualification, proposal, negotiation, closed_won, closed_lost
     probability = Column(Integer, default=0)  # 0-100
     amount = Column(Float)
@@ -202,6 +227,11 @@ class Opportunity(Base):
     contact = relationship("Contact")
     assignedTo = relationship("User")
 
+    @property
+    def createdBy(self):
+        x = getattr(self, "createdById", None)
+        return str(x) if x is not None else None
+
 class SalesActivity(Base):
     __tablename__ = "sales_activities"
     
@@ -213,6 +243,7 @@ class SalesActivity(Base):
     relatedToType = Column(String)  # lead, contact, company, opportunity
     relatedToId = Column(UUID(as_uuid=True))
     assignedToId = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    createdById = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     dueDate = Column(DateTime)
     completedAt = Column(DateTime)
     status = Column(String, default="pending")  # pending, in_progress, completed, cancelled
@@ -224,3 +255,14 @@ class SalesActivity(Base):
     # Relationships
     tenant = relationship("Tenant", back_populates="sales_activities")
     assignedTo = relationship("User")
+
+    @property
+    def completed(self):
+        return (getattr(self, "status", None) == "completed") or (
+            getattr(self, "completedAt", None) is not None
+        )
+
+    @property
+    def createdBy(self):
+        x = getattr(self, "createdById", None)
+        return str(x) if x is not None else None
