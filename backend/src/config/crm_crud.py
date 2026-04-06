@@ -463,6 +463,13 @@ def get_contacts_by_company(company_id: str, db: Session, tenant_id: str = None,
     return query.order_by(Contact.createdAt.desc()).offset(skip).limit(limit).all()
 
 def create_contact(contact_data: dict, db: Session) -> Contact:
+    atts = contact_data.get("attachments")
+    if atts is None:
+        contact_data["attachments"] = []
+    else:
+        contact_data["attachments"] = [_attachment_item_to_dict(x) for x in atts]
+    if contact_data.get("description") == "":
+        contact_data["description"] = None
     db_contact = Contact(**contact_data)
     db.add(db_contact)
     db.commit()
@@ -471,24 +478,39 @@ def create_contact(contact_data: dict, db: Session) -> Contact:
 
 def update_contact(contact_id: str, update_data: dict, db: Session, tenant_id: str = None) -> Optional[Contact]:
     contact = get_contact_by_id(contact_id, db, tenant_id)
-    if contact:
-        for key, value in update_data.items():
-            if not hasattr(contact, key):
-                continue
-            if value is not None or key == "email":
-                setattr(contact, key, value)
-        contact.updatedAt = datetime.utcnow()
-        db.commit()
-        db.refresh(contact)
+    if not contact:
+        return None
+    if "description" in update_data and update_data["description"] == "":
+        update_data["description"] = None
+    if "attachments" in update_data:
+        new_atts = update_data.get("attachments")
+        if new_atts is None:
+            update_data["attachments"] = []
+        else:
+            old_urls = _attachment_urls_set(contact.attachments)
+            new_urls = _attachment_urls_set(new_atts)
+            for url in old_urls - new_urls:
+                _delete_s3_for_file_url(url)
+            update_data["attachments"] = [_attachment_item_to_dict(x) for x in new_atts]
+    for key, value in update_data.items():
+        if not hasattr(contact, key):
+            continue
+        if value is not None or key in ("email", "notes", "description"):
+            setattr(contact, key, value)
+    contact.updatedAt = datetime.utcnow()
+    db.commit()
+    db.refresh(contact)
     return contact
 
 def delete_contact(contact_id: str, db: Session, tenant_id: str = None) -> bool:
     contact = get_contact_by_id(contact_id, db, tenant_id)
-    if contact:
-        db.delete(contact)
-        db.commit()
-        return True
-    return False
+    if not contact:
+        return False
+    for att in (contact.attachments or []):
+        _delete_s3_for_file_url(_attachment_url_from_stored(att))
+    db.delete(contact)
+    db.commit()
+    return True
 
 def get_company_by_id(company_id: str, db: Session, tenant_id: str = None) -> Optional[Company]:
     query = db.query(Company).filter(Company.id == company_id)

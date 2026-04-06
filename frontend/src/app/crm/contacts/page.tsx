@@ -38,6 +38,8 @@ import {
   Trash2,
   Eye,
   Building2,
+  Paperclip,
+  ExternalLink,
 } from 'lucide-react';
 import CRMService from '@/src/services/CRMService';
 import {
@@ -45,7 +47,10 @@ import {
   ContactType,
   CRMContactFilters,
   ContactCreate,
+  ContactUpdate,
+  ContactAttachment,
 } from '@/src/models/crm';
+import fileUploadService from '@/src/services/FileUploadService';
 import { DashboardLayout } from '../../../components/layout';
 import { useCustomOptions } from '../../../hooks/useCustomOptions';
 import { CustomOptionDialog } from '../../../components/common/CustomOptionDialog';
@@ -99,10 +104,14 @@ function CRMContactsContent() {
     companyId: '',
     contactType: ContactType.CUSTOMER,
     notes: '',
+    description: '',
     tags: [],
+    attachments: [] as ContactAttachment[],
     isActive: true,
   });
   const [companies, setCompanies] = useState<any[]>([]);
+  const attachmentFileInputRef = React.useRef<HTMLInputElement>(null);
+  const [attachmentUploading, setAttachmentUploading] = useState(false);
 
   useEffect(() => {
     loadContacts();
@@ -159,7 +168,9 @@ function CRMContactsContent() {
       companyId: '',
       contactType: ContactType.CUSTOMER,
       notes: '',
+      description: '',
       tags: [],
+      attachments: [],
       isActive: true,
     });
   };
@@ -175,8 +186,30 @@ function CRMContactsContent() {
     setSubmitting(true);
     try {
       if (editingContact) {
-        // TODO: Implement update functionality
-        } else {
+        const payload: ContactUpdate = {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email || undefined,
+          phone: formData.phone,
+          mobile: formData.mobile,
+          jobTitle: formData.jobTitle,
+          department: formData.department,
+          companyId: formData.companyId || undefined,
+          contactType: formData.contactType,
+          notes: formData.notes,
+          description: formData.description,
+          tags: formData.tags,
+          attachments: formData.attachments,
+          isActive: formData.isActive,
+        };
+        await CRMService.updateContact(editingContact.id, payload);
+        setSuccessMessage('Contact updated successfully!');
+        setShowCreateDialog(false);
+        setEditingContact(null);
+        resetForm();
+        loadContacts();
+        setTimeout(() => setSuccessMessage(''), 3000);
+      } else {
         await CRMService.createContact(formData);
         setSuccessMessage('Contact created successfully!');
         setShowCreateDialog(false);
@@ -207,10 +240,58 @@ function CRMContactsContent() {
       companyId: contact.companyId || '',
       contactType: contact.contactType ?? ContactType.CUSTOMER,
       notes: contact.notes || '',
+      description: contact.description || '',
       tags: contact.tags || [],
+      attachments: contact.attachments || [],
       isActive: contact.isActive,
     });
     setShowCreateDialog(true);
+  };
+
+  const handleAttachmentFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAttachmentUploading(true);
+    try {
+      const res = await fileUploadService.uploadDocument(file);
+      setFormData((prev) => ({
+        ...prev,
+        attachments: [
+          ...(prev.attachments || []),
+          {
+            url: res.file_url,
+            original_filename: res.original_filename,
+            s3_key: res.s3_key,
+          },
+        ],
+      }));
+    } catch {
+      setErrorMessage('File upload failed. Please try again.');
+      setTimeout(() => setErrorMessage(''), 5000);
+    } finally {
+      setAttachmentUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const removeAttachmentAt = async (index: number) => {
+    const list = formData.attachments || [];
+    const att = list[index];
+    if (att) {
+      const key = att.s3_key || fileUploadService.extractS3KeyFromUrl(att.url);
+      if (key) {
+        try {
+          await fileUploadService.deleteFile(key);
+        } catch {
+          setErrorMessage('Removed from list; storage delete may have failed.');
+          setTimeout(() => setErrorMessage(''), 5000);
+        }
+      }
+    }
+    setFormData((prev) => ({
+      ...prev,
+      attachments: (prev.attachments || []).filter((_, i) => i !== index),
+    }));
   };
 
   const handleView = (contact: Contact) => {
@@ -661,6 +742,83 @@ function CRMContactsContent() {
                     placeholder="tag1, tag2, tag3"
                   />
                 </div>
+
+                <div className="md:col-span-2">
+                  <Label htmlFor="contactDescription">Description</Label>
+                  <Textarea
+                    id="contactDescription"
+                    value={formData.description || ''}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
+                    placeholder="Profile or summary for this contact"
+                    rows={4}
+                    className="resize-y min-h-[80px]"
+                  />
+                </div>
+
+                <div className="md:col-span-2 space-y-2">
+                  <Label>Attachments</Label>
+                  <input
+                    ref={attachmentFileInputRef}
+                    type="file"
+                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    className="hidden"
+                    onChange={handleAttachmentFile}
+                  />
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={attachmentUploading}
+                      onClick={() => attachmentFileInputRef.current?.click()}
+                    >
+                      <Paperclip className="h-4 w-4 mr-1" />
+                      {attachmentUploading ? 'Uploading…' : 'Add file'}
+                    </Button>
+                    <span className="text-xs text-muted-foreground">
+                      PDF, DOC, DOCX (max 10MB)
+                    </span>
+                  </div>
+                  {(formData.attachments || []).length > 0 && (
+                    <ul className="border rounded-md divide-y text-sm">
+                      {(formData.attachments || []).map((att, idx) => (
+                        <li
+                          key={`${att.url}-${idx}`}
+                          className="flex items-center justify-between gap-2 px-3 py-2"
+                        >
+                          <span
+                            className="truncate flex-1"
+                            title={att.original_filename || att.url}
+                          >
+                            {att.original_filename || 'Attachment'}
+                          </span>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <a
+                              href={att.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary inline-flex items-center"
+                              aria-label="Open file"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-destructive"
+                              onClick={() => removeAttachmentAt(idx)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
 
               <DialogFooter>
@@ -793,6 +951,47 @@ function CRMContactsContent() {
                       Notes
                     </Label>
                     <p>{viewingContact.notes || 'No notes'}</p>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <Label className="text-sm font-medium text-gray-500">
+                      Description
+                    </Label>
+                    <p className="whitespace-pre-wrap">
+                      {viewingContact.description?.trim()
+                        ? viewingContact.description
+                        : '—'}
+                    </p>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <Label className="text-sm font-medium text-gray-500">
+                      Attachments
+                    </Label>
+                    {(viewingContact.attachments || []).length > 0 ? (
+                      <ul className="mt-1 border rounded-md divide-y text-sm">
+                        {(viewingContact.attachments || []).map((att, idx) => (
+                          <li
+                            key={`${att.url}-${idx}`}
+                            className="flex items-center justify-between gap-2 px-3 py-2"
+                          >
+                            <span className="truncate">
+                              {att.original_filename || 'File'}
+                            </span>
+                            <a
+                              href={att.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary inline-flex items-center shrink-0"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>None</p>
+                    )}
                   </div>
 
                   <div className="md:col-span-2">

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from uuid import UUID
@@ -14,6 +14,11 @@ from .common import (
     Industry,
     Pagination
 )
+
+class ContactAttachmentItem(BaseModel):
+    url: str
+    original_filename: Optional[str] = None
+    s3_key: Optional[str] = None
 
 class LeadBase(BaseModel):
     firstName: str
@@ -82,7 +87,9 @@ class ContactBase(BaseModel):
     contactType: ContactType = ContactType.CUSTOMER
     isPrimary: bool = False
     notes: Optional[str] = None
+    description: Optional[str] = None
     tags: List[str] = []
+    attachments: List[ContactAttachmentItem] = Field(default_factory=list)
     isActive: bool = True
 
     @field_validator("email", mode="before")
@@ -103,6 +110,19 @@ class ContactBase(BaseModel):
             return str(v)
         return v
 
+    @field_validator("attachments", mode="before")
+    @classmethod
+    def normalize_contact_attachments(cls, v):
+        if v is None:
+            return []
+        out = []
+        for item in v:
+            if isinstance(item, str):
+                out.append({"url": item})
+            elif isinstance(item, dict):
+                out.append(item)
+        return out
+
 class ContactCreate(ContactBase):
     pass
 
@@ -118,7 +138,9 @@ class ContactUpdate(BaseModel):
     contactType: Optional[ContactType] = None
     isPrimary: Optional[bool] = None
     notes: Optional[str] = None
+    description: Optional[str] = None
     tags: Optional[List[str]] = None
+    attachments: Optional[List[ContactAttachmentItem]] = None
     isActive: Optional[bool] = None
 
     @field_validator("email", mode="before")

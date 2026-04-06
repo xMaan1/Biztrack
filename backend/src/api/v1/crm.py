@@ -27,6 +27,7 @@ from ...models.crm_models import (
 from ...config.crm_models import Opportunity
 from ...config.database import get_db, get_user_by_id
 from ...config.crm_crud import (
+    _attachment_item_to_dict,
     create_lead, get_lead_by_id, get_leads, update_lead, delete_lead,
     create_contact, get_contact_by_id, get_contacts, update_contact, delete_contact,
     create_company, get_company_by_id, get_companies, update_company, delete_company,
@@ -62,6 +63,11 @@ def _contact_create_to_orm_dict(contact_data: ContactCreate, tenant_id) -> dict:
     else:
         contact_source = None
     now = datetime.utcnow()
+    desc = raw.get("description")
+    if desc is not None and isinstance(desc, str) and not desc.strip():
+        desc = None
+    atts_raw = raw.get("attachments") or []
+    atts = [_attachment_item_to_dict(x) for x in atts_raw]
     return {
         "id": uuid.uuid4(),
         "tenant_id": tenant_id,
@@ -76,6 +82,8 @@ def _contact_create_to_orm_dict(contact_data: ContactCreate, tenant_id) -> dict:
         "contactSource": contact_source,
         "isActive": raw.get("isActive", True),
         "notes": raw.get("notes"),
+        "description": desc,
+        "attachments": atts,
         "createdAt": now,
         "updatedAt": now,
     }

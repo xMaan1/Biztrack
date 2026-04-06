@@ -119,6 +119,8 @@ class Contact(Base):
     contactSource = Column(String)
     isActive = Column(Boolean, default=True)
     notes = Column(Text)
+    description = Column(Text, nullable=True)
+    attachments = Column(JSON, default=[])
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

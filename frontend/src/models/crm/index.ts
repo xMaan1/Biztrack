@@ -128,6 +128,12 @@ export interface LeadUpdate {
   timeline?: string;
 }
 
+export type ContactAttachment = {
+  url: string;
+  original_filename?: string;
+  s3_key?: string;
+};
+
 export interface Contact {
   id: string;
   firstName: string;
@@ -140,7 +146,9 @@ export interface Contact {
   companyId?: string;
   contactType?: ContactType;
   notes?: string;
+  description?: string;
   tags: string[];
+  attachments?: ContactAttachment[];
   isActive: boolean;
   lastContactDate?: string;
   nextFollowUpDate?: string;
@@ -162,7 +170,9 @@ export interface ContactCreate {
   companyId?: string;
   contactType?: ContactType;
   notes?: string;
+  description?: string;
   tags?: string[];
+  attachments?: ContactAttachment[];
   isActive?: boolean;
 }
 
@@ -177,7 +187,9 @@ export interface ContactUpdate {
   companyId?: string;
   contactType?: ContactType;
   notes?: string;
+  description?: string;
   tags?: string[];
+  attachments?: ContactAttachment[];
   isActive?: boolean;
 }
 
