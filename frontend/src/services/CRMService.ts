@@ -34,6 +34,7 @@ export type {
   CustomerUpdate,
   CustomerStats,
   CustomersResponse,
+  CustomerAttachment,
 } from './CustomerService';
 
 export { CustomerService } from './CustomerService';

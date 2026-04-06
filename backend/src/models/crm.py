@@ -3,6 +3,11 @@ from typing import Optional, List
 from datetime import datetime
 from uuid import UUID
 
+class CustomerAttachmentItem(BaseModel):
+    url: str
+    original_filename: Optional[str] = None
+    s3_key: Optional[str] = None
+
 # Customer Models
 class CustomerBase(BaseModel):
     firstName: str = Field(..., min_length=1, max_length=100)
@@ -32,8 +37,23 @@ class CustomerBase(BaseModel):
     paymentTerms: Optional[str] = Field(default="Cash", pattern=r"^(Credit|Card|Cash|Due Payments|immediate|net30|net60)$")
     assignedToId: Optional[UUID] = None
     notes: Optional[str] = None
+    description: Optional[str] = None
     tags: Optional[List[str]] = Field(default_factory=list)
+    attachments: List[CustomerAttachmentItem] = Field(default_factory=list)
     image_url: Optional[str] = None
+
+    @field_validator("attachments", mode="before")
+    @classmethod
+    def normalize_attachments(cls, v):
+        if v is None:
+            return []
+        out = []
+        for item in v:
+            if isinstance(item, str):
+                out.append({"url": item})
+            elif isinstance(item, dict):
+                out.append(item)
+        return out
 
 class CustomerCreate(CustomerBase):
     pass
@@ -59,7 +79,9 @@ class CustomerUpdate(BaseModel):
     paymentTerms: Optional[str] = Field(None, pattern=r"^(Credit|Card|Cash|Due Payments|immediate|net30|net60)$")
     assignedToId: Optional[UUID] = None
     notes: Optional[str] = None
+    description: Optional[str] = None
     tags: Optional[List[str]] = None
+    attachments: Optional[List[CustomerAttachmentItem]] = None
     image_url: Optional[str] = None
 
 class CustomerResponse(CustomerBase):

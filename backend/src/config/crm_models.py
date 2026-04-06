@@ -54,7 +54,9 @@ class Customer(Base):
     paymentTerms = Column(String, default="Cash")  # Credit, Card, Cash, Due Payments
     assignedToId = Column(UUID(as_uuid=True), ForeignKey("users.id"))
     notes = Column(Text)
+    description = Column(Text, nullable=True)
     tags = Column(JSON, default=[])  # Store tags as JSON array
+    attachments = Column(JSON, default=[])
     image_url = Column(Text, nullable=True)
     isActive = Column(Boolean, default=True)
     createdAt = Column(DateTime, default=datetime.utcnow)

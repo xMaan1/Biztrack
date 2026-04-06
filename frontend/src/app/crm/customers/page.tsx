@@ -59,6 +59,8 @@ import {
   CheckCircle,
   XCircle,
   Upload,
+  Paperclip,
+  ExternalLink,
 } from 'lucide-react';
 import {
   CustomerService,
@@ -67,13 +69,16 @@ import {
   CustomerStats,
   Guarantor,
   GuarantorCreate,
+  CustomerAttachment,
 } from '@/src/services/CRMService';
 import crmService from '@/src/services/CRMService';
+import fileUploadService from '@/src/services/FileUploadService';
 import { DashboardLayout } from '../../../components/layout';
 import { toast } from 'sonner';
 import CustomerImportDialog from '../../../components/crm/CustomerImportDialog';
 import { extractErrorMessage } from '@/src/utils/errorUtils';
 import { Camera, X, UserPlus } from 'lucide-react';
+import { Textarea } from '@/src/components/ui/textarea';
 
 export default function CustomersPage() {
   return (
@@ -119,6 +124,8 @@ function CustomersContent() {
     currentBalance: 0,
       paymentTerms: 'Cash',
     tags: [],
+    description: '',
+    attachments: [] as CustomerAttachment[],
   });
   const [customerPhotoPreview, setCustomerPhotoPreview] = useState<string | null>(null);
   const [guarantors, setGuarantors] = useState<Guarantor[]>([]);
@@ -138,6 +145,9 @@ function CustomersContent() {
   const [editingCreateGuarantorIndex, setEditingCreateGuarantorIndex] = useState<number | null>(null);
   const [photoRemoved, setPhotoRemoved] = useState(false);
   const customerPhotoInputRef = React.useRef<HTMLInputElement>(null);
+  const attachmentFileInputCreateRef = React.useRef<HTMLInputElement>(null);
+  const attachmentFileInputEditRef = React.useRef<HTMLInputElement>(null);
+  const [attachmentUploading, setAttachmentUploading] = useState(false);
 
   const itemsPerPage = 10;
 
@@ -282,6 +292,8 @@ function CustomersContent() {
       currentBalance: 0,
       paymentTerms: 'Cash',
       tags: [],
+      description: '',
+      attachments: [],
     });
     setSelectedCustomer(null);
     setCustomerPhotoPreview(null);
@@ -310,6 +322,8 @@ function CustomersContent() {
       currentBalance: customer.currentBalance,
       paymentTerms: customer.paymentTerms,
       tags: customer.tags,
+      description: customer.description || '',
+      attachments: customer.attachments || [],
     });
     setCustomerPhotoPreview(null);
     setPhotoRemoved(false);
@@ -329,6 +343,51 @@ function CustomersContent() {
     reader.onload = () => setCustomerPhotoPreview(reader.result as string);
     reader.readAsDataURL(file);
     setPhotoRemoved(false);
+  };
+
+  const handleAttachmentFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAttachmentUploading(true);
+    try {
+      const res = await fileUploadService.uploadDocument(file);
+      setFormData((prev) => ({
+        ...prev,
+        attachments: [
+          ...(prev.attachments || []),
+          {
+            url: res.file_url,
+            original_filename: res.original_filename,
+            s3_key: res.s3_key,
+          },
+        ],
+      }));
+      toast.success('File attached');
+    } catch (err) {
+      toast.error(extractErrorMessage(err, 'Upload failed'));
+    } finally {
+      setAttachmentUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const removeAttachmentAt = async (index: number) => {
+    const list = formData.attachments || [];
+    const att = list[index];
+    if (att) {
+      const key = att.s3_key || fileUploadService.extractS3KeyFromUrl(att.url);
+      if (key) {
+        try {
+          await fileUploadService.deleteFile(key);
+        } catch {
+          toast.warning('Removed from list; storage delete may have failed');
+        }
+      }
+    }
+    setFormData((prev) => ({
+      ...prev,
+      attachments: (prev.attachments || []).filter((_, i) => i !== index),
+    }));
   };
 
   const handleAddGuarantor = async () => {
@@ -747,6 +806,76 @@ function CustomersContent() {
                     }
                     placeholder="vip, regular, premium"
                   />
+                </div>
+                <div className="col-span-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description || ''}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
+                    placeholder="Notes or profile summary for this customer"
+                    rows={4}
+                    className="resize-y min-h-[80px]"
+                  />
+                </div>
+                <div className="col-span-2 space-y-2">
+                  <Label>Attachments</Label>
+                  <input
+                    ref={attachmentFileInputCreateRef}
+                    type="file"
+                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    className="hidden"
+                    onChange={handleAttachmentFile}
+                  />
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={attachmentUploading}
+                      onClick={() => attachmentFileInputCreateRef.current?.click()}
+                    >
+                      <Paperclip className="h-4 w-4 mr-1" />
+                      {attachmentUploading ? 'Uploading…' : 'Add file'}
+                    </Button>
+                    <span className="text-xs text-muted-foreground">PDF, DOC, DOCX (max 10MB)</span>
+                  </div>
+                  {(formData.attachments || []).length > 0 && (
+                    <ul className="border rounded-md divide-y text-sm">
+                      {(formData.attachments || []).map((att, idx) => (
+                        <li
+                          key={`${att.url}-${idx}`}
+                          className="flex items-center justify-between gap-2 px-3 py-2"
+                        >
+                          <span className="truncate flex-1" title={att.original_filename || att.url}>
+                            {att.original_filename || 'Attachment'}
+                          </span>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <a
+                              href={att.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary inline-flex items-center"
+                              aria-label="Open file"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-destructive"
+                              onClick={() => removeAttachmentAt(idx)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </div>
               <div className="border-t pt-4 mt-4">
@@ -1363,6 +1492,76 @@ function CustomersContent() {
                   }
                   placeholder="vip, regular, premium"
                 />
+              </div>
+              <div className="col-span-2">
+                <Label htmlFor="editDescription">Description</Label>
+                <Textarea
+                  id="editDescription"
+                  value={formData.description || ''}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  placeholder="Notes or profile summary for this customer"
+                  rows={4}
+                  className="resize-y min-h-[80px]"
+                />
+              </div>
+              <div className="col-span-2 space-y-2">
+                <Label>Attachments</Label>
+                <input
+                  ref={attachmentFileInputEditRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  className="hidden"
+                  onChange={handleAttachmentFile}
+                />
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={attachmentUploading}
+                    onClick={() => attachmentFileInputEditRef.current?.click()}
+                  >
+                    <Paperclip className="h-4 w-4 mr-1" />
+                    {attachmentUploading ? 'Uploading…' : 'Add file'}
+                  </Button>
+                  <span className="text-xs text-muted-foreground">PDF, DOC, DOCX (max 10MB)</span>
+                </div>
+                {(formData.attachments || []).length > 0 && (
+                  <ul className="border rounded-md divide-y text-sm">
+                    {(formData.attachments || []).map((att, idx) => (
+                      <li
+                        key={`${att.url}-${idx}`}
+                        className="flex items-center justify-between gap-2 px-3 py-2"
+                      >
+                        <span className="truncate flex-1" title={att.original_filename || att.url}>
+                          {att.original_filename || 'Attachment'}
+                        </span>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <a
+                            href={att.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary inline-flex items-center"
+                            aria-label="Open file"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-destructive"
+                            onClick={() => removeAttachmentAt(idx)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </div>
             <div className="border-t pt-4 mt-4">

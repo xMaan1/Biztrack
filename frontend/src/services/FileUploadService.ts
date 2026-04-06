@@ -7,6 +7,7 @@ export interface FileUploadResponse {
   file_url: string;
   filename: string;
   original_filename: string;
+  s3_key?: string;
   file_size: number;
   content_type: string;
 }
@@ -93,6 +94,34 @@ class FileUploadService {
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.detail || 'Failed to get logo info');
+    }
+
+    return await response.json();
+  }
+
+  async uploadDocument(file: File): Promise<FileUploadResponse> {
+    const token = localStorage.getItem('auth_token');
+    const tenantId = localStorage.getItem('currentTenantId');
+
+    if (!token || !tenantId) {
+      throw new Error('Authentication required');
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_BASE_URL}/file-upload/document`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'X-Tenant-ID': tenantId,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to upload document');
     }
 
     return await response.json();

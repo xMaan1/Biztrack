@@ -1,5 +1,11 @@
 import { apiService } from './ApiService';
 
+export interface CustomerAttachment {
+  url: string;
+  original_filename?: string;
+  s3_key?: string;
+}
+
 // Customer Types
 export interface Customer {
   id: string;
@@ -24,7 +30,9 @@ export interface Customer {
   paymentTerms: 'Credit' | 'Card' | 'Cash' | 'Due Payments';
   assignedToId?: string;
   notes?: string;
+  description?: string;
   tags: string[];
+  attachments?: CustomerAttachment[];
   image_url?: string;
   isActive: boolean;
   createdAt: string;
@@ -52,7 +60,9 @@ export interface CustomerCreate {
   paymentTerms?: 'Credit' | 'Card' | 'Cash' | 'Due Payments';
   assignedToId?: string;
   notes?: string;
+  description?: string;
   tags?: string[];
+  attachments?: CustomerAttachment[];
 }
 
 export interface CustomerUpdate extends Partial<CustomerCreate> {}

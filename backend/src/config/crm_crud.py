@@ -7,6 +7,38 @@ from sqlalchemy.exc import IntegrityError
 from .crm_models import Lead, Contact, Company, Opportunity, SalesActivity, Customer, CustomerGuarantor
 from .core_models import User
 from .database_config import get_db
+from ..services.s3_service import s3_service
+
+def _attachment_url_from_stored(item: Any) -> Optional[str]:
+    if isinstance(item, dict):
+        u = item.get("url")
+        return str(u) if u else None
+    if isinstance(item, str):
+        return item
+    return None
+
+def _attachment_urls_set(attachments: Any) -> set:
+    if not attachments:
+        return set()
+    return {u for u in (_attachment_url_from_stored(a) for a in attachments) if u}
+
+def _delete_s3_for_file_url(url: Optional[str]) -> None:
+    if not url or not (str(url).startswith("http://") or str(url).startswith("https://")):
+        return
+    try:
+        s3_key = s3_service.extract_s3_key_from_url(str(url))
+        if s3_key:
+            s3_service.delete_file(s3_key)
+    except Exception:
+        pass
+
+def _attachment_item_to_dict(x: Any) -> Dict[str, Any]:
+    if isinstance(x, dict):
+        return dict(x)
+    md = getattr(x, "model_dump", None)
+    if callable(md):
+        return md()
+    raise TypeError("Invalid attachment item")
 
 # Customer CRUD Operations
 def create_customer(db: Session, customer_data: Dict[str, Any], tenant_id: str) -> Customer:
@@ -18,7 +50,7 @@ def create_customer(db: Session, customer_data: Dict[str, Any], tenant_id: str) 
         customer_data["createdAt"] = datetime.utcnow()
         customer_data["updatedAt"] = datetime.utcnow()
         
-        optional_fields = ['cnic', 'phone', 'mobile', 'address', 'city', 'state', 'postalCode', 'notes', 'image_url', 'email']
+        optional_fields = ['cnic', 'phone', 'mobile', 'address', 'city', 'state', 'postalCode', 'notes', 'description', 'image_url', 'email']
         for field in optional_fields:
             if field in customer_data and customer_data[field] == '':
                 customer_data[field] = None
@@ -43,6 +75,12 @@ def create_customer(db: Session, customer_data: Dict[str, Any], tenant_id: str) 
             existing_customer = get_customer_by_email(db, customer_data['email'], tenant_id)
             if existing_customer:
                 raise ValueError(f"Customer with email '{customer_data['email']}' already exists")
+
+        atts = customer_data.get('attachments')
+        if atts is None:
+            customer_data['attachments'] = []
+        else:
+            customer_data['attachments'] = [_attachment_item_to_dict(x) for x in atts]
 
         customer = Customer(**customer_data)
         db.add(customer)
@@ -132,10 +170,20 @@ def update_customer(db: Session, customer_id: str, customer_data: Dict[str, Any]
         
         customer_data["updatedAt"] = datetime.utcnow()
         
-        optional_fields = ['cnic', 'phone', 'mobile', 'address', 'city', 'state', 'postalCode', 'notes', 'image_url', 'email']
+        optional_fields = ['cnic', 'phone', 'mobile', 'address', 'city', 'state', 'postalCode', 'notes', 'description', 'image_url', 'email']
         for field in optional_fields:
             if field in customer_data and customer_data[field] == '':
                 customer_data[field] = None
+        if 'attachments' in customer_data:
+            new_atts = customer_data.get('attachments')
+            if new_atts is None:
+                customer_data['attachments'] = []
+            else:
+                old_urls = _attachment_urls_set(customer.attachments)
+                new_urls = _attachment_urls_set(new_atts)
+                for url in old_urls - new_urls:
+                    _delete_s3_for_file_url(url)
+                customer_data['attachments'] = [_attachment_item_to_dict(x) for x in new_atts]
         if 'email' in customer_data:
             email_val = customer_data.get('email')
             if email_val is not None and isinstance(email_val, str):
@@ -185,7 +233,11 @@ def delete_customer(db: Session, customer_id: str, tenant_id: str) -> bool:
     customer = get_customer_by_id(db, customer_id, tenant_id)
     if not customer:
         return False
-    
+
+    _delete_s3_for_file_url(customer.image_url)
+    for att in (customer.attachments or []):
+        _delete_s3_for_file_url(_attachment_url_from_stored(att))
+
     db.delete(customer)
     db.commit()
     return True
