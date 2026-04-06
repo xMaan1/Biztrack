@@ -151,6 +151,7 @@ class Contact(Base):
     # Relationships
     tenant = relationship("Tenant", back_populates="contacts")
     company = relationship("Company", back_populates="contacts")
+    assignedTo = relationship("User", foreign_keys=[assignedToId])
 
     @property
     def contactType(self):
