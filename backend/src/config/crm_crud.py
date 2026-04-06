@@ -77,6 +77,48 @@ def _prepare_labeled_contact_dict(d: Dict[str, Any], *, customer_email_blank_str
     d["phone"] = phones[0]["value"] if len(phones) > 0 else None
     d["mobile"] = phones[1]["value"] if len(phones) > 1 else None
 
+def _contact_addresses_to_orm(addresses: Any) -> List[Dict[str, Any]]:
+    if not addresses:
+        return []
+    out: List[Dict[str, Any]] = []
+    keys = ("label", "line1", "line2", "city", "state", "postalCode", "country")
+    for a in addresses:
+        if hasattr(a, "model_dump"):
+            d = a.model_dump(exclude_none=False)
+        elif isinstance(a, dict):
+            d = dict(a)
+        else:
+            continue
+        cleaned: Dict[str, Any] = {}
+        for k in keys:
+            val = d.get(k)
+            if val is not None and isinstance(val, str):
+                val = val.strip() or None
+            elif val is not None:
+                s = str(val).strip()
+                val = s or None
+            if val:
+                cleaned[k] = val
+        if cleaned:
+            out.append(cleaned)
+    return out
+
+def _contact_social_to_orm(social: Any) -> Dict[str, str]:
+    if social is None:
+        return {}
+    if hasattr(social, "model_dump"):
+        d = social.model_dump(exclude_none=True)
+    elif isinstance(social, dict):
+        d = dict(social)
+    else:
+        return {}
+    out: Dict[str, str] = {}
+    for k in ("facebook", "instagram", "x", "linkedin", "skype", "tiktok", "threads"):
+        v = d.get(k)
+        if v is not None and str(v).strip():
+            out[k] = str(v).strip()
+    return out
+
 def find_customer_by_any_email(db: Session, email_lower: str, tenant_id: str) -> Optional[Customer]:
     if not email_lower or not str(email_lower).strip():
         return None
@@ -535,6 +577,8 @@ def get_contacts_by_company(company_id: str, db: Session, tenant_id: str = None,
     return query.order_by(Contact.createdAt.desc()).offset(skip).limit(limit).all()
 
 def create_contact(contact_data: dict, db: Session) -> Contact:
+    contact_data["addresses"] = _contact_addresses_to_orm(contact_data.get("addresses"))
+    contact_data["socialLinks"] = _contact_social_to_orm(contact_data.get("socialLinks"))
     atts = contact_data.get("attachments")
     if atts is None:
         contact_data["attachments"] = []
@@ -573,6 +617,10 @@ def update_contact(contact_id: str, update_data: dict, db: Session, tenant_id: s
             for url in old_urls - new_urls:
                 _delete_s3_for_file_url(url)
             update_data["attachments"] = [_attachment_item_to_dict(x) for x in new_atts]
+    if "addresses" in update_data:
+        update_data["addresses"] = _contact_addresses_to_orm(update_data.get("addresses"))
+    if "socialLinks" in update_data:
+        update_data["socialLinks"] = _contact_social_to_orm(update_data.get("socialLinks"))
     tid = str(tenant_id) if tenant_id else str(contact.tenant_id)
     if any(k in update_data for k in ("emails", "phones", "email", "phone", "mobile")):
         merged = {
@@ -599,7 +647,8 @@ def update_contact(contact_id: str, update_data: dict, db: Session, tenant_id: s
         if not hasattr(contact, key):
             continue
         if value is not None or key in (
-            "email", "notes", "description", "phone", "mobile", "emails", "phones"
+            "email", "notes", "description", "phone", "mobile", "emails", "phones",
+            "initials", "fullName", "birthday", "businessTaxId", "addresses", "socialLinks",
         ):
             setattr(contact, key, value)
     contact.updatedAt = datetime.utcnow()

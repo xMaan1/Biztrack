@@ -146,6 +146,26 @@ export interface LabeledPhoneItem {
   label: ContactLabel;
 }
 
+export type ContactAddressRow = {
+  label?: string;
+  line1?: string;
+  line2?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  country?: string;
+};
+
+export type ContactSocialLinks = {
+  facebook?: string;
+  instagram?: string;
+  x?: string;
+  linkedin?: string;
+  skype?: string;
+  tiktok?: string;
+  threads?: string;
+};
+
 export interface Contact {
   id: string;
   firstName: string;
@@ -164,6 +184,12 @@ export interface Contact {
   tags: string[];
   attachments?: ContactAttachment[];
   isActive: boolean;
+  initials?: string | null;
+  fullName?: string | null;
+  birthday?: string | null;
+  businessTaxId?: string | null;
+  addresses?: ContactAddressRow[];
+  socialLinks?: ContactSocialLinks;
   lastContactDate?: string;
   nextFollowUpDate?: string;
   tenantId?: string;
@@ -190,6 +216,12 @@ export interface ContactCreate {
   tags?: string[];
   attachments?: ContactAttachment[];
   isActive?: boolean;
+  initials?: string | null;
+  fullName?: string | null;
+  birthday?: string | null;
+  businessTaxId?: string | null;
+  addresses?: ContactAddressRow[];
+  socialLinks?: ContactSocialLinks;
 }
 
 export interface ContactUpdate {
@@ -209,6 +241,12 @@ export interface ContactUpdate {
   tags?: string[];
   attachments?: ContactAttachment[];
   isActive?: boolean;
+  initials?: string | null;
+  fullName?: string | null;
+  birthday?: string | null;
+  businessTaxId?: string | null;
+  addresses?: ContactAddressRow[];
+  socialLinks?: ContactSocialLinks;
 }
 
 export interface Company {

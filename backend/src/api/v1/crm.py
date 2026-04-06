@@ -86,6 +86,12 @@ def _contact_create_to_orm_dict(contact_data: ContactCreate, tenant_id) -> dict:
         "notes": raw.get("notes"),
         "description": desc,
         "attachments": atts,
+        "initials": raw.get("initials"),
+        "fullName": raw.get("fullName"),
+        "birthday": raw.get("birthday"),
+        "businessTaxId": raw.get("businessTaxId"),
+        "addresses": raw.get("addresses") or [],
+        "socialLinks": raw.get("socialLinks"),
         "createdAt": now,
         "updatedAt": now,
     }
@@ -650,7 +656,15 @@ async def get_crm_contacts(
                     continue
                 if search:
                     search_lower = search.lower()
-                    em_blob = json.dumps(contact.emails or []) + json.dumps(contact.phones or [])
+                    em_blob = (
+                        json.dumps(contact.emails or [])
+                        + json.dumps(contact.phones or [])
+                        + json.dumps(getattr(contact, "addresses", None) or [])
+                        + json.dumps(getattr(contact, "socialLinks", None) or {})
+                        + (getattr(contact, "initials", None) or "")
+                        + (getattr(contact, "fullName", None) or "")
+                        + (getattr(contact, "businessTaxId", None) or "")
+                    )
                     if not any([
                         search_lower in (contact.firstName or "").lower(),
                         search_lower in (contact.lastName or "").lower(),

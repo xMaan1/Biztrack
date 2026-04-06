@@ -21,6 +21,24 @@ class ContactAttachmentItem(BaseModel):
     original_filename: Optional[str] = None
     s3_key: Optional[str] = None
 
+class ContactAddressItem(BaseModel):
+    label: Optional[str] = None
+    line1: Optional[str] = None
+    line2: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    postalCode: Optional[str] = None
+    country: Optional[str] = None
+
+class ContactSocialLinks(BaseModel):
+    facebook: Optional[str] = None
+    instagram: Optional[str] = None
+    x: Optional[str] = None
+    linkedin: Optional[str] = None
+    skype: Optional[str] = None
+    tiktok: Optional[str] = None
+    threads: Optional[str] = None
+
 class LeadBase(BaseModel):
     firstName: str
     lastName: str
@@ -94,6 +112,63 @@ class ContactBase(BaseModel):
     tags: List[str] = []
     attachments: List[ContactAttachmentItem] = Field(default_factory=list)
     isActive: bool = True
+    initials: Optional[str] = None
+    fullName: Optional[str] = None
+    birthday: Optional[datetime] = None
+    businessTaxId: Optional[str] = None
+    addresses: List[ContactAddressItem] = Field(default_factory=list)
+    socialLinks: ContactSocialLinks = Field(default_factory=ContactSocialLinks)
+
+    @field_validator("initials", "fullName", "businessTaxId", mode="before")
+    @classmethod
+    def empty_optional_str(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str) and not v.strip():
+            return None
+        return v
+
+    @field_validator("birthday", mode="before")
+    @classmethod
+    def parse_birthday(cls, v):
+        if v is None or v == "":
+            return None
+        if isinstance(v, datetime):
+            return v
+        if isinstance(v, str):
+            s = v.strip()
+            if not s:
+                return None
+            try:
+                return datetime.fromisoformat(s.replace("Z", "+00:00"))
+            except ValueError:
+                return None
+        return None
+
+    @field_validator("addresses", mode="before")
+    @classmethod
+    def normalize_addresses_in(cls, v):
+        if v is None:
+            return []
+        out = []
+        for item in v:
+            if isinstance(item, dict):
+                out.append(item)
+        return out
+
+    @field_validator("socialLinks", mode="before")
+    @classmethod
+    def normalize_social_in(cls, v):
+        if v is None:
+            return ContactSocialLinks()
+        if isinstance(v, dict):
+            d = {}
+            for k in ("facebook", "instagram", "x", "linkedin", "skype", "tiktok", "threads"):
+                x = v.get(k)
+                if x is not None and str(x).strip():
+                    d[k] = str(x).strip()
+            return ContactSocialLinks(**d)
+        return v
 
     @field_validator("emails", mode="before")
     @classmethod
@@ -169,6 +244,63 @@ class ContactUpdate(BaseModel):
     tags: Optional[List[str]] = None
     attachments: Optional[List[ContactAttachmentItem]] = None
     isActive: Optional[bool] = None
+    initials: Optional[str] = None
+    fullName: Optional[str] = None
+    birthday: Optional[datetime] = None
+    businessTaxId: Optional[str] = None
+    addresses: Optional[List[ContactAddressItem]] = None
+    socialLinks: Optional[ContactSocialLinks] = None
+
+    @field_validator("initials", "fullName", "businessTaxId", mode="before")
+    @classmethod
+    def empty_optional_str_upd(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str) and not v.strip():
+            return None
+        return v
+
+    @field_validator("birthday", mode="before")
+    @classmethod
+    def parse_birthday_upd(cls, v):
+        if v is None or v == "":
+            return None
+        if isinstance(v, datetime):
+            return v
+        if isinstance(v, str):
+            s = v.strip()
+            if not s:
+                return None
+            try:
+                return datetime.fromisoformat(s.replace("Z", "+00:00"))
+            except ValueError:
+                return None
+        return None
+
+    @field_validator("addresses", mode="before")
+    @classmethod
+    def normalize_addresses_upd(cls, v):
+        if v is None:
+            return None
+        out = []
+        for item in v:
+            if isinstance(item, dict):
+                out.append(item)
+        return out
+
+    @field_validator("socialLinks", mode="before")
+    @classmethod
+    def normalize_social_upd(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, dict):
+            d = {}
+            for k in ("facebook", "instagram", "x", "linkedin", "skype", "tiktok", "threads"):
+                x = v.get(k)
+                if x is not None and str(x).strip():
+                    d[k] = str(x).strip()
+            return ContactSocialLinks(**d)
+        return v
 
     @field_validator("emails", mode="before")
     @classmethod

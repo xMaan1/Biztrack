@@ -125,6 +125,12 @@ class Contact(Base):
     notes = Column(Text)
     description = Column(Text, nullable=True)
     attachments = Column(JSON, default=[])
+    initials = Column(String, nullable=True)
+    fullName = Column(String, nullable=True)
+    birthday = Column(DateTime, nullable=True)
+    businessTaxId = Column(Text, nullable=True)
+    addresses = Column(JSON, default=list)
+    socialLinks = Column(JSON, default=dict)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

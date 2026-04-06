@@ -2,46 +2,11 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { ModuleGuard } from '../../../components/guards/PermissionGuard';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
-import { Input } from '@/src/components/ui/input';
-import { Textarea } from '@/src/components/ui/textarea';
-import { Label } from '@/src/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/src/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/src/components/ui/dialog';
-import { Alert, AlertDescription } from '@/src/components/ui/alert';
-import {
-  Users,
-  Plus,
-  Search,
-  Filter,
-  Edit,
-  Trash2,
-  Eye,
-  Building2,
-  Paperclip,
-  ExternalLink,
-} from 'lucide-react';
+import { DashboardLayout } from '../../../components/layout';
+import { useCustomOptions } from '../../../hooks/useCustomOptions';
+import { CustomOptionDialog } from '../../../components/common/CustomOptionDialog';
 import CRMService from '@/src/services/CRMService';
+import fileUploadService from '@/src/services/FileUploadService';
 import {
   Contact,
   ContactType,
@@ -51,25 +16,29 @@ import {
   ContactAttachment,
 } from '@/src/models/crm';
 import {
-  LabeledContactFields,
   defaultEmailRowsFromEntity,
   defaultPhoneRowsFromEntity,
 } from '@/src/components/crm/LabeledContactFields';
-import fileUploadService from '@/src/services/FileUploadService';
-import { DashboardLayout } from '../../../components/layout';
-import { useCustomOptions } from '../../../hooks/useCustomOptions';
-import { CustomOptionDialog } from '../../../components/common/CustomOptionDialog';
-
-function contactTypeDisplayLabel(contact: Contact): string {
-  const raw = contact.contactType ?? ContactType.CUSTOMER;
-  const s = String(raw);
-  if (!s) return 'Customer';
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
+import {
+  defaultSocialLinks,
+  mergeSocialFromApi,
+  birthdayInputFromApi,
+  buildAddressesPayload,
+} from '@/src/components/crm/contacts/contactUtils';
+import { ContactsLoadingState } from '@/src/components/crm/contacts/ContactsLoadingState';
+import { ContactsPageHeader } from '@/src/components/crm/contacts/ContactsPageHeader';
+import { ContactsFiltersCard } from '@/src/components/crm/contacts/ContactsFiltersCard';
+import { ContactsListCard } from '@/src/components/crm/contacts/ContactsListCard';
+import { ContactFormDialog } from '@/src/components/crm/contacts/ContactFormDialog';
+import { ContactViewDialog } from '@/src/components/crm/contacts/ContactViewDialog';
+import { ContactDeleteDialog } from '@/src/components/crm/contacts/ContactDeleteDialog';
 
 export default function CRMContactsPage() {
   return (
-    <ModuleGuard module="crm" fallback={<div>You don't have access to CRM module</div>}>
+    <ModuleGuard
+      module="crm"
+      fallback={<div>You don't have access to CRM module</div>}
+    >
       <CRMContactsContent />
     </ModuleGuard>
   );
@@ -90,8 +59,10 @@ function CRMContactsContent() {
   const [errorMessage, setErrorMessage] = useState('');
   const [showCustomContactTypeDialog, setShowCustomContactTypeDialog] =
     useState(false);
+  const [openAdditional, setOpenAdditional] = useState(false);
+  const [openAddresses, setOpenAddresses] = useState(false);
+  const [openContactDetails, setOpenContactDetails] = useState(false);
 
-  // Custom options hook
   const {
     customContactTypes,
     createCustomContactType,
@@ -112,8 +83,16 @@ function CRMContactsContent() {
     tags: [],
     attachments: [] as ContactAttachment[],
     isActive: true,
+    initials: '',
+    fullName: '',
+    birthday: '',
+    businessTaxId: '',
+    addresses: [],
+    socialLinks: defaultSocialLinks(),
   });
-  const [companies, setCompanies] = useState<any[]>([]);
+  const [companies, setCompanies] = useState<{ id: string; name: string }[]>(
+    [],
+  );
   const attachmentFileInputRef = React.useRef<HTMLInputElement>(null);
   const [attachmentUploading, setAttachmentUploading] = useState(false);
 
@@ -128,7 +107,7 @@ function CRMContactsContent() {
       const response = await CRMService.getContacts(filters, 1, 100);
       setContacts(response.contacts);
     } catch (err) {
-      } finally {
+    } finally {
       setLoading(false);
     }
   }, [filters]);
@@ -138,7 +117,7 @@ function CRMContactsContent() {
       const response = await CRMService.getCompanies({}, 1, 100);
       setCompanies(response.companies || []);
     } catch (err) {
-      }
+    }
   }, []);
 
   const handleSearch = () => {
@@ -157,7 +136,7 @@ function CRMContactsContent() {
     try {
       await createCustomContactType(name, description);
     } catch (error) {
-      }
+    }
   };
 
   const resetForm = () => {
@@ -175,7 +154,16 @@ function CRMContactsContent() {
       tags: [],
       attachments: [],
       isActive: true,
+      initials: '',
+      fullName: '',
+      birthday: '',
+      businessTaxId: '',
+      addresses: [],
+      socialLinks: defaultSocialLinks(),
     });
+    setOpenAdditional(false);
+    setOpenAddresses(false);
+    setOpenContactDetails(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -188,6 +176,8 @@ function CRMContactsContent() {
 
     setSubmitting(true);
     try {
+      const addressesPayload = buildAddressesPayload(formData.addresses);
+      const socialPayload = mergeSocialFromApi(formData.socialLinks);
       if (editingContact) {
         const payload: ContactUpdate = {
           firstName: formData.firstName,
@@ -203,6 +193,14 @@ function CRMContactsContent() {
           tags: formData.tags,
           attachments: formData.attachments,
           isActive: formData.isActive,
+          initials: formData.initials?.trim() || null,
+          fullName: formData.fullName?.trim() || null,
+          businessTaxId: formData.businessTaxId?.trim() || null,
+          addresses: addressesPayload,
+          socialLinks: socialPayload,
+          birthday: formData.birthday?.trim()
+            ? `${formData.birthday.trim()}T00:00:00`
+            : null,
         };
         await CRMService.updateContact(editingContact.id, payload);
         setSuccessMessage('Contact updated successfully!');
@@ -216,6 +214,14 @@ function CRMContactsContent() {
           ...formData,
           emails: (formData.emails || []).filter((e) => e.value.trim()),
           phones: (formData.phones || []).filter((p) => p.value.trim()),
+          initials: formData.initials?.trim() || undefined,
+          fullName: formData.fullName?.trim() || undefined,
+          businessTaxId: formData.businessTaxId?.trim() || undefined,
+          addresses: addressesPayload,
+          socialLinks: socialPayload,
+          ...(formData.birthday?.trim()
+            ? { birthday: `${formData.birthday.trim()}T00:00:00` }
+            : {}),
         });
         setSuccessMessage('Contact created successfully!');
         setShowCreateDialog(false);
@@ -249,11 +255,19 @@ function CRMContactsContent() {
       tags: contact.tags || [],
       attachments: contact.attachments || [],
       isActive: contact.isActive,
+      initials: contact.initials || '',
+      fullName: contact.fullName || '',
+      birthday: birthdayInputFromApi(contact.birthday),
+      businessTaxId: contact.businessTaxId || '',
+      addresses: Array.isArray(contact.addresses) ? contact.addresses : [],
+      socialLinks: mergeSocialFromApi(contact.socialLinks),
     });
     setShowCreateDialog(true);
   };
 
-  const handleAttachmentFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAttachmentFile = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setAttachmentUploading(true);
@@ -303,7 +317,7 @@ function CRMContactsContent() {
     setViewingContact(contact);
   };
 
-  const handleDelete = async (contact: Contact) => {
+  const handleDelete = (contact: Contact) => {
     setDeletingContact(contact);
   };
 
@@ -326,827 +340,86 @@ function CRMContactsContent() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
-          <p className="mt-4 text-lg">Loading Contacts...</p>
-        </div>
-      </div>
-    );
+    return <ContactsLoadingState />;
   }
 
   return (
     <DashboardLayout>
       <div className="container mx-auto p-6 space-y-6">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">CRM Contacts</h1>
-            <p className="text-gray-600">
-              Manage your customer contacts and relationships
-            </p>
-            {successMessage && (
-              <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-md">
-                <p className="text-green-800 text-sm">{successMessage}</p>
-              </div>
-            )}
-          </div>
-          <Button
-            onClick={() => {
-              setEditingContact(null);
-              resetForm();
-              setErrorMessage('');
-              setSuccessMessage('');
-              setShowCreateDialog(true);
-            }}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Contact
-          </Button>
-        </div>
+        <ContactsPageHeader
+          successMessage={successMessage}
+          onNewContact={() => {
+            setEditingContact(null);
+            resetForm();
+            setErrorMessage('');
+            setSuccessMessage('');
+            setShowCreateDialog(true);
+          }}
+        />
 
-        {/* Filters and Search */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Filter className="w-4 h-4 mr-2" />
-              Filters & Search
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="text-sm font-medium">Search</label>
-                <div className="flex space-x-2">
-                  <Input
-                    placeholder="Search contacts..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  />
-                  <Button onClick={handleSearch}>
-                    <Search className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Type</label>
-                <Select
-                  value={filters.type || 'all'}
-                  onValueChange={(value) =>
-                    setFilters((prev: CRMContactFilters) => ({
-                      ...prev,
-                      type:
-                        value === 'all' ? undefined : (value as ContactType),
-                    }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Types" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    {Object.values(ContactType).map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-end">
-                <Button variant="outline" onClick={resetFilters}>
-                  Reset Filters
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <ContactsFiltersCard
+          search={search}
+          onSearchChange={setSearch}
+          onSearchSubmit={handleSearch}
+          filters={filters}
+          setFilters={setFilters}
+          onResetFilters={resetFilters}
+        />
 
-        {/* Contacts List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Contacts ({contacts.length})</CardTitle>
-            <CardDescription>
-              Manage your customer contacts and track interactions
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {contacts.map((contact) => (
-                <div
-                  key={contact.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex items-center space-x-2">
-                        <Users className="w-5 h-5 text-gray-500" />
-                        <div>
-                          <div className="font-medium">
-                            {contact.firstName} {contact.lastName}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {(() => {
-                              const ev = (contact.emails || []).filter((e) =>
-                                e.value.trim(),
-                              );
-                              if (ev.length > 0) {
-                                return ev.map((e) => e.value).join(', ');
-                              }
-                              return contact.email?.trim() || 'No email';
-                            })()}
-                          </div>
-                        </div>
-                      </div>
-                      {contact.companyId && (
-                        <div className="flex items-center space-x-1 text-sm text-gray-500">
-                          <Building2 className="w-4 h-4" />
-                          <span>Company ID: {contact.companyId}</span>
-                        </div>
-                      )}
-                      {contact.jobTitle && (
-                        <span className="text-sm text-gray-500">
-                          {contact.jobTitle}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center space-x-2 mt-2">
-                      <Badge variant="outline">
-                        {contactTypeDisplayLabel(contact)}
-                      </Badge>
-                      <Badge
-                        variant={contact.isActive ? 'default' : 'secondary'}
-                      >
-                        {contact.isActive ? 'Active' : 'Inactive'}
-                      </Badge>
-                    </div>
-                    {contact.notes && (
-                      <div className="text-sm text-gray-600 mt-2">
-                        {contact.notes}
-                      </div>
-                    )}
-                    <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
-                      <span>
-                        Created: {CRMService.formatDate(contact.createdAt)}
-                      </span>
-                      {contact.lastContactDate && (
-                        <span>
-                          Last Contact:{' '}
-                          {CRMService.formatDate(contact.lastContactDate)}
-                        </span>
-                      )}
-                      {contact.nextFollowUpDate && (
-                        <span>
-                          Next Follow-up:{' '}
-                          {CRMService.formatDate(contact.nextFollowUpDate)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleView(contact)}
-                    >
-                      <Eye className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(contact)}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(contact)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <ContactsListCard
+          contacts={contacts}
+          onView={handleView}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
 
-        {/* Create/Edit Contact Dialog */}
-        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {editingContact ? 'Edit Contact' : 'Create New Contact'}
-              </DialogTitle>
-            </DialogHeader>
+        <ContactFormDialog
+          open={showCreateDialog}
+          onOpenChange={setShowCreateDialog}
+          editingContact={editingContact}
+          formData={formData}
+          setFormData={setFormData}
+          companies={companies}
+          customContactTypes={customContactTypes}
+          onRequestCustomContactType={() =>
+            setShowCustomContactTypeDialog(true)
+          }
+          openAdditional={openAdditional}
+          onToggleAdditional={() => setOpenAdditional((o) => !o)}
+          openAddresses={openAddresses}
+          onToggleAddresses={() => setOpenAddresses((o) => !o)}
+          openContactDetails={openContactDetails}
+          onToggleContactDetails={() => setOpenContactDetails((o) => !o)}
+          errorMessage={errorMessage}
+          onSubmit={handleSubmit}
+          submitting={submitting}
+          onCancel={() => {
+            setShowCreateDialog(false);
+            setEditingContact(null);
+            resetForm();
+            setErrorMessage('');
+            setSuccessMessage('');
+          }}
+          attachmentFileInputRef={attachmentFileInputRef}
+          onAttachmentFile={handleAttachmentFile}
+          attachmentUploading={attachmentUploading}
+          onRemoveAttachment={removeAttachmentAt}
+        />
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {errorMessage && (
-                <Alert variant="destructive">
-                  <AlertDescription>{errorMessage}</AlertDescription>
-                </Alert>
-              )}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="firstName">First Name *</Label>
-                  <Input
-                    id="firstName"
-                    value={formData.firstName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, firstName: e.target.value })
-                    }
-                    placeholder="Enter first name"
-                    required
-                  />
-                </div>
+        <ContactViewDialog
+          contact={viewingContact}
+          companies={companies}
+          onClose={() => setViewingContact(null)}
+          onEdit={handleEdit}
+        />
 
-                <div>
-                  <Label htmlFor="lastName">Last Name *</Label>
-                  <Input
-                    id="lastName"
-                    value={formData.lastName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, lastName: e.target.value })
-                    }
-                    placeholder="Enter last name"
-                    required
-                  />
-                </div>
+        <ContactDeleteDialog
+          contact={deletingContact}
+          deleting={deleting}
+          onClose={() => setDeletingContact(null)}
+          onConfirm={confirmDelete}
+        />
 
-                <LabeledContactFields
-                  emails={
-                    formData.emails || [{ value: '', label: 'personal' }]
-                  }
-                  phones={formData.phones || [{ value: '', label: 'work' }]}
-                  onEmailsChange={(emails) =>
-                    setFormData({ ...formData, emails })
-                  }
-                  onPhonesChange={(phones) =>
-                    setFormData({ ...formData, phones })
-                  }
-                />
-
-                <div>
-                  <Label htmlFor="jobTitle">Job Title</Label>
-                  <Input
-                    id="jobTitle"
-                    value={formData.jobTitle}
-                    onChange={(e) =>
-                      setFormData({ ...formData, jobTitle: e.target.value })
-                    }
-                    placeholder="Enter job title"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="department">Department</Label>
-                  <Input
-                    id="department"
-                    value={formData.department}
-                    onChange={(e) =>
-                      setFormData({ ...formData, department: e.target.value })
-                    }
-                    placeholder="Enter department"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="companyId">Company</Label>
-                  <Select
-                    value={formData.companyId || 'none'}
-                    onValueChange={(value) =>
-                      setFormData({
-                        ...formData,
-                        companyId: value === 'none' ? '' : value,
-                      })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select company" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No Company</SelectItem>
-                      {companies.map((company) => (
-                        <SelectItem key={company.id} value={company.id}>
-                          {company.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="contactType">Contact Type</Label>
-                  <Select
-                    value={formData.contactType}
-                    onValueChange={(value) => {
-                      if (value === 'create_new') {
-                        setShowCustomContactTypeDialog(true);
-                      } else {
-                        setFormData({
-                          ...formData,
-                          contactType: value as ContactType,
-                        });
-                      }
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.values(ContactType).map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type.charAt(0).toUpperCase() + type.slice(1)}
-                        </SelectItem>
-                      ))}
-
-                      {/* Custom Contact Types */}
-                      {customContactTypes &&
-                        customContactTypes.length > 0 &&
-                        customContactTypes.map((customType) => (
-                          <SelectItem key={customType.id} value={customType.id}>
-                            {customType.name}
-                          </SelectItem>
-                        ))}
-
-                      <SelectItem
-                        value="create_new"
-                        className="font-semibold text-blue-600"
-                      >
-                        + Create New Contact Type
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="isActive">Status</Label>
-                  <Select
-                    value={formData.isActive ? 'active' : 'inactive'}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, isActive: value === 'active' })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="md:col-span-2">
-                  <Label htmlFor="notes">Notes</Label>
-                  <Textarea
-                    id="notes"
-                    value={formData.notes}
-                    onChange={(e) =>
-                      setFormData({ ...formData, notes: e.target.value })
-                    }
-                    placeholder="Additional notes about the contact"
-                    rows={3}
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <Label htmlFor="tags">Tags (comma-separated)</Label>
-                  <Input
-                    id="tags"
-                    value={formData.tags?.join(', ') || ''}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        tags: e.target.value
-                          ? e.target.value.split(',').map((tag) => tag.trim())
-                          : [],
-                      })
-                    }
-                    placeholder="tag1, tag2, tag3"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <Label htmlFor="contactDescription">Description</Label>
-                  <Textarea
-                    id="contactDescription"
-                    value={formData.description || ''}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                    placeholder="Profile or summary for this contact"
-                    rows={4}
-                    className="resize-y min-h-[80px]"
-                  />
-                </div>
-
-                <div className="md:col-span-2 space-y-2">
-                  <Label>Attachments</Label>
-                  <input
-                    ref={attachmentFileInputRef}
-                    type="file"
-                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                    className="hidden"
-                    onChange={handleAttachmentFile}
-                  />
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={attachmentUploading}
-                      onClick={() => attachmentFileInputRef.current?.click()}
-                    >
-                      <Paperclip className="h-4 w-4 mr-1" />
-                      {attachmentUploading ? 'Uploading…' : 'Add file'}
-                    </Button>
-                    <span className="text-xs text-muted-foreground">
-                      PDF, DOC, DOCX (max 10MB)
-                    </span>
-                  </div>
-                  {(formData.attachments || []).length > 0 && (
-                    <ul className="border rounded-md divide-y text-sm">
-                      {(formData.attachments || []).map((att, idx) => (
-                        <li
-                          key={`${att.url}-${idx}`}
-                          className="flex items-center justify-between gap-2 px-3 py-2"
-                        >
-                          <span
-                            className="truncate flex-1"
-                            title={att.original_filename || att.url}
-                          >
-                            {att.original_filename || 'Attachment'}
-                          </span>
-                          <div className="flex items-center gap-1 shrink-0">
-                            <a
-                              href={att.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary inline-flex items-center"
-                              aria-label="Open file"
-                            >
-                              <ExternalLink className="h-4 w-4" />
-                            </a>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 text-destructive"
-                              onClick={() => removeAttachmentAt(idx)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </div>
-
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setShowCreateDialog(false);
-                    setEditingContact(null);
-                    resetForm();
-                    setErrorMessage('');
-                    setSuccessMessage('');
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={submitting}>
-                  {submitting
-                    ? 'Saving...'
-                    : editingContact
-                      ? 'Update Contact'
-                      : 'Create Contact'}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-
-        {/* View Contact Dialog */}
-        <Dialog
-          open={!!viewingContact}
-          onOpenChange={() => setViewingContact(null)}
-        >
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Contact Details</DialogTitle>
-            </DialogHeader>
-
-            {viewingContact && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium text-gray-500">
-                      First Name
-                    </Label>
-                    <p className="text-lg font-semibold">
-                      {viewingContact.firstName}
-                    </p>
-                  </div>
-
-                  <div>
-                    <Label className="text-sm font-medium text-gray-500">
-                      Last Name
-                    </Label>
-                    <p className="text-lg font-semibold">
-                      {viewingContact.lastName}
-                    </p>
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <Label className="text-sm font-medium text-gray-500">
-                      Email addresses
-                    </Label>
-                    <div className="mt-1 space-y-1">
-                      {(() => {
-                        const ev = (viewingContact.emails || []).filter(
-                          (e) => e.value.trim(),
-                        );
-                        const list =
-                          ev.length > 0
-                            ? ev
-                            : viewingContact.email?.trim()
-                              ? [
-                                  {
-                                    value: viewingContact.email.trim(),
-                                    label: 'personal' as const,
-                                  },
-                                ]
-                              : [];
-                        if (list.length === 0) {
-                          return (
-                            <p className="text-muted-foreground">
-                              Not specified
-                            </p>
-                          );
-                        }
-                        return list.map((e, i) => (
-                          <p key={i}>
-                            {e.value}{' '}
-                            <span className="text-muted-foreground text-sm">
-                              ({e.label})
-                            </span>
-                          </p>
-                        ));
-                      })()}
-                    </div>
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <Label className="text-sm font-medium text-gray-500">
-                      Phone numbers
-                    </Label>
-                    <div className="mt-1 space-y-1">
-                      {(() => {
-                        const pv = (viewingContact.phones || []).filter(
-                          (p) => p.value.trim(),
-                        );
-                        const list =
-                          pv.length > 0
-                            ? pv
-                            : [
-                                ...(viewingContact.phone
-                                  ? [
-                                      {
-                                        value: viewingContact.phone,
-                                        label: 'work' as const,
-                                      },
-                                    ]
-                                  : []),
-                                ...(viewingContact.mobile
-                                  ? [
-                                      {
-                                        value: viewingContact.mobile,
-                                        label: 'personal' as const,
-                                      },
-                                    ]
-                                  : []),
-                              ];
-                        if (list.length === 0) {
-                          return (
-                            <p className="text-muted-foreground">
-                              Not specified
-                            </p>
-                          );
-                        }
-                        return list.map((p, i) => (
-                          <p key={i}>
-                            {p.value}{' '}
-                            <span className="text-muted-foreground text-sm">
-                              ({p.label})
-                            </span>
-                          </p>
-                        ));
-                      })()}
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label className="text-sm font-medium text-gray-500">
-                      Job Title
-                    </Label>
-                    <p>{viewingContact.jobTitle || 'Not specified'}</p>
-                  </div>
-
-                  <div>
-                    <Label className="text-sm font-medium text-gray-500">
-                      Department
-                    </Label>
-                    <p>{viewingContact.department || 'Not specified'}</p>
-                  </div>
-
-                  <div>
-                    <Label className="text-sm font-medium text-gray-500">
-                      Company
-                    </Label>
-                    <p>
-                      {viewingContact.companyId
-                        ? companies.find(
-                            (c) => c.id === viewingContact.companyId,
-                          )?.name || 'Company ID: ' + viewingContact.companyId
-                        : 'Not specified'}
-                    </p>
-                  </div>
-
-                  <div>
-                    <Label className="text-sm font-medium text-gray-500">
-                      Contact Type
-                    </Label>
-                    <p>{contactTypeDisplayLabel(viewingContact)}</p>
-                  </div>
-
-                  <div>
-                    <Label className="text-sm font-medium text-gray-500">
-                      Status
-                    </Label>
-                    <Badge
-                      variant={
-                        viewingContact.isActive ? 'default' : 'secondary'
-                      }
-                    >
-                      {viewingContact.isActive ? 'Active' : 'Inactive'}
-                    </Badge>
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <Label className="text-sm font-medium text-gray-500">
-                      Notes
-                    </Label>
-                    <p>{viewingContact.notes || 'No notes'}</p>
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <Label className="text-sm font-medium text-gray-500">
-                      Description
-                    </Label>
-                    <p className="whitespace-pre-wrap">
-                      {viewingContact.description?.trim()
-                        ? viewingContact.description
-                        : '—'}
-                    </p>
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <Label className="text-sm font-medium text-gray-500">
-                      Attachments
-                    </Label>
-                    {(viewingContact.attachments || []).length > 0 ? (
-                      <ul className="mt-1 border rounded-md divide-y text-sm">
-                        {(viewingContact.attachments || []).map((att, idx) => (
-                          <li
-                            key={`${att.url}-${idx}`}
-                            className="flex items-center justify-between gap-2 px-3 py-2"
-                          >
-                            <span className="truncate">
-                              {att.original_filename || 'File'}
-                            </span>
-                            <a
-                              href={att.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary inline-flex items-center shrink-0"
-                            >
-                              <ExternalLink className="h-4 w-4" />
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p>None</p>
-                    )}
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <Label className="text-sm font-medium text-gray-500">
-                      Tags
-                    </Label>
-                    <div className="flex flex-wrap gap-2">
-                      {viewingContact.tags && viewingContact.tags.length > 0 ? (
-                        viewingContact.tags.map((tag, index) => (
-                          <Badge key={index} variant="outline">
-                            {tag}
-                          </Badge>
-                        ))
-                      ) : (
-                        <p>No tags</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <Label className="text-sm font-medium text-gray-500">
-                      Created
-                    </Label>
-                    <p>{CRMService.formatDate(viewingContact.createdAt)}</p>
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <Label className="text-sm font-medium text-gray-500">
-                      Last Updated
-                    </Label>
-                    <p>{CRMService.formatDate(viewingContact.updatedAt)}</p>
-                  </div>
-                </div>
-
-                <DialogFooter>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setViewingContact(null)}
-                  >
-                    Close
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      setViewingContact(null);
-                      handleEdit(viewingContact);
-                    }}
-                  >
-                    Edit Contact
-                  </Button>
-                </DialogFooter>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-
-        {/* Delete Confirmation Dialog */}
-        <Dialog
-          open={!!deletingContact}
-          onOpenChange={() => setDeletingContact(null)}
-        >
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Delete Contact</DialogTitle>
-            </DialogHeader>
-
-            {deletingContact && (
-              <div className="space-y-4">
-                <p className="text-gray-600">
-                  Are you sure you want to delete{' '}
-                  <strong>
-                    &quot;{deletingContact.firstName} {deletingContact.lastName}
-                    &quot;
-                  </strong>
-                  ? This action cannot be undone.
-                </p>
-
-                <DialogFooter>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setDeletingContact(null)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    onClick={confirmDelete}
-                    disabled={deleting}
-                  >
-                    {deleting ? 'Deleting...' : 'Delete Contact'}
-                  </Button>
-                </DialogFooter>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-
-        {/* Custom Contact Type Dialog */}
         <CustomOptionDialog
           open={showCustomContactTypeDialog}
           onOpenChange={setShowCustomContactTypeDialog}
