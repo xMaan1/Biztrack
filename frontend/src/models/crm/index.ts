@@ -134,6 +134,18 @@ export type ContactAttachment = {
   s3_key?: string;
 };
 
+export type ContactLabel = 'work' | 'personal' | 'other';
+
+export interface LabeledEmailItem {
+  value: string;
+  label: ContactLabel;
+}
+
+export interface LabeledPhoneItem {
+  value: string;
+  label: ContactLabel;
+}
+
 export interface Contact {
   id: string;
   firstName: string;
@@ -141,6 +153,8 @@ export interface Contact {
   email?: string | null;
   phone?: string;
   mobile?: string;
+  emails?: LabeledEmailItem[];
+  phones?: LabeledPhoneItem[];
   jobTitle?: string;
   department?: string;
   companyId?: string;
@@ -165,6 +179,8 @@ export interface ContactCreate {
   email?: string | null;
   phone?: string;
   mobile?: string;
+  emails?: LabeledEmailItem[];
+  phones?: LabeledPhoneItem[];
   jobTitle?: string;
   department?: string;
   companyId?: string;
@@ -182,6 +198,8 @@ export interface ContactUpdate {
   email?: string;
   phone?: string;
   mobile?: string;
+  emails?: LabeledEmailItem[];
+  phones?: LabeledPhoneItem[];
   jobTitle?: string;
   department?: string;
   companyId?: string;

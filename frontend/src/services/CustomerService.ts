@@ -1,5 +1,17 @@
 import { apiService } from './ApiService';
 
+export type ContactLabel = 'work' | 'personal' | 'other';
+
+export interface LabeledEmailItem {
+  value: string;
+  label: ContactLabel;
+}
+
+export interface LabeledPhoneItem {
+  value: string;
+  label: ContactLabel;
+}
+
 export interface CustomerAttachment {
   url: string;
   original_filename?: string;
@@ -15,6 +27,8 @@ export interface Customer {
   email?: string;
   phone?: string;
   mobile?: string;
+  emails?: LabeledEmailItem[];
+  phones?: LabeledPhoneItem[];
   cnic?: string;
   dateOfBirth?: string;
   gender?: 'male' | 'female' | 'other';
@@ -45,6 +59,8 @@ export interface CustomerCreate {
   email?: string;
   phone?: string;
   mobile?: string;
+  emails?: LabeledEmailItem[];
+  phones?: LabeledPhoneItem[];
   cnic?: string;
   dateOfBirth?: string;
   gender?: 'male' | 'female' | 'other';

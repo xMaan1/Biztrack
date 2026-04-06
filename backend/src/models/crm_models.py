@@ -1,5 +1,6 @@
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 from typing import Optional, List, Dict, Any
+from .labeled_contact_items import LabeledEmailItem, LabeledPhoneItem
 from datetime import datetime
 from uuid import UUID
 from .common import (
@@ -81,6 +82,8 @@ class ContactBase(BaseModel):
     email: Optional[EmailStr] = None
     phone: Optional[str] = None
     mobile: Optional[str] = None
+    emails: List[LabeledEmailItem] = Field(default_factory=list)
+    phones: List[LabeledPhoneItem] = Field(default_factory=list)
     jobTitle: Optional[str] = None
     department: Optional[str] = None
     companyId: Optional[str] = None
@@ -91,6 +94,28 @@ class ContactBase(BaseModel):
     tags: List[str] = []
     attachments: List[ContactAttachmentItem] = Field(default_factory=list)
     isActive: bool = True
+
+    @field_validator("emails", mode="before")
+    @classmethod
+    def normalize_contact_emails(cls, v):
+        if v is None:
+            return []
+        out = []
+        for item in v:
+            if isinstance(item, dict):
+                out.append(item)
+        return out
+
+    @field_validator("phones", mode="before")
+    @classmethod
+    def normalize_contact_phones(cls, v):
+        if v is None:
+            return []
+        out = []
+        for item in v:
+            if isinstance(item, dict):
+                out.append(item)
+        return out
 
     @field_validator("email", mode="before")
     @classmethod
@@ -132,6 +157,8 @@ class ContactUpdate(BaseModel):
     email: Optional[EmailStr] = None
     phone: Optional[str] = None
     mobile: Optional[str] = None
+    emails: Optional[List[LabeledEmailItem]] = None
+    phones: Optional[List[LabeledPhoneItem]] = None
     jobTitle: Optional[str] = None
     department: Optional[str] = None
     companyId: Optional[str] = None
@@ -142,6 +169,28 @@ class ContactUpdate(BaseModel):
     tags: Optional[List[str]] = None
     attachments: Optional[List[ContactAttachmentItem]] = None
     isActive: Optional[bool] = None
+
+    @field_validator("emails", mode="before")
+    @classmethod
+    def normalize_contact_emails_upd(cls, v):
+        if v is None:
+            return None
+        out = []
+        for item in v:
+            if isinstance(item, dict):
+                out.append(item)
+        return out
+
+    @field_validator("phones", mode="before")
+    @classmethod
+    def normalize_contact_phones_upd(cls, v):
+        if v is None:
+            return None
+        out = []
+        for item in v:
+            if isinstance(item, dict):
+                out.append(item)
+        return out
 
     @field_validator("email", mode="before")
     @classmethod
@@ -170,6 +219,31 @@ class Contact(ContactBase):
     activities: List[Dict[str, Any]] = []
     createdAt: datetime
     updatedAt: datetime
+
+    @model_validator(mode="before")
+    @classmethod
+    def hydrate_contact_orm(cls, data: Any):
+        if data is None or not hasattr(data, "_sa_instance_state"):
+            return data
+        from sqlalchemy.inspection import inspect as sa_inspect
+        c = data
+        emails = list(c.emails or [])
+        if not emails and getattr(c, "email", None):
+            em = (c.email or "").strip()
+            if em:
+                emails = [{"value": em, "label": "personal"}]
+        phones = list(c.phones or [])
+        if not phones:
+            if getattr(c, "phone", None) and str(c.phone).strip():
+                phones.append({"value": str(c.phone).strip(), "label": "work"})
+            if getattr(c, "mobile", None) and str(c.mobile).strip():
+                phones.append({"value": str(c.mobile).strip(), "label": "personal"})
+        out = {}
+        for attr in sa_inspect(c).mapper.column_attrs:
+            out[attr.key] = getattr(c, attr.key)
+        out["emails"] = emails
+        out["phones"] = phones
+        return out
 
     class Config:
         from_attributes = True

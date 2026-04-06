@@ -66,11 +66,19 @@ import {
   CustomerService,
   Customer,
   CustomerCreate,
+  CustomerUpdate,
   CustomerStats,
   Guarantor,
   GuarantorCreate,
   CustomerAttachment,
+  LabeledEmailItem,
+  LabeledPhoneItem,
 } from '@/src/services/CRMService';
+import {
+  LabeledContactFields,
+  defaultEmailRowsFromEntity,
+  defaultPhoneRowsFromEntity,
+} from '@/src/components/crm/LabeledContactFields';
 import crmService from '@/src/services/CRMService';
 import fileUploadService from '@/src/services/FileUploadService';
 import { DashboardLayout } from '../../../components/layout';
@@ -109,9 +117,8 @@ function CustomersContent() {
   const [formData, setFormData] = useState<CustomerCreate>({
     firstName: '',
     lastName: '',
-    email: '',
-    phone: '',
-    mobile: '',
+    emails: [{ value: '', label: 'personal' }] as LabeledEmailItem[],
+    phones: [{ value: '', label: 'work' }] as LabeledPhoneItem[],
     cnic: '',
     address: '',
     city: '',
@@ -197,7 +204,12 @@ function CustomersContent() {
         toast.error('Please fill in all required fields (First Name, Last Name)');
         return;
       }
-      const created = await CustomerService.createCustomer(formData);
+      const payload: CustomerCreate = {
+        ...formData,
+        emails: (formData.emails || []).filter((e) => e.value.trim()),
+        phones: (formData.phones || []).filter((p) => p.value.trim()),
+      };
+      const created = await CustomerService.createCustomer(payload);
       if (customerPhotoPreview) {
         try {
           await CustomerService.uploadCustomerPhoto(created.id, customerPhotoPreview);
@@ -239,7 +251,12 @@ function CustomersContent() {
           toast.warning(extractErrorMessage(e, 'Photo upload failed'));
         }
       }
-      await CustomerService.updateCustomer(selectedCustomer.id, formData);
+      const updatePayload: CustomerUpdate = {
+        ...formData,
+        emails: (formData.emails || []).filter((e) => e.value.trim()),
+        phones: (formData.phones || []).filter((p) => p.value.trim()),
+      };
+      await CustomerService.updateCustomer(selectedCustomer.id, updatePayload);
       toast.success('Customer updated successfully');
       setIsEditDialogOpen(false);
       resetForm();
@@ -277,9 +294,8 @@ function CustomersContent() {
     setFormData({
       firstName: '',
       lastName: '',
-      email: '',
-      phone: '',
-      mobile: '',
+      emails: [{ value: '', label: 'personal' }],
+      phones: [{ value: '', label: 'work' }],
       cnic: '',
       address: '',
       city: '',
@@ -307,9 +323,8 @@ function CustomersContent() {
     setFormData({
       firstName: customer.firstName,
       lastName: customer.lastName,
-      email: customer.email,
-      phone: customer.phone || '',
-      mobile: customer.mobile || '',
+      emails: defaultEmailRowsFromEntity(customer),
+      phones: defaultPhoneRowsFromEntity(customer),
       cnic: customer.cnic || '',
       address: customer.address || '',
       city: customer.city || '',
@@ -609,40 +624,16 @@ function CustomersContent() {
                     placeholder="Doe"
                   />
                 </div>
-                <div className="col-span-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
-                    placeholder="john.doe@example.com"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input
-                    id="phone"
-                    value={formData.phone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
-                    }
-                    placeholder="+92 300 1234567"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="mobile">Mobile</Label>
-                  <Input
-                    id="mobile"
-                    value={formData.mobile}
-                    onChange={(e) =>
-                      setFormData({ ...formData, mobile: e.target.value })
-                    }
-                    placeholder="+92 300 1234567"
-                  />
-                </div>
+                <LabeledContactFields
+                  emails={formData.emails || [{ value: '', label: 'personal' }]}
+                  phones={formData.phones || [{ value: '', label: 'work' }]}
+                  onEmailsChange={(emails) =>
+                    setFormData({ ...formData, emails })
+                  }
+                  onPhonesChange={(phones) =>
+                    setFormData({ ...formData, phones })
+                  }
+                />
                 <div>
                   <Label htmlFor="cnic">CNIC</Label>
                   <Input
@@ -1113,24 +1104,58 @@ function CustomersContent() {
                               {customer.firstName} {customer.lastName}
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              {customer.email}
+                              {(() => {
+                                const ev = (customer.emails || []).filter(
+                                  (e) => e.value.trim(),
+                                );
+                                if (ev.length > 0) {
+                                  return ev.map((e) => e.value).join(', ');
+                                }
+                                return customer.email || '—';
+                              })()}
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="space-y-1">
-                            {customer.phone && (
-                              <div className="flex items-center text-sm">
-                                <Phone className="w-3 h-3 mr-1" />
-                                {customer.phone}
-                              </div>
-                            )}
-                            {customer.mobile && (
-                              <div className="flex items-center text-sm">
-                                <Phone className="w-3 h-3 mr-1" />
-                                {customer.mobile}
-                              </div>
-                            )}
+                            {(() => {
+                              const pv = (customer.phones || []).filter((p) =>
+                                p.value.trim(),
+                              );
+                              const rows =
+                                pv.length > 0
+                                  ? pv
+                                  : [
+                                      ...(customer.phone
+                                        ? [
+                                            {
+                                              value: customer.phone,
+                                              label: 'work' as const,
+                                            },
+                                          ]
+                                        : []),
+                                      ...(customer.mobile
+                                        ? [
+                                            {
+                                              value: customer.mobile,
+                                              label: 'personal' as const,
+                                            },
+                                          ]
+                                        : []),
+                                    ];
+                              return rows.map((p, i) => (
+                                <div
+                                  key={i}
+                                  className="flex items-center text-sm flex-wrap gap-x-1"
+                                >
+                                  <Phone className="w-3 h-3 mr-1 shrink-0" />
+                                  <span className="text-muted-foreground text-xs">
+                                    ({p.label})
+                                  </span>
+                                  {p.value}
+                                </div>
+                              ));
+                            })()}
                             {customer.cnic && (
                               <div className="text-sm text-muted-foreground">
                                 CNIC: {customer.cnic}
@@ -1295,40 +1320,16 @@ function CustomersContent() {
                   placeholder="Doe"
                 />
               </div>
-              <div className="col-span-2">
-                <Label htmlFor="editEmail">Email</Label>
-                <Input
-                  id="editEmail"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  placeholder="john.doe@example.com"
-                />
-              </div>
-              <div>
-                <Label htmlFor="editPhone">Phone</Label>
-                <Input
-                  id="editPhone"
-                  value={formData.phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
-                  }
-                  placeholder="+92 300 1234567"
-                />
-              </div>
-              <div>
-                <Label htmlFor="editMobile">Mobile</Label>
-                <Input
-                  id="editMobile"
-                  value={formData.mobile}
-                  onChange={(e) =>
-                    setFormData({ ...formData, mobile: e.target.value })
-                  }
-                  placeholder="+92 300 1234567"
-                />
-              </div>
+              <LabeledContactFields
+                emails={formData.emails || [{ value: '', label: 'personal' }]}
+                phones={formData.phones || [{ value: '', label: 'work' }]}
+                onEmailsChange={(emails) =>
+                  setFormData({ ...formData, emails })
+                }
+                onPhonesChange={(phones) =>
+                  setFormData({ ...formData, phones })
+                }
+              />
               <div>
                 <Label htmlFor="editCnic">CNIC</Label>
                 <Input

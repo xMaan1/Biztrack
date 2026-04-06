@@ -35,6 +35,9 @@ export type {
   CustomerStats,
   CustomersResponse,
   CustomerAttachment,
+  ContactLabel,
+  LabeledEmailItem,
+  LabeledPhoneItem,
 } from './CustomerService';
 
 export { CustomerService } from './CustomerService';

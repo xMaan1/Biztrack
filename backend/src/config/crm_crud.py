@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any, Tuple
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, func, desc
+from sqlalchemy import and_, or_, func, desc, cast, String
 from sqlalchemy.exc import IntegrityError
 from .crm_models import Lead, Contact, Company, Opportunity, SalesActivity, Customer, CustomerGuarantor
 from .core_models import User
@@ -40,6 +40,67 @@ def _attachment_item_to_dict(x: Any) -> Dict[str, Any]:
         return md()
     raise TypeError("Invalid attachment item")
 
+_LABELS = frozenset({"work", "personal", "other"})
+
+def _norm_label(x: Any) -> str:
+    s = str(x or "personal").lower()
+    return s if s in _LABELS else "personal"
+
+def _prepare_labeled_contact_dict(d: Dict[str, Any], *, customer_email_blank_string: bool) -> None:
+    emails = []
+    for x in d.get("emails") or []:
+        if isinstance(x, dict):
+            v = (x.get("value") or "").strip()
+            if v:
+                emails.append({"value": v, "label": _norm_label(x.get("label"))})
+    if not emails and d.get("email"):
+        v = str(d["email"]).strip()
+        if v:
+            emails.append({"value": v, "label": "personal"})
+    phones = []
+    for x in d.get("phones") or []:
+        if isinstance(x, dict):
+            v = (x.get("value") or "").strip()
+            if v:
+                phones.append({"value": v, "label": _norm_label(x.get("label"))})
+    if not phones:
+        if d.get("phone") and str(d["phone"]).strip():
+            phones.append({"value": str(d["phone"]).strip(), "label": "work"})
+        if d.get("mobile") and str(d["mobile"]).strip():
+            phones.append({"value": str(d["mobile"]).strip(), "label": "personal"})
+    d["emails"] = emails
+    d["phones"] = phones
+    if customer_email_blank_string:
+        d["email"] = (emails[0]["value"].strip().lower() if emails else "") or ""
+    else:
+        d["email"] = emails[0]["value"].strip().lower() if emails else None
+    d["phone"] = phones[0]["value"] if len(phones) > 0 else None
+    d["mobile"] = phones[1]["value"] if len(phones) > 1 else None
+
+def find_customer_by_any_email(db: Session, email_lower: str, tenant_id: str) -> Optional[Customer]:
+    if not email_lower or not str(email_lower).strip():
+        return None
+    email_lower = str(email_lower).strip().lower()
+    for c in db.query(Customer).filter(Customer.tenant_id == tenant_id).all():
+        for e in (c.emails or []):
+            if isinstance(e, dict) and (e.get("value") or "").strip().lower() == email_lower:
+                return c
+        if c.email and str(c.email).strip().lower() == email_lower:
+            return c
+    return None
+
+def find_contact_by_any_email(db: Session, email_lower: str, tenant_id: str) -> Optional[Contact]:
+    if not email_lower or not str(email_lower).strip():
+        return None
+    email_lower = str(email_lower).strip().lower()
+    for c in db.query(Contact).filter(Contact.tenant_id == tenant_id).all():
+        for e in (c.emails or []):
+            if isinstance(e, dict) and (e.get("value") or "").strip().lower() == email_lower:
+                return c
+        if c.email and str(c.email).strip().lower() == email_lower:
+            return c
+    return None
+
 # Customer CRUD Operations
 def create_customer(db: Session, customer_data: Dict[str, Any], tenant_id: str) -> Customer:
     """Create a new customer"""
@@ -54,12 +115,8 @@ def create_customer(db: Session, customer_data: Dict[str, Any], tenant_id: str) 
         for field in optional_fields:
             if field in customer_data and customer_data[field] == '':
                 customer_data[field] = None
-        email_val = customer_data.get('email')
-        if email_val is not None and isinstance(email_val, str):
-            email_val = email_val.strip() or None
-        else:
-            email_val = None
-        customer_data['email'] = email_val if email_val else ''
+
+        _prepare_labeled_contact_dict(customer_data, customer_email_blank_string=True)
 
         uuid_fields = ['assignedToId']
         for field in uuid_fields:
@@ -71,10 +128,13 @@ def create_customer(db: Session, customer_data: Dict[str, Any], tenant_id: str) 
             if existing_customer:
                 raise ValueError(f"Customer with CNIC '{customer_data['cnic']}' already exists")
         
-        if email_val:
-            existing_customer = get_customer_by_email(db, customer_data['email'], tenant_id)
+        for em in customer_data.get("emails") or []:
+            ev = (em.get("value") or "").strip().lower()
+            if not ev:
+                continue
+            existing_customer = find_customer_by_any_email(db, ev, tenant_id)
             if existing_customer:
-                raise ValueError(f"Customer with email '{customer_data['email']}' already exists")
+                raise ValueError(f"Customer with email '{ev}' already exists")
 
         atts = customer_data.get('attachments')
         if atts is None:
@@ -184,13 +244,20 @@ def update_customer(db: Session, customer_id: str, customer_data: Dict[str, Any]
                 for url in old_urls - new_urls:
                     _delete_s3_for_file_url(url)
                 customer_data['attachments'] = [_attachment_item_to_dict(x) for x in new_atts]
-        if 'email' in customer_data:
-            email_val = customer_data.get('email')
-            if email_val is not None and isinstance(email_val, str):
-                email_val = email_val.strip() or None
-            else:
-                email_val = None
-            customer_data['email'] = email_val if email_val else ''
+        if any(k in customer_data for k in ('emails', 'phones', 'email', 'phone', 'mobile')):
+            merged = {
+                "emails": list(customer.emails or []),
+                "phones": list(customer.phones or []),
+                "email": customer.email,
+                "phone": customer.phone,
+                "mobile": customer.mobile,
+            }
+            for k in ('emails', 'phones', 'email', 'phone', 'mobile'):
+                if k in customer_data:
+                    merged[k] = customer_data[k]
+            _prepare_labeled_contact_dict(merged, customer_email_blank_string=True)
+            for k in ('emails', 'phones', 'email', 'phone', 'mobile'):
+                customer_data[k] = merged[k]
 
         uuid_fields = ['assignedToId']
         for field in uuid_fields:
@@ -202,10 +269,13 @@ def update_customer(db: Session, customer_id: str, customer_data: Dict[str, Any]
             if existing_customer and existing_customer.id != customer_id:
                 raise ValueError(f"Customer with CNIC '{customer_data['cnic']}' already exists")
         
-        if customer_data.get('email') and customer_data['email'] != customer.email:
-            existing_customer = get_customer_by_email(db, customer_data['email'], tenant_id)
-            if existing_customer and existing_customer.id != customer_id:
-                raise ValueError(f"Customer with email '{customer_data['email']}' already exists")
+        for em in customer_data.get("emails") or []:
+            ev = (em.get("value") or "").strip().lower()
+            if not ev:
+                continue
+            existing_customer = find_customer_by_any_email(db, ev, tenant_id)
+            if existing_customer and str(existing_customer.id) != str(customer_id):
+                raise ValueError(f"Customer with email '{ev}' already exists")
         
         for field, value in customer_data.items():
             if hasattr(customer, field):
@@ -330,7 +400,9 @@ def search_customers(
         Customer.phone.ilike(f"%{normalized_search}%"),
         Customer.mobile.ilike(f"%{normalized_search}%"),
         Customer.cnic.ilike(f"%{normalized_search}%"),
-        Customer.email.ilike(f"%{normalized_search}%")
+        Customer.email.ilike(f"%{normalized_search}%"),
+        cast(Customer.emails, String).ilike(f"%{normalized_search}%"),
+        cast(Customer.phones, String).ilike(f"%{normalized_search}%"),
     )
     
     return query.filter(search_filter).limit(limit).all()
@@ -470,6 +542,15 @@ def create_contact(contact_data: dict, db: Session) -> Contact:
         contact_data["attachments"] = [_attachment_item_to_dict(x) for x in atts]
     if contact_data.get("description") == "":
         contact_data["description"] = None
+    tid = str(contact_data.get("tenant_id", ""))
+    _prepare_labeled_contact_dict(contact_data, customer_email_blank_string=False)
+    for em in contact_data.get("emails") or []:
+        ev = (em.get("value") or "").strip().lower()
+        if not ev:
+            continue
+        existing = find_contact_by_any_email(db, ev, tid)
+        if existing:
+            raise ValueError(f"Contact with email '{ev}' already exists")
     db_contact = Contact(**contact_data)
     db.add(db_contact)
     db.commit()
@@ -492,10 +573,34 @@ def update_contact(contact_id: str, update_data: dict, db: Session, tenant_id: s
             for url in old_urls - new_urls:
                 _delete_s3_for_file_url(url)
             update_data["attachments"] = [_attachment_item_to_dict(x) for x in new_atts]
+    tid = str(tenant_id) if tenant_id else str(contact.tenant_id)
+    if any(k in update_data for k in ("emails", "phones", "email", "phone", "mobile")):
+        merged = {
+            "emails": list(contact.emails or []),
+            "phones": list(contact.phones or []),
+            "email": contact.email,
+            "phone": contact.phone,
+            "mobile": contact.mobile,
+        }
+        for k in ("emails", "phones", "email", "phone", "mobile"):
+            if k in update_data:
+                merged[k] = update_data[k]
+        _prepare_labeled_contact_dict(merged, customer_email_blank_string=False)
+        for k in ("emails", "phones", "email", "phone", "mobile"):
+            update_data[k] = merged[k]
+        for em in merged.get("emails") or []:
+            ev = (em.get("value") or "").strip().lower()
+            if not ev:
+                continue
+            existing = find_contact_by_any_email(db, ev, tid)
+            if existing and str(existing.id) != str(contact_id):
+                raise ValueError(f"Contact with email '{ev}' already exists")
     for key, value in update_data.items():
         if not hasattr(contact, key):
             continue
-        if value is not None or key in ("email", "notes", "description"):
+        if value is not None or key in (
+            "email", "notes", "description", "phone", "mobile", "emails", "phones"
+        ):
             setattr(contact, key, value)
     contact.updatedAt = datetime.utcnow()
     db.commit()

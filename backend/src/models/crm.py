@@ -1,7 +1,9 @@
-from pydantic import BaseModel, Field, field_validator
-from typing import Optional, List
+from pydantic import BaseModel, Field, field_validator, model_validator
+from typing import Optional, List, Any
 from datetime import datetime
 from uuid import UUID
+
+from .labeled_contact_items import LabeledEmailItem, LabeledPhoneItem
 
 class CustomerAttachmentItem(BaseModel):
     url: str
@@ -41,6 +43,8 @@ class CustomerBase(BaseModel):
     tags: Optional[List[str]] = Field(default_factory=list)
     attachments: List[CustomerAttachmentItem] = Field(default_factory=list)
     image_url: Optional[str] = None
+    emails: List[LabeledEmailItem] = Field(default_factory=list)
+    phones: List[LabeledPhoneItem] = Field(default_factory=list)
 
     @field_validator("attachments", mode="before")
     @classmethod
@@ -52,6 +56,28 @@ class CustomerBase(BaseModel):
             if isinstance(item, str):
                 out.append({"url": item})
             elif isinstance(item, dict):
+                out.append(item)
+        return out
+
+    @field_validator("emails", mode="before")
+    @classmethod
+    def normalize_emails(cls, v):
+        if v is None:
+            return []
+        out = []
+        for item in v:
+            if isinstance(item, dict):
+                out.append(item)
+        return out
+
+    @field_validator("phones", mode="before")
+    @classmethod
+    def normalize_phones(cls, v):
+        if v is None:
+            return []
+        out = []
+        for item in v:
+            if isinstance(item, dict):
                 out.append(item)
         return out
 
@@ -83,6 +109,8 @@ class CustomerUpdate(BaseModel):
     tags: Optional[List[str]] = None
     attachments: Optional[List[CustomerAttachmentItem]] = None
     image_url: Optional[str] = None
+    emails: Optional[List[LabeledEmailItem]] = None
+    phones: Optional[List[LabeledPhoneItem]] = None
 
 class CustomerResponse(CustomerBase):
     id: UUID
@@ -92,6 +120,31 @@ class CustomerResponse(CustomerBase):
     createdAt: datetime
     updatedAt: datetime
     
+    @model_validator(mode='before')
+    @classmethod
+    def hydrate_customer_orm(cls, data: Any):
+        if data is None or not hasattr(data, '_sa_instance_state'):
+            return data
+        from sqlalchemy.inspection import inspect as sa_inspect
+        c = data
+        emails = list(c.emails or [])
+        if not emails and getattr(c, 'email', None):
+            em = (c.email or '').strip()
+            if em:
+                emails = [{"value": em, "label": "personal"}]
+        phones = list(c.phones or [])
+        if not phones:
+            if getattr(c, 'phone', None) and str(c.phone).strip():
+                phones.append({"value": str(c.phone).strip(), "label": "work"})
+            if getattr(c, 'mobile', None) and str(c.mobile).strip():
+                phones.append({"value": str(c.mobile).strip(), "label": "personal"})
+        out = {}
+        for attr in sa_inspect(c).mapper.column_attrs:
+            out[attr.key] = getattr(c, attr.key)
+        out["emails"] = emails
+        out["phones"] = phones
+        return out
+
     class Config:
         from_attributes = True
 

@@ -37,8 +37,10 @@ class Customer(Base):
     firstName = Column(String, nullable=False)
     lastName = Column(String, nullable=False)
     email = Column(String, nullable=True)
+    emails = Column(JSON, default=list)
     phone = Column(String)
     mobile = Column(String)
+    phones = Column(JSON, default=list)
     cnic = Column(String, unique=True, nullable=True)  # CNIC for Pakistani customers
     dateOfBirth = Column(DateTime)
     gender = Column(String)  # male, female, other
@@ -111,8 +113,10 @@ class Contact(Base):
     firstName = Column(String, nullable=False)
     lastName = Column(String, nullable=False)
     email = Column(String, nullable=True)
+    emails = Column(JSON, default=list)
     phone = Column(String)
     mobile = Column(String)
+    phones = Column(JSON, default=list)
     jobTitle = Column(String)
     department = Column(String)
     companyId = Column(UUID(as_uuid=True), ForeignKey("companies.id"))

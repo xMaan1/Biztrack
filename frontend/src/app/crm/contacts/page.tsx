@@ -50,6 +50,11 @@ import {
   ContactUpdate,
   ContactAttachment,
 } from '@/src/models/crm';
+import {
+  LabeledContactFields,
+  defaultEmailRowsFromEntity,
+  defaultPhoneRowsFromEntity,
+} from '@/src/components/crm/LabeledContactFields';
 import fileUploadService from '@/src/services/FileUploadService';
 import { DashboardLayout } from '../../../components/layout';
 import { useCustomOptions } from '../../../hooks/useCustomOptions';
@@ -96,9 +101,8 @@ function CRMContactsContent() {
   const [formData, setFormData] = useState<ContactCreate>({
     firstName: '',
     lastName: '',
-    email: '',
-    phone: '',
-    mobile: '',
+    emails: [{ value: '', label: 'personal' }],
+    phones: [{ value: '', label: 'work' }],
     jobTitle: '',
     department: '',
     companyId: '',
@@ -160,9 +164,8 @@ function CRMContactsContent() {
     setFormData({
       firstName: '',
       lastName: '',
-      email: '',
-      phone: '',
-      mobile: '',
+      emails: [{ value: '', label: 'personal' }],
+      phones: [{ value: '', label: 'work' }],
       jobTitle: '',
       department: '',
       companyId: '',
@@ -189,9 +192,8 @@ function CRMContactsContent() {
         const payload: ContactUpdate = {
           firstName: formData.firstName,
           lastName: formData.lastName,
-          email: formData.email || undefined,
-          phone: formData.phone,
-          mobile: formData.mobile,
+          emails: (formData.emails || []).filter((e) => e.value.trim()),
+          phones: (formData.phones || []).filter((p) => p.value.trim()),
           jobTitle: formData.jobTitle,
           department: formData.department,
           companyId: formData.companyId || undefined,
@@ -210,7 +212,11 @@ function CRMContactsContent() {
         loadContacts();
         setTimeout(() => setSuccessMessage(''), 3000);
       } else {
-        await CRMService.createContact(formData);
+        await CRMService.createContact({
+          ...formData,
+          emails: (formData.emails || []).filter((e) => e.value.trim()),
+          phones: (formData.phones || []).filter((p) => p.value.trim()),
+        });
         setSuccessMessage('Contact created successfully!');
         setShowCreateDialog(false);
         resetForm();
@@ -232,9 +238,8 @@ function CRMContactsContent() {
     setFormData({
       firstName: contact.firstName,
       lastName: contact.lastName,
-      email: contact.email ?? '',
-      phone: contact.phone || '',
-      mobile: contact.mobile || '',
+      emails: defaultEmailRowsFromEntity(contact),
+      phones: defaultPhoneRowsFromEntity(contact),
       jobTitle: contact.jobTitle || '',
       department: contact.department || '',
       companyId: contact.companyId || '',
@@ -443,9 +448,15 @@ function CRMContactsContent() {
                             {contact.firstName} {contact.lastName}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {contact.email?.trim()
-                              ? contact.email
-                              : 'No email'}
+                            {(() => {
+                              const ev = (contact.emails || []).filter((e) =>
+                                e.value.trim(),
+                              );
+                              if (ev.length > 0) {
+                                return ev.map((e) => e.value).join(', ');
+                              }
+                              return contact.email?.trim() || 'No email';
+                            })()}
                           </div>
                         </div>
                       </div>
@@ -565,42 +576,18 @@ function CRMContactsContent() {
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    value={formData.email ?? ''}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
-                    placeholder="Enter email address"
-                    type="email"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input
-                    id="phone"
-                    value={formData.phone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
-                    }
-                    placeholder="Enter phone number"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="mobile">Mobile</Label>
-                  <Input
-                    id="mobile"
-                    value={formData.mobile}
-                    onChange={(e) =>
-                      setFormData({ ...formData, mobile: e.target.value })
-                    }
-                    placeholder="Enter mobile number"
-                  />
-                </div>
+                <LabeledContactFields
+                  emails={
+                    formData.emails || [{ value: '', label: 'personal' }]
+                  }
+                  phones={formData.phones || [{ value: '', label: 'work' }]}
+                  onEmailsChange={(emails) =>
+                    setFormData({ ...formData, emails })
+                  }
+                  onPhonesChange={(phones) =>
+                    setFormData({ ...formData, phones })
+                  }
+                />
 
                 <div>
                   <Label htmlFor="jobTitle">Job Title</Label>
@@ -878,25 +865,92 @@ function CRMContactsContent() {
                     </p>
                   </div>
 
-                  <div>
+                  <div className="md:col-span-2">
                     <Label className="text-sm font-medium text-gray-500">
-                      Email
+                      Email addresses
                     </Label>
-                    <p>{viewingContact.email?.trim() || 'Not specified'}</p>
+                    <div className="mt-1 space-y-1">
+                      {(() => {
+                        const ev = (viewingContact.emails || []).filter(
+                          (e) => e.value.trim(),
+                        );
+                        const list =
+                          ev.length > 0
+                            ? ev
+                            : viewingContact.email?.trim()
+                              ? [
+                                  {
+                                    value: viewingContact.email.trim(),
+                                    label: 'personal' as const,
+                                  },
+                                ]
+                              : [];
+                        if (list.length === 0) {
+                          return (
+                            <p className="text-muted-foreground">
+                              Not specified
+                            </p>
+                          );
+                        }
+                        return list.map((e, i) => (
+                          <p key={i}>
+                            {e.value}{' '}
+                            <span className="text-muted-foreground text-sm">
+                              ({e.label})
+                            </span>
+                          </p>
+                        ));
+                      })()}
+                    </div>
                   </div>
 
-                  <div>
+                  <div className="md:col-span-2">
                     <Label className="text-sm font-medium text-gray-500">
-                      Phone
+                      Phone numbers
                     </Label>
-                    <p>{viewingContact.phone || 'Not specified'}</p>
-                  </div>
-
-                  <div>
-                    <Label className="text-sm font-medium text-gray-500">
-                      Mobile
-                    </Label>
-                    <p>{viewingContact.mobile || 'Not specified'}</p>
+                    <div className="mt-1 space-y-1">
+                      {(() => {
+                        const pv = (viewingContact.phones || []).filter(
+                          (p) => p.value.trim(),
+                        );
+                        const list =
+                          pv.length > 0
+                            ? pv
+                            : [
+                                ...(viewingContact.phone
+                                  ? [
+                                      {
+                                        value: viewingContact.phone,
+                                        label: 'work' as const,
+                                      },
+                                    ]
+                                  : []),
+                                ...(viewingContact.mobile
+                                  ? [
+                                      {
+                                        value: viewingContact.mobile,
+                                        label: 'personal' as const,
+                                      },
+                                    ]
+                                  : []),
+                              ];
+                        if (list.length === 0) {
+                          return (
+                            <p className="text-muted-foreground">
+                              Not specified
+                            </p>
+                          );
+                        }
+                        return list.map((p, i) => (
+                          <p key={i}>
+                            {p.value}{' '}
+                            <span className="text-muted-foreground text-sm">
+                              ({p.label})
+                            </span>
+                          </p>
+                        ));
+                      })()}
+                    </div>
                   </div>
 
                   <div>
