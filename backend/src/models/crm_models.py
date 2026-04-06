@@ -118,6 +118,7 @@ class ContactBase(BaseModel):
     businessTaxId: Optional[str] = None
     addresses: List[ContactAddressItem] = Field(default_factory=list)
     socialLinks: ContactSocialLinks = Field(default_factory=ContactSocialLinks)
+    assignedTo: Optional[str] = None
 
     @field_validator("initials", "fullName", "businessTaxId", mode="before")
     @classmethod
@@ -210,6 +211,15 @@ class ContactBase(BaseModel):
             return str(v)
         return v
 
+    @field_validator("assignedTo", mode="before")
+    @classmethod
+    def empty_assigned_to_contact(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str) and not v.strip():
+            return None
+        return str(v)
+
     @field_validator("attachments", mode="before")
     @classmethod
     def normalize_contact_attachments(cls, v):
@@ -250,6 +260,7 @@ class ContactUpdate(BaseModel):
     businessTaxId: Optional[str] = None
     addresses: Optional[List[ContactAddressItem]] = None
     socialLinks: Optional[ContactSocialLinks] = None
+    assignedTo: Optional[str] = None
 
     @field_validator("initials", "fullName", "businessTaxId", mode="before")
     @classmethod
@@ -342,6 +353,15 @@ class ContactUpdate(BaseModel):
             return str(v)
         return v
 
+    @field_validator("assignedTo", mode="before")
+    @classmethod
+    def empty_assigned_to_upd(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str) and not v.strip():
+            return None
+        return str(v)
+
 class Contact(ContactBase):
     id: UUID
     tenant_id: UUID
@@ -375,6 +395,8 @@ class Contact(ContactBase):
             out[attr.key] = getattr(c, attr.key)
         out["emails"] = emails
         out["phones"] = phones
+        aid = out.pop("assignedToId", None)
+        out["assignedTo"] = str(aid) if aid is not None else None
         return out
 
     class Config:

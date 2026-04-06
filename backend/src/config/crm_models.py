@@ -131,6 +131,7 @@ class Contact(Base):
     businessTaxId = Column(Text, nullable=True)
     addresses = Column(JSON, default=list)
     socialLinks = Column(JSON, default=dict)
+    assignedToId = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

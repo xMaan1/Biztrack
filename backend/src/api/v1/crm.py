@@ -68,6 +68,12 @@ def _contact_create_to_orm_dict(contact_data: ContactCreate, tenant_id) -> dict:
         desc = None
     atts_raw = raw.get("attachments") or []
     atts = [_attachment_item_to_dict(x) for x in atts_raw]
+    assigned_to_id = None
+    if raw.get("assignedTo"):
+        try:
+            assigned_to_id = uuid.UUID(str(raw["assignedTo"]))
+        except (ValueError, TypeError):
+            assigned_to_id = None
     return {
         "id": uuid.uuid4(),
         "tenant_id": tenant_id,
@@ -92,6 +98,7 @@ def _contact_create_to_orm_dict(contact_data: ContactCreate, tenant_id) -> dict:
         "businessTaxId": raw.get("businessTaxId"),
         "addresses": raw.get("addresses") or [],
         "socialLinks": raw.get("socialLinks"),
+        "assignedToId": assigned_to_id,
         "createdAt": now,
         "updatedAt": now,
     }
@@ -783,6 +790,15 @@ async def update_crm_contact(
                 update_data["companyId"] = uuid.UUID(str(update_data["companyId"]))
             except (ValueError, TypeError):
                 update_data["companyId"] = None
+        if "assignedTo" in update_data:
+            at = update_data.pop("assignedTo", None)
+            if at:
+                try:
+                    update_data["assignedToId"] = uuid.UUID(str(at))
+                except (ValueError, TypeError):
+                    update_data["assignedToId"] = None
+            else:
+                update_data["assignedToId"] = None
         update_data["updatedAt"] = datetime.utcnow()
         
         updated_contact = update_contact(contact_id, update_data, db, tenant_context["tenant_id"] if tenant_context else None)

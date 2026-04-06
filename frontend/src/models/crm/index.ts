@@ -190,6 +190,7 @@ export interface Contact {
   businessTaxId?: string | null;
   addresses?: ContactAddressRow[];
   socialLinks?: ContactSocialLinks;
+  assignedTo?: string;
   lastContactDate?: string;
   nextFollowUpDate?: string;
   tenantId?: string;
@@ -222,6 +223,7 @@ export interface ContactCreate {
   businessTaxId?: string | null;
   addresses?: ContactAddressRow[];
   socialLinks?: ContactSocialLinks;
+  assignedTo?: string;
 }
 
 export interface ContactUpdate {
@@ -247,6 +249,7 @@ export interface ContactUpdate {
   businessTaxId?: string | null;
   addresses?: ContactAddressRow[];
   socialLinks?: ContactSocialLinks;
+  assignedTo?: string;
 }
 
 export interface Company {

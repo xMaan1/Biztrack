@@ -18,6 +18,8 @@ import { ContactFormAdditionalSection } from './contact-form/ContactFormAddition
 import { ContactFormAddressesSection } from './contact-form/ContactFormAddressesSection';
 import { ContactFormSocialSection } from './contact-form/ContactFormSocialSection';
 import { ContactFormAttachmentsSection } from './contact-form/ContactFormAttachmentsSection';
+import { User } from '@/src/models';
+import { type UserSearchItem } from '@/src/components/ui/user-search';
 
 type CompanyOption = { id: string; name: string };
 
@@ -30,6 +32,8 @@ type ContactFormDialogProps = {
   companies: CompanyOption[];
   customContactTypes: CustomOption[];
   onRequestCustomContactType: () => void;
+  users: User[];
+  selectedAssignee: UserSearchItem | null;
   openAdditional: boolean;
   onToggleAdditional: () => void;
   openAddresses: boolean;
@@ -55,6 +59,8 @@ export function ContactFormDialog({
   companies,
   customContactTypes,
   onRequestCustomContactType,
+  users,
+  selectedAssignee,
   openAdditional,
   onToggleAdditional,
   openAddresses,
@@ -92,6 +98,8 @@ export function ContactFormDialog({
               companies={companies}
               customContactTypes={customContactTypes}
               onRequestCustomContactType={onRequestCustomContactType}
+              users={users}
+              selectedAssignee={selectedAssignee}
             />
 
             <ContactFormNotesSection

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import { DashboardLayout } from '../../../components/layout';
 import { useCustomOptions } from '../../../hooks/useCustomOptions';
@@ -32,6 +32,10 @@ import { ContactsListCard } from '@/src/components/crm/contacts/ContactsListCard
 import { ContactFormDialog } from '@/src/components/crm/contacts/ContactFormDialog';
 import { ContactViewDialog } from '@/src/components/crm/contacts/ContactViewDialog';
 import { ContactDeleteDialog } from '@/src/components/crm/contacts/ContactDeleteDialog';
+import { useAuth } from '@/src/contexts/AuthContext';
+import { User } from '@/src/models';
+import { apiService } from '@/src/services/ApiService';
+import { type UserSearchItem } from '@/src/components/ui/user-search';
 
 export default function CRMContactsPage() {
   return (
@@ -45,6 +49,7 @@ export default function CRMContactsPage() {
 }
 
 function CRMContactsContent() {
+  const { user } = useAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<CRMContactFilters>({});
@@ -89,10 +94,12 @@ function CRMContactsContent() {
     businessTaxId: '',
     addresses: [],
     socialLinks: defaultSocialLinks(),
+    assignedTo: '',
   });
   const [companies, setCompanies] = useState<{ id: string; name: string }[]>(
     [],
   );
+  const [users, setUsers] = useState<User[]>([]);
   const attachmentFileInputRef = React.useRef<HTMLInputElement>(null);
   const [attachmentUploading, setAttachmentUploading] = useState(false);
 
@@ -119,6 +126,57 @@ function CRMContactsContent() {
     } catch (err) {
     }
   }, []);
+
+  const fetchUsers = useCallback(async () => {
+    try {
+      let tenantId: string | null = null;
+      const selectedTenant = localStorage.getItem('selectedTenant');
+      if (selectedTenant) {
+        try {
+          const parsed = JSON.parse(selectedTenant);
+          tenantId = parsed.id || parsed.tenantId;
+        } catch {
+        }
+      }
+      if (!tenantId) {
+        tenantId = localStorage.getItem('currentTenantId');
+      }
+      if (tenantId) {
+        const response = await apiService.getTenantUsers(tenantId);
+        const uniqueUsers = (response.users || []).reduce(
+          (acc: User[], u: User) => {
+            const existing = acc.find(
+              (x) => x.userId === u.userId || x.id === u.userId,
+            );
+            if (!existing) acc.push(u);
+            return acc;
+          },
+          [],
+        );
+        setUsers(uniqueUsers);
+      } else {
+        setUsers([]);
+      }
+    } catch {
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  const selectedAssignee = useMemo((): UserSearchItem | null => {
+    if (!formData.assignedTo) return null;
+    const found = users.find(
+      (u) => (u.id || u.userId) === formData.assignedTo,
+    );
+    if (found) return found;
+    return {
+      id: formData.assignedTo,
+      userId: formData.assignedTo,
+      userName: formData.assignedTo,
+    };
+  }, [users, formData.assignedTo]);
 
   const handleSearch = () => {
     setFilters((prev: CRMContactFilters) => ({ ...prev, search }));
@@ -160,6 +218,7 @@ function CRMContactsContent() {
       businessTaxId: '',
       addresses: [],
       socialLinks: defaultSocialLinks(),
+      assignedTo: '',
     });
     setOpenAdditional(false);
     setOpenAddresses(false);
@@ -201,6 +260,7 @@ function CRMContactsContent() {
           birthday: formData.birthday?.trim()
             ? `${formData.birthday.trim()}T00:00:00`
             : null,
+          assignedTo: formData.assignedTo || undefined,
         };
         await CRMService.updateContact(editingContact.id, payload);
         setSuccessMessage('Contact updated successfully!');
@@ -222,6 +282,7 @@ function CRMContactsContent() {
           ...(formData.birthday?.trim()
             ? { birthday: `${formData.birthday.trim()}T00:00:00` }
             : {}),
+          assignedTo: formData.assignedTo || undefined,
         });
         setSuccessMessage('Contact created successfully!');
         setShowCreateDialog(false);
@@ -261,6 +322,7 @@ function CRMContactsContent() {
       businessTaxId: contact.businessTaxId || '',
       addresses: Array.isArray(contact.addresses) ? contact.addresses : [],
       socialLinks: mergeSocialFromApi(contact.socialLinks),
+      assignedTo: contact.assignedTo || '',
     });
     setShowCreateDialog(true);
   };
@@ -351,6 +413,10 @@ function CRMContactsContent() {
           onNewContact={() => {
             setEditingContact(null);
             resetForm();
+            const uid = user?.id || user?.userId;
+            if (uid) {
+              setFormData((prev) => ({ ...prev, assignedTo: uid }));
+            }
             setErrorMessage('');
             setSuccessMessage('');
             setShowCreateDialog(true);
@@ -384,6 +450,8 @@ function CRMContactsContent() {
           onRequestCustomContactType={() =>
             setShowCustomContactTypeDialog(true)
           }
+          users={users}
+          selectedAssignee={selectedAssignee}
           openAdditional={openAdditional}
           onToggleAdditional={() => setOpenAdditional((o) => !o)}
           openAddresses={openAddresses}

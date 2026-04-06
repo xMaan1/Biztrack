@@ -13,6 +13,11 @@ import {
 } from '@/src/models/crm';
 import { LabeledContactFields } from '@/src/components/crm/LabeledContactFields';
 import { CustomOption } from '@/src/services/CustomOptionsService';
+import { User } from '@/src/models';
+import {
+  UserSearch,
+  type UserSearchItem,
+} from '@/src/components/ui/user-search';
 
 type CompanyOption = { id: string; name: string };
 
@@ -22,6 +27,8 @@ type ContactFormCoreFieldsProps = {
   companies: CompanyOption[];
   customContactTypes: CustomOption[];
   onRequestCustomContactType: () => void;
+  users: User[];
+  selectedAssignee: UserSearchItem | null;
 };
 
 export function ContactFormCoreFields({
@@ -30,6 +37,8 @@ export function ContactFormCoreFields({
   companies,
   customContactTypes,
   onRequestCustomContactType,
+  users,
+  selectedAssignee,
 }: ContactFormCoreFieldsProps) {
   return (
     <>
@@ -113,6 +122,21 @@ export function ContactFormCoreFields({
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      <div>
+        <UserSearch
+          users={users}
+          value={selectedAssignee}
+          onSelect={(user) =>
+            setFormData({
+              ...formData,
+              assignedTo: user ? user.id || user.userId || '' : '',
+            })
+          }
+          placeholder="Search by name or email..."
+          label="Assignee"
+        />
       </div>
 
       <div>

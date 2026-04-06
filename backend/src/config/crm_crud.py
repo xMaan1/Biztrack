@@ -649,6 +649,7 @@ def update_contact(contact_id: str, update_data: dict, db: Session, tenant_id: s
         if value is not None or key in (
             "email", "notes", "description", "phone", "mobile", "emails", "phones",
             "initials", "fullName", "birthday", "businessTaxId", "addresses", "socialLinks",
+            "assignedToId",
         ):
             setattr(contact, key, value)
     contact.updatedAt = datetime.utcnow()
