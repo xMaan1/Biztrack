@@ -27,7 +27,7 @@ class Lead(Base):
     
     # Relationships
     tenant = relationship("Tenant", back_populates="leads")
-    assignedTo = relationship("User")
+    assignedTo = relationship("User", foreign_keys=[assignedToId])
 
     @property
     def createdBy(self):
@@ -225,7 +225,7 @@ class Opportunity(Base):
     tenant = relationship("Tenant", back_populates="opportunities")
     company = relationship("Company", back_populates="opportunities")
     contact = relationship("Contact")
-    assignedTo = relationship("User")
+    assignedTo = relationship("User", foreign_keys=[assignedToId])
 
     @property
     def createdBy(self):
@@ -254,7 +254,7 @@ class SalesActivity(Base):
     
     # Relationships
     tenant = relationship("Tenant", back_populates="sales_activities")
-    assignedTo = relationship("User")
+    assignedTo = relationship("User", foreign_keys=[assignedToId])
 
     @property
     def completed(self):
