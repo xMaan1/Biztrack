@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
   Card,
@@ -29,6 +29,10 @@ import {
 } from '@/src/components/ui/dialog';
 import { Label } from '@/src/components/ui/label';
 import { Textarea } from '@/src/components/ui/textarea';
+import {
+  UserSearch,
+  type UserSearchItem,
+} from '@/src/components/ui/user-search';
 import { Alert, AlertDescription } from '@/src/components/ui/alert';
 import {
   Target,
@@ -47,6 +51,8 @@ import {
   CRMOpportunityFilters,
   OpportunityCreate,
 } from '@/src/models/crm';
+import { User } from '@/src/models';
+import { apiService } from '@/src/services/ApiService';
 import { DashboardLayout } from '../../../components/layout';
 import { useCurrency } from '../../../contexts/CurrencyContext';
 
@@ -90,16 +96,87 @@ function CRMOpportunitiesContent() {
     tags: [],
   });
   const [companies, setCompanies] = useState<{ id: string; name: string }[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+
+  const fetchUsers = useCallback(async () => {
+    try {
+      let tenantId: string | null = null;
+      const selectedTenant = localStorage.getItem('selectedTenant');
+      if (selectedTenant) {
+        try {
+          const parsed = JSON.parse(selectedTenant);
+          tenantId = parsed.id || parsed.tenantId;
+        } catch {
+        }
+      }
+      if (!tenantId) {
+        tenantId = localStorage.getItem('currentTenantId');
+      }
+      if (tenantId) {
+        const response = await apiService.getTenantUsers(tenantId);
+        const uniqueUsers = (response.users || []).reduce((acc: User[], user: User) => {
+          const existing = acc.find(
+            (u) => u.userId === user.userId || u.id === user.userId,
+          );
+          if (!existing) acc.push(user);
+          return acc;
+        }, []);
+        setUsers(uniqueUsers);
+      } else {
+        setUsers([]);
+      }
+    } catch {
+    }
+  }, []);
 
   useEffect(() => {
     loadOpportunities();
   }, [filters]);
 
   useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  useEffect(() => {
     if (showCreateDialog) {
       CRMService.getCompanies({}, 1, 100).then((r) => setCompanies(r.companies || [])).catch(() => setCompanies([]));
     }
   }, [showCreateDialog]);
+
+  const selectedAssignee = useMemo((): UserSearchItem | null => {
+    if (!formData.assignedTo) return null;
+    const found = users.find(
+      (u) => (u.id || u.userId) === formData.assignedTo,
+    );
+    if (found) return found;
+    return {
+      id: formData.assignedTo,
+      userId: formData.assignedTo,
+      userName: formData.assignedTo,
+    };
+  }, [users, formData.assignedTo]);
+
+  const assigneeDisplay = useCallback(
+    (opportunity: Opportunity) => {
+      if (!opportunity.assignedTo) return null;
+      const u = users.find(
+        (x) => (x.id || x.userId) === opportunity.assignedTo,
+      );
+      if (u) {
+        if (u.firstName || u.lastName) {
+          return [u.firstName, u.lastName].filter(Boolean).join(' ').trim();
+        }
+        return u.userName || u.email || opportunity.assignedTo;
+      }
+      return opportunity.assignedTo;
+    },
+    [users],
+  );
+
+  const viewingAssigneeLabel = useMemo(() => {
+    if (!viewingOpportunity) return null;
+    return assigneeDisplay(viewingOpportunity);
+  }, [viewingOpportunity, assigneeDisplay]);
 
   const loadOpportunities = useCallback(async () => {
     try {
@@ -342,7 +419,9 @@ function CRMOpportunitiesContent() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {opportunities.map((opportunity) => (
+              {opportunities.map((opportunity) => {
+                const assignedLabel = assigneeDisplay(opportunity);
+                return (
                 <div
                   key={opportunity.id}
                   className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
@@ -410,6 +489,9 @@ function CRMOpportunitiesContent() {
                       {opportunity.companyId && (
                         <span>Company ID: {opportunity.companyId}</span>
                       )}
+                      {assignedLabel && (
+                        <span>Assigned: {assignedLabel}</span>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -436,7 +518,8 @@ function CRMOpportunitiesContent() {
                     </Button>
                   </div>
                 </div>
-              ))}
+              );
+              })}
             </div>
           </CardContent>
         </Card>
@@ -648,17 +731,17 @@ function CRMOpportunitiesContent() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="assignedTo">Assigned To</Label>
-                <Input
-                  id="assignedTo"
-                  value={formData.assignedTo}
-                  onChange={(e) =>
+                <UserSearch
+                  users={users}
+                  value={selectedAssignee}
+                  onSelect={(user) =>
                     setFormData((prev) => ({
                       ...prev,
-                      assignedTo: e.target.value,
+                      assignedTo: user ? user.id || user.userId || '' : '',
                     }))
                   }
-                  placeholder="Optional"
+                  placeholder="Search by name or email..."
+                  label="Assigned To"
                 />
               </div>
               <div className="col-span-2">
@@ -767,6 +850,16 @@ function CRMOpportunitiesContent() {
                         {CRMService.formatDate(
                           viewingOpportunity.expectedCloseDate,
                         )}
+                      </p>
+                    </div>
+                  )}
+                  {viewingAssigneeLabel && (
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600">
+                        Assigned To
+                      </Label>
+                      <p className="text-gray-900">
+                        {viewingAssigneeLabel}
                       </p>
                     </div>
                   )}
