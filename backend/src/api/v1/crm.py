@@ -642,6 +642,7 @@ async def get_crm_contacts(
     type: Optional[str] = Query(None),
     company_id: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
+    assigned_to: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
@@ -654,13 +655,17 @@ async def get_crm_contacts(
         contacts = get_contacts(db, tenant_context["tenant_id"] if tenant_context else None, skip, limit)
         
         # Apply additional filters if provided
-        if type or company_id or search:
+        if type or company_id or search or assigned_to:
             filtered_contacts = []
             for contact in contacts:
                 if type and contact.contactType != type:
                     continue
                 if company_id and contact.companyId != company_id:
                     continue
+                if assigned_to:
+                    aid = getattr(contact, "assignedToId", None)
+                    if not aid or str(aid) != str(assigned_to):
+                        continue
                 if search:
                     search_lower = search.lower()
                     em_blob = (

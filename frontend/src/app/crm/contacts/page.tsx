@@ -430,6 +430,7 @@ function CRMContactsContent() {
           filters={filters}
           setFilters={setFilters}
           onResetFilters={resetFilters}
+          users={users}
         />
 
         <ContactsListCard

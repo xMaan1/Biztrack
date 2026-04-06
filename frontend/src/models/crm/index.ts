@@ -504,6 +504,7 @@ export interface CRMContactFilters {
   type?: ContactType;
   companyId?: string;
   search?: string;
+  assignedTo?: string;
 }
 
 export interface CRMCompanyFilters {

@@ -15,6 +15,13 @@ import {
 } from '@/src/components/ui/select';
 import { Filter, Search } from 'lucide-react';
 import { ContactType, CRMContactFilters } from '@/src/models/crm';
+import { User } from '@/src/models';
+
+function assigneeLabel(u: User): string {
+  const name = [u.firstName, u.lastName].filter(Boolean).join(' ').trim();
+  if (name) return name;
+  return u.userName || u.email || (u.id || u.userId || '');
+}
 
 type ContactsFiltersCardProps = {
   search: string;
@@ -23,6 +30,7 @@ type ContactsFiltersCardProps = {
   filters: CRMContactFilters;
   setFilters: React.Dispatch<React.SetStateAction<CRMContactFilters>>;
   onResetFilters: () => void;
+  users: User[];
 };
 
 export function ContactsFiltersCard({
@@ -32,6 +40,7 @@ export function ContactsFiltersCard({
   filters,
   setFilters,
   onResetFilters,
+  users,
 }: ContactsFiltersCardProps) {
   return (
     <Card>
@@ -42,7 +51,7 @@ export function ContactsFiltersCard({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label className="text-sm font-medium">Search</label>
             <div className="flex space-x-2">
@@ -78,6 +87,34 @@ export function ContactsFiltersCard({
                     {type.charAt(0).toUpperCase() + type.slice(1)}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-sm font-medium">Assignee</label>
+            <Select
+              value={filters.assignedTo || 'all'}
+              onValueChange={(value) =>
+                setFilters((prev: CRMContactFilters) => ({
+                  ...prev,
+                  assignedTo: value === 'all' ? undefined : value,
+                }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="All assignees" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All assignees</SelectItem>
+                {users.map((u) => {
+                  const id = u.id || u.userId;
+                  if (!id) return null;
+                  return (
+                    <SelectItem key={id} value={id}>
+                      {assigneeLabel(u)}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
