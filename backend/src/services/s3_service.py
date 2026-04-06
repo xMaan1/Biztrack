@@ -74,7 +74,7 @@ class S3Service:
             
             url_without_params = url.split('?')[0]
             
-            folder_patterns = ['/logos/', '/avatars/', '/documents/', '/employees/']
+            folder_patterns = ['/logos/', '/avatars/', '/documents/', '/employees/', '/reports/']
             for pattern in folder_patterns:
                 if pattern in url_without_params:
                     parts = url_without_params.split(pattern)

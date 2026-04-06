@@ -214,6 +214,9 @@ class FileUploadService {
       } else if (urlWithoutParams.includes('/employees/')) {
         const s3Key = 'employees/' + urlWithoutParams.split('/employees/')[1];
         return s3Key;
+      } else if (urlWithoutParams.includes('/reports/')) {
+        const s3Key = 'reports/' + urlWithoutParams.split('/reports/')[1];
+        return s3Key;
       }
       
       return null;

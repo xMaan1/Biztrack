@@ -90,6 +90,8 @@ from .event_models import (
     Event, EventType, EventStatus, RecurrenceType
 )
 
+from .saved_reports_models import SavedReport
+
 from .healthcare_models import Doctor, HealthcareStaff, Appointment, Prescription, Patient, ExpenseCategory, DailyExpense, Admission
 
 # Import all CRUD functions

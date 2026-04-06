@@ -1,6 +1,7 @@
-from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, Field
+from typing import Optional, List, Dict, Any, Literal
 from datetime import datetime
+from uuid import UUID
 
 class WorkOrderMetrics(BaseModel):
     total_work_orders: int
@@ -73,4 +74,26 @@ class ReportsFilters(BaseModel):
     department: Optional[str] = None
     project_id: Optional[str] = None
     user_id: Optional[str] = None
+
+
+class SavedReportItem(BaseModel):
+    id: UUID
+    title: str
+    file_type: Literal["pdf", "csv"]
+    file_url: str
+    original_filename: Optional[str] = None
+    file_size: Optional[int] = None
+    createdAt: datetime
+    updatedAt: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class SavedReportsListResponse(BaseModel):
+    reports: List[SavedReportItem]
+
+
+class SavedReportTitleBody(BaseModel):
+    title: str = Field(..., min_length=1, max_length=500)
 
