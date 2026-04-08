@@ -45,6 +45,7 @@ import { User } from '../../models/auth';
 import { apiService } from '../../services/ApiService';
 import { extractErrorMessage } from '../../utils/errorUtils';
 import { cn } from '../../lib/utils';
+import { usePermissions } from '../../hooks/usePermissions';
 
 interface TaskListProps {
   projectId?: string;
@@ -55,6 +56,7 @@ export const TaskList: React.FC<TaskListProps> = ({
   projectId,
   showProjectFilter = true,
 }) => {
+  const { canCreateTasks, canUpdateTasks, canDeleteTasks } = usePermissions();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -336,10 +338,12 @@ export const TaskList: React.FC<TaskListProps> = ({
           >
             <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
           </Button>
-          <Button onClick={handleCreateTask} className="modern-button">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Task
-          </Button>
+          {canCreateTasks() && (
+            <Button onClick={handleCreateTask} className="modern-button">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Task
+            </Button>
+          )}
         </div>
       </div>
 
@@ -571,10 +575,12 @@ export const TaskList: React.FC<TaskListProps> = ({
                     ? 'Try adjusting your filters or create a new task.'
                     : 'Get started by creating your first task.'}
                 </p>
-                <Button onClick={handleCreateTask} className="modern-button">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Task
-                </Button>
+                {canCreateTasks() && (
+                  <Button onClick={handleCreateTask} className="modern-button">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Task
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ) : (
@@ -583,16 +589,36 @@ export const TaskList: React.FC<TaskListProps> = ({
                 <TaskCard
                   key={task.id}
                   task={task}
-                  onEdit={handleEditTask}
-                  onDelete={(taskId) => handleDeleteTask(tasks.find(t => t.id === taskId)!)}
-                  onStatusChange={handleStatusChange}
-                  onAddSubtask={handleAddSubtask}
-                  onEditSubtask={handleEditSubtask}
-                  onDeleteSubtask={(subtaskId) => {
-                    const subtask = tasks.flatMap(t => t.subtasks || []).find(s => s.id === subtaskId);
-                    if (subtask) handleDeleteSubtask(subtask);
-                  }}
-                  onSubtaskStatusChange={handleStatusChange}
+                  onEdit={canUpdateTasks() ? handleEditTask : undefined}
+                  onDelete={
+                    canDeleteTasks()
+                      ? (taskId) =>
+                          handleDeleteTask(tasks.find((t) => t.id === taskId)!)
+                      : undefined
+                  }
+                  onStatusChange={
+                    canUpdateTasks() ? handleStatusChange : undefined
+                  }
+                  onAddSubtask={canCreateTasks() ? handleAddSubtask : undefined}
+                  onEditSubtask={
+                    canUpdateTasks() ? handleEditSubtask : undefined
+                  }
+                  onDeleteSubtask={
+                    canDeleteTasks()
+                      ? (subtaskId) => {
+                          const subtask = tasks
+                            .flatMap((t) => t.subtasks || [])
+                            .find((s) => s.id === subtaskId);
+                          if (subtask) handleDeleteSubtask(subtask);
+                        }
+                      : undefined
+                  }
+                  onSubtaskStatusChange={
+                    canUpdateTasks() ? handleStatusChange : undefined
+                  }
+                  canCreateTasks={canCreateTasks()}
+                  canUpdateTasks={canUpdateTasks()}
+                  canDeleteTasks={canDeleteTasks()}
                 />
               ))}
 

@@ -12,7 +12,7 @@ from ...config.database import (
     get_subtasks_by_parent, get_main_tasks_by_project, get_task_with_subtasks,
     Task as DBTask
 )
-from ...api.dependencies import get_current_user, get_tenant_context, require_tenant_admin_or_super_admin, can_see_all_tasks
+from ...api.dependencies import get_current_user, get_tenant_context, can_see_all_tasks
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
@@ -165,7 +165,7 @@ async def get_task(
     
     return transform_task_to_response(task, include_subtasks)
 
-@router.post("", response_model=SubTask, dependencies=[Depends(require_tenant_admin_or_super_admin)])
+@router.post("", response_model=SubTask)
 async def create_new_task(
     task_data: TaskCreate, 
     current_user = Depends(get_current_user),
@@ -173,7 +173,9 @@ async def create_new_task(
     tenant_context: Optional[dict] = Depends(get_tenant_context)
 ):
     """Create a new task or subtask"""
-    tenant_id = tenant_context["tenant_id"] if tenant_context else None
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    tenant_id = tenant_context["tenant_id"]
     
     project = get_project_by_id(task_data.projectId, db, tenant_id=tenant_id)
     if not project:
@@ -240,7 +242,7 @@ async def create_new_task(
             pass
     return transform_task_to_response(db_task, include_subtasks=False)
 
-@router.put("/{task_id}", response_model=SubTask, dependencies=[Depends(require_tenant_admin_or_super_admin)])
+@router.put("/{task_id}", response_model=SubTask)
 async def update_existing_task(
     task_id: str, 
     task_data: TaskUpdate, 
@@ -248,7 +250,9 @@ async def update_existing_task(
     db: Session = Depends(get_db),
     tenant_context: Optional[dict] = Depends(get_tenant_context)
 ):
-    tenant_id = tenant_context["tenant_id"] if tenant_context else None
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    tenant_id = tenant_context["tenant_id"]
     task = get_task_by_id(task_id, db, tenant_id=tenant_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
@@ -310,14 +314,16 @@ async def update_existing_task(
             pass
     return transform_task_to_response(updated_task)
 
-@router.delete("/{task_id}", dependencies=[Depends(require_tenant_admin_or_super_admin)])
+@router.delete("/{task_id}")
 async def delete_existing_task(
     task_id: str, 
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
     tenant_context: Optional[dict] = Depends(get_tenant_context)
 ):
-    tenant_id = tenant_context["tenant_id"] if tenant_context else None
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    tenant_id = tenant_context["tenant_id"]
     success = delete_task(task_id, db, tenant_id=tenant_id)
     if not success:
         raise HTTPException(status_code=404, detail="Task not found")
@@ -339,7 +345,7 @@ async def get_subtasks(
     subtasks = get_subtasks_by_parent(task_id, db, tenant_id=tenant_id)
     return [transform_subtask_to_response(subtask) for subtask in subtasks]
 
-@router.post("/{task_id}/subtasks", response_model=SubTask, dependencies=[Depends(require_tenant_admin_or_super_admin)])
+@router.post("/{task_id}/subtasks", response_model=SubTask)
 async def create_subtask(
     task_id: str,
     subtask_data: TaskCreate,
@@ -347,7 +353,9 @@ async def create_subtask(
     db: Session = Depends(get_db),
     tenant_context: Optional[dict] = Depends(get_tenant_context)
 ):
-    tenant_id = tenant_context["tenant_id"] if tenant_context else None
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    tenant_id = tenant_context["tenant_id"]
     
     parent_task = get_task_by_id(task_id, db, tenant_id=tenant_id)
     if not parent_task:

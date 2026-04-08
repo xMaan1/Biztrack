@@ -201,6 +201,9 @@ def _enforce_granular_permission(
     if not tenant_context:
         return
 
+    if getattr(current_user, "userRole", None) == "super_admin":
+        return
+
     if tenant_context.get("is_owner"):
         return
 

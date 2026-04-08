@@ -41,6 +41,9 @@ interface TaskCardProps {
   onEditSubtask?: (subtask: SubTask) => void;
   onDeleteSubtask?: (subtaskId: string) => void;
   onSubtaskStatusChange?: (subtaskId: string, status: TaskStatus) => void;
+  canCreateTasks?: boolean;
+  canUpdateTasks?: boolean;
+  canDeleteTasks?: boolean;
 }
 
 const getPriorityBadge = (priority: TaskPriority) => {
@@ -114,12 +117,19 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   onEditSubtask,
   onDeleteSubtask,
   onSubtaskStatusChange,
+  canCreateTasks = true,
+  canUpdateTasks = true,
+  canDeleteTasks = true,
 }) => {
   const [showSubtasks, setShowSubtasks] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [subtaskMenuOpenId, setSubtaskMenuOpenId] = useState<string | null>(
     null,
   );
+
+  const showTaskActionsMenu =
+    (canUpdateTasks && (onEdit || onStatusChange)) ||
+    (canDeleteTasks && onDelete);
 
   const completionPercentage =
     task.subtaskCount > 0
@@ -137,43 +147,59 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               {task.title}
             </h3>
           </div>
-          <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="ml-2">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onEdit?.(task)}>
-                <Edit className="mr-2 h-4 w-4" /> Edit Task
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => onStatusChange?.(task.id, TaskStatus.TODO)}
-              >
-                To Do
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() =>
-                  onStatusChange?.(task.id, TaskStatus.IN_PROGRESS)
-                }
-              >
-                In Progress
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => onStatusChange?.(task.id, TaskStatus.COMPLETED)}
-              >
-                Completed
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => onDelete?.(task.id)}
-                className="text-red-600"
-              >
-                <Trash2 className="mr-2 h-4 w-4" /> Delete Task
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {showTaskActionsMenu ? (
+            <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="ml-2">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {canUpdateTasks && onEdit && (
+                  <DropdownMenuItem onClick={() => onEdit(task)}>
+                    <Edit className="mr-2 h-4 w-4" /> Edit Task
+                  </DropdownMenuItem>
+                )}
+                {canUpdateTasks && onStatusChange && (
+                  <>
+                    {canUpdateTasks && onEdit && <DropdownMenuSeparator />}
+                    <DropdownMenuItem
+                      onClick={() => onStatusChange(task.id, TaskStatus.TODO)}
+                    >
+                      To Do
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() =>
+                        onStatusChange(task.id, TaskStatus.IN_PROGRESS)
+                      }
+                    >
+                      In Progress
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() =>
+                        onStatusChange(task.id, TaskStatus.COMPLETED)
+                      }
+                    >
+                      Completed
+                    </DropdownMenuItem>
+                  </>
+                )}
+                {canDeleteTasks && onDelete && (
+                  <>
+                    {canUpdateTasks && (onEdit || onStatusChange) && (
+                      <DropdownMenuSeparator />
+                    )}
+                    <DropdownMenuItem
+                      onClick={() => onDelete(task.id)}
+                      className="text-red-600"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" /> Delete Task
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : null}
         </div>
 
         {task.description && (
@@ -245,7 +271,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
 
         <div className="flex justify-between items-center mt-4">
           <div className="flex gap-1">
-            {onAddSubtask && (
+            {onAddSubtask && canCreateTasks && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -284,8 +310,10 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 className="flex items-center gap-2 pl-4 group"
               >
                 <button
-                  className="flex items-center justify-center h-5 w-5 rounded-full border border-gray-300 bg-white text-gray-400 hover:bg-gray-100 focus:outline-none"
+                  type="button"
+                  className="flex items-center justify-center h-5 w-5 rounded-full border border-gray-300 bg-white text-gray-400 hover:bg-gray-100 focus:outline-none disabled:opacity-50 disabled:pointer-events-none"
                   aria-label="Toggle subtask status"
+                  disabled={!canUpdateTasks || !onSubtaskStatusChange}
                   onClick={() =>
                     onSubtaskStatusChange?.(
                       subtask.id,
@@ -325,34 +353,47 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                     )}
                   </div>
                 </div>
-                <DropdownMenu
-                  open={subtaskMenuOpenId === subtask.id}
-                  onOpenChange={(open) =>
-                    setSubtaskMenuOpenId(open ? subtask.id : null)
-                  }
-                >
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="opacity-0 group-hover:opacity-100"
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => onEditSubtask?.(subtask)}>
-                      <Edit className="mr-2 h-4 w-4" /> Edit Subtask
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => onDeleteSubtask?.(subtask.id)}
-                      className="text-red-600"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" /> Delete Subtask
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {(canUpdateTasks && onEditSubtask) ||
+                (canDeleteTasks && onDeleteSubtask) ? (
+                  <DropdownMenu
+                    open={subtaskMenuOpenId === subtask.id}
+                    onOpenChange={(open) =>
+                      setSubtaskMenuOpenId(open ? subtask.id : null)
+                    }
+                  >
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="opacity-0 group-hover:opacity-100"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {canUpdateTasks && onEditSubtask && (
+                        <DropdownMenuItem
+                          onClick={() => onEditSubtask(subtask)}
+                        >
+                          <Edit className="mr-2 h-4 w-4" /> Edit Subtask
+                        </DropdownMenuItem>
+                      )}
+                      {canDeleteTasks && onDeleteSubtask && (
+                        <>
+                          {canUpdateTasks && onEditSubtask && (
+                            <DropdownMenuSeparator />
+                          )}
+                          <DropdownMenuItem
+                            onClick={() => onDeleteSubtask(subtask.id)}
+                            className="text-red-600"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" /> Delete Subtask
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : null}
               </div>
             ))}
           </div>

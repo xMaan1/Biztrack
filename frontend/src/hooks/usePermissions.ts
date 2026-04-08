@@ -55,6 +55,9 @@ export function usePermissions() {
     canManageInvoices: () => hasPermission('sales:create') || hasPermission('sales:update') || isOwner(),
     canViewReports: () => hasPermission('reports:view') || isOwner(),
     canExportReports: () => hasPermission('reports:export') || isOwner(),
+    canCreateTasks: () => hasPermission('projects:tasks:create') || isOwner(),
+    canUpdateTasks: () => hasPermission('projects:tasks:update') || isOwner(),
+    canDeleteTasks: () => hasPermission('projects:tasks:delete') || isOwner(),
   };
 }
 
