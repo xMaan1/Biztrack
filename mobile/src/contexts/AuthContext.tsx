@@ -1,9 +1,16 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, LoginCredentials } from '@/models/auth';
-import { apiService } from '@/services/ApiService';
-import { SessionManager } from '@/services/SessionManager';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
+import { User, LoginCredentials } from '../models/auth';
+import { apiService } from '../services/ApiService';
+import { SessionManager } from '../services/SessionManager';
+import { appCache } from '../services/appCache';
 
-interface Tenant {
+export interface Tenant {
   id: string;
   name: string;
   domain: string;
@@ -31,71 +38,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentTenant, setCurrentTenant] = useState<Tenant | null>(null);
 
   useEffect(() => {
+    apiService.onUnauthorized = () => {
+      setUser(null);
+      setTenants([]);
+      setCurrentTenant(null);
+      appCache.delete('plan_info');
+      appCache.delete('dashboard_overview');
+    };
+    return () => {
+      apiService.onUnauthorized = undefined;
+    };
+  }, []);
+
+  useEffect(() => {
     const initializeAuth = async () => {
+      const sessionManager = new SessionManager();
       try {
-        const sessionManager = new SessionManager();
-
-        sessionManager.onSessionExpired(async () => {
-          await handleAutoLogout();
-        });
-
-        const isSessionValid = await sessionManager.isSessionValid();
-
-        if (!isSessionValid) {
+        if (!(await sessionManager.isSessionValid())) {
           await sessionManager.clearSession();
           setUser(null);
           setTenants([]);
           setCurrentTenant(null);
-          setLoading(false);
           return;
         }
 
-        if (isSessionValid) {
-          const isTokenExpired = await sessionManager.isTokenExpired();
-          if (isTokenExpired) {
-            const refreshSuccess = await sessionManager.refreshAccessToken();
-            if (!refreshSuccess) {
-              await sessionManager.clearSession();
-              setUser(null);
-              setLoading(false);
-              return;
-            }
-          }
-
-          const session = await sessionManager.getSession();
-
-          if (session && session.token && session.user) {
-            const userWithId = {
-              ...session.user,
-              id: session.user.userId || session.user.id
-            };
-            setUser(userWithId);
-
-            sessionManager.startProactiveRefresh();
-
-            const storedTenants = await apiService.getUserTenants();
-            if (storedTenants.length > 0) {
-              setTenants(storedTenants);
-
-              const currentTenant = await apiService.getCurrentTenant();
-              if (currentTenant) {
-                setCurrentTenant(currentTenant);
-              } else {
-                setCurrentTenant(storedTenants[0]);
-                await apiService.setTenantId(storedTenants[0].id);
-              }
-            }
-          } else {
+        if (await sessionManager.isTokenExpired()) {
+          const refreshSuccess = await sessionManager.refreshAccessToken();
+          if (!refreshSuccess) {
             await sessionManager.clearSession();
             setUser(null);
+            return;
+          }
+        }
+
+        const sessionUser = await sessionManager.getUser();
+
+        if (sessionUser) {
+          const userWithId = {
+            ...sessionUser,
+            id: sessionUser.userId || sessionUser.id,
+          };
+          setUser(userWithId as User);
+
+          const storedTenants = apiService.getUserTenants();
+          if (storedTenants.length > 0) {
+            setTenants(storedTenants);
+
+            const ct = apiService.getCurrentTenant();
+            if (ct) {
+              setCurrentTenant(ct);
+            } else {
+              setCurrentTenant(storedTenants[0]);
+              apiService.setTenantId(storedTenants[0].id);
+            }
           }
         } else {
           await sessionManager.clearSession();
           setUser(null);
         }
-      } catch (error) {
-        const sessionManager = new SessionManager();
-        await sessionManager.clearSession();
+      } catch {
+        const sessionManagerInner = new SessionManager();
+        await sessionManagerInner.clearSession();
         setUser(null);
       } finally {
         setLoading(false);
@@ -105,72 +108,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initializeAuth();
   }, []);
 
-  const handleAutoLogout = async () => {
-    const sessionManager = new SessionManager();
-    setUser(null);
-    setTenants([]);
-    setCurrentTenant(null);
-    await sessionManager.clearSession();
-    await apiService.setTenantId(null);
-  };
-
   const login = async (credentials: LoginCredentials): Promise<boolean> => {
-    try {
-      setLoading(true);
-      const response = await apiService.login(credentials);
+    const response = await apiService.login(credentials);
 
-      if (response.success && response.user) {
-        const userWithId = {
-          ...response.user,
-          id: response.user.userId || response.user.id
-        };
-        setUser(userWithId);
+    if (response.success && response.user) {
+      const userWithId = {
+        ...response.user,
+        id: response.user.userId || response.user.id,
+      };
+      setUser(userWithId as User);
 
-        const sessionManager = new SessionManager();
-        sessionManager.startProactiveRefresh();
+      const storedTenants = apiService.getUserTenants();
+      if (storedTenants.length > 0) {
+        setTenants(storedTenants);
 
-        const storedTenants = await apiService.getUserTenants();
-        if (storedTenants.length > 0) {
-          setTenants(storedTenants);
-
-          const currentTenant = await apiService.getCurrentTenant();
-          if (currentTenant) {
-            setCurrentTenant(currentTenant);
-          }
+        const ct = apiService.getCurrentTenant();
+        if (ct) {
+          setCurrentTenant(ct);
         }
-
-        return true;
       }
-      return false;
-    } catch (error) {
-      throw error;
-    } finally {
-      setLoading(false);
+
+      return true;
     }
+    return false;
   };
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await apiService.logout();
-    } catch (error: any) {
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to logout';
-      console.error(`Logout Error: ${errorMessage}`);
+    } catch {
     } finally {
       const sessionManager = new SessionManager();
       setUser(null);
       setTenants([]);
       setCurrentTenant(null);
       await sessionManager.clearSession();
-      await apiService.setTenantId(null);
+      apiService.setTenantId(null);
+      appCache.delete('plan_info');
+      appCache.delete('dashboard_overview');
     }
-  };
+  }, []);
 
   const switchTenant = async (tenantId: string): Promise<boolean> => {
     try {
       const tenant = await apiService.switchTenant(tenantId);
       setCurrentTenant(tenant);
+      appCache.delete('plan_info');
+      appCache.delete('dashboard_overview');
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   };
@@ -186,7 +172,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     switchTenant,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
@@ -196,4 +184,3 @@ export function useAuth() {
   }
   return context;
 }
-

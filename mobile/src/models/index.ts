@@ -1,9 +1,4 @@
 export * from './auth';
-export * from './invoiceCustomization';
-export * from './notifications';
-export * from './crm';
-export * from './sales';
-export * from './healthcare';
-export * from './production';
-export * from './qualityControl';
-
+export * from './project';
+export * from './task';
+export * from './timeTracking';

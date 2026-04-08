@@ -3,7 +3,7 @@ export enum NotificationType {
   WARNING = 'warning',
   ERROR = 'error',
   SUCCESS = 'success',
-  SYSTEM = 'system',
+  SYSTEM = 'system'
 }
 
 export enum NotificationCategory {
@@ -14,7 +14,7 @@ export enum NotificationCategory {
   QUALITY = 'quality',
   MAINTENANCE = 'maintenance',
   LEDGER = 'ledger',
-  SYSTEM = 'system',
+  SYSTEM = 'system'
 }
 
 export interface Notification {
@@ -34,7 +34,7 @@ export interface Notification {
 }
 
 export interface NotificationCreate {
-  userId?: string;
+  userId?: string; // Optional, defaults to current user
   title: string;
   message: string;
   type?: NotificationType;
@@ -44,11 +44,9 @@ export interface NotificationCreate {
 }
 
 export interface NotificationFilters {
-  page?: number;
-  limit?: number;
-  is_read?: boolean;
+  isRead?: boolean;
+  notificationType?: NotificationType;
   category?: NotificationCategory;
-  type?: NotificationType;
 }
 
 export interface NotificationListResponse {
@@ -87,3 +85,91 @@ export interface NotificationPreferenceUpdate {
 export interface UnreadCountResponse {
   unread_count: number;
 }
+
+export interface NotificationFilters {
+  page?: number;
+  limit?: number;
+  is_read?: boolean;
+  category?: NotificationCategory;
+  type?: NotificationType;
+}
+
+export const getNotificationTypeColor = (type: NotificationType): string => {
+  switch (type) {
+    case NotificationType.SUCCESS:
+      return 'text-green-600 bg-green-50 border-green-200';
+    case NotificationType.WARNING:
+      return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+    case NotificationType.ERROR:
+      return 'text-red-600 bg-red-50 border-red-200';
+    case NotificationType.INFO:
+      return 'text-blue-600 bg-blue-50 border-blue-200';
+    case NotificationType.SYSTEM:
+      return 'text-gray-600 bg-gray-50 border-gray-200';
+    default:
+      return 'text-gray-600 bg-gray-50 border-gray-200';
+  }
+};
+
+export const getNotificationTypeIcon = (type: NotificationType): string => {
+  switch (type) {
+    case NotificationType.SUCCESS:
+      return 'CheckCircle';
+    case NotificationType.WARNING:
+      return 'AlertTriangle';
+    case NotificationType.ERROR:
+      return 'XCircle';
+    case NotificationType.INFO:
+      return 'Info';
+    case NotificationType.SYSTEM:
+      return 'Settings';
+    default:
+      return 'Bell';
+  }
+};
+
+export const getCategoryDisplayName = (category: NotificationCategory): string => {
+  switch (category) {
+    case NotificationCategory.HRM:
+      return 'Human Resources';
+    case NotificationCategory.INVENTORY:
+      return 'Inventory';
+    case NotificationCategory.CRM:
+      return 'Customer Relations';
+    case NotificationCategory.PRODUCTION:
+      return 'Production';
+    case NotificationCategory.QUALITY:
+      return 'Quality Control';
+    case NotificationCategory.MAINTENANCE:
+      return 'Maintenance';
+    case NotificationCategory.LEDGER:
+      return 'Finance';
+    case NotificationCategory.SYSTEM:
+      return 'System';
+    default:
+      return 'General';
+  }
+};
+
+export const getCategoryIcon = (category: NotificationCategory): string => {
+  switch (category) {
+    case NotificationCategory.HRM:
+      return 'Users';
+    case NotificationCategory.INVENTORY:
+      return 'Package';
+    case NotificationCategory.CRM:
+      return 'UserCheck';
+    case NotificationCategory.PRODUCTION:
+      return 'Factory';
+    case NotificationCategory.QUALITY:
+      return 'Shield';
+    case NotificationCategory.MAINTENANCE:
+      return 'Wrench';
+    case NotificationCategory.LEDGER:
+      return 'Calculator';
+    case NotificationCategory.SYSTEM:
+      return 'Settings';
+    default:
+      return 'Bell';
+  }
+};

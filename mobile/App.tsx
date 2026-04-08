@@ -1,47 +1,60 @@
-import React from 'react';
+import { useEffect, useState } from 'react';
+import { View, Text, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { RBACProvider } from '@/contexts/RBACContext';
-import { CurrencyProvider } from '@/contexts/CurrencyContext';
-import { NotificationProvider } from '@/contexts/NotificationContext';
-import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
-import { AppNavigator } from '@/navigation';
-import { useAppFonts } from '@/theme';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { apiService } from './src/services/ApiService';
+import { AuthProvider, useAuth } from './src/contexts/AuthContext';
+import { LoginScreen } from './src/screens/LoginScreen';
+import { CommerceDashboardScreen } from './src/screens/CommerceDashboardScreen';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+function RootBody() {
+  const { isAuthenticated, loading } = useAuth();
 
-export default function App() {
-  const fontsLoaded = useAppFonts();
-
-  if (!fontsLoaded) {
-    return null;
+  if (loading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-slate-50">
+        <ActivityIndicator size="large" color="#2563eb" />
+        <Text className="mt-3 text-slate-600">Loading…</Text>
+      </View>
+    );
   }
 
+  if (!isAuthenticated) {
+    return <LoginScreen />;
+  }
+
+  return <CommerceDashboardScreen />;
+}
+
+export default function App() {
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      await apiService.hydrate();
+      if (!cancelled) setHydrated(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <SubscriptionProvider>
-            <RBACProvider>
-              <CurrencyProvider>
-                <NotificationProvider>
-                  <AppNavigator />
-                  <StatusBar style="auto" />
-                </NotificationProvider>
-              </CurrencyProvider>
-            </RBACProvider>
-          </SubscriptionProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </GestureHandlerRootView>
+    <SafeAreaProvider>
+      <SafeAreaView className="flex-1 bg-slate-50">
+        <StatusBar style="dark" />
+        {!hydrated ? (
+          <View className="flex-1 items-center justify-center bg-slate-50">
+            <ActivityIndicator size="large" color="#2563eb" />
+            <Text className="mt-3 text-slate-600">Starting…</Text>
+          </View>
+        ) : (
+          <AuthProvider>
+            <RootBody />
+          </AuthProvider>
+        )}
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }

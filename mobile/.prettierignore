@@ -1,9 +1,0 @@
-node_modules
-.expo
-.expo-shared
-dist
-build
-*.log
-coverage
-.nyc_output
-

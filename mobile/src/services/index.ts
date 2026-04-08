@@ -1,10 +1,5 @@
-export { ApiService, apiService, type ApiResponse, type PaginatedResponse } from "./ApiService";
-export { SessionManager, type SessionData } from "./SessionManager";
-export { default as InvoiceCustomizationService } from "./InvoiceCustomizationService";
-export { default as NotificationService } from "./NotificationService";
-export { default as CRMService } from "./CRMService";
-export { default as SalesService } from "./SalesService";
-export { default as InvoiceService } from "./InvoiceService";
-export { default as WorkOrderService } from "./WorkOrderService";
-export { default as ProductionService } from "./ProductionService";
-export { default as QualityControlService } from "./QualityControlService";
+export { ApiService, apiService } from './ApiService';
+export type { ApiResponse, PaginatedResponse } from './ApiService';
+export { apiClient } from './apiClient';
+export { SessionManager } from './SessionManager';
+export type { SessionData } from './SessionManager';
