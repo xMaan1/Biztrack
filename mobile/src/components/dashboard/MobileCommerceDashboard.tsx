@@ -7,6 +7,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { MenuHeaderButton } from '../layout/MenuHeaderButton';
 
 export interface CommerceStats {
   totalProjects: number;
@@ -70,7 +71,9 @@ export function MobileCommerceDashboard({
     >
       <View className="border-b border-slate-200 bg-white px-4 pb-4 pt-2">
         <View className="flex-row items-start justify-between">
-          <View className="flex-1 pr-2">
+          <View className="flex-row flex-1 items-start gap-2 pr-2">
+            <MenuHeaderButton />
+            <View className="min-w-0 flex-1">
             <Text className="text-2xl font-bold text-emerald-700">
               Commerce Dashboard
             </Text>
@@ -80,6 +83,7 @@ export function MobileCommerceDashboard({
             {userLabel ? (
               <Text className="mt-1 text-xs text-slate-500">{userLabel}</Text>
             ) : null}
+            </View>
           </View>
           <Pressable
             className="rounded-lg border border-slate-200 px-3 py-2 active:bg-slate-100"

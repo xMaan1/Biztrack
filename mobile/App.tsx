@@ -4,6 +4,8 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { apiService } from './src/services/ApiService';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
+import { RBACProvider } from './src/contexts/RBACContext';
+import { SidebarDrawerProvider } from './src/contexts/SidebarDrawerContext';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { CommerceDashboardScreen } from './src/screens/CommerceDashboardScreen';
 
@@ -23,7 +25,13 @@ function RootBody() {
     return <LoginScreen />;
   }
 
-  return <CommerceDashboardScreen />;
+  return (
+    <RBACProvider>
+      <SidebarDrawerProvider>
+        <CommerceDashboardScreen />
+      </SidebarDrawerProvider>
+    </RBACProvider>
+  );
 }
 
 export default function App() {

@@ -1,6 +1,8 @@
 import { View, Text, ActivityIndicator, Pressable } from 'react-native';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useSidebarDrawer } from '../contexts/SidebarDrawerContext';
+import { MenuHeaderButton } from '../components/layout/MenuHeaderButton';
 import { usePlanInfo } from '../hooks/usePlanInfo';
 import { useDashboard, type DashboardData } from '../hooks/useDashboard';
 import {
@@ -58,6 +60,7 @@ function buildCommerceStats(data: DashboardData | null): CommerceStats {
 
 export function CommerceDashboardScreen() {
   const { logout, user, currentTenant } = useAuth();
+  const { setSidebarActivePath } = useSidebarDrawer();
   const { planInfo, loading: planLoading, error: planError, refreshPlanInfo } =
     usePlanInfo();
   const {
@@ -76,21 +79,34 @@ export function CommerceDashboardScreen() {
     await Promise.all([refreshPlanInfo(), refetch()]);
   }, [refreshPlanInfo, refetch]);
 
+  useEffect(() => {
+    setSidebarActivePath('/dashboard');
+  }, [setSidebarActivePath]);
+
   const awaitingFirstPayload =
     (planLoading || dashboardLoading) && (!planInfo || !dashboardData);
 
   if (awaitingFirstPayload) {
     return (
-      <View className="flex-1 items-center justify-center bg-slate-50">
-        <ActivityIndicator size="large" color="#2563eb" />
-        <Text className="mt-3 text-slate-600">Loading dashboard…</Text>
+      <View className="flex-1 bg-slate-50">
+        <View className="flex-row items-center border-b border-slate-200 bg-white px-3 py-2">
+          <MenuHeaderButton />
+        </View>
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#2563eb" />
+          <Text className="mt-3 text-slate-600">Loading dashboard…</Text>
+        </View>
       </View>
     );
   }
 
   if (planError || dashboardError) {
     return (
-      <View className="flex-1 justify-center bg-slate-50 px-6">
+      <View className="flex-1 bg-slate-50">
+        <View className="flex-row items-center border-b border-slate-200 bg-white px-3 py-2">
+          <MenuHeaderButton />
+        </View>
+        <View className="flex-1 justify-center px-6">
         <Text className="text-center text-lg font-semibold text-slate-900">
           Could not load dashboard
         </Text>
@@ -109,13 +125,18 @@ export function CommerceDashboardScreen() {
         >
           <Text className="font-medium text-slate-600">Sign out</Text>
         </Pressable>
+        </View>
       </View>
     );
   }
 
   if (!planInfo) {
     return (
-      <View className="flex-1 justify-center bg-slate-50 px-6">
+      <View className="flex-1 bg-slate-50">
+        <View className="flex-row items-center border-b border-slate-200 bg-white px-3 py-2">
+          <MenuHeaderButton />
+        </View>
+        <View className="flex-1 justify-center px-6">
         <Text className="text-center text-lg font-semibold text-slate-900">
           Plan information not available
         </Text>
@@ -128,6 +149,7 @@ export function CommerceDashboardScreen() {
         >
           <Text className="font-semibold text-white">Retry</Text>
         </Pressable>
+        </View>
       </View>
     );
   }
