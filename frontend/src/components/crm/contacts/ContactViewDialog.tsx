@@ -159,6 +159,29 @@ export function ContactViewDialog({
 
               <div>
                 <Label className="text-sm font-medium text-gray-500">
+                  Website
+                </Label>
+                {contact.website?.trim() ? (
+                  <a
+                    href={
+                      /^https?:\/\//i.test(contact.website.trim())
+                        ? contact.website.trim()
+                        : `https://${contact.website.trim()}`
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline inline-flex items-center gap-1"
+                  >
+                    {contact.website.trim()}
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                ) : (
+                  <p>Not specified</p>
+                )}
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium text-gray-500">
                   Company
                 </Label>
                 <p>

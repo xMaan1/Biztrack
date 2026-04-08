@@ -188,6 +188,7 @@ export interface Contact {
   fullName?: string | null;
   birthday?: string | null;
   businessTaxId?: string | null;
+  website?: string | null;
   addresses?: ContactAddressRow[];
   socialLinks?: ContactSocialLinks;
   assignedTo?: string;
@@ -221,6 +222,7 @@ export interface ContactCreate {
   fullName?: string | null;
   birthday?: string | null;
   businessTaxId?: string | null;
+  website?: string | null;
   addresses?: ContactAddressRow[];
   socialLinks?: ContactSocialLinks;
   assignedTo?: string;
@@ -247,6 +249,7 @@ export interface ContactUpdate {
   fullName?: string | null;
   birthday?: string | null;
   businessTaxId?: string | null;
+  website?: string | null;
   addresses?: ContactAddressRow[];
   socialLinks?: ContactSocialLinks;
   assignedTo?: string;
@@ -505,6 +508,10 @@ export interface CRMContactFilters {
   companyId?: string;
   search?: string;
   assignedTo?: string;
+  industry?: Industry;
+  website?: string;
+  birthdayMonth?: number;
+  country?: string;
 }
 
 export interface CRMCompanyFilters {

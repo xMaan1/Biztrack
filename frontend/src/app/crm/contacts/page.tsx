@@ -14,6 +14,7 @@ import {
   ContactCreate,
   ContactUpdate,
   ContactAttachment,
+  Company,
 } from '@/src/models/crm';
 import {
   defaultEmailRowsFromEntity,
@@ -95,10 +96,9 @@ function CRMContactsContent() {
     addresses: [],
     socialLinks: defaultSocialLinks(),
     assignedTo: '',
+    website: '',
   });
-  const [companies, setCompanies] = useState<{ id: string; name: string }[]>(
-    [],
-  );
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const attachmentFileInputRef = React.useRef<HTMLInputElement>(null);
   const [attachmentUploading, setAttachmentUploading] = useState(false);
@@ -111,7 +111,7 @@ function CRMContactsContent() {
   const loadContacts = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await CRMService.getContacts(filters, 1, 100);
+      const response = await CRMService.getContacts(filters, 1, 500);
       setContacts(response.contacts);
     } catch (err) {
     } finally {
@@ -219,6 +219,7 @@ function CRMContactsContent() {
       addresses: [],
       socialLinks: defaultSocialLinks(),
       assignedTo: '',
+      website: '',
     });
     setOpenAdditional(false);
     setOpenAddresses(false);
@@ -260,6 +261,7 @@ function CRMContactsContent() {
           birthday: formData.birthday?.trim()
             ? `${formData.birthday.trim()}T00:00:00`
             : null,
+          website: formData.website?.trim() || null,
           assignedTo: formData.assignedTo || undefined,
         };
         await CRMService.updateContact(editingContact.id, payload);
@@ -282,6 +284,7 @@ function CRMContactsContent() {
           ...(formData.birthday?.trim()
             ? { birthday: `${formData.birthday.trim()}T00:00:00` }
             : {}),
+          website: formData.website?.trim() || undefined,
           assignedTo: formData.assignedTo || undefined,
         });
         setSuccessMessage('Contact created successfully!');
@@ -323,6 +326,7 @@ function CRMContactsContent() {
       addresses: Array.isArray(contact.addresses) ? contact.addresses : [],
       socialLinks: mergeSocialFromApi(contact.socialLinks),
       assignedTo: contact.assignedTo || '',
+      website: contact.website || '',
     });
     setShowCreateDialog(true);
   };
@@ -435,6 +439,7 @@ function CRMContactsContent() {
 
         <ContactsListCard
           contacts={contacts}
+          companies={companies}
           onView={handleView}
           onEdit={handleEdit}
           onDelete={handleDelete}

@@ -100,6 +100,21 @@ export function ContactFormCoreFields({
       </div>
 
       <div>
+        <Label htmlFor="website">Website</Label>
+        <Input
+          id="website"
+          type="text"
+          inputMode="url"
+          autoComplete="url"
+          value={formData.website || ''}
+          onChange={(e) =>
+            setFormData({ ...formData, website: e.target.value || undefined })
+          }
+          placeholder="https://"
+        />
+      </div>
+
+      <div>
         <Label htmlFor="companyId">Company</Label>
         <Select
           value={formData.companyId || 'none'}

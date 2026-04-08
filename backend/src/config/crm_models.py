@@ -141,6 +141,7 @@ class Contact(Base):
     fullName = Column(String, nullable=True)
     birthday = Column(DateTime, nullable=True)
     businessTaxId = Column(Text, nullable=True)
+    website = Column(String, nullable=True)
     addresses = Column(JSON, default=list)
     socialLinks = Column(JSON, default=dict)
     assignedToId = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)

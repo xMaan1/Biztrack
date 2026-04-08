@@ -5,6 +5,24 @@ import {
   ContactType,
 } from '@/src/models/crm';
 
+export function contactAddressCountriesDisplay(contact: Contact): string {
+  const countries = new Set<string>();
+  for (const a of contact.addresses || []) {
+    const c = (a.country || '').trim();
+    if (c) countries.add(c);
+  }
+  if (countries.size === 0) return '';
+  return Array.from(countries).join(', ');
+}
+
+export function industryLabel(raw?: string | null): string {
+  if (!raw) return '';
+  return raw
+    .split('_')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ');
+}
+
 export function contactTypeDisplayLabel(contact: Contact): string {
   const raw = contact.contactType ?? ContactType.CUSTOMER;
   const s = String(raw);

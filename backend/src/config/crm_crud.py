@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any, Tuple
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, func, desc, cast, String
+from sqlalchemy import and_, or_, func, desc, cast, String, extract
 from sqlalchemy.exc import IntegrityError
 from .crm_models import Lead, Contact, Company, Opportunity, SalesActivity, Customer, CustomerGuarantor
 from .core_models import User
@@ -581,6 +581,90 @@ def get_contacts(db: Session, tenant_id: str = None, skip: int = 0, limit: int =
     """Get all contacts (alias for get_all_contacts)"""
     return get_all_contacts(db, tenant_id, skip, limit)
 
+
+def search_contacts(
+    db: Session,
+    tenant_id: str,
+    skip: int = 0,
+    limit: int = 100,
+    type_: Optional[str] = None,
+    company_id: Optional[str] = None,
+    search: Optional[str] = None,
+    assigned_to: Optional[str] = None,
+    industry: Optional[str] = None,
+    website: Optional[str] = None,
+    birthday_month: Optional[int] = None,
+    country: Optional[str] = None,
+    crm_scope_user_id: Optional[str] = None,
+) -> Tuple[List[Contact], int]:
+    q = db.query(Contact).filter(Contact.tenant_id == tenant_id)
+    if crm_scope_user_id:
+        try:
+            uid = uuid.UUID(str(crm_scope_user_id))
+        except (ValueError, TypeError):
+            q = q.filter(False)
+        else:
+            q = q.filter(
+                or_(Contact.assignedToId == uid, Contact.createdById == uid)
+            )
+    if industry:
+        q = q.join(Company, Contact.companyId == Company.id).filter(
+            Company.industry == industry
+        )
+    if type_:
+        q = q.filter(
+            or_(
+                Contact.contactSource == type_,
+                and_(Contact.contactSource.is_(None), type_ == "customer"),
+            )
+        )
+    if company_id:
+        try:
+            q = q.filter(Contact.companyId == uuid.UUID(str(company_id)))
+        except (ValueError, TypeError):
+            q = q.filter(False)
+    if assigned_to:
+        try:
+            q = q.filter(Contact.assignedToId == uuid.UUID(str(assigned_to)))
+        except (ValueError, TypeError):
+            q = q.filter(False)
+    if website and website.strip():
+        w = website.strip()
+        q = q.filter(Contact.website.ilike(f"%{w}%"))
+    if birthday_month is not None and 1 <= birthday_month <= 12:
+        q = q.filter(extract("month", Contact.birthday) == birthday_month)
+    if country and country.strip():
+        c = country.strip()
+        q = q.filter(cast(Contact.addresses, String).ilike(f"%{c}%"))
+    if search and search.strip():
+        term = f"%{search.strip()}%"
+        blob = func.concat(
+            func.coalesce(cast(Contact.emails, String), ""),
+            func.coalesce(cast(Contact.phones, String), ""),
+            func.coalesce(cast(Contact.addresses, String), ""),
+            func.coalesce(cast(Contact.socialLinks, String), ""),
+            func.coalesce(Contact.initials, ""),
+            func.coalesce(Contact.fullName, ""),
+            func.coalesce(Contact.businessTaxId, ""),
+            func.coalesce(Contact.email, ""),
+            func.coalesce(Contact.phone, ""),
+            func.coalesce(Contact.mobile, ""),
+        )
+        q = q.filter(
+            or_(
+                Contact.firstName.ilike(term),
+                Contact.lastName.ilike(term),
+                Contact.email.ilike(term),
+                Contact.phone.ilike(term),
+                Contact.mobile.ilike(term),
+                Contact.jobTitle.ilike(term),
+                blob.ilike(term),
+            )
+        )
+    total = q.count()
+    rows = q.order_by(Contact.createdAt.desc()).offset(skip).limit(limit).all()
+    return rows, total
+
 def get_contacts_by_company(company_id: str, db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Contact]:
     query = db.query(Contact).filter(Contact.companyId == company_id)
     if tenant_id:
@@ -659,7 +743,7 @@ def update_contact(contact_id: str, update_data: dict, db: Session, tenant_id: s
             continue
         if value is not None or key in (
             "email", "notes", "description", "phone", "mobile", "emails", "phones",
-            "initials", "fullName", "birthday", "businessTaxId", "addresses", "socialLinks",
+            "initials", "fullName", "birthday", "businessTaxId", "website", "addresses", "socialLinks",
             "assignedToId",
         ):
             setattr(contact, key, value)

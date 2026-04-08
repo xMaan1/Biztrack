@@ -116,11 +116,12 @@ class ContactBase(BaseModel):
     fullName: Optional[str] = None
     birthday: Optional[datetime] = None
     businessTaxId: Optional[str] = None
+    website: Optional[str] = None
     addresses: List[ContactAddressItem] = Field(default_factory=list)
     socialLinks: ContactSocialLinks = Field(default_factory=ContactSocialLinks)
     assignedTo: Optional[str] = None
 
-    @field_validator("initials", "fullName", "businessTaxId", mode="before")
+    @field_validator("initials", "fullName", "businessTaxId", "website", mode="before")
     @classmethod
     def empty_optional_str(cls, v):
         if v is None:
@@ -258,11 +259,12 @@ class ContactUpdate(BaseModel):
     fullName: Optional[str] = None
     birthday: Optional[datetime] = None
     businessTaxId: Optional[str] = None
+    website: Optional[str] = None
     addresses: Optional[List[ContactAddressItem]] = None
     socialLinks: Optional[ContactSocialLinks] = None
     assignedTo: Optional[str] = None
 
-    @field_validator("initials", "fullName", "businessTaxId", mode="before")
+    @field_validator("initials", "fullName", "businessTaxId", "website", mode="before")
     @classmethod
     def empty_optional_str_upd(cls, v):
         if v is None:

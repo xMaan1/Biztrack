@@ -29,7 +29,7 @@ from ...config.database import get_db, get_user_by_id
 from ...config.crm_crud import (
     _attachment_item_to_dict,
     create_lead, get_lead_by_id, get_leads, update_lead, delete_lead,
-    create_contact, get_contact_by_id, get_contacts, update_contact, delete_contact,
+    create_contact, get_contact_by_id, get_contacts, search_contacts, update_contact, delete_contact,
     create_company, get_company_by_id, get_companies, update_company, delete_company,
     create_opportunity, get_opportunity_by_id, get_opportunities, update_opportunity, delete_opportunity,
     create_customer, get_customer_by_id, get_customers, update_customer, delete_customer,
@@ -114,6 +114,7 @@ def _contact_create_to_orm_dict(
         "fullName": raw.get("fullName"),
         "birthday": raw.get("birthday"),
         "businessTaxId": raw.get("businessTaxId"),
+        "website": raw.get("website"),
         "addresses": raw.get("addresses") or [],
         "socialLinks": raw.get("socialLinks"),
         "assignedToId": assigned_to_id,
@@ -786,8 +787,12 @@ async def get_crm_contacts(
     company_id: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
     assigned_to: Optional[str] = Query(None),
+    industry: Optional[str] = Query(None),
+    website: Optional[str] = Query(None),
+    birthday_month: Optional[int] = Query(None, ge=1, le=12),
+    country: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
-    limit: int = Query(10, ge=1, le=100),
+    limit: int = Query(10, ge=1, le=500),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
@@ -795,57 +800,34 @@ async def get_crm_contacts(
 ):
     """Get all contacts with optional filtering"""
     try:
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
         skip = (page - 1) * limit
-        contacts = get_contacts(db, tenant_context["tenant_id"] if tenant_context else None, skip, limit)
-        
-        # Apply additional filters if provided
-        if type or company_id or search or assigned_to:
-            filtered_contacts = []
-            for contact in contacts:
-                if type and contact.contactType != type:
-                    continue
-                if company_id and contact.companyId != company_id:
-                    continue
-                if assigned_to:
-                    aid = getattr(contact, "assignedToId", None)
-                    if not aid or str(aid) != str(assigned_to):
-                        continue
-                if search:
-                    search_lower = search.lower()
-                    em_blob = (
-                        json.dumps(contact.emails or [])
-                        + json.dumps(contact.phones or [])
-                        + json.dumps(getattr(contact, "addresses", None) or [])
-                        + json.dumps(getattr(contact, "socialLinks", None) or {})
-                        + (getattr(contact, "initials", None) or "")
-                        + (getattr(contact, "fullName", None) or "")
-                        + (getattr(contact, "businessTaxId", None) or "")
-                    )
-                    if not any([
-                        search_lower in (contact.firstName or "").lower(),
-                        search_lower in (contact.lastName or "").lower(),
-                        search_lower in (contact.email or "").lower(),
-                        search_lower in (contact.phone or "").lower(),
-                        search_lower in (contact.mobile or "").lower(),
-                        search_lower in em_blob.lower(),
-                        search_lower in (contact.jobTitle or "").lower()
-                    ]):
-                        continue
-                filtered_contacts.append(contact)
-            contacts = filtered_contacts
-        
-        contacts = filter_crm_rows(contacts, tenant_context, str(current_user.id))
-        
-        total = len(contacts)
-        
+        scope_uid = _crm_scope_user_id(tenant_context, current_user)
+        contacts, total = search_contacts(
+            db,
+            str(tenant_context["tenant_id"]),
+            skip=skip,
+            limit=limit,
+            type_=type,
+            company_id=company_id,
+            search=search,
+            assigned_to=assigned_to,
+            industry=industry,
+            website=website,
+            birthday_month=birthday_month,
+            country=country,
+            crm_scope_user_id=scope_uid,
+        )
+        pages = (total + limit - 1) // limit if limit else 1
         return CRMContactsResponse(
             contacts=contacts,
             pagination={
                 "page": page,
                 "limit": limit,
                 "total": total,
-                "pages": (total + limit - 1) // limit
-            }
+                "pages": max(1, pages),
+            },
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching contacts: {str(e)}")

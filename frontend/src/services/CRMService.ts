@@ -144,6 +144,17 @@ export class CRMService {
     if (filters?.companyId) params.append('company_id', filters.companyId);
     if (filters?.search) params.append('search', filters.search);
     if (filters?.assignedTo) params.append('assigned_to', filters.assignedTo);
+    if (filters?.industry) params.append('industry', filters.industry);
+    if (filters?.website?.trim())
+      params.append('website', filters.website.trim());
+    if (
+      filters?.birthdayMonth != null &&
+      filters.birthdayMonth >= 1 &&
+      filters.birthdayMonth <= 12
+    )
+      params.append('birthday_month', String(filters.birthdayMonth));
+    if (filters?.country?.trim())
+      params.append('country', filters.country.trim());
     params.append('page', page.toString());
     params.append('limit', limit.toString());
 
