@@ -210,30 +210,30 @@ export function MobileSidebarModal({
                         onPress={() => void onNavigate(item.path!)}
                         className={`flex-row items-center gap-3 rounded-xl px-3 py-3 ${
                           isMainItemActive
-                            ? `bg-gradient-to-r ${item.gradient}`
+                            ? 'border border-blue-200 bg-blue-50'
                             : 'bg-slate-50 active:bg-slate-100'
                         }`}
                       >
                         <View
                           className={`rounded-lg p-2 ${
-                            isMainItemActive ? 'bg-white/20' : 'bg-white'
+                            isMainItemActive ? 'bg-blue-100' : 'bg-white'
                           }`}
                         >
                           <Ionicons
                             name={item.icon as never}
                             size={22}
-                            color={isMainItemActive ? '#fff' : '#475569'}
+                            color={isMainItemActive ? '#2563eb' : '#475569'}
                           />
                         </View>
                         <Text
                           className={`flex-1 font-semibold ${
-                            isMainItemActive ? 'text-white' : 'text-slate-800'
+                            isMainItemActive ? 'text-blue-950' : 'text-slate-800'
                           }`}
                         >
                           {item.text}
                         </Text>
                         {isMainItemActive ? (
-                          <View className="h-2 w-2 rounded-full bg-white" />
+                          <View className="h-2 w-2 rounded-full bg-blue-500" />
                         ) : null}
                       </Pressable>
                     ) : (
@@ -241,28 +241,28 @@ export function MobileSidebarModal({
                         onPress={() => toggleExpanded(item.text)}
                         className={`flex-row items-center justify-between rounded-xl px-3 py-3 ${
                           hasActiveSubItem
-                            ? `bg-gradient-to-r ${item.gradient}`
+                            ? 'border border-blue-200 bg-blue-50'
                             : 'bg-slate-50 active:bg-slate-100'
                         }`}
                       >
                         <View className="flex-row items-center gap-3">
                           <View
                             className={`rounded-lg p-2 ${
-                              hasActiveSubItem ? 'bg-white/20' : 'bg-white'
+                              hasActiveSubItem ? 'bg-blue-100' : 'bg-white'
                             }`}
                           >
                             <Ionicons
                               name={item.icon as never}
                               size={22}
                               color={
-                                hasActiveSubItem ? '#fff' : '#475569'
+                                hasActiveSubItem ? '#2563eb' : '#475569'
                               }
                             />
                           </View>
                           <Text
                             className={`font-semibold ${
                               hasActiveSubItem
-                                ? 'text-white'
+                                ? 'text-blue-950'
                                 : 'text-slate-800'
                             }`}
                           >
@@ -273,7 +273,7 @@ export function MobileSidebarModal({
                           <Ionicons
                             name="chevron-down-outline"
                             size={20}
-                            color={hasActiveSubItem ? '#fff' : '#64748b'}
+                            color={hasActiveSubItem ? '#2563eb' : '#64748b'}
                             style={{
                               transform: [
                                 { rotate: isExpanded ? '180deg' : '0deg' },
