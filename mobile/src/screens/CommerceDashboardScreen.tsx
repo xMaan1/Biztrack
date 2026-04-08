@@ -5,11 +5,14 @@ import { useSidebarDrawer } from '../contexts/SidebarDrawerContext';
 import { MenuHeaderButton } from '../components/layout/MenuHeaderButton';
 import { usePlanInfo } from '../hooks/usePlanInfo';
 import { useDashboard, type DashboardData } from '../hooks/useDashboard';
+import { usePermissions } from '../hooks/usePermissions';
 import {
   MobileCommerceDashboard,
   type CommerceStats,
 } from '../components/dashboard/MobileCommerceDashboard';
 import { NonCommerceScreen } from './NonCommerceScreen';
+import { MobileCrmDashboardScreen } from './MobileCrmDashboardScreen';
+import { MobileCustomersScreen } from './MobileCustomersScreen';
 
 function buildCommerceStats(data: DashboardData | null): CommerceStats {
   if (!data) {
@@ -60,7 +63,9 @@ function buildCommerceStats(data: DashboardData | null): CommerceStats {
 
 export function CommerceDashboardScreen() {
   const { logout, user, currentTenant } = useAuth();
-  const { setSidebarActivePath } = useSidebarDrawer();
+  const { setSidebarActivePath, workspacePath, setWorkspacePath } =
+    useSidebarDrawer();
+  const { canViewCRM } = usePermissions();
   const { planInfo, loading: planLoading, error: planError, refreshPlanInfo } =
     usePlanInfo();
   const {
@@ -79,12 +84,24 @@ export function CommerceDashboardScreen() {
     await Promise.all([refreshPlanInfo(), refetch()]);
   }, [refreshPlanInfo, refetch]);
 
+  const commerceHome =
+    planInfo?.planType === 'commerce' && workspacePath === '/dashboard';
+
   useEffect(() => {
-    setSidebarActivePath('/dashboard');
-  }, [setSidebarActivePath]);
+    if (workspacePath === '/dashboard') {
+      setSidebarActivePath('/dashboard');
+    }
+  }, [workspacePath, setSidebarActivePath]);
 
   const awaitingFirstPayload =
-    (planLoading || dashboardLoading) && (!planInfo || !dashboardData);
+    planLoading && !planInfo
+    ? true
+    : Boolean(
+        planInfo &&
+          commerceHome &&
+          dashboardLoading &&
+          !dashboardData,
+      );
 
   if (awaitingFirstPayload) {
     return (
@@ -100,7 +117,35 @@ export function CommerceDashboardScreen() {
     );
   }
 
-  if (planError || dashboardError) {
+  if (planError) {
+    return (
+      <View className="flex-1 bg-slate-50">
+        <View className="flex-row items-center border-b border-slate-200 bg-white px-3 py-2">
+          <MenuHeaderButton />
+        </View>
+        <View className="flex-1 justify-center px-6">
+        <Text className="text-center text-lg font-semibold text-slate-900">
+          Could not load dashboard
+        </Text>
+        <Text className="mt-2 text-center text-slate-600">{planError}</Text>
+        <Pressable
+          className="mt-6 items-center rounded-lg bg-blue-600 py-3 active:bg-blue-700"
+          onPress={() => void onRefresh()}
+        >
+          <Text className="font-semibold text-white">Try again</Text>
+        </Pressable>
+        <Pressable
+          className="mt-4 items-center py-2"
+          onPress={() => void logout()}
+        >
+          <Text className="font-medium text-slate-600">Sign out</Text>
+        </Pressable>
+        </View>
+      </View>
+    );
+  }
+
+  if (dashboardError && commerceHome) {
     return (
       <View className="flex-1 bg-slate-50">
         <View className="flex-row items-center border-b border-slate-200 bg-white px-3 py-2">
@@ -111,7 +156,7 @@ export function CommerceDashboardScreen() {
           Could not load dashboard
         </Text>
         <Text className="mt-2 text-center text-slate-600">
-          {planError || dashboardError}
+          {dashboardError}
         </Text>
         <Pressable
           className="mt-6 items-center rounded-lg bg-blue-600 py-3 active:bg-blue-700"
@@ -154,8 +199,80 @@ export function CommerceDashboardScreen() {
     );
   }
 
+  if (planInfo.planType === 'healthcare') {
+    if (workspacePath === '/crm' && canViewCRM()) {
+      return <MobileCrmDashboardScreen />;
+    }
+    if (workspacePath === '/crm/customers' && canViewCRM()) {
+      return <MobileCustomersScreen />;
+    }
+    if (workspacePath === '/crm' || workspacePath === '/crm/customers') {
+      return (
+        <View className="flex-1 bg-slate-50">
+          <View className="flex-row border-b border-slate-200 bg-white px-3 py-2">
+            <MenuHeaderButton />
+          </View>
+          <View className="flex-1 justify-center px-6">
+            <Text className="text-center text-lg font-semibold text-slate-900">
+              CRM access
+            </Text>
+            <Text className="mt-2 text-center text-slate-600">
+              You do not have permission to open this module.
+            </Text>
+            <Pressable
+              className="mt-6 items-center rounded-lg bg-blue-600 py-3"
+              onPress={() => setWorkspacePath('/dashboard')}
+            >
+              <Text className="font-semibold text-white">Back</Text>
+            </Pressable>
+          </View>
+        </View>
+      );
+    }
+    return <NonCommerceScreen planType={planInfo.planType} />;
+  }
+
+  if (planInfo.planType === 'workshop') {
+    if (workspacePath === '/crm/customers' || workspacePath === '/dashboard') {
+      return <MobileCustomersScreen />;
+    }
+    return <NonCommerceScreen planType={planInfo.planType} />;
+  }
+
   if (planInfo.planType !== 'commerce') {
     return <NonCommerceScreen planType={planInfo.planType} />;
+  }
+
+  if (workspacePath === '/crm' && canViewCRM()) {
+    return <MobileCrmDashboardScreen />;
+  }
+
+  if (workspacePath === '/crm/customers' && canViewCRM()) {
+    return <MobileCustomersScreen />;
+  }
+
+  if (workspacePath === '/crm' || workspacePath === '/crm/customers') {
+    return (
+      <View className="flex-1 bg-slate-50">
+        <View className="flex-row border-b border-slate-200 bg-white px-3 py-2">
+          <MenuHeaderButton />
+        </View>
+        <View className="flex-1 justify-center px-6">
+          <Text className="text-center text-lg font-semibold text-slate-900">
+            CRM access
+          </Text>
+          <Text className="mt-2 text-center text-slate-600">
+            You do not have permission to open this module.
+          </Text>
+          <Pressable
+            className="mt-6 items-center rounded-lg bg-blue-600 py-3"
+            onPress={() => setWorkspacePath('/dashboard')}
+          >
+            <Text className="font-semibold text-white">Back</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
   }
 
   const userLabel = [user?.firstName, user?.lastName].filter(Boolean).join(' ')

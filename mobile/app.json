@@ -25,6 +25,14 @@
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
-    }
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow BizTrack to choose photos for customer profiles."
+        }
+      ]
+    ]
   }
 }

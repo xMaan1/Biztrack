@@ -7,11 +7,16 @@ import React, {
 } from 'react';
 import { useAuth } from './AuthContext';
 import { MobileSidebarModal } from '../components/layout/MobileSidebarModal';
+import { openWebPath } from '../utils/openWebPath';
+import { isNativeWorkspacePath } from '../navigation/nativeWorkspacePaths';
 
 type SidebarDrawerContextValue = {
   openSidebar: () => void;
   closeSidebar: () => void;
   setSidebarActivePath: (path: string) => void;
+  workspacePath: string;
+  setWorkspacePath: (path: string) => void;
+  navigateMenuPath: (path: string) => Promise<void>;
 };
 
 const SidebarDrawerContext = createContext<
@@ -26,12 +31,36 @@ export function SidebarDrawerProvider({
   const { isAuthenticated } = useAuth();
   const [visible, setVisible] = useState(false);
   const [activePath, setActivePath] = useState('/dashboard');
+  const [workspacePath, setWorkspacePath] = useState('/dashboard');
 
   const openSidebar = useCallback(() => setVisible(true), []);
   const closeSidebar = useCallback(() => setVisible(false), []);
 
+  const setSidebarActivePath = useCallback((path: string) => {
+    setActivePath(path);
+    if (isNativeWorkspacePath(path)) {
+      setWorkspacePath(path);
+    }
+  }, []);
+
+  const navigateMenuPath = useCallback(async (path: string) => {
+    const normalized = path.startsWith('/') ? path : `/${path}`;
+    if (isNativeWorkspacePath(normalized)) {
+      setActivePath(normalized);
+      setWorkspacePath(normalized);
+      setVisible(false);
+      return;
+    }
+    setVisible(false);
+    await openWebPath(normalized);
+  }, []);
+
   useEffect(() => {
-    if (!isAuthenticated) setVisible(false);
+    if (!isAuthenticated) {
+      setVisible(false);
+      setActivePath('/dashboard');
+      setWorkspacePath('/dashboard');
+    }
   }, [isAuthenticated]);
 
   return (
@@ -39,7 +68,10 @@ export function SidebarDrawerProvider({
       value={{
         openSidebar,
         closeSidebar,
-        setSidebarActivePath: setActivePath,
+        setSidebarActivePath,
+        workspacePath,
+        setWorkspacePath,
+        navigateMenuPath,
       }}
     >
       {children}
@@ -48,6 +80,7 @@ export function SidebarDrawerProvider({
           visible={visible}
           onClose={closeSidebar}
           activePath={activePath}
+          onNavigatePath={navigateMenuPath}
         />
       ) : null}
     </SidebarDrawerContext.Provider>

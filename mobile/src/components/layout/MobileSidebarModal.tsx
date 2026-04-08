@@ -15,7 +15,6 @@ import {
   evalSidebarPathPermission,
 } from '../../hooks/useSidebarFilteredMenu';
 import { usePermissions } from '../../hooks/usePermissions';
-import { openWebPath } from '../../utils/openWebPath';
 import type { SubMenuItemDef } from '../../navigation/sidebarMenuData';
 
 function subRolesAllowed(
@@ -51,9 +50,15 @@ type Props = {
   visible: boolean;
   onClose: () => void;
   activePath: string;
+  onNavigatePath: (path: string) => void | Promise<void>;
 };
 
-export function MobileSidebarModal({ visible, onClose, activePath }: Props) {
+export function MobileSidebarModal({
+  visible,
+  onClose,
+  activePath,
+  onNavigatePath,
+}: Props) {
   const { user, logout } = useAuth();
   const { hasPermission, isOwner } = usePermissions();
   const [searchQuery, setSearchQuery] = useState('');
@@ -80,11 +85,10 @@ export function MobileSidebarModal({ visible, onClose, activePath }: Props) {
   );
 
   const onNavigate = useCallback(
-    async (path: string) => {
-      await openWebPath(path);
-      onClose();
+    (path: string) => {
+      void onNavigatePath(path);
     },
-    [onClose],
+    [onNavigatePath],
   );
 
   useEffect(() => {
