@@ -23,7 +23,8 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.RECORD_AUDIO"
-      ]
+      ],
+      "package": "com.xmaan1.mobile"
     },
     "web": {
       "favicon": "./assets/favicon.png",

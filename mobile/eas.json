@@ -17,6 +17,7 @@
         "buildType": "apk"
       },
       "env": {
+        "NODE_ENV": "production",
         "EXPO_PUBLIC_API_URL": "https://www.biztrack.uk/api"
       }
     }
