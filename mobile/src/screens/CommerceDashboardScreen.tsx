@@ -6,6 +6,8 @@ import { MenuHeaderButton } from '../components/layout/MenuHeaderButton';
 import { usePlanInfo } from '../hooks/usePlanInfo';
 import { useDashboard, type DashboardData } from '../hooks/useDashboard';
 import { usePermissions } from '../hooks/usePermissions';
+import { useRBAC } from '../contexts/RBACContext';
+import { evalSidebarPathPermission } from '../hooks/useSidebarFilteredMenu';
 import {
   MobileCommerceDashboard,
   type CommerceStats,
@@ -19,6 +21,14 @@ import {
   MobileLeadsScreen,
   MobileOpportunitiesScreen,
 } from '../features/crm';
+import {
+  MobileQuotesScreen,
+  MobileContractsScreen,
+  MobileSalesAnalyticsScreen,
+  MobileInvoicesScreen,
+  MobileInstallmentsScreen,
+  MobileDeliveryNotesScreen,
+} from '../features/sales';
 
 function buildCommerceStats(data: DashboardData | null): CommerceStats {
   if (!data) {
@@ -67,11 +77,36 @@ function buildCommerceStats(data: DashboardData | null): CommerceStats {
   };
 }
 
+function SalesAccessDenied(props: { onBack: () => void }) {
+  return (
+    <View className="flex-1 bg-slate-50">
+      <View className="flex-row border-b border-slate-200 bg-white px-3 py-2">
+        <MenuHeaderButton />
+      </View>
+      <View className="flex-1 justify-center px-6">
+        <Text className="text-center text-lg font-semibold text-slate-900">
+          Sales access
+        </Text>
+        <Text className="mt-2 text-center text-slate-600">
+          You do not have permission to open this module.
+        </Text>
+        <Pressable
+          className="mt-6 items-center rounded-lg bg-blue-600 py-3"
+          onPress={props.onBack}
+        >
+          <Text className="font-semibold text-white">Back</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
 export function CommerceDashboardScreen() {
   const { logout, user, currentTenant } = useAuth();
   const { setSidebarActivePath, workspacePath, setWorkspacePath } =
     useSidebarDrawer();
   const { canViewCRM } = usePermissions();
+  const { hasPermission, isOwner, hasModuleAccess } = useRBAC();
   const { planInfo, loading: planLoading, error: planError, refreshPlanInfo } =
     usePlanInfo();
   const {
@@ -224,6 +259,17 @@ export function CommerceDashboardScreen() {
     if (workspacePath === '/crm/opportunities' && canViewCRM()) {
       return <MobileOpportunitiesScreen />;
     }
+    if (workspacePath === '/sales/invoices') {
+      if (
+        hasModuleAccess('sales') &&
+        evalSidebarPathPermission('/sales/invoices', isOwner, hasPermission)
+      ) {
+        return <MobileInvoicesScreen />;
+      }
+      return (
+        <SalesAccessDenied onBack={() => setWorkspacePath('/dashboard')} />
+      );
+    }
     if (
       workspacePath === '/crm' ||
       workspacePath === '/crm/customers' ||
@@ -258,6 +304,17 @@ export function CommerceDashboardScreen() {
   }
 
   if (planInfo.planType === 'workshop') {
+    if (workspacePath === '/sales/invoices') {
+      if (
+        hasModuleAccess('sales') &&
+        evalSidebarPathPermission('/sales/invoices', isOwner, hasPermission)
+      ) {
+        return <MobileInvoicesScreen />;
+      }
+      return (
+        <SalesAccessDenied onBack={() => setWorkspacePath('/dashboard')} />
+      );
+    }
     if (workspacePath === '/crm/customers' || workspacePath === '/dashboard') {
       return <MobileCustomersScreen />;
     }
@@ -290,6 +347,42 @@ export function CommerceDashboardScreen() {
 
   if (workspacePath === '/crm/opportunities' && canViewCRM()) {
     return <MobileOpportunitiesScreen />;
+  }
+
+  if (
+    workspacePath === '/sales/quotes' ||
+    workspacePath === '/sales/contracts' ||
+    workspacePath === '/sales/analytics' ||
+    workspacePath === '/sales/invoices' ||
+    workspacePath === '/sales/installments' ||
+    workspacePath === '/sales/delivery-notes'
+  ) {
+    const salesOk =
+      hasModuleAccess('sales') &&
+      evalSidebarPathPermission(workspacePath, isOwner, hasPermission);
+    if (!salesOk) {
+      return (
+        <SalesAccessDenied onBack={() => setWorkspacePath('/dashboard')} />
+      );
+    }
+    switch (workspacePath) {
+      case '/sales/quotes':
+        return <MobileQuotesScreen />;
+      case '/sales/contracts':
+        return <MobileContractsScreen />;
+      case '/sales/analytics':
+        return <MobileSalesAnalyticsScreen />;
+      case '/sales/invoices':
+        return <MobileInvoicesScreen />;
+      case '/sales/installments':
+        return <MobileInstallmentsScreen />;
+      case '/sales/delivery-notes':
+        return <MobileDeliveryNotesScreen />;
+      default:
+        return (
+          <SalesAccessDenied onBack={() => setWorkspacePath('/dashboard')} />
+        );
+    }
   }
 
   if (

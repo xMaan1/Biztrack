@@ -1,35 +1,3 @@
-// Sales Module Types and Interfaces
-
-export enum LeadStatus {
-  NEW = 'new',
-  CONTACTED = 'contacted',
-  QUALIFIED = 'qualified',
-  PROPOSAL = 'proposal',
-  NEGOTIATION = 'negotiation',
-  WON = 'won',
-  LOST = 'lost',
-}
-
-export enum LeadSource {
-  WEBSITE = 'website',
-  REFERRAL = 'referral',
-  SOCIAL_MEDIA = 'social_media',
-  EMAIL_CAMPAIGN = 'email_campaign',
-  COLD_OUTREACH = 'cold_outreach',
-  TRADE_SHOW = 'trade_show',
-  OTHER = 'other',
-}
-
-export enum OpportunityStage {
-  PROSPECTING = 'prospecting',
-  QUALIFICATION = 'qualification',
-  QUALIFIED = 'qualified',
-  PROPOSAL = 'proposal',
-  NEGOTIATION = 'negotiation',
-  CLOSED_WON = 'closed_won',
-  CLOSED_LOST = 'closed_lost',
-}
-
 export enum QuoteStatus {
   DRAFT = 'draft',
   SENT = 'sent',
@@ -47,263 +15,6 @@ export enum ContractStatus {
   TERMINATED = 'terminated',
 }
 
-export enum ContactType {
-  LEAD = 'lead',
-  CUSTOMER = 'customer',
-  PARTNER = 'partner',
-  VENDOR = 'vendor',
-}
-
-export enum ContactStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  LEAD = 'lead',
-  PROSPECT = 'prospect',
-  CUSTOMER = 'customer',
-}
-
-export enum ContactSource {
-  WEBSITE = 'website',
-  REFERRAL = 'referral',
-  SOCIAL_MEDIA = 'social_media',
-  EMAIL_CAMPAIGN = 'email_campaign',
-  COLD_OUTREACH = 'cold_outreach',
-  TRADE_SHOW = 'trade_show',
-  EVENT = 'event',
-  OTHER = 'other',
-}
-
-export enum CompanyType {
-  CUSTOMER = 'customer',
-  PROSPECT = 'prospect',
-  PARTNER = 'partner',
-  VENDOR = 'vendor',
-  COMPETITOR = 'competitor',
-}
-
-export enum CompanyIndustry {
-  TECHNOLOGY = 'technology',
-  HEALTHCARE = 'healthcare',
-  FINANCE = 'finance',
-  RETAIL = 'retail',
-  MANUFACTURING = 'manufacturing',
-  EDUCATION = 'education',
-  REAL_ESTATE = 'real_estate',
-  CONSULTING = 'consulting',
-  OTHER = 'other',
-}
-
-export enum OpportunityPriority {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high',
-  CRITICAL = 'critical',
-}
-
-export enum ActivityType {
-  CALL = 'call',
-  EMAIL = 'email',
-  MEETING = 'meeting',
-  NOTE = 'note',
-  TASK = 'task',
-  PROPOSAL_SENT = 'proposal_sent',
-  QUOTE_SENT = 'quote_sent',
-  CONTRACT_SIGNED = 'contract_signed',
-}
-
-// Lead Types
-export interface Lead {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  company?: string;
-  jobTitle?: string;
-  leadSource: LeadSource;
-  status: LeadStatus;
-  assignedTo?: string;
-  notes?: string;
-  tags: string[];
-  estimatedValue?: number;
-  expectedCloseDate?: string;
-  tenantId: string;
-  createdBy: string;
-  assignedToUser?: {
-    id: string;
-    name: string;
-  };
-  activities: any[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface LeadCreate {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  company?: string;
-  jobTitle?: string;
-  leadSource: LeadSource;
-  status: LeadStatus;
-  assignedTo?: string;
-  notes?: string;
-  tags: string[];
-  estimatedValue?: number;
-  expectedCloseDate?: string;
-}
-
-export interface LeadUpdate {
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  phone?: string;
-  company?: string;
-  jobTitle?: string;
-  leadSource?: LeadSource;
-  status?: LeadStatus;
-  assignedTo?: string;
-  notes?: string;
-  tags?: string[];
-  estimatedValue?: number;
-  expectedCloseDate?: string;
-}
-
-// Contact Types
-export interface Contact {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email?: string | null;
-  phone?: string;
-  jobTitle?: string;
-  title?: string;
-  department?: string;
-  contactType: ContactType;
-  status: ContactStatus;
-  source: ContactSource;
-  isPrimary: boolean;
-  notes?: string;
-  tags: string[];
-  address?: string;
-  city?: string;
-  state?: string;
-  zipCode?: string;
-  country?: string;
-  companyId: string;
-  tenantId: string;
-  createdBy: string;
-  activities: any[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ContactCreate {
-  firstName: string;
-  lastName: string;
-  email?: string | null;
-  phone?: string;
-  jobTitle?: string;
-  department?: string;
-  contactType: ContactType;
-  isPrimary: boolean;
-  notes?: string;
-  tags: string[];
-  companyId: string;
-}
-
-// Company Types
-export interface Company {
-  id: string;
-  name: string;
-  type: CompanyType;
-  industry?: CompanyIndustry;
-  website?: string;
-  phone?: string;
-  email?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  zipCode?: string;
-  country?: string;
-  postalCode?: string;
-  annualRevenue?: number;
-  employeeCount?: number;
-  description?: string;
-  notes?: string;
-  tags: string[];
-  tenantId: string;
-  createdBy: string;
-  contacts: Contact[];
-  opportunities: any[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CompanyCreate {
-  name: string;
-  industry?: string;
-  website?: string;
-  phone?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  country?: string;
-  postalCode?: string;
-  annualRevenue?: number;
-  employeeCount?: number;
-  description?: string;
-  tags: string[];
-}
-
-// Opportunity Types
-export interface Opportunity {
-  id: string;
-  name: string;
-  title: string;
-  description?: string;
-  stage: OpportunityStage;
-  priority: OpportunityPriority;
-  amount: number;
-  probability: number;
-  expectedCloseDate: string;
-  closeDate?: string;
-  leadSource: LeadSource;
-  assignedTo?: string;
-  notes?: string;
-  tags: string[];
-  leadId?: string;
-  companyId?: string;
-  contactId?: string;
-  tenantId: string;
-  createdBy: string;
-  assignedToUser?: {
-    id: string;
-    name: string;
-  };
-  activities: any[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface OpportunityCreate {
-  name: string;
-  description?: string;
-  stage: OpportunityStage;
-  amount: number;
-  probability: number;
-  expectedCloseDate: string;
-  leadSource: LeadSource;
-  assignedTo?: string;
-  notes?: string;
-  tags: string[];
-  leadId?: string;
-  companyId?: string;
-  contactId?: string;
-}
-
-// Quote Types
 export interface QuoteItem {
   description: string;
   quantity: number;
@@ -316,10 +27,10 @@ export interface Quote {
   id: string;
   title: string;
   description?: string;
-  opportunityId: string;
+  opportunityId?: string;
   contactId?: string;
   validUntil: string;
-  amount?: number; // Add amount for compatibility
+  amount?: number;
   terms?: string;
   notes?: string;
   items: QuoteItem[];
@@ -328,9 +39,9 @@ export interface Quote {
   taxAmount: number;
   total: number;
   quoteNumber: string;
-  status: QuoteStatus;
-  tenantId: string;
-  createdBy: string;
+  status: QuoteStatus | string;
+  tenantId?: string;
+  createdBy?: string;
   sentAt?: string;
   viewedAt?: string;
   acceptedAt?: string;
@@ -338,7 +49,7 @@ export interface Quote {
   updatedAt: string;
 }
 
-export interface QuoteCreate {
+export interface QuoteCreatePayload {
   title: string;
   description?: string;
   opportunityId: string;
@@ -352,12 +63,11 @@ export interface QuoteCreate {
   total: number;
 }
 
-// Contract Types
 export interface Contract {
   id: string;
   title: string;
   description?: string;
-  opportunityId: string;
+  opportunityId?: string;
   contactId?: string;
   companyId?: string;
   startDate: string;
@@ -368,21 +78,19 @@ export interface Contract {
   autoRenew: boolean;
   renewalTerms?: string;
   contractNumber: string;
-  status: ContractStatus;
-  tenantId: string;
-  createdBy: string;
+  status: ContractStatus | string;
+  tenantId?: string;
+  createdBy?: string;
   signedAt?: string;
   activatedAt?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface ContractCreate {
+export interface ContractCreatePayload {
   title: string;
   description?: string;
   opportunityId: string;
-  contactId?: string;
-  companyId?: string;
   startDate: string;
   endDate: string;
   value: number;
@@ -392,139 +100,271 @@ export interface ContractCreate {
   renewalTerms?: string;
 }
 
-// Sales Activity Types
-export interface SalesActivity {
-  id: string;
-  type: ActivityType;
-  subject: string;
-  description?: string;
-  dueDate?: string;
-  completed: boolean;
-  notes?: string;
-  leadId?: string;
-  opportunityId?: string;
-  contactId?: string;
-  companyId?: string;
-  tenantId: string;
-  createdBy: string;
-  assignedTo?: string;
-  completedAt?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface SalesActivityCreate {
-  type: ActivityType;
-  subject: string;
-  description?: string;
-  dueDate?: string;
-  completed: boolean;
-  notes?: string;
-  leadId?: string;
-  opportunityId?: string;
-  contactId?: string;
-  companyId?: string;
-}
-
-// Sales Dashboard Types
-export interface SalesMetrics {
-  totalLeads: number;
-  activeLeads: number;
-  totalOpportunities: number;
-  openOpportunities: number;
-  totalRevenue: number;
-  projectedRevenue: number;
-  conversionRate: number;
-  averageDealSize: number;
-}
-
-export interface SalesPipeline {
-  stage: string;
-  count: number;
-  value: number;
-  probability: number;
-}
-
-export interface SalesDashboard {
-  metrics: SalesMetrics;
-  pipeline: SalesPipeline[];
-  recentActivities: SalesActivity[];
-  topOpportunities: Opportunity[];
-}
-
-// Response Types
-export interface LeadsResponse {
-  leads: Lead[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    pages: number;
-  };
-}
-
-export interface ContactsResponse {
-  contacts: Contact[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    pages: number;
-  };
-}
-
-export interface CompaniesResponse {
-  companies: Company[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    pages: number;
-  };
-}
-
-export interface OpportunitiesResponse {
-  opportunities: Opportunity[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    pages: number;
-  };
-}
-
 export interface QuotesResponse {
   quotes: Quote[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    pages: number;
-  };
+  pagination: { page: number; limit: number; total: number; pages: number };
 }
 
 export interface ContractsResponse {
   contracts: Contract[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    pages: number;
-  };
+  pagination: { page: number; limit: number; total: number; pages: number };
 }
 
-export interface SalesActivitiesResponse {
-  activities: SalesActivity[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    pages: number;
-  };
+export enum InvoiceStatus {
+  DRAFT = 'draft',
+  SENT = 'sent',
+  VIEWED = 'viewed',
+  PAID = 'paid',
+  PARTIALLY_PAID = 'partially_paid',
+  OVERDUE = 'overdue',
+  CANCELLED = 'cancelled',
+  VOID = 'void',
 }
 
-export * from './Invoice';
-export * from './Payment';
-export * from './InvoiceDashboard';
-export * from './Installment';
-export * from './DeliveryNote';
+export enum PaymentMethod {
+  CREDIT_CARD = 'credit_card',
+  BANK_TRANSFER = 'bank_transfer',
+  CASH = 'cash',
+  CHECK = 'check',
+  PAYPAL = 'paypal',
+  STRIPE = 'stripe',
+  CREDIT = 'credit',
+  OTHER = 'other',
+}
+
+export interface InvoiceItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  discount: number;
+  taxRate: number;
+  taxAmount: number;
+  total: number;
+  productId?: string;
+  projectId?: string;
+  taskId?: string;
+}
+
+export interface InvoiceItemCreate {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  discount: number;
+  taxRate: number;
+  productId?: string;
+  projectId?: string;
+  taskId?: string;
+}
+
+export interface Invoice {
+  id: string;
+  invoiceNumber: string;
+  customerId: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  billingAddress?: string;
+  shippingAddress?: string;
+  issueDate: string;
+  dueDate: string;
+  orderNumber?: string;
+  orderTime?: string;
+  paymentTerms: string;
+  currency: string;
+  subtotal: number;
+  taxRate: number;
+  taxAmount: number;
+  discount: number;
+  total: number;
+  notes?: string;
+  terms?: string;
+  status: InvoiceStatus | string;
+  items: InvoiceItem[];
+  opportunityId?: string;
+  quoteId?: string;
+  projectId?: string;
+  sentAt?: string;
+  viewedAt?: string;
+  paidAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  payments: unknown[];
+  totalPaid: number;
+  balance: number;
+  daysOverdue: number;
+}
+
+export interface InvoiceCreate {
+  customerId: string;
+  customerName: string;
+  customerEmail: string;
+  billingAddress?: string;
+  shippingAddress?: string;
+  issueDate: string;
+  dueDate: string;
+  orderNumber?: string;
+  orderTime?: string;
+  paymentTerms: string;
+  currency: string;
+  taxRate: number;
+  discount: number;
+  notes?: string;
+  terms?: string;
+  items: InvoiceItemCreate[];
+  opportunityId?: string;
+  quoteId?: string;
+  projectId?: string;
+}
+
+export interface InvoiceUpdate {
+  customerName?: string;
+  customerEmail?: string;
+  shippingAddress?: string;
+  issueDate?: string;
+  dueDate?: string;
+  orderNumber?: string;
+  orderTime?: string;
+  paymentTerms?: string;
+  currency?: string;
+  taxRate?: number;
+  discount?: number;
+  notes?: string;
+  terms?: string;
+  status?: InvoiceStatus;
+  items?: InvoiceItemCreate[];
+}
+
+export interface InvoiceFilters {
+  status?: string;
+  customerId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  amountFrom?: number;
+  amountTo?: number;
+  search?: string;
+}
+
+export interface InvoiceMetrics {
+  totalInvoices: number;
+  paidInvoices: number;
+  overdueInvoices: number;
+  draftInvoices: number;
+  totalRevenue: number;
+  outstandingAmount: number;
+  overdueAmount: number;
+  averagePaymentTime: number;
+}
+
+export interface InvoiceDashboard {
+  metrics: InvoiceMetrics;
+  recentInvoices: Invoice[];
+  overdueInvoices: Invoice[];
+  topCustomers: Array<{ name: string; amount: number; count: number }>;
+  monthlyRevenue: Array<{ month: string; revenue: number }>;
+}
+
+export enum PaymentStatus {
+  PENDING = 'pending',
+  PROCESSING = 'processing',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+  REFUNDED = 'refunded',
+  CANCELLED = 'cancelled',
+}
+
+export interface Payment {
+  id: string;
+  invoiceId: string;
+  amount: number;
+  paymentMethod: PaymentMethod | string;
+  paymentDate: string;
+  reference?: string;
+  notes?: string;
+  status: PaymentStatus | string;
+  tenantId?: string;
+  createdBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PaymentCreate {
+  invoiceId: string;
+  amount: number;
+  paymentMethod: PaymentMethod;
+  paymentDate: string;
+  reference?: string;
+  notes?: string;
+}
+
+export interface Installment {
+  id: string;
+  tenant_id: string;
+  installment_plan_id: string;
+  sequence_number: number;
+  due_date: string;
+  amount: number;
+  status: string;
+  paid_amount: number;
+  payment_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InstallmentPlan {
+  id: string;
+  tenant_id: string;
+  invoice_id: string;
+  total_amount: number;
+  currency: string;
+  number_of_installments: number;
+  frequency: string;
+  first_due_date: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  installments: Installment[];
+}
+
+export interface InstallmentPlanCreate {
+  invoice_id: string;
+  total_amount: number;
+  number_of_installments: number;
+  frequency: string;
+  first_due_date: string;
+  currency?: string;
+}
+
+export interface InstallmentPlanUpdate {
+  status?: string;
+}
+
+export interface ApplyPaymentToInstallmentRequest {
+  amount: number;
+  payment_id?: string;
+}
+
+export interface DeliveryNote {
+  id: string;
+  tenant_id: string;
+  invoice_id: string;
+  note: string | null;
+  created_by: string;
+  created_at: string;
+  invoice_number?: string | null;
+  customer_name?: string | null;
+}
+
+export interface DeliveryNoteCreate {
+  invoice_id: string;
+  note?: string | null;
+}
+
+export interface InvoiceCustomerOption {
+  id: string;
+  customerId?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string | null;
+  phone?: string | null;
+}

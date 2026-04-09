@@ -639,9 +639,11 @@ async def create_quote(
 ):
     """Create a new quote"""
     try:
+        qd = quote_data.dict()
+        qd.pop("items", None)
         quote = Quote(
             id=uuid.uuid4(),
-            **quote_data.dict(),
+            **qd,
             quoteNumber=generate_quote_number(),
             tenant_id=uuid.UUID(tenant_context["tenant_id"]) if tenant_context else uuid.uuid4(),
             createdBy=uuid.UUID(str(current_user.id)),
@@ -677,6 +679,8 @@ async def update_quote(
             raise HTTPException(status_code=404, detail="Quote not found")
         
         for field, value in quote_data.dict(exclude_unset=True).items():
+            if field == "items":
+                continue
             setattr(quote, field, value)
         
         quote.updatedAt = datetime.now()

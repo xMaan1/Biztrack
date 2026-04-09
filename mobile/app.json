@@ -33,7 +33,8 @@
           "photosPermission": "Allow BizTrack to choose photos for customer profiles."
         }
       ],
-      "expo-notifications"
+      "expo-notifications",
+      "expo-sharing"
     ]
   }
 }

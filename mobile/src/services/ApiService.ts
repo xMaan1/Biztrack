@@ -250,6 +250,13 @@ export class ApiService {
     return response.data;
   }
 
+  async getArrayBuffer(url: string): Promise<ArrayBuffer> {
+    const response = await this.client.get<ArrayBuffer>(url, {
+      responseType: 'arraybuffer',
+    });
+    return response.data;
+  }
+
   async post<T = any>(
     url: string,
     data?: any,
