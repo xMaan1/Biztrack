@@ -32,7 +32,8 @@
         {
           "photosPermission": "Allow BizTrack to choose photos for customer profiles."
         }
-      ]
+      ],
+      "expo-notifications"
     ]
   }
 }

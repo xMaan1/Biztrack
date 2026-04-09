@@ -28,25 +28,44 @@ class NotificationService:
     ) -> bool:
         """Create a new notification for a user"""
         try:
-            # Check if user has notifications enabled for this category
-            if not is_notification_enabled(self.db, tenant_id, user_id, category, 'in_app'):
+            in_app_ok = is_notification_enabled(
+                self.db, tenant_id, user_id, category, 'in_app'
+            )
+            push_ok = is_notification_enabled(
+                self.db, tenant_id, user_id, category, 'push'
+            )
+            if not in_app_ok and not push_ok:
                 return False
-            
-            notification_data = {
-                "id": str(uuid.uuid4()),
-                "tenant_id": tenant_id,
-                "user_id": user_id,
-                "title": title,
-                "message": message,
-                "type": type,
-                "category": category,
-                "action_url": action_url,
-                "notification_data": notification_data or {},
-                "created_at": datetime.utcnow(),
-                "updated_at": datetime.utcnow()
-            }
-            
-            create_notification(notification_data, self.db)
+
+            extra = notification_data or {}
+
+            if in_app_ok:
+                row_payload = {
+                    "id": str(uuid.uuid4()),
+                    "tenant_id": tenant_id,
+                    "user_id": user_id,
+                    "title": title,
+                    "message": message,
+                    "type": type,
+                    "category": category,
+                    "action_url": action_url,
+                    "notification_data": extra,
+                    "created_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                }
+                create_notification(row_payload, self.db)
+
+            if push_ok:
+                try:
+                    from .expo_push_service import send_expo_push_to_user
+                    push_data = dict(extra) if extra else {}
+                    if action_url:
+                        push_data["action_url"] = action_url
+                    send_expo_push_to_user(
+                        self.db, user_id, title, message, data=push_data
+                    )
+                except Exception:
+                    pass
             return True
         except Exception as e:
             print(f"Error creating notification: {str(e)}")
@@ -349,7 +368,7 @@ def send_assignment_notification(
     category: NotificationCategory = NotificationCategory.PROJECTS,
     extra_details: Optional[dict] = None
 ) -> None:
-    if not assignee_user or not getattr(assignee_user, 'email', None):
+    if not assignee_user:
         return
     assignee_id = str(assignee_user.id)
     assignee_name = (
@@ -358,7 +377,7 @@ def send_assignment_notification(
     )
     title = f"Assigned: {entity_type} - {entity_name[:60]}{'...' if len(entity_name) > 60 else ''}"
     message = f"{assigner_name} assigned you to {entity_type}: {entity_name}"
-    if is_notification_enabled(db, tenant_id, assignee_id, category, 'email'):
+    if getattr(assignee_user, 'email', None) and is_notification_enabled(db, tenant_id, assignee_id, category, 'email'):
         try:
             from .email_service import EmailService
             email_service = EmailService()
@@ -385,3 +404,19 @@ def send_assignment_notification(
             action_url=action_url,
             notification_data={"entity_type": entity_type, "entity_name": entity_name}
         )
+    elif is_notification_enabled(db, tenant_id, assignee_id, category, 'push'):
+        try:
+            from .expo_push_service import send_expo_push_to_user
+            send_expo_push_to_user(
+                db,
+                assignee_id,
+                title,
+                message,
+                data={
+                    "action_url": action_url or "",
+                    "entity_type": entity_type,
+                    "entity_name": entity_name,
+                },
+            )
+        except Exception:
+            pass

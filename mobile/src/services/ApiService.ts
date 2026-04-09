@@ -1,6 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { SessionManager } from './SessionManager';
+import {
+  enqueueOfflineMutation,
+  type OfflineMutation,
+} from './offline/outboxStore';
 
 export interface ApiResponse<T = any> {
   data: T;
@@ -176,6 +180,60 @@ export class ApiService {
           await this.sessionManager.clearSession();
           this.resetTenantMemory();
           this.onUnauthorized?.();
+        }
+
+        if (
+          !error.response &&
+          error.config &&
+          error.code !== 'ECONNABORTED' &&
+          !String(error.message || '').includes('Not authenticated') &&
+          !String(error.message || '').includes('Authentication token missing')
+        ) {
+          const cfg = error.config;
+          const hdrs = cfg.headers as Record<string, unknown> | undefined;
+          const replay =
+            hdrs &&
+            (hdrs['X-Biztrack-Offline-Replay'] === '1' ||
+              hdrs['x-biztrack-offline-replay'] === '1');
+          if (!replay) {
+            const method = (cfg.method || 'get').toLowerCase();
+            let url = String(cfg.url || '');
+            if (url.includes('://')) {
+              try {
+                url = new URL(url).pathname;
+              } catch {
+                // keep url
+              }
+            }
+            const ct = hdrs
+              ? String(hdrs['Content-Type'] ?? hdrs['content-type'] ?? '')
+              : '';
+            if (
+              ['post', 'put', 'patch', 'delete'].includes(method) &&
+              !url.includes('/auth/login') &&
+              !url.includes('/auth/register') &&
+              !url.includes('/notifications/push/register') &&
+              !ct.toLowerCase().includes('multipart')
+            ) {
+              try {
+                let body: unknown = cfg.data;
+                if (typeof body === 'string' && body) {
+                  try {
+                    body = JSON.parse(body);
+                  } catch {
+                    // keep string
+                  }
+                }
+                await enqueueOfflineMutation({
+                  method: method.toUpperCase() as OfflineMutation['method'],
+                  url,
+                  body,
+                });
+              } catch {
+                // ignore
+              }
+            }
+          }
         }
         return Promise.reject(error);
       },

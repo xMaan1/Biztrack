@@ -29,7 +29,7 @@ from .hrm_models import (
 )
 
 from .notification_models import (
-    Notification, NotificationPreference
+    Notification, NotificationPreference, MobilePushDevice
 )
 
 from .inventory_models import (

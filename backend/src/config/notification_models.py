@@ -41,6 +41,17 @@ class Notification(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     
 
+class MobilePushDevice(Base):
+    __tablename__ = "mobile_push_devices"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
+    expo_push_token = Column(Text, nullable=False)
+    platform = Column(String(32), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+
 class NotificationPreference(Base):
     __tablename__ = "notification_preferences"
     

@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { apiService } from './src/services/ApiService';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
+import { NetworkSyncProvider } from './src/contexts/NetworkSyncContext';
 import { RBACProvider } from './src/contexts/RBACContext';
 import { SidebarDrawerProvider } from './src/contexts/SidebarDrawerContext';
 import { LoginScreen } from './src/screens/LoginScreen';
@@ -58,9 +59,11 @@ export default function App() {
             <Text className="mt-3 text-slate-600">Starting…</Text>
           </View>
         ) : (
-          <AuthProvider>
-            <RootBody />
-          </AuthProvider>
+          <NetworkSyncProvider>
+            <AuthProvider>
+              <RootBody />
+            </AuthProvider>
+          </NetworkSyncProvider>
         )}
       </SafeAreaView>
     </SafeAreaProvider>

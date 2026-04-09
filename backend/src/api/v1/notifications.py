@@ -8,6 +8,7 @@ from ...config.database import get_db
 from ...api.dependencies import get_current_user, get_tenant_context
 from ...services.notification_service import NotificationService
 from ...config.notification_models import NotificationType, NotificationCategory
+from ...config.mobile_push_crud import upsert_push_device, delete_push_device
 
 router = APIRouter()
 
@@ -56,6 +57,46 @@ class NotificationPreferenceUpdate(BaseModel):
     email_enabled: Optional[bool] = None
     push_enabled: Optional[bool] = None
     in_app_enabled: Optional[bool] = None
+
+
+class MobilePushRegisterBody(BaseModel):
+    expo_push_token: str
+    platform: Optional[str] = None
+
+
+class MobilePushUnregisterBody(BaseModel):
+    expo_push_token: str
+
+@router.post("/notifications/push/register")
+async def register_mobile_push_token(
+    body: MobilePushRegisterBody,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        upsert_push_device(
+            db,
+            str(current_user.id),
+            body.expo_push_token,
+            platform=body.platform,
+        )
+        return {"success": True}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.delete("/notifications/push/register")
+async def unregister_mobile_push_token(
+    body: MobilePushUnregisterBody,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        n = delete_push_device(db, str(current_user.id), body.expo_push_token)
+        return {"success": True, "removed": n}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 
 @router.get("/notifications", response_model=NotificationListResponse)
 async def get_notifications(
