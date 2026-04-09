@@ -1,3 +1,7 @@
+import { INVENTORY_NATIVE_PATHS } from '../features/inventory/inventoryPaths';
+import { POS_NATIVE_PATHS } from '../features/pos/posPaths';
+import { HRM_NATIVE_PATHS } from '../features/hrm/hrmPaths';
+
 export const NATIVE_WORKSPACE_PATHS = [
   '/dashboard',
   '/crm',
@@ -12,6 +16,9 @@ export const NATIVE_WORKSPACE_PATHS = [
   '/sales/invoices',
   '/sales/installments',
   '/sales/delivery-notes',
+  ...INVENTORY_NATIVE_PATHS,
+  ...POS_NATIVE_PATHS,
+  ...HRM_NATIVE_PATHS,
 ] as const;
 
 export type NativeWorkspacePath = (typeof NATIVE_WORKSPACE_PATHS)[number];

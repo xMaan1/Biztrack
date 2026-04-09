@@ -29,6 +29,12 @@ import {
   MobileInstallmentsScreen,
   MobileDeliveryNotesScreen,
 } from '../features/sales';
+import { InventoryRouter } from '../features/inventory/InventoryRouter';
+import { isInventoryWorkspacePath } from '../features/inventory/inventoryPaths';
+import { PosRouter } from '../features/pos/PosRouter';
+import { isPosWorkspacePath } from '../features/pos/posPaths';
+import { HrmRouter } from '../features/hrm/HrmRouter';
+import { isHrmWorkspacePath } from '../features/hrm/hrmPaths';
 
 function buildCommerceStats(data: DashboardData | null): CommerceStats {
   if (!data) {
@@ -238,6 +244,18 @@ export function CommerceDashboardScreen() {
         </View>
       </View>
     );
+  }
+
+  if (isInventoryWorkspacePath(workspacePath)) {
+    return <InventoryRouter />;
+  }
+
+  if (isPosWorkspacePath(workspacePath)) {
+    return <PosRouter />;
+  }
+
+  if (isHrmWorkspacePath(workspacePath)) {
+    return <HrmRouter />;
   }
 
   if (planInfo.planType === 'healthcare') {

@@ -121,16 +121,34 @@ export interface POSCategoriesResponse {
   customCategories: { id: string; name: string }[];
 }
 
+export type POSAPIPaymentMethod =
+  | 'cash'
+  | 'card'
+  | 'mobile'
+  | 'bank_transfer';
+
 // POS Transaction Types
 export interface POSTransactionItem {
   id: string;
   productId: string;
   productName: string;
+  sku: string;
   quantity: number;
   unitPrice: number;
   discount: number;
   taxRate: number;
   taxAmount: number;
+  total: number;
+}
+
+export interface POSTransactionLineInput {
+  productId: string;
+  productName: string;
+  sku: string;
+  quantity: number;
+  unitPrice: number;
+  discount: number;
+  taxRate: number;
   total: number;
 }
 
@@ -145,7 +163,7 @@ export interface POSTransaction {
   taxAmount: number;
   discount: number;
   total: number;
-  paymentMethod: POSPaymentMethod;
+  paymentMethod: string;
   status: POSTransactionStatus;
   cashierId: string;
   cashierName: string;
@@ -159,10 +177,10 @@ export interface POSTransaction {
 export interface POSTransactionCreate {
   customerId?: string;
   customerName?: string;
-  items: Omit<POSTransactionItem, 'id' | 'total'>[];
+  items: POSTransactionLineInput[];
   taxRate: number;
   discount: number;
-  paymentMethod: POSPaymentMethod;
+  paymentMethod: POSAPIPaymentMethod;
   notes?: string;
 }
 
@@ -261,6 +279,13 @@ export interface POSDashboard {
   metrics: POSMetrics;
   recentTransactions: POSTransaction[];
   lowStockProducts: Product[];
+}
+
+export interface PosDashboardApi {
+  today: { sales: number; transactions: number };
+  month: { sales: number; transactions: number };
+  open_shifts: number;
+  payment_methods: Record<string, { count: number; total: number }>;
 }
 
 export interface ProductFilters {
