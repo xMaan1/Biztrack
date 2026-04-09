@@ -185,22 +185,54 @@ async def create_project_time_entry(
     tenant_context: dict = Depends(get_tenant_context),
     _: dict = Depends(require_permission(ModulePermission.PROJECTS_CREATE.value))
 ):
-    """Create a new time entry"""
     try:
-        time_entry = TimeEntry(
-            id=str(uuid.uuid4()),
-            **time_entry_data.dict(),
-            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
-            createdBy=str(current_user.id),
-            createdAt=datetime.now(),
-            updatedAt=datetime.now()
-        )
-        
-        db.add(time_entry)
-        db.commit()
-        db.refresh(time_entry)
-        
-        return time_entry
+        if not tenant_context or not tenant_context.get("tenant_id"):
+            raise HTTPException(status_code=400, detail="Tenant context required")
+        from uuid import UUID
+        tid = tenant_context["tenant_id"]
+        data = time_entry_data.model_dump()
+        emp_uuid = UUID(str(data["employeeId"]))
+        tenant_uuid = UUID(str(tid))
+        proj_uuid = UUID(str(data["projectId"])) if data.get("projectId") else None
+        task_uuid = UUID(str(data["taskId"])) if data.get("taskId") else None
+        date_str = str(data["date"])[:10]
+        date_part = datetime.strptime(date_str, "%Y-%m-%d").date()
+        cin = (data.get("clockIn") or "").strip()
+
+        def parse_clock(s: str):
+            if not s:
+                return None
+            if len(s) == 5 and s[2] == ":":
+                return datetime.combine(date_part, datetime.strptime(s, "%H:%M").time())
+            try:
+                return datetime.fromisoformat(s.replace("Z", "+00:00"))
+            except Exception:
+                return None
+
+        st = parse_clock(cin) or datetime.combine(date_part, datetime.min.time())
+        et = parse_clock((data.get("clockOut") or "").strip())
+        hrs = float(data["totalHours"]) if data.get("totalHours") is not None else 0.0
+        if hrs <= 0 and et and st:
+            hrs = max(0.0, (et - st).total_seconds() / 3600)
+        if hrs <= 0:
+            hrs = 1.0
+
+        row_dict = {
+            "id": uuid.uuid4(),
+            "tenant_id": tenant_uuid,
+            "employeeId": emp_uuid,
+            "projectId": proj_uuid,
+            "taskId": task_uuid,
+            "date": date_part,
+            "startTime": st,
+            "endTime": et,
+            "hours": hrs,
+            "description": data.get("notes"),
+        }
+        db_entry = create_time_entry(row_dict, db)
+        return transform_db_time_entry_to_pydantic(db_entry)
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error creating time entry: {str(e)}")
@@ -687,6 +719,31 @@ async def resume_project_time_session(
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error resuming time session: {str(e)}")
 
+@router.get("/team-members")
+async def get_project_team_members(
+    db: Session = Depends(get_db),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PROJECTS_VIEW.value))
+):
+    from ...models.common import UserRole
+    from ...config.database import get_all_users
+
+    tenant_id = tenant_context["tenant_id"] if tenant_context else None
+    users = get_all_users(db, tenant_id=tenant_id)
+    team_members = []
+
+    for user in users:
+        if user.isActive and user.userRole in [UserRole.PROJECT_MANAGER.value, UserRole.TEAM_MEMBER.value]:
+            team_members.append({
+                "id": str(user.id),
+                "name": f"{user.firstName or ''} {user.lastName or ''}".strip() or user.userName,
+                "email": user.email,
+                "role": user.userRole,
+                "avatar": user.avatar
+            })
+
+    return {"teamMembers": team_members}
+
 @router.get("/{project_id}", response_model=Project)
 async def get_project(
     project_id: str,
@@ -981,30 +1038,3 @@ async def get_project_tasks(
             "pages": 1
         }
     )
-
-@router.get("/team-members")
-async def get_project_team_members(
-    db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context),
-    _: dict = Depends(require_permission(ModulePermission.PROJECTS_VIEW.value))
-):
-    """Get all available team members for project assignment"""
-    from ...models.common import UserRole
-    from ...config.database import get_all_users
-    
-    # Get all active users who can be team members
-    tenant_id = tenant_context["tenant_id"] if tenant_context else None
-    users = get_all_users(db, tenant_id=tenant_id)
-    team_members = []
-    
-    for user in users:
-        if user.isActive and user.userRole in [UserRole.PROJECT_MANAGER.value, UserRole.TEAM_MEMBER.value]:
-            team_members.append({
-                "id": str(user.id),
-                "name": f"{user.firstName or ''} {user.lastName or ''}".strip() or user.userName,
-                "email": user.email,
-                "role": user.userRole,
-                "avatar": user.avatar
-            })
-    
-    return {"teamMembers": team_members}
