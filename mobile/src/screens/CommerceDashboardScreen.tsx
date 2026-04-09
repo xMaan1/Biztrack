@@ -37,6 +37,8 @@ import { HrmRouter } from '../features/hrm/HrmRouter';
 import { isHrmWorkspacePath } from '../features/hrm/hrmPaths';
 import { ProjectRouter } from '../features/projects/ProjectRouter';
 import { isProjectWorkspacePath } from '../features/projects/projectPaths';
+import { WorkspaceRouter } from '../features/workspace/WorkspaceRouter';
+import { isWorkspaceHubPath } from '../features/workspace/workspacePaths';
 
 function buildCommerceStats(data: DashboardData | null): CommerceStats {
   if (!data) {
@@ -262,6 +264,10 @@ export function CommerceDashboardScreen() {
 
   if (isProjectWorkspacePath(workspacePath)) {
     return <ProjectRouter />;
+  }
+
+  if (isWorkspaceHubPath(workspacePath)) {
+    return <WorkspaceRouter />;
   }
 
   if (planInfo.planType === 'healthcare') {
