@@ -2,6 +2,7 @@ import { INVENTORY_NATIVE_PATHS } from '../features/inventory/inventoryPaths';
 import { POS_NATIVE_PATHS } from '../features/pos/posPaths';
 import { HRM_NATIVE_PATHS } from '../features/hrm/hrmPaths';
 import { PROJECT_NATIVE_PATHS } from '../features/projects/projectPaths';
+import { BANKING_NATIVE_PATHS } from '../features/banking/bankingPaths';
 import { WORKSPACE_HUB_PATHS } from '../features/workspace/workspacePaths';
 
 export const NATIVE_WORKSPACE_PATHS = [
@@ -22,6 +23,7 @@ export const NATIVE_WORKSPACE_PATHS = [
   ...POS_NATIVE_PATHS,
   ...HRM_NATIVE_PATHS,
   ...PROJECT_NATIVE_PATHS,
+  ...BANKING_NATIVE_PATHS,
   ...WORKSPACE_HUB_PATHS,
 ] as const;
 

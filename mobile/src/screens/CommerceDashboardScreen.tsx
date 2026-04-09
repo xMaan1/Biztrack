@@ -37,6 +37,8 @@ import { HrmRouter } from '../features/hrm/HrmRouter';
 import { isHrmWorkspacePath } from '../features/hrm/hrmPaths';
 import { ProjectRouter } from '../features/projects/ProjectRouter';
 import { isProjectWorkspacePath } from '../features/projects/projectPaths';
+import { BankingRouter } from '../features/banking/BankingRouter';
+import { isBankingWorkspacePath } from '../features/banking/bankingPaths';
 import { WorkspaceRouter } from '../features/workspace/WorkspaceRouter';
 import { isWorkspaceHubPath } from '../features/workspace/workspacePaths';
 
@@ -264,6 +266,10 @@ export function CommerceDashboardScreen() {
 
   if (isProjectWorkspacePath(workspacePath)) {
     return <ProjectRouter />;
+  }
+
+  if (isBankingWorkspacePath(workspacePath)) {
+    return <BankingRouter />;
   }
 
   if (isWorkspaceHubPath(workspacePath)) {
