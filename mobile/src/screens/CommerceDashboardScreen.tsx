@@ -12,7 +12,13 @@ import {
 } from '../components/dashboard/MobileCommerceDashboard';
 import { NonCommerceScreen } from './NonCommerceScreen';
 import { MobileCrmDashboardScreen } from './MobileCrmDashboardScreen';
-import { MobileCustomersScreen } from './MobileCustomersScreen';
+import {
+  MobileCustomersScreen,
+  MobileContactsScreen,
+  MobileCompaniesScreen,
+  MobileLeadsScreen,
+  MobileOpportunitiesScreen,
+} from '../features/crm';
 
 function buildCommerceStats(data: DashboardData | null): CommerceStats {
   if (!data) {
@@ -206,7 +212,26 @@ export function CommerceDashboardScreen() {
     if (workspacePath === '/crm/customers' && canViewCRM()) {
       return <MobileCustomersScreen />;
     }
-    if (workspacePath === '/crm' || workspacePath === '/crm/customers') {
+    if (workspacePath === '/crm/contacts' && canViewCRM()) {
+      return <MobileContactsScreen />;
+    }
+    if (workspacePath === '/crm/companies' && canViewCRM()) {
+      return <MobileCompaniesScreen />;
+    }
+    if (workspacePath === '/crm/leads' && canViewCRM()) {
+      return <MobileLeadsScreen />;
+    }
+    if (workspacePath === '/crm/opportunities' && canViewCRM()) {
+      return <MobileOpportunitiesScreen />;
+    }
+    if (
+      workspacePath === '/crm' ||
+      workspacePath === '/crm/customers' ||
+      workspacePath === '/crm/contacts' ||
+      workspacePath === '/crm/companies' ||
+      workspacePath === '/crm/leads' ||
+      workspacePath === '/crm/opportunities'
+    ) {
       return (
         <View className="flex-1 bg-slate-50">
           <View className="flex-row border-b border-slate-200 bg-white px-3 py-2">
@@ -251,7 +276,30 @@ export function CommerceDashboardScreen() {
     return <MobileCustomersScreen />;
   }
 
-  if (workspacePath === '/crm' || workspacePath === '/crm/customers') {
+  if (workspacePath === '/crm/contacts' && canViewCRM()) {
+    return <MobileContactsScreen />;
+  }
+
+  if (workspacePath === '/crm/companies' && canViewCRM()) {
+    return <MobileCompaniesScreen />;
+  }
+
+  if (workspacePath === '/crm/leads' && canViewCRM()) {
+    return <MobileLeadsScreen />;
+  }
+
+  if (workspacePath === '/crm/opportunities' && canViewCRM()) {
+    return <MobileOpportunitiesScreen />;
+  }
+
+  if (
+    workspacePath === '/crm' ||
+    workspacePath === '/crm/customers' ||
+    workspacePath === '/crm/contacts' ||
+    workspacePath === '/crm/companies' ||
+    workspacePath === '/crm/leads' ||
+    workspacePath === '/crm/opportunities'
+  ) {
     return (
       <View className="flex-1 bg-slate-50">
         <View className="flex-row border-b border-slate-200 bg-white px-3 py-2">

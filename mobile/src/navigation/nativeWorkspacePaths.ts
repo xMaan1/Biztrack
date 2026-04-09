@@ -2,6 +2,10 @@ export const NATIVE_WORKSPACE_PATHS = [
   '/dashboard',
   '/crm',
   '/crm/customers',
+  '/crm/contacts',
+  '/crm/companies',
+  '/crm/leads',
+  '/crm/opportunities',
 ] as const;
 
 export type NativeWorkspacePath = (typeof NATIVE_WORKSPACE_PATHS)[number];

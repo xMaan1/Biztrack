@@ -446,7 +446,7 @@ export function MobileCrmDashboardScreen() {
         <View className="mt-3 flex-row flex-wrap gap-2">
           <Pressable
             className="min-w-[30%] flex-1 items-center rounded-xl border border-slate-200 bg-white py-4 active:bg-slate-50"
-            onPress={() => void openWebPath('/crm/leads')}
+            onPress={() => void navigateMenuPath('/crm/leads')}
           >
             <Ionicons name="people-outline" size={24} color="#4f46e5" />
             <Text className="mt-2 text-center text-xs font-semibold text-slate-800">
@@ -464,7 +464,7 @@ export function MobileCrmDashboardScreen() {
           </Pressable>
           <Pressable
             className="min-w-[30%] flex-1 items-center rounded-xl border border-slate-200 bg-white py-4 active:bg-slate-50"
-            onPress={() => void openWebPath('/crm/contacts')}
+            onPress={() => void navigateMenuPath('/crm/contacts')}
           >
             <Ionicons name="person-outline" size={24} color="#4f46e5" />
             <Text className="mt-2 text-center text-xs font-semibold text-slate-800">
@@ -473,7 +473,7 @@ export function MobileCrmDashboardScreen() {
           </Pressable>
           <Pressable
             className="min-w-[30%] flex-1 items-center rounded-xl border border-slate-200 bg-white py-4 active:bg-slate-50"
-            onPress={() => void openWebPath('/crm/companies')}
+            onPress={() => void navigateMenuPath('/crm/companies')}
           >
             <Ionicons name="business-outline" size={24} color="#4f46e5" />
             <Text className="mt-2 text-center text-xs font-semibold text-slate-800">
@@ -482,7 +482,7 @@ export function MobileCrmDashboardScreen() {
           </Pressable>
           <Pressable
             className="min-w-[30%] flex-1 items-center rounded-xl border border-slate-200 bg-white py-4 active:bg-slate-50"
-            onPress={() => void openWebPath('/crm/opportunities')}
+            onPress={() => void navigateMenuPath('/crm/opportunities')}
           >
             <Ionicons name="trending-up-outline" size={24} color="#4f46e5" />
             <Text className="mt-2 text-center text-xs font-semibold text-slate-800">

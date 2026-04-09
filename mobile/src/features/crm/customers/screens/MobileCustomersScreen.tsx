@@ -16,21 +16,21 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
-import { MenuHeaderButton } from '../components/layout/MenuHeaderButton';
-import { useSidebarDrawer } from '../contexts/SidebarDrawerContext';
-import { useAuth } from '../contexts/AuthContext';
+import { MenuHeaderButton } from '../../../../components/layout/MenuHeaderButton';
+import { useSidebarDrawer } from '../../../../contexts/SidebarDrawerContext';
+import { useAuth } from '../../../../contexts/AuthContext';
 import {
   LabeledContactFieldsMobile,
   defaultEmailRowsFromEntity,
   defaultPhoneRowsFromEntity,
-} from '../components/crm/LabeledContactFieldsMobile';
-import { OptionSheet } from '../components/crm/OptionSheet';
-import { extractErrorMessage } from '../utils/errorUtils';
+} from '../../../../components/crm/LabeledContactFieldsMobile';
+import { OptionSheet } from '../../../../components/crm/OptionSheet';
+import { extractErrorMessage } from '../../../../utils/errorUtils';
 import {
   uploadDocumentFromUri,
   deleteUploadedFileByKey,
   extractS3KeyFromUrl,
-} from '../utils/fileUploadMobile';
+} from '../../../../utils/fileUploadMobile';
 import type {
   Customer,
   CustomerAttachment,
@@ -41,7 +41,7 @@ import type {
   GuarantorCreate,
   LabeledEmailItem,
   LabeledPhoneItem,
-} from '../models/crm/customers';
+} from '../../../../models/crm/customers';
 import {
   getCustomers,
   getCustomerStats,
@@ -55,7 +55,7 @@ import {
   createGuarantor,
   updateGuarantor,
   deleteGuarantor,
-} from '../services/crm/CrmMobileService';
+} from '../../../../services/crm/CrmMobileService';
 
 const ITEMS_PER_PAGE = 10;
 

@@ -76,6 +76,7 @@ export interface Lead {
   phone?: string;
   company?: string;
   jobTitle?: string;
+  leadSource?: string;
   status: LeadStatus;
   source: LeadSource;
   assignedTo?: string;
