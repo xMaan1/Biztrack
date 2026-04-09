@@ -399,6 +399,14 @@ class Contact(ContactBase):
         out["phones"] = phones
         aid = out.pop("assignedToId", None)
         out["assignedTo"] = str(aid) if aid is not None else None
+        cs = out.get("contactSource")
+        if cs:
+            try:
+                out["contactType"] = ContactType(str(cs))
+            except ValueError:
+                out["contactType"] = ContactType.OTHER
+        else:
+            out["contactType"] = ContactType.CUSTOMER
         return out
 
     class Config:

@@ -124,6 +124,101 @@ def _contact_create_to_orm_dict(
     }
 
 
+def _primary_email_from_contact_create(contact_data: ContactCreate) -> Optional[str]:
+    raw = contact_data.model_dump() if hasattr(contact_data, "model_dump") else contact_data.dict()
+    for e in raw.get("emails") or []:
+        if isinstance(e, dict):
+            v = (e.get("value") or "").strip()
+            if v:
+                return v
+    e = raw.get("email")
+    if e and str(e).strip():
+        return str(e).strip()
+    return None
+
+
+def _primary_phone_from_contact_create(contact_data: ContactCreate) -> Optional[str]:
+    raw = contact_data.model_dump() if hasattr(contact_data, "model_dump") else contact_data.dict()
+    for p in raw.get("phones") or []:
+        if isinstance(p, dict):
+            v = (p.get("value") or "").strip()
+            if v:
+                return v
+    for fld in ("phone", "mobile"):
+        v = raw.get(fld)
+        if v and str(v).strip():
+            return str(v).strip()
+    return None
+
+
+def _ensure_lead_row_for_contact_type_lead(
+    contact_data: ContactCreate,
+    db: Session,
+    tenant_id: str,
+    current_user_id: str,
+) -> None:
+    from ...config.crm_models import Lead as LeadORM, Company as CompanyORM
+
+    raw = contact_data.model_dump() if hasattr(contact_data, "model_dump") else contact_data.dict()
+    ct = raw.get("contactType")
+    val = ct.value if hasattr(ct, "value") else (str(ct) if ct is not None else None)
+    if val != "lead":
+        return
+    email = _primary_email_from_contact_create(contact_data)
+    if not email:
+        return
+    tid = uuid.UUID(str(tenant_id))
+    existing = (
+        db.query(LeadORM)
+        .filter(LeadORM.tenant_id == tid, LeadORM.email == email)
+        .first()
+    )
+    if existing:
+        return
+    phone = _primary_phone_from_contact_create(contact_data)
+    company_name = None
+    cid = raw.get("companyId")
+    if cid:
+        try:
+            cuid = uuid.UUID(str(cid))
+            comp = db.query(CompanyORM).filter(CompanyORM.id == cuid).first()
+            if comp:
+                company_name = comp.name
+        except (ValueError, TypeError):
+            pass
+    assigned_to_id = None
+    if raw.get("assignedTo"):
+        try:
+            assigned_to_id = uuid.UUID(str(raw["assignedTo"]))
+        except (ValueError, TypeError):
+            assigned_to_id = None
+    created_by_uuid = None
+    try:
+        created_by_uuid = uuid.UUID(str(current_user_id))
+    except (ValueError, TypeError):
+        created_by_uuid = None
+    now = datetime.utcnow()
+    lead_dict = {
+        "id": uuid.uuid4(),
+        "tenant_id": tid,
+        "firstName": raw["firstName"],
+        "lastName": raw["lastName"],
+        "email": email,
+        "phone": phone,
+        "company": company_name,
+        "jobTitle": raw.get("jobTitle"),
+        "leadSource": "contact",
+        "status": "new",
+        "priority": "medium",
+        "assignedToId": assigned_to_id,
+        "createdById": created_by_uuid,
+        "notes": raw.get("notes"),
+        "createdAt": now,
+        "updatedAt": now,
+    }
+    create_lead(lead_dict, db)
+
+
 class CustomerPhotoUpload(PydanticBaseModel):
     image: str
 
@@ -853,7 +948,20 @@ async def create_crm_contact(
             ),
             db,
         )
-        
+        try:
+            _ensure_lead_row_for_contact_type_lead(
+                contact_data,
+                db,
+                str(tenant_context["tenant_id"]),
+                str(current_user.id),
+            )
+        except Exception as sync_err:
+            logger.warning(
+                "Could not create lead row for contact: %s",
+                sync_err,
+                exc_info=True,
+            )
+
         try:
             from ...services.notification_service import create_crm_notification_for_all_tenant_users
             from ...config.notification_models import NotificationType

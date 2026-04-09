@@ -217,7 +217,7 @@ async def create_tenant_from_landing(
     except Exception as e:
         logger.warning(f"⚠️ Warning: Ledger seeding failed for tenant {tenant.name}: {str(e)}")
     
-    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    frontend_url = os.getenv("FRONTEND_URL", "https://biztrack.uk")
     success_url = f"{frontend_url}/subscription/success?session_id={{CHECKOUT_SESSION_ID}}"
     cancel_url = f"{frontend_url}/subscription/cancel"
     

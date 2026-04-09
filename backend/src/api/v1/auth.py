@@ -425,7 +425,7 @@ def send_password_reset_email(email: str, token: str):
     # In production, you'd use a proper email service like SendGrid, AWS SES, etc.
     # For now, we'll just print the reset link to console for development
     
-    reset_link = f"http://localhost:3000/reset-password/confirm?token={token}"
+    reset_link = f"https://biztrack.uk/reset-password/confirm?token={token}"
     
     print(f"\n{'='*60}")
     print(f"PASSWORD RESET EMAIL")
