@@ -445,6 +445,18 @@ export const getTransactionTypeLabel = (type: TransactionType): string => {
   return labels[type] || type;
 };
 
+export const getTransactionStatusLabel = (status: TransactionStatus): string => {
+  const labels: Record<TransactionStatus, string> = {
+    [TransactionStatus.DRAFT]: 'Draft',
+    [TransactionStatus.PENDING]: 'Pending',
+    [TransactionStatus.POSTED]: 'Posted',
+    [TransactionStatus.CANCELLED]: 'Cancelled',
+    [TransactionStatus.COMPLETED]: 'Completed',
+    [TransactionStatus.FAILED]: 'Failed',
+  };
+  return labels[status] || status;
+};
+
 export const getAccountTypeColor = (type: AccountType): string => {
   const colors = {
     [AccountType.ASSET]: 'text-blue-600',

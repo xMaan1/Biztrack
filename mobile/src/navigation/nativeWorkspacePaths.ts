@@ -3,6 +3,8 @@ import { POS_NATIVE_PATHS } from '../features/pos/posPaths';
 import { HRM_NATIVE_PATHS } from '../features/hrm/hrmPaths';
 import { PROJECT_NATIVE_PATHS } from '../features/projects/projectPaths';
 import { BANKING_NATIVE_PATHS } from '../features/banking/bankingPaths';
+import { LEDGER_NATIVE_PATHS } from '../features/ledger/ledgerPaths';
+import { SETTINGS_NATIVE_PATHS } from '../features/settings/settingsPaths';
 import { WORKSPACE_HUB_PATHS } from '../features/workspace/workspacePaths';
 
 export const NATIVE_WORKSPACE_PATHS = [
@@ -24,6 +26,8 @@ export const NATIVE_WORKSPACE_PATHS = [
   ...HRM_NATIVE_PATHS,
   ...PROJECT_NATIVE_PATHS,
   ...BANKING_NATIVE_PATHS,
+  ...LEDGER_NATIVE_PATHS,
+  ...SETTINGS_NATIVE_PATHS,
   ...WORKSPACE_HUB_PATHS,
 ] as const;
 

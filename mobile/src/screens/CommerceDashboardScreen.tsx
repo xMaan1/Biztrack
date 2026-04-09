@@ -39,6 +39,10 @@ import { ProjectRouter } from '../features/projects/ProjectRouter';
 import { isProjectWorkspacePath } from '../features/projects/projectPaths';
 import { BankingRouter } from '../features/banking/BankingRouter';
 import { isBankingWorkspacePath } from '../features/banking/bankingPaths';
+import { LedgerRouter } from '../features/ledger/LedgerRouter';
+import { isLedgerWorkspacePath } from '../features/ledger/ledgerPaths';
+import { SettingsRouter } from '../features/settings/SettingsRouter';
+import { isSettingsWorkspacePath } from '../features/settings/settingsPaths';
 import { WorkspaceRouter } from '../features/workspace/WorkspaceRouter';
 import { isWorkspaceHubPath } from '../features/workspace/workspacePaths';
 
@@ -270,6 +274,14 @@ export function CommerceDashboardScreen() {
 
   if (isBankingWorkspacePath(workspacePath)) {
     return <BankingRouter />;
+  }
+
+  if (isLedgerWorkspacePath(workspacePath)) {
+    return <LedgerRouter />;
+  }
+
+  if (isSettingsWorkspacePath(workspacePath)) {
+    return <SettingsRouter />;
   }
 
   if (isWorkspaceHubPath(workspacePath)) {

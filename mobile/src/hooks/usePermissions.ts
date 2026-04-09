@@ -52,6 +52,9 @@ export function usePermissions() {
       hasPermission('maintenance:create') || isOwner(),
     canViewBanking: () => hasModuleAccess('banking'),
     canManageBanking: () => hasPermission('banking:create') || isOwner(),
+    canViewLedger: () => hasModuleAccess('ledger'),
+    canManageLedger: () =>
+      hasPermission('ledger:transactions:create') || isOwner(),
     canViewEvents: () => hasModuleAccess('events'),
     canManageEvents: () => hasPermission('events:create') || isOwner(),
     canViewSales: () => hasModuleAccess('sales'),
