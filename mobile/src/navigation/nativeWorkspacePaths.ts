@@ -7,10 +7,12 @@ import { LEDGER_NATIVE_PATHS } from '../features/ledger/ledgerPaths';
 import { SETTINGS_NATIVE_PATHS } from '../features/settings/settingsPaths';
 import { WORKSPACE_HUB_PATHS } from '../features/workspace/workspacePaths';
 import { HEALTHCARE_NATIVE_PATHS } from '../features/healthcare/healthcarePaths';
+import { WORKSHOP_NATIVE_PATHS } from '../features/workshop/workshopPaths';
 
 export const NATIVE_WORKSPACE_PATHS = [
   '/dashboard',
   ...HEALTHCARE_NATIVE_PATHS,
+  ...WORKSHOP_NATIVE_PATHS,
   '/crm',
   '/crm/customers',
   '/crm/contacts',

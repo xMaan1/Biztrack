@@ -50,6 +50,11 @@ import {
   HealthcareRouter,
   isHealthcareWorkspacePath,
 } from '../features/healthcare';
+import { MobileWorkshopDashboardScreen } from './MobileWorkshopDashboardScreen';
+import {
+  WorkshopRouter,
+  isWorkshopWorkspacePath,
+} from '../features/workshop';
 
 function buildCommerceStats(data: DashboardData | null): CommerceStats {
   if (!data) {
@@ -148,6 +153,8 @@ export function CommerceDashboardScreen() {
 
   const commerceHome =
     planInfo?.planType === 'commerce' && workspacePath === '/dashboard';
+  const workshopHome =
+    planInfo?.planType === 'workshop' && workspacePath === '/dashboard';
 
   useEffect(() => {
     if (workspacePath === '/dashboard') {
@@ -160,7 +167,7 @@ export function CommerceDashboardScreen() {
     ? true
     : Boolean(
         planInfo &&
-          commerceHome &&
+          (commerceHome || workshopHome) &&
           dashboardLoading &&
           !dashboardData,
       );
@@ -207,7 +214,7 @@ export function CommerceDashboardScreen() {
     );
   }
 
-  if (dashboardError && commerceHome) {
+  if (dashboardError && (commerceHome || workshopHome)) {
     return (
       <View className="flex-1 bg-slate-50">
         <View className="flex-row items-center border-b border-slate-200 bg-white px-3 py-2">
@@ -363,6 +370,12 @@ export function CommerceDashboardScreen() {
   }
 
   if (planInfo.planType === 'workshop') {
+    if (workspacePath === '/dashboard') {
+      return <MobileWorkshopDashboardScreen />;
+    }
+    if (isWorkshopWorkspacePath(workspacePath)) {
+      return <WorkshopRouter />;
+    }
     if (workspacePath === '/sales/invoices') {
       if (
         hasModuleAccess('sales') &&
@@ -374,7 +387,7 @@ export function CommerceDashboardScreen() {
         <SalesAccessDenied onBack={() => setWorkspacePath('/dashboard')} />
       );
     }
-    if (workspacePath === '/crm/customers' || workspacePath === '/dashboard') {
+    if (workspacePath === '/crm/customers' && canViewCRM()) {
       return <MobileCustomersScreen />;
     }
     return <NonCommerceScreen planType={planInfo.planType} />;
