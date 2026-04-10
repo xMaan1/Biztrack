@@ -37,7 +37,7 @@ export const allMenuItems: MenuItemDef[] = [
       {
         text: 'Dashboard',
         icon: 'grid-outline' as const,
-        path: '/healthcare',
+        path: '/dashboard',
         roles: ['*'],
         planTypes: ['healthcare'],
       },

@@ -92,7 +92,7 @@ const allMenuItems: MenuItem[] = [
       {
         text: 'Dashboard',
         icon: LayoutDashboard,
-        path: '/healthcare',
+        path: '/dashboard',
         roles: ['*'],
         planTypes: ['healthcare'],
       },
