@@ -35,13 +35,6 @@ export const allMenuItems: MenuItemDef[] = [
     gradient: 'from-teal-500 to-cyan-500',
     subItems: [
       {
-        text: 'Dashboard',
-        icon: 'grid-outline' as const,
-        path: '/dashboard',
-        roles: ['*'],
-        planTypes: ['healthcare'],
-      },
-      {
         text: 'Appointments',
         icon: 'calendar-outline' as const,
         path: '/healthcare/appointments',

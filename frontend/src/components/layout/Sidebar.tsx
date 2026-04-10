@@ -90,13 +90,6 @@ const allMenuItems: MenuItem[] = [
     gradient: 'from-teal-500 to-cyan-500',
     subItems: [
       {
-        text: 'Dashboard',
-        icon: LayoutDashboard,
-        path: '/dashboard',
-        roles: ['*'],
-        planTypes: ['healthcare'],
-      },
-      {
         text: 'Appointments',
         icon: Calendar,
         path: '/healthcare/appointments',
