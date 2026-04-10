@@ -6,9 +6,11 @@ import { BANKING_NATIVE_PATHS } from '../features/banking/bankingPaths';
 import { LEDGER_NATIVE_PATHS } from '../features/ledger/ledgerPaths';
 import { SETTINGS_NATIVE_PATHS } from '../features/settings/settingsPaths';
 import { WORKSPACE_HUB_PATHS } from '../features/workspace/workspacePaths';
+import { HEALTHCARE_NATIVE_PATHS } from '../features/healthcare/healthcarePaths';
 
 export const NATIVE_WORKSPACE_PATHS = [
   '/dashboard',
+  ...HEALTHCARE_NATIVE_PATHS,
   '/crm',
   '/crm/customers',
   '/crm/contacts',

@@ -43,6 +43,7 @@ function getModuleForMenuItem(item: MenuItemDef): string | null {
     Events: 'events',
     Reports: 'reports',
     Dashboard: 'dashboard',
+    Healthcare: 'healthcare',
   };
   return moduleMap[item.text] || null;
 }

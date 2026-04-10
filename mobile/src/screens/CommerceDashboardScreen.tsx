@@ -45,6 +45,11 @@ import { SettingsRouter } from '../features/settings/SettingsRouter';
 import { isSettingsWorkspacePath } from '../features/settings/settingsPaths';
 import { WorkspaceRouter } from '../features/workspace/WorkspaceRouter';
 import { isWorkspaceHubPath } from '../features/workspace/workspacePaths';
+import { MobileHealthcareDashboardScreen } from './MobileHealthcareDashboardScreen';
+import {
+  HealthcareRouter,
+  isHealthcareWorkspacePath,
+} from '../features/healthcare';
 
 function buildCommerceStats(data: DashboardData | null): CommerceStats {
   if (!data) {
@@ -289,6 +294,12 @@ export function CommerceDashboardScreen() {
   }
 
   if (planInfo.planType === 'healthcare') {
+    if (workspacePath === '/dashboard') {
+      return <MobileHealthcareDashboardScreen />;
+    }
+    if (isHealthcareWorkspacePath(workspacePath)) {
+      return <HealthcareRouter />;
+    }
     if (workspacePath === '/crm' && canViewCRM()) {
       return <MobileCrmDashboardScreen />;
     }
