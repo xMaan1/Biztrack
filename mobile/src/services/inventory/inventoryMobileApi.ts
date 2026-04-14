@@ -1,5 +1,10 @@
 import { apiService } from '../ApiService';
 import type {
+  ProductCreate,
+  ProductUpdate,
+  ProductResponse,
+} from '../../models/pos';
+import type {
   WarehousesResponse,
   WarehouseResponse,
   WarehouseCreate,
@@ -278,4 +283,20 @@ export async function createSupplierReturn(
 
 export async function fetchPosProducts(): Promise<{ products: Product[] }> {
   return apiService.get<{ products: Product[] }>('/pos/products');
+}
+
+export async function getProduct(id: string): Promise<ProductResponse> {
+  return apiService.get<ProductResponse>(`/pos/products/${id}`);
+}
+
+export async function createProduct(data: ProductCreate): Promise<ProductResponse> {
+  return apiService.post<ProductResponse>('/pos/products', data);
+}
+
+export async function updateProduct(id: string, data: ProductUpdate): Promise<ProductResponse> {
+  return apiService.put<ProductResponse>(`/pos/products/${id}`, data);
+}
+
+export async function deleteProduct(id: string): Promise<void> {
+  await apiService.delete(`/pos/products/${id}`);
 }
