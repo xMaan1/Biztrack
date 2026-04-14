@@ -79,6 +79,68 @@ def convert_db_product_to_pydantic(db_product):
         updatedAt=db_product.updatedAt
     )
 
+def convert_db_shift_to_pydantic(db_shift):
+    """Convert database POSShift model to Pydantic POSShift model"""
+    from ...models.pos_models import POSShift as PydanticPOSShift
+    
+    return PydanticPOSShift(
+        id=str(db_shift.id),
+        tenant_id=str(db_shift.tenant_id),
+        shiftNumber=db_shift.shiftNumber,
+        cashierId=str(db_shift.employeeId),
+        cashierName=getattr(db_shift, 'cashierName', "System User"), # Fallback if not in DB
+        openingBalance=getattr(db_shift, 'openingAmount', 0.0),
+        closingBalance=getattr(db_shift, 'closingAmount', None),
+        totalSales=db_shift.totalSales or 0.0,
+        totalTransactions=db_shift.totalTransactions or 0,
+        status=db_shift.status,
+        openedAt=db_shift.startTime,
+        closedAt=getattr(db_shift, 'endTime', None),
+        notes=db_shift.notes,
+        createdAt=db_shift.createdAt,
+        updatedAt=db_shift.updatedAt
+    )
+
+def convert_db_transaction_to_pydantic(db_txn):
+    """Convert database POSTransaction model to Pydantic POSTransaction model"""
+    from ...models.pos_models import POSTransaction as PydanticPOSTransaction, POSPaymentMethod, POSTransactionStatus
+    
+    # Map payment method string to Enum
+    try:
+        payment_method = POSPaymentMethod(db_txn.paymentMethod)
+    except ValueError:
+        payment_method = POSPaymentMethod.CASH
+        
+    # Map status string to Enum
+    try:
+        status = POSTransactionStatus(db_txn.paymentStatus)
+    except ValueError:
+        status = POSTransactionStatus.COMPLETED
+
+    return PydanticPOSTransaction(
+        id=str(db_txn.id),
+        tenant_id=str(db_txn.tenant_id),
+        transactionNumber=db_txn.transactionNumber,
+        shiftId=str(db_txn.shiftId),
+        cashierId=str(getattr(db_txn, 'cashierId', "")), # Map if exists
+        cashierName=str(getattr(db_txn, 'cashierName', "")),
+        customerId=db_txn.customerId,
+        customerName=db_txn.customerName,
+        items=db_txn.items,
+        subtotal=db_txn.subtotal,
+        discount=db_txn.discount or 0.0,
+        taxAmount=db_txn.taxAmount or 0.0,
+        total=db_txn.total,
+        paymentMethod=payment_method,
+        cashAmount=getattr(db_txn, 'cashAmount', 0.0),
+        changeAmount=getattr(db_txn, 'changeAmount', 0.0),
+        notes=db_txn.notes,
+        status=status,
+        createdAt=db_txn.createdAt,
+        updatedAt=db_txn.updatedAt
+    )
+
+
 def calculate_transaction_totals(items: List[dict], discount: float = 0.0, tax_rate: float = 0.0) -> dict:
     """Calculate transaction totals"""
     subtotal = sum(item['total'] for item in items)
@@ -451,11 +513,14 @@ async def get_pos_shifts(
                 filtered_shifts.append(shift)
             shifts = filtered_shifts
         
+        # Convert to Pydantic
+        pydantic_shifts = [convert_db_shift_to_pydantic(s) for s in shifts]
+        
         # Get total count for pagination
-        total = len(shifts)
+        total = len(pydantic_shifts)
         
         return POSShiftsResponse(
-            shifts=shifts,
+            shifts=pydantic_shifts,
             pagination={
                 "page": page,
                 "limit": limit,
@@ -481,7 +546,7 @@ async def get_pos_shift(
         shift = get_pos_shift_by_id(db, shift_id, tenant_context["tenant_id"])
         if not shift:
             raise HTTPException(status_code=404, detail="Shift not found")
-        return POSShiftResponse(shift=shift)
+        return POSShiftResponse(shift=convert_db_shift_to_pydantic(shift))
     except HTTPException:
         raise
     except Exception as e:
@@ -504,23 +569,23 @@ async def create_pos_shift(
         if existing_open_shift:
             raise HTTPException(status_code=400, detail="User already has an open shift")
         
-        shift = POSShift(
-            id=str(uuid.uuid4()),
-            shiftNumber=generate_shift_number(),
-            cashierId=str(current_user.id),
-            cashierName=f"{current_user.firstName or ''} {current_user.lastName or ''}".strip() or current_user.userName,
-            openingBalance=shift_data.openingBalance,
-            totalSales=0.0,
-            totalTransactions=0,
-            status="open",
-            openedAt=datetime.now(),
-            tenant_id=tenant_context["tenant_id"],
-            createdAt=datetime.now(),
-            updatedAt=datetime.now()
-        )
+        db_shift_data = {
+            "id": str(uuid.uuid4()),
+            "shiftNumber": generate_shift_number(),
+            "tenant_id": tenant_context["tenant_id"],
+            "employeeId": str(current_user.id),
+            "startTime": datetime.now(),
+            "openingAmount": shift_data.openingBalance,
+            "totalSales": 0.0,
+            "totalTransactions": 0,
+            "status": "open",
+            "notes": shift_data.notes,
+            "createdAt": datetime.now(),
+            "updatedAt": datetime.now()
+        }
         
-        db_shift = create_pos_shift(db, shift.__dict__)
-        return POSShiftResponse(shift=db_shift)
+        db_shift = create_pos_shift(db, db_shift_data)
+        return POSShiftResponse(shift=convert_db_shift_to_pydantic(db_shift))
     except HTTPException:
         raise
     except Exception as e:
@@ -547,7 +612,7 @@ async def update_pos_shift(
         )
         if not db_shift:
             raise HTTPException(status_code=404, detail="Shift not found")
-        return POSShiftResponse(shift=db_shift)
+        return POSShiftResponse(shift=convert_db_shift_to_pydantic(db_shift))
     except HTTPException:
         raise
     except Exception as e:
@@ -566,7 +631,7 @@ async def get_current_open_shift(
     try:
         shift = get_open_pos_shift(db, tenant_context["tenant_id"], str(current_user.id))
         if shift:
-            return {"shift": shift}
+            return {"shift": convert_db_shift_to_pydantic(shift)}
         return {"shift": None}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching open shift: {str(e)}")
@@ -628,11 +693,14 @@ async def get_pos_transactions(
                 filtered_transactions.append(transaction)
             transactions = filtered_transactions
         
+        # Convert to Pydantic
+        pydantic_transactions = [convert_db_transaction_to_pydantic(t) for t in transactions]
+        
         # Get total count for pagination
-        total = len(transactions)
+        total = len(pydantic_transactions)
         
         return POSTransactionsResponse(
-            transactions=transactions,
+            transactions=pydantic_transactions,
             pagination={
                 "page": page,
                 "limit": limit,
@@ -658,7 +726,7 @@ async def get_pos_transaction(
         transaction = get_pos_transaction_by_id(db, transaction_id, tenant_context["tenant_id"])
         if not transaction:
             raise HTTPException(status_code=404, detail="Transaction not found")
-        return POSTransactionResponse(transaction=transaction)
+        return POSTransactionResponse(transaction=convert_db_transaction_to_pydantic(transaction))
     except HTTPException:
         raise
     except Exception as e:
@@ -684,21 +752,26 @@ async def create_pos_transaction(
         # Calculate totals
         totals = calculate_transaction_totals(transaction_data.items, transaction_data.discount, 0.0)  # No tax for now
         
-        transaction = POSTransaction(
-            id=str(uuid.uuid4()),
-            transactionNumber=generate_transaction_number(),
-            **transaction_data.dict(),
-            **totals,
-            status="completed",
-            tenant_id=tenant_context["tenant_id"],
-            shiftId=str(open_shift.id),
-            cashierId=str(current_user.id),
-            cashierName=f"{current_user.firstName or ''} {current_user.lastName or ''}".strip() or current_user.userName,
-            createdAt=datetime.now(),
-            updatedAt=datetime.now()
-        )
+        db_txn_data = {
+            "id": str(uuid.uuid4()),
+            "transactionNumber": generate_transaction_number(),
+            "tenant_id": tenant_context["tenant_id"],
+            "shiftId": str(open_shift.id),
+            "customerId": transaction_data.customerId,
+            "customerName": transaction_data.customerName,
+            "items": [item.dict() for item in transaction_data.items],
+            "subtotal": totals["subtotal"],
+            "discount": totals["discount"],
+            "taxAmount": totals["taxAmount"],
+            "total": totals["total"],
+            "paymentMethod": transaction_data.paymentMethod.value,
+            "paymentStatus": "completed",
+            "notes": transaction_data.notes,
+            "createdAt": datetime.now(),
+            "updatedAt": datetime.now()
+        }
         
-        db_transaction = create_pos_transaction(db, transaction.__dict__)
+        db_transaction = create_pos_transaction(db, db_txn_data)
         
         # Update shift totals
         open_shift.totalSales += totals["total"]
@@ -706,7 +779,7 @@ async def create_pos_transaction(
         db.commit()
         db.refresh(open_shift)
         
-        return POSTransactionResponse(transaction=db_transaction)
+        return POSTransactionResponse(transaction=convert_db_transaction_to_pydantic(db_transaction))
     except HTTPException:
         raise
     except Exception as e:
@@ -725,15 +798,20 @@ async def update_pos_transaction(
     if not tenant_context:
         raise HTTPException(status_code=400, detail="Tenant context required")
     try:
+        # Map status to paymentStatus for DB
+        update_dict = transaction_data.dict(exclude_unset=True)
+        if 'status' in update_dict:
+            update_dict['paymentStatus'] = update_dict.pop('status')
+
         db_transaction = update_pos_transaction(
             db, 
             transaction_id, 
-            transaction_data.dict(exclude_unset=True), 
+            update_dict, 
             tenant_context["tenant_id"]
         )
         if not db_transaction:
             raise HTTPException(status_code=404, detail="Transaction not found")
-        return POSTransactionResponse(transaction=db_transaction)
+        return POSTransactionResponse(transaction=convert_db_transaction_to_pydantic(db_transaction))
     except HTTPException:
         raise
     except Exception as e:
@@ -755,7 +833,10 @@ async def get_pos_sales_report(
     if not tenant_context:
         raise HTTPException(status_code=400, detail="Tenant context required")
     try:
-        transactions = get_pos_transactions(db, tenant_context["tenant_id"], 0, 1000)
+        db_transactions = get_pos_transactions(db, tenant_context["tenant_id"], 0, 1000)
+        
+        # Convert to Pydantic for consistent field access
+        transactions = [convert_db_transaction_to_pydantic(t) for t in db_transactions]
         
         # Handle case where no transactions exist
         if not transactions:
@@ -929,7 +1010,10 @@ async def get_pos_shifts_report(
     if not tenant_context:
         raise HTTPException(status_code=400, detail="Tenant context required")
     try:
-        shifts = get_pos_shifts(db, tenant_context["tenant_id"], 0, 1000)
+        db_shifts = get_pos_shifts(db, tenant_context["tenant_id"], 0, 1000)
+        
+        # Convert to Pydantic for consistent field access
+        shifts = [convert_db_shift_to_pydantic(s) for s in db_shifts]
         
         # Handle case where no shifts exist
         if not shifts:
@@ -1043,11 +1127,13 @@ async def search_products(
     try:
         products = get_products(db, tenant_context["tenant_id"], 0, 100)
         
+        pydantic_products = [convert_db_product_to_pydantic(p) for p in products]
+        
         # Filter products by search query
         search_lower = q.lower()
         matching_products = []
         
-        for product in products:
+        for product in pydantic_products:
             if (search_lower in product.name.lower() or 
                 search_lower in product.sku.lower() or 
                 (product.barcode and search_lower in product.barcode.lower())):
