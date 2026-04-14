@@ -551,7 +551,7 @@ async def get_pos_shift(
         raise HTTPException(status_code=500, detail=f"Error fetching shift: {str(e)}")
 
 @router.post("/shifts", response_model=POSShiftResponse)
-async def create_pos_shift(
+async def open_pos_shift(
     shift_data: POSShiftCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),

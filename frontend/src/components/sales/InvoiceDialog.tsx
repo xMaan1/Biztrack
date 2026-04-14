@@ -45,7 +45,7 @@ interface InvoiceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: InvoiceCreate, options?: { installmentPlan?: InstallmentPlanCreateOption }) => void;
-  mode: 'create' | 'edit';
+  mode: 'create' | 'edit' | 'view';
   invoice?: Invoice | null;
   error?: string | null;
 }
@@ -384,6 +384,10 @@ export function InvoiceDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (mode === 'view') {
+      return;
+    }
+
     if (!validateForm()) {
       return;
     }
@@ -423,7 +427,7 @@ export function InvoiceDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            {mode === 'create' ? 'Create New Invoice' : 'Edit Invoice'}
+            {mode === 'create' ? 'Create New Invoice' : mode === 'edit' ? 'Edit Invoice' : 'View Invoice'}
           </DialogTitle>
         </DialogHeader>
 
@@ -1095,15 +1099,17 @@ export function InvoiceDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {mode === 'view' ? 'Close' : 'Cancel'}
             </Button>
-            <Button type="submit" disabled={loading} className="modern-button">
-              {loading
-                ? 'Saving...'
-                : mode === 'create'
-                  ? 'Create Invoice'
-                  : 'Update Invoice'}
-            </Button>
+            {mode !== 'view' && (
+              <Button type="submit" disabled={loading} className="modern-button">
+                {loading
+                  ? 'Saving...'
+                  : mode === 'create'
+                    ? 'Create Invoice'
+                    : 'Update Invoice'}
+              </Button>
+            )}
           </div>
         </form>
       </DialogContent>

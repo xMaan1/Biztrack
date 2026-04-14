@@ -69,6 +69,7 @@ export default function InvoicesPage() {
 
   // Dialog states
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showViewDialog, setShowViewDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showCustomizeDialog, setShowCustomizeDialog] = useState(false);
@@ -246,6 +247,11 @@ export default function InvoicesPage() {
     setSelectedInvoice(invoice);
     setUpdateError(null);
     setShowEditDialog(true);
+  };
+
+  const handleView = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+    setShowViewDialog(true);
   };
 
   const handleDelete = (invoice: Invoice) => {
@@ -435,6 +441,7 @@ export default function InvoicesPage() {
               invoices={invoices}
               loading={loading}
               onEdit={handleEdit}
+              onView={handleView}
               onDelete={handleDelete}
               onSend={handleSendInvoice}
               onMarkAsPaid={handleMarkAsPaid}
@@ -535,6 +542,15 @@ export default function InvoicesPage() {
           mode="edit"
           invoice={selectedInvoice}
           error={updateError}
+        />
+
+        {/* View Invoice Dialog */}
+        <InvoiceDialog
+          open={showViewDialog}
+          onOpenChange={setShowViewDialog}
+          onSubmit={() => {}}
+          mode="view"
+          invoice={selectedInvoice}
         />
 
         {/* Delete Confirmation Dialog */}

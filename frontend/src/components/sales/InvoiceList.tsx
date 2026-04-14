@@ -44,6 +44,7 @@ interface InvoiceListProps {
   invoices: Invoice[];
   loading: boolean;
   onEdit: (invoice: Invoice) => void;
+  onView: (invoice: Invoice) => void;
   onDelete: (invoice: Invoice) => void;
   onSend?: (invoiceId: string) => Promise<void>;
   onMarkAsPaid: (invoiceId: string) => void;
@@ -60,6 +61,7 @@ export function InvoiceList({
   invoices,
   loading,
   onEdit,
+  onView,
   onDelete,
   onMarkAsPaid,
   onBulkSend,
@@ -502,7 +504,7 @@ export function InvoiceList({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onEdit(invoice)}>
+                      <DropdownMenuItem onClick={() => onView(invoice)}>
                         <Eye className="h-4 w-4 mr-2" />
                         View Details
                       </DropdownMenuItem>
