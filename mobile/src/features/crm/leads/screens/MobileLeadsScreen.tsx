@@ -36,6 +36,7 @@ import {
   formatUsd,
   getLeadStatusBadgeClass,
 } from '../../../../services/crm/CrmMobileService';
+import { FormHeader, FormSection, FormInput, FormSelect } from '../../../../components/layout/MobileForm';
 
 const ITEMS_PER_PAGE = 10;
 const FILTER_ANY = 'all';
@@ -382,9 +383,9 @@ export function MobileLeadsScreen() {
             <Text className="text-slate-900">
               {form.source
                 ? form.source
-                    .split('_')
-                    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-                    .join(' ')
+                  .split('_')
+                  .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                  .join(' ')
                 : ''}
             </Text>
           </Pressable>
@@ -521,9 +522,9 @@ export function MobileLeadsScreen() {
                 Source:{' '}
                 {filters.source
                   ? String(filters.source)
-                      .split('_')
-                      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-                      .join(' ')
+                    .split('_')
+                    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                    .join(' ')
                   : 'all'}
               </Text>
             </Pressable>
@@ -564,9 +565,8 @@ export function MobileLeadsScreen() {
             <Pressable
               disabled={currentPage <= 1}
               onPress={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              className={`rounded-lg border px-4 py-2 ${
-                currentPage <= 1 ? 'border-slate-100 opacity-50' : 'border-slate-300'
-              }`}
+              className={`rounded-lg border px-4 py-2 ${currentPage <= 1 ? 'border-slate-100 opacity-50' : 'border-slate-300'
+                }`}
             >
               <Text className="font-semibold text-slate-800">Previous</Text>
             </Pressable>
@@ -575,11 +575,10 @@ export function MobileLeadsScreen() {
               onPress={() =>
                 setCurrentPage((p) => Math.min(totalPages, p + 1))
               }
-              className={`rounded-lg border px-4 py-2 ${
-                currentPage >= totalPages
+              className={`rounded-lg border px-4 py-2 ${currentPage >= totalPages
                   ? 'border-slate-100 opacity-50'
                   : 'border-slate-300'
-              }`}
+                }`}
             >
               <Text className="font-semibold text-slate-800">Next</Text>
             </Pressable>
@@ -734,55 +733,255 @@ export function MobileLeadsScreen() {
         onClose={() => setFormSourceOpen(false)}
       />
 
-      <Modal visible={createOpen} animationType="slide" transparent>
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
-            <Text className="text-lg font-bold text-slate-900">New lead</Text>
-            {renderForm()}
-            <View className="mt-4 flex-row gap-2">
-              <Pressable
-                className="flex-1 items-center rounded-lg border border-slate-300 py-3"
-                onPress={() => {
-                  setCreateOpen(false);
-                  resetForm();
-                }}
-              >
-                <Text className="font-semibold text-slate-700">Cancel</Text>
-              </Pressable>
-              <Pressable
-                className="flex-1 items-center rounded-lg bg-indigo-600 py-3 active:bg-indigo-700"
-                onPress={() => void submitSave()}
-              >
-                <Text className="font-semibold text-white">Create</Text>
-              </Pressable>
-            </View>
-          </View>
+      <Modal visible={createOpen} animationType="slide" presentationStyle="pageSheet">
+        <View className="flex-1 bg-slate-50">
+          <FormHeader
+            title="New Lead"
+            onCancel={() => {
+              setCreateOpen(false);
+              resetForm();
+            }}
+            onSave={() => void submitSave()}
+          />
+          <ScrollView
+            className="flex-1 px-4 pt-6"
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <FormSection title="Personal Information">
+              <FormInput
+                label="First Name"
+                icon="person-outline"
+                value={form.firstName}
+                onChangeText={(t) => setForm(p => ({ ...p, firstName: t }))}
+                placeholder="John"
+                autoCapitalize="words"
+              />
+              <FormInput
+                label="Last Name"
+                icon="person-outline"
+                value={form.lastName}
+                onChangeText={(t) => setForm(p => ({ ...p, lastName: t }))}
+                placeholder="Doe"
+                autoCapitalize="words"
+              />
+              <FormInput
+                label="Email Address"
+                icon="mail-outline"
+                value={form.email}
+                onChangeText={(t) => setForm(p => ({ ...p, email: t }))}
+                placeholder="john.doe@example.com"
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+              <FormInput
+                label="Phone Number"
+                icon="call-outline"
+                value={form.phone || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, phone: t }))}
+                placeholder="+1 (555) 000-0000"
+                keyboardType="phone-pad"
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Professional Background">
+              <FormInput
+                label="Company Name"
+                icon="business-outline"
+                value={form.company || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, company: t }))}
+                placeholder="Acme Corp"
+              />
+              <FormInput
+                label="Job Title"
+                icon="briefcase-outline"
+                value={form.jobTitle || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, jobTitle: t }))}
+                placeholder="Manager"
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Lead Qualification">
+              <FormSelect
+                label="Current Status"
+                icon="flag-outline"
+                value={form.status ? String(form.status) : ''}
+                onPress={() => setFormStatusOpen(true)}
+              />
+              <FormSelect
+                label="Lead Source"
+                icon="share-social-outline"
+                value={form.source ? form.source.replace(/_/g, ' ') : ''}
+                onPress={() => setFormSourceOpen(true)}
+              />
+              <FormInput
+                label="Lead Score"
+                icon="star-outline"
+                value={String(form.score ?? 0)}
+                onChangeText={(t) => setForm(p => ({ ...p, score: parseInt(t.replace(/[^0-9-]/g, ''), 10) || 0 }))}
+                keyboardType="number-pad"
+              />
+              <FormInput
+                label="Budget"
+                icon="cash-outline"
+                value={form.budget != null ? String(form.budget) : ''}
+                onChangeText={(t) => setForm(p => ({ ...p, budget: t.trim() ? parseFloat(t.replace(/[^0-9.-]/g, '')) : undefined }))}
+                keyboardType="decimal-pad"
+                placeholder="0.00"
+              />
+              <FormInput
+                label="Timeline / Deadline"
+                icon="timer-outline"
+                value={form.timeline || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, timeline: t }))}
+                placeholder="e.g. Q3"
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Additional Context">
+              <FormInput
+                label="Tags (comma separated)"
+                icon="pricetags-outline"
+                value={form.tagsText}
+                onChangeText={(t) => setForm(p => ({ ...p, tagsText: t }))}
+                placeholder="high-value, urgent..."
+              />
+              <FormInput
+                label="Internal Notes"
+                icon="musical-notes-outline"
+                value={form.notes || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, notes: t }))}
+                multiline
+                placeholder="Private information about the lead..."
+                last
+              />
+            </FormSection>
+            <View className="h-10" />
+          </ScrollView>
         </View>
       </Modal>
 
-      <Modal visible={editOpen} animationType="slide" transparent>
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
-            <Text className="text-lg font-bold text-slate-900">Edit lead</Text>
-            {renderForm()}
-            <View className="mt-4 flex-row gap-2">
-              <Pressable
-                className="flex-1 items-center rounded-lg border border-slate-300 py-3"
-                onPress={() => {
-                  setEditOpen(false);
-                  resetForm();
-                }}
-              >
-                <Text className="font-semibold text-slate-700">Cancel</Text>
-              </Pressable>
-              <Pressable
-                className="flex-1 items-center rounded-lg bg-indigo-600 py-3 active:bg-indigo-700"
-                onPress={() => void submitSave()}
-              >
-                <Text className="font-semibold text-white">Save</Text>
-              </Pressable>
-            </View>
-          </View>
+      <Modal visible={editOpen} animationType="slide" presentationStyle="pageSheet">
+        <View className="flex-1 bg-slate-50">
+          <FormHeader
+            title="Edit Lead"
+            onCancel={() => {
+              setEditOpen(false);
+              resetForm();
+            }}
+            onSave={() => void submitSave()}
+          />
+          <ScrollView
+            className="flex-1 px-4 pt-6"
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <FormSection title="Personal Information">
+              <FormInput
+                label="First Name"
+                icon="person-outline"
+                value={form.firstName}
+                onChangeText={(t) => setForm(p => ({ ...p, firstName: t }))}
+                autoCapitalize="words"
+              />
+              <FormInput
+                label="Last Name"
+                icon="person-outline"
+                value={form.lastName}
+                onChangeText={(t) => setForm(p => ({ ...p, lastName: t }))}
+                autoCapitalize="words"
+              />
+              <FormInput
+                label="Email Address"
+                icon="mail-outline"
+                value={form.email}
+                onChangeText={(t) => setForm(p => ({ ...p, email: t }))}
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+              <FormInput
+                label="Phone Number"
+                icon="call-outline"
+                value={form.phone || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, phone: t }))}
+                keyboardType="phone-pad"
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Professional Background">
+              <FormInput
+                label="Company Name"
+                icon="business-outline"
+                value={form.company || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, company: t }))}
+              />
+              <FormInput
+                label="Job Title"
+                icon="briefcase-outline"
+                value={form.jobTitle || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, jobTitle: t }))}
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Lead Qualification">
+              <FormSelect
+                label="Current Status"
+                icon="flag-outline"
+                value={form.status ? String(form.status) : ''}
+                onPress={() => setFormStatusOpen(true)}
+              />
+              <FormSelect
+                label="Lead Source"
+                icon="share-social-outline"
+                value={form.source ? form.source.replace(/_/g, ' ') : ''}
+                onPress={() => setFormSourceOpen(true)}
+              />
+              <FormInput
+                label="Lead Score"
+                icon="star-outline"
+                value={String(form.score ?? 0)}
+                onChangeText={(t) => setForm(p => ({ ...p, score: parseInt(t.replace(/[^0-9-]/g, ''), 10) || 0 }))}
+                keyboardType="number-pad"
+              />
+              <FormInput
+                label="Budget"
+                icon="cash-outline"
+                value={form.budget != null ? String(form.budget) : ''}
+                onChangeText={(t) => setForm(p => ({ ...p, budget: t.trim() ? parseFloat(t.replace(/[^0-9.-]/g, '')) : undefined }))}
+                keyboardType="decimal-pad"
+              />
+              <FormInput
+                label="Timeline"
+                icon="timer-outline"
+                value={form.timeline || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, timeline: t }))}
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Additional Context">
+              <FormInput
+                label="Tags (comma separated)"
+                icon="pricetags-outline"
+                value={form.tagsText}
+                onChangeText={(t) => setForm(p => ({ ...p, tagsText: t }))}
+              />
+              <FormInput
+                label="Internal Notes"
+                icon="musical-notes-outline"
+                value={form.notes || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, notes: t }))}
+                multiline
+                last
+              />
+            </FormSection>
+            <View className="h-10" />
+          </ScrollView>
         </View>
       </Modal>
 

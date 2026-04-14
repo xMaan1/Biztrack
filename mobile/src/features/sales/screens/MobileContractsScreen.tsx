@@ -32,6 +32,7 @@ import {
   deleteContractApi,
 } from '../../../services/sales/salesApi';
 import { usePermissions } from '../../../hooks/usePermissions';
+import { FormHeader, FormSection, FormInput, FormSelect } from '../../../components/layout/MobileForm';
 
 const PAGE_SIZE = 15;
 const STATUS_FILTER: { value: string; label: string }[] = [
@@ -133,6 +134,11 @@ export function MobileContractsScreen() {
     setNotes('');
     setAutoRenew(false);
     setRenewalTerms('');
+  };
+
+  const openCreate = () => {
+    resetForm();
+    setCreateOpen(true);
   };
 
   const submitCreate = async () => {
@@ -238,10 +244,7 @@ export function MobileContractsScreen() {
         </Text>
         {canManageSales() ? (
           <Pressable
-            onPress={() => {
-              resetForm();
-              setCreateOpen(true);
-            }}
+            onPress={openCreate}
             className="rounded-lg bg-blue-600 px-3 py-2 active:bg-blue-700"
           >
             <Text className="font-semibold text-white">New</Text>
@@ -391,157 +394,212 @@ export function MobileContractsScreen() {
         </View>
       </Modal>
 
-      <Modal visible={createOpen} animationType="slide">
-        <View className="flex-1 bg-white">
-          <View className="flex-row items-center justify-between border-b border-slate-200 px-3 py-3">
-            <Pressable onPress={() => setCreateOpen(false)}>
-              <Text className="text-blue-600">Cancel</Text>
-            </Pressable>
-            <Text className="text-lg font-semibold">New contract</Text>
-            <Pressable onPress={() => void submitCreate()}>
-              <Text className="font-semibold text-blue-600">Save</Text>
-            </Pressable>
-          </View>
-          <ScrollView className="flex-1 px-4 py-4" keyboardShouldPersistTaps="handled">
-            <Text className="mb-1 text-sm font-medium text-slate-700">Title</Text>
-            <TextInput
-              value={title}
-              onChangeText={setTitle}
-              className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <Text className="mb-1 text-sm font-medium text-slate-700">Opportunity</Text>
-            <Pressable
-              onPress={() => setOppPickerOpen(true)}
-              className="mb-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-3"
-            >
-              <Text className="text-slate-900">{oppLabel}</Text>
-            </Pressable>
-            <Text className="mb-1 text-sm font-medium text-slate-700">Value</Text>
-            <TextInput
-              value={valueStr}
-              onChangeText={setValueStr}
-              keyboardType="decimal-pad"
-              className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <Text className="mb-1 text-sm font-medium text-slate-700">Start</Text>
-            <TextInput
-              value={startDate}
-              onChangeText={setStartDate}
-              placeholder="YYYY-MM-DD"
-              className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <Text className="mb-1 text-sm font-medium text-slate-700">End</Text>
-            <TextInput
-              value={endDate}
-              onChangeText={setEndDate}
-              placeholder="YYYY-MM-DD"
-              className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <View className="mb-3 flex-row items-center justify-between rounded-lg border border-slate-200 px-3 py-2">
-              <Text className="text-slate-800">Auto renew</Text>
-              <Switch value={autoRenew} onValueChange={setAutoRenew} />
-            </View>
-            <Text className="mb-1 text-sm font-medium text-slate-700">Description</Text>
-            <TextInput
-              value={description}
-              onChangeText={setDescription}
-              multiline
-              className="mb-3 min-h-[72px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <Text className="mb-1 text-sm font-medium text-slate-700">Terms</Text>
-            <TextInput
-              value={terms}
-              onChangeText={setTerms}
-              multiline
-              className="mb-3 min-h-[72px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <Text className="mb-1 text-sm font-medium text-slate-700">Renewal terms</Text>
-            <TextInput
-              value={renewalTerms}
-              onChangeText={setRenewalTerms}
-              multiline
-              className="mb-3 min-h-[56px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <Text className="mb-1 text-sm font-medium text-slate-700">Notes</Text>
-            <TextInput
-              value={notes}
-              onChangeText={setNotes}
-              multiline
-              className="mb-8 min-h-[56px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
+      <Modal visible={createOpen} animationType="slide" presentationStyle="pageSheet">
+        <View className="flex-1 bg-slate-50">
+          <FormHeader 
+            title="New Contract" 
+            onCancel={() => setCreateOpen(false)} 
+            onSave={() => void submitCreate()} 
+          />
+          <ScrollView 
+            className="flex-1 px-4 pt-6" 
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <FormSection title="General Information">
+              <FormInput
+                label="Contract Title"
+                icon="document-text-outline"
+                value={title}
+                onChangeText={setTitle}
+                placeholder="Ex: Annual Maintenance Contract"
+              />
+              <FormSelect
+                label="Related Opportunity"
+                icon="briefcase-outline"
+                value={opportunityId ? opportunities.find(o => o.id === opportunityId)?.title || '' : ''}
+                onPress={() => setOppPickerOpen(true)}
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Financials & Dates">
+              <FormInput
+                label="Contract Value"
+                icon="cash-outline"
+                value={valueStr}
+                onChangeText={setValueStr}
+                keyboardType="decimal-pad"
+                placeholder="0.00"
+              />
+              <FormInput
+                label="Start Date"
+                icon="calendar-outline"
+                value={startDate}
+                onChangeText={setStartDate}
+                placeholder="YYYY-MM-DD"
+              />
+              <FormInput
+                label="End Date"
+                icon="calendar-outline"
+                value={endDate}
+                onChangeText={setEndDate}
+                placeholder="YYYY-MM-DD"
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Renewal Policy">
+              <View className="px-4 py-3 flex-row items-center justify-between border-b border-slate-50">
+                <View className="flex-row items-center">
+                  <Ionicons name="refresh-outline" size={14} color="#94a3b8" className="mr-1" />
+                  <Text className="text-[11px] font-semibold text-slate-500 uppercase">Auto Renew</Text>
+                </View>
+                <Switch 
+                  value={autoRenew} 
+                  onValueChange={setAutoRenew}
+                  trackColor={{ false: '#e2e8f0', true: '#93c5fd' }}
+                  thumbColor={autoRenew ? '#2563eb' : '#f8fafc'}
+                />
+              </View>
+              {autoRenew && (
+                <FormInput
+                  label="Renewal Terms"
+                  value={renewalTerms}
+                  onChangeText={setRenewalTerms}
+                  multiline
+                  placeholder="Terms for automatic renewal..."
+                  last
+                />
+              )}
+            </FormSection>
+
+            <FormSection title="Details & Notes">
+              <FormInput
+                label="Description"
+                value={description}
+                onChangeText={setDescription}
+                multiline
+                placeholder="Detailed contract description..."
+              />
+              <FormInput
+                label="Terms & Conditions"
+                value={terms}
+                onChangeText={setTerms}
+                multiline
+                placeholder="Standard terms..."
+              />
+              <FormInput
+                label="Internal Notes"
+                value={notes}
+                onChangeText={setNotes}
+                multiline
+                placeholder="Private notes for team..."
+                last
+              />
+            </FormSection>
+            <View className="h-10" />
           </ScrollView>
         </View>
       </Modal>
 
-      <Modal visible={editOpen} animationType="slide">
-        <View className="flex-1 bg-white">
-          <View className="flex-row items-center justify-between border-b border-slate-200 px-3 py-3">
-            <Pressable onPress={() => setEditOpen(false)}>
-              <Text className="text-blue-600">Cancel</Text>
-            </Pressable>
-            <Text className="text-lg font-semibold">Edit contract</Text>
-            <Pressable onPress={() => void submitEdit()}>
-              <Text className="font-semibold text-blue-600">Save</Text>
-            </Pressable>
-          </View>
-          <ScrollView className="flex-1 px-4 py-4" keyboardShouldPersistTaps="handled">
-            <Text className="mb-1 text-sm font-medium text-slate-700">Title</Text>
-            <TextInput
-              value={title}
-              onChangeText={setTitle}
-              className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <Text className="mb-1 text-sm font-medium text-slate-700">Value</Text>
-            <TextInput
-              value={valueStr}
-              onChangeText={setValueStr}
-              keyboardType="decimal-pad"
-              className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <Text className="mb-1 text-sm font-medium text-slate-700">Start</Text>
-            <TextInput
-              value={startDate}
-              onChangeText={setStartDate}
-              className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <Text className="mb-1 text-sm font-medium text-slate-700">End</Text>
-            <TextInput
-              value={endDate}
-              onChangeText={setEndDate}
-              className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <View className="mb-3 flex-row items-center justify-between rounded-lg border border-slate-200 px-3 py-2">
-              <Text className="text-slate-800">Auto renew</Text>
-              <Switch value={autoRenew} onValueChange={setAutoRenew} />
-            </View>
-            <Text className="mb-1 text-sm font-medium text-slate-700">Description</Text>
-            <TextInput
-              value={description}
-              onChangeText={setDescription}
-              multiline
-              className="mb-3 min-h-[72px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <Text className="mb-1 text-sm font-medium text-slate-700">Terms</Text>
-            <TextInput
-              value={terms}
-              onChangeText={setTerms}
-              multiline
-              className="mb-3 min-h-[72px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <Text className="mb-1 text-sm font-medium text-slate-700">Renewal terms</Text>
-            <TextInput
-              value={renewalTerms}
-              onChangeText={setRenewalTerms}
-              multiline
-              className="mb-3 min-h-[56px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <Text className="mb-1 text-sm font-medium text-slate-700">Notes</Text>
-            <TextInput
-              value={notes}
-              onChangeText={setNotes}
-              multiline
-              className="mb-8 min-h-[56px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
+      <Modal visible={editOpen} animationType="slide" presentationStyle="pageSheet">
+        <View className="flex-1 bg-slate-50">
+          <FormHeader 
+            title="Edit Contract" 
+            onCancel={() => setEditOpen(false)} 
+            onSave={() => void submitEdit()} 
+          />
+          <ScrollView 
+            className="flex-1 px-4 pt-6" 
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <FormSection title="General Information">
+              <FormInput
+                label="Contract Title"
+                icon="document-text-outline"
+                value={title}
+                onChangeText={setTitle}
+              />
+              <FormSelect
+                label="Opportunity"
+                icon="briefcase-outline"
+                value={opportunityId ? opportunities.find(o => o.id === opportunityId)?.title || '' : ''}
+                onPress={() => {}}
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Financials & Dates">
+              <FormInput
+                label="Contract Value"
+                icon="cash-outline"
+                value={valueStr}
+                onChangeText={setValueStr}
+                keyboardType="decimal-pad"
+              />
+              <FormInput
+                label="Start Date"
+                icon="calendar-outline"
+                value={startDate}
+                onChangeText={setStartDate}
+              />
+              <FormInput
+                label="End Date"
+                icon="calendar-outline"
+                value={endDate}
+                onChangeText={setEndDate}
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Renewal Policy">
+              <View className="px-4 py-3 flex-row items-center justify-between border-b border-slate-50">
+                <View className="flex-row items-center">
+                  <Ionicons name="refresh-outline" size={14} color="#94a3b8" className="mr-1" />
+                  <Text className="text-[11px] font-semibold text-slate-500 uppercase">Auto Renew</Text>
+                </View>
+                <Switch 
+                  value={autoRenew} 
+                  onValueChange={setAutoRenew}
+                  trackColor={{ false: '#e2e8f0', true: '#93c5fd' }}
+                  thumbColor={autoRenew ? '#2563eb' : '#f8fafc'}
+                />
+              </View>
+              {autoRenew && (
+                <FormInput
+                  label="Renewal Terms"
+                  value={renewalTerms}
+                  onChangeText={setRenewalTerms}
+                  multiline
+                  last
+                />
+              )}
+            </FormSection>
+
+            <FormSection title="Details & Notes">
+              <FormInput
+                label="Description"
+                value={description}
+                onChangeText={setDescription}
+                multiline
+              />
+              <FormInput
+                label="Terms & Conditions"
+                value={terms}
+                onChangeText={setTerms}
+                multiline
+              />
+              <FormInput
+                label="Internal Notes"
+                value={notes}
+                onChangeText={setNotes}
+                multiline
+                last
+              />
+            </FormSection>
+            <View className="h-10" />
           </ScrollView>
         </View>
       </Modal>

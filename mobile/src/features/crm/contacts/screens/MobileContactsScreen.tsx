@@ -11,6 +11,7 @@ import {
   RefreshControl,
   Alert,
   Linking,
+  Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
@@ -42,6 +43,8 @@ import {
   LabeledEmailItem,
   LabeledPhoneItem,
   Company,
+  ContactSocialLinks,
+  ContactAddressRow,
 } from '../../../../models/crm';
 import {
   fetchContacts,
@@ -62,13 +65,14 @@ import {
   mergeSocialFromApi,
   CONTACT_SOCIAL_KEYS,
 } from '../utils/contactFormUtils';
+import { FormHeader, FormSection, FormInput, FormSelect } from '../../../../components/layout/MobileForm';
 
 const ITEMS_PER_PAGE = 10;
 const FILTER_ANY = 'all';
 
 type FormState = ContactCreate & { tagsText: string };
 
-function assigneeLabel(u: User): string {
+function assigneeLabel(u: Partial<User>): string {
   const name = [u.firstName, u.lastName].filter(Boolean).join(' ').trim();
   if (name) return name;
   return u.userName || u.email || (u.id || u.userId || '');
@@ -152,7 +156,6 @@ export function MobileContactsScreen() {
   const [viewingContact, setViewingContact] = useState<Contact | null>(null);
   const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
   const [attachmentBusy, setAttachmentBusy] = useState(false);
-  const [moreFieldsOpen, setMoreFieldsOpen] = useState(false);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE));
 
@@ -238,7 +241,6 @@ export function MobileContactsScreen() {
   const resetForm = useCallback(() => {
     setForm(buildEmptyForm());
     setEditingContact(null);
-    setMoreFieldsOpen(false);
   }, []);
 
   const openCreate = () => {
@@ -276,7 +278,6 @@ export function MobileContactsScreen() {
       assignedTo: c.assignedTo || '',
       website: c.website || '',
     });
-    setMoreFieldsOpen(false);
     setEditOpen(true);
   };
 
@@ -537,450 +538,6 @@ export function MobileContactsScreen() {
     ? `${[user?.firstName, user?.lastName].filter(Boolean).join(' ')} · ${user?.email ?? ''}`
     : user?.email ?? '';
 
-  const renderForm = () => (
-    <ScrollView
-      className="max-h-[80%]"
-      keyboardShouldPersistTaps="handled"
-      showsVerticalScrollIndicator={false}
-    >
-      <View className="mt-2 gap-3">
-        <View>
-          <Text className="mb-1 text-xs font-medium text-slate-600">
-            First name *
-          </Text>
-          <TextInput
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-            value={form.firstName}
-            onChangeText={(t) => setForm((p) => ({ ...p, firstName: t }))}
-            placeholder="First name"
-          />
-        </View>
-        <View>
-          <Text className="mb-1 text-xs font-medium text-slate-600">
-            Last name *
-          </Text>
-          <TextInput
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-            value={form.lastName}
-            onChangeText={(t) => setForm((p) => ({ ...p, lastName: t }))}
-            placeholder="Last name"
-          />
-        </View>
-
-        <LabeledContactFieldsMobile
-          emails={(form.emails || []) as LabeledEmailItem[]}
-          phones={(form.phones || []) as LabeledPhoneItem[]}
-          onEmailsChange={(emails) => setForm((p) => ({ ...p, emails }))}
-          onPhonesChange={(phones) => setForm((p) => ({ ...p, phones }))}
-        />
-
-        <View>
-          <Text className="mb-1 text-xs font-medium text-slate-600">
-            Job title
-          </Text>
-          <TextInput
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-            value={form.jobTitle || ''}
-            onChangeText={(t) => setForm((p) => ({ ...p, jobTitle: t }))}
-            placeholder="Job title"
-          />
-        </View>
-        <View>
-          <Text className="mb-1 text-xs font-medium text-slate-600">
-            Department
-          </Text>
-          <TextInput
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-            value={form.department || ''}
-            onChangeText={(t) => setForm((p) => ({ ...p, department: t }))}
-            placeholder="Department"
-          />
-        </View>
-
-        <View>
-          <Text className="mb-1 text-xs font-medium text-slate-600">Company</Text>
-          <Pressable
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2"
-            onPress={() => setCompanySheetOpen(true)}
-          >
-            <Text className="text-slate-900">
-              {form.companyId
-                ? companyById.get(form.companyId)?.name || 'Company'
-                : 'No company'}
-            </Text>
-          </Pressable>
-        </View>
-
-        <View>
-          <Text className="mb-1 text-xs font-medium text-slate-600">Category</Text>
-          <Pressable
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2"
-            onPress={() => setFormContactTypeSheetOpen(true)}
-          >
-            <Text className="text-slate-900 capitalize">
-              {form.contactType
-                ? String(form.contactType)
-                : ContactType.CUSTOMER}
-            </Text>
-          </Pressable>
-        </View>
-
-        <View>
-          <Text className="mb-1 text-xs font-medium text-slate-600">
-            Tags (comma separated)
-          </Text>
-          <TextInput
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-            value={form.tagsText}
-            onChangeText={(t) =>
-              setForm((p) => ({
-                ...p,
-                tagsText: t,
-                tags: t
-                  .split(',')
-                  .map((x) => x.trim())
-                  .filter(Boolean),
-              }))
-            }
-            placeholder="vip, partner"
-          />
-        </View>
-
-        <View>
-          <Text className="mb-1 text-xs font-medium text-slate-600">Notes</Text>
-          <TextInput
-            className="min-h-[72px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-            value={form.notes || ''}
-            onChangeText={(t) => setForm((p) => ({ ...p, notes: t }))}
-            placeholder="Notes"
-            multiline
-            textAlignVertical="top"
-          />
-        </View>
-
-        <View>
-          <Text className="mb-1 text-xs font-medium text-slate-600">
-            Description
-          </Text>
-          <TextInput
-            className="min-h-[72px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-            value={form.description || ''}
-            onChangeText={(t) => setForm((p) => ({ ...p, description: t }))}
-            placeholder="Description"
-            multiline
-            textAlignVertical="top"
-          />
-        </View>
-
-        <Pressable
-          onPress={() => setForm((p) => ({ ...p, isActive: !p.isActive }))}
-          className="flex-row items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-3"
-        >
-          <Text className="text-sm font-medium text-slate-800">Active</Text>
-          <View
-            className={`h-7 w-12 rounded-full ${form.isActive ? 'bg-emerald-500' : 'bg-slate-300'}`}
-          >
-            <View
-              className={`mt-0.5 h-6 w-6 rounded-full bg-white ${form.isActive ? 'ml-5' : 'ml-0.5'}`}
-            />
-          </View>
-        </Pressable>
-
-        <Pressable
-          onPress={() => setMoreFieldsOpen((o) => !o)}
-          className="flex-row items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"
-        >
-          <Text className="text-sm font-semibold text-slate-800">
-            More details
-          </Text>
-          <Ionicons
-            name={moreFieldsOpen ? 'chevron-up' : 'chevron-down'}
-            size={20}
-            color="#64748b"
-          />
-        </Pressable>
-
-        {moreFieldsOpen ? (
-          <View className="gap-3 border-l-2 border-indigo-200 pl-3">
-            <View>
-              <Text className="mb-1 text-xs font-medium text-slate-600">
-                Initials
-              </Text>
-              <TextInput
-                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-                value={form.initials || ''}
-                onChangeText={(t) => setForm((p) => ({ ...p, initials: t }))}
-              />
-            </View>
-            <View>
-              <Text className="mb-1 text-xs font-medium text-slate-600">
-                Full name (display)
-              </Text>
-              <TextInput
-                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-                value={form.fullName || ''}
-                onChangeText={(t) => setForm((p) => ({ ...p, fullName: t }))}
-              />
-            </View>
-            <View>
-              <Text className="mb-1 text-xs font-medium text-slate-600">
-                Birthday (YYYY-MM-DD)
-              </Text>
-              <TextInput
-                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-                value={form.birthday || ''}
-                onChangeText={(t) => setForm((p) => ({ ...p, birthday: t }))}
-                placeholder="1990-01-15"
-              />
-            </View>
-            <View>
-              <Text className="mb-1 text-xs font-medium text-slate-600">
-                Website
-              </Text>
-              <TextInput
-                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-                value={form.website || ''}
-                onChangeText={(t) => setForm((p) => ({ ...p, website: t }))}
-                placeholder="https://"
-                autoCapitalize="none"
-              />
-            </View>
-            <View>
-              <Text className="mb-1 text-xs font-medium text-slate-600">
-                Tax / business ID
-              </Text>
-              <TextInput
-                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-                value={form.businessTaxId || ''}
-                onChangeText={(t) =>
-                  setForm((p) => ({ ...p, businessTaxId: t }))
-                }
-              />
-            </View>
-            <View>
-              <Text className="mb-1 text-xs font-medium text-slate-600">
-                Assigned to
-              </Text>
-              <Pressable
-                className="rounded-lg border border-slate-200 bg-white px-3 py-2"
-                onPress={() => setFormAssigneeSheetOpen(true)}
-              >
-                <Text className="text-slate-900">
-                  {form.assignedTo
-                    ? assigneeLabel(
-                        users.find(
-                          (u) =>
-                            (u.id || u.userId) === form.assignedTo,
-                        ) || {
-                          userName: form.assignedTo,
-                          email: '',
-                        } as User,
-                      )
-                    : 'Unassigned'}
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-        ) : null}
-
-        <View>
-          <Text className="mb-2 text-xs font-medium text-slate-600">Addresses</Text>
-          {(form.addresses || []).map((row, idx) => (
-            <View
-              key={`addr-${idx}`}
-              className="mb-3 rounded-lg border border-slate-100 bg-slate-50 p-3"
-            >
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-900"
-                value={row.label || ''}
-                onChangeText={(t) =>
-                  setForm((p) => {
-                    const next = [...(p.addresses || [])];
-                    next[idx] = { ...next[idx], label: t };
-                    return { ...p, addresses: next };
-                  })
-                }
-                placeholder="Label"
-              />
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm text-slate-900"
-                value={row.line1 || ''}
-                onChangeText={(t) =>
-                  setForm((p) => {
-                    const next = [...(p.addresses || [])];
-                    next[idx] = { ...next[idx], line1: t };
-                    return { ...p, addresses: next };
-                  })
-                }
-                placeholder="Line 1"
-              />
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm text-slate-900"
-                value={row.line2 || ''}
-                onChangeText={(t) =>
-                  setForm((p) => {
-                    const next = [...(p.addresses || [])];
-                    next[idx] = { ...next[idx], line2: t };
-                    return { ...p, addresses: next };
-                  })
-                }
-                placeholder="Line 2"
-              />
-              <View className="mb-2 flex-row gap-2">
-                <TextInput
-                  className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm text-slate-900"
-                  value={row.city || ''}
-                  onChangeText={(t) =>
-                    setForm((p) => {
-                      const next = [...(p.addresses || [])];
-                      next[idx] = { ...next[idx], city: t };
-                      return { ...p, addresses: next };
-                    })
-                  }
-                  placeholder="City"
-                />
-                <TextInput
-                  className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm text-slate-900"
-                  value={row.state || ''}
-                  onChangeText={(t) =>
-                    setForm((p) => {
-                      const next = [...(p.addresses || [])];
-                      next[idx] = { ...next[idx], state: t };
-                      return { ...p, addresses: next };
-                    })
-                  }
-                  placeholder="State"
-                />
-              </View>
-              <View className="mb-2 flex-row gap-2">
-                <TextInput
-                  className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm text-slate-900"
-                  value={row.postalCode || ''}
-                  onChangeText={(t) =>
-                    setForm((p) => {
-                      const next = [...(p.addresses || [])];
-                      next[idx] = { ...next[idx], postalCode: t };
-                      return { ...p, addresses: next };
-                    })
-                  }
-                  placeholder="Postal"
-                />
-                <TextInput
-                  className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm text-slate-900"
-                  value={row.country || ''}
-                  onChangeText={(t) =>
-                    setForm((p) => {
-                      const next = [...(p.addresses || [])];
-                      next[idx] = { ...next[idx], country: t };
-                      return { ...p, addresses: next };
-                    })
-                  }
-                  placeholder="Country"
-                />
-              </View>
-              <Pressable
-                onPress={() =>
-                  setForm((p) => ({
-                    ...p,
-                    addresses: (p.addresses || []).filter((_, i) => i !== idx),
-                  }))
-                }
-              >
-                <Text className="text-xs font-semibold text-red-600">
-                  Remove address
-                </Text>
-              </Pressable>
-            </View>
-          ))}
-          <Pressable
-            onPress={() =>
-              setForm((p) => ({
-                ...p,
-                addresses: [...(p.addresses || []), emptyAddressRow()],
-              }))
-            }
-            className="self-start rounded-lg border border-slate-200 px-3 py-2"
-          >
-            <Text className="text-sm font-semibold text-indigo-700">
-              Add address
-            </Text>
-          </Pressable>
-        </View>
-
-        <View>
-          <Text className="mb-2 text-xs font-medium text-slate-600">Social</Text>
-          {CONTACT_SOCIAL_KEYS.map(([key, label]) => (
-            <View key={key} className="mb-2">
-              <Text className="mb-1 text-xs text-slate-500">{label}</Text>
-              <TextInput
-                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-                value={
-                  (form.socialLinks?.[
-                    key as keyof typeof form.socialLinks
-                  ] as string) || ''
-                }
-                onChangeText={(t) =>
-                  setForm((p) => ({
-                    ...p,
-                    socialLinks: {
-                      ...mergeSocialFromApi(p.socialLinks),
-                      [key]: t,
-                    },
-                  }))
-                }
-                placeholder={label}
-                autoCapitalize="none"
-              />
-            </View>
-          ))}
-        </View>
-
-        <View>
-          <Text className="mb-1 text-xs font-medium text-slate-600">
-            Attachments
-          </Text>
-          <Pressable
-            disabled={attachmentBusy}
-            onPress={() => void pickAttachment()}
-            className="flex-row items-center gap-2 self-start rounded-lg border border-slate-200 bg-white px-3 py-2 active:bg-slate-50"
-          >
-            <Ionicons name="attach-outline" size={18} color="#475569" />
-            <Text className="text-sm text-slate-700">
-              {attachmentBusy ? 'Uploading…' : 'Add file (PDF, DOC, DOCX)'}
-            </Text>
-          </Pressable>
-          {(form.attachments || []).map((att, idx) => (
-            <View
-              key={`${att.url}-${idx}`}
-              className="mt-2 flex-row items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2"
-            >
-              <Text
-                className="mr-2 flex-1 text-sm text-slate-800"
-                numberOfLines={1}
-              >
-                {att.original_filename || 'File'}
-              </Text>
-              <View className="flex-row gap-2">
-                <Pressable
-                  onPress={() => void Linking.openURL(att.url)}
-                  hitSlop={8}
-                >
-                  <Ionicons name="open-outline" size={20} color="#2563eb" />
-                </Pressable>
-                <Pressable
-                  onPress={() => void removeAttachmentAt(idx)}
-                  hitSlop={8}
-                >
-                  <Ionicons name="trash-outline" size={20} color="#b91c1c" />
-                </Pressable>
-              </View>
-            </View>
-          ))}
-        </View>
-      </View>
-    </ScrollView>
-  );
-
   const listHeader = (
     <View className="pb-2">
       <View className="border-b border-slate-200 bg-white px-4 pb-4 pt-2">
@@ -1082,8 +639,7 @@ export function MobileContactsScreen() {
                         (u) => (u.id || u.userId) === filters.assignedTo,
                       ) || {
                         userName: filters.assignedTo,
-                        email: '',
-                      } as User,
+                      },
                     )
                   : 'all'}
               </Text>
@@ -1405,55 +961,489 @@ export function MobileContactsScreen() {
         </View>
       </Modal>
 
-      <Modal visible={createOpen} animationType="slide" transparent>
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
-            <Text className="text-lg font-bold text-slate-900">New contact</Text>
-            {renderForm()}
-            <View className="mt-4 flex-row gap-2">
+      <Modal visible={createOpen} animationType="slide" presentationStyle="pageSheet">
+        <View className="flex-1 bg-slate-50">
+          <FormHeader 
+            title="New Contact" 
+            onCancel={() => {
+              setCreateOpen(false);
+              resetForm();
+            }} 
+            onSave={() => void submitCreate()} 
+          />
+          <ScrollView 
+            className="flex-1 px-4 pt-6" 
+            keyboardShouldPersistTaps="handled" 
+            showsVerticalScrollIndicator={false}
+          >
+            <FormSection title="Core Identity">
+              <FormInput
+                label="First Name"
+                icon="person-outline"
+                value={form.firstName}
+                onChangeText={(t) => setForm(p => ({ ...p, firstName: t }))}
+                placeholder="John"
+                autoCapitalize="words"
+              />
+              <FormInput
+                label="Last Name"
+                icon="person-outline"
+                value={form.lastName}
+                onChangeText={(t) => setForm(p => ({ ...p, lastName: t }))}
+                placeholder="Doe"
+                autoCapitalize="words"
+              />
+              <View className="p-3">
+                <LabeledContactFieldsMobile
+                  emails={(form.emails || []) as LabeledEmailItem[]}
+                  phones={(form.phones || []) as LabeledPhoneItem[]}
+                  onEmailsChange={(emails) => setForm((p) => ({ ...p, emails }))}
+                  onPhonesChange={(phones) => setForm((p) => ({ ...p, phones }))}
+                />
+              </View>
+            </FormSection>
+
+            <FormSection title="Professional Context">
+              <FormInput
+                label="Job Title"
+                icon="briefcase-outline"
+                value={form.jobTitle || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, jobTitle: t }))}
+                placeholder="Ex: Marketing Director"
+              />
+               <FormInput
+                label="Department"
+                icon="apps-outline"
+                value={form.department || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, department: t }))}
+                placeholder="Ex: Sales"
+              />
+              <FormSelect
+                label="Target Company"
+                icon="business-outline"
+                value={form.companyId ? companyById.get(form.companyId)?.name || '' : 'Select Company'}
+                onPress={() => setCompanySheetOpen(true)}
+              />
+              <FormSelect
+                label="Relationship Category"
+                icon="people-outline"
+                value={form.contactType ? String(form.contactType) : 'Customer'}
+                onPress={() => setFormContactTypeSheetOpen(true)}
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Personal Details">
+              <FormInput
+                label="Initials"
+                icon="text-outline"
+                value={form.initials || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, initials: t }))}
+                placeholder="JD"
+              />
+              <FormInput
+                label="Birthday"
+                icon="calendar-outline"
+                value={form.birthday || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, birthday: t }))}
+                placeholder="YYYY-MM-DD"
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Communication & Social">
+              <FormInput
+                label="Website"
+                icon="globe-outline"
+                value={form.website || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, website: t }))}
+                placeholder="https://..."
+                autoCapitalize="none"
+              />
+              {CONTACT_SOCIAL_KEYS.map(([sKey, sLabel], idx) => (
+                <FormInput
+                  key={sKey}
+                  label={sLabel}
+                  icon="share-social-outline"
+                  value={form.socialLinks?.[sKey as keyof ContactSocialLinks] || ''}
+                  onChangeText={(v) => setForm(p => ({ ...p, socialLinks: { ...(p.socialLinks || {}), [sKey]: v } }))}
+                  placeholder={`Username / URL`}
+                  last={idx === CONTACT_SOCIAL_KEYS.length - 1}
+                />
+              ))}
+            </FormSection>
+
+            <FormSection title="Addresses">
+              {(form.addresses || []).map((row, idx) => (
+                <View key={`addr-${idx}`} className="mb-4 rounded-xl border border-slate-100 bg-white p-3 shadow-sm">
+                  <View className="mb-2 flex-row items-center justify-between">
+                    <Text className="text-xs font-bold uppercase text-slate-400">Address {idx + 1}</Text>
+                    <Pressable onPress={() => {
+                        const next = [...(form.addresses || [])];
+                        next.splice(idx, 1);
+                        setForm(p => ({ ...p, addresses: next }));
+                    }}>
+                        <Ionicons name="trash-outline" size={16} color="#ef4444" />
+                    </Pressable>
+                  </View>
+                  <TextInput
+                    className="mb-1 rounded-lg border border-slate-100 bg-slate-50 px-2 py-2 text-sm text-slate-900"
+                    placeholder="Label (Work, Home...)"
+                    value={row.label || ''}
+                    onChangeText={(t) => {
+                        const next = [...(form.addresses || [])];
+                        next[idx] = { ...next[idx], label: t };
+                        setForm(p => ({ ...p, addresses: next }));
+                    }}
+                  />
+                  <TextInput
+                    className="mb-1 rounded-lg border border-slate-100 bg-slate-50 px-2 py-2 text-sm text-slate-900"
+                    placeholder="Street Address"
+                    value={row.line1 || ''}
+                    onChangeText={(t) => {
+                        const next = [...(form.addresses || [])];
+                        next[idx] = { ...next[idx], line1: t };
+                        setForm(p => ({ ...p, addresses: next }));
+                    }}
+                  />
+                  <View className="flex-row gap-1">
+                    <TextInput
+                      className="flex-1 rounded-lg border border-slate-100 bg-slate-50 px-2 py-2 text-sm text-slate-900"
+                      placeholder="City"
+                      value={row.city || ''}
+                      onChangeText={(t) => {
+                          const next = [...(form.addresses || [])];
+                          next[idx] = { ...next[idx], city: t };
+                          setForm(p => ({ ...p, addresses: next }));
+                      }}
+                    />
+                    <TextInput
+                      className="w-20 rounded-lg border border-slate-100 bg-slate-50 px-2 py-2 text-sm text-slate-900"
+                      placeholder="State"
+                      value={row.state || ''}
+                      onChangeText={(t) => {
+                          const next = [...(form.addresses || [])];
+                          next[idx] = { ...next[idx], state: t };
+                          setForm(p => ({ ...p, addresses: next }));
+                      }}
+                    />
+                  </View>
+                </View>
+              ))}
               <Pressable
-                className="flex-1 items-center rounded-lg border border-slate-300 py-3"
-                onPress={() => {
-                  setCreateOpen(false);
-                  resetForm();
-                }}
+                className="items-center rounded-lg border border-dashed border-slate-300 py-3"
+                onPress={() => setForm(p => ({ ...p, addresses: [...(p.addresses || []), emptyAddressRow()] }))}
               >
-                <Text className="font-semibold text-slate-700">Cancel</Text>
+                <Text className="text-sm font-semibold text-slate-600">+ Add Address</Text>
               </Pressable>
+            </FormSection>
+
+            <FormSection title="Documents & Files">
+              {(form.attachments || []).map((att, idx) => (
+                <View key={idx} className="mb-2 flex-row items-center justify-between rounded-lg border border-slate-100 bg-white p-3">
+                  <View className="flex-row items-center">
+                    <Ionicons name="document-outline" size={20} color="#6366f1" />
+                    <Text className="ml-2 text-sm text-slate-700" numberOfLines={1}>{att.original_filename || 'File'}</Text>
+                  </View>
+                  <Pressable onPress={() => void removeAttachmentAt(idx)}>
+                    <Ionicons name="close-circle" size={20} color="#ef4444" />
+                  </Pressable>
+                </View>
+              ))}
               <Pressable
-                className="flex-1 items-center rounded-lg bg-indigo-600 py-3 active:bg-indigo-700"
-                onPress={() => void submitCreate()}
+                className={`items-center rounded-xl border border-dashed border-slate-300 py-6 ${attachmentBusy ? 'opacity-50' : ''}`}
+                onPress={() => void pickAttachment()}
+                disabled={attachmentBusy}
               >
-                <Text className="font-semibold text-white">Create</Text>
+                <Ionicons name="cloud-upload-outline" size={24} color="#64748b" />
+                <Text className="mt-2 text-sm font-semibold text-slate-600">
+                  {attachmentBusy ? 'Uploading...' : 'Upload Document'}
+                </Text>
               </Pressable>
-            </View>
-          </View>
+            </FormSection>
+
+            <FormSection title="Internal Notes & Tags">
+              <FormInput
+                label="Tags (comma separated)"
+                icon="pricetags-outline"
+                value={form.tagsText}
+                onChangeText={(t) => setForm(p => ({ ...p, tagsText: t, tags: t.split(',').map(x => x.trim()).filter(Boolean) }))}
+              />
+              <FormInput
+                label="Internal Description"
+                value={form.description || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, description: t }))}
+                multiline
+              />
+              <FormInput
+                label="Private Notes"
+                value={form.notes || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, notes: t }))}
+                multiline
+                last
+              />
+              
+              <View className="mt-4 flex-row items-center justify-between rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm">
+                <View className="flex-row items-center">
+                  <View className={`h-2 w-2 rounded-full mr-2 ${form.isActive ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                  <Text className="text-sm font-semibold text-slate-800">Active Record</Text>
+                </View>
+                <Switch 
+                  value={form.isActive} 
+                  onValueChange={(v) => setForm(p => ({ ...p, isActive: v }))} 
+                  trackColor={{ false: '#e2e8f0', true: '#6ee7b7' }}
+                  thumbColor={form.isActive ? '#10b981' : '#f8fafc'}
+                />
+              </View>
+              
+              <FormSelect
+                label="Assigned Owner"
+                icon="person-circle-outline"
+                value={form.assignedTo ? assigneeLabel(users.find(u => (u.id || u.userId) === form.assignedTo) || { userName: form.assignedTo }) : 'Unassigned'}
+                onPress={() => setFormAssigneeSheetOpen(true)}
+              />
+            </FormSection>
+            <View className="h-10" />
+          </ScrollView>
         </View>
       </Modal>
 
-      <Modal visible={editOpen} animationType="slide" transparent>
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
-            <Text className="text-lg font-bold text-slate-900">Edit contact</Text>
-            {renderForm()}
-            <View className="mt-4 flex-row gap-2">
+      <Modal visible={editOpen} animationType="slide" presentationStyle="pageSheet">
+        <View className="flex-1 bg-slate-50">
+          <FormHeader 
+            title="Edit Contact" 
+            onCancel={() => {
+              setEditOpen(false);
+              resetForm();
+            }} 
+            onSave={() => void submitEdit()} 
+          />
+          <ScrollView 
+            className="flex-1 px-4 pt-6" 
+            keyboardShouldPersistTaps="handled" 
+            showsVerticalScrollIndicator={false}
+          >
+            <FormSection title="Core Identity">
+              <FormInput
+                label="First Name"
+                icon="person-outline"
+                value={form.firstName}
+                onChangeText={(t) => setForm(p => ({ ...p, firstName: t }))}
+                autoCapitalize="words"
+              />
+              <FormInput
+                label="Last Name"
+                icon="person-outline"
+                value={form.lastName}
+                onChangeText={(t) => setForm(p => ({ ...p, lastName: t }))}
+                autoCapitalize="words"
+              />
+              <View className="p-3">
+                <LabeledContactFieldsMobile
+                  emails={(form.emails || []) as LabeledEmailItem[]}
+                  phones={(form.phones || []) as LabeledPhoneItem[]}
+                  onEmailsChange={(emails) => setForm((p) => ({ ...p, emails }))}
+                  onPhonesChange={(phones) => setForm((p) => ({ ...p, phones }))}
+                />
+              </View>
+            </FormSection>
+
+            <FormSection title="Professional Context">
+              <FormInput
+                label="Job Title"
+                icon="briefcase-outline"
+                value={form.jobTitle || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, jobTitle: t }))}
+              />
+               <FormInput
+                label="Department"
+                icon="apps-outline"
+                value={form.department || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, department: t }))}
+              />
+              <FormSelect
+                label="Target Company"
+                icon="business-outline"
+                value={form.companyId ? companyById.get(form.companyId)?.name || '' : 'Select Company'}
+                onPress={() => setCompanySheetOpen(true)}
+              />
+              <FormSelect
+                label="Relationship Category"
+                icon="people-outline"
+                value={form.contactType ? String(form.contactType) : 'Customer'}
+                onPress={() => setFormContactTypeSheetOpen(true)}
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Personal Details">
+              <FormInput
+                label="Initials"
+                icon="text-outline"
+                value={form.initials || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, initials: t }))}
+              />
+              <FormInput
+                label="Birthday"
+                icon="calendar-outline"
+                value={form.birthday || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, birthday: t }))}
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Communication & Social">
+              <FormInput
+                label="Website"
+                icon="globe-outline"
+                value={form.website || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, website: t }))}
+                autoCapitalize="none"
+              />
+              {CONTACT_SOCIAL_KEYS.map(([sKey, sLabel], idx) => (
+                <FormInput
+                  key={sKey}
+                  label={sLabel}
+                  icon="share-social-outline"
+                  value={form.socialLinks?.[sKey as keyof ContactSocialLinks] || ''}
+                  onChangeText={(v) => setForm(p => ({ ...p, socialLinks: { ...(p.socialLinks || {}), [sKey]: v } }))}
+                  last={idx === CONTACT_SOCIAL_KEYS.length - 1}
+                />
+              ))}
+            </FormSection>
+
+            <FormSection title="Addresses">
+              {(form.addresses || []).map((row, idx) => (
+                <View key={`addr-${idx}`} className="mb-4 rounded-xl border border-slate-100 bg-white p-3 shadow-sm">
+                  <View className="mb-2 flex-row items-center justify-between">
+                    <Text className="text-xs font-bold uppercase text-slate-400">Address {idx + 1}</Text>
+                    <Pressable onPress={() => {
+                        const next = [...(form.addresses || [])];
+                        next.splice(idx, 1);
+                        setForm(p => ({ ...p, addresses: next }));
+                    }}>
+                        <Ionicons name="trash-outline" size={16} color="#ef4444" />
+                    </Pressable>
+                  </View>
+                  <TextInput
+                    className="mb-1 rounded-lg border border-slate-100 bg-slate-50 px-2 py-2 text-sm text-slate-900"
+                    placeholder="Label (Work, Home...)"
+                    value={row.label || ''}
+                    onChangeText={(t) => {
+                        const next = [...(form.addresses || [])];
+                        next[idx] = { ...next[idx], label: t };
+                        setForm(p => ({ ...p, addresses: next }));
+                    }}
+                  />
+                  <TextInput
+                    className="mb-1 rounded-lg border border-slate-100 bg-slate-50 px-2 py-2 text-sm text-slate-900"
+                    placeholder="Street Address"
+                    value={row.line1 || ''}
+                    onChangeText={(t) => {
+                        const next = [...(form.addresses || [])];
+                        next[idx] = { ...next[idx], line1: t };
+                        setForm(p => ({ ...p, addresses: next }));
+                    }}
+                  />
+                  <View className="flex-row gap-1">
+                    <TextInput
+                      className="flex-1 rounded-lg border border-slate-100 bg-slate-50 px-2 py-2 text-sm text-slate-900"
+                      placeholder="City"
+                      value={row.city || ''}
+                      onChangeText={(t) => {
+                          const next = [...(form.addresses || [])];
+                          next[idx] = { ...next[idx], city: t };
+                          setForm(p => ({ ...p, addresses: next }));
+                      }}
+                    />
+                    <TextInput
+                      className="w-20 rounded-lg border border-slate-100 bg-slate-50 px-2 py-2 text-sm text-slate-900"
+                      placeholder="State"
+                      value={row.state || ''}
+                      onChangeText={(t) => {
+                          const next = [...(form.addresses || [])];
+                          next[idx] = { ...next[idx], state: t };
+                          setForm(p => ({ ...p, addresses: next }));
+                      }}
+                    />
+                  </View>
+                </View>
+              ))}
               <Pressable
-                className="flex-1 items-center rounded-lg border border-slate-300 py-3"
-                onPress={() => {
-                  setEditOpen(false);
-                  resetForm();
-                }}
+                className="items-center rounded-lg border border-dashed border-slate-300 py-3"
+                onPress={() => setForm(p => ({ ...p, addresses: [...(p.addresses || []), emptyAddressRow()] }))}
               >
-                <Text className="font-semibold text-slate-700">Cancel</Text>
+                <Text className="text-sm font-semibold text-slate-600">+ Add Address</Text>
               </Pressable>
+            </FormSection>
+
+            <FormSection title="Documents & Files">
+              {(form.attachments || []).map((att, idx) => (
+                <View key={idx} className="mb-2 flex-row items-center justify-between rounded-lg border border-slate-100 bg-white p-3">
+                  <View className="flex-row items-center">
+                    <Ionicons name="document-outline" size={20} color="#6366f1" />
+                    <Text className="ml-2 text-sm text-slate-700" numberOfLines={1}>{att.original_filename || 'File'}</Text>
+                  </View>
+                  <Pressable onPress={() => void removeAttachmentAt(idx)}>
+                    <Ionicons name="close-circle" size={20} color="#ef4444" />
+                  </Pressable>
+                </View>
+              ))}
               <Pressable
-                className="flex-1 items-center rounded-lg bg-indigo-600 py-3 active:bg-indigo-700"
-                onPress={() => void submitEdit()}
+                className={`items-center rounded-xl border border-dashed border-slate-300 py-6 ${attachmentBusy ? 'opacity-50' : ''}`}
+                onPress={() => void pickAttachment()}
+                disabled={attachmentBusy}
               >
-                <Text className="font-semibold text-white">Save</Text>
+                <Ionicons name="cloud-upload-outline" size={24} color="#64748b" />
+                <Text className="mt-2 text-sm font-semibold text-slate-600">
+                  {attachmentBusy ? 'Uploading...' : 'Upload Document'}
+                </Text>
               </Pressable>
-            </View>
-          </View>
+            </FormSection>
+
+            <FormSection title="Internal Notes & Tags">
+              <FormInput
+                label="Tags (comma separated)"
+                icon="pricetags-outline"
+                value={form.tagsText}
+                onChangeText={(t) => setForm(p => ({ ...p, tagsText: t, tags: t.split(',').map(x => x.trim()).filter(Boolean) }))}
+              />
+              <FormInput
+                label="Internal Description"
+                value={form.description || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, description: t }))}
+                multiline
+              />
+              <FormInput
+                label="Private Notes"
+                value={form.notes || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, notes: t }))}
+                multiline
+                last
+              />
+              
+              <View className="mt-4 flex-row items-center justify-between rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm">
+                <View className="flex-row items-center">
+                  <View className={`h-2 w-2 rounded-full mr-2 ${form.isActive ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                  <Text className="text-sm font-semibold text-slate-800">Active Record</Text>
+                </View>
+                <Switch 
+                  value={form.isActive} 
+                  onValueChange={(v) => setForm(p => ({ ...p, isActive: v }))} 
+                  trackColor={{ false: '#e2e8f0', true: '#6ee7b7' }}
+                  thumbColor={form.isActive ? '#10b981' : '#f8fafc'}
+                />
+              </View>
+              
+              <FormSelect
+                label="Assigned Owner"
+                icon="person-circle-outline"
+                value={form.assignedTo ? assigneeLabel(users.find(u => (u.id || u.userId) === form.assignedTo) || { userName: form.assignedTo }) : 'Unassigned'}
+                onPress={() => setFormAssigneeSheetOpen(true)}
+              />
+            </FormSection>
+            <View className="h-10" />
+          </ScrollView>
         </View>
       </Modal>
 

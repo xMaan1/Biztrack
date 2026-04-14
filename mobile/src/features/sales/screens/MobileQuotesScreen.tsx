@@ -31,6 +31,7 @@ import {
   deleteQuoteApi,
 } from '../../../services/sales/salesApi';
 import { usePermissions } from '../../../hooks/usePermissions';
+import { FormHeader, FormSection, FormInput, FormSelect } from '../../../components/layout/MobileForm';
 
 const PAGE_SIZE = 15;
 const STATUS_FILTER: { value: string; label: string }[] = [
@@ -410,124 +411,150 @@ export function MobileQuotesScreen() {
         </View>
       </Modal>
 
-      <Modal visible={createOpen} animationType="slide">
-        <View className="flex-1 bg-white">
-          <View className="flex-row items-center justify-between border-b border-slate-200 px-3 py-3">
-            <Pressable onPress={() => setCreateOpen(false)}>
-              <Text className="text-blue-600">Cancel</Text>
-            </Pressable>
-            <Text className="text-lg font-semibold">New quote</Text>
-            <Pressable onPress={() => void submitCreate()}>
-              <Text className="font-semibold text-blue-600">Save</Text>
-            </Pressable>
-          </View>
-          <ScrollView className="flex-1 px-4 py-4" keyboardShouldPersistTaps="handled">
-            <Text className="mb-1 text-sm font-medium text-slate-700">Title</Text>
-            <TextInput
-              value={title}
-              onChangeText={setTitle}
-              className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-              placeholder="Quote title"
-            />
-            <Text className="mb-1 text-sm font-medium text-slate-700">Opportunity</Text>
-            <Pressable
-              onPress={() => setOppPickerOpen(true)}
-              className="mb-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-3"
-            >
-              <Text className="text-slate-900">{oppLabel}</Text>
-            </Pressable>
-            <Text className="mb-1 text-sm font-medium text-slate-700">Amount</Text>
-            <TextInput
-              value={amountStr}
-              onChangeText={setAmountStr}
-              keyboardType="decimal-pad"
-              className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-              placeholder="0.00"
-            />
-            <Text className="mb-1 text-sm font-medium text-slate-700">Valid until</Text>
-            <TextInput
-              value={validUntil}
-              onChangeText={setValidUntil}
-              placeholder="YYYY-MM-DD"
-              className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <Text className="mb-1 text-sm font-medium text-slate-700">Description</Text>
-            <TextInput
-              value={description}
-              onChangeText={setDescription}
-              multiline
-              className="mb-3 min-h-[80px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <Text className="mb-1 text-sm font-medium text-slate-700">Terms</Text>
-            <TextInput
-              value={terms}
-              onChangeText={setTerms}
-              multiline
-              className="mb-3 min-h-[72px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <Text className="mb-1 text-sm font-medium text-slate-700">Notes</Text>
-            <TextInput
-              value={notes}
-              onChangeText={setNotes}
-              multiline
-              className="mb-8 min-h-[72px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
+      <Modal visible={createOpen} animationType="slide" presentationStyle="pageSheet">
+        <View className="flex-1 bg-slate-50">
+          <FormHeader 
+            title="New Quote" 
+            onCancel={() => setCreateOpen(false)} 
+            onSave={() => void submitCreate()} 
+          />
+          <ScrollView 
+            className="flex-1 px-4 pt-6" 
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <FormSection title="General Information">
+              <FormInput
+                label="Quote Title"
+                icon="document-text-outline"
+                value={title}
+                onChangeText={setTitle}
+                placeholder="Ex: Software Development Services"
+              />
+              <FormSelect
+                label="Related Opportunity"
+                icon="briefcase-outline"
+                value={opportunityId ? opportunities.find(o => o.id === opportunityId)?.title || '' : ''}
+                onPress={() => setOppPickerOpen(true)}
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Pricing & Timeline">
+              <FormInput
+                label="Amount"
+                icon="cash-outline"
+                value={amountStr}
+                onChangeText={setAmountStr}
+                keyboardType="decimal-pad"
+                placeholder="0.00"
+              />
+              <FormInput
+                label="Valid Until"
+                icon="calendar-outline"
+                value={validUntil}
+                onChangeText={setValidUntil}
+                placeholder="YYYY-MM-DD"
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Details & Terms">
+              <FormInput
+                label="Description"
+                value={description}
+                onChangeText={setDescription}
+                multiline
+                placeholder="Detailed scope of work..."
+              />
+              <FormInput
+                label="Terms"
+                value={terms}
+                onChangeText={setTerms}
+                multiline
+                placeholder="Payment terms, conditions..."
+              />
+              <FormInput
+                label="Internal Notes"
+                value={notes}
+                onChangeText={setNotes}
+                multiline
+                placeholder="Private notes for team..."
+                last
+              />
+            </FormSection>
+            <View className="h-10" />
           </ScrollView>
         </View>
       </Modal>
 
-      <Modal visible={editOpen} animationType="slide">
-        <View className="flex-1 bg-white">
-          <View className="flex-row items-center justify-between border-b border-slate-200 px-3 py-3">
-            <Pressable onPress={() => setEditOpen(false)}>
-              <Text className="text-blue-600">Cancel</Text>
-            </Pressable>
-            <Text className="text-lg font-semibold">Edit quote</Text>
-            <Pressable onPress={() => void submitEdit()}>
-              <Text className="font-semibold text-blue-600">Save</Text>
-            </Pressable>
-          </View>
-          <ScrollView className="flex-1 px-4 py-4" keyboardShouldPersistTaps="handled">
-            <Text className="mb-1 text-sm font-medium text-slate-700">Title</Text>
-            <TextInput
-              value={title}
-              onChangeText={setTitle}
-              className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <Text className="mb-1 text-sm font-medium text-slate-700">Amount</Text>
-            <TextInput
-              value={amountStr}
-              onChangeText={setAmountStr}
-              keyboardType="decimal-pad"
-              className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <Text className="mb-1 text-sm font-medium text-slate-700">Valid until</Text>
-            <TextInput
-              value={validUntil}
-              onChangeText={setValidUntil}
-              className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <Text className="mb-1 text-sm font-medium text-slate-700">Description</Text>
-            <TextInput
-              value={description}
-              onChangeText={setDescription}
-              multiline
-              className="mb-3 min-h-[80px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <Text className="mb-1 text-sm font-medium text-slate-700">Terms</Text>
-            <TextInput
-              value={terms}
-              onChangeText={setTerms}
-              multiline
-              className="mb-3 min-h-[72px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <Text className="mb-1 text-sm font-medium text-slate-700">Notes</Text>
-            <TextInput
-              value={notes}
-              onChangeText={setNotes}
-              multiline
-              className="mb-8 min-h-[72px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
+      <Modal visible={editOpen} animationType="slide" presentationStyle="pageSheet">
+        <View className="flex-1 bg-slate-50">
+          <FormHeader 
+            title="Edit Quote" 
+            onCancel={() => setEditOpen(false)} 
+            onSave={() => void submitEdit()} 
+          />
+          <ScrollView 
+            className="flex-1 px-4 pt-6" 
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <FormSection title="General Information">
+              <FormInput
+                label="Quote Title"
+                icon="document-text-outline"
+                value={title}
+                onChangeText={setTitle}
+              />
+              <FormSelect
+                label="Opportunity"
+                icon="briefcase-outline"
+                value={opportunityId ? opportunities.find(o => o.id === opportunityId)?.title || '' : ''}
+                onPress={() => {}} // Usually opportunity is read-only in edit for quotes if linked
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Pricing & Timeline">
+              <FormInput
+                label="Amount"
+                icon="cash-outline"
+                value={amountStr}
+                onChangeText={setAmountStr}
+                keyboardType="decimal-pad"
+              />
+              <FormInput
+                label="Valid Until"
+                icon="calendar-outline"
+                value={validUntil}
+                onChangeText={setValidUntil}
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Details & Terms">
+              <FormInput
+                label="Description"
+                value={description}
+                onChangeText={setDescription}
+                multiline
+              />
+              <FormInput
+                label="Terms"
+                value={terms}
+                onChangeText={setTerms}
+                multiline
+              />
+              <FormInput
+                label="Internal Notes"
+                value={notes}
+                onChangeText={setNotes}
+                multiline
+                last
+              />
+            </FormSection>
+            <View className="h-10" />
           </ScrollView>
         </View>
       </Modal>

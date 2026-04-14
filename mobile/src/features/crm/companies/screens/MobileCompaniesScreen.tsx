@@ -11,6 +11,7 @@ import {
   RefreshControl,
   Alert,
   Linking,
+  Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MenuHeaderButton } from '../../../../components/layout/MenuHeaderButton';
@@ -33,6 +34,7 @@ import {
 } from '../../../../services/crm/companiesApi';
 import { formatCrmDate, formatUsd } from '../../../../services/crm/CrmMobileService';
 import { industryLabel } from '../../contacts/utils/contactFormUtils';
+import { FormHeader, FormSection, FormInput, FormSelect } from '../../../../components/layout/MobileForm';
 
 const ITEMS_PER_PAGE = 10;
 const FILTER_ANY = 'all';
@@ -272,218 +274,6 @@ export function MobileCompaniesScreen() {
   const userLabel = [user?.firstName, user?.lastName].filter(Boolean).join(' ')
     ? `${[user?.firstName, user?.lastName].filter(Boolean).join(' ')} · ${user?.email ?? ''}`
     : user?.email ?? '';
-
-  const renderForm = () => (
-    <ScrollView
-      className="max-h-[80%]"
-      keyboardShouldPersistTaps="handled"
-      showsVerticalScrollIndicator={false}
-    >
-      <View className="mt-2 gap-3">
-        <View>
-          <Text className="mb-1 text-xs font-medium text-slate-600">
-            Company name *
-          </Text>
-          <TextInput
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-            value={form.name}
-            onChangeText={(t) => setForm((p) => ({ ...p, name: t }))}
-            placeholder="Name"
-          />
-        </View>
-        <View>
-          <Text className="mb-1 text-xs font-medium text-slate-600">Industry</Text>
-          <Pressable
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2"
-            onPress={() => setFormIndustryOpen(true)}
-          >
-            <Text className="text-slate-900">
-              {form.industry ? industryLabel(form.industry) : 'Not set'}
-            </Text>
-          </Pressable>
-        </View>
-        <View>
-          <Text className="mb-1 text-xs font-medium text-slate-600">Size</Text>
-          <Pressable
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2"
-            onPress={() => setFormSizeOpen(true)}
-          >
-            <Text className="text-slate-900">
-              {form.size ? sizeLabel(form.size) : 'Not set'}
-            </Text>
-          </Pressable>
-        </View>
-        {(
-          [
-            ['website', 'Website', 'https://'],
-            ['phone', 'Phone', ''],
-            ['address', 'Address', 'Street'],
-          ] as const
-        ).map(([k, label, ph]) => (
-          <View key={k}>
-            <Text className="mb-1 text-xs font-medium text-slate-600">{label}</Text>
-            <TextInput
-              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-              value={String(form[k] ?? '')}
-              onChangeText={(t) =>
-                setForm((p) => ({ ...p, [k]: t } as FormState))
-              }
-              placeholder={ph}
-              autoCapitalize={k === 'website' ? 'none' : 'sentences'}
-            />
-          </View>
-        ))}
-        <View className="flex-row gap-2">
-          <View className="flex-1">
-            <Text className="mb-1 text-xs font-medium text-slate-600">City</Text>
-            <TextInput
-              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-              value={form.city || ''}
-              onChangeText={(t) => setForm((p) => ({ ...p, city: t }))}
-            />
-          </View>
-          <View className="flex-1">
-            <Text className="mb-1 text-xs font-medium text-slate-600">State</Text>
-            <TextInput
-              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-              value={form.state || ''}
-              onChangeText={(t) => setForm((p) => ({ ...p, state: t }))}
-            />
-          </View>
-        </View>
-        <View className="flex-row gap-2">
-          <View className="flex-1">
-            <Text className="mb-1 text-xs font-medium text-slate-600">Country</Text>
-            <TextInput
-              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-              value={form.country || ''}
-              onChangeText={(t) => setForm((p) => ({ ...p, country: t }))}
-            />
-          </View>
-          <View className="flex-1">
-            <Text className="mb-1 text-xs font-medium text-slate-600">Postal</Text>
-            <TextInput
-              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-              value={form.postalCode || ''}
-              onChangeText={(t) => setForm((p) => ({ ...p, postalCode: t }))}
-            />
-          </View>
-        </View>
-        <View>
-          <Text className="mb-1 text-xs font-medium text-slate-600">Description</Text>
-          <TextInput
-            className="min-h-[72px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-            value={form.description || ''}
-            onChangeText={(t) => setForm((p) => ({ ...p, description: t }))}
-            multiline
-            textAlignVertical="top"
-          />
-        </View>
-        <View>
-          <Text className="mb-1 text-xs font-medium text-slate-600">Notes</Text>
-          <TextInput
-            className="min-h-[72px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-            value={form.notes || ''}
-            onChangeText={(t) => setForm((p) => ({ ...p, notes: t }))}
-            multiline
-            textAlignVertical="top"
-          />
-        </View>
-        <View>
-          <Text className="mb-1 text-xs font-medium text-slate-600">
-            Tags (comma separated)
-          </Text>
-          <TextInput
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-            value={form.tagsText}
-            onChangeText={(t) =>
-              setForm((p) => ({
-                ...p,
-                tagsText: t,
-                tags: t
-                  .split(',')
-                  .map((x) => x.trim())
-                  .filter(Boolean),
-              }))
-            }
-          />
-        </View>
-        <Pressable
-          onPress={() => setForm((p) => ({ ...p, isActive: !p.isActive }))}
-          className="flex-row items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-3"
-        >
-          <Text className="text-sm font-medium text-slate-800">Active</Text>
-          <View
-            className={`h-7 w-12 rounded-full ${form.isActive ? 'bg-emerald-500' : 'bg-slate-300'}`}
-          >
-            <View
-              className={`mt-0.5 h-6 w-6 rounded-full bg-white ${form.isActive ? 'ml-5' : 'ml-0.5'}`}
-            />
-          </View>
-        </Pressable>
-        <View>
-          <Text className="mb-1 text-xs font-medium text-slate-600">
-            Annual revenue
-          </Text>
-          <TextInput
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-            value={
-              form.annualRevenue != null ? String(form.annualRevenue) : ''
-            }
-            onChangeText={(t) =>
-              setForm((p) => ({
-                ...p,
-                annualRevenue: t.trim()
-                  ? parseFloat(t.replace(/[^0-9.-]/g, ''))
-                  : undefined,
-              }))
-            }
-            keyboardType="decimal-pad"
-          />
-        </View>
-        <View className="flex-row gap-2">
-          <View className="flex-1">
-            <Text className="mb-1 text-xs font-medium text-slate-600">
-              Employees
-            </Text>
-            <TextInput
-              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-              value={
-                form.employeeCount != null ? String(form.employeeCount) : ''
-              }
-              onChangeText={(t) =>
-                setForm((p) => ({
-                  ...p,
-                  employeeCount: t.trim()
-                    ? parseInt(t.replace(/[^0-9]/g, ''), 10)
-                    : undefined,
-                }))
-              }
-              keyboardType="number-pad"
-            />
-          </View>
-          <View className="flex-1">
-            <Text className="mb-1 text-xs font-medium text-slate-600">
-              Founded year
-            </Text>
-            <TextInput
-              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-              value={form.foundedYear != null ? String(form.foundedYear) : ''}
-              onChangeText={(t) =>
-                setForm((p) => ({
-                  ...p,
-                  foundedYear: t.trim()
-                    ? parseInt(t.replace(/[^0-9]/g, ''), 10)
-                    : undefined,
-                }))
-              }
-              keyboardType="number-pad"
-            />
-          </View>
-        </View>
-      </View>
-    </ScrollView>
-  );
 
   const listHeader = (
     <View className="pb-2">
@@ -775,55 +565,355 @@ export function MobileCompaniesScreen() {
         onClose={() => setFormSizeOpen(false)}
       />
 
-      <Modal visible={createOpen} animationType="slide" transparent>
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
-            <Text className="text-lg font-bold text-slate-900">New company</Text>
-            {renderForm()}
-            <View className="mt-4 flex-row gap-2">
-              <Pressable
-                className="flex-1 items-center rounded-lg border border-slate-300 py-3"
-                onPress={() => {
-                  setCreateOpen(false);
-                  resetForm();
-                }}
-              >
-                <Text className="font-semibold text-slate-700">Cancel</Text>
-              </Pressable>
-              <Pressable
-                className="flex-1 items-center rounded-lg bg-indigo-600 py-3 active:bg-indigo-700"
-                onPress={() => void submitSave()}
-              >
-                <Text className="font-semibold text-white">Create</Text>
-              </Pressable>
+      <Modal visible={createOpen} animationType="slide" presentationStyle="pageSheet">
+        <View className="flex-1 bg-slate-50">
+          <FormHeader 
+            title="New Company" 
+            onCancel={() => {
+              setCreateOpen(false);
+              resetForm();
+            }} 
+            onSave={() => void submitSave()} 
+          />
+          <ScrollView 
+            className="flex-1 px-4 pt-6" 
+            keyboardShouldPersistTaps="handled" 
+            showsVerticalScrollIndicator={false}
+          >
+            <FormSection title="Account Identity">
+              <FormInput
+                label="Company Name"
+                icon="business-outline"
+                value={form.name}
+                onChangeText={(t) => setForm(p => ({ ...p, name: t }))}
+                placeholder="Ex: Acme Corporation"
+              />
+              <FormSelect
+                label="Industry"
+                icon="flask-outline"
+                value={form.industry ? industryLabel(form.industry) : 'Not set'}
+                onPress={() => setFormIndustryOpen(true)}
+              />
+              <FormSelect
+                label="Company Size"
+                icon="podium-outline"
+                value={form.size ? sizeLabel(form.size) : 'Not set'}
+                onPress={() => setFormSizeOpen(true)}
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Presence & Communication">
+              <FormInput
+                label="Website"
+                icon="globe-outline"
+                value={form.website || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, website: t }))}
+                placeholder="https://..."
+                autoCapitalize="none"
+              />
+              <FormInput
+                label="Phone"
+                icon="call-outline"
+                value={form.phone || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, phone: t }))}
+                placeholder="+1..."
+                keyboardType="phone-pad"
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Address Details">
+              <FormInput
+                label="Street Address"
+                icon="location-outline"
+                value={form.address || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, address: t }))}
+              />
+              <View className="flex-row border-b border-slate-50">
+                <View className="flex-1">
+                  <FormInput
+                    label="City"
+                    value={form.city || ''}
+                    onChangeText={(t) => setForm(p => ({ ...p, city: t }))}
+                    className="border-b-0"
+                  />
+                </View>
+                <View className="flex-1 border-l border-slate-50">
+                  <FormInput
+                    label="State"
+                    value={form.state || ''}
+                    onChangeText={(t) => setForm(p => ({ ...p, state: t }))}
+                    className="border-b-0"
+                  />
+                </View>
+              </View>
+              <View className="flex-row">
+                <View className="flex-1">
+                  <FormInput
+                    label="Country"
+                    value={form.country || ''}
+                    onChangeText={(t) => setForm(p => ({ ...p, country: t }))}
+                    className="border-b-0"
+                  />
+                </View>
+                <View className="flex-1 border-l border-slate-50">
+                  <FormInput
+                    label="Postal Code"
+                    value={form.postalCode || ''}
+                    onChangeText={(t) => setForm(p => ({ ...p, postalCode: t }))}
+                    className="border-b-0"
+                    last
+                  />
+                </View>
+              </View>
+            </FormSection>
+
+            <FormSection title="Financials & Metrics">
+              <FormInput
+                label="Annual Revenue"
+                icon="wallet-outline"
+                value={form.annualRevenue != null ? String(form.annualRevenue) : ''}
+                onChangeText={(t) => setForm(p => ({ ...p, annualRevenue: t.trim() ? parseFloat(t.replace(/[^0-9.-]/g, '')) : undefined }))}
+                keyboardType="decimal-pad"
+                placeholder="0.00"
+              />
+              <View className="flex-row">
+                <View className="flex-1">
+                  <FormInput
+                    label="Employees"
+                    icon="people-outline"
+                    value={form.employeeCount != null ? String(form.employeeCount) : ''}
+                    onChangeText={(t) => setForm(p => ({ ...p, employeeCount: t.trim() ? parseInt(t.replace(/[^0-9]/g, ''), 10) : undefined }))}
+                    keyboardType="number-pad"
+                    className="border-b-0"
+                  />
+                </View>
+                <View className="flex-1 border-l border-slate-50">
+                  <FormInput
+                    label="Founded Year"
+                    icon="calendar-outline"
+                    value={form.foundedYear != null ? String(form.foundedYear) : ''}
+                    onChangeText={(t) => setForm(p => ({ ...p, foundedYear: t.trim() ? parseInt(t.replace(/[^0-9]/g, ''), 10) : undefined }))}
+                    keyboardType="number-pad"
+                    className="border-b-0"
+                    last
+                  />
+                </View>
+              </View>
+            </FormSection>
+
+            <FormSection title="Notes & Metadata">
+              <FormInput
+                label="Description"
+                value={form.description || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, description: t }))}
+                multiline
+              />
+              <FormInput
+                label="Tags (comma separated)"
+                icon="pricetags-outline"
+                value={form.tagsText}
+                onChangeText={(t) => setForm(p => ({ ...p, tagsText: t, tags: t.split(',').map(x => x.trim()).filter(Boolean) }))}
+              />
+              <FormInput
+                label="Internal Notes"
+                value={form.notes || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, notes: t }))}
+                multiline
+                last
+              />
+            </FormSection>
+            
+            <View className="mb-6 flex-row items-center justify-between rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm">
+              <View className="flex-row items-center">
+                <View className={`h-2 w-2 rounded-full mr-2 ${form.isActive ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                <Text className="text-sm font-semibold text-slate-800">Active Account</Text>
+              </View>
+              <Switch 
+                value={form.isActive} 
+                onValueChange={(v) => setForm(p => ({ ...p, isActive: v }))} 
+                trackColor={{ false: '#e2e8f0', true: '#6ee7b7' }}
+                thumbColor={form.isActive ? '#10b981' : '#f8fafc'}
+              />
             </View>
-          </View>
+            
+            <View className="h-10" />
+          </ScrollView>
         </View>
       </Modal>
 
-      <Modal visible={editOpen} animationType="slide" transparent>
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
-            <Text className="text-lg font-bold text-slate-900">Edit company</Text>
-            {renderForm()}
-            <View className="mt-4 flex-row gap-2">
-              <Pressable
-                className="flex-1 items-center rounded-lg border border-slate-300 py-3"
-                onPress={() => {
-                  setEditOpen(false);
-                  resetForm();
-                }}
-              >
-                <Text className="font-semibold text-slate-700">Cancel</Text>
-              </Pressable>
-              <Pressable
-                className="flex-1 items-center rounded-lg bg-indigo-600 py-3 active:bg-indigo-700"
-                onPress={() => void submitSave()}
-              >
-                <Text className="font-semibold text-white">Save</Text>
-              </Pressable>
+      <Modal visible={editOpen} animationType="slide" presentationStyle="pageSheet">
+        <View className="flex-1 bg-slate-50">
+          <FormHeader 
+            title="Edit Company" 
+            onCancel={() => {
+              setEditOpen(false);
+              resetForm();
+            }} 
+            onSave={() => void submitSave()} 
+          />
+          <ScrollView 
+            className="flex-1 px-4 pt-6" 
+            keyboardShouldPersistTaps="handled" 
+            showsVerticalScrollIndicator={false}
+          >
+            <FormSection title="Account Identity">
+              <FormInput
+                label="Company Name"
+                icon="business-outline"
+                value={form.name}
+                onChangeText={(t) => setForm(p => ({ ...p, name: t }))}
+              />
+              <FormSelect
+                label="Industry"
+                icon="flask-outline"
+                value={form.industry ? industryLabel(form.industry) : 'Not set'}
+                onPress={() => setFormIndustryOpen(true)}
+              />
+              <FormSelect
+                label="Company Size"
+                icon="podium-outline"
+                value={form.size ? sizeLabel(form.size) : 'Not set'}
+                onPress={() => setFormSizeOpen(true)}
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Presence & Communication">
+              <FormInput
+                label="Website"
+                icon="globe-outline"
+                value={form.website || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, website: t }))}
+                autoCapitalize="none"
+              />
+              <FormInput
+                label="Phone"
+                icon="call-outline"
+                value={form.phone || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, phone: t }))}
+                keyboardType="phone-pad"
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Address Details">
+              <FormInput
+                label="Street Address"
+                icon="location-outline"
+                value={form.address || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, address: t }))}
+              />
+              <View className="flex-row border-b border-slate-50">
+                <View className="flex-1">
+                  <FormInput
+                    label="City"
+                    value={form.city || ''}
+                    onChangeText={(t) => setForm(p => ({ ...p, city: t }))}
+                    className="border-b-0"
+                  />
+                </View>
+                <View className="flex-1 border-l border-slate-50">
+                  <FormInput
+                    label="State"
+                    value={form.state || ''}
+                    onChangeText={(t) => setForm(p => ({ ...p, state: t }))}
+                    className="border-b-0"
+                  />
+                </View>
+              </View>
+              <View className="flex-row">
+                <View className="flex-1">
+                  <FormInput
+                    label="Country"
+                    value={form.country || ''}
+                    onChangeText={(t) => setForm(p => ({ ...p, country: t }))}
+                    className="border-b-0"
+                  />
+                </View>
+                <View className="flex-1 border-l border-slate-50">
+                  <FormInput
+                    label="Postal Code"
+                    value={form.postalCode || ''}
+                    onChangeText={(t) => setForm(p => ({ ...p, postalCode: t }))}
+                    className="border-b-0"
+                    last
+                  />
+                </View>
+              </View>
+            </FormSection>
+
+            <FormSection title="Financials & Metrics">
+              <FormInput
+                label="Annual Revenue"
+                icon="wallet-outline"
+                value={form.annualRevenue != null ? String(form.annualRevenue) : ''}
+                onChangeText={(t) => setForm(p => ({ ...p, annualRevenue: t.trim() ? parseFloat(t.replace(/[^0-9.-]/g, '')) : undefined }))}
+                keyboardType="decimal-pad"
+              />
+              <View className="flex-row">
+                <View className="flex-1">
+                  <FormInput
+                    label="Employees"
+                    icon="people-outline"
+                    value={form.employeeCount != null ? String(form.employeeCount) : ''}
+                    onChangeText={(t) => setForm(p => ({ ...p, employeeCount: t.trim() ? parseInt(t.replace(/[^0-9]/g, ''), 10) : undefined }))}
+                    keyboardType="number-pad"
+                    className="border-b-0"
+                  />
+                </View>
+                <View className="flex-1 border-l border-slate-50">
+                  <FormInput
+                    label="Founded Year"
+                    icon="calendar-outline"
+                    value={form.foundedYear != null ? String(form.foundedYear) : ''}
+                    onChangeText={(t) => setForm(p => ({ ...p, foundedYear: t.trim() ? parseInt(t.replace(/[^0-9]/g, ''), 10) : undefined }))}
+                    keyboardType="number-pad"
+                    className="border-b-0"
+                    last
+                  />
+                </View>
+              </View>
+            </FormSection>
+
+            <FormSection title="Notes & Metadata">
+              <FormInput
+                label="Description"
+                value={form.description || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, description: t }))}
+                multiline
+              />
+              <FormInput
+                label="Tags (comma separated)"
+                icon="pricetags-outline"
+                value={form.tagsText}
+                onChangeText={(t) => setForm(p => ({ ...p, tagsText: t, tags: t.split(',').map(x => x.trim()).filter(Boolean) }))}
+              />
+              <FormInput
+                label="Internal Notes"
+                value={form.notes || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, notes: t }))}
+                multiline
+                last
+              />
+            </FormSection>
+            
+            <View className="mb-6 flex-row items-center justify-between rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm">
+              <View className="flex-row items-center">
+                <View className={`h-2 w-2 rounded-full mr-2 ${form.isActive ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                <Text className="text-sm font-semibold text-slate-800">Active Account</Text>
+              </View>
+              <Switch 
+                value={form.isActive} 
+                onValueChange={(v) => setForm(p => ({ ...p, isActive: v }))} 
+                trackColor={{ false: '#e2e8f0', true: '#6ee7b7' }}
+                thumbColor={form.isActive ? '#10b981' : '#f8fafc'}
+              />
             </View>
-          </View>
+            
+            <View className="h-10" />
+          </ScrollView>
         </View>
       </Modal>
 

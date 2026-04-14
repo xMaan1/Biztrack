@@ -32,7 +32,7 @@ class PaymentStatus(str, Enum):
     CANCELLED = "cancelled"
 
 class InvoiceItem(BaseModel):
-    id: str
+    id: Any
     description: str
     quantity: float
     unitPrice: float
@@ -40,7 +40,7 @@ class InvoiceItem(BaseModel):
     taxRate: float = 0.0
     taxAmount: float = 0.0
     total: float
-    productId: Optional[str] = None
+    productId: Optional[Any] = None
     projectId: Optional[str] = None
     taskId: Optional[str] = None
 
@@ -66,7 +66,7 @@ class InvoiceItemUpdate(BaseModel):
 
 class InvoiceBase(BaseModel):
     invoiceNumber: str
-    customerId: str
+    customerId: Any
     customerName: str
     customerEmail: str
     customerPhone: Optional[str] = None
@@ -163,9 +163,9 @@ class InvoiceUpdate(BaseModel):
     partsTotal: Optional[float] = None
 
 class Invoice(InvoiceBase):
-    id: str
-    tenant_id: str
-    createdBy: str
+    id: Any
+    tenant_id: Any
+    createdBy: Any
     opportunityId: Optional[str] = None
     quoteId: Optional[str] = None
     projectId: Optional[str] = None

@@ -43,6 +43,7 @@ import {
   formatUsd,
   getOpportunityStageBadgeClass,
 } from '../../../../services/crm/CrmMobileService';
+import { FormHeader, FormSection, FormInput, FormSelect } from '../../../../components/layout/MobileForm';
 
 const ITEMS_PER_PAGE = 10;
 const FILTER_ANY = 'all';
@@ -521,9 +522,9 @@ export function MobileOpportunitiesScreen() {
             <Text className="text-slate-900">
               {form.leadId
                 ? (() => {
-                    const L = leadById.get(form.leadId);
-                    return L ? leadName(L) : form.leadId;
-                  })()
+                  const L = leadById.get(form.leadId);
+                  return L ? leadName(L) : form.leadId;
+                })()
                 : 'None'}
             </Text>
           </Pressable>
@@ -537,9 +538,9 @@ export function MobileOpportunitiesScreen() {
             <Text className="text-slate-900">
               {form.contactId
                 ? (() => {
-                    const C = contactById.get(form.contactId);
-                    return C ? contactName(C) : form.contactId;
-                  })()
+                  const C = contactById.get(form.contactId);
+                  return C ? contactName(C) : form.contactId;
+                })()
                 : 'None'}
             </Text>
           </Pressable>
@@ -553,11 +554,11 @@ export function MobileOpportunitiesScreen() {
             <Text className="text-slate-900">
               {form.assignedTo
                 ? assigneeLabel(
-                    users.find((u) => (u.id || u.userId) === form.assignedTo) || {
-                      userName: form.assignedTo,
-                      email: '',
-                    } as User,
-                  )
+                  users.find((u) => (u.id || u.userId) === form.assignedTo) || {
+                    userName: form.assignedTo,
+                    email: '',
+                  } as User,
+                )
                 : 'Unassigned'}
             </Text>
           </Pressable>
@@ -698,9 +699,8 @@ export function MobileOpportunitiesScreen() {
             <Pressable
               disabled={currentPage <= 1}
               onPress={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              className={`rounded-lg border px-4 py-2 ${
-                currentPage <= 1 ? 'border-slate-100 opacity-50' : 'border-slate-300'
-              }`}
+              className={`rounded-lg border px-4 py-2 ${currentPage <= 1 ? 'border-slate-100 opacity-50' : 'border-slate-300'
+                }`}
             >
               <Text className="font-semibold text-slate-800">Previous</Text>
             </Pressable>
@@ -709,11 +709,10 @@ export function MobileOpportunitiesScreen() {
               onPress={() =>
                 setCurrentPage((p) => Math.min(totalPages, p + 1))
               }
-              className={`rounded-lg border px-4 py-2 ${
-                currentPage >= totalPages
+              className={`rounded-lg border px-4 py-2 ${currentPage >= totalPages
                   ? 'border-slate-100 opacity-50'
                   : 'border-slate-300'
-              }`}
+                }`}
             >
               <Text className="font-semibold text-slate-800">Next</Text>
             </Pressable>
@@ -875,55 +874,231 @@ export function MobileOpportunitiesScreen() {
         onClose={() => setFormAssigneeOpen(false)}
       />
 
-      <Modal visible={createOpen} animationType="slide" transparent>
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
-            <Text className="text-lg font-bold text-slate-900">New opportunity</Text>
-            {renderForm()}
-            <View className="mt-4 flex-row gap-2">
-              <Pressable
-                className="flex-1 items-center rounded-lg border border-slate-300 py-3"
-                onPress={() => {
-                  setCreateOpen(false);
-                  resetForm();
-                }}
-              >
-                <Text className="font-semibold text-slate-700">Cancel</Text>
-              </Pressable>
-              <Pressable
-                className="flex-1 items-center rounded-lg bg-indigo-600 py-3 active:bg-indigo-700"
-                onPress={() => void submitSave()}
-              >
-                <Text className="font-semibold text-white">Create</Text>
-              </Pressable>
-            </View>
-          </View>
+      <Modal visible={createOpen} animationType="slide" presentationStyle="pageSheet">
+        <View className="flex-1 bg-slate-50">
+          <FormHeader
+            title="New Opportunity"
+            onCancel={() => {
+              setCreateOpen(false);
+              resetForm();
+            }}
+            onSave={() => void submitSave()}
+          />
+          <ScrollView
+            className="flex-1 px-4 pt-6"
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <FormSection title="Core Information">
+              <FormInput
+                label="Opportunity Title"
+                icon="document-text-outline"
+                value={form.title}
+                onChangeText={(t) => setForm(p => ({ ...p, title: t }))}
+                placeholder="Ex: Project Alpha Expansion"
+              />
+              <FormSelect
+                label="Current Stage"
+                icon="stats-chart-outline"
+                value={stageLabel(form.stage!)}
+                onPress={() => setFormStageOpen(true)}
+              />
+              <FormInput
+                label="Description"
+                icon="reader-outline"
+                value={form.description || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, description: t }))}
+                multiline
+                placeholder="Details about the deal..."
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Financials & Timeline">
+              <FormInput
+                label="Amount"
+                icon="cash-outline"
+                value={form.amount != null ? String(form.amount) : ''}
+                onChangeText={(t) => setForm(p => ({ ...p, amount: t.trim() ? parseFloat(t.replace(/[^0-9.-]/g, '')) : undefined }))}
+                keyboardType="decimal-pad"
+                placeholder="0.00"
+              />
+              <FormInput
+                label="Probability (%)"
+                icon="pie-chart-outline"
+                value={String(form.probability ?? 0)}
+                onChangeText={(t) => setForm(p => ({ ...p, probability: Math.min(100, Math.max(0, parseInt(t.replace(/[^0-9]/g, ''), 10) || 0)) }))}
+                keyboardType="number-pad"
+              />
+              <FormInput
+                label="Expected Close Date"
+                icon="calendar-outline"
+                value={form.expectedCloseDate || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, expectedCloseDate: t }))}
+                placeholder="YYYY-MM-DD"
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Relationships & Assignment">
+              <FormSelect
+                label="Account / Company"
+                icon="business-outline"
+                value={form.companyId ? companyById.get(form.companyId)?.name || '' : 'None'}
+                onPress={() => setFormCompanyOpen(true)}
+              />
+              <FormSelect
+                label="Primary Contact"
+                icon="person-outline"
+                value={form.contactId ? contactName(contactById.get(form.contactId)!) : 'None'}
+                onPress={() => setFormContactOpen(true)}
+              />
+              <FormSelect
+                label="Lead Source"
+                icon="at-outline"
+                value={form.leadId ? leadName(leadById.get(form.leadId)!) : 'None'}
+                onPress={() => setFormLeadOpen(true)}
+              />
+              <FormSelect
+                label="Assigned To"
+                icon="people-outline"
+                value={form.assignedTo ? assigneeLabel(users.find(u => (u.id || u.userId) === form.assignedTo) || { userName: form.assignedTo } as User) : 'Unassigned'}
+                onPress={() => setFormAssigneeOpen(true)}
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Categorization & Notes">
+              <FormInput
+                label="Tags (comma separated)"
+                icon="pricetags-outline"
+                value={form.tagsText}
+                onChangeText={(t) => setForm(p => ({ ...p, tagsText: t }))}
+                placeholder="enterprise, referral..."
+              />
+              <FormInput
+                label="Internal Notes"
+                icon="chatbox-ellipses-outline"
+                value={form.notes || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, notes: t }))}
+                multiline
+                placeholder="Confidential notes..."
+                last
+              />
+            </FormSection>
+            <View className="h-10" />
+          </ScrollView>
         </View>
       </Modal>
 
-      <Modal visible={editOpen} animationType="slide" transparent>
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
-            <Text className="text-lg font-bold text-slate-900">Edit opportunity</Text>
-            {renderForm()}
-            <View className="mt-4 flex-row gap-2">
-              <Pressable
-                className="flex-1 items-center rounded-lg border border-slate-300 py-3"
-                onPress={() => {
-                  setEditOpen(false);
-                  resetForm();
-                }}
-              >
-                <Text className="font-semibold text-slate-700">Cancel</Text>
-              </Pressable>
-              <Pressable
-                className="flex-1 items-center rounded-lg bg-indigo-600 py-3 active:bg-indigo-700"
-                onPress={() => void submitSave()}
-              >
-                <Text className="font-semibold text-white">Save</Text>
-              </Pressable>
-            </View>
-          </View>
+      <Modal visible={editOpen} animationType="slide" presentationStyle="pageSheet">
+        <View className="flex-1 bg-slate-50">
+          <FormHeader
+            title="Edit Opportunity"
+            onCancel={() => {
+              setEditOpen(false);
+              resetForm();
+            }}
+            onSave={() => void submitSave()}
+          />
+          <ScrollView
+            className="flex-1 px-4 pt-6"
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <FormSection title="Core Information">
+              <FormInput
+                label="Opportunity Title"
+                icon="document-text-outline"
+                value={form.title}
+                onChangeText={(t) => setForm(p => ({ ...p, title: t }))}
+              />
+              <FormSelect
+                label="Current Stage"
+                icon="stats-chart-outline"
+                value={stageLabel(form.stage!)}
+                onPress={() => setFormStageOpen(true)}
+              />
+              <FormInput
+                label="Description"
+                icon="reader-outline"
+                value={form.description || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, description: t }))}
+                multiline
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Financials & Timeline">
+              <FormInput
+                label="Amount"
+                icon="cash-outline"
+                value={form.amount != null ? String(form.amount) : ''}
+                onChangeText={(t) => setForm(p => ({ ...p, amount: t.trim() ? parseFloat(t.replace(/[^0-9.-]/g, '')) : undefined }))}
+                keyboardType="decimal-pad"
+              />
+              <FormInput
+                label="Probability (%)"
+                icon="pie-chart-outline"
+                value={String(form.probability ?? 0)}
+                onChangeText={(t) => setForm(p => ({ ...p, probability: Math.min(100, Math.max(0, parseInt(t.replace(/[^0-9]/g, ''), 10) || 0)) }))}
+                keyboardType="number-pad"
+              />
+              <FormInput
+                label="Expected Close Date"
+                icon="calendar-outline"
+                value={form.expectedCloseDate || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, expectedCloseDate: t }))}
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Relationships & Assignment">
+              <FormSelect
+                label="Account / Company"
+                icon="business-outline"
+                value={form.companyId ? companyById.get(form.companyId)?.name || '' : 'None'}
+                onPress={() => setFormCompanyOpen(true)}
+              />
+              <FormSelect
+                label="Primary Contact"
+                icon="person-outline"
+                value={form.contactId ? contactName(contactById.get(form.contactId)!) : 'None'}
+                onPress={() => setFormContactOpen(true)}
+              />
+              <FormSelect
+                label="Lead Source"
+                icon="at-outline"
+                value={form.leadId ? leadName(leadById.get(form.leadId)!) : 'None'}
+                onPress={() => setFormLeadOpen(true)}
+              />
+              <FormSelect
+                label="Assigned To"
+                icon="people-outline"
+                value={form.assignedTo ? assigneeLabel(users.find(u => (u.id || u.userId) === form.assignedTo) || { userName: form.assignedTo } as User) : 'Unassigned'}
+                onPress={() => setFormAssigneeOpen(true)}
+                last
+              />
+            </FormSection>
+
+            <FormSection title="Categorization & Notes">
+              <FormInput
+                label="Tags (comma separated)"
+                icon="pricetags-outline"
+                value={form.tagsText}
+                onChangeText={(t) => setForm(p => ({ ...p, tagsText: t }))}
+              />
+              <FormInput
+                label="Internal Notes"
+                icon="chatbox-ellipses-outline"
+                value={form.notes || ''}
+                onChangeText={(t) => setForm(p => ({ ...p, notes: t }))}
+                multiline
+                last
+              />
+            </FormSection>
+            <View className="h-10" />
+          </ScrollView>
         </View>
       </Modal>
 
