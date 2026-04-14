@@ -630,6 +630,13 @@ export const allMenuItems: MenuItemDef[] = [
         planTypes: ['*'],
       },
       {
+        text: 'Invoice Customization',
+        icon: 'document-text-outline' as const,
+        path: '/settings/invoice',
+        roles: ['*'],
+        planTypes: ['*'],
+      },
+      {
         text: 'Notifications',
         icon: 'notifications-outline' as const,
         path: '/notifications',

@@ -1,5 +1,6 @@
 import { useSidebarDrawer } from '../../contexts/SidebarDrawerContext';
 import { MobileGeneralSettingsScreen } from './screens/MobileGeneralSettingsScreen';
+import { MobileInvoiceCustomizationScreen } from './screens/MobileInvoiceCustomizationScreen';
 import { MobileNotificationSettingsScreen } from './screens/MobileNotificationSettingsScreen';
 import { MobileSubscriptionManageScreen } from './screens/MobileSubscriptionManageScreen';
 import { MobileNotificationsScreen } from '../notifications/screens/MobileNotificationsScreen';
@@ -15,6 +16,8 @@ export function SettingsRouter() {
   switch (workspacePath) {
     case '/settings':
       return <MobileGeneralSettingsScreen />;
+    case '/settings/invoice':
+      return <MobileInvoiceCustomizationScreen />;
     case '/notifications':
       return <MobileNotificationsScreen />;
     case '/notifications/settings':

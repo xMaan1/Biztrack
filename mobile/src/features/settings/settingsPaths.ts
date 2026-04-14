@@ -1,5 +1,6 @@
 export const SETTINGS_NATIVE_PATHS = [
   '/settings',
+  '/settings/invoice',
   '/notifications',
   '/notifications/settings',
   '/subscription/manage',

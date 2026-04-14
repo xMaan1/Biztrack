@@ -165,7 +165,7 @@ def get_allowed_category_values(db, tenant_id: str) -> List[str]:
 
 # Product endpoints
 @router.get("/products", response_model=ProductsResponse)
-async def get_pos_products(
+async def list_pos_products(
     category: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
     low_stock: Optional[bool] = Query(None),
@@ -473,7 +473,7 @@ async def delete_pos_category_endpoint(
 
 # POS Shift endpoints
 @router.get("/shifts", response_model=POSShiftsResponse)
-async def get_pos_shifts(
+async def list_pos_shifts(
     status: Optional[str] = Query(None),
     cashier_id: Optional[str] = Query(None),
     date_from: Optional[str] = Query(None),
@@ -638,7 +638,7 @@ async def get_current_open_shift(
 
 # POS Transaction endpoints
 @router.get("/transactions", response_model=POSTransactionsResponse)
-async def get_pos_transactions(
+async def list_pos_transactions(
     status: Optional[str] = Query(None),
     payment_method: Optional[str] = Query(None),
     date_from: Optional[str] = Query(None),
