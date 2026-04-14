@@ -87,7 +87,7 @@ async def get_leads(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching leads: {str(e)}")
 
-@router.post("/leads", response_model=Lead)
+@router.post("/leads", response_model=LeadPydantic)
 async def create_lead(
     lead_data: LeadCreate,
     current_user = Depends(get_current_user),
