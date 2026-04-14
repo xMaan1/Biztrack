@@ -46,7 +46,7 @@ class LeadBase(BaseModel):
     phone: Optional[str] = None
     company: Optional[str] = None
     jobTitle: Optional[str] = None
-    leadSource: LeadSource = LeadSource.WEBSITE
+    leadSource: Optional[LeadSource] = LeadSource.WEBSITE
     status: LeadStatus = LeadStatus.NEW
     assignedTo: Optional[str] = None
     notes: Optional[str] = None
@@ -478,7 +478,7 @@ class OpportunityBase(BaseModel):
     amount: Optional[float] = None
     probability: int = 50
     expectedCloseDate: Optional[str] = None
-    leadSource: LeadSource = LeadSource.WEBSITE
+    leadSource: Optional[LeadSource] = LeadSource.WEBSITE
     leadId: Optional[str] = None
     contactId: Optional[str] = None
     companyId: Optional[str] = None
@@ -515,6 +515,29 @@ class Opportunity(OpportunityBase):
     activities: List[Dict[str, Any]] = []
     createdAt: datetime
     updatedAt: datetime
+
+    @field_validator("id", "tenant_id", mode="before")
+    @classmethod
+    def coerce_uuid_to_str(cls, v):
+        if v is None:
+            return v
+        return str(v) if hasattr(v, "hex") else v
+
+    @field_validator("createdBy", "assignedTo", mode="before")
+    @classmethod
+    def coerce_user_to_id(cls, v):
+        if v is None:
+            return None
+        if hasattr(v, "id"):
+            return str(v.id)
+        return str(v)
+
+    @field_validator("leadSource", mode="before")
+    @classmethod
+    def empty_lead_source(cls, v):
+        if v is None or v == "":
+            return None
+        return v
 
     class Config:
         from_attributes = True
