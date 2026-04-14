@@ -175,6 +175,20 @@ function BankingDashboardContent() {
   };
 
   const handleCreateAccount = async () => {
+    // Validation
+    if (!formData.accountName.trim()) {
+      toast.error('Account Name is required');
+      return;
+    }
+    if (!formData.accountNumber.trim()) {
+      toast.error('Account Number is required');
+      return;
+    }
+    if (!formData.bankName.trim()) {
+      toast.error('Bank Name is required');
+      return;
+    }
+    
     try {
       setSubmitting(true);
       

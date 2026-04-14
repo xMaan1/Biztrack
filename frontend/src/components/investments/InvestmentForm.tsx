@@ -85,6 +85,17 @@ export default function InvestmentForm({ isOpen, onClose, onSuccess, editingInve
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validation
+    if (!formData.description.trim()) {
+      alert('Please enter a description');
+      return;
+    }
+    if (formData.amount <= 0) {
+      alert('Amount must be greater than 0');
+      return;
+    }
+
     setLoading(true);
 
     try {
