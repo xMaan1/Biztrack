@@ -368,7 +368,7 @@ const POSProducts = () => {
                     <SelectItem value="all">All Categories</SelectItem>
                     {(categories.length ? categories : Object.values(ProductCategory)).map((category) => (
                       <SelectItem key={category} value={category}>
-                        {category.charAt(0).toUpperCase() + category.replace(/_/g, ' ')}
+                        {category.charAt(0).toUpperCase() + category.slice(1).replace(/_/g, ' ')}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -576,7 +576,7 @@ const POSProducts = () => {
                         <SelectContent>
                           {(categories.length ? categories : Object.values(ProductCategory)).map((category) => (
                             <SelectItem key={category} value={category}>
-                              {category.charAt(0).toUpperCase() + category.replace(/_/g, ' ')}
+                              {category.charAt(0).toUpperCase() + category.slice(1).replace(/_/g, ' ')}
                             </SelectItem>
                           ))}
                         </SelectContent>
