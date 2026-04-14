@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 from .labeled_contact_items import LabeledEmailItem, LabeledPhoneItem
 from datetime import datetime
 from uuid import UUID
@@ -553,7 +553,7 @@ class QuoteBase(BaseModel):
     title: str
     description: Optional[str] = None
     opportunityId: str
-    validUntil: str
+    validUntil: Union[datetime, str]
     terms: Optional[str] = None
     notes: Optional[str] = None
     items: List[QuoteItem] = []
@@ -568,7 +568,7 @@ class QuoteCreate(QuoteBase):
 class QuoteUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
-    validUntil: Optional[str] = None
+    validUntil: Optional[Union[datetime, str]] = None
     terms: Optional[str] = None
     notes: Optional[str] = None
     items: Optional[List[QuoteItem]] = None
@@ -578,11 +578,11 @@ class QuoteUpdate(BaseModel):
     total: Optional[float] = None
 
 class Quote(QuoteBase):
-    id: str
+    id: UUID
     quoteNumber: str
     status: QuoteStatus = QuoteStatus.DRAFT
-    tenant_id: str
-    createdBy: str
+    tenant_id: UUID
+    createdBy: UUID
     sentAt: Optional[datetime] = None
     viewedAt: Optional[datetime] = None
     acceptedAt: Optional[datetime] = None
@@ -596,8 +596,8 @@ class ContractBase(BaseModel):
     title: str
     description: Optional[str] = None
     opportunityId: str
-    startDate: str
-    endDate: str
+    startDate: Union[datetime, str]
+    endDate: Union[datetime, str]
     value: float
     terms: Optional[str] = None
     notes: Optional[str] = None
@@ -610,8 +610,8 @@ class ContractCreate(ContractBase):
 class ContractUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
-    startDate: Optional[str] = None
-    endDate: Optional[str] = None
+    startDate: Optional[Union[datetime, str]] = None
+    endDate: Optional[Union[datetime, str]] = None
     value: Optional[float] = None
     terms: Optional[str] = None
     notes: Optional[str] = None
@@ -619,11 +619,11 @@ class ContractUpdate(BaseModel):
     renewalTerms: Optional[str] = None
 
 class Contract(ContractBase):
-    id: str
+    id: UUID
     contractNumber: str
     status: ContractStatus = ContractStatus.DRAFT
-    tenant_id: str
-    createdBy: str
+    tenant_id: UUID
+    createdBy: UUID
     signedAt: Optional[datetime] = None
     activatedAt: Optional[datetime] = None
     createdAt: datetime

@@ -196,27 +196,28 @@ export function MobileQuotesScreen() {
       Alert.alert('Quotes', 'Title, valid until, and amount are required.');
       return;
     }
+    const payload = {
+      title: title.trim(),
+      description: description.trim() || undefined,
+      validUntil: new Date(validUntil).toISOString(),
+      terms: terms.trim() || undefined,
+      notes: notes.trim() || undefined,
+      subtotal: amt,
+      taxRate: 0,
+      taxAmount: 0,
+      total: amt,
+      items: [
+        {
+          description: title.trim(),
+          quantity: 1,
+          unitPrice: amt,
+          discount: 0,
+          total: amt,
+        },
+      ],
+    };
     try {
-      await updateQuoteApi(editing.id, {
-        title: title.trim(),
-        description: description.trim() || undefined,
-        validUntil: new Date(validUntil).toISOString(),
-        terms: terms.trim() || undefined,
-        notes: notes.trim() || undefined,
-        subtotal: amt,
-        taxRate: 0,
-        taxAmount: 0,
-        total: amt,
-        items: [
-          {
-            description: title.trim(),
-            quantity: 1,
-            unitPrice: amt,
-            discount: 0,
-            total: amt,
-          },
-        ],
-      });
+      await updateQuoteApi(editing.id, payload);
       setEditOpen(false);
       setEditing(null);
       await loadQuotes();
