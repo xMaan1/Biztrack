@@ -477,7 +477,7 @@ class OpportunityBase(BaseModel):
     stage: OpportunityStage = OpportunityStage.PROSPECTING
     amount: Optional[float] = None
     probability: int = 50
-    expectedCloseDate: Optional[str] = None
+    expectedCloseDate: Optional[datetime] = None
     leadSource: Optional[LeadSource] = LeadSource.WEBSITE
     leadId: Optional[str] = None
     contactId: Optional[str] = None
@@ -495,7 +495,7 @@ class OpportunityUpdate(BaseModel):
     stage: Optional[OpportunityStage] = None
     amount: Optional[float] = None
     probability: Optional[int] = None
-    expectedCloseDate: Optional[str] = None
+    expectedCloseDate: Optional[datetime] = None
     leadSource: Optional[LeadSource] = None
     leadId: Optional[str] = None
     contactId: Optional[str] = None
@@ -636,7 +636,7 @@ class SalesActivityBase(BaseModel):
     type: ActivityType
     subject: str
     description: Optional[str] = None
-    dueDate: Optional[str] = None
+    dueDate: Optional[datetime] = None
     completed: bool = False
     notes: Optional[str] = None
 
@@ -650,7 +650,7 @@ class SalesActivityUpdate(BaseModel):
     type: Optional[ActivityType] = None
     subject: Optional[str] = None
     description: Optional[str] = None
-    dueDate: Optional[str] = None
+    dueDate: Optional[datetime] = None
     completed: Optional[bool] = None
     notes: Optional[str] = None
 
