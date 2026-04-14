@@ -6,16 +6,19 @@ import uuid
 from datetime import datetime, timedelta
 
 from ...models.crm_models import (
-    Lead, LeadCreate, LeadUpdate, LeadsResponse,
-    Contact, ContactCreate, ContactUpdate, ContactsResponse,
-    Company, CompanyCreate, CompanyUpdate, CompaniesResponse,
-    Opportunity, OpportunityCreate, OpportunityUpdate, OpportunitiesResponse,
+    Lead as LeadPydantic, LeadCreate, LeadUpdate, LeadsResponse,
+    Contact as ContactPydantic, ContactCreate, ContactUpdate, ContactsResponse,
+    Company as CompanyPydantic, CompanyCreate, CompanyUpdate, CompaniesResponse,
+    Opportunity as OpportunityPydantic, OpportunityCreate, OpportunityUpdate, OpportunitiesResponse,
     Quote as QuotePydantic, QuoteCreate, QuoteUpdate, QuotesResponse,
     Contract as ContractPydantic, ContractCreate, ContractUpdate, ContractsResponse,
-    SalesActivity, SalesActivityCreate, SalesActivityUpdate, SalesActivitiesResponse,
+    SalesActivity as SalesActivityPydantic, SalesActivityCreate, SalesActivityUpdate, SalesActivitiesResponse,
     SalesDashboard, SalesMetrics, SalesPipeline
 )
 from ...config.sales_models import Quote, Contract
+from ...config.crm_models import (
+    Lead, Contact, Company, Opportunity, SalesActivity
+)
 from ...models.common import LeadStatus, LeadSource, OpportunityStage, QuoteStatus, ContractStatus, ContactType, ActivityType
 from ...config.database import (
     get_db, get_user_by_id
@@ -95,10 +98,10 @@ async def create_lead(
     """Create a new lead"""
     try:
         lead = Lead(
-            id=str(uuid.uuid4()),
+            id=uuid.uuid4(),
             **lead_data.dict(),
-            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
-            createdBy=str(current_user.id),
+            tenant_id=uuid.UUID(tenant_context["tenant_id"]) if tenant_context else uuid.uuid4(),
+            createdById=current_user.id,
             createdAt=datetime.now(),
             updatedAt=datetime.now()
         )
@@ -107,12 +110,12 @@ async def create_lead(
         db.commit()
         db.refresh(lead)
         
-        return lead
+        return LeadPydantic.model_validate(lead)
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error creating lead: {str(e)}")
 
-@router.get("/leads/{lead_id}", response_model=Lead)
+@router.get("/leads/{lead_id}", response_model=LeadPydantic)
 async def get_lead(
     lead_id: str,
     db: Session = Depends(get_db),
@@ -129,13 +132,13 @@ async def get_lead(
         if not lead:
             raise HTTPException(status_code=404, detail="Lead not found")
         
-        return lead
+        return LeadPydantic.model_validate(lead)
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching lead: {str(e)}")
 
-@router.put("/leads/{lead_id}", response_model=Lead)
+@router.put("/leads/{lead_id}", response_model=LeadPydantic)
 async def update_lead(
     lead_id: str,
     lead_data: LeadUpdate,
@@ -160,7 +163,7 @@ async def update_lead(
         db.commit()
         db.refresh(lead)
         
-        return lead
+        return LeadPydantic.model_validate(lead)
     except HTTPException:
         raise
     except Exception as e:
@@ -240,7 +243,7 @@ async def get_contacts(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching contacts: {str(e)}")
 
-@router.post("/contacts", response_model=Contact)
+@router.post("/contacts", response_model=ContactPydantic)
 async def create_contact(
     contact_data: ContactCreate,
     current_user = Depends(get_current_user),
@@ -251,10 +254,10 @@ async def create_contact(
     """Create a new contact"""
     try:
         contact = Contact(
-            id=str(uuid.uuid4()),
+            id=uuid.uuid4(),
             **contact_data.dict(),
-            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
-            createdBy=str(current_user.id),
+            tenant_id=uuid.UUID(tenant_context["tenant_id"]) if tenant_context else uuid.uuid4(),
+            createdById=current_user.id,
             createdAt=datetime.now(),
             updatedAt=datetime.now()
         )
@@ -263,12 +266,12 @@ async def create_contact(
         db.commit()
         db.refresh(contact)
         
-        return contact
+        return ContactPydantic.model_validate(contact)
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error creating contact: {str(e)}")
 
-@router.put("/contacts/{contact_id}", response_model=Contact)
+@router.put("/contacts/{contact_id}", response_model=ContactPydantic)
 async def update_contact(
     contact_id: str,
     contact_data: ContactUpdate,
@@ -293,7 +296,7 @@ async def update_contact(
         db.commit()
         db.refresh(contact)
         
-        return contact
+        return ContactPydantic.model_validate(contact)
     except HTTPException:
         raise
     except Exception as e:
@@ -369,7 +372,7 @@ async def get_companies(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching companies: {str(e)}")
 
-@router.post("/companies", response_model=Company)
+@router.post("/companies", response_model=CompanyPydantic)
 async def create_company(
     company_data: CompanyCreate,
     current_user = Depends(get_current_user),
@@ -380,10 +383,10 @@ async def create_company(
     """Create a new company"""
     try:
         company = Company(
-            id=str(uuid.uuid4()),
+            id=uuid.uuid4(),
             **company_data.dict(),
-            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
-            createdBy=str(current_user.id),
+            tenant_id=uuid.UUID(tenant_context["tenant_id"]) if tenant_context else uuid.uuid4(),
+            createdById=current_user.id,
             createdAt=datetime.now(),
             updatedAt=datetime.now()
         )
@@ -392,12 +395,12 @@ async def create_company(
         db.commit()
         db.refresh(company)
         
-        return company
+        return CompanyPydantic.model_validate(company)
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error creating company: {str(e)}")
 
-@router.put("/companies/{company_id}", response_model=Company)
+@router.put("/companies/{company_id}", response_model=CompanyPydantic)
 async def update_company(
     company_id: str,
     company_data: CompanyUpdate,
@@ -422,7 +425,7 @@ async def update_company(
         db.commit()
         db.refresh(company)
         
-        return company
+        return CompanyPydantic.model_validate(company)
     except HTTPException:
         raise
     except Exception as e:
@@ -502,7 +505,7 @@ async def get_opportunities(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching opportunities: {str(e)}")
 
-@router.post("/opportunities", response_model=Opportunity)
+@router.post("/opportunities", response_model=OpportunityPydantic)
 async def create_opportunity(
     opportunity_data: OpportunityCreate,
     current_user = Depends(get_current_user),
@@ -513,10 +516,10 @@ async def create_opportunity(
     """Create a new opportunity"""
     try:
         opportunity = Opportunity(
-            id=str(uuid.uuid4()),
+            id=uuid.uuid4(),
             **opportunity_data.dict(),
-            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
-            createdBy=str(current_user.id),
+            tenant_id=uuid.UUID(tenant_context["tenant_id"]) if tenant_context else uuid.uuid4(),
+            createdById=current_user.id,
             createdAt=datetime.now(),
             updatedAt=datetime.now()
         )
@@ -525,12 +528,12 @@ async def create_opportunity(
         db.commit()
         db.refresh(opportunity)
         
-        return opportunity
+        return OpportunityPydantic.model_validate(opportunity)
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error creating opportunity: {str(e)}")
 
-@router.put("/opportunities/{opportunity_id}", response_model=Opportunity)
+@router.put("/opportunities/{opportunity_id}", response_model=OpportunityPydantic)
 async def update_opportunity(
     opportunity_id: str,
     opportunity_data: OpportunityUpdate,
@@ -555,7 +558,7 @@ async def update_opportunity(
         db.commit()
         db.refresh(opportunity)
         
-        return opportunity
+        return OpportunityPydantic.model_validate(opportunity)
     except HTTPException:
         raise
     except Exception as e:
@@ -896,7 +899,7 @@ async def get_sales_activities(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching sales activities: {str(e)}")
 
-@router.post("/activities", response_model=SalesActivity)
+@router.post("/activities", response_model=SalesActivityPydantic)
 async def create_sales_activity(
     activity_data: SalesActivityCreate,
     current_user = Depends(get_current_user),
@@ -907,10 +910,10 @@ async def create_sales_activity(
     """Create a new sales activity"""
     try:
         activity = SalesActivity(
-            id=str(uuid.uuid4()),
+            id=uuid.uuid4(),
             **activity_data.dict(),
-            tenant_id=tenant_context["tenant_id"] if tenant_context else str(uuid.uuid4()),
-            createdBy=str(current_user.id),
+            tenant_id=uuid.UUID(tenant_context["tenant_id"]) if tenant_context else uuid.uuid4(),
+            createdById=current_user.id,
             createdAt=datetime.now(),
             updatedAt=datetime.now()
         )
@@ -919,7 +922,7 @@ async def create_sales_activity(
         db.commit()
         db.refresh(activity)
         
-        return activity
+        return SalesActivityPydantic.model_validate(activity)
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error creating sales activity: {str(e)}")
@@ -938,8 +941,9 @@ async def get_sales_dashboard(
         base_opportunity_query = db.query(Opportunity)
         
         if tenant_context:
-            base_lead_query = base_lead_query.filter(Lead.tenant_id == tenant_context["tenant_id"])
-            base_opportunity_query = base_opportunity_query.filter(Opportunity.tenant_id == tenant_context["tenant_id"])
+            t_id = uuid.UUID(tenant_context["tenant_id"])
+            base_lead_query = base_lead_query.filter(Lead.tenant_id == t_id)
+            base_opportunity_query = base_opportunity_query.filter(Opportunity.tenant_id == t_id)
         
         # Calculate metrics
         total_leads = base_lead_query.count()
@@ -1018,8 +1022,9 @@ async def get_sales_dashboard(
         top_opportunities = []
         
         if tenant_context:
+            t_id = uuid.UUID(tenant_context["tenant_id"])
             recent_activities = db.query(SalesActivity).filter(
-                SalesActivity.tenant_id == tenant_context["tenant_id"]
+                SalesActivity.tenant_id == t_id
             ).order_by(SalesActivity.createdAt.desc()).limit(10).all()
             
             top_opportunities = base_opportunity_query.filter(

@@ -1,20 +1,18 @@
 from fastapi import APIRouter, HTTPException, status, Depends, Query
 from sqlalchemy.orm import Session
 from typing import Optional, List
-import json
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from ...models.inventory_models import (
-    Product, ProductCreate, ProductUpdate, ProductsResponse, ProductResponse, ProductCategory
+  ProductCreate, ProductUpdate, ProductsResponse, ProductResponse, ProductCategory
 )
 from ...models.pos_models import (
-    POSShift, POSShiftCreate, POSShiftUpdate, POSShiftsResponse, POSShiftResponse,
-    POSTransaction, POSTransactionCreate, POSTransactionUpdate, POSTransactionsResponse, POSTransactionResponse,
-    POSDashboard, POSMetrics, ProductFilters, POSTransactionFilters, POSShiftFilters
+     POSShiftCreate, POSShiftUpdate, POSShiftsResponse, POSShiftResponse,
+    POSTransactionCreate, POSTransactionUpdate, POSTransactionsResponse, POSTransactionResponse,
 )
 from ...config.database import (
-    get_db, get_user_by_id,
+    get_db,
     get_products, get_product_by_id, create_product, update_product, delete_product,
     get_pos_shifts, get_pos_shift_by_id, get_open_pos_shift, create_pos_shift, update_pos_shift,
     get_pos_transactions, get_pos_transaction_by_id, create_pos_transaction, update_pos_transaction,

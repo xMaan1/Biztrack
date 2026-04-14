@@ -76,17 +76,25 @@ function SalesContent() {
     { ttl: 30000 }
   );
   
-  const { data: leads, loading: leadsLoading, refetch: refetchLeads } = useCachedApi<Lead[]>(
+  const { data: leadsData, loading: leadsLoading, refetch: refetchLeads } = useCachedApi<any>(
     'sales_leads',
-    () => apiService.get('/sales/leads'),
+    async () => {
+      const resp = await apiService.get('/sales/leads');
+      return resp.leads || [];
+    },
     { ttl: 60000 }
   );
+  const leads = leadsData || [];
   
-  const { data: opportunities, loading: opportunitiesLoading, refetch: refetchOpportunities } = useCachedApi<Opportunity[]>(
+  const { data: opportunitiesData, loading: opportunitiesLoading, refetch: refetchOpportunities } = useCachedApi<any>(
     'sales_opportunities',
-    () => apiService.get('/sales/opportunities'),
+    async () => {
+      const resp = await apiService.get('/sales/opportunities');
+      return resp.opportunities || [];
+    },
     { ttl: 60000 }
   );
+  const opportunities = opportunitiesData || [];
 
   // Custom options hook
   const {

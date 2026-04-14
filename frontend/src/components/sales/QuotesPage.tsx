@@ -87,7 +87,7 @@ export default function QuotesPage() {
         CRMService.getOpportunities({}, 1, 100),
         CRMService.getContacts({}, 1, 100),
       ]);
-      setQuotes(quotesData);
+      setQuotes(Array.isArray(quotesData) ? quotesData : quotesData.quotes || []);
       setOpportunities(opportunitiesData.opportunities || []);
       setContacts(contactsData.contacts || []);
     } catch (error) {
