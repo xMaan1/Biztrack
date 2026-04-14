@@ -77,8 +77,8 @@ export function MobileSidebarModal({
   }, []);
 
   const isActive = useCallback(
-    (path: string) => {
-      if (path === '/') return activePath === '/';
+    (path: string, exact: boolean = false) => {
+      if (path === '/' || exact) return activePath === path;
       return activePath.startsWith(path);
     },
     [activePath],
@@ -197,11 +197,11 @@ export function MobileSidebarModal({
                   item.subItems && item.subItems.length > 0
                 );
                 const isMainItemActive = !!(
-                  item.path && isActive(item.path)
+                  item.path && isActive(item.path, item.text === 'Dashboard')
                 );
                 const hasActiveSubItem =
                   hasSubItems &&
-                  item.subItems!.some((s) => isActive(s.path));
+                  item.subItems!.some((s) => isActive(s.path, s.text === 'Dashboard'));
 
                 return (
                   <View key={item.text} className="mb-2">
@@ -314,7 +314,7 @@ export function MobileSidebarModal({
                             return null;
                           }
 
-                          const subActive = isActive(subItem.path);
+                          const subActive = isActive(subItem.path, subItem.text === 'Dashboard');
 
                           return (
                             <Pressable

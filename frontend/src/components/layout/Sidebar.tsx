@@ -893,9 +893,9 @@ export default function Sidebar() {
     setExpandedItems(newExpanded);
   }, [searchQuery, filteredItems, planInfo, planLoading, user]);
 
-  const isActive = (path: string) => {
-    if (path === '/') {
-      return pathname === '/';
+  const isActive = (path: string, exact: boolean = false) => {
+    if (path === '/' || exact) {
+      return pathname === path;
     }
     return pathname.startsWith(path);
   };
@@ -982,10 +982,10 @@ export default function Sidebar() {
           filteredItems.map((item) => {
             const isExpanded = expandedItems.has(item.text);
             const hasSubItems = item.subItems && item.subItems.length > 0;
-            const isMainItemActive = item.path && isActive(item.path);
+            const isMainItemActive = item.path && isActive(item.path, item.text === 'Dashboard');
             const hasActiveSubItem =
               hasSubItems &&
-              item.subItems!.some((subItem) => isActive(subItem.path));
+              item.subItems!.some((subItem) => isActive(subItem.path, subItem.text === 'Dashboard'));
 
             return (
               <div key={item.text} className="space-y-1">
@@ -1086,7 +1086,7 @@ export default function Sidebar() {
               {hasSubItems && isExpanded && (
                 <div className="ml-4 space-y-1 border-l-2 border-gray-200 pl-4">
                   {item.subItems!.map((subItem) => {
-                    const isSubItemActive = isActive(subItem.path);
+                    const isSubItemActive = isActive(subItem.path, subItem.text === 'Dashboard');
                     const subItemAvailable =
                       subItem.planTypes.includes('*') ||
                       (planInfo &&
