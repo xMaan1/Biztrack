@@ -5,7 +5,7 @@ import json
 import uuid
 import base64
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from pydantic import BaseModel as PydanticBaseModel
 
 from ...services.s3_service import s3_service
@@ -1394,6 +1394,8 @@ async def create_crm_opportunity(
             createdById=_safe_uuid(str(current_user.id)),
             notes=data.get('notes'),
             tenant_id=tenant_uuid,
+            tags=data.get('tags', []),
+            leadSource=data.get('leadSource', 'website'),
             createdAt=datetime.now(),
             updatedAt=datetime.now()
         )
@@ -1501,6 +1503,22 @@ async def update_crm_opportunity(
             opportunity.assignedToId = _safe_uuid(data['assignedTo'])
         if 'notes' in data:
             opportunity.notes = data['notes']
+        if 'closedDate' in data:
+            if data['closedDate']:
+                try:
+                    opportunity.closedDate = datetime.strptime(str(data['closedDate']).split('T')[0], '%Y-%m-%d')
+                except:
+                    pass
+            else:
+                opportunity.closedDate = None
+        if 'wonAmount' in data:
+            opportunity.wonAmount = data['wonAmount']
+        if 'lostReason' in data:
+            opportunity.lostReason = data['lostReason']
+        if 'tags' in data:
+            opportunity.tags = data['tags']
+        if 'leadSource' in data:
+            opportunity.leadSource = data['leadSource']
         opportunity.updatedAt = datetime.now()
         db.commit()
         db.refresh(opportunity)

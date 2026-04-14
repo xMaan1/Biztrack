@@ -22,12 +22,17 @@ class Lead(Base):
     assignedToId = Column(UUID(as_uuid=True), ForeignKey("users.id"))
     createdById = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     notes = Column(Text)
+    tags = Column(JSON, default=[])
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     tenant = relationship("Tenant", back_populates="leads")
     assignedTo = relationship("User", foreign_keys=[assignedToId])
+
+    @property
+    def activities(self):
+        return []
 
     @property
     def createdBy(self):
@@ -217,9 +222,13 @@ class Opportunity(Base):
     probability = Column(Integer, default=0)  # 0-100
     amount = Column(Float)
     expectedCloseDate = Column(DateTime)
+    closedDate = Column(DateTime)
+    wonAmount = Column(Float)
+    lostReason = Column(Text)
     leadSource = Column(String)
     description = Column(Text)
     notes = Column(Text)
+    tags = Column(JSON, default=[])
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -228,6 +237,18 @@ class Opportunity(Base):
     company = relationship("Company", back_populates="opportunities")
     contact = relationship("Contact")
     assignedTo = relationship("User", foreign_keys=[assignedToId])
+
+    @property
+    def title(self):
+        return self.name
+
+    @title.setter
+    def title(self, value):
+        self.name = value
+
+    @property
+    def activities(self):
+        return []
 
     @property
     def createdBy(self):
