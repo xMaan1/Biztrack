@@ -872,20 +872,22 @@ export default function Sidebar() {
     const newExpanded = new Set(expandedItems);
 
     filteredItems.forEach((item) => {
-      if (
-        item.subItems &&
-        item.subItems.some((subItem) => {
-          // For super admin, all sub-items are available
-          if (user?.userRole === 'super_admin') {
-            return subItem.text.toLowerCase().includes(query);
-          }
-          // For regular users, check plan availability
-          const subItemAvailable =
-            subItem.planTypes.includes('*') ||
-            (planInfo && subItem.planTypes.includes(planInfo.planType));
-          return subItemAvailable && subItem.text.toLowerCase().includes(query);
-        })
-      ) {
+      if (!item.subItems) return;
+
+      const parentMatches = item.text.toLowerCase().includes(query);
+      const childMatches = item.subItems.some((subItem) => {
+        // For super admin, all sub-items are available
+        if (user?.userRole === 'super_admin') {
+          return subItem.text.toLowerCase().includes(query);
+        }
+        // For regular users, check plan availability
+        const subItemAvailable =
+          subItem.planTypes.includes('*') ||
+          (planInfo && subItem.planTypes.includes(planInfo.planType));
+        return subItemAvailable && subItem.text.toLowerCase().includes(query);
+      });
+
+      if (parentMatches || childMatches) {
         newExpanded.add(item.text);
       }
     });
