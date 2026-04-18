@@ -391,6 +391,7 @@ export class HealthcareService {
   getDailyExpense = healthcareQueries.getDailyExpense.bind(healthcareQueries);
   getAdmissions = healthcareQueries.getAdmissions.bind(healthcareQueries);
   getAdmission = healthcareQueries.getAdmission.bind(healthcareQueries);
+  getAdmissionInvoices = healthcareQueries.getAdmissionInvoices.bind(healthcareQueries);
 
   createAppointmentInvoice = healthcareCommands.createAppointmentInvoice.bind(healthcareCommands);
   createAdmission = healthcareCommands.createAdmission.bind(healthcareCommands);

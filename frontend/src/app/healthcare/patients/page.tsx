@@ -272,7 +272,7 @@ function PatientsContent() {
                     <TableCell>{p.date_of_birth || '—'}</TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="sm" asChild>
-                        <Link href={`/healthcare/patients/${p.id}`}>
+                        <Link href={`/healthcare/patient-history?patient=${p.id}`}>
                           <History className="w-4 h-4 mr-1" />
                           View history
                         </Link>
