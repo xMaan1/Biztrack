@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import List, Optional
 from datetime import datetime, timedelta
 from pydantic import BaseModel
@@ -12,12 +13,20 @@ import os
 import urllib.parse
 
 from ...config.database import get_db, get_event_by_id, get_all_events, create_event, update_event, delete_event, get_events_by_project, get_events_by_user, get_upcoming_events, get_user_by_email
+from ...config.event_models import Event as EventRow
 from ...models.event_models import EventCreate, EventUpdate, Event, EventResponse, EventType, EventStatus, RecurrenceType
 from ...api.dependencies import get_current_user, get_tenant_context
 from ...services.google_meet_service import GoogleMeetService
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/events", tags=["events"])
+
+def _pagination(skip: int, limit: int, total: int) -> dict:
+    lim = max(1, limit)
+    tot = max(0, int(total))
+    page = (max(0, int(skip)) // lim) + 1
+    pages = max(1, (tot + lim - 1) // lim) if tot else 1
+    return {"page": page, "limit": lim, "total": tot, "pages": pages}
 
 class AuthorizationCodeRequest(BaseModel):
     code: str
@@ -166,27 +175,38 @@ async def get_events(
 ):
     """Get all events with optional filtering"""
     try:
+        tenant_id_str = str(tenant_context['tenant_id'])
         if project_id:
-            events = get_events_by_project(project_id, db, str(tenant_context['tenant_id']))
+            events = get_events_by_project(project_id, db, tenant_id_str)
         elif user_id:
-            events = get_events_by_user(user_id, db, str(tenant_context['tenant_id']))
+            events = get_events_by_user(user_id, db, tenant_id_str)
         else:
-            events = get_all_events(db, str(tenant_context['tenant_id']), skip, limit)
-        
-        # Apply status filter if provided
-        if status_filter:
+            events = get_all_events(
+                db, tenant_id_str, skip, limit, status_filter,
+            )
+
+        if status_filter and (project_id or user_id):
             events = [event for event in events if event.status == status_filter]
-        
-        # Convert database objects to response models
+
         events_response = [convert_event_to_response(event) for event in events]
-        
+
+        if project_id or user_id:
+            total_for_pagination = len(events)
+            skip_eff = 0
+            limit_eff = max(1, len(events) or 1)
+        else:
+            count_q = db.query(func.count(EventRow.id)).filter(
+                EventRow.tenant_id == tenant_id_str,
+            )
+            if status_filter:
+                count_q = count_q.filter(EventRow.status == status_filter)
+            total_for_pagination = int(count_q.scalar() or 0)
+            skip_eff = skip
+            limit_eff = limit
+
         return {
             "events": events_response,
-            "pagination": {
-                "skip": skip,
-                "limit": limit,
-                "total": len(events)
-            }
+            "pagination": _pagination(skip_eff, limit_eff, total_for_pagination),
         }
         
     except Exception as e:
@@ -211,10 +231,7 @@ async def get_upcoming_events_route(
         
         return {
             "events": events_response,
-            "pagination": {
-                "total": len(events),
-                "days": days
-            }
+            "pagination": None,
         }
         
     except Exception as e:

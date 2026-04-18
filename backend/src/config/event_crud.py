@@ -12,10 +12,18 @@ def get_event_by_id(event_id: str, db: Session, tenant_id: str = None) -> Option
         query = query.filter(Event.tenant_id == tenant_id)
     return query.first()
 
-def get_all_events(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Event]:
+def get_all_events(
+    db: Session,
+    tenant_id: str = None,
+    skip: int = 0,
+    limit: int = 100,
+    status: Optional[str] = None,
+) -> List[Event]:
     query = db.query(Event)
     if tenant_id:
         query = query.filter(Event.tenant_id == tenant_id)
+    if status:
+        query = query.filter(Event.status == status)
     return query.order_by(Event.startDate.desc()).offset(skip).limit(limit).all()
 
 def get_events_by_project(project_id: str, db: Session, tenant_id: str = None) -> List[Event]:
