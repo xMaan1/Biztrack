@@ -216,9 +216,9 @@ const allMenuItems: MenuItem[] = [
   {
     text: 'Invoicing',
     icon: Banknote,
-    path: '/sales/invoices',
+    path: '/invoices',
     roles: ['*'],
-    planTypes: ['workshop', 'healthcare'], // Workshop and Healthcare plans - invoicing needed
+    planTypes: ['workshop', 'healthcare'],
     gradient: 'from-green-500 to-emerald-500',
   },
   {
@@ -896,6 +896,9 @@ export default function Sidebar() {
   }, [searchQuery, filteredItems, planInfo, planLoading, user]);
 
   const isActive = (path: string, exact: boolean = false) => {
+    if (path === '/invoices') {
+      return pathname === '/invoices' || pathname.startsWith('/invoices/');
+    }
     if (path === '/' || exact) {
       return pathname === path;
     }

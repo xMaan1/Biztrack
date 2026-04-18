@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { InvoicesPlanRedirect } from '@/src/components/sales/InvoicesPlanRedirect';
 import {
   Card,
   CardContent,
@@ -56,7 +57,7 @@ import { usePermissions } from '@/src/hooks/usePermissions';
 import { usePlanInfo } from '@/src/hooks/usePlanInfo';
 import { extractErrorMessage } from '@/src/utils/errorUtils';
 
-export default function InvoicesPage() {
+function InvoicesPageContent() {
   const { formatCurrency } = useCurrency();
   const { isOwner, canViewInvoices } = usePermissions();
   const { planInfo } = usePlanInfo();
@@ -605,5 +606,13 @@ export default function InvoicesPage() {
         />
       </div>
     </DashboardLayout>
+  );
+}
+
+export default function InvoicesPage() {
+  return (
+    <InvoicesPlanRedirect>
+      <InvoicesPageContent />
+    </InvoicesPlanRedirect>
   );
 }

@@ -175,6 +175,7 @@ export const SIDEBAR_PATH_PERMISSIONS: Record<string, string> = {
   '/sales/contracts': 'sales:contracts:view',
   '/sales/analytics': 'sales:analytics:view',
   '/sales/invoices': 'sales:invoices:view',
+  '/invoices': 'sales:invoices:view',
   '/sales/installments': 'sales:installments:view',
   '/sales/delivery-notes': 'sales:delivery_notes:view',
   '/inventory/warehouses': 'inventory:warehouses:view',

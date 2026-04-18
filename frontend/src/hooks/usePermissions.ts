@@ -51,7 +51,11 @@ export function usePermissions() {
     canManageEvents: () => hasPermission('events:create') || isOwner(),
     canViewSales: () => hasModuleAccess('sales'),
     canManageSales: () => hasPermission('sales:create') || isOwner(),
-    canViewInvoices: () => hasModuleAccess('sales') || hasPermission('sales:view') || isOwner(),
+    canViewInvoices: () =>
+      hasModuleAccess('sales') ||
+      hasPermission('sales:view') ||
+      hasPermission('sales:invoices:view') ||
+      isOwner(),
     canManageInvoices: () => hasPermission('sales:create') || hasPermission('sales:update') || isOwner(),
     canViewReports: () => hasPermission('reports:view') || isOwner(),
     canExportReports: () => hasPermission('reports:export') || isOwner(),
