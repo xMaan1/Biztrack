@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { ModuleGuard } from '@/src/components/guards/PermissionGuard';
 import {
   Card,
@@ -94,17 +95,8 @@ function LedgerDashboardContent() {
   const [netIncome, setNetIncome] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  const [showNewTransactionModal, setShowNewTransactionModal] = useState(false);
   const [showJournalEntryModal, setShowJournalEntryModal] = useState(false);
   const [showAccountBalanceModal, setShowAccountBalanceModal] = useState(false);
-
-  const [transactionForm, setTransactionForm] = useState({
-    description: '',
-    amount: '',
-    debitAccountId: '',
-    creditAccountId: '',
-    transactionDate: new Date().toISOString().split('T')[0],
-  });
 
   const [journalEntryForm, setJournalEntryForm] = useState({
     entryNumber: '',
@@ -155,25 +147,11 @@ function LedgerDashboardContent() {
     refetchIncomeStatement();
   };
 
-  const handleNewTransaction = () => {
-    setShowNewTransactionModal(true);
-  };
   const handleJournalEntry = () => {
     setShowJournalEntryModal(true);
   };
   const handleAccountBalance = () => {
     setShowAccountBalanceModal(true);
-  };
-
-  const closeTransactionModal = () => {
-    setShowNewTransactionModal(false);
-    setTransactionForm({
-      description: '',
-      amount: '',
-      debitAccountId: '',
-      creditAccountId: '',
-      transactionDate: new Date().toISOString().split('T')[0],
-    });
   };
 
   const closeJournalEntryModal = () => {
@@ -193,39 +171,6 @@ function LedgerDashboardContent() {
     });
   };
 
-
-  const handleTransactionSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      if (
-        !transactionForm.debitAccountId ||
-        !transactionForm.creditAccountId ||
-        !transactionForm.amount
-      ) {
-        alert('Please fill in all required fields');
-        return;
-      }
-
-      const transactionData = {
-        description: transactionForm.description,
-        amount: parseFloat(transactionForm.amount),
-        account_id: transactionForm.debitAccountId,
-        contra_account_id: transactionForm.creditAccountId,
-        transaction_date: transactionForm.transactionDate,
-        transaction_type: 'GENERAL' as TransactionType,
-        meta_data: {
-          currency: 'USD',
-        },
-      };
-
-      await LedgerService.createLedgerTransaction(transactionData);
-      alert('Transaction created successfully!');
-      closeTransactionModal();
-      handleRefresh();
-    } catch (error) {
-      alert('Failed to create transaction. Please try again.');
-    }
-  };
 
   const handleJournalEntrySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -332,9 +277,11 @@ function LedgerDashboardContent() {
             </p>
           </div>
           <div className="flex space-x-2">
-            <Button size="sm" onClick={handleNewTransaction}>
-              <Plus className="w-4 h-4 mr-2" />
-              New Transaction
+            <Button size="sm" asChild>
+              <Link href="/ledger/transactions">
+                <Plus className="w-4 h-4 mr-2" />
+                New Transaction
+              </Link>
             </Button>
           </div>
         </div>
@@ -468,9 +415,11 @@ function LedgerDashboardContent() {
                         </div>
                       ))}
                   </div>
-                  <Button variant="outline" className="w-full mt-4">
-                    <Eye className="w-4 h-4 mr-2" />
-                    View All Transactions
+                  <Button variant="outline" className="w-full mt-4" asChild>
+                    <Link href="/ledger/transactions">
+                      <Eye className="w-4 h-4 mr-2" />
+                      View All Transactions
+                    </Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -527,13 +476,11 @@ function LedgerDashboardContent() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <Button
-                    variant="outline"
-                    className="h-20 flex-col"
-                    onClick={handleNewTransaction}
-                  >
-                    <Plus className="w-6 h-6 mb-2" />
-                    New Transaction
+                  <Button variant="outline" className="h-20 flex-col" asChild>
+                    <Link href="/ledger/transactions">
+                      <Plus className="w-6 h-6 mb-2" />
+                      New Transaction
+                    </Link>
                   </Button>
                   <Button
                     variant="outline"
@@ -868,169 +815,6 @@ function LedgerDashboardContent() {
             </Card>
           </TabsContent>
         </Tabs>
-
-        {/* New Transaction Modal */}
-        {showNewTransactionModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">New Transaction</h3>
-                <button
-                  onClick={closeTransactionModal}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-              <form onSubmit={handleTransactionSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Transaction description"
-                    value={transactionForm.description}
-                    onChange={(e) =>
-                      setTransactionForm({
-                        ...transactionForm,
-                        description: e.target.value,
-                      })
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Amount
-                  </label>
-                  <input
-                    type="number"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="0.00"
-                    step="0.01"
-                    value={transactionForm.amount}
-                    onChange={(e) =>
-                      setTransactionForm({
-                        ...transactionForm,
-                        amount: e.target.value,
-                      })
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Transaction Date
-                  </label>
-                  <input
-                    type="date"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={transactionForm.transactionDate}
-                    onChange={(e) =>
-                      setTransactionForm({
-                        ...transactionForm,
-                        transactionDate: e.target.value,
-                      })
-                    }
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Debit Account
-                    </label>
-                    <select
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={transactionForm.debitAccountId}
-                      onChange={(e) =>
-                        setTransactionForm({
-                          ...transactionForm,
-                          debitAccountId: e.target.value,
-                        })
-                      }
-                      required
-                    >
-                      <option value="">Select account</option>
-                      {chartOfAccounts && chartOfAccounts.length > 0 ? (
-                        chartOfAccounts.map((account) => (
-                          <option key={account.id} value={account.id}>
-                            {account.account_name}
-                          </option>
-                        ))
-                      ) : (
-                        <option value="" disabled>
-                          No accounts available
-                        </option>
-                      )}
-                    </select>
-                    {(!chartOfAccounts || chartOfAccounts.length === 0) && (
-                      <p className="text-xs text-red-500 mt-1">
-                        No accounts found. Please create accounts first.
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Credit Account
-                    </label>
-                    <select
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={transactionForm.creditAccountId}
-                      onChange={(e) =>
-                        setTransactionForm({
-                          ...transactionForm,
-                          creditAccountId: e.target.value,
-                        })
-                      }
-                      required
-                    >
-                      <option value="">Select account</option>
-                      {chartOfAccounts && chartOfAccounts.length > 0 ? (
-                        chartOfAccounts.map((account) => (
-                          <option key={account.id} value={account.id}>
-                            {account.account_name}
-                          </option>
-                        ))
-                      ) : (
-                        <option value="" disabled>
-                          No accounts available
-                        </option>
-                      )}
-                    </select>
-                    {(!chartOfAccounts || chartOfAccounts.length === 0) && (
-                      <p className="text-xs text-red-500 mt-1">
-                        No accounts found. Please create accounts first.
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Chart of accounts info */}
-                <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-sm text-green-800">
-                    Chart of accounts is ready with {chartOfAccounts.length} accounts available for transactions.
-                  </p>
-                </div>
-                <div className="flex space-x-3 pt-4">
-                  <Button
-                    type="button"
-                    onClick={closeTransactionModal}
-                    variant="outline"
-                    className="flex-1"
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" className="flex-1">
-                    Create Transaction
-                  </Button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
 
         {/* Journal Entry Modal */}
         {showJournalEntryModal && (
