@@ -161,7 +161,7 @@ export function CustomerSearch({
 
         {/* Dropdown */}
         {isOpen && (
-          <Card className="absolute z-50 w-full mt-1 max-h-60 overflow-y-auto shadow-lg border">
+          <Card className="absolute z-[110] w-full mt-1 max-h-60 overflow-y-auto shadow-lg border">
             <CardContent className="p-0">
               {loading ? (
                 <div className="p-4 text-center text-gray-500">

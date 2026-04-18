@@ -103,7 +103,7 @@ export function UserMultiSearch({
         />
       </div>
       {isOpen && (
-        <Card className="absolute z-50 w-full mt-1 max-h-60 overflow-y-auto shadow-lg border">
+        <Card className="absolute z-[110] w-full mt-1 max-h-60 overflow-y-auto shadow-lg border">
           <CardContent className="p-0">
             {filteredUsers.length > 0 ? (
               <div className="py-1">
