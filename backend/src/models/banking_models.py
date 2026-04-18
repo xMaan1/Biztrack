@@ -138,8 +138,38 @@ class BankTransactionBase(BaseModel):
     class Config:
         populate_by_name = True
 
-class BankTransactionCreate(BankTransactionBase):
-    pass
+class BankTransactionCreate(BaseModel):
+    bank_account_id: str = Field(alias="bankAccountId")
+    transaction_date: datetime = Field(alias="transactionDate")
+    value_date: Optional[datetime] = Field(alias="valueDate", default=None)
+    transaction_type: TransactionType = Field(alias="transactionType")
+    status: TransactionStatus = Field(alias="status", default=TransactionStatus.PENDING)
+    amount: float = Field(alias="amount")
+    running_balance: Optional[float] = Field(alias="runningBalance", default=None)
+    currency: str = Field(alias="currency", default="USD")
+    exchange_rate: float = Field(alias="exchangeRate", default=1.0)
+    base_amount: Optional[float] = Field(alias="baseAmount", default=None)
+    payment_method: Optional[PaymentMethod] = Field(alias="paymentMethod", default=None)
+    reference_number: Optional[str] = Field(alias="referenceNumber", default=None)
+    external_reference: Optional[str] = Field(alias="externalReference", default=None)
+    check_number: Optional[str] = Field(alias="checkNumber", default=None)
+    description: str = Field(alias="description")
+    memo: Optional[str] = Field(alias="memo", default=None)
+    category: Optional[str] = Field(alias="category", default=None)
+    counterparty_name: Optional[str] = Field(alias="counterpartyName", default=None)
+    counterparty_account: Optional[str] = Field(alias="counterpartyAccount", default=None)
+    counterparty_bank: Optional[str] = Field(alias="counterpartyBank", default=None)
+    is_reconciled: bool = Field(alias="isReconciled", default=False)
+    reconciled_date: Optional[datetime] = Field(alias="reconciledDate", default=None)
+    related_invoice_id: Optional[str] = Field(alias="relatedInvoiceId", default=None)
+    related_purchase_order_id: Optional[str] = Field(alias="relatedPurchaseOrderId", default=None)
+    related_expense_id: Optional[str] = Field(alias="relatedExpenseId", default=None)
+    tags: List[str] = Field(alias="tags", default=[])
+    attachments: List[Dict[str, Any]] = Field(alias="attachments", default=[])
+    notes: Optional[str] = Field(alias="notes", default=None)
+
+    class Config:
+        populate_by_name = True
 
 class BankTransactionUpdate(BaseModel):
     transaction_date: Optional[datetime] = Field(alias="transactionDate", default=None)

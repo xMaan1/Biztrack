@@ -80,9 +80,63 @@ def delete_bank_account(account_id: str, db: Session, tenant_id: str) -> bool:
     db.commit()
     return True
 
+def _bank_transaction_type_value(tt: Any) -> str:
+    if tt is None:
+        return ""
+    if hasattr(tt, "value"):
+        return str(tt.value)
+    return str(tt).split(".")[-1].lower()
+
+
+def _signed_base_delta_for_bank_transaction(
+    transaction_type: Any, amount: float, exchange_rate: float, base_amount: Optional[float],
+) -> float:
+    rate = exchange_rate if exchange_rate else 1.0
+    base = base_amount if base_amount is not None else float(amount) * float(rate)
+    key = _bank_transaction_type_value(transaction_type)
+    inflow = {"deposit", "transfer_in", "refund", "interest"}
+    outflow = {"withdrawal", "transfer_out", "payment", "fee"}
+    if key in inflow:
+        return base
+    if key in outflow:
+        return -base
+    if key == "adjustment":
+        return float(amount) * float(rate)
+    return base
+
+
 # Bank Transaction CRUD Operations
 def create_bank_transaction(transaction_data: Dict[str, Any], db: Session) -> BankTransaction:
-    """Create a new bank transaction"""
+    amount = float(transaction_data.get("amount") or 0)
+    exchange_rate = float(transaction_data.get("exchange_rate") or 1.0)
+    if transaction_data.get("base_amount") is None:
+        transaction_data["base_amount"] = amount * exchange_rate
+    bank_account_id = transaction_data.get("bank_account_id")
+    tenant_id = transaction_data.get("tenant_id")
+    last = (
+        db.query(BankTransaction)
+        .filter(
+            and_(
+                BankTransaction.bank_account_id == bank_account_id,
+                BankTransaction.tenant_id == tenant_id,
+            ),
+        )
+        .order_by(desc(BankTransaction.transaction_date), desc(BankTransaction.created_at))
+        .first()
+    )
+    account = None
+    if bank_account_id and tenant_id:
+        account = get_bank_account_by_id(str(bank_account_id), db, str(tenant_id))
+    prior = float(last.running_balance) if last and last.running_balance is not None else (
+        float(account.current_balance) if account else 0.0
+    )
+    delta = _signed_base_delta_for_bank_transaction(
+        transaction_data.get("transaction_type"),
+        amount,
+        exchange_rate,
+        transaction_data.get("base_amount"),
+    )
+    transaction_data["running_balance"] = prior + delta
     db_transaction = BankTransaction(**transaction_data)
     db.add(db_transaction)
     db.commit()
