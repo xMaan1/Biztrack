@@ -1192,10 +1192,28 @@ def create_customer_return(
         "updatedAt": datetime.utcnow()
     })
     
-    # Create the stock movement
     movement = create_stock_movement(movement_data, db)
-    
-    return StockMovementResponse(stockMovement=movement)
+    response_data = {
+        "id": str(movement.id),
+        "tenant_id": str(movement.tenant_id),
+        "productId": movement.productId,
+        "warehouseId": str(movement.warehouseId),
+        "locationId": movement.locationId,
+        "movementType": movement.movementType,
+        "quantity": movement.quantity,
+        "unitCost": movement.unitCost,
+        "referenceNumber": movement.referenceNumber,
+        "referenceType": movement.referenceType,
+        "notes": movement.notes,
+        "batchNumber": movement.batchNumber,
+        "serialNumber": movement.serialNumber,
+        "expiryDate": movement.expiryDate.isoformat() if movement.expiryDate else None,
+        "status": movement.status,
+        "createdBy": str(movement.createdBy),
+        "createdAt": movement.createdAt,
+        "updatedAt": movement.updatedAt,
+    }
+    return StockMovementResponse(stockMovement=response_data)
 
 # Supplier Returns Endpoints
 @router.get("/supplier-returns", response_model=StockMovementsWithProductResponse)
@@ -1311,7 +1329,25 @@ def create_supplier_return(
         "updatedAt": datetime.utcnow()
     })
     
-    # Create the stock movement
     movement = create_stock_movement(movement_data, db)
-    
-    return StockMovementResponse(stockMovement=movement)
+    response_data = {
+        "id": str(movement.id),
+        "tenant_id": str(movement.tenant_id),
+        "productId": movement.productId,
+        "warehouseId": str(movement.warehouseId),
+        "locationId": movement.locationId,
+        "movementType": movement.movementType,
+        "quantity": movement.quantity,
+        "unitCost": movement.unitCost,
+        "referenceNumber": movement.referenceNumber,
+        "referenceType": movement.referenceType,
+        "notes": movement.notes,
+        "batchNumber": movement.batchNumber,
+        "serialNumber": movement.serialNumber,
+        "expiryDate": movement.expiryDate.isoformat() if movement.expiryDate else None,
+        "status": movement.status,
+        "createdBy": str(movement.createdBy),
+        "createdAt": movement.createdAt,
+        "updatedAt": movement.updatedAt,
+    }
+    return StockMovementResponse(stockMovement=response_data)

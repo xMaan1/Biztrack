@@ -11,6 +11,13 @@ import { Separator } from '../../components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../../components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { UserSearch, type UserSearchItem } from '../../components/ui/user-search';
 import { UserMultiSearch, type UserMultiSearchItem } from '../../components/ui/user-multi-search';
@@ -830,275 +837,204 @@ export default function ProjectsPage() {
 
         )}
 
-        {dialogOpen && (
-
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-
-            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-
-              <h2 className="text-lg font-semibold mb-4">
-
+        <Dialog
+          open={dialogOpen}
+          onOpenChange={(open) => {
+            if (formLoading && !open) return;
+            setDialogOpen(open);
+          }}
+        >
+          <DialogContent
+            className={cn(
+              'flex max-h-[85vh] min-h-0 w-[calc(100vw-1.5rem)] max-w-2xl flex-col gap-0 overflow-hidden p-0 sm:max-h-[90vh]',
+            )}
+          >
+            <DialogHeader className="shrink-0 space-y-3 border-b px-6 pb-4 pt-6 pr-14 text-left">
+              <DialogTitle>
                 {dialogMode === 'create' ? 'Create New Project' : 'Edit Project'}
-
-              </h2>
-
-              {formError && (
-
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-
-                  <p className="text-red-600 text-sm">{formError}</p>
-
+              </DialogTitle>
+              {formError ? (
+                <div className="rounded-md border border-red-200 bg-red-50 p-3">
+                  <p className="text-sm text-red-600">{formError}</p>
                 </div>
-
-              )}
-
-              <form onSubmit={handleFormSubmit} className="space-y-4">
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                  <div>
-
-                    <Label htmlFor="name">Project Name *</Label>
-
+              ) : null}
+            </DialogHeader>
+            <form onSubmit={handleFormSubmit} className="flex min-h-0 flex-1 flex-col">
+              <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-6 py-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="project-form-name">Project name *</Label>
                     <Input
-
-                      id="name"
-
+                      id="project-form-name"
                       value={formData.name}
-
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-
                       required
-
                     />
-
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="project-form-status">Status</Label>
+                    <select
+                      id="project-form-status"
+                      className={cn(
+                        'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm',
+                        'ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                      )}
+                      value={formData.status}
+                      onChange={(e) =>
+                        setFormData({ ...formData, status: e.target.value })
+                      }
+                    >
+                      <option value="planning">Planning</option>
+                      <option value="in_progress">In progress</option>
+                      <option value="on_hold">On hold</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
                   </div>
 
-                  <div>
-
-                    <Label htmlFor="status">Status</Label>
-
-                    <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-
-                      <SelectTrigger>
-
-                        <SelectValue />
-
-                      </SelectTrigger>
-
-                      <SelectContent>
-
-                        <SelectItem value="planning">Planning</SelectItem>
-
-                        <SelectItem value="in_progress">In Progress</SelectItem>
-
-                        <SelectItem value="on_hold">On Hold</SelectItem>
-
-                        <SelectItem value="completed">Completed</SelectItem>
-
-                        <SelectItem value="cancelled">Cancelled</SelectItem>
-
-                      </SelectContent>
-
-                    </Select>
-
+                  <div className="space-y-2">
+                    <Label htmlFor="project-form-priority">Priority</Label>
+                    <select
+                      id="project-form-priority"
+                      className={cn(
+                        'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm',
+                        'ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                      )}
+                      value={formData.priority}
+                      onChange={(e) =>
+                        setFormData({ ...formData, priority: e.target.value })
+                      }
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </select>
                   </div>
-
-                  <div>
-
-                    <Label htmlFor="startDate">Start Date *</Label>
-
+                  <div className="space-y-2">
+                    <Label htmlFor="project-form-start">Start date *</Label>
                     <Input
-
-                      id="startDate"
-
+                      id="project-form-start"
                       type="date"
-
                       required
-
                       value={formData.startDate || ''}
-
-                      onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-
+                      onChange={(e) =>
+                        setFormData({ ...formData, startDate: e.target.value })
+                      }
                     />
-
                   </div>
-
-                  <div>
-
-                    <Label htmlFor="endDate">End Date *</Label>
-
+                  <div className="space-y-2">
+                    <Label htmlFor="project-form-end">End date *</Label>
                     <Input
-
-                      id="endDate"
-
+                      id="project-form-end"
                       type="date"
-
                       required
-
                       value={formData.endDate || ''}
-
-                      onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-
                       min={formData.startDate || undefined}
-
+                      onChange={(e) =>
+                        setFormData({ ...formData, endDate: e.target.value })
+                      }
                     />
-
                   </div>
-
-                  <div>
-
-                    <Label htmlFor="budget">Budget</Label>
-
+                  <div className="space-y-2">
+                    <Label htmlFor="project-form-budget">Budget</Label>
                     <Input
-
-                      id="budget"
-
+                      id="project-form-budget"
                       type="number"
-
                       value={formData.budget}
-
-                      onChange={(e) => setFormData({ ...formData, budget: Number(e.target.value) })}
-
+                      onChange={(e) =>
+                        setFormData({ ...formData, budget: Number(e.target.value) })
+                      }
                     />
-
                   </div>
-
-                  <div>
-
-                    <Label htmlFor="priority">Priority</Label>
-
-                    <Select value={formData.priority} onValueChange={(value) => setFormData({ ...formData, priority: value })}>
-
-                      <SelectTrigger>
-
-                        <SelectValue />
-
-                      </SelectTrigger>
-
-                      <SelectContent>
-
-                        <SelectItem value="low">Low</SelectItem>
-
-                        <SelectItem value="medium">Medium</SelectItem>
-
-                        <SelectItem value="high">High</SelectItem>
-
-                      </SelectContent>
-
-                    </Select>
-
-                  </div>
-
                 </div>
-
-                <div>
-
-                  <Label htmlFor="description">Description</Label>
-
+                <div className="space-y-2">
+                  <Label htmlFor="project-form-description">Description</Label>
                   <Textarea
-
-                    id="description"
-
+                    id="project-form-description"
                     value={formData.description}
-
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
                     rows={3}
-
                   />
-
                 </div>
-
-                <div>
-
-                  <Label htmlFor="clientEmail">Client Email</Label>
-
+                <div className="space-y-2">
+                  <Label htmlFor="project-form-client-email">Client email</Label>
                   <Input
-
-                    id="clientEmail"
-
+                    id="project-form-client-email"
                     type="email"
-
                     value={formData.clientEmail}
-
-                    onChange={(e) => setFormData({ ...formData, clientEmail: e.target.value })}
-
+                    onChange={(e) =>
+                      setFormData({ ...formData, clientEmail: e.target.value })
+                    }
                   />
-
                 </div>
-
-                <div>
-
-                  <Label htmlFor="notes">Notes</Label>
-
+                <div className="space-y-2">
+                  <Label htmlFor="project-form-notes">Notes</Label>
                   <Textarea
-
-                    id="notes"
-
+                    id="project-form-notes"
                     value={formData.notes}
-
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-
+                    onChange={(e) =>
+                      setFormData({ ...formData, notes: e.target.value })
+                    }
                     rows={2}
-
                   />
-
                 </div>
-
-                <div>
-
+                <div className="space-y-2">
                   <UserSearch
-
                     users={users}
-
                     value={selectedProjectManager}
-
-                    onSelect={(user) => setFormData({ ...formData, projectManagerId: user ? (user.id || user.userId || '') : '' })}
-
+                    onSelect={(user) =>
+                      setFormData({
+                        ...formData,
+                        projectManagerId: user ? user.id || user.userId || '' : '',
+                      })
+                    }
                     placeholder="Search by name or email..."
-
-                    label="Project Manager *"
-
+                    label="Project manager *"
                     required
-
-                    error={formError === 'Please select a project manager' ? formError : undefined}
-
+                    error={
+                      formError === 'Please select a project manager'
+                        ? formError
+                        : undefined
+                    }
                   />
-
                 </div>
-
-                <div>
-
+                <div className="space-y-2">
                   <UserMultiSearch
-
                     users={users}
-
                     value={selectedTeamMembers}
-
-                    onChange={(selected) => setFormData({ ...formData, teamMemberIds: selected.map((u) => u.id || u.userId || '') })}
-
+                    onChange={(selected) =>
+                      setFormData({
+                        ...formData,
+                        teamMemberIds: selected.map((u) => u.id || u.userId || ''),
+                      })
+                    }
                     placeholder="Search to add team members..."
-
-                    label="Team Members"
-
+                    label="Team members"
                   />
-
                 </div>
-
-                <div className="flex justify-end gap-2 pt-4">
-
-                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={formLoading} className="modern-button">
-                    {formLoading ? 'Saving...' : dialogMode === 'create' ? 'Create Project' : 'Update Project'}
-                  </Button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+              </div>
+              <DialogFooter className="shrink-0 gap-2 border-t px-6 py-4 sm:gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setDialogOpen(false)}
+                  disabled={formLoading}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={formLoading} className="modern-button">
+                  {formLoading
+                    ? 'Saving...'
+                    : dialogMode === 'create'
+                      ? 'Create project'
+                      : 'Update project'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
         {deleteDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">

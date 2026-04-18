@@ -239,8 +239,8 @@ export default function ProjectDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[85vh] flex-col gap-0 overflow-hidden p-0 sm:max-h-[90vh] sm:max-w-[600px]">
+        <DialogHeader className="shrink-0 space-y-1.5 px-6 pb-2 pt-6 text-left">
           <DialogTitle>
             {mode === 'create' ? 'Create New Project' : 'Edit Project'}
           </DialogTitle>
@@ -251,7 +251,11 @@ export default function ProjectDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="flex min-h-0 flex-1 flex-col"
+        >
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-6 py-2 [scrollbar-gutter:stable]">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2 space-y-2">
               <Label htmlFor="name">Project Name *</Label>
@@ -530,8 +534,9 @@ export default function ProjectDialog({
               />
             </div>
           </div>
+          </div>
 
-          <DialogFooter>
+          <DialogFooter className="shrink-0 border-t px-6 py-4">
             <Button
               type="button"
               variant="outline"
