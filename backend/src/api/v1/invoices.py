@@ -184,7 +184,7 @@ def transform_invoice_to_pydantic(db_invoice: Invoice):
         invoiceNumber=db_invoice.invoiceNumber,
         customerId=str(db_invoice.customerId) if db_invoice.customerId else '',
         customerName=db_invoice.customerName,
-        customerEmail=db_invoice.customerEmail,
+        customerEmail=db_invoice.customerEmail or "",
         customerPhone=db_invoice.customerPhone,
         billingAddress=db_invoice.billingAddress,
         shippingAddress=db_invoice.shippingAddress,
@@ -598,9 +598,6 @@ def create_invoice(
         if not invoice_data.customerName:
             raise HTTPException(status_code=400, detail="Customer name is required")
         
-        if not invoice_data.customerEmail:
-            raise HTTPException(status_code=400, detail="Customer email is required")
-        
         if not invoice_data.items or len(invoice_data.items) == 0:
             raise HTTPException(status_code=400, detail="At least one item is required")
         
@@ -627,7 +624,7 @@ def create_invoice(
             createdBy=str(current_user.id),
             customerId=invoice_data.customerId or "",
             customerName=invoice_data.customerName,
-            customerEmail=invoice_data.customerEmail,
+            customerEmail=invoice_data.customerEmail or "",
             customerPhone="",  # Will be populated from customer record
             billingAddress=invoice_data.billingAddress or "",  # Use provided billing address or populate from customer record
             shippingAddress=invoice_data.shippingAddress,

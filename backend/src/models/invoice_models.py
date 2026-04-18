@@ -103,7 +103,7 @@ class InvoiceBase(BaseModel):
 class InvoiceCreate(BaseModel):
     customerId: str
     customerName: str
-    customerEmail: str
+    customerEmail: Optional[str] = None
     billingAddress: Optional[str] = None
     shippingAddress: Optional[str] = None
     issueDate: str
