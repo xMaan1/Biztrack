@@ -208,9 +208,9 @@ const allMenuItems: MenuItem[] = [
   {
     text: 'Customers',
     icon: Users,
-    path: '/crm/customers',
+    path: '/workshop-management/customers',
     roles: ['*'],
-    planTypes: ['workshop'], // Workshop plan - only customers needed
+    planTypes: ['workshop'],
     gradient: 'from-blue-500 to-indigo-500',
   },
   {

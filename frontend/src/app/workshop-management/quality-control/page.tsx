@@ -12,7 +12,6 @@ import {
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Badge } from '../../../components/ui/badge';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
 import {
   Select,
   SelectContent,
@@ -52,15 +51,12 @@ import {
   Loader2,
   RefreshCw,
   CheckSquare,
-  AlertTriangle,
   Play,
-  Bug,
   AlertCircle,
   CheckCircle,
   XCircle,
   Clock3,
   FileCheck,
-  BarChart,
   Calendar,
   Target,
 } from 'lucide-react';
@@ -298,7 +294,6 @@ export default function QualityControlPage() {
 }
 
 function QualityControlContent() {
-  const { getCurrencySymbol } = useCurrency();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(true);
@@ -308,7 +303,6 @@ function QualityControlContent() {
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [recentChecks, setRecentChecks] = useState<QualityCheck[]>([]);
   const [upcomingChecks, setUpcomingChecks] = useState<QualityCheck[]>([]);
-  const [criticalDefects, setCriticalDefects] = useState<any[]>([]);
 
   // Quality Checks data
   const [qualityChecks, setQualityChecks] = useState<QualityCheck[]>([]);
@@ -331,7 +325,6 @@ function QualityControlContent() {
       setDashboardData(dashboard.stats);
       setRecentChecks(dashboard.recent_checks || []);
       setUpcomingChecks(dashboard.upcoming_checks || []);
-      setCriticalDefects(dashboard.critical_defects || []);
     } catch (error) {
     } finally {
       setLoading(false);
@@ -459,7 +452,7 @@ function QualityControlContent() {
               Quality Control
             </h1>
             <p className="text-gray-600 mt-2">
-              Manage quality checks, inspections, defects, and reports
+              Manage quality checks and dashboard metrics
             </p>
           </div>
           <div className="flex items-center space-x-2">
@@ -480,12 +473,9 @@ function QualityControlContent() {
           onValueChange={setActiveTab}
           className="space-y-4"
         >
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-2 max-w-md">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="checks">Quality Checks</TabsTrigger>
-            <TabsTrigger value="inspections">Inspections</TabsTrigger>
-            <TabsTrigger value="defects">Defects</TabsTrigger>
-            <TabsTrigger value="reports">Reports</TabsTrigger>
           </TabsList>
 
           {/* Dashboard Tab */}
@@ -497,7 +487,7 @@ function QualityControlContent() {
             ) : (
               <>
                 {/* Stats Cards */}
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">
@@ -545,23 +535,6 @@ function QualityControlContent() {
                       </div>
                       <p className="text-xs text-muted-foreground">
                         Average compliance
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">
-                        Critical Defects
-                      </CardTitle>
-                      <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">
-                        {dashboardData?.critical_defects || 0}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Require immediate attention
                       </p>
                     </CardContent>
                   </Card>
@@ -653,51 +626,6 @@ function QualityControlContent() {
                     </CardContent>
                   </Card>
                 </div>
-
-                {/* Critical Defects */}
-                {criticalDefects.length > 0 && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-red-600">
-                        <AlertTriangle className="h-5 w-5" />
-                        Critical Defects
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {criticalDefects.map((defect: any) => (
-                          <div
-                            key={defect.id}
-                            className="flex items-center justify-between p-3 border border-red-200 rounded-lg bg-red-50"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="p-2 bg-red-100 rounded-full">
-                                <Bug className="h-4 w-4 text-red-600" />
-                              </div>
-                              <div>
-                                <p className="font-medium text-sm">
-                                  {defect.title}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {defect.category} •{' '}
-                                  {defect.location || 'No location'}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <Badge className="bg-red-100 text-red-800">
-                                {defect.severity}
-                              </Badge>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {getCurrencySymbol()}{defect.cost_impact}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
               </>
             )}
           </TabsContent>
@@ -863,75 +791,6 @@ function QualityControlContent() {
                       </div>
                     </div>
                   )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Inspections Tab */}
-          <TabsContent value="inspections" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Quality Inspections</CardTitle>
-                <p className="text-muted-foreground">
-                  View and manage quality inspections
-                </p>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <FileCheck className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">
-                    Inspections coming soon
-                  </h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    This feature is under development.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Defects Tab */}
-          <TabsContent value="defects" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Quality Defects</CardTitle>
-                <p className="text-muted-foreground">
-                  Track and manage quality defects
-                </p>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <Bug className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">
-                    Defects coming soon
-                  </h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    This feature is under development.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Reports Tab */}
-          <TabsContent value="reports" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Quality Reports</CardTitle>
-                <p className="text-muted-foreground">
-                  Generate and view quality reports
-                </p>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <BarChart className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">
-                    Reports coming soon
-                  </h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    This feature is under development.
-                  </p>
                 </div>
               </CardContent>
             </Card>

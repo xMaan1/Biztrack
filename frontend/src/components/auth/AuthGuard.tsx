@@ -41,8 +41,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     '/workspace',
     '/reports',
     '/hrm',
-    '/workshop-management/production',
-    '/workshop-management/quality-control',
+    '/workshop-management',
   ];
 
   // Check if current route is public

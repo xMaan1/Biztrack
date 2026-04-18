@@ -167,6 +167,7 @@ export const RBAC_PERMISSION_MODULES: PermissionModule[] = [
 export const SIDEBAR_PATH_PERMISSIONS: Record<string, string> = {
   '/crm': 'crm:dashboard:view',
   '/crm/customers': 'crm:customers:view',
+  '/workshop-management/customers': 'crm:customers:view',
   '/crm/companies': 'crm:companies:view',
   '/crm/contacts': 'crm:contacts:view',
   '/crm/leads': 'crm:leads:view',
