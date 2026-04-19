@@ -1,5 +1,10 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { SessionManager } from './SessionManager';
+import {
+  offlineGetCacheKey,
+  offlineRequestPathname,
+  offlineUseAggregateFallback,
+} from './offlineCacheKey';
 
 export interface ApiResponse<T = any> {
   data: T;
@@ -48,6 +53,11 @@ export class ApiService {
     }
 
     this.setupInterceptors();
+    this.setupOfflineInterceptors();
+  }
+
+  getClient(): AxiosInstance {
+    return this.client;
   }
 
   // Tenant management
@@ -195,7 +205,33 @@ export class ApiService {
     );
 
     this.client.interceptors.response.use(
-      (response) => response,
+      async (response) => {
+        if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+          try {
+            if (
+              navigator.onLine &&
+              (response.config.method || '').toLowerCase() === 'get' &&
+              response.config.responseType !== 'blob' &&
+              !(response.data instanceof Blob)
+            ) {
+              const { invoke } = await import('@tauri-apps/api/core');
+              const tid = this.getTenantId() || '';
+              const u = String(response.config.url || '');
+              const key = offlineGetCacheKey(
+                tid,
+                u,
+                (response.config.params as Record<string, unknown>) || {},
+              );
+              const value =
+                typeof response.data === 'string'
+                  ? response.data
+                  : JSON.stringify(response.data);
+              await invoke('offline_cache_put', { key, value });
+            }
+          } catch {}
+        }
+        return response;
+      },
       async (error) => {
         if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {
           return Promise.reject(new Error('Request timeout. Please try again.'));
@@ -235,6 +271,98 @@ export class ApiService {
         }
         return Promise.reject(error);
       },
+    );
+  }
+
+  private setupOfflineInterceptors() {
+    this.client.interceptors.request.use(
+      async (config) => {
+        if (typeof window === 'undefined' || !('__TAURI_INTERNALS__' in window)) {
+          return config;
+        }
+        if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+          return config;
+        }
+        const online = typeof navigator !== 'undefined' && navigator.onLine;
+        const method = (config.method || 'get').toUpperCase();
+        const url = String(config.url || '');
+        const isPublicEndpoint = this.publicEndpoints.some((endpoint) =>
+          url.includes(endpoint),
+        );
+        if (isPublicEndpoint) {
+          return config;
+        }
+        const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
+        if (!online && isMutation) {
+          const { invoke } = await import('@tauri-apps/api/core');
+          const token = this.sessionManager.getToken();
+          const tid = this.getTenantId();
+          await invoke('offline_enqueue', {
+            method,
+            url,
+            query_json: config.params ? JSON.stringify(config.params) : null,
+            body_json:
+              config.data !== undefined && config.data !== null
+                ? typeof config.data === 'string'
+                  ? config.data
+                  : JSON.stringify(config.data)
+                : null,
+            headers_json: JSON.stringify({
+              Authorization: token ? `Bearer ${token}` : config.headers?.Authorization,
+              'X-Tenant-ID': tid || (config.headers as Record<string, unknown>)['X-Tenant-ID'],
+            }),
+            tenant_id: tid,
+          });
+          (config as { adapter?: (c: typeof config) => Promise<unknown> }).adapter = () =>
+            Promise.resolve({
+              data: { success: true, offlineQueued: true },
+              status: 202,
+              statusText: 'Accepted',
+              headers: {},
+              config,
+              request: {},
+            });
+          return config;
+        }
+        if (!online && method === 'GET') {
+          const { invoke } = await import('@tauri-apps/api/core');
+          const tid = this.getTenantId() || '';
+          const key = offlineGetCacheKey(
+            tid,
+            url,
+            (config.params as Record<string, unknown>) || {},
+          );
+          let payload: string | null = await invoke<string | null>('offline_cache_get', { key });
+          if (payload == null) {
+            const pathname = offlineRequestPathname(url);
+            if (offlineUseAggregateFallback(pathname, url)) {
+              payload = await invoke<string | null>('offline_aggregate_get', {
+                tenant_id: tid,
+                route_key: pathname,
+              });
+            }
+          }
+          if (payload != null) {
+            let parsed: unknown;
+            try {
+              parsed = JSON.parse(payload);
+            } catch {
+              parsed = payload;
+            }
+            (config as { adapter?: (c: typeof config) => Promise<unknown> }).adapter = () =>
+              Promise.resolve({
+                data: parsed,
+                status: 200,
+                statusText: 'OK',
+                headers: {},
+                config,
+                request: {},
+              });
+          }
+        }
+        return config;
+      },
+      (error) => Promise.reject(error),
     );
   }
 

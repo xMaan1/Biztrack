@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { isTauriApp } from '@/src/lib/isTauriApp';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -56,13 +57,16 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
   useEffect(() => {
     if (!loading) {
-      // If user is not authenticated and trying to access protected route
+      if (isTauriApp() && pathname === '/signup') {
+        router.replace('/login');
+        return;
+      }
+
       if (!isAuthenticated && isProtectedRoute) {
         router.push('/login');
         return;
       }
 
-      // If user is authenticated and trying to access login/signup pages
       if (
         isAuthenticated &&
         (pathname === '/login' || pathname === '/signup')

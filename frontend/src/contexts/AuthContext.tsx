@@ -4,6 +4,13 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, LoginCredentials } from '@/src/models/auth';
 import { apiService } from '@/src/services/ApiService';
 import { SessionManager } from '@/src/services/SessionManager';
+import { startOfflineOutboxFlush } from '@/src/services/offlineOutboxFlush';
+import {
+  runTenantFullSync,
+  TENANT_FULL_SYNC_TOTAL_STEPS,
+  type TenantSyncProgressPayload,
+} from '@/src/services/tenantOfflineSync';
+import { isTauriApp } from '@/src/lib/isTauriApp';
 
 interface Tenant {
   id: string;
@@ -19,6 +26,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   tenants: Tenant[];
   currentTenant: Tenant | null;
+  tauriTenantSync: TenantSyncProgressPayload | null;
   login: (credentials: LoginCredentials) => Promise<boolean>;
   logout: () => Promise<void>;
   switchTenant: (tenantId: string) => Promise<boolean>;
@@ -31,6 +39,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [currentTenant, setCurrentTenant] = useState<Tenant | null>(null);
+  const [tauriTenantSync, setTauriTenantSync] = useState<TenantSyncProgressPayload | null>(null);
+
+  const startTauriTenantDataSync = (client: ReturnType<typeof apiService.getClient>, tenantId: string) => {
+    if (!isTauriApp() || !tenantId || !navigator.onLine) return;
+    void (async () => {
+      setTauriTenantSync({ step: 0, total: TENANT_FULL_SYNC_TOTAL_STEPS, label: 'starting' });
+      try {
+        await runTenantFullSync(client, tenantId, (p) => setTauriTenantSync(p));
+      } finally {
+        setTauriTenantSync(null);
+      }
+    })();
+  };
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -81,6 +102,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 apiService.setTenantId(storedTenants[0].id);
               }
             }
+            const tidAfter = apiService.getTenantId();
+            if (tidAfter) {
+              startTauriTenantDataSync(apiService.getClient(), tidAfter);
+            }
           } else {
             sessionManager.clearSession();
             setUser(null);
@@ -99,6 +124,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     initializeAuth();
+  }, []);
+
+  useEffect(() => {
+    const stop = startOfflineOutboxFlush(() => apiService.getClient());
+    return stop;
   }, []);
 
   const login = async (credentials: LoginCredentials): Promise<boolean> => {
@@ -125,6 +155,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (currentTenant) {
             setCurrentTenant(currentTenant);
           }
+        }
+        const tidLogin = apiService.getTenantId();
+        if (tidLogin) {
+          startTauriTenantDataSync(apiService.getClient(), tidLogin);
         }
 
         return true;
@@ -160,6 +194,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const tenant = await apiService.switchTenant(tenantId);
       setCurrentTenant(tenant);
+      startTauriTenantDataSync(apiService.getClient(), tenantId);
       return true;
     } catch (error) {
       return false;
@@ -172,6 +207,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: !!user,
     tenants,
     currentTenant,
+    tauriTenantSync,
     login,
     logout,
     switchTenant,

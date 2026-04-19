@@ -20,6 +20,7 @@ import {
   DialogDescription,
 } from '../components/ui/dialog';
 import { useAuth } from '../contexts/AuthContext';
+import { isTauriApp } from '@/src/lib/isTauriApp';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { apiService } from '../services/ApiService';
 import { LandingNav } from '../components/landing/LandingNav';
@@ -142,14 +143,27 @@ export default function LandingPage() {
   const { getCurrencySymbol } = useCurrency();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(false);
+  const [desktopApp, setDesktopApp] = useState(false);
   const [subscriptionModal, setSubscriptionModal] = useState<{
     isOpen: boolean;
     plan: Plan | null;
   }>({ isOpen: false, plan: null });
 
   useEffect(() => {
-    fetchPlans();
+    if (isTauriApp()) {
+      setDesktopApp(true);
+    }
   }, []);
+
+  useEffect(() => {
+    if (!desktopApp || authLoading) return;
+    router.replace(isAuthenticated ? '/dashboard' : '/login');
+  }, [desktopApp, authLoading, isAuthenticated, router]);
+
+  useEffect(() => {
+    if (desktopApp) return;
+    fetchPlans();
+  }, [desktopApp]);
 
   // Handle stored plan for new signups
   useEffect(() => {
@@ -331,7 +345,14 @@ export default function LandingPage() {
     },
   ];
 
-  // Show loading screen while checking authentication
+  if (desktopApp) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">

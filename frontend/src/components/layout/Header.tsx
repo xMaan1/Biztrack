@@ -13,8 +13,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
-import { Menu, Settings, LogOut, User } from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';
+import { Menu, Settings, LogOut, User, Loader2 } from 'lucide-react';
+import { useAuth } from '@/src/contexts/AuthContext';
+import { isTauriApp } from '@/src/lib/isTauriApp';
 import { useRBAC } from '../../contexts/RBACContext';
 import { getInitials } from '../../lib/utils';
 import NotificationBell from '../notifications/NotificationBell';
@@ -24,7 +25,7 @@ interface HeaderProps {
 }
 
 export default function Header({ onMenuClick }: HeaderProps) {
-  const { user, logout } = useAuth();
+  const { user, logout, tauriTenantSync } = useAuth();
   const { isOwner, userPermissions } = useRBAC();
   const router = useRouter();
 
@@ -43,8 +44,25 @@ export default function Header({ onMenuClick }: HeaderProps) {
     router.push('/profile');
   };
 
+  const showSync =
+    isTauriApp() && tauriTenantSync && tauriTenantSync.total > 0;
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md shadow-sm">
+      {showSync ? (
+        <div className="flex items-center gap-2 border-b border-blue-100 bg-blue-50/90 px-4 py-2 text-sm text-blue-900 md:px-6">
+          <Loader2 className="h-4 w-4 shrink-0 animate-spin text-blue-600" aria-hidden />
+          <span className="min-w-0 flex-1 truncate font-medium">
+            Syncing workspace for offline use{' '}
+            <span className="font-normal text-blue-800/90">
+              ({tauriTenantSync.step}/{tauriTenantSync.total}) {tauriTenantSync.label.replace(/_/g, ' ')}
+            </span>
+          </span>
+          <span className="hidden shrink-0 tabular-nums text-blue-700 sm:inline">
+            {Math.round((100 * tauriTenantSync.step) / tauriTenantSync.total)}%
+          </span>
+        </div>
+      ) : null}
       <div className="flex h-16 items-center justify-between px-4 md:px-6">
         {/* Left side - Menu button */}
         <div className="flex items-center gap-4">
