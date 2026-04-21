@@ -91,7 +91,7 @@ function CRMDashboardContent() {
           </div>
           <div className="flex space-x-2">
             <Button asChild>
-              <Link href="/crm/leads/new">
+              <Link href="/crm/leads?new=1">
                 <Plus className="w-4 h-4 mr-2" />
                 New Lead
               </Link>

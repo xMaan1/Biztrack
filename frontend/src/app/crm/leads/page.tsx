@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
   Card,
@@ -59,6 +60,7 @@ export default function CRMLeadsPage() {
 }
 
 function CRMLeadsContent() {
+  const searchParams = useSearchParams();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<CRMLeadFilters>({});
@@ -111,6 +113,12 @@ function CRMLeadsContent() {
   useEffect(() => {
     loadLeads();
   }, [loadLeads]);
+
+  useEffect(() => {
+    if (searchParams.get('new') === '1') {
+      setIsCreateDialogOpen(true);
+    }
+  }, [searchParams]);
 
   const handleCreateCustomLeadSource = async (
     name: string,
