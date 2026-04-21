@@ -93,6 +93,35 @@ export interface Lead {
 export class CRMService {
   private apiService = apiService;
 
+  private normalizeOpportunityPayload(
+    opportunity: OpportunityCreate | OpportunityUpdate,
+  ) {
+    const payload: Record<string, unknown> = { ...opportunity };
+    const optionalStringFields = [
+      'expectedCloseDate',
+      'leadId',
+      'contactId',
+      'companyId',
+      'assignedTo',
+      'notes',
+      'description',
+    ];
+
+    optionalStringFields.forEach((field) => {
+      const value = payload[field];
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (!trimmed) {
+          delete payload[field];
+        } else {
+          payload[field] = trimmed;
+        }
+      }
+    });
+
+    return payload;
+  }
+
   // Lead Management
   async getLeads(
     filters?: CRMLeadFilters,
@@ -250,14 +279,16 @@ export class CRMService {
   async createOpportunity(
     opportunity: OpportunityCreate,
   ): Promise<Opportunity> {
-    return this.apiService.post('/crm/opportunities', opportunity);
+    const payload = this.normalizeOpportunityPayload(opportunity);
+    return this.apiService.post('/crm/opportunities', payload);
   }
 
   async updateOpportunity(
     id: string,
     opportunity: OpportunityUpdate,
   ): Promise<Opportunity> {
-    return this.apiService.put(`/crm/opportunities/${id}`, opportunity);
+    const payload = this.normalizeOpportunityPayload(opportunity);
+    return this.apiService.put(`/crm/opportunities/${id}`, payload);
   }
 
   async deleteOpportunity(id: string): Promise<void> {
