@@ -1419,6 +1419,8 @@ async def create_crm_opportunity(
             except Exception:
                 pass
         return OpportunityPydantic.model_validate(opportunity)
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error creating opportunity: {str(e)}")

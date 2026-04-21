@@ -532,6 +532,15 @@ class Opportunity(OpportunityBase):
             return str(v.id)
         return str(v)
 
+    @field_validator("leadId", "contactId", "companyId", mode="before")
+    @classmethod
+    def coerce_related_ids(cls, v):
+        if v is None:
+            return None
+        if hasattr(v, "hex"):
+            return str(v)
+        return str(v)
+
     @field_validator("leadSource", mode="before")
     @classmethod
     def empty_lead_source(cls, v):
