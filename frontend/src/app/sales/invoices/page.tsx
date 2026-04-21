@@ -246,6 +246,8 @@ function InvoicesPageContent() {
 
   const handleEdit = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
+    setShowCreateDialog(false);
+    setShowViewDialog(false);
     setUpdateError(null);
     setShowEditDialog(true);
   };
@@ -530,7 +532,7 @@ function InvoicesPageContent() {
 
         {/* Edit Invoice Dialog */}
         <InvoiceDialog
-          open={showEditDialog}
+          open={showEditDialog && !!selectedInvoice}
           onOpenChange={(open) => {
             setShowEditDialog(open);
             if (!open) {
