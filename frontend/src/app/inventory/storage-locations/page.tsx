@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
   Card,
@@ -43,6 +43,7 @@ import {
   StorageLocation,
   Warehouse,
   StorageLocationCreate,
+  StorageLocationUpdate,
 } from '../../../models/inventory';
 import { DashboardLayout } from '../../../components/layout';
 import { formatDate } from '../../../lib/utils';
@@ -68,6 +69,7 @@ export default function StorageLocationsPage() {
 function StorageLocationsContent() {
   const { } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [storageLocations, setStorageLocations] = useState<StorageLocation[]>(
     [],
   );
@@ -76,13 +78,27 @@ function StorageLocationsContent() {
   const [searchTerm, setSearchTerm] = useState('');
   const [warehouseFilter, setWarehouseFilter] = useState<string>('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
   const [locationToDelete, setLocationToDelete] = useState<StorageLocation | null>(null);
+  const [locationToEdit, setLocationToEdit] = useState<StorageLocation | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newLocation, setNewLocation] = useState<StorageLocationCreate>({
+    warehouseId: '',
+    name: '',
+    code: '',
+    description: '',
+    locationType: 'shelf',
+    parentLocationId: '',
+    capacity: undefined,
+    usedCapacity: undefined,
+    isActive: true,
+  });
+  const [editLocation, setEditLocation] = useState<StorageLocationUpdate>({
     warehouseId: '',
     name: '',
     code: '',
@@ -97,6 +113,14 @@ function StorageLocationsContent() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    const editId = searchParams.get('edit');
+    if (!editId || storageLocations.length === 0 || isEditModalOpen) return;
+    const location = storageLocations.find((item) => item.id === editId);
+    if (!location) return;
+    openEditModal(location);
+  }, [searchParams, storageLocations, isEditModalOpen]);
 
   const fetchData = async () => {
     try {
@@ -146,6 +170,41 @@ function StorageLocationsContent() {
   const openDeleteDialog = (location: StorageLocation) => {
     setLocationToDelete(location);
     setIsDeleteDialogOpen(true);
+  };
+
+  const openEditModal = (location: StorageLocation) => {
+    setLocationToEdit(location);
+    setEditLocation({
+      warehouseId: location.warehouseId,
+      name: location.name,
+      code: location.code,
+      description: location.description || '',
+      locationType: location.locationType,
+      parentLocationId: location.parentLocationId || '',
+      capacity: location.capacity,
+      usedCapacity: location.usedCapacity,
+      isActive: location.isActive,
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    setLocationToEdit(null);
+    setEditLocation({
+      warehouseId: '',
+      name: '',
+      code: '',
+      description: '',
+      locationType: 'shelf',
+      parentLocationId: '',
+      capacity: undefined,
+      usedCapacity: undefined,
+      isActive: true,
+    });
+    if (searchParams.get('edit')) {
+      router.replace('/inventory/storage-locations');
+    }
   };
 
   const closeDeleteDialog = () => {
@@ -217,6 +276,29 @@ function StorageLocationsContent() {
       setIsErrorDialogOpen(true);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleEditLocation = async () => {
+    if (!locationToEdit) return;
+    if (!editLocation.warehouseId || !editLocation.name || !editLocation.code) {
+      setErrorMessage('Please fill in all required fields');
+      setIsErrorDialogOpen(true);
+      return;
+    }
+    try {
+      setEditLoading(true);
+      await inventoryService.updateStorageLocation(locationToEdit.id, editLocation);
+      closeEditModal();
+      fetchData();
+      if (searchParams.get('edit')) {
+        router.replace('/inventory/storage-locations');
+      }
+    } catch {
+      setErrorMessage('Failed to update storage location. Please try again.');
+      setIsErrorDialogOpen(true);
+    } finally {
+      setEditLoading(false);
     }
   };
 
@@ -386,11 +468,7 @@ function StorageLocationsContent() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() =>
-                              router.push(
-                                `/inventory/storage-locations/${location.id}/edit`,
-                              )
-                            }
+                            onClick={() => openEditModal(location)}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -667,6 +745,188 @@ function StorageLocationsContent() {
               </Button>
               <Button onClick={handleAddLocation} disabled={isSubmitting}>
                 {isSubmitting ? 'Creating...' : 'Create Location'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          open={isEditModalOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              closeEditModal();
+              return;
+            }
+            setIsEditModalOpen(true);
+          }}
+        >
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Edit Storage Location</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-warehouse">Warehouse *</Label>
+                  <Select
+                    value={editLocation.warehouseId || ''}
+                    onValueChange={(value) =>
+                      setEditLocation((prev) => ({
+                        ...prev,
+                        warehouseId: value,
+                      }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select warehouse" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {warehouses.map((warehouse) => (
+                        <SelectItem key={warehouse.id} value={warehouse.id}>
+                          {warehouse.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-locationType">Location Type *</Label>
+                  <Select
+                    value={editLocation.locationType || 'shelf'}
+                    onValueChange={(value) =>
+                      setEditLocation((prev) => ({
+                        ...prev,
+                        locationType: value,
+                      }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="shelf">Shelf</SelectItem>
+                      <SelectItem value="rack">Rack</SelectItem>
+                      <SelectItem value="bin">Bin</SelectItem>
+                      <SelectItem value="area">Area</SelectItem>
+                      <SelectItem value="zone">Zone</SelectItem>
+                      <SelectItem value="room">Room</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-name">Name *</Label>
+                  <Input
+                    id="edit-name"
+                    value={editLocation.name || ''}
+                    onChange={(e) =>
+                      setEditLocation((prev) => ({
+                        ...prev,
+                        name: e.target.value,
+                      }))
+                    }
+                    placeholder="Enter location name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-code">Code *</Label>
+                  <Input
+                    id="edit-code"
+                    value={editLocation.code || ''}
+                    onChange={(e) =>
+                      setEditLocation((prev) => ({
+                        ...prev,
+                        code: e.target.value,
+                      }))
+                    }
+                    placeholder="Enter location code"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  value={editLocation.description || ''}
+                  onChange={(e) =>
+                    setEditLocation((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
+                  placeholder="Enter location description"
+                  rows={3}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-capacity">Capacity (m³)</Label>
+                  <Input
+                    id="edit-capacity"
+                    type="number"
+                    step="0.1"
+                    value={editLocation.capacity || ''}
+                    onChange={(e) =>
+                      setEditLocation((prev) => ({
+                        ...prev,
+                        capacity: e.target.value
+                          ? parseFloat(e.target.value)
+                          : undefined,
+                      }))
+                    }
+                    placeholder="Enter capacity"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-usedCapacity">Used Capacity (m³)</Label>
+                  <Input
+                    id="edit-usedCapacity"
+                    type="number"
+                    step="0.1"
+                    value={editLocation.usedCapacity || ''}
+                    onChange={(e) =>
+                      setEditLocation((prev) => ({
+                        ...prev,
+                        usedCapacity: e.target.value
+                          ? parseFloat(e.target.value)
+                          : undefined,
+                      }))
+                    }
+                    placeholder="Enter used capacity"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="edit-isActive"
+                  checked={!!editLocation.isActive}
+                  onChange={(e) =>
+                    setEditLocation((prev) => ({
+                      ...prev,
+                      isActive: e.target.checked,
+                    }))
+                  }
+                  className="rounded border-gray-300"
+                />
+                <Label htmlFor="edit-isActive">Active</Label>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={closeEditModal}
+                disabled={editLoading}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleEditLocation} disabled={editLoading}>
+                {editLoading ? 'Saving...' : 'Save Changes'}
               </Button>
             </DialogFooter>
           </DialogContent>
