@@ -60,6 +60,7 @@ export default function CRMLeadsPage() {
 }
 
 function CRMLeadsContent() {
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const searchParams = useSearchParams();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,6 +72,7 @@ function CRMLeadsContent() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const [showCustomLeadSourceDialog, setShowCustomLeadSourceDialog] =
     useState(false);
 
@@ -131,8 +133,29 @@ function CRMLeadsContent() {
   };
 
   const handleCreateLead = async () => {
+    const firstName = formData.firstName.trim();
+    const lastName = formData.lastName.trim();
+    const email = (formData.email || '').trim();
+    if (!firstName || !lastName || !emailPattern.test(email)) {
+      setFormError('First name, last name, and a valid email are required.');
+      return;
+    }
+
+    const payload: LeadCreate = {
+      ...formData,
+      firstName,
+      lastName,
+      email,
+      phone: formData.phone?.trim() || undefined,
+      company: formData.company?.trim() || undefined,
+      jobTitle: formData.jobTitle?.trim() || undefined,
+      notes: formData.notes?.trim() || undefined,
+      timeline: formData.timeline?.trim() || undefined,
+    };
+
     try {
-      await CRMService.createLead(formData);
+      setFormError(null);
+      await CRMService.createLead(payload);
       setIsCreateDialogOpen(false);
       setFormData({
         firstName: '',
@@ -151,17 +174,40 @@ function CRMLeadsContent() {
       });
       loadLeads();
     } catch (err) {
-      }
+      setFormError('Failed to create lead. Please try again.');
+    }
   };
 
   const handleUpdateLead = async () => {
     if (!selectedLead) return;
+    const firstName = formData.firstName.trim();
+    const lastName = formData.lastName.trim();
+    const email = (formData.email || '').trim();
+    if (!firstName || !lastName || !emailPattern.test(email)) {
+      setFormError('First name, last name, and a valid email are required.');
+      return;
+    }
+
+    const payload: LeadCreate = {
+      ...formData,
+      firstName,
+      lastName,
+      email,
+      phone: formData.phone?.trim() || undefined,
+      company: formData.company?.trim() || undefined,
+      jobTitle: formData.jobTitle?.trim() || undefined,
+      notes: formData.notes?.trim() || undefined,
+      timeline: formData.timeline?.trim() || undefined,
+    };
+
     try {
-      await CRMService.updateLead(selectedLead.id, formData);
+      setFormError(null);
+      await CRMService.updateLead(selectedLead.id, payload);
       setIsEditDialogOpen(false);
       loadLeads();
     } catch (err) {
-      }
+      setFormError('Failed to update lead. Please try again.');
+    }
   };
 
   const handleDeleteLead = async (id: string) => {
@@ -454,7 +500,15 @@ function CRMLeadsContent() {
         </Card>
 
         {/* Create Lead Dialog */}
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <Dialog
+          open={isCreateDialogOpen}
+          onOpenChange={(open) => {
+            setIsCreateDialogOpen(open);
+            if (!open) {
+              setFormError(null);
+            }
+          }}
+        >
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Create New Lead</DialogTitle>
@@ -462,6 +516,7 @@ function CRMLeadsContent() {
                 Add a new lead to your CRM system
               </DialogDescription>
             </DialogHeader>
+            {formError && <p className="text-sm text-red-600">{formError}</p>}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="firstName">First Name *</Label>
@@ -660,12 +715,21 @@ function CRMLeadsContent() {
         </Dialog>
 
         {/* Edit Lead Dialog */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <Dialog
+          open={isEditDialogOpen}
+          onOpenChange={(open) => {
+            setIsEditDialogOpen(open);
+            if (!open) {
+              setFormError(null);
+            }
+          }}
+        >
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Edit Lead</DialogTitle>
               <DialogDescription>Update lead information</DialogDescription>
             </DialogHeader>
+            {formError && <p className="text-sm text-red-600">{formError}</p>}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="editFirstName">First Name *</Label>

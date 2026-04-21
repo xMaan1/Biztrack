@@ -115,11 +115,29 @@ export class CRMService {
   }
 
   async createLead(lead: LeadCreate): Promise<Lead> {
-    return this.apiService.post('/crm/leads', lead);
+    const payload: Record<string, unknown> = { ...lead };
+    const normalizedLeadSource = payload.leadSource ?? payload.source;
+    if (normalizedLeadSource) {
+      payload.leadSource = normalizedLeadSource;
+    }
+    delete payload.source;
+    if (typeof payload.email === 'string') {
+      payload.email = payload.email.trim();
+    }
+    return this.apiService.post('/crm/leads', payload);
   }
 
   async updateLead(id: string, lead: LeadUpdate): Promise<Lead> {
-    return this.apiService.put(`/crm/leads/${id}`, lead);
+    const payload: Record<string, unknown> = { ...lead };
+    const normalizedLeadSource = payload.leadSource ?? payload.source;
+    if (normalizedLeadSource) {
+      payload.leadSource = normalizedLeadSource;
+    }
+    delete payload.source;
+    if (typeof payload.email === 'string') {
+      payload.email = payload.email.trim();
+    }
+    return this.apiService.put(`/crm/leads/${id}`, payload);
   }
 
   async deleteLead(id: string): Promise<void> {
