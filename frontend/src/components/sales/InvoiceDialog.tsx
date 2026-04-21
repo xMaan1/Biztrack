@@ -152,7 +152,7 @@ export function InvoiceDialog({
   };
 
   useEffect(() => {
-    if (invoice && mode === 'edit') {
+    if (invoice && (mode === 'edit' || mode === 'view')) {
       setFormData({
         customerId: invoice.customerId,
         customerName: invoice.customerName,
@@ -420,6 +420,20 @@ export function InvoiceDialog({
   };
 
   const totals = calculateTotals();
+  const hasWorkshopData = Boolean(
+    invoice?.vehicleMake ||
+      invoice?.vehicleModel ||
+      invoice?.vehicleYear ||
+      invoice?.vehicleColor ||
+      invoice?.vehicleVin ||
+      invoice?.vehicleReg ||
+      invoice?.vehicleMileage ||
+      invoice?.documentNo ||
+      invoice?.jobDescription ||
+      invoice?.partsDescription ||
+      invoice?.labourTotal ||
+      invoice?.partsTotal,
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -431,6 +445,237 @@ export function InvoiceDialog({
           </DialogTitle>
         </DialogHeader>
 
+        {mode === 'view' && invoice ? (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>{invoice.invoiceNumber}</span>
+                  <span className={`px-2 py-1 rounded text-xs ${InvoiceService.getStatusColor(invoice.status)}`}>
+                    {InvoiceService.getStatusLabel(invoice.status)}
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Total</p>
+                  <p className="font-semibold text-lg">{formatCurrency(invoice.total)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Paid</p>
+                  <p className="font-medium text-green-600">{formatCurrency(invoice.totalPaid)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Balance</p>
+                  <p className={`font-medium ${invoice.balance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                    {formatCurrency(invoice.balance)}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  Customer Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Customer Name</p>
+                  <p className="font-medium">{invoice.customerName || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Customer ID</p>
+                  <p>{invoice.customerId || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Customer Email</p>
+                  <p>{invoice.customerEmail || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Customer Phone</p>
+                  <p>{invoice.customerPhone || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Billing Address</p>
+                  <p>{invoice.billingAddress || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Shipping Address</p>
+                  <p>{invoice.shippingAddress || '-'}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building className="h-4 w-4" />
+                  Invoice Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Issue Date</p>
+                  <p>{InvoiceService.formatDate(invoice.issueDate)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Due Date</p>
+                  <p>{InvoiceService.formatDate(invoice.dueDate)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Payment Terms</p>
+                  <p>{invoice.paymentTerms || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Currency</p>
+                  <p>{invoice.currency || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Order Number</p>
+                  <p>{invoice.orderNumber || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Order Time</p>
+                  <p>{invoice.orderTime ? InvoiceService.formatDate(invoice.orderTime) : '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Opportunity ID</p>
+                  <p>{invoice.opportunityId || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Quote ID</p>
+                  <p>{invoice.quoteId || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Project ID</p>
+                  <p>{invoice.projectId || '-'}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {hasWorkshopData && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Workshop Details</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div><p className="text-sm text-gray-500">Vehicle Make</p><p>{invoice.vehicleMake || '-'}</p></div>
+                  <div><p className="text-sm text-gray-500">Vehicle Model</p><p>{invoice.vehicleModel || '-'}</p></div>
+                  <div><p className="text-sm text-gray-500">Vehicle Year</p><p>{invoice.vehicleYear || '-'}</p></div>
+                  <div><p className="text-sm text-gray-500">Vehicle Color</p><p>{invoice.vehicleColor || '-'}</p></div>
+                  <div><p className="text-sm text-gray-500">VIN</p><p>{invoice.vehicleVin || '-'}</p></div>
+                  <div><p className="text-sm text-gray-500">Registration</p><p>{invoice.vehicleReg || '-'}</p></div>
+                  <div><p className="text-sm text-gray-500">Mileage</p><p>{invoice.vehicleMileage || '-'}</p></div>
+                  <div><p className="text-sm text-gray-500">Document No</p><p>{invoice.documentNo || '-'}</p></div>
+                  <div><p className="text-sm text-gray-500">Labour Total</p><p>{formatCurrency(invoice.labourTotal || 0)}</p></div>
+                  <div><p className="text-sm text-gray-500">Parts Total</p><p>{formatCurrency(invoice.partsTotal || 0)}</p></div>
+                  <div className="md:col-span-2"><p className="text-sm text-gray-500">Job Description</p><p>{invoice.jobDescription || '-'}</p></div>
+                  <div className="md:col-span-2"><p className="text-sm text-gray-500">Parts Description</p><p>{invoice.partsDescription || '-'}</p></div>
+                </CardContent>
+              </Card>
+            )}
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calculator className="h-4 w-4" />
+                  Invoice Items
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {invoice.items.length > 0 ? (
+                  invoice.items.map((item) => (
+                    <div key={item.id} className="grid grid-cols-1 md:grid-cols-6 gap-3 border rounded-lg p-3">
+                      <div className="md:col-span-2">
+                        <p className="text-sm text-gray-500">Description</p>
+                        <p className="font-medium">{item.description || '-'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Quantity</p>
+                        <p>{item.quantity}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Unit Price</p>
+                        <p>{formatCurrency(item.unitPrice)}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Discount</p>
+                        <p>{item.discount}%</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Tax</p>
+                        <p>{item.taxRate}%</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Line Total</p>
+                        <p className="font-medium">{formatCurrency(item.total)}</p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500">No invoice items.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Totals</CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div><p className="text-sm text-gray-500">Subtotal</p><p>{formatCurrency(invoice.subtotal)}</p></div>
+                <div><p className="text-sm text-gray-500">Discount ({invoice.discount}%)</p><p>-{formatCurrency((invoice.subtotal * invoice.discount) / 100)}</p></div>
+                <div><p className="text-sm text-gray-500">Tax ({invoice.taxRate}%)</p><p>{formatCurrency(invoice.taxAmount)}</p></div>
+                <div><p className="text-sm text-gray-500">Total</p><p className="font-semibold">{formatCurrency(invoice.total)}</p></div>
+                <div><p className="text-sm text-gray-500">Total Paid</p><p>{formatCurrency(invoice.totalPaid)}</p></div>
+                <div><p className="text-sm text-gray-500">Balance</p><p>{formatCurrency(invoice.balance)}</p></div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Additional Information</CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Notes</p>
+                  <p>{invoice.notes || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Terms & Conditions</p>
+                  <p>{invoice.terms || '-'}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Timeline</CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div><p className="text-sm text-gray-500">Created At</p><p>{InvoiceService.formatDate(invoice.createdAt)}</p></div>
+                <div><p className="text-sm text-gray-500">Updated At</p><p>{InvoiceService.formatDate(invoice.updatedAt)}</p></div>
+                <div><p className="text-sm text-gray-500">Sent At</p><p>{invoice.sentAt ? InvoiceService.formatDate(invoice.sentAt) : '-'}</p></div>
+                <div><p className="text-sm text-gray-500">Viewed At</p><p>{invoice.viewedAt ? InvoiceService.formatDate(invoice.viewedAt) : '-'}</p></div>
+                <div><p className="text-sm text-gray-500">Paid At</p><p>{invoice.paidAt ? InvoiceService.formatDate(invoice.paidAt) : '-'}</p></div>
+                <div><p className="text-sm text-gray-500">Overdue At</p><p>{invoice.overdueAt ? InvoiceService.formatDate(invoice.overdueAt) : '-'}</p></div>
+              </CardContent>
+            </Card>
+
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Customer Information */}
           <Card>
@@ -1112,6 +1357,7 @@ export function InvoiceDialog({
             )}
           </div>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );
