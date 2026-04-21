@@ -36,8 +36,6 @@
     "@tauri-apps/api": "^2.10.1",
     "@types/react-datepicker": "^6.2.0",
     "axios": "^1.6.0",
-    "baseline-browser-mapping": "^2.10.20",
-    "caniuse-lite": "^1.0.30001788",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "date-fns": "^2.30.0",
