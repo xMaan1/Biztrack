@@ -4,6 +4,8 @@ from typing import Optional, List
 import json
 import uuid
 import logging
+import re
+import secrets
 from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
@@ -28,7 +30,7 @@ from ...models.hrm_models import (
 from ...config.hrm_models import Employee as DBEmployee
 from ...services.s3_service import s3_service
 from ...config.database import (
-    get_db, get_user_by_id,
+    get_db, get_user_by_id, get_user_by_email, get_user_by_username, get_employee_by_user_id,
     get_employees, get_employee_by_id, create_employee, update_employee, delete_employee,
     get_job_postings, get_job_posting_by_id, create_job_posting, update_job_posting, delete_job_posting,
     get_applications, get_application_by_id, create_application, update_application, delete_application,
@@ -43,8 +45,10 @@ from ...config.database import (
     get_suppliers, get_supplier_by_id, get_supplier_by_code, create_supplier, update_supplier, delete_supplier
 )
 from ...config.core_crud import (
+    create_user,
     update_user,
 )
+from ...core.auth import get_password_hash
 from ...api.dependencies import get_current_user, get_tenant_context, require_permission
 from ...models.common import ModulePermission
 
@@ -96,7 +100,6 @@ async def get_hrm_employees(
         # Convert database employees to Pydantic models
         employee_models = []
         for db_employee in employees:
-            # Get user data for this employee
             user = get_user_by_id(str(db_employee.userId), db) if db_employee.userId else None
             
             employee_models.append(Employee(
@@ -104,26 +107,26 @@ async def get_hrm_employees(
                 firstName=user.firstName if user else "",
                 lastName=user.lastName if user else "",
                 email=user.email if user else "",
-                phone=None,  # Not stored in User model
-                dateOfBirth=None,  # Not stored in current DB model
+                phone=db_employee.phone,
+                dateOfBirth=db_employee.dateOfBirth.isoformat() if db_employee.dateOfBirth else None,
                 hireDate=db_employee.hireDate.isoformat() if db_employee.hireDate else "",
                 employeeId=db_employee.employeeId,
                 department=Department(db_employee.department) if db_employee.department else Department.OTHER,
                 position=db_employee.position,
-                employeeType=EmployeeType.FULL_TIME,  # Default since not in DB model
-                employmentStatus=EmploymentStatus.ACTIVE,  # Default since not in DB model
+                employeeType=EmployeeType(db_employee.employeeType) if db_employee.employeeType else EmployeeType.FULL_TIME,
+                employmentStatus=EmploymentStatus(db_employee.employmentStatus) if db_employee.employmentStatus else EmploymentStatus.ACTIVE,
                 managerId=str(db_employee.managerId) if db_employee.managerId else None,
                 salary=db_employee.salary,
-                address=None,  # Not stored in current DB model
-                emergencyContact=None,  # Not stored in current DB model
-                emergencyPhone=None,  # Not stored in current DB model
-                skills=[],  # Not stored in current DB model
-                certifications=[],  # Not stored in current DB model
+                address=db_employee.address,
+                emergencyContact=db_employee.emergencyContact,
+                emergencyPhone=db_employee.emergencyPhone,
+                skills=db_employee.skills if db_employee.skills else [],
+                certifications=db_employee.certifications if db_employee.certifications else [],
                 notes=db_employee.notes,
                 resume_url=db_employee.resume_url if hasattr(db_employee, 'resume_url') else None,
                 attachments=db_employee.attachments if db_employee.attachments else [],
                 tenant_id=str(db_employee.tenant_id),
-                createdBy="",  # Not stored in current DB model
+                createdBy=str(db_employee.userId) if db_employee.userId else "",
                 createdAt=db_employee.createdAt.isoformat() if db_employee.createdAt else "",
                 updatedAt=db_employee.updatedAt.isoformat() if db_employee.updatedAt else ""
             ))
@@ -152,10 +155,56 @@ async def create_hrm_employee(
     try:
         if not tenant_context:
             raise HTTPException(status_code=400, detail="Tenant context required")
-        
+
+        tenant_id = str(tenant_context["tenant_id"])
+        employee_email = employee_data.email.strip().lower()
+        first_name = employee_data.firstName.strip()
+        last_name = employee_data.lastName.strip()
+
+        linked_user = get_user_by_email(employee_email, db)
+        if linked_user:
+            if linked_user.tenant_id and str(linked_user.tenant_id) != tenant_id:
+                raise HTTPException(status_code=400, detail="Email is already registered in another tenant")
+            existing_employee_for_user = get_employee_by_user_id(str(linked_user.id), db, tenant_id)
+            if existing_employee_for_user:
+                raise HTTPException(status_code=400, detail="This user already has an employee profile")
+            user_id = linked_user.id
+            user_updates = {}
+            if linked_user.firstName != first_name:
+                user_updates["firstName"] = first_name
+            if linked_user.lastName != last_name:
+                user_updates["lastName"] = last_name
+            if linked_user.email != employee_email:
+                user_updates["email"] = employee_email
+            if user_updates:
+                update_user(str(linked_user.id), user_updates, db)
+        else:
+            username_base = re.sub(r"[^a-z0-9_]", "_", (employee_email.split("@")[0] if "@" in employee_email else employee_data.employeeId.lower())).strip("_")
+            if not username_base:
+                username_base = "employee"
+            username = username_base
+            suffix = 1
+            while get_user_by_username(username, db):
+                username = f"{username_base}_{suffix}"
+                suffix += 1
+            new_user = create_user(
+                {
+                    "tenant_id": tenant_id,
+                    "userName": username,
+                    "email": employee_email,
+                    "firstName": first_name,
+                    "lastName": last_name,
+                    "userRole": "team_member",
+                    "hashedPassword": get_password_hash(secrets.token_urlsafe(24)),
+                    "isActive": True,
+                },
+                db,
+            )
+            user_id = new_user.id
+
         db_employee = DBEmployee(
             tenant_id=tenant_context["tenant_id"],
-            userId=current_user.id,
+            userId=user_id,
             employeeId=employee_data.employeeId,
             department=employee_data.department.value if hasattr(employee_data.department, 'value') else employee_data.department,
             position=employee_data.position,
@@ -205,7 +254,7 @@ async def create_hrm_employee(
             resume_url=employee_data.resume_url,
             attachments=employee_data.attachments,
             tenant_id=str(db_employee.tenant_id),
-            createdBy=str(current_user.id),
+            createdBy=str(user_id),
             createdAt=db_employee.createdAt.isoformat() if db_employee.createdAt else None,
             updatedAt=db_employee.updatedAt.isoformat() if db_employee.updatedAt else None
         )
@@ -227,10 +276,40 @@ async def get_hrm_employee(
 ):
     """Get employee by ID"""
     try:
-        employee = get_employee_by_id(db, employee_id, tenant_context["tenant_id"] if tenant_context else None)
-        if not employee:
+        db_employee = get_employee_by_id(employee_id, db, tenant_context["tenant_id"] if tenant_context else None)
+        if not db_employee:
             raise HTTPException(status_code=404, detail="Employee not found")
-        return employee
+        user = get_user_by_id(str(db_employee.userId), db) if db_employee.userId else None
+        return Employee(
+            id=str(db_employee.id),
+            firstName=user.firstName if user else "",
+            lastName=user.lastName if user else "",
+            email=user.email if user else "",
+            phone=db_employee.phone,
+            dateOfBirth=db_employee.dateOfBirth.isoformat() if db_employee.dateOfBirth else None,
+            hireDate=db_employee.hireDate.isoformat() if db_employee.hireDate else "",
+            employeeId=db_employee.employeeId,
+            department=Department(db_employee.department) if db_employee.department else Department.OTHER,
+            position=db_employee.position,
+            employeeType=EmployeeType(db_employee.employeeType) if db_employee.employeeType else EmployeeType.FULL_TIME,
+            employmentStatus=EmploymentStatus(db_employee.employmentStatus) if db_employee.employmentStatus else EmploymentStatus.ACTIVE,
+            managerId=str(db_employee.managerId) if db_employee.managerId else None,
+            salary=db_employee.salary,
+            address=db_employee.address,
+            emergencyContact=db_employee.emergencyContact,
+            emergencyPhone=db_employee.emergencyPhone,
+            skills=db_employee.skills if db_employee.skills else [],
+            certifications=db_employee.certifications if db_employee.certifications else [],
+            notes=db_employee.notes,
+            resume_url=db_employee.resume_url if hasattr(db_employee, 'resume_url') else None,
+            attachments=db_employee.attachments if db_employee.attachments else [],
+            tenant_id=str(db_employee.tenant_id),
+            createdBy=str(db_employee.userId) if db_employee.userId else "",
+            createdAt=db_employee.createdAt.isoformat() if db_employee.createdAt else "",
+            updatedAt=db_employee.updatedAt.isoformat() if db_employee.updatedAt else "",
+        )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching employee: {str(e)}")
 
@@ -288,7 +367,7 @@ async def update_hrm_employee(
             resume_url=db_employee.resume_url if hasattr(db_employee, 'resume_url') else None,
             attachments=db_employee.attachments if db_employee.attachments else [],
             tenant_id=str(db_employee.tenant_id),
-            createdBy="",
+            createdBy=str(db_employee.userId) if db_employee.userId else "",
             createdAt=db_employee.createdAt.isoformat() if db_employee.createdAt else "",
             updatedAt=db_employee.updatedAt.isoformat() if db_employee.updatedAt else ""
         )
