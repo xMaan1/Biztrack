@@ -91,6 +91,28 @@ class Lead(LeadBase):
     createdAt: datetime
     updatedAt: datetime
 
+    @field_validator("assignedTo", mode="before")
+    @classmethod
+    def coerce_assigned_to(cls, v):
+        if v is None:
+            return None
+        if hasattr(v, "id"):
+            return str(v.id)
+        if isinstance(v, str) and not v.strip():
+            return None
+        return str(v)
+
+    @field_validator("leadSource", mode="before")
+    @classmethod
+    def normalize_lead_source(cls, v):
+        if v is None or v == "":
+            return None
+        value = v.value if hasattr(v, "value") else str(v)
+        allowed = {item.value for item in LeadSource}
+        if value not in allowed:
+            return LeadSource.OTHER.value
+        return value
+
     class Config:
         from_attributes = True
 

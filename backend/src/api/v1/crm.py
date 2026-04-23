@@ -207,7 +207,7 @@ def _ensure_lead_row_for_contact_type_lead(
         "phone": phone,
         "company": company_name,
         "jobTitle": raw.get("jobTitle"),
-        "leadSource": "contact",
+        "leadSource": "other",
         "status": "new",
         "priority": "medium",
         "assignedToId": assigned_to_id,
