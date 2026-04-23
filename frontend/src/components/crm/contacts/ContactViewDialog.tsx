@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -35,6 +36,20 @@ export function ContactViewDialog({
   onClose,
   onEdit,
 }: ContactViewDialogProps) {
+  const [showFullWebsite, setShowFullWebsite] = useState(false);
+
+  useEffect(() => {
+    setShowFullWebsite(false);
+  }, [contact?.id]);
+
+  const websiteValue = contact?.website?.trim() || '';
+  const websiteHref = websiteValue
+    ? /^https?:\/\//i.test(websiteValue)
+      ? websiteValue
+      : `https://${websiteValue}`
+    : '';
+  const isLongWebsite = websiteValue.length > 48;
+
   return (
     <Dialog open={!!contact} onOpenChange={() => onClose()}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -161,20 +176,41 @@ export function ContactViewDialog({
                 <Label className="text-sm font-medium text-gray-500">
                   Website
                 </Label>
-                {contact.website?.trim() ? (
-                  <a
-                    href={
-                      /^https?:\/\//i.test(contact.website.trim())
-                        ? contact.website.trim()
-                        : `https://${contact.website.trim()}`
-                    }
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline inline-flex items-center gap-1"
-                  >
-                    {contact.website.trim()}
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
+                {websiteValue ? (
+                  <div className="mt-1 space-y-1.5">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        isLongWebsite && setShowFullWebsite((prev) => !prev)
+                      }
+                      className={`block text-left text-blue-600 hover:underline ${
+                        !showFullWebsite ? 'max-w-[320px] truncate' : 'break-all'
+                      }`}
+                      title={websiteValue}
+                    >
+                      {websiteValue}
+                    </button>
+                    <div className="flex items-center gap-3 text-sm">
+                      {isLongWebsite && (
+                        <button
+                          type="button"
+                          onClick={() => setShowFullWebsite((prev) => !prev)}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          {showFullWebsite ? 'Show less' : 'Show full'}
+                        </button>
+                      )}
+                      <a
+                        href={websiteHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline inline-flex items-center gap-1"
+                      >
+                        Open link
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  </div>
                 ) : (
                   <p>Not specified</p>
                 )}
