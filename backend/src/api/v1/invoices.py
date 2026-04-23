@@ -593,6 +593,7 @@ def create_invoice(
             raise HTTPException(status_code=400, detail="Tenant context required")
             
         tenant_id = tenant_context["tenant_id"]
+        is_commerce_plan = str(tenant_context.get("plan_type", "")).lower() == "commerce"
         
         # Validate required fields
         if not invoice_data.customerName:
@@ -671,6 +672,8 @@ def create_invoice(
             
             if item_data.unitPrice < 0:
                 raise HTTPException(status_code=400, detail="Item unit price cannot be negative")
+            if is_commerce_plan and not item_data.productId:
+                raise HTTPException(status_code=400, detail="Product is required for commerce invoices")
             
             product_description = item_data.description
             product_unit_price = item_data.unitPrice
@@ -688,8 +691,12 @@ def create_invoice(
                         product_description = product.name
                         product_unit_price = product.unitPrice
                         product_sku = product.sku
+                    else:
+                        raise HTTPException(status_code=400, detail="Invalid product selected")
                 except Exception as e:
-                    print(f"Warning: Could not fetch product details: {e}")
+                    if isinstance(e, HTTPException):
+                        raise
+                    raise HTTPException(status_code=400, detail="Invalid product selected")
             
             # Calculate item total
             item_subtotal = item_data.quantity * product_unit_price
@@ -928,6 +935,7 @@ def update_invoice(
             raise HTTPException(status_code=400, detail="Tenant context required")
             
         tenant_id = tenant_context["tenant_id"]
+        is_commerce_plan = str(tenant_context.get("plan_type", "")).lower() == "commerce"
         
         invoice = db.query(Invoice).filter(
             and_(
@@ -998,6 +1006,16 @@ def update_invoice(
                     
                     if unit_price < 0:
                         raise HTTPException(status_code=400, detail="Item unit price cannot be negative")
+                    if is_commerce_plan and not product_id:
+                        raise HTTPException(status_code=400, detail="Product is required for commerce invoices")
+                    if product_id:
+                        from ...config.inventory_models import Product
+                        product = db.query(Product).filter(
+                            Product.id == product_id,
+                            Product.tenant_id == tenant_id
+                        ).first()
+                        if not product:
+                            raise HTTPException(status_code=400, detail="Invalid product selected")
                     
                     # Calculate item total
                     item_subtotal = quantity * unit_price

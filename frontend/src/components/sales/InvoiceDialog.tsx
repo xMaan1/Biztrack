@@ -314,6 +314,23 @@ export function InvoiceDialog({
   };
 
   const addItem = () => {
+    const itemErrors: { [key: string]: string } = {};
+    if (isCommerce && !newItem.productId) {
+      itemErrors.newItemProduct = 'Please select a product';
+    }
+    if (!newItem.description.trim()) {
+      itemErrors.newItemDescription = 'Description is required';
+    }
+    if (newItem.quantity <= 0) {
+      itemErrors.newItemQuantity = 'Quantity must be greater than 0';
+    }
+    if (newItem.unitPrice < 0) {
+      itemErrors.newItemUnitPrice = 'Unit price cannot be negative';
+    }
+    if (Object.keys(itemErrors).length > 0) {
+      setErrors((prev) => ({ ...prev, ...itemErrors }));
+      return;
+    }
     setItems((prev) => [...prev, { ...newItem }]);
     setNewItem({
       description: '',
@@ -366,6 +383,9 @@ export function InvoiceDialog({
 
     // Validate items
     items.forEach((item, index) => {
+      if (isCommerce && !item.productId) {
+        newErrors[`item_${index}_productId`] = 'Product is required';
+      }
       if (!item.description.trim()) {
         newErrors[`item_${index}_description`] = 'Item description is required';
       }
@@ -1058,6 +1078,13 @@ export function InvoiceDialog({
                         description: product?.name || '',
                         unitPrice: product?.unitPrice || 0,
                       }));
+                      if (errors.newItemProduct || errors.newItemDescription) {
+                        setErrors((prev) => ({
+                          ...prev,
+                          newItemProduct: '',
+                          newItemDescription: '',
+                        }));
+                      }
                     }}
                   >
                     <SelectTrigger>
@@ -1077,6 +1104,9 @@ export function InvoiceDialog({
                       )}
                     </SelectContent>
                   </Select>
+                  {errors.newItemProduct && (
+                    <p className="text-red-500 text-sm">{errors.newItemProduct}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="description">Description *</Label>
@@ -1084,13 +1114,21 @@ export function InvoiceDialog({
                     id="description"
                     value={newItem.description}
                       onChange={(e) =>
-                      setNewItem((prev) => ({
-                        ...prev,
-                        description: e.target.value,
-                      }))
+                      {
+                        setNewItem((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }));
+                        if (errors.newItemDescription) {
+                          setErrors((prev) => ({ ...prev, newItemDescription: '' }));
+                        }
+                      }
                       }
                       placeholder="Item description"
                     />
+                  {errors.newItemDescription && (
+                    <p className="text-red-500 text-sm">{errors.newItemDescription}</p>
+                  )}
                   </div>
                 <div className="space-y-2">
                   <Label htmlFor="quantity">Quantity *</Label>
@@ -1101,13 +1139,21 @@ export function InvoiceDialog({
                       step="0.01"
                     value={newItem.quantity}
                       onChange={(e) =>
-                      setNewItem((prev) => ({
-                        ...prev,
-                        quantity: parseFloat(e.target.value) || 0,
-                      }))
+                      {
+                        setNewItem((prev) => ({
+                          ...prev,
+                          quantity: parseFloat(e.target.value) || 0,
+                        }));
+                        if (errors.newItemQuantity) {
+                          setErrors((prev) => ({ ...prev, newItemQuantity: '' }));
+                        }
+                      }
                     }
                     placeholder="Qty"
                   />
+                  {errors.newItemQuantity && (
+                    <p className="text-red-500 text-sm">{errors.newItemQuantity}</p>
+                  )}
                   </div>
                 <div className="space-y-2">
                   <Label htmlFor="unitPrice">Unit Price *</Label>
@@ -1118,13 +1164,21 @@ export function InvoiceDialog({
                       step="0.01"
                     value={newItem.unitPrice}
                       onChange={(e) =>
-                      setNewItem((prev) => ({
-                        ...prev,
-                        unitPrice: parseFloat(e.target.value) || 0,
-                      }))
+                      {
+                        setNewItem((prev) => ({
+                          ...prev,
+                          unitPrice: parseFloat(e.target.value) || 0,
+                        }));
+                        if (errors.newItemUnitPrice) {
+                          setErrors((prev) => ({ ...prev, newItemUnitPrice: '' }));
+                        }
+                      }
                       }
                       placeholder="0.00"
                     />
+                  {errors.newItemUnitPrice && (
+                    <p className="text-red-500 text-sm">{errors.newItemUnitPrice}</p>
+                  )}
                   </div>
                 <div className="space-y-2">
                   <Label htmlFor="discount">Discount (%)</Label>
@@ -1166,7 +1220,9 @@ export function InvoiceDialog({
               {items.map((item, index) => (
                 <div
                   key={index}
-                  className="grid grid-cols-12 gap-2 items-center border p-3 rounded-lg"
+                  className={`grid grid-cols-12 gap-2 items-center border p-3 rounded-lg ${
+                    errors[`item_${index}_productId`] ? 'border-red-500' : ''
+                  }`}
                 >
                   <div className="col-span-3">
                     <span className="font-medium">{item.description}</span>

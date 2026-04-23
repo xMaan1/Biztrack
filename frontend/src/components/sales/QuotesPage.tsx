@@ -87,8 +87,8 @@ export default function QuotesPage() {
     try {
       const [quotesData, opportunitiesData, contactsData] = await Promise.all([
         apiService.getQuotes(),
-        apiService.getOpportunities({ page: 1, limit: 500 }),
-        apiService.getContacts({ page: 1, limit: 500 }),
+        apiService.getOpportunities({ page: 1, limit: 100 }),
+        apiService.getContacts({ page: 1, limit: 100 }),
       ]);
       setQuotes(Array.isArray(quotesData) ? quotesData : quotesData.quotes || []);
       setOpportunities(opportunitiesData.opportunities || []);
