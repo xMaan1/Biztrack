@@ -508,6 +508,32 @@ class OpportunityBase(BaseModel):
     notes: Optional[str] = None
     tags: List[str] = []
 
+    @field_validator("title", mode="before")
+    @classmethod
+    def validate_title(cls, v):
+        if v is None:
+            raise ValueError("Title is required")
+        text = str(v).strip()
+        if not text:
+            raise ValueError("Title is required")
+        return text
+
+    @field_validator("probability")
+    @classmethod
+    def validate_probability(cls, v):
+        if v < 0 or v > 100:
+            raise ValueError("Probability must be between 0 and 100")
+        return v
+
+    @field_validator("amount")
+    @classmethod
+    def validate_amount(cls, v):
+        if v is None:
+            return v
+        if v < 0:
+            raise ValueError("Amount cannot be negative")
+        return v
+
 class OpportunityCreate(OpportunityBase):
     pass
 
@@ -525,6 +551,34 @@ class OpportunityUpdate(BaseModel):
     assignedTo: Optional[str] = None
     notes: Optional[str] = None
     tags: Optional[List[str]] = None
+
+    @field_validator("title", mode="before")
+    @classmethod
+    def validate_title(cls, v):
+        if v is None:
+            return v
+        text = str(v).strip()
+        if not text:
+            raise ValueError("Title cannot be empty")
+        return text
+
+    @field_validator("probability")
+    @classmethod
+    def validate_probability(cls, v):
+        if v is None:
+            return v
+        if v < 0 or v > 100:
+            raise ValueError("Probability must be between 0 and 100")
+        return v
+
+    @field_validator("amount")
+    @classmethod
+    def validate_amount(cls, v):
+        if v is None:
+            return v
+        if v < 0:
+            raise ValueError("Amount cannot be negative")
+        return v
 
 class Opportunity(OpportunityBase):
     id: str

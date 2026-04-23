@@ -1349,6 +1349,9 @@ async def create_crm_opportunity(
     """Create a new opportunity"""
     try:
         data = opportunity_data.dict()
+        title = (data.get("title") or "").strip()
+        if not title:
+            raise HTTPException(status_code=422, detail="Title is required")
         
         company_id_raw = (data.get('companyId') and str(data['companyId']).strip()) or None
         
@@ -1382,7 +1385,7 @@ async def create_crm_opportunity(
         
         opportunity = Opportunity(
             id=uuid.uuid4(),
-            name=data.get('title', ''),
+            name=title,
             description=data.get('description'),
             stage=data.get('stage', 'prospecting'),
             amount=data.get('amount'),
@@ -1474,7 +1477,10 @@ async def update_crm_opportunity(
         data = opportunity_data.dict(exclude_unset=True)
         
         if 'title' in data:
-            opportunity.name = data['title']
+            title = str(data['title']).strip()
+            if not title:
+                raise HTTPException(status_code=422, detail="Title is required")
+            opportunity.name = title
         if 'description' in data:
             opportunity.description = data['description']
         if 'stage' in data:

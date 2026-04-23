@@ -81,6 +81,7 @@ function CRMOpportunitiesContent() {
   const [deleting, setDeleting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [formErrorMessage, setFormErrorMessage] = useState<string | null>(null);
   const [formData, setFormData] = useState<OpportunityCreate>({
     title: '',
     description: '',
@@ -216,18 +217,40 @@ function CRMOpportunitiesContent() {
     });
     setEditingOpportunity(null);
     setErrorMessage(null);
+    setFormErrorMessage(null);
   };
 
   const handleSubmit = async () => {
+    const title = (formData.title || '').trim();
+    if (!title) {
+      setFormErrorMessage('Title is required.');
+      return;
+    }
+    if (formData.amount !== undefined && formData.amount < 0) {
+      setFormErrorMessage('Amount cannot be negative.');
+      return;
+    }
+    if (
+      formData.probability !== undefined &&
+      (formData.probability < 0 || formData.probability > 100)
+    ) {
+      setFormErrorMessage('Probability must be between 0 and 100.');
+      return;
+    }
     try {
       setSubmitting(true);
       setErrorMessage(null);
+      setFormErrorMessage(null);
+      const payload: OpportunityCreate = {
+        ...formData,
+        title,
+      };
 
       if (editingOpportunity) {
-        await CRMService.updateOpportunity(editingOpportunity.id, formData);
+        await CRMService.updateOpportunity(editingOpportunity.id, payload);
         setSuccessMessage('Opportunity updated successfully!');
       } else {
-        await CRMService.createOpportunity(formData);
+        await CRMService.createOpportunity(payload);
         setSuccessMessage('Opportunity created successfully!');
       }
 
@@ -593,6 +616,12 @@ function CRMOpportunitiesContent() {
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, title: e.target.value }))
                   }
+                  onBlur={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      title: e.target.value.trim(),
+                    }))
+                  }
                   placeholder="Opportunity title"
                 />
               </div>
@@ -639,6 +668,7 @@ function CRMOpportunitiesContent() {
                 <Input
                   id="amount"
                   type="number"
+                  min="0"
                   value={formData.amount || ''}
                   onChange={(e) =>
                     setFormData((prev) => ({
@@ -662,7 +692,10 @@ function CRMOpportunitiesContent() {
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
-                      probability: parseInt(e.target.value) || 0,
+                      probability: Math.max(
+                        0,
+                        Math.min(100, parseInt(e.target.value) || 0),
+                      ),
                     }))
                   }
                 />
@@ -756,6 +789,11 @@ function CRMOpportunitiesContent() {
                 />
               </div>
             </div>
+            {formErrorMessage && (
+              <Alert variant="destructive">
+                <AlertDescription>{formErrorMessage}</AlertDescription>
+              </Alert>
+            )}
 
             <DialogFooter>
               <Button
