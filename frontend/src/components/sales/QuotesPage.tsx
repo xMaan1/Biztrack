@@ -47,7 +47,6 @@ import {
   Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import CRMService from '../../services/CRMService';
 import apiService from '../../services/ApiService';
 import { QuoteStatus } from '../../models/sales';
 import { Quote } from '../../models/sales';
@@ -63,6 +62,10 @@ export default function QuotesPage() {
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [downloadingQuoteId, setDownloadingQuoteId] = useState<string | null>(
+    null,
+  );
 
   const [newQuote, setNewQuote] = useState({
     quoteNumber: '',
@@ -84,8 +87,8 @@ export default function QuotesPage() {
     try {
       const [quotesData, opportunitiesData, contactsData] = await Promise.all([
         apiService.getQuotes(),
-        CRMService.getOpportunities({}, 1, 100),
-        CRMService.getContacts({}, 1, 100),
+        apiService.getOpportunities({ page: 1, limit: 500 }),
+        apiService.getContacts({ page: 1, limit: 500 }),
       ]);
       setQuotes(Array.isArray(quotesData) ? quotesData : quotesData.quotes || []);
       setOpportunities(opportunitiesData.opportunities || []);
@@ -148,6 +151,33 @@ export default function QuotesPage() {
       }
   };
 
+  const handleViewQuote = (quote: Quote) => {
+    setSelectedQuote(quote);
+    setIsViewDialogOpen(true);
+  };
+
+  const handleDownloadQuote = async (quote: Quote) => {
+    try {
+      setDownloadingQuoteId(quote.id);
+      const blob = await apiService.get(`/sales/quotes/${quote.id}/download`, {
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(blob as Blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `quote-${quote.quoteNumber || quote.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success('Quote downloaded successfully');
+    } catch (error) {
+      toast.error('Failed to download quote');
+    } finally {
+      setDownloadingQuoteId(null);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'draft':
@@ -165,13 +195,51 @@ export default function QuotesPage() {
     }
   };
 
-  const getOpportunityName = (opportunityId: string) => {
-    const opportunity = opportunities.find((o) => o.id === opportunityId);
-    return opportunity?.title || 'Unknown Opportunity';
+  const normalizeId = (value: unknown) => {
+    if (value === null || value === undefined) {
+      return '';
+    }
+    return String(value).trim();
   };
 
-  const getContactName = (contactId: string) => {
-    const contact = contacts.find((c) => c.id === contactId);
+  const getQuoteOpportunityId = (quote: Quote) =>
+    normalizeId(
+      (quote as unknown as { opportunityId?: string; opportunity_id?: string })
+        .opportunityId ??
+        (quote as unknown as { opportunityId?: string; opportunity_id?: string })
+          .opportunity_id,
+    );
+
+  const getQuoteContactId = (quote: Quote) =>
+    normalizeId(
+      (quote as unknown as { contactId?: string; contact_id?: string }).contactId ??
+        (quote as unknown as { contactId?: string; contact_id?: string })
+          .contact_id,
+    );
+
+  const getOpportunityName = (quote: Quote) => {
+    const opportunityId = getQuoteOpportunityId(quote);
+    if (!opportunityId) {
+      return 'Unknown Opportunity';
+    }
+    const opportunity = opportunities.find(
+      (o) => normalizeId(o.id) === opportunityId,
+    );
+    return opportunity?.title || (opportunity as any)?.name || 'Unknown Opportunity';
+  };
+
+  const getContactName = (quote: Quote) => {
+    let contactId = getQuoteContactId(quote);
+    if (!contactId) {
+      const opportunity = opportunities.find(
+        (o) => normalizeId(o.id) === getQuoteOpportunityId(quote),
+      );
+      contactId = normalizeId((opportunity as any)?.contactId);
+    }
+    if (!contactId) {
+      return 'Unknown Contact';
+    }
+    const contact = contacts.find((c) => normalizeId(c.id) === contactId);
     return contact
       ? `${contact.firstName} ${contact.lastName}`
       : 'Unknown Contact';
@@ -439,12 +507,8 @@ export default function QuotesPage() {
                       {quote.quoteNumber}
                     </TableCell>
                     <TableCell>{quote.title}</TableCell>
-                    <TableCell>
-                      {getOpportunityName(quote.opportunityId)}
-                    </TableCell>
-                    <TableCell>
-                      {getContactName(quote.contactId || '')}
-                    </TableCell>
+                    <TableCell>{getOpportunityName(quote)}</TableCell>
+                    <TableCell>{getContactName(quote)}</TableCell>
                     <TableCell>
                       {getCurrencySymbol()}{(quote.amount || 0).toLocaleString()}
                     </TableCell>
@@ -460,7 +524,11 @@ export default function QuotesPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
-                        <Button variant="ghost" size="sm">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleViewQuote(quote)}
+                        >
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Button
@@ -473,7 +541,12 @@ export default function QuotesPage() {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDownloadQuote(quote)}
+                          disabled={downloadingQuoteId === quote.id}
+                        >
                           <Download className="h-4 w-4" />
                         </Button>
                         <Button
@@ -618,6 +691,75 @@ export default function QuotesPage() {
                 Cancel
               </Button>
               <Button onClick={handleUpdateQuote}>Update Quote</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Quote Details</DialogTitle>
+              <DialogDescription>View quote information</DialogDescription>
+            </DialogHeader>
+            {selectedQuote && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Quote Number</Label>
+                  <p>{selectedQuote.quoteNumber || '-'}</p>
+                </div>
+                <div>
+                  <Label>Status</Label>
+                  <p>{selectedQuote.status}</p>
+                </div>
+                <div className="md:col-span-2">
+                  <Label>Title</Label>
+                  <p>{selectedQuote.title || '-'}</p>
+                </div>
+                <div className="md:col-span-2">
+                  <Label>Description</Label>
+                  <p>{selectedQuote.description || '-'}</p>
+                </div>
+                <div>
+                  <Label>Opportunity</Label>
+                  <p>{getOpportunityName(selectedQuote)}</p>
+                </div>
+                <div>
+                  <Label>Contact</Label>
+                  <p>{getContactName(selectedQuote)}</p>
+                </div>
+                <div>
+                  <Label>Amount</Label>
+                  <p>
+                    {getCurrencySymbol()}
+                    {(selectedQuote.amount || 0).toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <Label>Valid Until</Label>
+                  <p>
+                    {selectedQuote.validUntil
+                      ? new Date(selectedQuote.validUntil).toLocaleDateString()
+                      : '-'}
+                  </p>
+                </div>
+                <div className="md:col-span-2">
+                  <Label>Terms</Label>
+                  <p>{selectedQuote.terms || '-'}</p>
+                </div>
+              </div>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsViewDialogOpen(false)}
+              >
+                Close
+              </Button>
+              {selectedQuote && (
+                <Button onClick={() => handleDownloadQuote(selectedQuote)}>
+                  Download PDF
+                </Button>
+              )}
             </div>
           </DialogContent>
         </Dialog>

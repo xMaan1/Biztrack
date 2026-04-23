@@ -1,9 +1,10 @@
-from fastapi import APIRouter, HTTPException, status, Depends, Query
+from fastapi import APIRouter, HTTPException, status, Depends, Query, Response
 from sqlalchemy.orm import Session
 from typing import Optional, List
 import json
 import uuid
 from datetime import datetime, timedelta
+import io
 
 from ...models.crm_models import (
     Lead as LeadPydantic, LeadCreate, LeadUpdate, LeadsResponse,
@@ -662,6 +663,117 @@ async def create_quote(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error creating quote: {str(e)}")
+
+@router.get("/quotes/{quote_id}", response_model=QuotePydantic)
+async def get_quote(
+    quote_id: str,
+    db: Session = Depends(get_db),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_VIEW.value))
+):
+    try:
+        query = db.query(Quote).filter(Quote.id == uuid.UUID(quote_id))
+        if tenant_context:
+            query = query.filter(Quote.tenant_id == uuid.UUID(tenant_context["tenant_id"]))
+        quote = query.first()
+        if not quote:
+            raise HTTPException(status_code=404, detail="Quote not found")
+        return QuotePydantic.model_validate(quote)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching quote: {str(e)}")
+
+@router.get("/quotes/{quote_id}/download")
+async def download_quote(
+    quote_id: str,
+    db: Session = Depends(get_db),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.SALES_VIEW.value))
+):
+    try:
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+        query = db.query(Quote).filter(Quote.id == uuid.UUID(quote_id))
+        query = query.filter(Quote.tenant_id == uuid.UUID(tenant_context["tenant_id"]))
+        quote = query.first()
+        if not quote:
+            raise HTTPException(status_code=404, detail="Quote not found")
+
+        opportunity_name = ""
+        contact_name = ""
+        if quote.opportunityId:
+            try:
+                opp = db.query(Opportunity).filter(
+                    Opportunity.id == uuid.UUID(str(quote.opportunityId))
+                ).first()
+            except Exception:
+                opp = None
+            if opp:
+                opportunity_name = (
+                    getattr(opp, "name", None)
+                    or getattr(opp, "title", None)
+                    or str(quote.opportunityId)
+                )
+                contact_id = getattr(opp, "contactId", None)
+                if contact_id:
+                    try:
+                        contact = db.query(Contact).filter(
+                            Contact.id == uuid.UUID(str(contact_id))
+                        ).first()
+                    except Exception:
+                        contact = None
+                    if contact:
+                        contact_name = f"{getattr(contact, 'firstName', '')} {getattr(contact, 'lastName', '')}".strip()
+
+        from reportlab.pdfgen import canvas
+        from reportlab.lib.pagesizes import A4
+
+        buffer = io.BytesIO()
+        pdf = canvas.Canvas(buffer, pagesize=A4)
+        width, height = A4
+        y = height - 50
+
+        def row(label: str, value: str):
+            nonlocal y
+            pdf.setFont("Helvetica-Bold", 10)
+            pdf.drawString(50, y, f"{label}:")
+            pdf.setFont("Helvetica", 10)
+            pdf.drawString(170, y, value or "-")
+            y -= 22
+
+        pdf.setFont("Helvetica-Bold", 18)
+        pdf.drawString(50, y, "Quote")
+        y -= 35
+        row("Quote Number", getattr(quote, "quoteNumber", ""))
+        row("Title", getattr(quote, "title", ""))
+        row("Status", str(getattr(quote, "status", "")))
+        row("Opportunity", opportunity_name or str(getattr(quote, "opportunityId", "") or ""))
+        row("Contact", contact_name)
+        row("Valid Until", quote.validUntil.strftime("%Y-%m-%d") if getattr(quote, "validUntil", None) else "")
+        row("Subtotal", f"{float(getattr(quote, 'subtotal', 0.0) or 0.0):.2f}")
+        row("Tax Rate", f"{float(getattr(quote, 'taxRate', 0.0) or 0.0):.2f}%")
+        row("Tax Amount", f"{float(getattr(quote, 'taxAmount', 0.0) or 0.0):.2f}")
+        row("Total", f"{float(getattr(quote, 'total', 0.0) or 0.0):.2f}")
+        row("Description", getattr(quote, "description", "") or "")
+        row("Terms", getattr(quote, "terms", "") or "")
+        row("Notes", getattr(quote, "notes", "") or "")
+
+        pdf.showPage()
+        pdf.save()
+        pdf_bytes = buffer.getvalue()
+        buffer.close()
+
+        safe_quote_number = str(getattr(quote, "quoteNumber", "quote")).replace("/", "-")
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename=quote-{safe_quote_number}.pdf"},
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error downloading quote: {str(e)}")
 
 @router.put("/quotes/{quote_id}", response_model=QuotePydantic)
 async def update_quote(
