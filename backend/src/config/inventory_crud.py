@@ -319,6 +319,8 @@ def create_storage_location(storage_location_data: dict, db: Session) -> Storage
     return db_storage_location
 
 def update_storage_location(location_id: str, update_data: dict, db: Session, tenant_id: str = None) -> Optional[StorageLocation]:
+    if not isinstance(update_data, dict):
+        raise TypeError("update_data must be a dict")
     if update_data.get('parentLocationId') == '':
         update_data['parentLocationId'] = None
         

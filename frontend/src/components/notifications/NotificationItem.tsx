@@ -32,6 +32,38 @@ interface NotificationItemProps {
   onAction?: () => void;
 }
 
+const resolveNotificationUrl = (actionUrl: string): string => {
+  if (!actionUrl) {
+    return actionUrl;
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(actionUrl, window.location.origin);
+  } catch {
+    return actionUrl;
+  }
+
+  const path = parsed.pathname;
+
+  const routeMap: Array<[RegExp, string]> = [
+    [/^\/crm\/customers\/[^/]+\/?$/, '/crm/customers'],
+    [/^\/crm\/leads\/[^/]+\/?$/, '/crm/leads'],
+    [/^\/crm\/opportunities\/[^/]+\/?$/, '/crm/opportunities'],
+    [/^\/work-orders\/[^/]+\/?$/, '/workshop-management/work-orders'],
+    [/^\/job-cards\/[^/]+\/?$/, '/workshop-management/job-cards'],
+    [/^\/hrm\/applications\/[^/]+\/?$/, '/hrm/job-postings'],
+  ];
+
+  for (const [pattern, target] of routeMap) {
+    if (pattern.test(path)) {
+      return `${target}${parsed.search}${parsed.hash}`;
+    }
+  }
+
+  return `${path}${parsed.search}${parsed.hash}`;
+};
+
 const iconMap = {
   CheckCircle,
   AlertTriangle,
@@ -68,7 +100,8 @@ export default function NotificationItem({
 
   const handleActionClick = () => {
     if (notification.action_url) {
-      window.open(notification.action_url, '_blank');
+      const resolvedUrl = resolveNotificationUrl(notification.action_url);
+      window.open(resolvedUrl, '_blank');
     }
     onAction?.();
   };

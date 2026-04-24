@@ -378,7 +378,7 @@ def update_storage_location_endpoint(
     location_update = location.dict(exclude_unset=True)
     location_update["updatedAt"] = datetime.utcnow()
     
-    db_location = update_storage_location(db, location_id, location_update, str(tenant_context["tenant_id"]))
+    db_location = update_storage_location(location_id, location_update, db, str(tenant_context["tenant_id"]))
     if not db_location:
         raise HTTPException(status_code=404, detail="Storage location not found")
     
