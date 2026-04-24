@@ -11,6 +11,29 @@ from .banking_models import (
     BankAccountType, TransactionType, TransactionStatus, PaymentMethod, TillTransactionType
 )
 
+
+def _normalize_enum_input(value: Any, enum_cls):
+    if value is None:
+        return None
+    if isinstance(value, enum_cls):
+        return value
+
+    raw = getattr(value, "value", value)
+    text = str(raw).strip()
+    if not text:
+        return None
+
+    for candidate in (text, text.lower(), text.upper()):
+        try:
+            return enum_cls(candidate)
+        except Exception:
+            pass
+
+    try:
+        return enum_cls[text.upper()]
+    except Exception:
+        return value
+
 # Bank Account CRUD Operations
 def create_bank_account(account_data: Dict[str, Any], db: Session) -> BankAccount:
     """Create a new bank account"""
@@ -107,6 +130,14 @@ def _signed_base_delta_for_bank_transaction(
 
 # Bank Transaction CRUD Operations
 def create_bank_transaction(transaction_data: Dict[str, Any], db: Session) -> BankTransaction:
+    for field_name, enum_cls in (
+        ("transaction_type", TransactionType),
+        ("status", TransactionStatus),
+        ("payment_method", PaymentMethod),
+    ):
+        if field_name in transaction_data and transaction_data.get(field_name) is not None:
+            transaction_data[field_name] = _normalize_enum_input(transaction_data.get(field_name), enum_cls)
+
     amount = float(transaction_data.get("amount") or 0)
     exchange_rate = float(transaction_data.get("exchange_rate") or 1.0)
     if transaction_data.get("base_amount") is None:
@@ -206,6 +237,14 @@ def update_bank_transaction(transaction_id: str, transaction_data: Dict[str, Any
     db_transaction = get_bank_transaction_by_id(transaction_id, db, tenant_id)
     if not db_transaction:
         return None
+
+    for field_name, enum_cls in (
+        ("transaction_type", TransactionType),
+        ("status", TransactionStatus),
+        ("payment_method", PaymentMethod),
+    ):
+        if field_name in transaction_data and transaction_data.get(field_name) is not None:
+            transaction_data[field_name] = _normalize_enum_input(transaction_data.get(field_name), enum_cls)
     
     for key, value in transaction_data.items():
         if hasattr(db_transaction, key):
