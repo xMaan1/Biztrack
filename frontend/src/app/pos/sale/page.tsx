@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -46,6 +47,7 @@ interface CartItem {
 const POSSale = () => {
   const { } = useAuth();
   const { formatCurrency } = useCurrency();
+  const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -157,6 +159,7 @@ const POSSale = () => {
         items: cart.map((item) => ({
           productId: item.product.id,
           productName: item.product.name,
+          sku: item.product.sku,
           quantity: item.quantity,
           unitPrice: item.product.unitPrice,
           discount: 0,
@@ -197,6 +200,7 @@ const POSSale = () => {
 
           <Button
             className="bg-blue-600 hover:bg-blue-700"
+            onClick={() => router.push('/pos/products?openAdd=true')}
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Product

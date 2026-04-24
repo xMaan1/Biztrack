@@ -126,6 +126,7 @@ export interface POSTransactionItem {
   id: string;
   productId: string;
   productName: string;
+  sku: string;
   quantity: number;
   unitPrice: number;
   discount: number;

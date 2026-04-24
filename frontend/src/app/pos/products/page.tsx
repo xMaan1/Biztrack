@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -70,6 +71,8 @@ interface ProductFormData {
 const POSProducts = () => {
   const { } = useAuth();
   const { formatCurrency } = useCurrency();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -108,6 +111,15 @@ const POSProducts = () => {
     fetchProducts();
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    if (searchParams.get('openAdd') !== 'true') return;
+    openNewProductDialog();
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('openAdd');
+    const nextQuery = params.toString();
+    router.replace(nextQuery ? `/pos/products?${nextQuery}` : '/pos/products');
+  }, [searchParams, router]);
 
   const fetchCategories = async () => {
     try {
