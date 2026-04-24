@@ -20,6 +20,7 @@ from ...models.inventory_models import (
     InventoryDashboardStats, StockAlert
 )
 from ...config.inventory_models import PurchaseOrder as PurchaseOrderDB
+from ...config.hrm_models import Supplier
 from ...config.database import (
     get_warehouses, get_warehouse_by_id, create_warehouse, update_warehouse, delete_warehouse,
     get_storage_locations, get_storage_locations_by_warehouse, get_storage_location_by_id, create_storage_location, update_storage_location, delete_storage_location,
@@ -30,6 +31,25 @@ from ...config.database import (
 )
 
 router = APIRouter(prefix="/inventory", tags=["Inventory Management"])
+
+
+def get_supplier_name_map(db: Session, tenant_id: str, supplier_ids: List[str]) -> dict:
+    valid_ids = []
+    for supplier_id in supplier_ids:
+        try:
+            valid_ids.append(uuid.UUID(str(supplier_id)))
+        except (ValueError, TypeError):
+            continue
+
+    if not valid_ids:
+        return {}
+
+    supplier_rows = db.query(Supplier.id, Supplier.name).filter(
+        Supplier.tenant_id == tenant_id,
+        Supplier.id.in_(valid_ids)
+    ).all()
+
+    return {str(supplier_id): name for supplier_id, name in supplier_rows}
 
 @router.get("/health")
 def inventory_health_check():
@@ -608,15 +628,18 @@ def read_purchase_orders(
     
     total = len(orders)
     
-    # Convert to response format
+    supplier_ids = [str(order.supplierId) for order in orders if getattr(order, "supplierId", None)]
+    supplier_name_map = get_supplier_name_map(db, str(tenant_context["tenant_id"]), supplier_ids)
+
     response_orders = []
     for order in orders:
+        supplier_id = str(order.supplierId)
         response_data = {
             "id": str(order.id),
             "tenant_id": str(order.tenant_id),
             "orderNumber": order.poNumber,
-            "supplierId": str(order.supplierId),
-            "supplierName": "",  # Not stored in DB, will be empty
+            "supplierId": supplier_id,
+            "supplierName": supplier_name_map.get(supplier_id, ""),
             "warehouseId": str(order.warehouseId),
             "orderDate": order.orderDate.isoformat() if order.orderDate else None,
             "expectedDeliveryDate": order.expectedDeliveryDate.isoformat() if order.expectedDeliveryDate else None,
@@ -649,14 +672,20 @@ def read_purchase_order(
     if not order:
         raise HTTPException(status_code=404, detail="Purchase order not found")
     
-    # Convert to response format
+    supplier_name_map = get_supplier_name_map(
+        db,
+        str(tenant_context["tenant_id"]),
+        [str(order.supplierId)]
+    )
+    supplier_id = str(order.supplierId)
+
     response_data = {
         "id": str(order.id),
         "tenant_id": str(order.tenant_id),
         "orderNumber": order.poNumber,
         "batchNumber": order.batchNumber,
-        "supplierId": str(order.supplierId),
-        "supplierName": "",  # Not stored in DB, will be empty
+        "supplierId": supplier_id,
+        "supplierName": supplier_name_map.get(supplier_id, ""),
         "warehouseId": str(order.warehouseId),
         "orderDate": order.orderDate.isoformat() if order.orderDate else None,
         "expectedDeliveryDate": order.expectedDeliveryDate.isoformat() if order.expectedDeliveryDate else None,
@@ -720,14 +749,20 @@ def create_purchase_order_endpoint(
     
     db_order = create_purchase_order(order_data, db)
     
-    # Convert to response format
+    supplier_name_map = get_supplier_name_map(
+        db,
+        str(tenant_context["tenant_id"]),
+        [str(db_order.supplierId)]
+    )
+    supplier_id = str(db_order.supplierId)
+
     response_data = {
         "id": str(db_order.id),
         "tenant_id": str(db_order.tenant_id),
         "orderNumber": db_order.poNumber,
         "batchNumber": db_order.batchNumber,
-        "supplierId": str(db_order.supplierId),
-        "supplierName": "",  # Not stored in DB, will be empty
+        "supplierId": supplier_id,
+        "supplierName": supplier_name_map.get(supplier_id, ""),
         "warehouseId": str(db_order.warehouseId),
         "orderDate": db_order.orderDate.isoformat() if db_order.orderDate else None,
         "expectedDeliveryDate": db_order.expectedDeliveryDate.isoformat() if db_order.expectedDeliveryDate else None,
@@ -789,14 +824,20 @@ def update_purchase_order_endpoint(
     
     db_order = update_purchase_order(order_id, order_update, db, str(tenant_context["tenant_id"]))
     
-    # Convert to response format
+    supplier_name_map = get_supplier_name_map(
+        db,
+        str(tenant_context["tenant_id"]),
+        [str(db_order.supplierId)]
+    )
+    supplier_id = str(db_order.supplierId)
+
     response_data = {
         "id": str(db_order.id),
         "tenant_id": str(db_order.tenant_id),
         "orderNumber": db_order.poNumber,
         "batchNumber": db_order.batchNumber,
-        "supplierId": str(db_order.supplierId),
-        "supplierName": "",  # Not stored in DB, will be empty
+        "supplierId": supplier_id,
+        "supplierName": supplier_name_map.get(supplier_id, ""),
         "warehouseId": str(db_order.warehouseId),
         "orderDate": db_order.orderDate.isoformat() if db_order.orderDate else None,
         "expectedDeliveryDate": db_order.expectedDeliveryDate.isoformat() if db_order.expectedDeliveryDate else None,
