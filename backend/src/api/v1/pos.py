@@ -224,6 +224,39 @@ async def list_pos_products(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching products: {str(e)}")
 
+
+@router.get("/products/search")
+async def search_products(
+    q: str = Query(..., description="Search query for product name, SKU, or barcode"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
+):
+    """Search products for POS operations"""
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    try:
+        products = get_products(db, tenant_context["tenant_id"], 0, 100)
+        
+        pydantic_products = [convert_db_product_to_pydantic(p) for p in products]
+        
+        search_lower = q.lower()
+        matching_products = []
+        
+        for product in pydantic_products:
+            if (search_lower in product.name.lower() or 
+                search_lower in product.sku.lower() or 
+                (product.barcode and search_lower in product.barcode.lower())):
+                matching_products.append(product)
+        
+        return {
+            "products": matching_products[:10],
+            "total": len(matching_products)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error searching products: {str(e)}")
+
 @router.get("/products/{product_id}", response_model=ProductResponse)
 async def get_pos_product(
     product_id: str,
@@ -1109,37 +1142,3 @@ async def get_pos_dashboard(
         return dashboard_data
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching dashboard data: {str(e)}")
-
-# Product search endpoint for POS
-@router.get("/products/search")
-async def search_products(
-    q: str = Query(..., description="Search query for product name, SKU, or barcode"),
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user),
-    tenant_context: Optional[dict] = Depends(get_tenant_context),
-    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
-):
-    """Search products for POS operations"""
-    if not tenant_context:
-        raise HTTPException(status_code=400, detail="Tenant context required")
-    try:
-        products = get_products(db, tenant_context["tenant_id"], 0, 100)
-        
-        pydantic_products = [convert_db_product_to_pydantic(p) for p in products]
-        
-        # Filter products by search query
-        search_lower = q.lower()
-        matching_products = []
-        
-        for product in pydantic_products:
-            if (search_lower in product.name.lower() or 
-                search_lower in product.sku.lower() or 
-                (product.barcode and search_lower in product.barcode.lower())):
-                matching_products.append(product)
-        
-        return {
-            "products": matching_products[:10],  # Limit to 10 results
-            "total": len(matching_products)
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error searching products: {str(e)}")
