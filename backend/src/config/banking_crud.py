@@ -23,16 +23,20 @@ def _normalize_enum_input(value: Any, enum_cls):
     if not text:
         return None
 
-    for candidate in (text, text.lower(), text.upper()):
+    name_key = text.upper().replace("-", "_")
+    try:
+        return enum_cls[name_key]
+    except KeyError:
+        pass
+
+    slug = text.lower().replace("-", "_")
+    for candidate in (slug, text.lower(), text, text.upper()):
         try:
             return enum_cls(candidate)
         except Exception:
             pass
 
-    try:
-        return enum_cls[text.upper()]
-    except Exception:
-        return value
+    return value
 
 # Bank Account CRUD Operations
 def create_bank_account(account_data: Dict[str, Any], db: Session) -> BankAccount:

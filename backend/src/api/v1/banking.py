@@ -3,7 +3,7 @@ Banking API Endpoints
 """
 
 import uuid
-from typing import List, Optional
+from typing import List, Optional, Any, Dict
 from datetime import datetime, date
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -22,7 +22,12 @@ from ...models.banking_models import (
     TillTransaction as TillTransactionModel, TillTransactionCreate, TillTransactionUpdate, TillTransactionResponse, TillTransactionsResponse,
     TillTransactionType
 )
-from ...config.banking_models import BankTransaction
+from ...config.banking_models import (
+    BankTransaction,
+    TransactionType as DbTransactionType,
+    TransactionStatus as DbTransactionStatus,
+    PaymentMethod as DbPaymentMethod,
+)
 from ...config.banking_crud import (
     # Bank Account CRUD
     create_bank_account, get_bank_account_by_id, get_all_bank_accounts, get_active_bank_accounts,
@@ -45,10 +50,28 @@ from ...config.banking_crud import (
     
     # Till Transaction CRUD
     create_till_transaction, get_till_transaction_by_id, get_all_till_transactions,
-    update_till_transaction, delete_till_transaction
+    update_till_transaction, delete_till_transaction,
+    _normalize_enum_input,
 )
 
 router = APIRouter(prefix="/banking", tags=["Banking"])
+
+
+def _pydantic_body_dict(model: Any) -> Dict[str, Any]:
+    if hasattr(model, "model_dump"):
+        return model.model_dump(mode="python")
+    return model.dict()
+
+
+def _coerce_bank_transaction_row_enums(data: Dict[str, Any]) -> None:
+    for field, cls in (
+        ("transaction_type", DbTransactionType),
+        ("status", DbTransactionStatus),
+        ("payment_method", DbPaymentMethod),
+    ):
+        if field not in data or data.get(field) is None:
+            continue
+        data[field] = _normalize_enum_input(data.get(field), cls)
 
 # Bank Account Endpoints
 @router.post("/accounts", response_model=BankAccountResponse, status_code=status.HTTP_201_CREATED)
@@ -162,7 +185,7 @@ def create_bank_transaction_endpoint(
         # Generate transaction number
         transaction_number = f"BT-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
         
-        transaction_data = transaction.dict()
+        transaction_data = _pydantic_body_dict(transaction)
         transaction_data.update({
             "id": str(uuid.uuid4()),
             "tenant_id": str(tenant_context["tenant_id"]),
@@ -171,6 +194,7 @@ def create_bank_transaction_endpoint(
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow()
         })
+        _coerce_bank_transaction_row_enums(transaction_data)
         
         db_transaction = create_bank_transaction(transaction_data, db)
         return BankTransactionResponse(bank_transaction=db_transaction)
@@ -227,8 +251,12 @@ def update_bank_transaction_endpoint(
 ):
     """Update a bank transaction"""
     try:
-        transaction_data = transaction.dict(exclude_unset=True)
+        if hasattr(transaction, "model_dump"):
+            transaction_data = transaction.model_dump(exclude_unset=True, mode="python")
+        else:
+            transaction_data = transaction.dict(exclude_unset=True)
         transaction_data["updated_at"] = datetime.utcnow()
+        _coerce_bank_transaction_row_enums(transaction_data)
         
         db_transaction = update_bank_transaction(transaction_id, transaction_data, db, str(tenant_context["tenant_id"]))
         if not db_transaction:
