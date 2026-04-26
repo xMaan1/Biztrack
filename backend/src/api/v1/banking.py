@@ -17,7 +17,7 @@ from ...models.banking_models import (
     BankTransaction as BankTransactionModel, BankTransactionCreate, BankTransactionUpdate, BankTransactionResponse, BankTransactionsResponse,
     CashPosition, CashPositionCreate, CashPositionUpdate, CashPositionResponse, CashPositionsResponse,
     BankingDashboard, ReconciliationSummary, TransactionReconciliation,
-    BankAccountType, TransactionType, TransactionStatus, PaymentMethod,
+    TransactionType, TransactionStatus, PaymentMethod,
     Till, TillCreate, TillUpdate, TillResponse, TillsResponse,
     TillTransaction as TillTransactionModel, TillTransactionCreate, TillTransactionUpdate, TillTransactionResponse, TillTransactionsResponse,
     TillTransactionType
@@ -74,31 +74,9 @@ def _coerce_bank_transaction_row_enums(data: Dict[str, Any]) -> None:
         data[field] = _normalize_enum_input(data.get(field), cls)
 
 
-def _coerce_api_bank_account_type(at: Any) -> BankAccountType:
-    if at is None:
-        return BankAccountType.CHECKING
-    if isinstance(at, BankAccountType):
-        return at
-    raw = getattr(at, "value", at) if at is not None else None
-    s = str(raw).strip() if raw is not None else ""
-    if not s:
-        return BankAccountType.CHECKING
-    nk = s.upper().replace("-", "_")
-    if nk in BankAccountType.__members__:
-        return BankAccountType[nk]
-    sk = s.lower().replace("-", "_")
-    if sk in BankAccountType._value2member_map_:
-        return BankAccountType._value2member_map_[sk]
-    for m in BankAccountType:
-        if s.lower() == m.value.lower() or s.upper() == m.name:
-            return m
-    return BankAccountType.CHECKING
-
-
 def _pydantic_bank_account_from_orm(orm) -> BankAccount:
     from sqlalchemy.inspection import inspect as sa_inspect
     d = {a.key: getattr(orm, a.key) for a in sa_inspect(orm).mapper.column_attrs}
-    d["account_type"] = _coerce_api_bank_account_type(d.get("account_type"))
     return BankAccount.model_validate(d)
 
 # Bank Account Endpoints

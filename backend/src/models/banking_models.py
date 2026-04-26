@@ -4,7 +4,7 @@ Banking Pydantic Models for API
 
 from datetime import datetime
 from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator
 from enum import Enum
 import uuid
 
@@ -15,6 +15,27 @@ class BankAccountType(str, Enum):
     BUSINESS = "business"
     CREDIT_LINE = "credit_line"
     MONEY_MARKET = "money_market"
+
+def bank_account_type_slug(v: Any) -> str:
+    if v is None:
+        return BankAccountType.CHECKING.value
+    if isinstance(v, str):
+        s = v.strip()
+    else:
+        r = getattr(v, "value", v)
+        s = str(r).strip() if r is not None else ""
+    if not s:
+        return BankAccountType.CHECKING.value
+    nk = s.upper().replace("-", "_")
+    if nk in BankAccountType.__members__:
+        return BankAccountType[nk].value
+    sk = s.lower().replace("-", "_")
+    if sk in BankAccountType._value2member_map_:
+        return BankAccountType._value2member_map_[sk].value
+    for m in BankAccountType:
+        if s.lower() == m.value.lower() or s.upper() == m.name:
+            return m.value
+    return BankAccountType.CHECKING.value
 
 class TransactionType(str, Enum):
     DEPOSIT = "deposit"
@@ -53,7 +74,7 @@ class BankAccountBase(BaseModel):
     routing_number: Optional[str] = Field(alias="routingNumber", default=None)
     bank_name: str = Field(alias="bankName")
     bank_code: Optional[str] = Field(alias="bankCode", default=None)
-    account_type: BankAccountType = Field(alias="accountType")
+    account_type: str = Field(alias="accountType")
     currency: str = Field(default="USD")
     current_balance: float = Field(alias="currentBalance", default=0.0)
     available_balance: float = Field(alias="availableBalance", default=0.0)
@@ -66,24 +87,8 @@ class BankAccountBase(BaseModel):
 
     @field_validator("account_type", mode="before")
     @classmethod
-    def account_type_to_api_enum(cls, v: Any) -> Any:
-        if v is None or isinstance(v, BankAccountType):
-            return v
-        if isinstance(v, Enum):
-            v = v.value
-        s = str(v).strip()
-        if not s:
-            return v
-        key = s.lower().replace("-", "_")
-        if key in BankAccountType._value2member_map_:
-            return BankAccountType._value2member_map_[key]
-        n = s.upper().replace("-", "_")
-        if n in BankAccountType.__members__:
-            return BankAccountType[n]
-        try:
-            return BankAccountType(key)
-        except Exception:
-            return BankAccountType.CHECKING
+    def account_type_to_slug(cls, v: Any) -> str:
+        return bank_account_type_slug(v)
 
     @field_validator("tags", mode="before")
     @classmethod
@@ -103,13 +108,20 @@ class BankAccountUpdate(BaseModel):
     routing_number: Optional[str] = Field(alias="routingNumber", default=None)
     bank_name: Optional[str] = Field(alias="bankName", default=None)
     bank_code: Optional[str] = Field(alias="bankCode", default=None)
-    account_type: Optional[BankAccountType] = Field(alias="accountType", default=None)
+    account_type: Optional[str] = Field(alias="accountType", default=None)
     currency: Optional[str] = Field(default=None)
     is_active: Optional[bool] = Field(alias="isActive", default=None)
     is_primary: Optional[bool] = Field(alias="isPrimary", default=None)
     supports_online_banking: Optional[bool] = Field(alias="supportsOnlineBanking", default=None)
     description: Optional[str] = Field(default=None)
     tags: Optional[List[str]] = Field(default=None)
+
+    @field_validator("account_type", mode="before")
+    @classmethod
+    def account_type_update_to_slug(cls, v: Any) -> Any:
+        if v is None:
+            return v
+        return bank_account_type_slug(v)
 
     class Config:
         populate_by_name = True
@@ -120,33 +132,6 @@ class BankAccount(BankAccountBase):
     created_by: str = Field(alias="createdBy")
     created_at: datetime = Field(alias="createdAt")
     updated_at: datetime = Field(alias="updatedAt")
-
-    @model_validator(mode="before")
-    @classmethod
-    def normalize_bank_account_row(cls, data: Any) -> Any:
-        if data is None:
-            return data
-        if hasattr(data, "_sa_instance_state"):
-            from sqlalchemy.inspection import inspect as sa_inspect
-            d = {attr.key: getattr(data, attr.key) for attr in sa_inspect(data).mapper.column_attrs}
-        elif isinstance(data, dict):
-            d = dict(data)
-        else:
-            return data
-        at = d.get("account_type")
-        if at is not None and not isinstance(at, BankAccountType):
-            if isinstance(at, Enum):
-                at = at.value
-            s = str(at).strip()
-            if s:
-                k = s.lower().replace("-", "_")
-                if k in BankAccountType._value2member_map_:
-                    d["account_type"] = BankAccountType._value2member_map_[k]
-                else:
-                    nk = s.upper().replace("-", "_")
-                    if nk in BankAccountType.__members__:
-                        d["account_type"] = BankAccountType[nk]
-        return d
 
     @field_validator('id', 'tenant_id', 'created_by', mode='before')
     @classmethod

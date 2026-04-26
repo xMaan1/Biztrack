@@ -40,8 +40,10 @@ def _normalize_enum_input(value: Any, enum_cls):
 
 # Bank Account CRUD Operations
 def create_bank_account(account_data: Dict[str, Any], db: Session) -> BankAccount:
-    """Create a new bank account"""
-    db_account = BankAccount(**account_data)
+    data = dict(account_data)
+    if "account_type" in data and data.get("account_type") is not None:
+        data["account_type"] = _normalize_enum_input(data["account_type"], BankAccountType)
+    db_account = BankAccount(**data)
     db.add(db_account)
     db.commit()
     db.refresh(db_account)
@@ -89,7 +91,8 @@ def update_bank_account(account_id: str, account_data: Dict[str, Any], db: Sessi
     
     for key, value in account_data.items():
         if hasattr(db_account, key):
-            setattr(db_account, key, value)
+            v = _normalize_enum_input(value, BankAccountType) if key == "account_type" and value is not None else value
+            setattr(db_account, key, v)
     
     db_account.updated_at = datetime.utcnow()
     db.commit()
