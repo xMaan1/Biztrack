@@ -47,6 +47,29 @@ router = APIRouter(prefix="/crm", tags=["crm"])
 logger = logging.getLogger(__name__)
 
 
+def _pydantic_company_from_orm(company_orm) -> Company:
+    from sqlalchemy.inspection import inspect as sa_inspect
+    d = {a.key: getattr(company_orm, a.key) for a in sa_inspect(company_orm).mapper.column_attrs}
+    cid = d.pop("createdById", None)
+    d["createdBy"] = str(cid) if cid is not None else None
+    d["id"] = str(d["id"]) if d.get("id") is not None else ""
+    d["tenant_id"] = str(d["tenant_id"]) if d.get("tenant_id") is not None else ""
+    d["opportunities"] = [
+        OpportunityPydantic.model_validate(o, from_attributes=True).model_dump()
+        for o in (getattr(company_orm, "opportunities", None) or [])
+    ]
+    d["contacts"] = [
+        Contact.model_validate(c, from_attributes=True).model_dump()
+        for c in (getattr(company_orm, "contacts", None) or [])
+    ]
+    d.setdefault("size", None)
+    d.setdefault("description", None)
+    raw_tags = d.get("tags")
+    d["tags"] = list(raw_tags) if isinstance(raw_tags, (list, tuple)) else (raw_tags if raw_tags is not None else [])
+    d.setdefault("foundedYear", None)
+    return Company.model_validate(d)
+
+
 def _crm_scope_user_id(tenant_context: Optional[dict], current_user) -> Optional[str]:
     if not tenant_context or can_see_all_crm_records(tenant_context):
         return None
@@ -1139,7 +1162,7 @@ async def get_crm_companies(
             for company in companies:
                 if industry and company.industry != industry:
                     continue
-                if size and company.size != size:
+                if size and getattr(company, "size", None) != size:
                     continue
                 if search:
                     search_lower = search.lower()
@@ -1155,9 +1178,9 @@ async def get_crm_companies(
         companies = filter_crm_rows(companies, tenant_context, str(current_user.id))
         
         total = len(companies)
-        
+        companies_out = [_pydantic_company_from_orm(c) for c in companies]
         return CRMCompaniesResponse(
-            companies=companies,
+            companies=companies_out,
             pagination={
                 "page": page,
                 "limit": limit,
@@ -1200,7 +1223,7 @@ async def create_crm_company(
             "updatedAt": datetime.now(),
         }
         company = create_company(payload, db)
-        return company
+        return _pydantic_company_from_orm(company)
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error creating company: {str(e)}")
@@ -1225,7 +1248,7 @@ async def get_crm_company(
             getattr(company, "createdById", None),
         ):
             raise HTTPException(status_code=404, detail="Company not found")
-        return company
+        return _pydantic_company_from_orm(company)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching company: {str(e)}")
 
@@ -1255,7 +1278,7 @@ async def update_crm_company(
         update_data["updatedAt"] = datetime.now()
         
         updated_company = update_company(company_id, update_data, db, tenant_context["tenant_id"] if tenant_context else None)
-        return updated_company
+        return _pydantic_company_from_orm(updated_company)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating company: {str(e)}")
 

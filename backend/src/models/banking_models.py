@@ -80,7 +80,10 @@ class BankAccountBase(BaseModel):
         n = s.upper().replace("-", "_")
         if n in BankAccountType.__members__:
             return BankAccountType[n]
-        return BankAccountType(key)
+        try:
+            return BankAccountType(key)
+        except Exception:
+            return BankAccountType.CHECKING
 
     @field_validator("tags", mode="before")
     @classmethod

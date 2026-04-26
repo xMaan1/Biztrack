@@ -73,6 +73,16 @@ def _coerce_bank_transaction_row_enums(data: Dict[str, Any]) -> None:
             continue
         data[field] = _normalize_enum_input(data.get(field), cls)
 
+
+def _pydantic_bank_account_from_orm(orm) -> BankAccount:
+    from sqlalchemy.inspection import inspect as sa_inspect
+    d = {a.key: getattr(orm, a.key) for a in sa_inspect(orm).mapper.column_attrs}
+    t = _normalize_enum_input(d.get("account_type"), BankAccountType)
+    if t is not None and not isinstance(t, BankAccountType):
+        t = _normalize_enum_input(getattr(t, "value", t), BankAccountType)
+    d["account_type"] = t if isinstance(t, BankAccountType) else BankAccountType.CHECKING
+    return BankAccount.model_validate(d)
+
 # Bank Account Endpoints
 @router.post("/accounts", response_model=BankAccountResponse, status_code=status.HTTP_201_CREATED)
 def create_bank_account_endpoint(
@@ -93,7 +103,7 @@ def create_bank_account_endpoint(
         })
         
         db_account = create_bank_account(account_data, db)
-        return BankAccountResponse(bank_account=db_account)
+        return BankAccountResponse(bank_account=_pydantic_bank_account_from_orm(db_account))
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create bank account: {str(e)}")
@@ -114,8 +124,8 @@ def get_bank_accounts_endpoint(
         else:
             accounts = get_all_bank_accounts(db, str(tenant_context["tenant_id"]), skip, limit)
         
-        response = BankAccountsResponse(bank_accounts=accounts, total=len(accounts))
-        return response
+        paccounts = [_pydantic_bank_account_from_orm(a) for a in accounts]
+        return BankAccountsResponse(bank_accounts=paccounts, total=len(paccounts))
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch bank accounts: {str(e)}")
@@ -132,7 +142,7 @@ def get_bank_account_endpoint(
     if not account:
         raise HTTPException(status_code=404, detail="Bank account not found")
     
-    return BankAccountResponse(bank_account=account)
+    return BankAccountResponse(bank_account=_pydantic_bank_account_from_orm(account))
 
 @router.put("/accounts/{account_id}", response_model=BankAccountResponse)
 def update_bank_account_endpoint(
@@ -151,7 +161,7 @@ def update_bank_account_endpoint(
         if not db_account:
             raise HTTPException(status_code=404, detail="Bank account not found")
         
-        return BankAccountResponse(bank_account=db_account)
+        return BankAccountResponse(bank_account=_pydantic_bank_account_from_orm(db_account))
         
     except HTTPException:
         raise
