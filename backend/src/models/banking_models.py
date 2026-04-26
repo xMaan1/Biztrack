@@ -71,9 +71,16 @@ class BankAccountBase(BaseModel):
             return v
         if isinstance(v, Enum):
             v = v.value
-        if isinstance(v, str):
-            return BankAccountType(v)
-        return v
+        s = str(v).strip()
+        if not s:
+            return v
+        key = s.lower().replace("-", "_")
+        if key in BankAccountType._value2member_map_:
+            return BankAccountType._value2member_map_[key]
+        n = s.upper().replace("-", "_")
+        if n in BankAccountType.__members__:
+            return BankAccountType[n]
+        return BankAccountType(key)
 
     @field_validator("tags", mode="before")
     @classmethod
