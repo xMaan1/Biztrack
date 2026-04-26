@@ -64,6 +64,24 @@ class BankAccountBase(BaseModel):
     description: Optional[str] = Field(default=None)
     tags: List[str] = Field(default=[])
 
+    @field_validator("account_type", mode="before")
+    @classmethod
+    def account_type_to_api_enum(cls, v: Any) -> Any:
+        if v is None or isinstance(v, BankAccountType):
+            return v
+        if isinstance(v, Enum):
+            v = v.value
+        if isinstance(v, str):
+            return BankAccountType(v)
+        return v
+
+    @field_validator("tags", mode="before")
+    @classmethod
+    def tags_default_list(cls, v: Any) -> Any:
+        if v is None:
+            return []
+        return v
+
     class Config:
         populate_by_name = True
 

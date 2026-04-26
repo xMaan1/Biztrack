@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import sys
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 from typing import Optional, List, Dict, Any, Union
 from .labeled_contact_items import LabeledEmailItem, LabeledPhoneItem
@@ -487,6 +490,22 @@ class Company(CompanyBase):
         if v is None:
             return v
         return str(v) if hasattr(v, "hex") else v
+
+    @field_validator("opportunities", mode="before")
+    @classmethod
+    def opportunities_orm_to_dicts(cls, v: Any) -> Any:
+        if v is None or not v:
+            return []
+        Oppo = sys.modules[__name__].Opportunity
+        out = []
+        for item in v:
+            if isinstance(item, dict):
+                out.append(item)
+            elif hasattr(item, "_sa_instance_state"):
+                out.append(Oppo.model_validate(item).model_dump())
+            else:
+                out.append(item)
+        return out
 
     class Config:
         from_attributes = True
