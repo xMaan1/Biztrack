@@ -6,9 +6,10 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime, date
 from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy import and_, or_, func, desc, asc
+from .bank_account_types import bank_account_type_slug
 from .banking_models import (
     BankAccount, BankTransaction, CashPosition, Till, TillTransaction,
-    BankAccountType, TransactionType, TransactionStatus, PaymentMethod, TillTransactionType
+    TransactionType, TransactionStatus, PaymentMethod, TillTransactionType
 )
 
 
@@ -42,7 +43,7 @@ def _normalize_enum_input(value: Any, enum_cls):
 def create_bank_account(account_data: Dict[str, Any], db: Session) -> BankAccount:
     data = dict(account_data)
     if "account_type" in data and data.get("account_type") is not None:
-        data["account_type"] = _normalize_enum_input(data["account_type"], BankAccountType)
+        data["account_type"] = bank_account_type_slug(data["account_type"])
     db_account = BankAccount(**data)
     db.add(db_account)
     db.commit()
@@ -91,7 +92,7 @@ def update_bank_account(account_id: str, account_data: Dict[str, Any], db: Sessi
     
     for key, value in account_data.items():
         if hasattr(db_account, key):
-            v = _normalize_enum_input(value, BankAccountType) if key == "account_type" and value is not None else value
+            v = bank_account_type_slug(value) if key == "account_type" and value is not None else value
             setattr(db_account, key, v)
     
     db_account.updated_at = datetime.utcnow()

@@ -8,34 +8,7 @@ from pydantic import BaseModel, Field, field_validator
 from enum import Enum
 import uuid
 
-# Enums
-class BankAccountType(str, Enum):
-    CHECKING = "checking"
-    SAVINGS = "savings"
-    BUSINESS = "business"
-    CREDIT_LINE = "credit_line"
-    MONEY_MARKET = "money_market"
-
-def bank_account_type_slug(v: Any) -> str:
-    if v is None:
-        return BankAccountType.CHECKING.value
-    if isinstance(v, str):
-        s = v.strip()
-    else:
-        r = getattr(v, "value", v)
-        s = str(r).strip() if r is not None else ""
-    if not s:
-        return BankAccountType.CHECKING.value
-    nk = s.upper().replace("-", "_")
-    if nk in BankAccountType.__members__:
-        return BankAccountType[nk].value
-    sk = s.lower().replace("-", "_")
-    if sk in BankAccountType._value2member_map_:
-        return BankAccountType._value2member_map_[sk].value
-    for m in BankAccountType:
-        if s.lower() == m.value.lower() or s.upper() == m.name:
-            return m.value
-    return BankAccountType.CHECKING.value
+from ..config.bank_account_types import BankAccountType, bank_account_type_slug
 
 class TransactionType(str, Enum):
     DEPOSIT = "deposit"

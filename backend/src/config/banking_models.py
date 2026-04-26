@@ -11,13 +11,7 @@ from sqlalchemy import Column, String, Float, DateTime, Text, Boolean, ForeignKe
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 from .database_config import Base
-
-class BankAccountType(str, Enum):
-    CHECKING = "checking"
-    SAVINGS = "savings"
-    BUSINESS = "business"
-    CREDIT_LINE = "credit_line"
-    MONEY_MARKET = "money_market"
+from .bank_account_types import BankAccountType
 
 class TransactionType(str, Enum):
     DEPOSIT = "deposit"
@@ -64,7 +58,7 @@ class BankAccount(Base):
     routing_number = Column(String, nullable=True)
     bank_name = Column(String, nullable=False)
     bank_code = Column(String, nullable=True)  # SWIFT, BIC, etc.
-    account_type = Column(SQLEnum(BankAccountType, values_callable=_pg_enum_values), nullable=False)
+    account_type = Column(String(32), nullable=False, default=BankAccountType.CHECKING.value)
     currency = Column(String, default="USD")
     
     # Balance Information
