@@ -4,7 +4,7 @@ Banking Pydantic Models for API
 
 from datetime import datetime
 from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from enum import Enum
 import uuid
 
@@ -117,6 +117,33 @@ class BankAccount(BankAccountBase):
     created_by: str = Field(alias="createdBy")
     created_at: datetime = Field(alias="createdAt")
     updated_at: datetime = Field(alias="updatedAt")
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_bank_account_row(cls, data: Any) -> Any:
+        if data is None:
+            return data
+        if hasattr(data, "_sa_instance_state"):
+            from sqlalchemy.inspection import inspect as sa_inspect
+            d = {attr.key: getattr(data, attr.key) for attr in sa_inspect(data).mapper.column_attrs}
+        elif isinstance(data, dict):
+            d = dict(data)
+        else:
+            return data
+        at = d.get("account_type")
+        if at is not None and not isinstance(at, BankAccountType):
+            if isinstance(at, Enum):
+                at = at.value
+            s = str(at).strip()
+            if s:
+                k = s.lower().replace("-", "_")
+                if k in BankAccountType._value2member_map_:
+                    d["account_type"] = BankAccountType._value2member_map_[k]
+                else:
+                    nk = s.upper().replace("-", "_")
+                    if nk in BankAccountType.__members__:
+                        d["account_type"] = BankAccountType[nk]
+        return d
 
     @field_validator('id', 'tenant_id', 'created_by', mode='before')
     @classmethod

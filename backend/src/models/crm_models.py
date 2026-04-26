@@ -480,7 +480,7 @@ class Company(CompanyBase):
     employeeCount: Optional[int] = None
     foundedYear: Optional[int] = None
     contacts: List[Contact] = []
-    opportunities: List[Dict[str, Any]] = []
+    opportunities: List[Any] = []
     createdAt: datetime
     updatedAt: datetime
 
