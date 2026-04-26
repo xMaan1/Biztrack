@@ -86,11 +86,25 @@ def update_doctor(doctor_id: str, update_data: dict, db: Session, tenant_id: Opt
 
 def delete_doctor(doctor_id: str, db: Session, tenant_id: Optional[str] = None) -> bool:
     doctor = get_doctor_by_id(doctor_id, db, tenant_id)
-    if doctor:
-        db.delete(doctor)
-        db.commit()
-        return True
-    return False
+    if not doctor:
+        return False
+    tid = doctor.tenant_id
+    did = doctor.id
+    db.query(Prescription).filter(
+        Prescription.doctor_id == did,
+        Prescription.tenant_id == tid,
+    ).delete(synchronize_session=False)
+    db.query(Appointment).filter(
+        Appointment.doctor_id == did,
+        Appointment.tenant_id == tid,
+    ).delete(synchronize_session=False)
+    db.query(Admission).filter(
+        Admission.doctor_id == did,
+        Admission.tenant_id == tid,
+    ).delete(synchronize_session=False)
+    db.delete(doctor)
+    db.commit()
+    return True
 
 
 def get_healthcare_staff_by_id(staff_id: str, db: Session, tenant_id: Optional[str] = None) -> Optional[HealthcareStaff]:

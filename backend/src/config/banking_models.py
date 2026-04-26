@@ -6,6 +6,7 @@ Handles bank payments and cash position tracking
 import uuid
 from datetime import datetime
 from enum import Enum
+from typing import List, Type
 from sqlalchemy import Column, String, Float, DateTime, Text, Boolean, ForeignKey, Index, JSON, Enum as SQLEnum, Integer
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
@@ -48,6 +49,9 @@ class PaymentMethod(str, Enum):
     MOBILE_PAYMENT = "mobile_payment"
     CRYPTOCURRENCY = "cryptocurrency"
 
+def _pg_enum_values(enum_cls: Type[Enum]) -> List[str]:
+    return [m.value for m in enum_cls]
+
 class BankAccount(Base):
     __tablename__ = "bank_accounts"
     
@@ -60,7 +64,7 @@ class BankAccount(Base):
     routing_number = Column(String, nullable=True)
     bank_name = Column(String, nullable=False)
     bank_code = Column(String, nullable=True)  # SWIFT, BIC, etc.
-    account_type = Column(SQLEnum(BankAccountType), nullable=False)
+    account_type = Column(SQLEnum(BankAccountType, values_callable=_pg_enum_values), nullable=False)
     currency = Column(String, default="USD")
     
     # Balance Information
@@ -106,8 +110,8 @@ class BankTransaction(Base):
     transaction_number = Column(String, unique=True, index=True)  # Auto-generated
     transaction_date = Column(DateTime, nullable=False, index=True)
     value_date = Column(DateTime, nullable=True)  # When funds are actually available
-    transaction_type = Column(SQLEnum(TransactionType), nullable=False)
-    status = Column(SQLEnum(TransactionStatus), default=TransactionStatus.PENDING)
+    transaction_type = Column(SQLEnum(TransactionType, values_callable=_pg_enum_values), nullable=False)
+    status = Column(SQLEnum(TransactionStatus, values_callable=_pg_enum_values), default=TransactionStatus.PENDING)
     
     # Amount Information
     amount = Column(Float, nullable=False)
@@ -117,7 +121,7 @@ class BankTransaction(Base):
     base_amount = Column(Float, nullable=False)  # Amount in base currency
     
     # Payment Method and Reference
-    payment_method = Column(SQLEnum(PaymentMethod), nullable=True)
+    payment_method = Column(SQLEnum(PaymentMethod, values_callable=_pg_enum_values), nullable=True)
     reference_number = Column(String, nullable=True)
     external_reference = Column(String, nullable=True)  # Bank's reference
     check_number = Column(String, nullable=True)
@@ -256,7 +260,7 @@ class TillTransaction(Base):
     
     transaction_number = Column(String, unique=True, index=True)
     transaction_date = Column(DateTime, nullable=False, index=True)
-    transaction_type = Column(SQLEnum(TillTransactionType), nullable=False)
+    transaction_type = Column(SQLEnum(TillTransactionType, values_callable=_pg_enum_values), nullable=False)
     
     amount = Column(Float, nullable=False)
     running_balance = Column(Float, nullable=False)

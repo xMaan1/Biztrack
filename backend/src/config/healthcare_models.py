@@ -72,9 +72,9 @@ class Doctor(Base):
     )
 
     tenant = relationship("Tenant", back_populates="doctors")
-    appointments = relationship("Appointment", back_populates="doctor")
-    prescriptions = relationship("Prescription", back_populates="doctor")
-    admissions = relationship("Admission", back_populates="doctor")
+    appointments = relationship("Appointment", back_populates="doctor", passive_deletes=True)
+    prescriptions = relationship("Prescription", back_populates="doctor", passive_deletes=True)
+    admissions = relationship("Admission", back_populates="doctor", passive_deletes=True)
 
 
 class Patient(Base):

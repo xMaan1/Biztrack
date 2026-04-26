@@ -20,6 +20,7 @@ import {
 import { PurchaseOrder } from '../../models/inventory';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { formatDate } from '../../lib/utils';
+import { usePlanInfo } from '../../hooks/usePlanInfo';
 
 interface PurchaseOrderViewModalProps {
   isOpen: boolean;
@@ -33,6 +34,8 @@ export default function PurchaseOrderViewModal({
   purchaseOrder,
 }: PurchaseOrderViewModalProps) {
   const { formatCurrency } = useCurrency();
+  const { planInfo } = usePlanInfo();
+  const isHealthcare = planInfo?.planType === 'healthcare';
 
   if (!purchaseOrder) return null;
 
@@ -57,7 +60,7 @@ export default function PurchaseOrderViewModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ClipboardList className="h-5 w-5" />
-            Purchase Order Details
+            {isHealthcare ? 'Medical supplies purchase order' : 'Purchase Order Details'}
           </DialogTitle>
         </DialogHeader>
 
@@ -169,6 +172,42 @@ export default function PurchaseOrderViewModal({
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {isHealthcare &&
+            (purchaseOrder.department ||
+              purchaseOrder.deliveryLocation ||
+              purchaseOrder.requisitionNumber) && (
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold mb-4">Facility details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {purchaseOrder.department && (
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600">Department</Label>
+                      <p className="text-lg">{purchaseOrder.department}</p>
+                    </div>
+                  )}
+                  {purchaseOrder.deliveryLocation && (
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600">Delivery location</Label>
+                      <p className="text-lg">{purchaseOrder.deliveryLocation}</p>
+                    </div>
+                  )}
+                  {purchaseOrder.requisitionNumber && (
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600">Internal requisition #</Label>
+                      <p className="text-lg font-mono">{purchaseOrder.requisitionNumber}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+          {!isHealthcare && purchaseOrder.vehicleReg && (
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-semibold mb-4">Vehicle</h3>
+              <p className="text-lg font-mono">{purchaseOrder.vehicleReg}</p>
             </div>
           )}
 

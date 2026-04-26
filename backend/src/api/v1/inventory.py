@@ -51,6 +51,36 @@ def get_supplier_name_map(db: Session, tenant_id: str, supplier_ids: List[str]) 
 
     return {str(supplier_id): name for supplier_id, name in supplier_rows}
 
+
+def _purchase_order_api_payload(order: PurchaseOrderDB, supplier_name: str) -> dict:
+    supplier_id = str(order.supplierId)
+    return {
+        "id": str(order.id),
+        "tenant_id": str(order.tenant_id),
+        "orderNumber": order.poNumber,
+        "batchNumber": order.batchNumber,
+        "supplierId": supplier_id,
+        "supplierName": supplier_name,
+        "warehouseId": str(order.warehouseId),
+        "orderDate": order.orderDate.isoformat() if order.orderDate else None,
+        "expectedDeliveryDate": order.expectedDeliveryDate.isoformat() if order.expectedDeliveryDate else None,
+        "status": order.status,
+        "subtotal": order.subtotal,
+        "vatRate": order.vatRate,
+        "vatAmount": order.vatAmount,
+        "totalAmount": order.totalAmount,
+        "notes": order.notes,
+        "items": order.items if order.items else [],
+        "vehicleReg": order.vehicleReg if hasattr(order, "vehicleReg") else None,
+        "department": getattr(order, "department", None),
+        "deliveryLocation": getattr(order, "deliveryLocation", None),
+        "requisitionNumber": getattr(order, "requisitionNumber", None),
+        "createdBy": str(order.createdBy) if hasattr(order, "createdBy") else "",
+        "createdAt": order.createdAt,
+        "updatedAt": order.updatedAt,
+    }
+
+
 @router.get("/health")
 def inventory_health_check():
     return {"status": "ok", "module": "inventory", "message": "Inventory endpoints are accessible"}
@@ -634,28 +664,9 @@ def read_purchase_orders(
     response_orders = []
     for order in orders:
         supplier_id = str(order.supplierId)
-        response_data = {
-            "id": str(order.id),
-            "tenant_id": str(order.tenant_id),
-            "orderNumber": order.poNumber,
-            "supplierId": supplier_id,
-            "supplierName": supplier_name_map.get(supplier_id, ""),
-            "warehouseId": str(order.warehouseId),
-            "orderDate": order.orderDate.isoformat() if order.orderDate else None,
-            "expectedDeliveryDate": order.expectedDeliveryDate.isoformat() if order.expectedDeliveryDate else None,
-            "status": order.status,
-            "subtotal": order.subtotal,
-            "vatRate": order.vatRate,
-            "vatAmount": order.vatAmount,
-            "totalAmount": order.totalAmount,
-            "notes": order.notes,
-            "items": order.items if order.items else [],
-            "vehicleReg": order.vehicleReg if hasattr(order, 'vehicleReg') else None,
-            "createdBy": str(order.createdBy) if hasattr(order, 'createdBy') else "",
-            "createdAt": order.createdAt,
-            "updatedAt": order.updatedAt
-        }
-        response_orders.append(response_data)
+        response_orders.append(
+            _purchase_order_api_payload(order, supplier_name_map.get(supplier_id, ""))
+        )
     
     return PurchaseOrdersResponse(purchaseOrders=response_orders, total=total)
 
@@ -679,30 +690,9 @@ def read_purchase_order(
     )
     supplier_id = str(order.supplierId)
 
-    response_data = {
-        "id": str(order.id),
-        "tenant_id": str(order.tenant_id),
-        "orderNumber": order.poNumber,
-        "batchNumber": order.batchNumber,
-        "supplierId": supplier_id,
-        "supplierName": supplier_name_map.get(supplier_id, ""),
-        "warehouseId": str(order.warehouseId),
-        "orderDate": order.orderDate.isoformat() if order.orderDate else None,
-        "expectedDeliveryDate": order.expectedDeliveryDate.isoformat() if order.expectedDeliveryDate else None,
-        "status": order.status,
-        "subtotal": order.subtotal,
-        "vatRate": order.vatRate,
-        "vatAmount": order.vatAmount,
-        "totalAmount": order.totalAmount,
-            "notes": order.notes,
-            "items": order.items if order.items else [],
-            "vehicleReg": order.vehicleReg if hasattr(order, 'vehicleReg') else None,
-            "createdBy": str(order.createdBy) if hasattr(order, 'createdBy') else "",
-        "createdAt": order.createdAt,
-        "updatedAt": order.updatedAt
-    }
-    
-    return PurchaseOrderResponse(purchaseOrder=response_data)
+    return PurchaseOrderResponse(
+        purchaseOrder=_purchase_order_api_payload(order, supplier_name_map.get(supplier_id, ""))
+    )
 
 @router.post("/purchase-orders", response_model=PurchaseOrderResponse)
 def create_purchase_order_endpoint(
@@ -756,30 +746,9 @@ def create_purchase_order_endpoint(
     )
     supplier_id = str(db_order.supplierId)
 
-    response_data = {
-        "id": str(db_order.id),
-        "tenant_id": str(db_order.tenant_id),
-        "orderNumber": db_order.poNumber,
-        "batchNumber": db_order.batchNumber,
-        "supplierId": supplier_id,
-        "supplierName": supplier_name_map.get(supplier_id, ""),
-        "warehouseId": str(db_order.warehouseId),
-        "orderDate": db_order.orderDate.isoformat() if db_order.orderDate else None,
-        "expectedDeliveryDate": db_order.expectedDeliveryDate.isoformat() if db_order.expectedDeliveryDate else None,
-        "status": db_order.status,
-        "subtotal": db_order.subtotal,
-        "vatRate": db_order.vatRate,
-        "vatAmount": db_order.vatAmount,
-        "totalAmount": db_order.totalAmount,
-        "notes": db_order.notes,
-        "items": db_order.items if db_order.items else [],
-        "vehicleReg": db_order.vehicleReg if hasattr(db_order, 'vehicleReg') else None,
-        "createdBy": str(db_order.createdBy),
-        "createdAt": db_order.createdAt,
-        "updatedAt": db_order.updatedAt
-    }
-    
-    return PurchaseOrderResponse(purchaseOrder=response_data)
+    return PurchaseOrderResponse(
+        purchaseOrder=_purchase_order_api_payload(db_order, supplier_name_map.get(supplier_id, ""))
+    )
 
 @router.put("/purchase-orders/{order_id}", response_model=PurchaseOrderResponse)
 def update_purchase_order_endpoint(
@@ -831,30 +800,9 @@ def update_purchase_order_endpoint(
     )
     supplier_id = str(db_order.supplierId)
 
-    response_data = {
-        "id": str(db_order.id),
-        "tenant_id": str(db_order.tenant_id),
-        "orderNumber": db_order.poNumber,
-        "batchNumber": db_order.batchNumber,
-        "supplierId": supplier_id,
-        "supplierName": supplier_name_map.get(supplier_id, ""),
-        "warehouseId": str(db_order.warehouseId),
-        "orderDate": db_order.orderDate.isoformat() if db_order.orderDate else None,
-        "expectedDeliveryDate": db_order.expectedDeliveryDate.isoformat() if db_order.expectedDeliveryDate else None,
-        "status": db_order.status,
-        "subtotal": db_order.subtotal,
-        "vatRate": db_order.vatRate,
-        "vatAmount": db_order.vatAmount,
-        "totalAmount": db_order.totalAmount,
-        "notes": db_order.notes,
-        "items": db_order.items if db_order.items else [],
-        "vehicleReg": db_order.vehicleReg if hasattr(db_order, 'vehicleReg') else None,
-        "createdBy": str(db_order.createdBy) if hasattr(db_order, 'createdBy') else "",
-        "createdAt": db_order.createdAt,
-        "updatedAt": db_order.updatedAt
-    }
-    
-    return PurchaseOrderResponse(purchaseOrder=response_data)
+    return PurchaseOrderResponse(
+        purchaseOrder=_purchase_order_api_payload(db_order, supplier_name_map.get(supplier_id, ""))
+    )
 
 @router.delete("/purchase-orders/{order_id}")
 def delete_purchase_order_endpoint(

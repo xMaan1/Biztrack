@@ -63,6 +63,9 @@ export interface PurchaseOrder {
   totalAmount: number;
   notes?: string;
   vehicleReg?: string;
+  department?: string;
+  deliveryLocation?: string;
+  requisitionNumber?: string;
   items: PurchaseOrderItemCreate[];
   createdAt: string;
   updatedAt: string;
@@ -79,6 +82,9 @@ export interface PurchaseOrderCreate {
   vatRate?: number;
   notes?: string;
   vehicleReg?: string;
+  department?: string;
+  deliveryLocation?: string;
+  requisitionNumber?: string;
   items: PurchaseOrderItemCreate[];
 }
 
@@ -97,6 +103,9 @@ export interface PurchaseOrderUpdate {
   totalAmount?: number;
   notes?: string;
   vehicleReg?: string;
+  department?: string;
+  deliveryLocation?: string;
+  requisitionNumber?: string;
 }
 
 export interface PurchaseOrderResponse {

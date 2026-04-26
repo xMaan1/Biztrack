@@ -35,6 +35,7 @@ import { Alert, AlertDescription } from '../ui/alert';
 import { apiService } from '../../services/ApiService';
 import { VehicleSearch } from '../ui/vehicle-search';
 import { Vehicle } from '../../models/workshop';
+import { usePlanInfo } from '../../hooks/usePlanInfo';
 
 interface PurchaseOrderModalProps {
   isOpen: boolean;
@@ -60,6 +61,8 @@ export default function PurchaseOrderModal({
   initialData = {},
 }: PurchaseOrderModalProps) {
   const { formatCurrency } = useCurrency();
+  const { planInfo } = usePlanInfo();
+  const isHealthcare = planInfo?.planType === 'healthcare';
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -76,6 +79,9 @@ export default function PurchaseOrderModal({
     orderDate: new Date().toISOString().split('T')[0],
     expectedDeliveryDate: '',
     vehicleReg: '',
+    department: '',
+    deliveryLocation: '',
+    requisitionNumber: '',
     vatRate: 0,
     notes: '',
     items: [],
@@ -211,7 +217,18 @@ export default function PurchaseOrderModal({
     try {
       setIsSubmitting(true);
       setErrorMessage('');
-      await inventoryService.createPurchaseOrder(newOrder);
+      const payload: PurchaseOrderCreate = isHealthcare
+        ? {
+            ...newOrder,
+            vehicleReg: undefined,
+          }
+        : {
+            ...newOrder,
+            department: undefined,
+            deliveryLocation: undefined,
+            requisitionNumber: undefined,
+          };
+      await inventoryService.createPurchaseOrder(payload);
       
       if (useToastNotifications) {
         toast.success('Purchase order created successfully');
@@ -233,6 +250,7 @@ export default function PurchaseOrderModal({
   };
 
   const resetForm = () => {
+    setSelectedVehicle(null);
     setNewOrder({
       orderNumber: '',
       batchNumber: '',
@@ -242,6 +260,9 @@ export default function PurchaseOrderModal({
       orderDate: new Date().toISOString().split('T')[0],
       expectedDeliveryDate: '',
       vehicleReg: initialData?.vehicleReg || '',
+      department: initialData?.department || '',
+      deliveryLocation: initialData?.deliveryLocation || '',
+      requisitionNumber: initialData?.requisitionNumber || '',
       vatRate: 0,
       notes: '',
       items: [],
@@ -288,7 +309,9 @@ export default function PurchaseOrderModal({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="batchNumber">Batch Number</Label>
+              <Label htmlFor="batchNumber">
+                {isHealthcare ? 'Lot / batch reference' : 'Batch Number'}
+              </Label>
               <Input
                 id="batchNumber"
                 value={newOrder.batchNumber}
@@ -298,7 +321,9 @@ export default function PurchaseOrderModal({
                     batchNumber: e.target.value,
                   }))
                 }
-                placeholder="Enter batch number"
+                placeholder={
+                  isHealthcare ? 'e.g. cold chain lot, supplier batch' : 'Enter batch number'
+                }
               />
             </div>
             {showOrderDate && (
@@ -414,36 +439,85 @@ export default function PurchaseOrderModal({
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <VehicleSearch
-              label="Vehicle"
-              value={selectedVehicle}
-              onSelect={(v) => {
-                setSelectedVehicle(v);
-                if (v) {
-                  setNewOrder((prev) => ({
-                    ...prev,
-                    vehicleReg: v.registration_number ?? '',
-                  }));
-                }
-              }}
-              placeholder="Search by reg, VIN, make, model..."
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="vehicleReg">Vehicle Registration</Label>
-            <Input
-              id="vehicleReg"
-              value={newOrder.vehicleReg}
-              onChange={(e) =>
-                setNewOrder((prev) => ({
-                  ...prev,
-                  vehicleReg: e.target.value,
-                }))
-              }
-              placeholder="Enter vehicle registration or driver info"
-            />
-          </div>
+          {isHealthcare ? (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="department">Department</Label>
+                <Input
+                  id="department"
+                  value={newOrder.department ?? ''}
+                  onChange={(e) =>
+                    setNewOrder((prev) => ({
+                      ...prev,
+                      department: e.target.value,
+                    }))
+                  }
+                  placeholder="e.g. Pharmacy, ICU, General ward"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="deliveryLocation">Delivery location</Label>
+                <Input
+                  id="deliveryLocation"
+                  value={newOrder.deliveryLocation ?? ''}
+                  onChange={(e) =>
+                    setNewOrder((prev) => ({
+                      ...prev,
+                      deliveryLocation: e.target.value,
+                    }))
+                  }
+                  placeholder="e.g. Main store, Ward 3, Central pharmacy"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="requisitionNumber">Internal requisition #</Label>
+                <Input
+                  id="requisitionNumber"
+                  value={newOrder.requisitionNumber ?? ''}
+                  onChange={(e) =>
+                    setNewOrder((prev) => ({
+                      ...prev,
+                      requisitionNumber: e.target.value,
+                    }))
+                  }
+                  placeholder="Optional reference from your approval workflow"
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="space-y-2">
+                <VehicleSearch
+                  label="Vehicle"
+                  value={selectedVehicle}
+                  onSelect={(v) => {
+                    setSelectedVehicle(v);
+                    if (v) {
+                      setNewOrder((prev) => ({
+                        ...prev,
+                        vehicleReg: v.registration_number ?? '',
+                      }));
+                    }
+                  }}
+                  placeholder="Search by reg, VIN, make, model..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="vehicleReg">Vehicle Registration</Label>
+                <Input
+                  id="vehicleReg"
+                  value={newOrder.vehicleReg}
+                  onChange={(e) =>
+                    setNewOrder((prev) => ({
+                      ...prev,
+                      vehicleReg: e.target.value,
+                    }))
+                  }
+                  placeholder="Enter vehicle registration or driver info"
+                />
+              </div>
+            </>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="vatRate">VAT Rate (%)</Label>

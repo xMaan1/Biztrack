@@ -187,6 +187,17 @@ export class ApiService {
           );
         }
 
+        if (
+          typeof FormData !== 'undefined' &&
+          config.data &&
+          config.data instanceof FormData
+        ) {
+          if (config.headers) {
+            delete (config.headers as Record<string, unknown>)['Content-Type'];
+            delete (config.headers as Record<string, unknown>)['content-type'];
+          }
+        }
+
         console.log('[ApiService Interceptor] Request config final:', {
           url: config.url,
           method: config.method,

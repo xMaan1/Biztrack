@@ -60,6 +60,7 @@ import { Textarea } from '../../../components/ui/textarea';
 import { toast } from 'sonner';
 import PurchaseOrderModal from '../../../components/inventory/PurchaseOrderModal';
 import PurchaseOrderViewModal from '../../../components/inventory/PurchaseOrderViewModal';
+import { usePlanInfo } from '../../../hooks/usePlanInfo';
 
 export default function PurchaseOrdersPage() {
   return (
@@ -71,6 +72,8 @@ export default function PurchaseOrdersPage() {
 
 function PurchaseOrdersContent() {
   const { } = useAuth();
+  const { planInfo } = usePlanInfo();
+  const isHealthcare = planInfo?.planType === 'healthcare';
   const { formatCurrency } = useCurrency();
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -126,6 +129,9 @@ function PurchaseOrdersContent() {
     orderDate: '',
     expectedDeliveryDate: '',
     notes: '',
+    department: '',
+    deliveryLocation: '',
+    requisitionNumber: '',
   });
 
 
@@ -136,7 +142,12 @@ function PurchaseOrdersContent() {
       const matchesSearch =
         order.orderNumber.toLowerCase().includes(searchLower) ||
         order.supplierName.toLowerCase().includes(searchLower) ||
-        (order.vehicleReg && order.vehicleReg.toLowerCase().includes(searchLower));
+        (order.vehicleReg && order.vehicleReg.toLowerCase().includes(searchLower)) ||
+        (order.department && order.department.toLowerCase().includes(searchLower)) ||
+        (order.deliveryLocation &&
+          order.deliveryLocation.toLowerCase().includes(searchLower)) ||
+        (order.requisitionNumber &&
+          order.requisitionNumber.toLowerCase().includes(searchLower));
 
       const matchesStatus =
         statusFilter === 'all' || !statusFilter || order.status === statusFilter;
@@ -208,6 +219,9 @@ function PurchaseOrdersContent() {
       expectedDeliveryDate: order.expectedDeliveryDate ? order.expectedDeliveryDate.split('T')[0] : '',
       vatRate: order.vatRate || 0,
       notes: order.notes || '',
+      department: order.department || '',
+      deliveryLocation: order.deliveryLocation || '',
+      requisitionNumber: order.requisitionNumber || '',
     });
     setIsEditModalOpen(true);
   };
@@ -227,7 +241,15 @@ function PurchaseOrdersContent() {
 
     try {
       setIsSubmitting(true);
-      await inventoryService.updatePurchaseOrder(selectedOrder.id, editOrder);
+      const updatePayload: PurchaseOrderUpdate = { ...editOrder };
+      if (!isHealthcare) {
+        delete updatePayload.department;
+        delete updatePayload.deliveryLocation;
+        delete updatePayload.requisitionNumber;
+      } else {
+        delete updatePayload.vehicleReg;
+      }
+      await inventoryService.updatePurchaseOrder(selectedOrder.id, updatePayload);
       toast.success('Purchase order updated successfully');
       setIsEditModalOpen(false);
       refetchPurchaseOrders();
@@ -289,10 +311,12 @@ function PurchaseOrdersContent() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
-              Purchase Orders
+              {isHealthcare ? 'Medical supplies orders' : 'Purchase Orders'}
             </h1>
             <p className="text-muted-foreground">
-              Manage purchase orders and supplier procurement
+              {isHealthcare
+                ? 'Raise and track purchase orders for wards, pharmacy, and clinical stock'
+                : 'Manage purchase orders and supplier procurement'}
             </p>
           </div>
           <Button onClick={() => setIsAddModalOpen(true)}>
@@ -311,7 +335,11 @@ function PurchaseOrdersContent() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
-                  placeholder="Search by PO number or supplier name..."
+                  placeholder={
+                    isHealthcare
+                      ? 'Search PO, supplier, department, location, requisition…'
+                      : 'Search by PO number or supplier name...'
+                  }
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -534,7 +562,11 @@ function PurchaseOrdersContent() {
           isOpen={isAddModalOpen}
           onClose={() => setIsAddModalOpen(false)}
           onSuccess={refetchPurchaseOrders}
-          title="Create New Purchase Order"
+          title={
+            isHealthcare
+              ? 'Create medical supplies purchase order'
+              : 'Create New Purchase Order'
+          }
           showOrderDate={true}
           showSupplierCount={true}
           showAddSupplierButton={true}
@@ -596,7 +628,9 @@ function PurchaseOrdersContent() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-batchNumber">Batch Number</Label>
+                  <Label htmlFor="edit-batchNumber">
+                    {isHealthcare ? 'Lot / batch reference' : 'Batch Number'}
+                  </Label>
                   <Input
                     id="edit-batchNumber"
                     value={editOrder.batchNumber}
@@ -606,7 +640,9 @@ function PurchaseOrdersContent() {
                         batchNumber: e.target.value,
                       }))
                     }
-                    placeholder="Enter batch number"
+                    placeholder={
+                      isHealthcare ? 'e.g. cold chain lot, supplier batch' : 'Enter batch number'
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -717,6 +753,50 @@ function PurchaseOrdersContent() {
                   </Button>
                 </div>
               </div>
+
+              {isHealthcare && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-department">Department</Label>
+                    <Input
+                      id="edit-department"
+                      value={editOrder.department ?? ''}
+                      onChange={(e) =>
+                        setEditOrder((prev) => ({ ...prev, department: e.target.value }))
+                      }
+                      placeholder="e.g. Pharmacy, ICU"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-deliveryLocation">Delivery location</Label>
+                    <Input
+                      id="edit-deliveryLocation"
+                      value={editOrder.deliveryLocation ?? ''}
+                      onChange={(e) =>
+                        setEditOrder((prev) => ({
+                          ...prev,
+                          deliveryLocation: e.target.value,
+                        }))
+                      }
+                      placeholder="e.g. Main store, Ward 3"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-requisitionNumber">Internal requisition #</Label>
+                    <Input
+                      id="edit-requisitionNumber"
+                      value={editOrder.requisitionNumber ?? ''}
+                      onChange={(e) =>
+                        setEditOrder((prev) => ({
+                          ...prev,
+                          requisitionNumber: e.target.value,
+                        }))
+                      }
+                      placeholder="Optional"
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="edit-vatRate">VAT Rate (%)</Label>

@@ -750,6 +750,11 @@ export default function Sidebar() {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const pathname = usePathname();
   const { planInfo, loading: planLoading } = usePlanInfo();
+
+  const purchaseOrdersNavLabel = (subItem: SubMenuItem) =>
+    subItem.path === '/inventory/purchase-orders' && planInfo?.planType === 'healthcare'
+      ? 'Medical supply orders'
+      : subItem.text;
   const { user } = useAuth();
   const { accessibleModules, hasModuleAccess, hasPermission, isOwner } = usePermissions();
 
@@ -849,8 +854,11 @@ export default function Sidebar() {
             const subItemAvailable =
               subItem.planTypes.includes('*') ||
               subItem.planTypes.includes(currentPlanType);
+            const label = purchaseOrdersNavLabel(subItem);
             return (
-              subItemAvailable && subItem.text.toLowerCase().includes(query)
+              subItemAvailable &&
+              (label.toLowerCase().includes(query) ||
+                subItem.text.toLowerCase().includes(query))
             );
           });
         }
@@ -876,15 +884,21 @@ export default function Sidebar() {
 
       const parentMatches = item.text.toLowerCase().includes(query);
       const childMatches = item.subItems.some((subItem) => {
-        // For super admin, all sub-items are available
+        const label = purchaseOrdersNavLabel(subItem);
         if (user?.userRole === 'super_admin') {
-          return subItem.text.toLowerCase().includes(query);
+          return (
+            label.toLowerCase().includes(query) ||
+            subItem.text.toLowerCase().includes(query)
+          );
         }
-        // For regular users, check plan availability
         const subItemAvailable =
           subItem.planTypes.includes('*') ||
           (planInfo && subItem.planTypes.includes(planInfo.planType));
-        return subItemAvailable && subItem.text.toLowerCase().includes(query);
+        return (
+          subItemAvailable &&
+          (label.toLowerCase().includes(query) ||
+            subItem.text.toLowerCase().includes(query))
+        );
       });
 
       if (parentMatches || childMatches) {
@@ -1103,6 +1117,8 @@ export default function Sidebar() {
                       return null;
                     }
 
+                    const subItemLabel = purchaseOrdersNavLabel(subItem);
+
                     return (
                       <Link
                         key={subItem.text}
@@ -1137,7 +1153,7 @@ export default function Sidebar() {
                             isSubItemActive ? 'text-blue-700' : 'text-gray-600',
                           )}
                         >
-                          {subItem.text}
+                          {subItemLabel}
                         </span>
                         {isSubItemActive && (
                           <div className="ml-auto w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />

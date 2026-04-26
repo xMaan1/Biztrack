@@ -351,6 +351,9 @@ class PurchaseOrderBase(BaseModel):
     totalAmount: float
     notes: Optional[str] = None
     vehicleReg: Optional[str] = None
+    department: Optional[str] = None
+    deliveryLocation: Optional[str] = None
+    requisitionNumber: Optional[str] = None
     items: List[PurchaseOrderItemCreate]
 
 class PurchaseOrderCreate(BaseModel):
@@ -364,6 +367,9 @@ class PurchaseOrderCreate(BaseModel):
     expectedDeliveryDate: str
     vatRate: float = 0.0
     notes: Optional[str] = None
+    department: Optional[str] = None
+    deliveryLocation: Optional[str] = None
+    requisitionNumber: Optional[str] = None
     items: List[PurchaseOrderItemCreate]
 
 class PurchaseOrderUpdate(BaseModel):
@@ -381,6 +387,9 @@ class PurchaseOrderUpdate(BaseModel):
     totalAmount: Optional[float] = None
     notes: Optional[str] = None
     vehicleReg: Optional[str] = None
+    department: Optional[str] = None
+    deliveryLocation: Optional[str] = None
+    requisitionNumber: Optional[str] = None
 
 class PurchaseOrder(PurchaseOrderBase):
     id: str
