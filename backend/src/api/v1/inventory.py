@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, func, desc
+from sqlalchemy import and_, func, desc, Integer
 from typing import List, Optional
 from datetime import datetime
 import uuid
@@ -107,59 +107,30 @@ def generate_purchase_order_number(tenant_id: str, db: Session) -> str:
     """Generate unique purchase order number with proper race condition handling"""
     year = datetime.now().year
     month = datetime.now().month
-    
-    max_retries = 10
+    prefix = f"PO-{year:04d}{month:02d}"
+
+    max_retries = 100
     for attempt in range(max_retries):
-        highest_po = db.query(PurchaseOrderDB).filter(
-            and_(
-                PurchaseOrderDB.tenant_id == tenant_id,
-                func.extract('year', PurchaseOrderDB.createdAt) == year,
-                func.extract('month', PurchaseOrderDB.createdAt) == month
-            )
-        ).order_by(desc(PurchaseOrderDB.poNumber)).first()
-        
-        if highest_po:
-            try:
-                parts = highest_po.poNumber.split('-')
-                if len(parts) == 3:
-                    last_number = int(parts[2])
-                    new_number = last_number + 1
-                else:
-                    count = db.query(PurchaseOrderDB).filter(
-                        and_(
-                            PurchaseOrderDB.tenant_id == tenant_id,
-                            func.extract('year', PurchaseOrderDB.createdAt) == year,
-                            func.extract('month', PurchaseOrderDB.createdAt) == month
-                        )
-                    ).count()
-                    new_number = count + 1
-            except (ValueError, IndexError):
-                count = db.query(PurchaseOrderDB).filter(
-                    and_(
-                        PurchaseOrderDB.tenant_id == tenant_id,
-                        func.extract('year', PurchaseOrderDB.createdAt) == year,
-                        func.extract('month', PurchaseOrderDB.createdAt) == month
-                    )
-                ).count()
-                new_number = count + 1
-        else:
-            new_number = 1
-        
-        po_number = f"PO-{year:04d}{month:02d}-{new_number:04d}"
-        
+        max_suffix = db.query(
+            func.max(func.cast(func.split_part(PurchaseOrderDB.poNumber, "-", 3), Integer))
+        ).filter(PurchaseOrderDB.poNumber.like(f"{prefix}-%")).scalar()
+
+        new_number = (max_suffix or 0) + 1 + attempt
+        po_number = f"{prefix}-{new_number:04d}"
+
         existing_po = db.query(PurchaseOrderDB).filter(
             PurchaseOrderDB.poNumber == po_number
         ).first()
-        
+
         if not existing_po:
             return po_number
-        
+
         if attempt == max_retries - 1:
             raise HTTPException(
                 status_code=500,
                 detail="Unable to generate unique purchase order number after multiple attempts"
             )
-    
+
     return po_number
 
 
