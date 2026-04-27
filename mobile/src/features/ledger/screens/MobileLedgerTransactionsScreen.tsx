@@ -54,6 +54,14 @@ const STATUS_FILTER: OptionItem<string>[] = [
   ...STATUSES,
 ];
 
+function parseDateInputToIso(dateInput: string): string | null {
+  const trimmed = dateInput.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return null;
+  const d = new Date(`${trimmed}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString();
+}
+
 export function MobileLedgerTransactionsScreen() {
   const { workspacePath, setSidebarActivePath } = useSidebarDrawer();
   const { canManageLedger } = usePermissions();
@@ -178,12 +186,16 @@ export function MobileLedgerTransactionsScreen() {
     ) {
       return null;
     }
+    const transactionDateIso = parseDateInputToIso(txDate);
+    if (!transactionDateIso) {
+      return null;
+    }
     return {
       description: desc.trim(),
       amount,
       account_id: debitId,
       contra_account_id: creditId,
-      transaction_date: new Date(txDate).toISOString(),
+      transaction_date: transactionDateIso,
       transaction_type: txType,
       status: txStatus,
       reference_number: refNum.trim() || undefined,
@@ -193,7 +205,7 @@ export function MobileLedgerTransactionsScreen() {
   const submitCreate = useCallback(async () => {
     const b = buildCreateBody();
     if (!b) {
-      Alert.alert('Ledger', 'Fill required fields and two accounts.');
+      Alert.alert('Ledger', 'Fill required fields, valid date, and two accounts.');
       return;
     }
     try {
@@ -212,7 +224,7 @@ export function MobileLedgerTransactionsScreen() {
     if (!editing) return;
     const b = buildCreateBody();
     if (!b) {
-      Alert.alert('Ledger', 'Check fields.');
+      Alert.alert('Ledger', 'Check fields and date format (YYYY-MM-DD).');
       return;
     }
     try {

@@ -1,6 +1,18 @@
 import React from 'react';
-import { View, Text, TextInput, Pressable, TextInputProps } from 'react-native';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  TextInputProps,
+  View,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface FormSectionProps {
   title?: string;
@@ -81,17 +93,13 @@ export const FormSelect: React.FC<FormSelectProps> = ({
 interface FormHeaderProps {
   title: string;
   onCancel: () => void;
-  onSave: () => void;
-  saveLoading?: boolean;
 }
 
 export const FormHeader: React.FC<FormHeaderProps> = ({ 
   title, 
-  onCancel, 
-  onSave,
-  saveLoading 
+  onCancel,
 }) => (
-  <View className="flex-row items-center justify-between border-b border-slate-100 bg-white px-4 py-4">
+  <View className="flex-row items-center justify-between border-b border-slate-100 bg-white px-4 py-3">
     <Pressable 
       onPress={onCancel}
       className="h-10 w-10 items-center justify-center rounded-full bg-slate-50 active:bg-slate-100"
@@ -99,12 +107,92 @@ export const FormHeader: React.FC<FormHeaderProps> = ({
       <Ionicons name="close" size={24} color="#64748b" />
     </Pressable>
     <Text className="text-lg font-bold text-slate-900">{title}</Text>
-    <Pressable 
-      onPress={onSave}
-      disabled={saveLoading}
-      className="rounded-xl bg-blue-600 px-5 py-2.5 active:bg-blue-700 shadow-sm shadow-blue-200"
-    >
-      <Text className="font-bold text-white text-sm">Save</Text>
-    </Pressable>
+    <View className="w-10" />
   </View>
+);
+
+interface FormFooterActionsProps {
+  onCancel: () => void;
+  onSave: () => void;
+  saveLabel?: string;
+  saveLoading?: boolean;
+}
+
+export const FormFooterActions: React.FC<FormFooterActionsProps> = ({
+  onCancel,
+  onSave,
+  saveLabel = 'Save',
+  saveLoading,
+}) => (
+  <View className="border-t border-slate-100 bg-white px-4 pb-3 pt-3">
+    <View className="flex-row gap-2">
+      <Pressable
+        onPress={onCancel}
+        className="flex-1 items-center rounded-xl border border-slate-300 py-3 active:bg-slate-50"
+      >
+        <Text className="font-semibold text-slate-700">Cancel</Text>
+      </Pressable>
+      <Pressable
+        onPress={onSave}
+        disabled={saveLoading}
+        className="flex-1 items-center rounded-xl bg-blue-600 py-3 active:bg-blue-700"
+      >
+        {saveLoading ? (
+          <ActivityIndicator color="#ffffff" />
+        ) : (
+          <Text className="font-semibold text-white">{saveLabel}</Text>
+        )}
+      </Pressable>
+    </View>
+  </View>
+);
+
+interface MobileFormSheetProps {
+  visible: boolean;
+  title: string;
+  onCancel: () => void;
+  onSave: () => void;
+  saveLabel?: string;
+  saveLoading?: boolean;
+  children: React.ReactNode;
+}
+
+export const MobileFormSheet: React.FC<MobileFormSheetProps> = ({
+  visible,
+  title,
+  onCancel,
+  onSave,
+  saveLabel,
+  saveLoading,
+  children,
+}) => (
+  <Modal
+    visible={visible}
+    animationType="slide"
+    presentationStyle="pageSheet"
+    onRequestClose={onCancel}
+  >
+    <SafeAreaView className="flex-1 bg-slate-50" edges={['top', 'bottom']}>
+      <FormHeader title={title} onCancel={onCancel} />
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          className="flex-1 px-4 pt-6"
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 24 }}
+        >
+          {children}
+        </ScrollView>
+      </KeyboardAvoidingView>
+      <FormFooterActions
+        onCancel={onCancel}
+        onSave={onSave}
+        saveLabel={saveLabel}
+        saveLoading={saveLoading}
+      />
+    </SafeAreaView>
+  </Modal>
 );

@@ -54,7 +54,7 @@ export function MobilePosReportsScreen() {
         const r = await getPosSalesReport(p);
         setSales(r);
       } else if (tab === 'inventory') {
-        const r = await getPosInventoryReport({});
+        const r = await getPosInventoryReport(p);
         setInventory(r);
       } else {
         const r = await getPosShiftsReport(p);

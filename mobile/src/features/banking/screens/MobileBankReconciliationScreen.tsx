@@ -49,6 +49,16 @@ type TxFilters = {
   dateTo: string;
 };
 
+function parseDateInputToIso(dateInput: string, endOfDay = false): string | undefined {
+  const trimmed = dateInput.trim();
+  if (!trimmed) return undefined;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return undefined;
+  const timeSuffix = endOfDay ? 'T23:59:59' : 'T00:00:00';
+  const d = new Date(`${trimmed}${timeSuffix}`);
+  if (Number.isNaN(d.getTime())) return undefined;
+  return d.toISOString();
+}
+
 function buildTxParams(f: TxFilters, skip: number) {
   return {
     skip,
@@ -56,12 +66,8 @@ function buildTxParams(f: TxFilters, skip: number) {
     accountId: f.accountId === 'all' ? undefined : f.accountId,
     status:
       f.status === 'all' ? undefined : (f.status as TransactionStatus),
-    startDate: f.dateFrom.trim()
-      ? new Date(`${f.dateFrom.trim()}T00:00:00`).toISOString()
-      : undefined,
-    endDate: f.dateTo.trim()
-      ? new Date(`${f.dateTo.trim()}T23:59:59`).toISOString()
-      : undefined,
+    startDate: parseDateInputToIso(f.dateFrom),
+    endDate: parseDateInputToIso(f.dateTo, true),
   };
 }
 
@@ -179,6 +185,14 @@ export function MobileBankReconciliationScreen() {
 
   const applyFilters = useCallback(() => {
     void (async () => {
+      if (dateFrom.trim() && !parseDateInputToIso(dateFrom)) {
+        Alert.alert('Reconciliation', 'Invalid From date. Use YYYY-MM-DD.');
+        return;
+      }
+      if (dateTo.trim() && !parseDateInputToIso(dateTo, true)) {
+        Alert.alert('Reconciliation', 'Invalid To date. Use YYYY-MM-DD.');
+        return;
+      }
       const f: TxFilters = {
         accountId: accountFilter,
         status: statusFilter,

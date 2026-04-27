@@ -33,7 +33,7 @@ const PAYMENT_OPTIONS: { key: POSAPIPaymentMethod; label: string }[] = [
 
 export function MobilePosNewSaleScreen() {
   const { workspacePath, setSidebarActivePath } = useSidebarDrawer();
-  const { canManageInventory } = usePermissions();
+  const { canManageSales, isOwner } = usePermissions();
   const [products, setProducts] = useState<Product[]>([]);
   const [q, setQ] = useState('');
   const [cart, setCart] = useState<CartLine[]>([]);
@@ -134,7 +134,7 @@ export function MobilePosNewSaleScreen() {
       );
       return;
     }
-    if (!canManageInventory()) {
+    if (!canManageSales() && !isOwner()) {
       Alert.alert('POS', 'You do not have permission to complete sales.');
       return;
     }

@@ -129,3 +129,14 @@ export async function createProjectTimeEntryApi(
 ): Promise<ProjectTimeEntry> {
   return apiService.post<ProjectTimeEntry>('/projects/time-entries', body);
 }
+
+export async function updateProjectTimeEntryApi(
+  id: string,
+  body: Partial<TimeEntryCreate>,
+): Promise<ProjectTimeEntry> {
+  return apiService.put<ProjectTimeEntry>(`/projects/time-entries/${id}`, body);
+}
+
+export async function deleteProjectTimeEntryApi(id: string): Promise<void> {
+  await apiService.delete(`/projects/time-entries/${id}`);
+}

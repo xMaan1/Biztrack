@@ -44,6 +44,14 @@ const STATUSES: OptionItem<string>[] = [
   { value: 'failed', label: 'Failed' },
 ];
 
+function parseDateInputToIso(dateInput: string): string | null {
+  const trimmed = dateInput.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return null;
+  const d = new Date(`${trimmed}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString();
+}
+
 export function MobileLedgerInvestmentsScreen() {
   const { workspacePath, setSidebarActivePath } = useSidebarDrawer();
   const { canManageLedger } = usePermissions();
@@ -115,14 +123,19 @@ export function MobileLedgerInvestmentsScreen() {
 
   const submitCreate = useCallback(async () => {
     const amount = parseFloat(amountStr.replace(',', '.'));
+    const investmentDateIso = parseDateInputToIso(invDate);
     if (!invDate || !desc.trim() || Number.isNaN(amount) || amount <= 0) {
       Alert.alert('Investments', 'Date, description, and valid amount are required.');
+      return;
+    }
+    if (!investmentDateIso) {
+      Alert.alert('Investments', 'Use valid date format YYYY-MM-DD.');
       return;
     }
     try {
       setBusy(true);
       await createInvestment({
-        investment_date: new Date(invDate).toISOString(),
+        investment_date: investmentDateIso,
         investment_type: invType,
         amount,
         currency,

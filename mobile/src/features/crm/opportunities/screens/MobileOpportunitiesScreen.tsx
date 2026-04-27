@@ -43,7 +43,12 @@ import {
   formatUsd,
   getOpportunityStageBadgeClass,
 } from '../../../../services/crm/CrmMobileService';
-import { FormHeader, FormSection, FormInput, FormSelect } from '../../../../components/layout/MobileForm';
+import {
+  FormInput,
+  FormSection,
+  FormSelect,
+  MobileFormSheet,
+} from '../../../../components/layout/MobileForm';
 
 const ITEMS_PER_PAGE = 10;
 const FILTER_ANY = 'all';
@@ -874,21 +879,16 @@ export function MobileOpportunitiesScreen() {
         onClose={() => setFormAssigneeOpen(false)}
       />
 
-      <Modal visible={createOpen} animationType="slide" presentationStyle="pageSheet">
-        <View className="flex-1 bg-slate-50">
-          <FormHeader
-            title="New Opportunity"
-            onCancel={() => {
-              setCreateOpen(false);
-              resetForm();
-            }}
-            onSave={() => void submitSave()}
-          />
-          <ScrollView
-            className="flex-1 px-4 pt-6"
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
+      <MobileFormSheet
+        visible={createOpen}
+        title="New Opportunity"
+        onCancel={() => {
+          setCreateOpen(false);
+          resetForm();
+        }}
+        onSave={() => void submitSave()}
+        saveLabel="Create"
+      >
             <FormSection title="Core Information">
               <FormInput
                 label="Opportunity Title"
@@ -986,26 +986,17 @@ export function MobileOpportunitiesScreen() {
                 last
               />
             </FormSection>
-            <View className="h-10" />
-          </ScrollView>
-        </View>
-      </Modal>
+      </MobileFormSheet>
 
-      <Modal visible={editOpen} animationType="slide" presentationStyle="pageSheet">
-        <View className="flex-1 bg-slate-50">
-          <FormHeader
-            title="Edit Opportunity"
-            onCancel={() => {
-              setEditOpen(false);
-              resetForm();
-            }}
-            onSave={() => void submitSave()}
-          />
-          <ScrollView
-            className="flex-1 px-4 pt-6"
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
+      <MobileFormSheet
+        visible={editOpen}
+        title="Edit Opportunity"
+        onCancel={() => {
+          setEditOpen(false);
+          resetForm();
+        }}
+        onSave={() => void submitSave()}
+      >
             <FormSection title="Core Information">
               <FormInput
                 label="Opportunity Title"
@@ -1097,10 +1088,7 @@ export function MobileOpportunitiesScreen() {
                 last
               />
             </FormSection>
-            <View className="h-10" />
-          </ScrollView>
-        </View>
-      </Modal>
+      </MobileFormSheet>
 
       <Modal visible={deleteOpen} transparent animationType="fade">
         <View className="flex-1 items-center justify-center bg-black/40 px-6">

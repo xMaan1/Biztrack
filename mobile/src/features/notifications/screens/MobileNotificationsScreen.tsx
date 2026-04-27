@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -107,14 +107,16 @@ export function MobileNotificationsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const unreadCount = useMemo(
+    () => notifications.filter((n) => !n.is_read).length,
+    [notifications],
+  );
 
   const load = useCallback(async (isRefresh = false) => {
     try {
       if (!isRefresh) setLoading(true);
       const res = await getNotifications({ limit: 50 });
       setNotifications(res.notifications);
-      setUnreadCount(res.notifications.filter((n) => !n.is_read).length);
     } catch (e) {
       Alert.alert('Notifications', extractErrorMessage(e, 'Failed to load notifications'));
     } finally {
@@ -170,7 +172,6 @@ export function MobileNotificationsScreen() {
       setNotifications((prev) =>
         prev.map((item) => ({ ...item, is_read: true })),
       );
-      setUnreadCount(0);
     } catch (e) {
       Alert.alert('Error', extractErrorMessage(e, 'Action failed'));
     }

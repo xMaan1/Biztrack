@@ -36,7 +36,12 @@ import {
   formatUsd,
   getLeadStatusBadgeClass,
 } from '../../../../services/crm/CrmMobileService';
-import { FormHeader, FormSection, FormInput, FormSelect } from '../../../../components/layout/MobileForm';
+import {
+  FormInput,
+  FormSection,
+  FormSelect,
+  MobileFormSheet,
+} from '../../../../components/layout/MobileForm';
 
 const ITEMS_PER_PAGE = 10;
 const FILTER_ANY = 'all';
@@ -733,21 +738,16 @@ export function MobileLeadsScreen() {
         onClose={() => setFormSourceOpen(false)}
       />
 
-      <Modal visible={createOpen} animationType="slide" presentationStyle="pageSheet">
-        <View className="flex-1 bg-slate-50">
-          <FormHeader
-            title="New Lead"
-            onCancel={() => {
-              setCreateOpen(false);
-              resetForm();
-            }}
-            onSave={() => void submitSave()}
-          />
-          <ScrollView
-            className="flex-1 px-4 pt-6"
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
+      <MobileFormSheet
+        visible={createOpen}
+        title="New Lead"
+        onCancel={() => {
+          setCreateOpen(false);
+          resetForm();
+        }}
+        onSave={() => void submitSave()}
+        saveLabel="Create"
+      >
             <FormSection title="Personal Information">
               <FormInput
                 label="First Name"
@@ -859,26 +859,17 @@ export function MobileLeadsScreen() {
                 last
               />
             </FormSection>
-            <View className="h-10" />
-          </ScrollView>
-        </View>
-      </Modal>
+      </MobileFormSheet>
 
-      <Modal visible={editOpen} animationType="slide" presentationStyle="pageSheet">
-        <View className="flex-1 bg-slate-50">
-          <FormHeader
-            title="Edit Lead"
-            onCancel={() => {
-              setEditOpen(false);
-              resetForm();
-            }}
-            onSave={() => void submitSave()}
-          />
-          <ScrollView
-            className="flex-1 px-4 pt-6"
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
+      <MobileFormSheet
+        visible={editOpen}
+        title="Edit Lead"
+        onCancel={() => {
+          setEditOpen(false);
+          resetForm();
+        }}
+        onSave={() => void submitSave()}
+      >
             <FormSection title="Personal Information">
               <FormInput
                 label="First Name"
@@ -980,10 +971,7 @@ export function MobileLeadsScreen() {
                 last
               />
             </FormSection>
-            <View className="h-10" />
-          </ScrollView>
-        </View>
-      </Modal>
+      </MobileFormSheet>
 
       <Modal visible={deleteOpen} transparent animationType="fade">
         <View className="flex-1 items-center justify-center bg-black/40 px-6">

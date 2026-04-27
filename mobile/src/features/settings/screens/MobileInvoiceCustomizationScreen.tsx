@@ -91,7 +91,7 @@ export function MobileInvoiceCustomizationScreen() {
     <View className="flex-1 bg-slate-50">
       <View className="flex-row items-center justify-between border-b border-slate-200 bg-white px-2 py-4">
         <Pressable 
-          onPress={() => setWorkspacePath('/sales/invoices')}
+          onPress={() => setWorkspacePath('/settings')}
           className="h-10 w-10 items-center justify-center rounded-full active:bg-slate-100"
         >
           <Ionicons name="arrow-back" size={24} color="#1e293b" />

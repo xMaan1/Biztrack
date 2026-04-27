@@ -62,6 +62,14 @@ const STATUS_FILTER_OPTIONS: OptionItem<string>[] = [
   ...TX_STATUSES,
 ];
 
+function parseDateInputToIso(dateInput: string): string | null {
+  const trimmed = dateInput.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return null;
+  const d = new Date(`${trimmed}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString();
+}
+
 export function MobileBankTransactionsScreen() {
   const { workspacePath, setSidebarActivePath } = useSidebarDrawer();
   const { canManageBanking } = usePermissions();
@@ -194,7 +202,10 @@ export function MobileBankTransactionsScreen() {
     if (!bankAccountId || !txDate || !description.trim() || Number.isNaN(amount) || amount <= 0) {
       return null;
     }
-    const transactionDate = new Date(txDate).toISOString();
+    const transactionDate = parseDateInputToIso(txDate);
+    if (!transactionDate) {
+      return null;
+    }
     return {
       bankAccountId,
       transactionDate,
@@ -224,7 +235,7 @@ export function MobileBankTransactionsScreen() {
   const submitCreate = useCallback(async () => {
     const p = buildPayload();
     if (!p) {
-      Alert.alert('Transactions', 'Account, date, description, and valid amount are required.');
+      Alert.alert('Transactions', 'Account, valid date (YYYY-MM-DD), description, and amount are required.');
       return;
     }
     try {
@@ -243,7 +254,7 @@ export function MobileBankTransactionsScreen() {
     if (!editing) return;
     const p = buildPayload();
     if (!p) {
-      Alert.alert('Transactions', 'Check required fields.');
+      Alert.alert('Transactions', 'Check required fields and date format YYYY-MM-DD.');
       return;
     }
     try {

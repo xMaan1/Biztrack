@@ -17,6 +17,7 @@ import { extractErrorMessage } from '../../../utils/errorUtils';
 import {
   getWarehouses,
   createWarehouse,
+  updateWarehouse,
   deleteWarehouse,
 } from '../../../services/inventory/inventoryMobileApi';
 import type { Warehouse, WarehouseCreate } from '../../../models/inventory';
@@ -29,6 +30,7 @@ export function MobileWarehousesScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
   const [address, setAddress] = useState('');
@@ -81,8 +83,13 @@ export function MobileWarehousesScreen() {
       isActive: true,
     };
     try {
-      await createWarehouse(payload);
+      if (editingId) {
+        await updateWarehouse(editingId, payload);
+      } else {
+        await createWarehouse(payload);
+      }
       setOpen(false);
+      setEditingId(null);
       setName('');
       setCode('');
       setAddress('');
@@ -94,6 +101,18 @@ export function MobileWarehousesScreen() {
     } catch (e) {
       Alert.alert('Warehouses', extractErrorMessage(e, 'Failed to save'));
     }
+  };
+
+  const openEdit = (w: Warehouse) => {
+    setEditingId(w.id);
+    setName(w.name);
+    setCode(w.code);
+    setAddress(w.address);
+    setCity(w.city);
+    setState(w.state || '');
+    setCountry(w.country || '');
+    setPostalCode(w.postalCode || '');
+    setOpen(true);
   };
 
   const remove = (w: Warehouse) => {
@@ -160,12 +179,14 @@ export function MobileWarehousesScreen() {
                 {item.city}, {item.country}
               </Text>
               {canManageInventory() ? (
-                <Pressable
-                  onPress={() => remove(item)}
-                  className="mt-2 self-start"
-                >
-                  <Text className="font-medium text-red-600">Delete</Text>
-                </Pressable>
+                <View className="mt-2 flex-row gap-3">
+                  <Pressable onPress={() => openEdit(item)}>
+                    <Text className="font-medium text-blue-600">Edit</Text>
+                  </Pressable>
+                  <Pressable onPress={() => remove(item)}>
+                    <Text className="font-medium text-red-600">Delete</Text>
+                  </Pressable>
+                </View>
               ) : null}
             </View>
           )}
@@ -175,10 +196,17 @@ export function MobileWarehousesScreen() {
       <Modal visible={open} animationType="slide">
         <View className="flex-1 bg-white">
           <View className="flex-row items-center justify-between border-b border-slate-200 px-3 py-3">
-            <Pressable onPress={() => setOpen(false)}>
+            <Pressable
+              onPress={() => {
+                setOpen(false);
+                setEditingId(null);
+              }}
+            >
               <Text className="text-blue-600">Cancel</Text>
             </Pressable>
-            <Text className="text-lg font-semibold">New warehouse</Text>
+            <Text className="text-lg font-semibold">
+              {editingId ? 'Edit warehouse' : 'New warehouse'}
+            </Text>
             <Pressable onPress={() => void submit()}>
               <Text className="font-semibold text-blue-600">Save</Text>
             </Pressable>

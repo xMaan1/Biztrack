@@ -32,7 +32,12 @@ import {
   deleteContractApi,
 } from '../../../services/sales/salesApi';
 import { usePermissions } from '../../../hooks/usePermissions';
-import { FormHeader, FormSection, FormInput, FormSelect } from '../../../components/layout/MobileForm';
+import {
+  FormInput,
+  FormSection,
+  FormSelect,
+  MobileFormSheet,
+} from '../../../components/layout/MobileForm';
 
 const PAGE_SIZE = 15;
 const STATUS_FILTER: { value: string; label: string }[] = [
@@ -394,18 +399,13 @@ export function MobileContractsScreen() {
         </View>
       </Modal>
 
-      <Modal visible={createOpen} animationType="slide" presentationStyle="pageSheet">
-        <View className="flex-1 bg-slate-50">
-          <FormHeader 
-            title="New Contract" 
-            onCancel={() => setCreateOpen(false)} 
-            onSave={() => void submitCreate()} 
-          />
-          <ScrollView 
-            className="flex-1 px-4 pt-6" 
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
+      <MobileFormSheet
+        visible={createOpen}
+        title="New Contract"
+        onCancel={() => setCreateOpen(false)}
+        onSave={() => void submitCreate()}
+        saveLabel="Create"
+      >
             <FormSection title="General Information">
               <FormInput
                 label="Contract Title"
@@ -498,23 +498,14 @@ export function MobileContractsScreen() {
                 last
               />
             </FormSection>
-            <View className="h-10" />
-          </ScrollView>
-        </View>
-      </Modal>
+      </MobileFormSheet>
 
-      <Modal visible={editOpen} animationType="slide" presentationStyle="pageSheet">
-        <View className="flex-1 bg-slate-50">
-          <FormHeader 
-            title="Edit Contract" 
-            onCancel={() => setEditOpen(false)} 
-            onSave={() => void submitEdit()} 
-          />
-          <ScrollView 
-            className="flex-1 px-4 pt-6" 
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
+      <MobileFormSheet
+        visible={editOpen}
+        title="Edit Contract"
+        onCancel={() => setEditOpen(false)}
+        onSave={() => void submitEdit()}
+      >
             <FormSection title="General Information">
               <FormInput
                 label="Contract Title"
@@ -526,7 +517,7 @@ export function MobileContractsScreen() {
                 label="Opportunity"
                 icon="briefcase-outline"
                 value={opportunityId ? opportunities.find(o => o.id === opportunityId)?.title || '' : ''}
-                onPress={() => {}}
+                onPress={() => setOppPickerOpen(true)}
                 last
               />
             </FormSection>
@@ -599,10 +590,7 @@ export function MobileContractsScreen() {
                 last
               />
             </FormSection>
-            <View className="h-10" />
-          </ScrollView>
-        </View>
-      </Modal>
+      </MobileFormSheet>
 
       <Modal visible={viewOpen} animationType="fade" transparent>
         <View className="flex-1 justify-center bg-black/40 px-4">

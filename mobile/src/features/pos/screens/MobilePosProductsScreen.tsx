@@ -5,6 +5,7 @@ export function MobilePosProductsScreen() {
     <MobileInventoryProductsScreen
       sidebarPathWhenNotDashboard="/pos/products"
       title="Products"
+      manageScope="pos"
     />
   );
 }

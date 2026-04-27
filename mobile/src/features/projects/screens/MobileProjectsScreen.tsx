@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { MobileFormSheet } from '../../../components/layout/MobileForm';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { OptionSheet } from '../../../components/crm/OptionSheet';
 import { extractErrorMessage } from '../../../utils/errorUtils';
@@ -107,6 +108,10 @@ export function MobileProjectsScreen() {
   useEffect(() => {
     void loadPage();
   }, [loadPage]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -439,54 +444,27 @@ export function MobileProjectsScreen() {
         </View>
       </Modal>
 
-      <Modal visible={createOpen} animationType="slide" transparent>
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
-            <Text className="text-lg font-semibold text-slate-900">New project</Text>
-            <ScrollView className="mt-3" keyboardShouldPersistTaps="handled">
-              {formFields}
-            </ScrollView>
-            <Pressable
-              className="mt-3 items-center rounded-lg bg-blue-600 py-3"
-              onPress={() => void submitCreate()}
-            >
-              <Text className="font-semibold text-white">Create</Text>
-            </Pressable>
-            <Pressable
-              className="mt-2 items-center py-2"
-              onPress={() => setCreateOpen(false)}
-            >
-              <Text className="text-slate-600">Cancel</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
+      <MobileFormSheet
+        visible={createOpen}
+        title="New project"
+        onCancel={() => setCreateOpen(false)}
+        onSave={() => void submitCreate()}
+        saveLabel="Create"
+      >
+        {formFields}
+      </MobileFormSheet>
 
-      <Modal visible={editOpen} animationType="slide" transparent>
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
-            <Text className="text-lg font-semibold text-slate-900">Edit project</Text>
-            <ScrollView className="mt-3" keyboardShouldPersistTaps="handled">
-              {formFields}
-            </ScrollView>
-            <Pressable
-              className="mt-3 items-center rounded-lg bg-blue-600 py-3"
-              onPress={() => void submitEdit()}
-            >
-              <Text className="font-semibold text-white">Save</Text>
-            </Pressable>
-            <Pressable
-              className="mt-2 items-center py-2"
-              onPress={() => {
-                setEditOpen(false);
-                setSelected(null);
-              }}
-            >
-              <Text className="text-slate-600">Cancel</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
+      <MobileFormSheet
+        visible={editOpen}
+        title="Edit project"
+        onCancel={() => {
+          setEditOpen(false);
+          setSelected(null);
+        }}
+        onSave={() => void submitEdit()}
+      >
+        {formFields}
+      </MobileFormSheet>
 
       <OptionSheet
         visible={statusOpen}

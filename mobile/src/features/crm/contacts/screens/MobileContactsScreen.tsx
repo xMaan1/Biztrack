@@ -65,7 +65,12 @@ import {
   mergeSocialFromApi,
   CONTACT_SOCIAL_KEYS,
 } from '../utils/contactFormUtils';
-import { FormHeader, FormSection, FormInput, FormSelect } from '../../../../components/layout/MobileForm';
+import {
+  FormInput,
+  FormSection,
+  FormSelect,
+  MobileFormSheet,
+} from '../../../../components/layout/MobileForm';
 
 const ITEMS_PER_PAGE = 10;
 const FILTER_ANY = 'all';
@@ -961,21 +966,16 @@ export function MobileContactsScreen() {
         </View>
       </Modal>
 
-      <Modal visible={createOpen} animationType="slide" presentationStyle="pageSheet">
-        <View className="flex-1 bg-slate-50">
-          <FormHeader 
-            title="New Contact" 
-            onCancel={() => {
-              setCreateOpen(false);
-              resetForm();
-            }} 
-            onSave={() => void submitCreate()} 
-          />
-          <ScrollView 
-            className="flex-1 px-4 pt-6" 
-            keyboardShouldPersistTaps="handled" 
-            showsVerticalScrollIndicator={false}
-          >
+      <MobileFormSheet
+        visible={createOpen}
+        title="New Contact"
+        onCancel={() => {
+          setCreateOpen(false);
+          resetForm();
+        }}
+        onSave={() => void submitCreate()}
+        saveLabel="Create"
+      >
             <FormSection title="Core Identity">
               <FormInput
                 label="First Name"
@@ -1203,26 +1203,17 @@ export function MobileContactsScreen() {
                 onPress={() => setFormAssigneeSheetOpen(true)}
               />
             </FormSection>
-            <View className="h-10" />
-          </ScrollView>
-        </View>
-      </Modal>
+      </MobileFormSheet>
 
-      <Modal visible={editOpen} animationType="slide" presentationStyle="pageSheet">
-        <View className="flex-1 bg-slate-50">
-          <FormHeader 
-            title="Edit Contact" 
-            onCancel={() => {
-              setEditOpen(false);
-              resetForm();
-            }} 
-            onSave={() => void submitEdit()} 
-          />
-          <ScrollView 
-            className="flex-1 px-4 pt-6" 
-            keyboardShouldPersistTaps="handled" 
-            showsVerticalScrollIndicator={false}
-          >
+      <MobileFormSheet
+        visible={editOpen}
+        title="Edit Contact"
+        onCancel={() => {
+          setEditOpen(false);
+          resetForm();
+        }}
+        onSave={() => void submitEdit()}
+      >
             <FormSection title="Core Identity">
               <FormInput
                 label="First Name"
@@ -1442,10 +1433,7 @@ export function MobileContactsScreen() {
                 onPress={() => setFormAssigneeSheetOpen(true)}
               />
             </FormSection>
-            <View className="h-10" />
-          </ScrollView>
-        </View>
-      </Modal>
+      </MobileFormSheet>
 
       <Modal visible={deleteOpen} transparent animationType="fade">
         <View className="flex-1 items-center justify-center bg-black/40 px-6">

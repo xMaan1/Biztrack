@@ -22,9 +22,11 @@ import type { ProjectRecord, ProjectTimeEntry, SubTaskRecord } from '../../../mo
 import { getEmployees } from '../../../services/hrm/hrmMobileApi';
 import {
   createProjectTimeEntryApi,
+  deleteProjectTimeEntryApi,
   fetchProjectTimeEntriesPaged,
   fetchProjectsPaged,
   fetchTasksPaged,
+  updateProjectTimeEntryApi,
 } from '../../../services/projects/projectMobileApi';
 
 function todayYmd(): string {
@@ -57,6 +59,7 @@ export function MobileTimeTrackingScreen() {
   const [totalPages, setTotalPages] = useState(1);
 
   const [createOpen, setCreateOpen] = useState(false);
+  const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [empId, setEmpId] = useState('');
   const [dateStr, setDateStr] = useState(todayYmd);
   const [timeStr, setTimeStr] = useState('09:00');
@@ -149,12 +152,29 @@ export function MobileTimeTrackingScreen() {
   }, [loadRefs, loadEntries]);
 
   const openCreate = useCallback(() => {
+    setEditingEntryId(null);
     setDateStr(todayYmd());
     setTimeStr('09:00');
     setHoursStr('1');
     setProjId('');
     setTaskId('');
     setNotes('');
+    setCreateOpen(true);
+  }, []);
+
+  const openEdit = useCallback((entry: ProjectTimeEntry) => {
+    setEditingEntryId(entry.id);
+    setEmpId(entry.employeeId);
+    setDateStr(entry.date || todayYmd());
+    const clockIn = entry.clockIn || '';
+    const time = clockIn.includes('T')
+      ? clockIn.split('T')[1]?.slice(0, 5) || '09:00'
+      : clockIn.slice(0, 5) || '09:00';
+    setTimeStr(time);
+    setHoursStr(String(entry.totalHours ?? 1));
+    setProjId(entry.projectId ?? '');
+    setTaskId(entry.taskId ?? '');
+    setNotes(entry.notes ?? '');
     setCreateOpen(true);
   }, []);
 
@@ -169,7 +189,7 @@ export function MobileTimeTrackingScreen() {
       return;
     }
     try {
-      await createProjectTimeEntryApi({
+      const payload = {
         employeeId: empId,
         date: dateStr,
         clockIn: buildClockInIso(dateStr, timeStr),
@@ -177,14 +197,40 @@ export function MobileTimeTrackingScreen() {
         projectId: projId || undefined,
         taskId: taskId || undefined,
         notes: notes.trim() || undefined,
-        status: 'active',
-      });
+        status: 'active' as const,
+      };
+      if (editingEntryId) {
+        await updateProjectTimeEntryApi(editingEntryId, payload);
+      } else {
+        await createProjectTimeEntryApi(payload);
+      }
       setCreateOpen(false);
+      setEditingEntryId(null);
       await loadEntries();
     } catch (e) {
       Alert.alert('Time tracking', extractErrorMessage(e, 'Could not save'));
     }
-  }, [empId, dateStr, timeStr, hoursStr, projId, taskId, notes, loadEntries]);
+  }, [editingEntryId, empId, dateStr, timeStr, hoursStr, projId, taskId, notes, loadEntries]);
+
+  const removeEntry = useCallback((entry: ProjectTimeEntry) => {
+    Alert.alert('Delete entry', `Delete entry on ${entry.date}?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          void (async () => {
+            try {
+              await deleteProjectTimeEntryApi(entry.id);
+              await loadEntries();
+            } catch (e) {
+              Alert.alert('Time tracking', extractErrorMessage(e, 'Could not delete'));
+            }
+          })();
+        },
+      },
+    ]);
+  }, [loadEntries]);
 
   const empOptions = useMemo(
     () => employees.map((e) => ({
@@ -244,6 +290,16 @@ export function MobileTimeTrackingScreen() {
               {item.notes ? (
                 <Text className="mt-2 text-sm text-slate-600">{item.notes}</Text>
               ) : null}
+              {canManageProjects() ? (
+                <View className="mt-2 flex-row gap-3">
+                  <Pressable onPress={() => openEdit(item)}>
+                    <Text className="font-medium text-blue-600">Edit</Text>
+                  </Pressable>
+                  <Pressable onPress={() => removeEntry(item)}>
+                    <Text className="font-medium text-red-600">Delete</Text>
+                  </Pressable>
+                </View>
+              ) : null}
             </View>
           )}
           ListEmptyComponent={
@@ -279,7 +335,9 @@ export function MobileTimeTrackingScreen() {
       <Modal visible={createOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
-            <Text className="text-lg font-semibold text-slate-900">Log time</Text>
+            <Text className="text-lg font-semibold text-slate-900">
+              {editingEntryId ? 'Edit time entry' : 'Log time'}
+            </Text>
             <ScrollView className="mt-3" keyboardShouldPersistTaps="handled">
               <Text className="mb-1 text-xs font-medium text-slate-500">Employee</Text>
               <Pressable
@@ -348,11 +406,16 @@ export function MobileTimeTrackingScreen() {
               className="mt-2 items-center rounded-lg bg-blue-600 py-3"
               onPress={() => void submitCreate()}
             >
-              <Text className="font-semibold text-white">Save entry</Text>
+              <Text className="font-semibold text-white">
+                {editingEntryId ? 'Save changes' : 'Save entry'}
+              </Text>
             </Pressable>
             <Pressable
               className="mt-2 items-center py-2"
-              onPress={() => setCreateOpen(false)}
+              onPress={() => {
+                setCreateOpen(false);
+                setEditingEntryId(null);
+              }}
             >
               <Text className="text-slate-600">Cancel</Text>
             </Pressable>

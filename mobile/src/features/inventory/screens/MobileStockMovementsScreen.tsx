@@ -11,6 +11,7 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
+import { MobileFormSheet } from '../../../components/layout/MobileForm';
 import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { usePermissions } from '../../../hooks/usePermissions';
@@ -234,13 +235,12 @@ export function MobileStockMovementsScreen() {
         />
       )}
 
-      <Modal visible={open} animationType="slide" transparent>
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-6 pt-3">
-            <Text className="mb-3 text-lg font-semibold text-slate-900">
-              New movement
-            </Text>
-            <ScrollView keyboardShouldPersistTaps="handled">
+      <MobileFormSheet
+        visible={open}
+        title="New movement"
+        onCancel={() => setOpen(false)}
+        onSave={() => void submit()}
+      >
               <Text className="mb-1 text-sm text-slate-600">Warehouse</Text>
               <ScrollView horizontal className="mb-3">
                 {warehouses.map((w) => (
@@ -304,24 +304,7 @@ export function MobileStockMovementsScreen() {
                 multiline
                 className="mb-4 min-h-[72px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
               />
-              <View className="flex-row gap-2">
-                <Pressable
-                  onPress={() => setOpen(false)}
-                  className="flex-1 items-center rounded-lg border border-slate-200 py-3"
-                >
-                  <Text className="font-medium text-slate-800">Cancel</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => void submit()}
-                  className="flex-1 items-center rounded-lg bg-blue-600 py-3"
-                >
-                  <Text className="font-semibold text-white">Save</Text>
-                </Pressable>
-              </View>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
+      </MobileFormSheet>
 
       <Modal visible={productPicker} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">

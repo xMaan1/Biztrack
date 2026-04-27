@@ -154,12 +154,12 @@ export function MobileReceivingScreen() {
     }
     if (draft.items.length > 0) {
       const bad = draft.items.filter(
-        (it) => it.receivedQuantity > it.quantity,
+        (it) => it.receivedQuantity < 0 || it.receivedQuantity > it.quantity,
       );
       if (bad.length > 0) {
         Alert.alert(
           'Receiving',
-          'Received quantity cannot exceed ordered quantity.',
+          'Received quantity must be between 0 and ordered quantity.',
         );
         return;
       }
@@ -236,12 +236,7 @@ export function MobileReceivingScreen() {
             <Text className="py-8 text-center text-slate-500">No receivings</Text>
           }
           renderItem={({ item }) => (
-            <Pressable
-              onLongPress={() =>
-                canManageInventory() ? removeRec(item) : undefined
-              }
-              className="mb-3 rounded-xl border border-slate-200 bg-white p-3"
-            >
+            <View className="mb-3 rounded-xl border border-slate-200 bg-white p-3">
               <Text className="font-semibold text-slate-900">
                 {item.receivingNumber}
               </Text>
@@ -252,11 +247,13 @@ export function MobileReceivingScreen() {
                 {whName[item.warehouseId] ?? item.warehouseId} · {item.status}
               </Text>
               {canManageInventory() ? (
-                <Text className="mt-1 text-xs text-slate-400">
-                  Long-press to delete
-                </Text>
+                <View className="mt-2 flex-row gap-3">
+                  <Pressable onPress={() => removeRec(item)}>
+                    <Text className="font-medium text-red-600">Delete</Text>
+                  </Pressable>
+                </View>
               ) : null}
-            </Pressable>
+            </View>
           )}
         />
       )}

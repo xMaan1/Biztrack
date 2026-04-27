@@ -24,6 +24,14 @@ import { formatMoney } from '../ledgerFormat';
 
 type Tab = 'trial' | 'income' | 'balance';
 
+function parseDateInputToIso(dateInput: string): string | null {
+  const trimmed = dateInput.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return null;
+  const d = new Date(`${trimmed}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString();
+}
+
 export function MobileLedgerReportsScreen() {
   const { workspacePath, setSidebarActivePath } = useSidebarDrawer();
   const [tab, setTab] = useState<Tab>('trial');
@@ -47,15 +55,29 @@ export function MobileLedgerReportsScreen() {
     try {
       setLoading(true);
       if (tab === 'trial') {
+        if (!parseDateInputToIso(asOf)) {
+          Alert.alert('Reports', 'Use valid as-of date format YYYY-MM-DD.');
+          return;
+        }
         const t = await getTrialBalance(asOf);
         setTrial(t);
       } else if (tab === 'income') {
+        const startIso = parseDateInputToIso(start);
+        const endIso = parseDateInputToIso(end);
+        if (!startIso || !endIso) {
+          Alert.alert('Reports', 'Use valid start/end date format YYYY-MM-DD.');
+          return;
+        }
         const i = await getIncomeStatement(
-          new Date(start).toISOString(),
-          new Date(end).toISOString(),
+          startIso,
+          endIso,
         );
         setIncome(i);
       } else {
+        if (!parseDateInputToIso(asOf)) {
+          Alert.alert('Reports', 'Use valid as-of date format YYYY-MM-DD.');
+          return;
+        }
         const b = await getBalanceSheet(asOf);
         setBalance(b);
       }
