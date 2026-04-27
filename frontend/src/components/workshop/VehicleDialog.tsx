@@ -16,6 +16,7 @@ import { CustomerSearch } from '../ui/customer-search';
 import { Customer } from '../../services/CustomerService';
 import { apiService } from '../../services/ApiService';
 import { Vehicle, VehicleCreate, VehicleUpdate } from '../../models/workshop';
+import axios from 'axios';
 
 interface VehicleDialogProps {
   open: boolean;
@@ -84,28 +85,57 @@ export default function VehicleDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
+
+    const registrationNumber = formData.registration_number.trim();
+    const make = formData.make.trim();
+    const model = formData.model.trim();
+    if (!registrationNumber || !make || !model) {
+      setErrorMessage('Registration number, make, and model are required.');
+      return;
+    }
+
     setLoading(true);
     try {
-      const payload: VehicleCreate | VehicleUpdate = {
-        make: formData.make || undefined,
-        model: formData.model || undefined,
-        year: formData.year || undefined,
-        color: formData.color || undefined,
-        vin: formData.vin || undefined,
-        registration_number: formData.registration_number || undefined,
-        mileage: formData.mileage || undefined,
-        customer_id: selectedCustomer?.id || undefined,
-        notes: formData.notes || undefined,
-      };
       if (mode === 'create') {
+        const payload: VehicleCreate = {
+          make,
+          model,
+          year: formData.year.trim() || undefined,
+          color: formData.color.trim() || undefined,
+          vin: formData.vin.trim() || undefined,
+          registration_number: registrationNumber,
+          mileage: formData.mileage.trim() || undefined,
+          customer_id: selectedCustomer?.id || undefined,
+          notes: formData.notes.trim() || undefined,
+        };
         await apiService.post('/vehicles', payload);
       } else if (vehicle) {
+        const payload: VehicleUpdate = {
+          make,
+          model,
+          year: formData.year.trim() || undefined,
+          color: formData.color.trim() || undefined,
+          vin: formData.vin.trim() || undefined,
+          registration_number: registrationNumber,
+          mileage: formData.mileage.trim() || undefined,
+          customer_id: selectedCustomer?.id || undefined,
+          notes: formData.notes.trim() || undefined,
+        };
         await apiService.put(`/vehicles/${vehicle.id}`, payload);
       }
       onSuccess();
       onOpenChange(false);
-    } catch {
-      setErrorMessage('Failed to save vehicle.');
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const detail = error.response?.data?.detail;
+        if (typeof detail === 'string' && detail.trim()) {
+          setErrorMessage(detail);
+        } else {
+          setErrorMessage('Failed to save vehicle.');
+        }
+      } else {
+        setErrorMessage('Failed to save vehicle.');
+      }
     } finally {
       setLoading(false);
     }
@@ -127,6 +157,7 @@ export default function VehicleDialog({
             <div>
               <Label>Registration number</Label>
               <Input
+                required
                 value={formData.registration_number}
                 onChange={(e) => setFormData({ ...formData, registration_number: e.target.value })}
                 placeholder="e.g. ABC 1234"
@@ -142,11 +173,11 @@ export default function VehicleDialog({
             </div>
             <div>
               <Label>Make</Label>
-              <Input value={formData.make} onChange={(e) => setFormData({ ...formData, make: e.target.value })} placeholder="e.g. Toyota" />
+              <Input required value={formData.make} onChange={(e) => setFormData({ ...formData, make: e.target.value })} placeholder="e.g. Toyota" />
             </div>
             <div>
               <Label>Model</Label>
-              <Input value={formData.model} onChange={(e) => setFormData({ ...formData, model: e.target.value })} placeholder="e.g. Corolla" />
+              <Input required value={formData.model} onChange={(e) => setFormData({ ...formData, model: e.target.value })} placeholder="e.g. Corolla" />
             </div>
             <div>
               <Label>Year</Label>

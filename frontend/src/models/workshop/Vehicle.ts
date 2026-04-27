@@ -16,12 +16,12 @@ export interface Vehicle {
 }
 
 export interface VehicleCreate {
-  make?: string;
-  model?: string;
+  make: string;
+  model: string;
   year?: string;
   color?: string;
   vin?: string;
-  registration_number?: string;
+  registration_number: string;
   mileage?: string;
   customer_id?: string;
   notes?: string;

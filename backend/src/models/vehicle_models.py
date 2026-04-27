@@ -1,18 +1,26 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 from datetime import datetime
 
 
 class VehicleCreate(BaseModel):
-    make: Optional[str] = None
-    model: Optional[str] = None
+    make: str = Field(..., min_length=1)
+    model: str = Field(..., min_length=1)
     year: Optional[str] = None
     color: Optional[str] = None
     vin: Optional[str] = None
-    registration_number: Optional[str] = None
+    registration_number: str = Field(..., min_length=1)
     mileage: Optional[str] = None
     customer_id: Optional[str] = None
     notes: Optional[str] = None
+
+    @field_validator("make", "model", "registration_number")
+    @classmethod
+    def validate_required_text(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("This field is required")
+        return cleaned
 
 
 class VehicleUpdate(BaseModel):
