@@ -27,7 +27,7 @@ export function MobilePosShiftsScreen() {
     try {
       setLoading(true);
       const [list, cur] = await Promise.all([
-        getPosShifts(1, 200),
+        getPosShifts(1, 100),
         getCurrentOpenShift(),
       ]);
       setRows(list.shifts ?? []);
