@@ -1,5 +1,6 @@
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { UnitOfMeasure } from '../../../../models/pos';
 import { PRODUCT_CATEGORIES, PRODUCT_UNITS } from './helpers';
 import type { ProductFormState } from './types';
@@ -28,11 +29,12 @@ export function ProductFormModal({
 }: Props) {
   return (
     <AppModal visible={visible} animationType="slide">
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <View style={{ flex: 1, backgroundColor: '#fff' }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['top', 'bottom']}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <View style={{ flex: 1, backgroundColor: '#fff' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#e2e8f0', paddingHorizontal: 16, paddingVertical: 14 }}>
             <Pressable onPress={onClose}>
               <Ionicons name="close" size={24} color="#64748b" />
@@ -139,8 +141,9 @@ export function ProductFormModal({
               onChange={(v) => onFieldChange('unitOfMeasure', v as UnitOfMeasure)}
             />
           </ScrollView>
-        </View>
-      </KeyboardAvoidingView>
+          </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </AppModal>
   );
 }
