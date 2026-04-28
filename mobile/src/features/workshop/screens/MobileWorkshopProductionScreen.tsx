@@ -1,16 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TextInput,
-  Pressable,
-  Modal,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import {
@@ -37,6 +26,7 @@ import {
   WorkshopPrimaryButton,
 } from '../components/WorkshopChrome';
 import { PickerModal } from '../../healthcare/components/PickerModal';
+import { AppModal } from '../../../components/layout/AppModal';
 
 const PROD_TYPES = Object.values(ProductionType);
 const PROD_PRIOS = Object.values(ProductionPriority);
@@ -371,7 +361,7 @@ export function MobileWorkshopProductionScreen() {
         onClose={() => setUserPick(false)}
       />
 
-      <Modal visible={modalOpen} animationType="slide" transparent>
+      <AppModal visible={modalOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[94%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-3 text-lg font-semibold">
@@ -554,7 +544,7 @@ export function MobileWorkshopProductionScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </AppModal>
     </WorkshopChrome>
   );
 }

@@ -1,22 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TextInput,
-  Modal,
-  ScrollView,
-  Pressable,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+import { View, Text, FlatList, TextInput, ScrollView, Pressable, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { extractErrorMessage } from '../../../utils/errorUtils';
 import { getJobPostings, deleteJobPosting } from '../../../services/hrm/hrmMobileApi';
 import type { JobPosting } from '../../../models/hrm';
+import { AppModal } from '../../../components/layout/AppModal';
 
 export function MobileHrmJobPostingsScreen() {
   const { workspacePath, setSidebarActivePath } = useSidebarDrawer();
@@ -124,7 +114,7 @@ export function MobileHrmJobPostingsScreen() {
         />
       )}
 
-      <Modal visible={detail != null} animationType="slide" transparent>
+      <AppModal visible={detail != null} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[88%] rounded-t-2xl bg-white p-4">
             <Text className="text-lg font-semibold text-slate-900">Job</Text>
@@ -158,7 +148,7 @@ export function MobileHrmJobPostingsScreen() {
             </View>
           </View>
         </View>
-      </Modal>
+      </AppModal>
     </View>
   );
 }

@@ -1,16 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TextInput,
-  Pressable,
-  Modal,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MenuHeaderButton } from '../../../../components/layout/MenuHeaderButton';
 import { useSidebarDrawer } from '../../../../contexts/SidebarDrawerContext';
@@ -36,6 +25,7 @@ import {
   formatUsd,
   getLeadStatusBadgeClass,
 } from '../../../../services/crm/CrmMobileService';
+import { AppModal } from '../../../../components/layout/AppModal';
 import {
   FormInput,
   FormSection,
@@ -973,7 +963,7 @@ export function MobileLeadsScreen() {
             </FormSection>
       </MobileFormSheet>
 
-      <Modal visible={deleteOpen} transparent animationType="fade">
+      <AppModal visible={deleteOpen} transparent animationType="fade">
         <View className="flex-1 items-center justify-center bg-black/40 px-6">
           <View className="w-full max-w-sm rounded-2xl bg-white p-5">
             <Text className="text-lg font-bold text-slate-900">Delete lead</Text>
@@ -999,9 +989,9 @@ export function MobileLeadsScreen() {
             </View>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
-      <Modal visible={viewOpen} animationType="slide" transparent>
+      <AppModal visible={viewOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="text-lg font-bold text-slate-900">Lead</Text>
@@ -1048,7 +1038,7 @@ export function MobileLeadsScreen() {
             </View>
           </View>
         </View>
-      </Modal>
+      </AppModal>
     </View>
   );
 }

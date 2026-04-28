@@ -1,21 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  Pressable,
-  Modal,
-  TextInput,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+import { View, Text, FlatList, Pressable, TextInput, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import type { AdmissionInvoiceSummary } from '../../../models/healthcare';
 import { getAdmissionInvoices } from '../../../services/healthcare/healthcareMobileApi';
 import { apiService } from '../../../services/ApiService';
 import { extractErrorMessage } from '../../../utils/errorUtils';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
+import { AppModal } from '../../../components/layout/AppModal';
 import {
   HealthcareChrome,
   HealthcareCard,
@@ -189,7 +179,7 @@ export function MobileHealthcarePaymentsScreen() {
         />
       </View>
 
-      <Modal visible={payOpen} animationType="slide" transparent>
+      <AppModal visible={payOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-3 text-lg font-semibold">Record payment</Text>
@@ -247,7 +237,7 @@ export function MobileHealthcarePaymentsScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </AppModal>
     </HealthcareChrome>
   );
 }

@@ -1,17 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  Pressable,
-  ActivityIndicator,
-  RefreshControl,
-} from 'react-native';
+import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MenuHeaderButton } from '../components/layout/MenuHeaderButton';
 import { useSidebarDrawer } from '../contexts/SidebarDrawerContext';
 import { useAuth } from '../contexts/AuthContext';
-import { openWebPath } from '../utils/openWebPath';
 import { extractErrorMessage } from '../utils/errorUtils';
 import type { CRMDashboard } from '../models/crm';
 import {
@@ -158,14 +150,14 @@ export function MobileCrmDashboardScreen() {
         <View className="mt-3 flex-row flex-wrap gap-2">
           <Pressable
             className="flex-row items-center rounded-lg bg-indigo-600 px-3 py-2 active:bg-indigo-700"
-            onPress={() => void openWebPath('/crm/leads/new')}
+            onPress={() => void navigateMenuPath('/crm/leads')}
           >
             <Ionicons name="add" size={18} color="#fff" />
             <Text className="ml-1 text-sm font-semibold text-white">New lead</Text>
           </Pressable>
           <Pressable
             className="flex-row items-center rounded-lg border border-indigo-600 px-3 py-2 active:bg-indigo-50"
-            onPress={() => void openWebPath('/crm/opportunities/new')}
+            onPress={() => void navigateMenuPath('/crm/opportunities')}
           >
             <Ionicons name="locate-outline" size={18} color="#4f46e5" />
             <Text className="ml-1 text-sm font-semibold text-indigo-700">

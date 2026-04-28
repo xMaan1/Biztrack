@@ -15,6 +15,7 @@ import type {
   PaymentCreate,
   InvoiceCustomerOption,
 } from '../../models/sales';
+import type { Product } from '../../models/pos';
 
 export async function fetchInvoicesPaged(
   filters: InvoiceFilters,
@@ -110,6 +111,14 @@ export async function searchInvoiceCustomers(
   return apiService.get<InvoiceCustomerOption[]>(
     `/invoices/customers/search?q=${q}&limit=${limit}`,
   );
+}
+
+export async function fetchInvoiceProducts(): Promise<Product[]> {
+  const res = await apiService.get<{ products?: Product[]; pagination?: unknown } | Product[]>(
+    '/pos/products',
+  );
+  if (Array.isArray(res)) return res;
+  return res.products ?? [];
 }
 
 export async function createInstallmentPlan(

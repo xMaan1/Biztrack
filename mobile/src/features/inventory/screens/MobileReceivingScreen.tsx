@@ -1,16 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TextInput,
-  Pressable,
-  Modal,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { usePermissions } from '../../../hooks/usePermissions';
@@ -30,6 +19,7 @@ import type {
   ReceivingItemCreate,
 } from '../../../models/inventory';
 import { PurchaseOrderStatus } from '../../../models/inventory';
+import { AppModal } from '../../../components/layout/AppModal';
 
 const PO_OPEN_STATUSES: string[] = [
   PurchaseOrderStatus.SUBMITTED,
@@ -258,7 +248,7 @@ export function MobileReceivingScreen() {
         />
       )}
 
-      <Modal visible={open} animationType="slide" transparent>
+      <AppModal visible={open} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-6 pt-3">
             <Text className="mb-3 text-lg font-semibold text-slate-900">
@@ -376,7 +366,7 @@ export function MobileReceivingScreen() {
             </ScrollView>
           </View>
         </View>
-      </Modal>
+      </AppModal>
     </View>
   );
 }

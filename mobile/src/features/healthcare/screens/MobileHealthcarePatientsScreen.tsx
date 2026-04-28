@@ -1,16 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TextInput,
-  Pressable,
-  Modal,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import type { Patient, PatientCreate } from '../../../models/healthcare';
@@ -21,6 +10,7 @@ import {
   deletePatient,
 } from '../../../services/healthcare/healthcareMobileApi';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { AppModal } from '../../../components/layout/AppModal';
 import {
   HealthcareChrome,
   HealthcareCard,
@@ -252,7 +242,7 @@ export function MobileHealthcarePatientsScreen() {
         />
       </View>
 
-      <Modal visible={formOpen} animationType="slide" transparent>
+      <AppModal visible={formOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-4 text-lg font-semibold text-slate-900">
@@ -317,7 +307,7 @@ export function MobileHealthcarePatientsScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </AppModal>
     </HealthcareChrome>
   );
 }

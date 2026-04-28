@@ -1,16 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TextInput,
-  Pressable,
-  Modal,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import type {
@@ -38,6 +27,7 @@ import {
   HealthcareOutlineButton,
 } from '../components/HealthcareChrome';
 import { PickerModal } from '../components/PickerModal';
+import { AppModal } from '../../../components/layout/AppModal';
 
 const PAGE_SIZE = 20;
 
@@ -443,7 +433,7 @@ export function MobileHealthcareAdmittedPatientsScreen() {
         onClose={() => setFormPatPick(false)}
       />
 
-      <Modal visible={formOpen} animationType="slide" transparent>
+      <AppModal visible={formOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-3 text-lg font-semibold">
@@ -545,9 +535,9 @@ export function MobileHealthcareAdmittedPatientsScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
-      <Modal visible={billOpen} animationType="slide" transparent>
+      <AppModal visible={billOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[75%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-2 font-semibold">Admission invoice</Text>
@@ -594,7 +584,7 @@ export function MobileHealthcareAdmittedPatientsScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </AppModal>
     </HealthcareChrome>
   );
 }

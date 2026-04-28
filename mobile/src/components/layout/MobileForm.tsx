@@ -1,18 +1,8 @@
 import React from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  TextInputProps,
-  View,
-} from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, TextInputProps, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AppModal } from './AppModal';
 
 interface FormSectionProps {
   title?: string;
@@ -166,11 +156,11 @@ export const MobileFormSheet: React.FC<MobileFormSheetProps> = ({
   saveLoading,
   children,
 }) => (
-  <Modal
+  <AppModal
     visible={visible}
     animationType="slide"
     presentationStyle="pageSheet"
-    onRequestClose={onCancel}
+    onClose={onCancel}
   >
     <SafeAreaView className="flex-1 bg-slate-50" edges={['top', 'bottom']}>
       <FormHeader title={title} onCancel={onCancel} />
@@ -194,5 +184,5 @@ export const MobileFormSheet: React.FC<MobileFormSheetProps> = ({
         saveLoading={saveLoading}
       />
     </SafeAreaView>
-  </Modal>
+  </AppModal>
 );

@@ -1,16 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TextInput,
-  Pressable,
-  Modal,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
@@ -31,6 +20,7 @@ import {
   deleteQuoteApi,
 } from '../../../services/sales/salesApi';
 import { usePermissions } from '../../../hooks/usePermissions';
+import { AppModal } from '../../../components/layout/AppModal';
 import {
   FormInput,
   FormSection,
@@ -385,7 +375,7 @@ export function MobileQuotesScreen() {
         onClose={() => setStatusOpen(false)}
       />
 
-      <Modal visible={oppPickerOpen} animationType="slide" transparent>
+      <AppModal visible={oppPickerOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[70%] rounded-t-2xl bg-white p-4">
             <Text className="mb-3 text-lg font-semibold text-slate-900">
@@ -414,7 +404,7 @@ export function MobileQuotesScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
       <MobileFormSheet
         visible={createOpen}
@@ -547,7 +537,7 @@ export function MobileQuotesScreen() {
             </FormSection>
       </MobileFormSheet>
 
-      <Modal visible={viewOpen} animationType="fade" transparent>
+      <AppModal visible={viewOpen} animationType="fade" transparent>
         <View className="flex-1 justify-center bg-black/40 px-4">
           <View className="max-h-[80%] rounded-2xl bg-white p-4">
             <Text className="text-lg font-semibold text-slate-900">Quote</Text>
@@ -576,7 +566,7 @@ export function MobileQuotesScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </AppModal>
     </View>
   );
 }

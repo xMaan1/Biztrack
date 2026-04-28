@@ -1,16 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TextInput,
-  Pressable,
-  Modal,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { usePermissions } from '../../../hooks/usePermissions';
@@ -32,6 +21,7 @@ import type {
 } from '../../../models/inventory';
 import type { Product } from '../../../models/pos';
 import type { Supplier } from '../../../models/hrm/supplier';
+import { AppModal } from '../../../components/layout/AppModal';
 
 function defaultExpectedDate(): string {
   const d = new Date();
@@ -281,7 +271,7 @@ export function MobilePurchaseOrdersScreen() {
         />
       )}
 
-      <Modal visible={open} animationType="slide" transparent>
+      <AppModal visible={open} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-6 pt-3">
             <Text className="mb-3 text-lg font-semibold text-slate-900">
@@ -416,9 +406,9 @@ export function MobilePurchaseOrdersScreen() {
             </ScrollView>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
-      <Modal visible={productPicker} animationType="slide" transparent>
+      <AppModal visible={productPicker} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[85%] rounded-t-2xl bg-white px-3 pb-6 pt-3">
             <TextInput
@@ -453,7 +443,7 @@ export function MobilePurchaseOrdersScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </AppModal>
     </View>
   );
 }

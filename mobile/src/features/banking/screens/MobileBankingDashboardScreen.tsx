@@ -1,15 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  Pressable,
-  ActivityIndicator,
-  RefreshControl,
-  Modal,
-  TextInput,
-  Alert,
-} from 'react-native';
+import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
@@ -29,6 +19,7 @@ import {
   getTills,
 } from '../../../services/banking/bankingMobileApi';
 import { formatMoney } from '../bankingFormat';
+import { AppModal } from '../../../components/layout/AppModal';
 
 function Metric(props: {
   title: string;
@@ -306,7 +297,7 @@ export function MobileBankingDashboardScreen() {
         </ScrollView>
       )}
 
-      <Modal visible={createOpen} animationType="slide" transparent>
+      <AppModal visible={createOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="text-lg font-semibold text-slate-900">New account</Text>
@@ -349,7 +340,7 @@ export function MobileBankingDashboardScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </AppModal>
     </View>
   );
 }

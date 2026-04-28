@@ -1,11 +1,4 @@
-import {
-  View,
-  Text,
-  Pressable,
-  ScrollView,
-  Alert,
-  RefreshControl,
-} from 'react-native';
+import { View, Text, Pressable, ScrollView, Alert, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MenuHeaderButton } from '../layout/MenuHeaderButton';
 

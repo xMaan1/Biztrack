@@ -1,16 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TextInput,
-  Pressable,
-  Modal,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import type { Vehicle, VehicleCreate, VehicleUpdate } from '../../../models/workshop/Vehicle';
@@ -21,6 +10,7 @@ import {
   deleteVehicle,
 } from '../../../services/workshop/workshopMobileApi';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { AppModal } from '../../../components/layout/AppModal';
 import {
   WorkshopChrome,
   WorkshopCard,
@@ -228,7 +218,7 @@ export function MobileWorkshopVehiclesScreen() {
         />
       )}
 
-      <Modal visible={modalOpen} animationType="slide" transparent>
+      <AppModal visible={modalOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-3 text-lg font-semibold">
@@ -318,7 +308,7 @@ export function MobileWorkshopVehiclesScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </AppModal>
     </WorkshopChrome>
   );
 }

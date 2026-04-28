@@ -1,16 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  Modal,
-  ScrollView,
-  TextInput,
-  Pressable,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+import { View, Text, FlatList, ScrollView, TextInput, Pressable, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { usePermissions } from '../../../hooks/usePermissions';
@@ -24,6 +13,7 @@ import {
 } from '../../../services/hrm/hrmMobileApi';
 import type { LeaveRequest, Employee } from '../../../models/hrm';
 import { LeaveType, LeaveStatus } from '../../../models/hrm';
+import { AppModal } from '../../../components/layout/AppModal';
 
 const LEAVE_TYPES = Object.values(LeaveType);
 
@@ -189,7 +179,7 @@ export function MobileHrmLeaveManagementScreen() {
         />
       )}
 
-      <Modal visible={open} animationType="slide" transparent>
+      <AppModal visible={open} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-6 pt-3">
             <Text className="mb-3 text-lg font-semibold text-slate-900">
@@ -268,9 +258,9 @@ export function MobileHrmLeaveManagementScreen() {
             </ScrollView>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
-      <Modal visible={detail != null} animationType="slide" transparent>
+      <AppModal visible={detail != null} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[88%] rounded-t-2xl bg-white p-4">
             <Text className="text-lg font-semibold text-slate-900">Leave request</Text>
@@ -313,7 +303,7 @@ export function MobileHrmLeaveManagementScreen() {
             </View>
           </View>
         </View>
-      </Modal>
+      </AppModal>
     </View>
   );
 }

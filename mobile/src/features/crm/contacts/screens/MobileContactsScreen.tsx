@@ -1,18 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TextInput,
-  Pressable,
-  Modal,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-  Linking,
-  Switch,
-} from 'react-native';
+import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert, Linking, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import { MenuHeaderButton } from '../../../../components/layout/MenuHeaderButton';
@@ -65,6 +52,7 @@ import {
   mergeSocialFromApi,
   CONTACT_SOCIAL_KEYS,
 } from '../utils/contactFormUtils';
+import { AppModal } from '../../../../components/layout/AppModal';
 import {
   FormInput,
   FormSection,
@@ -894,7 +882,7 @@ export function MobileContactsScreen() {
         onClose={() => setFormAssigneeSheetOpen(false)}
       />
 
-      <Modal visible={filtersModalOpen} transparent animationType="slide">
+      <AppModal visible={filtersModalOpen} transparent animationType="slide">
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[85%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
             <Text className="text-lg font-bold text-slate-900">Filters</Text>
@@ -964,7 +952,7 @@ export function MobileContactsScreen() {
             </View>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
       <MobileFormSheet
         visible={createOpen}
@@ -1435,7 +1423,7 @@ export function MobileContactsScreen() {
             </FormSection>
       </MobileFormSheet>
 
-      <Modal visible={deleteOpen} transparent animationType="fade">
+      <AppModal visible={deleteOpen} transparent animationType="fade">
         <View className="flex-1 items-center justify-center bg-black/40 px-6">
           <View className="w-full max-w-sm rounded-2xl bg-white p-5">
             <Text className="text-lg font-bold text-slate-900">Delete contact</Text>
@@ -1462,9 +1450,9 @@ export function MobileContactsScreen() {
             </View>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
-      <Modal visible={viewOpen} animationType="slide" transparent>
+      <AppModal visible={viewOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="text-lg font-bold text-slate-900">Contact</Text>
@@ -1550,7 +1538,7 @@ export function MobileContactsScreen() {
             </View>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
     </View>
   );

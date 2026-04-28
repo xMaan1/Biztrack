@@ -1,16 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TextInput,
-  Modal,
-  ScrollView,
-  Pressable,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+import { View, Text, FlatList, TextInput, ScrollView, Pressable, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { usePermissions } from '../../../hooks/usePermissions';
@@ -21,6 +10,7 @@ import {
   deleteSupplier,
 } from '../../../services/hrm/hrmMobileApi';
 import type { Supplier } from '../../../models/hrm';
+import { AppModal } from '../../../components/layout/AppModal';
 
 export function MobileHrmSuppliersScreen() {
   const { workspacePath, setSidebarActivePath } = useSidebarDrawer();
@@ -144,7 +134,7 @@ export function MobileHrmSuppliersScreen() {
         />
       )}
 
-      <Modal visible={open} animationType="slide" transparent>
+      <AppModal visible={open} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="rounded-t-2xl bg-white px-4 pb-6 pt-3">
             <Text className="mb-3 text-lg font-semibold text-slate-900">
@@ -178,9 +168,9 @@ export function MobileHrmSuppliersScreen() {
             </View>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
-      <Modal visible={detail != null} animationType="slide" transparent>
+      <AppModal visible={detail != null} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[85%] rounded-t-2xl bg-white p-4">
             <Text className="text-lg font-semibold text-slate-900">Supplier</Text>
@@ -214,7 +204,7 @@ export function MobileHrmSuppliersScreen() {
             </View>
           </View>
         </View>
-      </Modal>
+      </AppModal>
     </View>
   );
 }

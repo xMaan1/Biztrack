@@ -1,18 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TextInput,
-  Pressable,
-  Modal,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-  Image,
-  Alert,
-  Linking,
-} from 'react-native';
+import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Image, Alert, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
@@ -42,6 +29,7 @@ import type {
   LabeledEmailItem,
   LabeledPhoneItem,
 } from '../../../../models/crm/customers';
+import { AppModal } from '../../../../components/layout/AppModal';
 import {
   getCustomers,
   getCustomerStats,
@@ -1280,7 +1268,7 @@ export function MobileCustomersScreen() {
         onClose={() => setTypeSheetOpen(false)}
       />
 
-      <Modal visible={createOpen} animationType="slide" transparent>
+      <AppModal visible={createOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
             <Text className="text-lg font-bold text-slate-900">New customer</Text>
@@ -1304,9 +1292,9 @@ export function MobileCustomersScreen() {
             </View>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
-      <Modal visible={editOpen} animationType="slide" transparent>
+      <AppModal visible={editOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
             <Text className="text-lg font-bold text-slate-900">Edit customer</Text>
@@ -1330,9 +1318,9 @@ export function MobileCustomersScreen() {
             </View>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
-      <Modal visible={deleteOpen} transparent animationType="fade">
+      <AppModal visible={deleteOpen} transparent animationType="fade">
         <View className="flex-1 items-center justify-center bg-black/40 px-6">
           <View className="w-full max-w-sm rounded-2xl bg-white p-5">
             <Text className="text-lg font-bold text-slate-900">Delete customer</Text>
@@ -1359,9 +1347,9 @@ export function MobileCustomersScreen() {
             </View>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
-      <Modal visible={importOpen} transparent animationType="fade">
+      <AppModal visible={importOpen} transparent animationType="fade">
         <View className="flex-1 items-center justify-center bg-black/40 px-6">
           <View className="w-full max-w-sm rounded-2xl bg-white p-5">
             <Text className="text-lg font-bold text-slate-900">Import customers</Text>
@@ -1387,9 +1375,9 @@ export function MobileCustomersScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
-      <Modal visible={guarantorOpen} transparent animationType="fade">
+      <AppModal visible={guarantorOpen} transparent animationType="fade">
         <View className="flex-1 justify-end bg-black/40">
           <View className="rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="text-lg font-bold text-slate-900">
@@ -1451,7 +1439,7 @@ export function MobileCustomersScreen() {
             </View>
           </View>
         </View>
-      </Modal>
+      </AppModal>
     </View>
   );
 }

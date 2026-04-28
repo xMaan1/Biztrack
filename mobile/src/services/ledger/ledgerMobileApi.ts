@@ -18,6 +18,33 @@ function asArray<T>(res: unknown): T[] {
   return Array.isArray(res) ? (res as T[]) : [];
 }
 
+function normalizeLedgerPayload<T extends object>(body: T): T {
+  const payload = { ...(body as Record<string, unknown>) };
+  if ('metadata' in payload && !('meta_data' in payload)) {
+    payload.meta_data = payload.metadata;
+  }
+  const meta = payload.meta_data;
+  if (meta && typeof meta === 'object' && !Array.isArray(meta)) {
+    const compactMeta = Object.fromEntries(
+      Object.entries(meta as Record<string, unknown>).filter(([, value]) => {
+        if (value == null) return false;
+        if (typeof value === 'string') return value.trim().length > 0;
+        if (Array.isArray(value)) return value.length > 0;
+        return true;
+      }),
+    );
+    if (Object.keys(compactMeta).length > 0) {
+      payload.meta_data = compactMeta;
+    } else {
+      delete payload.meta_data;
+    }
+  } else if (meta == null) {
+    delete payload.meta_data;
+  }
+  delete payload.metadata;
+  return payload as T;
+}
+
 export async function getChartOfAccounts(
   skip = 0,
   limit = 500,
@@ -63,7 +90,10 @@ export async function getLedgerTransactions(params?: {
 export async function createLedgerTransaction(
   body: LedgerTransactionCreate,
 ): Promise<LedgerTransactionResponse> {
-  return apiService.post<LedgerTransactionResponse>(`${base}/transactions`, body);
+  return apiService.post<LedgerTransactionResponse>(
+    `${base}/transactions`,
+    normalizeLedgerPayload(body),
+  );
 }
 
 export async function updateLedgerTransaction(
@@ -72,7 +102,7 @@ export async function updateLedgerTransaction(
 ): Promise<LedgerTransactionResponse> {
   return apiService.put<LedgerTransactionResponse>(
     `${base}/transactions/${id}`,
-    body,
+    normalizeLedgerPayload(body),
   );
 }
 

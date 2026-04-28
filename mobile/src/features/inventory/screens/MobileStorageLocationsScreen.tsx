@@ -1,16 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TextInput,
-  Pressable,
-  Modal,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { extractErrorMessage } from '../../../utils/errorUtils';
@@ -22,6 +11,7 @@ import {
 } from '../../../services/inventory/inventoryMobileApi';
 import type { StorageLocation, StorageLocationCreate, Warehouse } from '../../../models/inventory';
 import { usePermissions } from '../../../hooks/usePermissions';
+import { AppModal } from '../../../components/layout/AppModal';
 
 export function MobileStorageLocationsScreen() {
   const { workspacePath, setSidebarActivePath } = useSidebarDrawer();
@@ -195,7 +185,7 @@ export function MobileStorageLocationsScreen() {
         />
       )}
 
-      <Modal visible={open} animationType="slide">
+      <AppModal visible={open} animationType="slide">
         <View className="flex-1 bg-white">
           <View className="flex-row items-center justify-between border-b border-slate-200 px-3 py-3">
             <Pressable onPress={() => setOpen(false)}>
@@ -227,7 +217,7 @@ export function MobileStorageLocationsScreen() {
             />
           </ScrollView>
         </View>
-      </Modal>
+      </AppModal>
     </View>
   );
 }

@@ -1,17 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TextInput,
-  Pressable,
-  Modal,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { AppModal } from '../../../components/layout/AppModal';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { extractErrorMessage } from '../../../utils/errorUtils';
 import { formatUsd } from '../../../services/crm/CrmMobileService';
@@ -182,7 +172,11 @@ export function MobileInstallmentsScreen() {
         />
       )}
 
-      <Modal visible={detailOpen} animationType="slide">
+      <AppModal
+        visible={detailOpen}
+        animationType="slide"
+        onClose={() => setDetailOpen(false)}
+      >
         <View className="flex-1 bg-white">
           <View className="flex-row items-center justify-between border-b border-slate-200 px-3 py-3">
             <Pressable onPress={() => setDetailOpen(false)}>
@@ -229,9 +223,14 @@ export function MobileInstallmentsScreen() {
             ) : null}
           </ScrollView>
         </View>
-      </Modal>
+      </AppModal>
 
-      <Modal visible={payOpen} animationType="fade" transparent>
+      <AppModal
+        visible={payOpen}
+        animationType="fade"
+        transparent
+        onClose={() => setPayOpen(false)}
+      >
         <View className="flex-1 justify-center bg-black/40 px-4">
           <View className="rounded-2xl bg-white p-4">
             <Text className="text-lg font-semibold text-slate-900">Record payment</Text>
@@ -267,7 +266,7 @@ export function MobileInstallmentsScreen() {
             </View>
           </View>
         </View>
-      </Modal>
+      </AppModal>
     </View>
   );
 }

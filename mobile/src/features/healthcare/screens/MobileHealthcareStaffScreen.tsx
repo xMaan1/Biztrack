@@ -1,17 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TextInput,
-  Pressable,
-  Modal,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-  Switch,
-} from 'react-native';
+import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import type {
@@ -27,6 +15,7 @@ import {
   deleteStaff,
 } from '../../../services/healthcare/healthcareMobileApi';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { AppModal } from '../../../components/layout/AppModal';
 import {
   HealthcareChrome,
   HealthcareCard,
@@ -314,7 +303,7 @@ export function MobileHealthcareStaffScreen() {
         />
       </View>
 
-      <Modal visible={formOpen} animationType="slide" transparent>
+      <AppModal visible={formOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-4 text-lg font-semibold text-slate-900">
@@ -416,7 +405,7 @@ export function MobileHealthcareStaffScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </AppModal>
     </HealthcareChrome>
   );
 }

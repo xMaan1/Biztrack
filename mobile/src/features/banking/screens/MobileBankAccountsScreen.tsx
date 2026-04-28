@@ -1,16 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TextInput,
-  Pressable,
-  Modal,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
@@ -30,6 +19,7 @@ import {
   updateBankAccount,
 } from '../../../services/banking/bankingMobileApi';
 import { formatMoney } from '../bankingFormat';
+import { AppModal } from '../../../components/layout/AppModal';
 
 const ACCOUNT_TYPES = Object.values(BankAccountType).map((v) => ({
   value: v,
@@ -366,7 +356,7 @@ export function MobileBankAccountsScreen() {
         />
       )}
 
-      <Modal visible={createOpen} animationType="slide" transparent>
+      <AppModal visible={createOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="text-lg font-semibold text-slate-900">New account</Text>
@@ -385,9 +375,9 @@ export function MobileBankAccountsScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
-      <Modal visible={editOpen} animationType="slide" transparent>
+      <AppModal visible={editOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="text-lg font-semibold text-slate-900">Edit account</Text>
@@ -412,7 +402,7 @@ export function MobileBankAccountsScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
       <OptionSheet
         visible={typeOpen}

@@ -1,16 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TextInput,
-  Pressable,
-  Modal,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import type {
@@ -38,6 +27,7 @@ import {
   HealthcarePrimaryButton,
 } from '../components/HealthcareChrome';
 import { PickerModal } from '../components/PickerModal';
+import { AppModal } from '../../../components/layout/AppModal';
 
 type Tab = 'categories' | 'expenses';
 
@@ -432,7 +422,7 @@ export function MobileHealthcareDailyExpenseScreen() {
         onClose={() => setFormCatPick(false)}
       />
 
-      <Modal visible={catFormOpen} animationType="slide" transparent>
+      <AppModal visible={catFormOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-3 text-lg font-semibold">
@@ -461,9 +451,9 @@ export function MobileHealthcareDailyExpenseScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
-      <Modal visible={expFormOpen} animationType="slide" transparent>
+      <AppModal visible={expFormOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[85%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-3 text-lg font-semibold">
@@ -511,7 +501,7 @@ export function MobileHealthcareDailyExpenseScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </AppModal>
     </HealthcareChrome>
   );
 }

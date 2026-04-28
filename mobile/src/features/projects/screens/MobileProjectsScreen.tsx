@@ -1,16 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TextInput,
-  Pressable,
-  Modal,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
 import { MobileFormSheet } from '../../../components/layout/MobileForm';
@@ -19,6 +8,7 @@ import { OptionSheet } from '../../../components/crm/OptionSheet';
 import { extractErrorMessage } from '../../../utils/errorUtils';
 import { usePermissions } from '../../../hooks/usePermissions';
 import type { ProjectRecord, ProjectTeamMemberRef } from '../../../models/project';
+import { AppModal } from '../../../components/layout/AppModal';
 import {
   createProjectApi,
   deleteProjectApi,
@@ -390,7 +380,7 @@ export function MobileProjectsScreen() {
         </Pressable>
       </View>
 
-      <Modal visible={detailOpen} animationType="slide" transparent>
+      <AppModal visible={detailOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[85%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
             <Text className="text-lg font-semibold text-slate-900">Project</Text>
@@ -442,7 +432,7 @@ export function MobileProjectsScreen() {
             </View>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
       <MobileFormSheet
         visible={createOpen}

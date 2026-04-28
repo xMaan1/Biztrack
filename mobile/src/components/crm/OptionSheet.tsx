@@ -1,4 +1,5 @@
-import { Modal, View, Text, Pressable, ScrollView } from 'react-native';
+import { View, Text, Pressable, ScrollView } from 'react-native';
+import { AppModal } from '../../components/layout/AppModal';
 
 export type OptionItem<T extends string> = { value: T; label: string };
 
@@ -18,7 +19,7 @@ export function OptionSheet<T extends string>({
   onClose,
 }: Props<T>) {
   return (
-    <Modal visible={visible} transparent animationType="fade">
+    <AppModal visible={visible} transparent animationType="fade">
       <Pressable
         className="flex-1 justify-end bg-black/40"
         onPress={onClose}
@@ -54,6 +55,6 @@ export function OptionSheet<T extends string>({
           </Pressable>
         </Pressable>
       </Pressable>
-    </Modal>
+    </AppModal>
   );
 }

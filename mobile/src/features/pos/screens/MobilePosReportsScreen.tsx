@@ -1,14 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TextInput,
-  Pressable,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+import { View, Text, ScrollView, TextInput, Pressable, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { formatUsd } from '../../../services/crm/CrmMobileService';
@@ -54,7 +45,7 @@ export function MobilePosReportsScreen() {
         const r = await getPosSalesReport(p);
         setSales(r);
       } else if (tab === 'inventory') {
-        const r = await getPosInventoryReport(p);
+        const r = await getPosInventoryReport();
         setInventory(r);
       } else {
         const r = await getPosShiftsReport(p);

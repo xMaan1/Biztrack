@@ -1,17 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TextInput,
-  Pressable,
-  Modal,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+import { View, Text, FlatList, TextInput, Pressable, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { MobileFormSheet } from '../../../components/layout/MobileForm';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { extractErrorMessage } from '../../../utils/errorUtils';
 import { type DeliveryNote } from '../../../models/sales';
@@ -183,61 +173,55 @@ export function MobileDeliveryNotesScreen() {
         />
       )}
 
-      <Modal visible={createOpen} animationType="slide">
-        <View className="flex-1 bg-white">
-          <View className="flex-row items-center justify-between border-b border-slate-200 px-3 py-3">
-            <Pressable onPress={() => setCreateOpen(false)}>
-              <Text className="text-blue-600">Cancel</Text>
-            </Pressable>
-            <Text className="text-lg font-semibold">New delivery note</Text>
-            <Pressable onPress={() => void submitCreate()}>
-              <Text className="font-semibold text-blue-600">Save</Text>
-            </Pressable>
-          </View>
-          <ScrollView className="flex-1 px-4 py-3" keyboardShouldPersistTaps="handled">
-            <Text className="mb-1 text-sm font-medium text-slate-700">Invoice</Text>
-            <TextInput
-              value={invoiceQuery}
-              onChangeText={setInvoiceQuery}
-              placeholder="Search invoice # or customer…"
-              className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            {invoiceLabel ? (
-              <Text className="mb-2 text-slate-800">Selected: {invoiceLabel}</Text>
-            ) : null}
-            {invoiceHits.length > 0 ? (
-              <FlatList
-                data={invoiceHits}
-                keyExtractor={(i) => i.id}
-                keyboardShouldPersistTaps="handled"
-                className="mb-3 max-h-48 rounded-lg border border-slate-200"
-                renderItem={({ item }) => (
-                  <Pressable
-                    onPress={() => {
-                      setInvoiceId(item.id);
-                      setInvoiceLabel(`${item.invoiceNumber} · ${item.customerName}`);
-                      setInvoiceHits([]);
-                      setInvoiceQuery('');
-                    }}
-                    className="border-b border-slate-100 px-3 py-2"
-                  >
-                    <Text className="font-medium text-slate-900">{item.invoiceNumber}</Text>
-                    <Text className="text-sm text-slate-600">{item.customerName}</Text>
-                  </Pressable>
-                )}
-              />
-            ) : null}
-            <Text className="mb-1 text-sm font-medium text-slate-700">Note</Text>
-            <TextInput
-              value={noteText}
-              onChangeText={setNoteText}
-              multiline
-              className="min-h-[120px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-              placeholder="Optional note"
-            />
-          </ScrollView>
-        </View>
-      </Modal>
+      <MobileFormSheet
+        visible={createOpen}
+        title="New Delivery Note"
+        onCancel={() => setCreateOpen(false)}
+        onSave={() => void submitCreate()}
+      >
+        <Text className="mb-1 text-sm font-medium text-slate-700">Invoice</Text>
+        <TextInput
+          value={invoiceQuery}
+          onChangeText={setInvoiceQuery}
+          placeholder="Search invoice # or customer…"
+          placeholderTextColor="#94a3b8"
+          className="mb-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
+        />
+        {invoiceLabel ? (
+          <Text className="mb-2 text-slate-800">Selected: {invoiceLabel}</Text>
+        ) : null}
+        {invoiceHits.length > 0 ? (
+          <FlatList
+            data={invoiceHits}
+            keyExtractor={(i) => i.id}
+            keyboardShouldPersistTaps="handled"
+            className="mb-3 max-h-48 rounded-lg border border-slate-200 bg-white"
+            renderItem={({ item }) => (
+              <Pressable
+                onPress={() => {
+                  setInvoiceId(item.id);
+                  setInvoiceLabel(`${item.invoiceNumber} · ${item.customerName}`);
+                  setInvoiceHits([]);
+                  setInvoiceQuery('');
+                }}
+                className="border-b border-slate-100 px-3 py-2"
+              >
+                <Text className="font-medium text-slate-900">{item.invoiceNumber}</Text>
+                <Text className="text-sm text-slate-600">{item.customerName}</Text>
+              </Pressable>
+            )}
+          />
+        ) : null}
+        <Text className="mb-1 text-sm font-medium text-slate-700">Note</Text>
+        <TextInput
+          value={noteText}
+          onChangeText={setNoteText}
+          multiline
+          className="min-h-[120px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
+          placeholder="Optional note"
+          placeholderTextColor="#94a3b8"
+        />
+      </MobileFormSheet>
     </View>
   );
 }

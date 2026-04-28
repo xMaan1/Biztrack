@@ -1,12 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  ScrollView,
-} from 'react-native';
+import { View, Text, TextInput, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
@@ -16,6 +9,7 @@ import {
 } from '../../hooks/useSidebarFilteredMenu';
 import { usePermissions } from '../../hooks/usePermissions';
 import type { SubMenuItemDef } from '../../navigation/sidebarMenuData';
+import { AppModal } from '../../components/layout/AppModal';
 
 function subRolesAllowed(
   sub: SubMenuItemDef,
@@ -122,11 +116,11 @@ export function MobileSidebarModal({
   const planLabel = getPlanDisplayName(isSuperAdminNoTenant, planInfo);
 
   return (
-    <Modal
+    <AppModal
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={onClose}
+      onClose={onClose}
     >
       <View className="flex-1 flex-row bg-black/50">
         <SafeAreaView
@@ -401,6 +395,6 @@ export function MobileSidebarModal({
 
         <Pressable className="flex-1" onPress={onClose} accessibilityRole="button" />
       </View>
-    </Modal>
+    </AppModal>
   );
 }

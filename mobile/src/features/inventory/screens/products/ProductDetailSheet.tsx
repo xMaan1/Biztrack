@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { formatUsd } from '../../../../services/crm/CrmMobileService';
 import type { Product } from '../../../../models/pos';
 import { stockColor } from './helpers';
+import { AppModal } from '../../../../components/layout/AppModal';
 
 type Props = {
   visible: boolean;
@@ -22,7 +23,7 @@ export function ProductDetailSheet({
   onDelete,
 }: Props) {
   return (
-    <Modal visible={visible} animationType="slide" transparent>
+    <AppModal visible={visible} animationType="slide" transparent>
       <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.45)' }}>
         <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '85%' }}>
           <View style={{ alignItems: 'center', paddingTop: 12 }}>
@@ -95,6 +96,6 @@ export function ProductDetailSheet({
           )}
         </View>
       </View>
-    </Modal>
+    </AppModal>
   );
 }

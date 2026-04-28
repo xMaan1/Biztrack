@@ -1,16 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TextInput,
-  Pressable,
-  Modal,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
@@ -18,6 +7,7 @@ import { OptionSheet } from '../../../components/crm/OptionSheet';
 import { extractErrorMessage } from '../../../utils/errorUtils';
 import { usePermissions } from '../../../hooks/usePermissions';
 import type { ProjectRecord, SubTaskRecord } from '../../../models/project';
+import { AppModal } from '../../../components/layout/AppModal';
 import {
   createTaskApi,
   deleteTaskApi,
@@ -365,7 +355,7 @@ export function MobileTasksScreen() {
         />
       )}
 
-      <Modal visible={detailOpen} animationType="slide" transparent>
+      <AppModal visible={detailOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[85%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
             <Text className="text-lg font-semibold text-slate-900">Task</Text>
@@ -419,9 +409,9 @@ export function MobileTasksScreen() {
             </View>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
-      <Modal visible={createOpen} animationType="slide" transparent>
+      <AppModal visible={createOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
             <Text className="text-lg font-semibold text-slate-900">New task</Text>
@@ -442,9 +432,9 @@ export function MobileTasksScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
-      <Modal visible={editOpen} animationType="slide" transparent>
+      <AppModal visible={editOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
             <Text className="text-lg font-semibold text-slate-900">Edit task</Text>
@@ -468,7 +458,7 @@ export function MobileTasksScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
       <OptionSheet
         visible={projectSheetOpen}

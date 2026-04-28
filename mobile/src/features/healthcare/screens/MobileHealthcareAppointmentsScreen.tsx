@@ -1,16 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TextInput,
-  Pressable,
-  Modal,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { formatYMD } from '../../../utils/dateMobile';
 import { Ionicons } from '@expo/vector-icons';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
@@ -46,6 +35,7 @@ import {
   HealthcareOutlineButton,
 } from '../components/HealthcareChrome';
 import { PickerModal } from '../components/PickerModal';
+import { AppModal } from '../../../components/layout/AppModal';
 
 const PAGE_SIZE = 20;
 
@@ -547,7 +537,7 @@ export function MobileHealthcareAppointmentsScreen() {
         onClose={() => setFormDoctorPicker(false)}
       />
 
-      <Modal visible={patientPicker} animationType="slide" transparent>
+      <AppModal visible={patientPicker} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[70%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
             <Text className="mb-2 font-semibold text-slate-900">
@@ -589,9 +579,9 @@ export function MobileHealthcareAppointmentsScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
-      <Modal visible={formOpen} animationType="slide" transparent>
+      <AppModal visible={formOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-4 text-lg font-semibold text-slate-900">
@@ -710,9 +700,9 @@ export function MobileHealthcareAppointmentsScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
-      <Modal visible={rxOpen} animationType="slide" transparent>
+      <AppModal visible={rxOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[85%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-2 text-lg font-semibold">New prescription</Text>
@@ -799,9 +789,9 @@ export function MobileHealthcareAppointmentsScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
-      <Modal visible={viewRxOpen} animationType="slide" transparent>
+      <AppModal visible={viewRxOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[80%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
             <Text className="mb-2 font-semibold text-slate-900">
@@ -862,9 +852,9 @@ export function MobileHealthcareAppointmentsScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
-      <Modal visible={invOpen} animationType="slide" transparent>
+      <AppModal visible={invOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[80%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-2 font-semibold">Appointment invoice</Text>
@@ -916,7 +906,7 @@ export function MobileHealthcareAppointmentsScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </AppModal>
     </HealthcareChrome>
   );
 }

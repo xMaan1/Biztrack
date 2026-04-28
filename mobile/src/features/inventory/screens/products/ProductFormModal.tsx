@@ -1,10 +1,11 @@
-import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { UnitOfMeasure } from '../../../../models/pos';
 import { PRODUCT_CATEGORIES, PRODUCT_UNITS } from './helpers';
 import type { ProductFormState } from './types';
 import { ProductChipSelect } from './ProductChipSelect';
 import { ProductFieldRow } from './ProductFieldRow';
+import { AppModal } from '../../../../components/layout/AppModal';
 
 type Props = {
   visible: boolean;
@@ -26,7 +27,7 @@ export function ProductFormModal({
   onFieldChange,
 }: Props) {
   return (
-    <Modal visible={visible} animationType="slide">
+    <AppModal visible={visible} animationType="slide">
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -140,6 +141,6 @@ export function ProductFormModal({
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
-    </Modal>
+    </AppModal>
   );
 }

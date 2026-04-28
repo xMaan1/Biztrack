@@ -1,18 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TextInput,
-  Pressable,
-  Modal,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-  Linking,
-} from 'react-native';
+import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { AppModal } from '../../../components/layout/AppModal';
 import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { extractErrorMessage } from '../../../utils/errorUtils';
@@ -31,6 +21,7 @@ import {
   fetchInvoicesPaged,
   getInvoice,
   createInvoice,
+  createInstallmentPlan as createInstallmentPlanApi,
   updateInvoice,
   deleteInvoice,
   getInvoiceDashboard,
@@ -38,10 +29,12 @@ import {
   markInvoicePaid,
   sendInvoiceEmail,
   sendInvoiceWhatsApp,
+  fetchInvoiceProducts,
 } from '../../../services/sales/invoiceMobileApi';
 import { sharePdfFromAuthenticatedPath } from '../../../utils/salesPdfShare';
 import { OptionSheet } from '../../../components/crm/OptionSheet';
 import { usePermissions } from '../../../hooks/usePermissions';
+import type { Product } from '../../../models/pos';
 
 const PAGE_SIZE = 15;
 const STATUS_OPTS: { value: string; label: string }[] = [
@@ -66,6 +59,7 @@ function buildItemsPayload(rows: InvoiceItemCreate[]): InvoiceItemCreate[] {
       unitPrice: Number(r.unitPrice) || 0,
       discount: Number(r.discount) || 0,
       taxRate: Number(r.taxRate) || 0,
+      productId: r.productId || undefined,
     }));
 }
 
@@ -125,6 +119,13 @@ export function MobileInvoicesScreen() {
   const [lineRows, setLineRows] = useState<InvoiceItemCreate[]>([
     { description: '', quantity: 1, unitPrice: 0, discount: 0, taxRate: 0 },
   ]);
+  const [createInstallmentPlan, setCreateInstallmentPlan] = useState(false);
+  const [installmentCount, setInstallmentCount] = useState('3');
+  const [installmentFrequency, setInstallmentFrequency] = useState('monthly');
+  const [installmentFirstDueDate, setInstallmentFirstDueDate] = useState('');
+  const [products, setProducts] = useState<Product[]>([]);
+  const [productSheetOpen, setProductSheetOpen] = useState(false);
+  const [activeLineIndex, setActiveLineIndex] = useState<number | null>(null);
 
   const filters: InvoiceFilters = useMemo(() => {
     const f: InvoiceFilters = {};
@@ -149,12 +150,16 @@ export function MobileInvoicesScreen() {
     try {
       setLoading(true);
       await Promise.all([loadList(), loadDashboard()]);
+      if (products.length === 0) {
+        const productRows = await fetchInvoiceProducts();
+        setProducts(productRows);
+      }
     } catch (e) {
       Alert.alert('Invoices', extractErrorMessage(e, 'Failed to load'));
     } finally {
       setLoading(false);
     }
-  }, [loadList, loadDashboard]);
+  }, [loadList, loadDashboard, products.length]);
 
   useEffect(() => {
     setSidebarActivePath(
@@ -209,6 +214,10 @@ export function MobileInvoicesScreen() {
     setLineRows([
       { description: '', quantity: 1, unitPrice: 0, discount: 0, taxRate: 0 },
     ]);
+    setCreateInstallmentPlan(false);
+    setInstallmentCount('3');
+    setInstallmentFrequency('monthly');
+    setInstallmentFirstDueDate(due);
   };
 
   const submitCreate = async () => {
@@ -242,7 +251,27 @@ export function MobileInvoicesScreen() {
       items,
     };
     try {
-      await createInvoice(payload);
+      const created = await createInvoice(payload);
+      const subtotalAmount = items.reduce(
+        (sum, item) => sum + item.quantity * item.unitPrice * (1 - item.discount / 100),
+        0,
+      );
+      const discountPct = parseFloat(discount) || 0;
+      const taxPct = parseFloat(taxRate) || 0;
+      const discountAmount = subtotalAmount * (discountPct / 100);
+      const taxableAmount = subtotalAmount - discountAmount;
+      const taxAmount = taxableAmount * (taxPct / 100);
+      const totalAmount = taxableAmount + taxAmount;
+      if (createInstallmentPlan && totalAmount > 0) {
+        await createInstallmentPlanApi({
+          invoice_id: created.id,
+          total_amount: Number(totalAmount.toFixed(2)),
+          number_of_installments: Math.max(1, parseInt(installmentCount, 10) || 1),
+          frequency: installmentFrequency,
+          first_due_date: `${(installmentFirstDueDate || dueDate).trim()}T00:00:00Z`,
+          currency,
+        });
+      }
       setCreateOpen(false);
       resetCreate();
       await loadAll();
@@ -335,6 +364,22 @@ export function MobileInvoicesScreen() {
   };
 
   const canEdit = canManageInvoices() || canManageSales();
+  const lineSubtotal = useMemo(
+    () =>
+      lineRows.reduce((sum, row) => {
+        const qty = Math.max(1, Number(row.quantity) || 1);
+        const unit = Number(row.unitPrice) || 0;
+        const rowDiscount = Number(row.discount) || 0;
+        return sum + qty * unit * (1 - rowDiscount / 100);
+      }, 0),
+    [lineRows],
+  );
+  const invoiceDiscountPct = Number(discount) || 0;
+  const invoiceTaxPct = Number(taxRate) || 0;
+  const invoiceDiscountAmount = lineSubtotal * (invoiceDiscountPct / 100);
+  const taxableAmount = lineSubtotal - invoiceDiscountAmount;
+  const invoiceTaxAmount = taxableAmount * (invoiceTaxPct / 100);
+  const invoiceTotal = taxableAmount + invoiceTaxAmount;
 
   return (
     <View className="flex-1 bg-slate-50">
@@ -622,8 +667,13 @@ export function MobileInvoicesScreen() {
         onClose={() => setStatusOpen(false)}
       />
 
-      <Modal visible={createOpen} animationType="slide">
-        <View className="flex-1 bg-slate-50">
+      <AppModal
+        visible={createOpen}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onClose={() => setCreateOpen(false)}
+      >
+        <SafeAreaView className="flex-1 bg-slate-50" edges={['top', 'bottom']}>
           <View className="flex-row items-center justify-between bg-white border-b border-slate-200 px-4 py-4">
             <Pressable onPress={() => setCreateOpen(false)} className="px-2 py-1">
               <Text className="font-bold text-slate-500">Cancel</Text>
@@ -633,7 +683,11 @@ export function MobileInvoicesScreen() {
               <Text className="font-bold text-white">Save</Text>
             </Pressable>
           </View>
-          <ScrollView className="flex-1 px-4 py-6" keyboardShouldPersistTaps="handled">
+          <ScrollView
+            className="flex-1 px-4 py-6"
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ paddingBottom: 48 }}
+          >
             <Text className="mb-1 text-sm font-medium text-slate-700">
               Find customer
             </Text>
@@ -642,6 +696,7 @@ export function MobileInvoicesScreen() {
               onChangeText={setCustQuery}
               className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
               placeholder="Type name, email, phone…"
+              placeholderTextColor="#94a3b8"
             />
             {custHits.length > 0 ? (
               <View className="mb-3 max-h-40 rounded-lg border border-slate-200">
@@ -652,7 +707,7 @@ export function MobileInvoicesScreen() {
                   renderItem={({ item }) => (
                     <Pressable
                       onPress={() => {
-                        setCustomerId(String(item.customerId ?? item.id));
+                        setCustomerId(String(item.id));
                         setCustomerName(customerLabel(item));
                         setCustomerEmail(String(item.email ?? ''));
                         setCustHits([]);
@@ -735,6 +790,23 @@ export function MobileInvoicesScreen() {
             <Text className="mb-2 font-semibold text-slate-900">Line items</Text>
             {lineRows.map((row, idx) => (
               <View key={idx} className="mb-3 rounded-lg border border-slate-200 p-2">
+                <Pressable
+                  onPress={() => {
+                    setActiveLineIndex(idx);
+                    setProductSheetOpen(true);
+                  }}
+                  className="mb-2 flex-row items-center justify-between rounded border border-slate-100 px-2 py-2"
+                >
+                  <View className="flex-1 pr-2">
+                    <Text className="text-xs text-slate-500">Product</Text>
+                    <Text className="text-sm font-medium text-slate-800" numberOfLines={1}>
+                      {row.productId
+                        ? products.find((p) => p.id === row.productId)?.name || 'Selected product'
+                        : 'Select product'}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-down" size={18} color="#64748b" />
+                </Pressable>
                 <TextInput
                   value={row.description}
                   onChangeText={(t) => {
@@ -768,6 +840,16 @@ export function MobileInvoicesScreen() {
                     className="flex-1 rounded border border-slate-100 px-2 py-1 text-slate-900"
                   />
                 </View>
+                <View className="mt-2 flex-row items-center justify-between border-t border-slate-100 pt-2">
+                  <Text className="text-xs text-slate-500">Line total</Text>
+                  <Text className="text-sm font-semibold text-slate-900">
+                    {formatUsd(
+                      Math.max(1, Number(row.quantity) || 1) *
+                        (Number(row.unitPrice) || 0) *
+                        (1 - (Number(row.discount) || 0) / 100),
+                    )}
+                  </Text>
+                </View>
               </View>
             ))}
             <Pressable
@@ -781,11 +863,121 @@ export function MobileInvoicesScreen() {
             >
               <Text className="font-medium text-slate-800">Add line</Text>
             </Pressable>
+            <View className="mb-3 rounded-xl border border-slate-200 bg-white p-3">
+              <View className="flex-row items-center justify-between">
+                <Text className="text-slate-600">Subtotal</Text>
+                <Text className="font-semibold text-slate-900">{formatUsd(lineSubtotal)}</Text>
+              </View>
+              <View className="mt-1 flex-row items-center justify-between">
+                <Text className="text-slate-600">Discount ({invoiceDiscountPct}%)</Text>
+                <Text className="font-semibold text-slate-900">-{formatUsd(invoiceDiscountAmount)}</Text>
+              </View>
+              <View className="mt-1 flex-row items-center justify-between">
+                <Text className="text-slate-600">Tax ({invoiceTaxPct}%)</Text>
+                <Text className="font-semibold text-slate-900">{formatUsd(invoiceTaxAmount)}</Text>
+              </View>
+              <View className="mt-2 flex-row items-center justify-between border-t border-slate-100 pt-2">
+                <Text className="text-base font-bold text-slate-900">Total</Text>
+                <Text className="text-base font-bold text-blue-600">{formatUsd(invoiceTotal)}</Text>
+              </View>
+            </View>
+            <View className="mb-3 rounded-xl border border-slate-200 bg-white p-3">
+              <Pressable
+                onPress={() => setCreateInstallmentPlan((prev) => !prev)}
+                className="flex-row items-center justify-between"
+              >
+                <Text className="text-sm font-semibold text-slate-900">
+                  Create installment plan
+                </Text>
+                <View
+                  className={`h-6 w-10 rounded-full px-0.5 ${
+                    createInstallmentPlan ? 'bg-blue-600' : 'bg-slate-300'
+                  }`}
+                >
+                  <View
+                    className={`h-5 w-5 rounded-full bg-white mt-0.5 ${
+                      createInstallmentPlan ? 'ml-4' : 'ml-0'
+                    }`}
+                  />
+                </View>
+              </Pressable>
+              {createInstallmentPlan ? (
+                <View className="mt-3">
+                  <Text className="mb-1 text-sm font-medium text-slate-700">Number of installments</Text>
+                  <TextInput
+                    value={installmentCount}
+                    onChangeText={setInstallmentCount}
+                    keyboardType="number-pad"
+                    className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
+                  />
+                  <Text className="mb-1 text-sm font-medium text-slate-700">Frequency</Text>
+                  <Pressable
+                    onPress={() =>
+                      setInstallmentFrequency((prev) =>
+                        prev === 'weekly'
+                          ? 'monthly'
+                          : prev === 'monthly'
+                            ? 'quarterly'
+                            : 'weekly',
+                      )
+                    }
+                    className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
+                  >
+                    <Text className="text-slate-900 capitalize">{installmentFrequency}</Text>
+                  </Pressable>
+                  <Text className="mb-1 text-sm font-medium text-slate-700">First due date</Text>
+                  <TextInput
+                    value={installmentFirstDueDate}
+                    onChangeText={setInstallmentFirstDueDate}
+                    placeholder="YYYY-MM-DD"
+                    placeholderTextColor="#94a3b8"
+                    className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
+                  />
+                </View>
+              ) : null}
+            </View>
           </ScrollView>
-        </View>
-      </Modal>
+        </SafeAreaView>
+      </AppModal>
+      <OptionSheet
+        visible={productSheetOpen}
+        title="Select Product"
+        options={products.map((p) => ({
+          value: p.id,
+          label: `${p.name}${p.sku ? ` (${p.sku})` : ''}`,
+        }))}
+        onSelect={(productId) => {
+          if (activeLineIndex == null) {
+            setProductSheetOpen(false);
+            return;
+          }
+          const product = products.find((p) => p.id === productId);
+          if (!product) {
+            setProductSheetOpen(false);
+            return;
+          }
+          setLineRows((prev) =>
+            prev.map((line, i) =>
+              i === activeLineIndex
+                ? {
+                    ...line,
+                    productId: product.id,
+                    description: line.description?.trim() ? line.description : product.name,
+                    unitPrice: Number(line.unitPrice) > 0 ? line.unitPrice : product.unitPrice,
+                  }
+                : line,
+            ),
+          );
+          setProductSheetOpen(false);
+        }}
+        onClose={() => setProductSheetOpen(false)}
+      />
 
-      <Modal visible={detailOpen} animationType="slide">
+      <AppModal
+        visible={detailOpen}
+        animationType="slide"
+        onClose={() => setDetailOpen(false)}
+      >
         <View className="flex-1 bg-slate-50">
           <View className="flex-row items-center justify-between bg-white border-b border-slate-200 px-4 py-4">
             <Pressable onPress={() => setDetailOpen(false)} className="h-10 w-10 items-center justify-center rounded-full bg-slate-100">
@@ -930,9 +1122,14 @@ export function MobileInvoicesScreen() {
             )}
           </ScrollView>
         </View>
-      </Modal>
+      </AppModal>
 
-      <Modal visible={emailOpen} animationType="fade" transparent>
+      <AppModal
+        visible={emailOpen}
+        animationType="fade"
+        transparent
+        onClose={() => setEmailOpen(false)}
+      >
         <View className="flex-1 justify-center bg-black/40 px-4">
           <View className="rounded-2xl bg-white p-4">
             <Text className="text-lg font-semibold text-slate-900">Send email</Text>
@@ -962,7 +1159,7 @@ export function MobileInvoicesScreen() {
             </View>
           </View>
         </View>
-      </Modal>
+      </AppModal>
     </View>
   );
 }

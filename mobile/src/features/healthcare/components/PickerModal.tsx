@@ -1,12 +1,6 @@
 import React from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  Pressable,
-  FlatList,
-  TextInput,
-} from 'react-native';
+import { View, Text, Pressable, FlatList, TextInput } from 'react-native';
+import { AppModal } from '../../../components/layout/AppModal';
 
 export function PickerModal<T extends { id: string; label: string }>(props: {
   visible: boolean;
@@ -18,7 +12,7 @@ export function PickerModal<T extends { id: string; label: string }>(props: {
   onSearchChange?: (q: string) => void;
 }) {
   return (
-    <Modal visible={props.visible} animationType="slide" transparent>
+    <AppModal visible={props.visible} animationType="slide" transparent>
       <View className="flex-1 justify-end bg-black/40">
         <View className="max-h-[80%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
           <Text className="mb-3 text-lg font-semibold text-slate-900">
@@ -57,6 +51,6 @@ export function PickerModal<T extends { id: string; label: string }>(props: {
           </Pressable>
         </View>
       </View>
-    </Modal>
+    </AppModal>
   );
 }

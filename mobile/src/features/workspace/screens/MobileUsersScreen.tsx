@@ -1,15 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TextInput,
-  Pressable,
-  Modal,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+import { View, Text, ScrollView, TextInput, Pressable, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
@@ -17,6 +7,7 @@ import { useRBAC, type CreateUserData, type UserWithPermissions } from '../../..
 import { OptionSheet } from '../../../components/crm/OptionSheet';
 import { extractErrorMessage } from '../../../utils/errorUtils';
 import { usePermissions } from '../../../hooks/usePermissions';
+import { AppModal } from '../../../components/layout/AppModal';
 
 function initials(u: UserWithPermissions): string {
   if (u.firstName && u.lastName) {
@@ -318,7 +309,7 @@ export function MobileUsersScreen() {
         <View className="h-8" />
       </ScrollView>
 
-      <Modal visible={createOpen} animationType="slide" transparent>
+      <AppModal visible={createOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="text-lg font-semibold text-slate-900">Add user</Text>
@@ -380,9 +371,9 @@ export function MobileUsersScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
-      <Modal visible={editOpen} animationType="slide" transparent>
+      <AppModal visible={editOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="text-lg font-semibold text-slate-900">Edit user</Text>
@@ -425,9 +416,9 @@ export function MobileUsersScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
-      <Modal visible={deleteOpen} animationType="fade" transparent>
+      <AppModal visible={deleteOpen} animationType="fade" transparent>
         <View className="flex-1 justify-center bg-black/40 px-4">
           <View className="rounded-2xl bg-white p-4">
             <Text className="text-lg font-semibold text-slate-900">Remove user</Text>
@@ -448,7 +439,7 @@ export function MobileUsersScreen() {
             </View>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
       <OptionSheet
         visible={roleOpen}

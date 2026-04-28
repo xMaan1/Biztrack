@@ -1,16 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TextInput,
-  Pressable,
-  Modal,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-  Linking,
-} from 'react-native';
+import { View, Text, ScrollView, TextInput, Pressable, ActivityIndicator, RefreshControl, Alert, Linking } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
@@ -19,6 +8,7 @@ import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { AppModal } from '../../../components/layout/AppModal';
 import {
   deleteSavedReport,
   exportReportsDashboard,
@@ -423,7 +413,7 @@ export function MobileReportsScreen() {
         <View className="h-8" />
       </ScrollView>
 
-      <Modal visible={addOpen} animationType="slide" transparent>
+      <AppModal visible={addOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="text-lg font-semibold text-slate-900">Upload report</Text>
@@ -457,9 +447,9 @@ export function MobileReportsScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
-      <Modal visible={renameOpen} animationType="fade" transparent>
+      <AppModal visible={renameOpen} animationType="fade" transparent>
         <View className="flex-1 justify-center bg-black/40 px-4">
           <View className="rounded-2xl bg-white p-4">
             <Text className="text-lg font-semibold text-slate-900">Rename</Text>
@@ -482,7 +472,7 @@ export function MobileReportsScreen() {
             </View>
           </View>
         </View>
-      </Modal>
+      </AppModal>
     </View>
   );
 }

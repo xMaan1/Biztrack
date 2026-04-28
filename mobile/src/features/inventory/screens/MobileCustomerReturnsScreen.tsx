@@ -1,16 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TextInput,
-  Pressable,
-  Modal,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { usePermissions } from '../../../hooks/usePermissions';
@@ -24,6 +13,7 @@ import {
 import type { Warehouse, StockMovement } from '../../../models/inventory';
 import { StockMovementType, StockMovementCreate } from '../../../models/inventory';
 import type { Product } from '../../../models/pos';
+import { AppModal } from '../../../components/layout/AppModal';
 
 export function MobileCustomerReturnsScreen() {
   const { workspacePath, setSidebarActivePath } = useSidebarDrawer();
@@ -234,7 +224,7 @@ export function MobileCustomerReturnsScreen() {
         />
       )}
 
-      <Modal visible={open} animationType="slide" transparent>
+      <AppModal visible={open} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-6 pt-3">
             <Text className="mb-3 text-lg font-semibold text-slate-900">
@@ -310,9 +300,9 @@ export function MobileCustomerReturnsScreen() {
             </ScrollView>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
-      <Modal visible={productPicker} animationType="slide" transparent>
+      <AppModal visible={productPicker} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[85%] rounded-t-2xl bg-white px-3 pb-6 pt-3">
             <TextInput
@@ -343,7 +333,7 @@ export function MobileCustomerReturnsScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </AppModal>
     </View>
   );
 }
