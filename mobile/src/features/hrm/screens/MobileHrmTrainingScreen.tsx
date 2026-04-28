@@ -18,7 +18,7 @@ export function MobileHrmTrainingScreen() {
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await getTrainingPrograms(1, 200);
+      const res = await getTrainingPrograms(1, 100);
       setRows(res.training ?? []);
     } catch (e) {
       Alert.alert('HRM', extractErrorMessage(e, 'Failed to load'));

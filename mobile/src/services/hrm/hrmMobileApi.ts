@@ -27,6 +27,8 @@ import type {
   HRMTrainingFilters,
 } from '../../models/hrm';
 
+const clampPageLimit = (limit: number) => Math.min(Math.max(limit, 1), 100);
+
 export async function getHrmDashboard(): Promise<HRMDashboard> {
   return apiService.get<HRMDashboard>('/hrm/dashboard');
 }
@@ -36,9 +38,10 @@ export async function getEmployees(
   limit = 100,
   filters?: HRMEmployeeFilters,
 ): Promise<HRMEmployeesResponse> {
+  const safeLimit = clampPageLimit(limit);
   const p = new URLSearchParams();
   p.append('page', String(page));
-  p.append('limit', String(limit));
+  p.append('limit', String(safeLimit));
   if (filters?.department) p.append('department', filters.department);
   if (filters?.status) p.append('status', filters.status);
   if (filters?.employeeType) p.append('employee_type', filters.employeeType);
@@ -59,12 +62,13 @@ export async function getJobPostings(
   limit = 100,
   filters?: HRMJobFilters,
 ): Promise<HRMJobPostingsResponse> {
+  const safeLimit = clampPageLimit(limit);
   const p = new URLSearchParams();
   p.append('page', String(page));
-  p.append('limit', String(limit));
+  p.append('limit', String(safeLimit));
   if (filters?.department) p.append('department', filters.department);
   if (filters?.status) p.append('status', filters.status);
-  if (filters?.type) p.append('type', filters.type);
+  if (filters?.type) p.append('job_type', filters.type);
   if (filters?.search) p.append('search', filters.search);
   return apiService.get<HRMJobPostingsResponse>(`/hrm/jobs?${p.toString()}`);
 }
@@ -82,9 +86,10 @@ export async function getPerformanceReviews(
   limit = 100,
   filters?: HRMReviewFilters,
 ): Promise<HRMReviewsResponse> {
+  const safeLimit = clampPageLimit(limit);
   const p = new URLSearchParams();
   p.append('page', String(page));
-  p.append('limit', String(limit));
+  p.append('limit', String(safeLimit));
   if (filters?.employeeId) p.append('employee_id', filters.employeeId);
   if (filters?.reviewType) p.append('review_type', filters.reviewType);
   if (filters?.status) p.append('status', filters.status);
@@ -107,9 +112,10 @@ export async function getLeaveRequests(
   limit = 100,
   filters?: HRMLeaveFilters,
 ): Promise<HRMLeaveRequestsResponse> {
+  const safeLimit = clampPageLimit(limit);
   const p = new URLSearchParams();
   p.append('page', String(page));
-  p.append('limit', String(limit));
+  p.append('limit', String(safeLimit));
   if (filters?.employeeId) p.append('employee_id', filters.employeeId);
   if (filters?.leaveType) p.append('leave_type', filters.leaveType);
   if (filters?.status) p.append('status', filters.status);
@@ -142,9 +148,10 @@ export async function getPayrollRecords(
   limit = 100,
   filters?: HRMPayrollFilters,
 ): Promise<HRMPayrollResponse> {
+  const safeLimit = clampPageLimit(limit);
   const p = new URLSearchParams();
   p.append('page', String(page));
-  p.append('limit', String(limit));
+  p.append('limit', String(safeLimit));
   if (filters?.employeeId) p.append('employee_id', filters.employeeId);
   if (filters?.payPeriod) p.append('pay_period', filters.payPeriod);
   if (filters?.status) p.append('status', filters.status);
@@ -162,9 +169,10 @@ export async function getTrainingPrograms(
   limit = 100,
   filters?: HRMTrainingFilters,
 ): Promise<HRMTrainingResponse> {
+  const safeLimit = clampPageLimit(limit);
   const p = new URLSearchParams();
   p.append('page', String(page));
-  p.append('limit', String(limit));
+  p.append('limit', String(safeLimit));
   if (filters?.trainingType) p.append('training_type', filters.trainingType);
   if (filters?.status) p.append('status', filters.status);
   if (filters?.provider) p.append('provider', filters.provider);

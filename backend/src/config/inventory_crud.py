@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from .inventory_models import Product, Warehouse, PurchaseOrder, Receiving, StorageLocation, StockMovement
 from .hrm_models import Supplier
 
@@ -225,10 +226,23 @@ def update_purchase_order(po_id: str, update_data: dict, db: Session, tenant_id:
 
 def delete_purchase_order(po_id: str, db: Session, tenant_id: str = None) -> bool:
     po = get_purchase_order_by_id(po_id, db, tenant_id)
-    if po:
+    if not po:
+        return False
+
+    receiving_query = db.query(Receiving).filter(Receiving.purchaseOrderId == po.id)
+    if tenant_id:
+        receiving_query = receiving_query.filter(Receiving.tenant_id == tenant_id)
+    has_receivings = receiving_query.first() is not None
+    if has_receivings:
+        raise ValueError("Cannot delete purchase order with linked receivings")
+
+    try:
         db.delete(po)
         db.commit()
         return True
+    except IntegrityError:
+        db.rollback()
+        raise ValueError("Cannot delete purchase order because related records exist")
     return False
 
 # Receiving functions

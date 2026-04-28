@@ -38,8 +38,8 @@ export function MobileHrmLeaveManagementScreen() {
     try {
       setLoading(true);
       const [lr, em] = await Promise.all([
-        getLeaveRequests(1, 200),
-        getEmployees(1, 200),
+        getLeaveRequests(1, 100),
+        getEmployees(1, 100),
       ]);
       setRows(lr.leaveRequests ?? []);
       const list = em.employees ?? [];

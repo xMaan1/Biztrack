@@ -22,7 +22,7 @@ export function MobileHrmPerformanceReviewsScreen() {
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await getPerformanceReviews(1, 200);
+      const res = await getPerformanceReviews(1, 100);
       setRows(res.reviews ?? []);
     } catch (e) {
       Alert.alert('HRM', extractErrorMessage(e, 'Failed to load'));

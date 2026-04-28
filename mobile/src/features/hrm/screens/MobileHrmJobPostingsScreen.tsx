@@ -20,7 +20,7 @@ export function MobileHrmJobPostingsScreen() {
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await getJobPostings(1, 200, q.trim() ? { search: q.trim() } : undefined);
+      const res = await getJobPostings(1, 100, q.trim() ? { search: q.trim() } : undefined);
       setRows(res.jobPostings ?? []);
     } catch (e) {
       Alert.alert('HRM', extractErrorMessage(e, 'Failed to load'));

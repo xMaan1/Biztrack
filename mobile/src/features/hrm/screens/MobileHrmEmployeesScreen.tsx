@@ -21,7 +21,7 @@ export function MobileHrmEmployeesScreen() {
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await getEmployees(1, 200, q.trim() ? { search: q.trim() } : undefined);
+      const res = await getEmployees(1, 100, q.trim() ? { search: q.trim() } : undefined);
       setRows(res.employees ?? []);
     } catch (e) {
       Alert.alert('HRM', extractErrorMessage(e, 'Failed to load'));

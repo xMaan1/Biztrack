@@ -18,7 +18,7 @@ export function MobileHrmPayrollScreen() {
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await getPayrollRecords(1, 200);
+      const res = await getPayrollRecords(1, 100);
       setRows(res.payroll ?? []);
     } catch (e) {
       Alert.alert('HRM', extractErrorMessage(e, 'Failed to load'));

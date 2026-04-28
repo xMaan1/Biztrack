@@ -784,10 +784,13 @@ def delete_purchase_order_endpoint(
     _: dict = Depends(require_permission(ModulePermission.INVENTORY_DELETE.value))
 ):
     """Delete a purchase order"""
-    success = delete_purchase_order(order_id, db, str(tenant_context["tenant_id"]))
-    if not success:
-        raise HTTPException(status_code=404, detail="Purchase order not found")
-    return {"message": "Purchase order deleted successfully"}
+    try:
+        success = delete_purchase_order(order_id, db, str(tenant_context["tenant_id"]))
+        if not success:
+            raise HTTPException(status_code=404, detail="Purchase order not found")
+        return {"message": "Purchase order deleted successfully"}
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
 # Receiving Endpoints
 @router.get("/receivings", response_model=ReceivingsResponse)
