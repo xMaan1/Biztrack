@@ -5,9 +5,35 @@ import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { extractErrorMessage } from '../../../utils/errorUtils';
 import { formatUsd } from '../../../services/crm/CrmMobileService';
-import { getEmployees, deleteEmployee } from '../../../services/hrm/hrmMobileApi';
-import type { Employee } from '../../../models/hrm';
+import { getEmployees, deleteEmployee, createEmployee, updateEmployee } from '../../../services/hrm/hrmMobileApi';
+import type { Employee, EmployeeCreate, EmployeeUpdate } from '../../../models/hrm';
+import { Department, EmployeeType, EmploymentStatus } from '../../../models/hrm';
 import { AppModal } from '../../../components/layout/AppModal';
+
+const DEPARTMENTS = Object.values(Department);
+const EMPLOYEE_TYPES = Object.values(EmployeeType);
+const EMPLOYMENT_STATUSES = Object.values(EmploymentStatus);
+
+function todayIsoDate() {
+  return new Date().toISOString().split('T')[0] || '';
+}
+
+function buildEmptyForm() {
+  return {
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    hireDate: todayIsoDate(),
+    employeeId: '',
+    department: Department.GENERAL,
+    position: '',
+    employeeType: EmployeeType.FULL_TIME,
+    employmentStatus: EmploymentStatus.ACTIVE,
+    salary: '',
+    notes: '',
+  };
+}
 
 export function MobileHrmEmployeesScreen() {
   const { workspacePath, setSidebarActivePath } = useSidebarDrawer();
@@ -17,6 +43,11 @@ export function MobileHrmEmployeesScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [q, setQ] = useState('');
   const [detail, setDetail] = useState<Employee | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [selected, setSelected] = useState<Employee | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState(buildEmptyForm());
 
   const load = useCallback(async () => {
     try {
@@ -67,6 +98,132 @@ export function MobileHrmEmployeesScreen() {
     ]);
   };
 
+  const openCreate = () => {
+    setForm(buildEmptyForm());
+    setCreateOpen(true);
+  };
+
+  const openEdit = (employee: Employee) => {
+    setSelected(employee);
+    setForm({
+      firstName: employee.firstName,
+      lastName: employee.lastName,
+      email: employee.email,
+      phone: employee.phone || '',
+      hireDate: employee.hireDate || todayIsoDate(),
+      employeeId: employee.employeeId,
+      department: employee.department,
+      position: employee.position,
+      employeeType: employee.employeeType,
+      employmentStatus: employee.employmentStatus,
+      salary: employee.salary != null ? String(employee.salary) : '',
+      notes: employee.notes || '',
+    });
+    setEditOpen(true);
+  };
+
+  const validateForm = () => {
+    if (!form.firstName.trim() || !form.lastName.trim() || !form.email.trim()) {
+      Alert.alert('HRM', 'First name, last name, and email are required.');
+      return false;
+    }
+    if (!form.employeeId.trim() || !form.position.trim() || !form.hireDate.trim()) {
+      Alert.alert('HRM', 'Employee ID, position, and hire date are required.');
+      return false;
+    }
+    return true;
+  };
+
+  const submitCreate = async () => {
+    if (!validateForm()) return;
+    setSaving(true);
+    try {
+      const salaryValue = parseFloat(form.salary);
+      const payload: EmployeeCreate = {
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim() || undefined,
+        hireDate: form.hireDate.trim(),
+        employeeId: form.employeeId.trim(),
+        department: form.department,
+        position: form.position.trim(),
+        employeeType: form.employeeType,
+        employmentStatus: form.employmentStatus,
+        salary: Number.isFinite(salaryValue) ? salaryValue : undefined,
+        notes: form.notes.trim() || undefined,
+      };
+      await createEmployee(payload);
+      setCreateOpen(false);
+      await load();
+    } catch (e) {
+      Alert.alert('HRM', extractErrorMessage(e, 'Failed to create'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const submitEdit = async () => {
+    if (!selected || !validateForm()) return;
+    setSaving(true);
+    try {
+      const salaryValue = parseFloat(form.salary);
+      const payload: EmployeeUpdate = {
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim() || undefined,
+        hireDate: form.hireDate.trim(),
+        employeeId: form.employeeId.trim(),
+        department: form.department,
+        position: form.position.trim(),
+        employeeType: form.employeeType,
+        employmentStatus: form.employmentStatus,
+        salary: Number.isFinite(salaryValue) ? salaryValue : undefined,
+        notes: form.notes.trim() || undefined,
+      };
+      await updateEmployee(selected.id, payload);
+      setEditOpen(false);
+      setSelected(null);
+      await load();
+    } catch (e) {
+      Alert.alert('HRM', extractErrorMessage(e, 'Failed to update'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const cycleOption = <T extends string>(list: readonly T[], current: T): T => {
+    const index = list.indexOf(current);
+    if (index < 0) return list[0] as T;
+    return list[(index + 1) % list.length] as T;
+  };
+
+  const renderForm = () => (
+    <ScrollView keyboardShouldPersistTaps="handled" className="mt-3 max-h-[75%]">
+      <View className="gap-3">
+        <TextInput value={form.firstName} onChangeText={(v) => setForm((p) => ({ ...p, firstName: v }))} placeholder="First name" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+        <TextInput value={form.lastName} onChangeText={(v) => setForm((p) => ({ ...p, lastName: v }))} placeholder="Last name" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+        <TextInput value={form.email} onChangeText={(v) => setForm((p) => ({ ...p, email: v }))} placeholder="Email" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" keyboardType="email-address" autoCapitalize="none" />
+        <TextInput value={form.phone} onChangeText={(v) => setForm((p) => ({ ...p, phone: v }))} placeholder="Phone" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+        <TextInput value={form.employeeId} onChangeText={(v) => setForm((p) => ({ ...p, employeeId: v }))} placeholder="Employee ID" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+        <TextInput value={form.position} onChangeText={(v) => setForm((p) => ({ ...p, position: v }))} placeholder="Position" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+        <TextInput value={form.hireDate} onChangeText={(v) => setForm((p) => ({ ...p, hireDate: v }))} placeholder="Hire date (YYYY-MM-DD)" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+        <TextInput value={form.salary} onChangeText={(v) => setForm((p) => ({ ...p, salary: v }))} placeholder="Salary" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+        <Pressable onPress={() => setForm((p) => ({ ...p, department: cycleOption(DEPARTMENTS, p.department) }))} className="rounded-lg border border-slate-200 px-3 py-2">
+          <Text className="text-slate-900">Department: {form.department}</Text>
+        </Pressable>
+        <Pressable onPress={() => setForm((p) => ({ ...p, employeeType: cycleOption(EMPLOYEE_TYPES, p.employeeType) }))} className="rounded-lg border border-slate-200 px-3 py-2">
+          <Text className="text-slate-900">Type: {form.employeeType}</Text>
+        </Pressable>
+        <Pressable onPress={() => setForm((p) => ({ ...p, employmentStatus: cycleOption(EMPLOYMENT_STATUSES, p.employmentStatus) }))} className="rounded-lg border border-slate-200 px-3 py-2">
+          <Text className="text-slate-900">Status: {form.employmentStatus}</Text>
+        </Pressable>
+        <TextInput value={form.notes} onChangeText={(v) => setForm((p) => ({ ...p, notes: v }))} placeholder="Notes" multiline className="min-h-[86px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
+      </View>
+    </ScrollView>
+  );
+
   return (
     <View className="flex-1 bg-slate-50">
       <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
@@ -74,7 +231,13 @@ export function MobileHrmEmployeesScreen() {
         <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
           Employees
         </Text>
-        <View className="w-10" />
+        {canManageHRM() ? (
+          <Pressable onPress={openCreate} className="px-2 py-1">
+            <Text className="font-semibold text-blue-600">New</Text>
+          </Pressable>
+        ) : (
+          <View className="w-10" />
+        )}
       </View>
       <View className="border-b border-slate-200 bg-white px-3 py-2">
         <TextInput
@@ -150,6 +313,11 @@ export function MobileHrmEmployeesScreen() {
             ) : null}
             <View className="mt-4 flex-row gap-2">
               {detail && canManageHRM() ? (
+                <Pressable onPress={() => openEdit(detail)} className="flex-1 items-center rounded-lg bg-blue-600 py-3">
+                  <Text className="font-semibold text-white">Edit</Text>
+                </Pressable>
+              ) : null}
+              {detail && canManageHRM() ? (
                 <Pressable
                   onPress={() => remove(detail)}
                   className="flex-1 items-center rounded-lg bg-red-600 py-3"
@@ -162,6 +330,40 @@ export function MobileHrmEmployeesScreen() {
                 className="flex-1 items-center rounded-lg bg-slate-100 py-3"
               >
                 <Text className="font-semibold text-slate-800">Close</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </AppModal>
+
+      <AppModal visible={createOpen} animationType="slide" transparent>
+        <View className="flex-1 justify-end bg-black/40">
+          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
+            <Text className="text-lg font-semibold text-slate-900">New employee</Text>
+            {renderForm()}
+            <View className="mt-4 flex-row gap-2">
+              <Pressable onPress={() => setCreateOpen(false)} className="flex-1 items-center rounded-lg border border-slate-300 py-3">
+                <Text className="font-semibold text-slate-700">Cancel</Text>
+              </Pressable>
+              <Pressable onPress={() => void submitCreate()} disabled={saving} className="flex-1 items-center rounded-lg bg-blue-600 py-3">
+                <Text className="font-semibold text-white">{saving ? 'Saving...' : 'Create'}</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </AppModal>
+
+      <AppModal visible={editOpen} animationType="slide" transparent>
+        <View className="flex-1 justify-end bg-black/40">
+          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
+            <Text className="text-lg font-semibold text-slate-900">Edit employee</Text>
+            {renderForm()}
+            <View className="mt-4 flex-row gap-2">
+              <Pressable onPress={() => { setEditOpen(false); setSelected(null); }} className="flex-1 items-center rounded-lg border border-slate-300 py-3">
+                <Text className="font-semibold text-slate-700">Cancel</Text>
+              </Pressable>
+              <Pressable onPress={() => void submitEdit()} disabled={saving} className="flex-1 items-center rounded-lg bg-blue-600 py-3">
+                <Text className="font-semibold text-white">{saving ? 'Saving...' : 'Save'}</Text>
               </Pressable>
             </View>
           </View>

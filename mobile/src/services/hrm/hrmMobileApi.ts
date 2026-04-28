@@ -25,6 +25,16 @@ import type {
   HRMLeaveFilters,
   HRMPayrollFilters,
   HRMTrainingFilters,
+  EmployeeCreate,
+  EmployeeUpdate,
+  JobPostingCreate,
+  JobPostingUpdate,
+  PerformanceReviewCreate,
+  PerformanceReviewUpdate,
+  PayrollCreate,
+  PayrollUpdate,
+  TrainingCreate,
+  TrainingUpdate,
 } from '../../models/hrm';
 
 const clampPageLimit = (limit: number) => Math.min(Math.max(limit, 1), 100);
@@ -57,6 +67,17 @@ export async function deleteEmployee(id: string): Promise<void> {
   await apiService.delete(`/hrm/employees/${id}`);
 }
 
+export async function createEmployee(data: EmployeeCreate): Promise<Employee> {
+  return apiService.post<Employee>('/hrm/employees', data);
+}
+
+export async function updateEmployee(
+  id: string,
+  data: EmployeeUpdate,
+): Promise<Employee> {
+  return apiService.put<Employee>(`/hrm/employees/${id}`, data);
+}
+
 export async function getJobPostings(
   page = 1,
   limit = 100,
@@ -79,6 +100,17 @@ export async function getJobPosting(id: string): Promise<JobPosting> {
 
 export async function deleteJobPosting(id: string): Promise<void> {
   await apiService.delete(`/hrm/jobs/${id}`);
+}
+
+export async function createJobPosting(data: JobPostingCreate): Promise<JobPosting> {
+  return apiService.post<JobPosting>('/hrm/jobs', data);
+}
+
+export async function updateJobPosting(
+  id: string,
+  data: JobPostingUpdate,
+): Promise<JobPosting> {
+  return apiService.put<JobPosting>(`/hrm/jobs/${id}`, data);
 }
 
 export async function getPerformanceReviews(
@@ -105,6 +137,19 @@ export async function getPerformanceReview(
 
 export async function deletePerformanceReview(id: string): Promise<void> {
   await apiService.delete(`/hrm/reviews/${id}`);
+}
+
+export async function createPerformanceReview(
+  data: PerformanceReviewCreate,
+): Promise<PerformanceReview> {
+  return apiService.post<PerformanceReview>('/hrm/reviews', data);
+}
+
+export async function updatePerformanceReview(
+  id: string,
+  data: PerformanceReviewUpdate,
+): Promise<PerformanceReview> {
+  return apiService.put<PerformanceReview>(`/hrm/reviews/${id}`, data);
 }
 
 export async function getLeaveRequests(
@@ -164,6 +209,21 @@ export async function getPayrollRecord(id: string): Promise<Payroll> {
   return apiService.get<Payroll>(`/hrm/payroll/${id}`);
 }
 
+export async function createPayrollRecord(data: PayrollCreate): Promise<Payroll> {
+  return apiService.post<Payroll>('/hrm/payroll', data);
+}
+
+export async function updatePayrollRecord(
+  id: string,
+  data: PayrollUpdate,
+): Promise<Payroll> {
+  return apiService.put<Payroll>(`/hrm/payroll/${id}`, data);
+}
+
+export async function deletePayrollRecord(id: string): Promise<void> {
+  await apiService.delete(`/hrm/payroll/${id}`);
+}
+
 export async function getTrainingPrograms(
   page = 1,
   limit = 100,
@@ -182,6 +242,21 @@ export async function getTrainingPrograms(
 
 export async function getTrainingProgram(id: string): Promise<Training> {
   return apiService.get<Training>(`/hrm/training/${id}`);
+}
+
+export async function createTrainingProgram(data: TrainingCreate): Promise<Training> {
+  return apiService.post<Training>('/hrm/training', data);
+}
+
+export async function updateTrainingProgram(
+  id: string,
+  data: TrainingUpdate,
+): Promise<Training> {
+  return apiService.put<Training>(`/hrm/training/${id}`, data);
+}
+
+export async function deleteTrainingProgram(id: string): Promise<void> {
+  await apiService.delete(`/hrm/training/${id}`);
 }
 
 export async function fetchSuppliers(
