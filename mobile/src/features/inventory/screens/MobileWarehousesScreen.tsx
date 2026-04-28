@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { extractErrorMessage } from '../../../utils/errorUtils';
@@ -184,24 +185,33 @@ export function MobileWarehousesScreen() {
       )}
 
       <AppModal visible={open} animationType="slide">
-        <View className="flex-1 bg-white">
-          <View className="flex-row items-center justify-between border-b border-slate-200 px-3 py-3">
+        <SafeAreaView className="flex-1 bg-slate-50" edges={['top', 'bottom']}>
+          <View className="flex-row items-center justify-between border-b border-slate-200 bg-white px-4 py-4">
             <Pressable
               onPress={() => {
                 setOpen(false);
                 setEditingId(null);
               }}
+              className="px-2 py-1"
             >
-              <Text className="text-blue-600">Cancel</Text>
+              <Text className="font-semibold text-slate-500">Cancel</Text>
             </Pressable>
-            <Text className="text-lg font-semibold">
-              {editingId ? 'Edit warehouse' : 'New warehouse'}
+            <Text className="text-lg font-black text-slate-900">
+              {editingId ? 'Edit Warehouse' : 'New Warehouse'}
             </Text>
-            <Pressable onPress={() => void submit()}>
-              <Text className="font-semibold text-blue-600">Save</Text>
+            <Pressable
+              onPress={() => void submit()}
+              className="rounded-xl bg-blue-600 px-5 py-2 active:bg-blue-700"
+            >
+              <Text className="font-bold text-white">Save</Text>
             </Pressable>
           </View>
-          <ScrollView className="flex-1 px-4 py-3" keyboardShouldPersistTaps="handled">
+          <ScrollView
+            className="flex-1 px-4 py-5"
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ paddingBottom: 48 }}
+          >
+            <View className="rounded-2xl border border-slate-200 bg-white p-4">
             <Text className="mb-1 text-sm font-medium text-slate-700">Name</Text>
             <TextInput
               value={name}
@@ -242,10 +252,11 @@ export function MobileWarehousesScreen() {
             <TextInput
               value={postalCode}
               onChangeText={setPostalCode}
-              className="mb-8 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
+              className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
             />
+            </View>
           </ScrollView>
-        </View>
+        </SafeAreaView>
       </AppModal>
     </View>
   );

@@ -14,8 +14,8 @@ from ...models.pos_models import (
 from ...config.database import (
     get_db,
     get_products, get_product_by_id, create_product, update_product, delete_product,
-    get_pos_shifts, get_pos_shift_by_id, get_open_pos_shift, create_pos_shift, update_pos_shift,
-    get_pos_transactions, get_pos_transaction_by_id, create_pos_transaction, update_pos_transaction,
+    get_pos_shifts, get_pos_shift_by_id, get_open_pos_shift, create_pos_shift, update_pos_shift as db_update_pos_shift,
+    get_pos_transactions, get_pos_transaction_by_id, create_pos_transaction, update_pos_transaction as db_update_pos_transaction,
     get_pos_dashboard_data,
     get_pos_categories, get_pos_category_by_name, create_pos_category, delete_pos_category
 )
@@ -640,7 +640,7 @@ async def update_pos_shift(
     if not tenant_context:
         raise HTTPException(status_code=400, detail="Tenant context required")
     try:
-        db_shift = update_pos_shift(
+        db_shift = db_update_pos_shift(
             db, 
             shift_id, 
             shift_data.dict(exclude_unset=True), 
@@ -839,7 +839,7 @@ async def update_pos_transaction(
         if 'status' in update_dict:
             update_dict['paymentStatus'] = update_dict.pop('status')
 
-        db_transaction = update_pos_transaction(
+        db_transaction = db_update_pos_transaction(
             db, 
             transaction_id, 
             update_dict, 
@@ -979,6 +979,12 @@ async def get_pos_inventory_report(
         raise HTTPException(status_code=400, detail="Tenant context required")
     try:
         products = get_products(db, tenant_context["tenant_id"], 0, 1000)
+
+        def get_price(product):
+            return float(getattr(product, "unitPrice", getattr(product, "price", 0.0)) or 0.0)
+
+        def get_low_stock_threshold(product):
+            return int(getattr(product, "minStockLevel", getattr(product, "lowStockThreshold", 0)) or 0)
         
         # Handle case where no products exist
         if not products:
@@ -996,15 +1002,15 @@ async def get_pos_inventory_report(
         
         # Apply filters
         if low_stock_only:
-            products = [p for p in products if p.stockQuantity <= p.lowStockThreshold]
+            products = [p for p in products if p.stockQuantity <= get_low_stock_threshold(p)]
         
         if category:
             products = [p for p in products if p.category == category]
         
         # Calculate inventory metrics
         total_products = len(products)
-        total_value = sum(p.price * p.stockQuantity for p in products)
-        low_stock_count = len([p for p in products if p.stockQuantity <= p.lowStockThreshold])
+        total_value = sum(get_price(p) * p.stockQuantity for p in products)
+        low_stock_count = len([p for p in products if p.stockQuantity <= get_low_stock_threshold(p)])
         out_of_stock_count = len([p for p in products if p.stockQuantity == 0])
         
         # Group by category
@@ -1014,8 +1020,8 @@ async def get_pos_inventory_report(
             if cat not in category_summary:
                 category_summary[cat] = {"count": 0, "totalValue": 0, "lowStock": 0}
             category_summary[cat]["count"] += 1
-            category_summary[cat]["totalValue"] += product.price * product.stockQuantity
-            if product.stockQuantity <= product.lowStockThreshold:
+            category_summary[cat]["totalValue"] += get_price(product) * product.stockQuantity
+            if product.stockQuantity <= get_low_stock_threshold(product):
                 category_summary[cat]["lowStock"] += 1
         
         return {
@@ -1026,7 +1032,7 @@ async def get_pos_inventory_report(
                 "outOfStockItems": out_of_stock_count
             },
             "categorySummary": category_summary,
-            "lowStockProducts": [p for p in products if p.stockQuantity <= p.lowStockThreshold],
+            "lowStockProducts": [p for p in products if p.stockQuantity <= get_low_stock_threshold(p)],
             "products": products[:100]  # Limit to 100 for performance
         }
     except Exception as e:
