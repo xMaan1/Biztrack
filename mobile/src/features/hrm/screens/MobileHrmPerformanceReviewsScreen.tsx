@@ -303,7 +303,7 @@ export function MobileHrmPerformanceReviewsScreen() {
 
       <AppModal visible={createOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
+          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-2 pt-4">
             <Text className="text-lg font-semibold text-slate-900">New review</Text>
             <ScrollView keyboardShouldPersistTaps="handled" className="mt-3 max-h-[76%]">
               <View className="gap-3">
@@ -319,10 +319,10 @@ export function MobileHrmPerformanceReviewsScreen() {
                 <Pressable onPress={() => setForm((p) => ({ ...p, status: cycleOption(REVIEW_STATUSES, p.status) }))} className="rounded-lg border border-slate-200 px-3 py-2">
                   <Text className="text-slate-900">Status: {form.status}</Text>
                 </Pressable>
-                <TextInput value={form.reviewPeriod} onChangeText={(v) => setForm((p) => ({ ...p, reviewPeriod: v }))} placeholder="Review period" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.reviewDate} onChangeText={(v) => setForm((p) => ({ ...p, reviewDate: v }))} placeholder="Review date (YYYY-MM-DD)" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.overallRating} onChangeText={(v) => setForm((p) => ({ ...p, overallRating: v }))} placeholder="Overall rating (0-5)" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.comments} onChangeText={(v) => setForm((p) => ({ ...p, comments: v }))} placeholder="Comments" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
+                <TextInput value={form.reviewPeriod} onChangeText={(v) => setForm((p) => ({ ...p, reviewPeriod: v }))} placeholder="Review period" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.reviewDate} onChangeText={(v) => setForm((p) => ({ ...p, reviewDate: v }))} placeholder="Review date (YYYY-MM-DD)" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.overallRating} onChangeText={(v) => setForm((p) => ({ ...p, overallRating: v }))} placeholder="Overall rating (0-5)" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.comments} onChangeText={(v) => setForm((p) => ({ ...p, comments: v }))} placeholder="Comments" placeholderTextColor="#475569" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
               </View>
             </ScrollView>
             <View className="mt-4 flex-row gap-2">
@@ -339,7 +339,7 @@ export function MobileHrmPerformanceReviewsScreen() {
 
       <AppModal visible={editOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
+          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-2 pt-4">
             <Text className="text-lg font-semibold text-slate-900">Edit review</Text>
             <ScrollView keyboardShouldPersistTaps="handled" className="mt-3 max-h-[76%]">
               <View className="gap-3">
@@ -355,10 +355,10 @@ export function MobileHrmPerformanceReviewsScreen() {
                 <Pressable onPress={() => setForm((p) => ({ ...p, status: cycleOption(REVIEW_STATUSES, p.status) }))} className="rounded-lg border border-slate-200 px-3 py-2">
                   <Text className="text-slate-900">Status: {form.status}</Text>
                 </Pressable>
-                <TextInput value={form.reviewPeriod} onChangeText={(v) => setForm((p) => ({ ...p, reviewPeriod: v }))} placeholder="Review period" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.reviewDate} onChangeText={(v) => setForm((p) => ({ ...p, reviewDate: v }))} placeholder="Review date (YYYY-MM-DD)" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.overallRating} onChangeText={(v) => setForm((p) => ({ ...p, overallRating: v }))} placeholder="Overall rating (0-5)" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.comments} onChangeText={(v) => setForm((p) => ({ ...p, comments: v }))} placeholder="Comments" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
+                <TextInput value={form.reviewPeriod} onChangeText={(v) => setForm((p) => ({ ...p, reviewPeriod: v }))} placeholder="Review period" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.reviewDate} onChangeText={(v) => setForm((p) => ({ ...p, reviewDate: v }))} placeholder="Review date (YYYY-MM-DD)" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.overallRating} onChangeText={(v) => setForm((p) => ({ ...p, overallRating: v }))} placeholder="Overall rating (0-5)" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.comments} onChangeText={(v) => setForm((p) => ({ ...p, comments: v }))} placeholder="Comments" placeholderTextColor="#475569" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
               </View>
             </ScrollView>
             <View className="mt-4 flex-row gap-2">

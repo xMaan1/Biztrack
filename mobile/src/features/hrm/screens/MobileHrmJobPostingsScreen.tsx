@@ -204,6 +204,7 @@ export function MobileHrmJobPostingsScreen() {
           value={q}
           onChangeText={setQ}
           placeholder="Search…"
+          placeholderTextColor="#475569"
           className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
         />
       </View>
@@ -281,16 +282,16 @@ export function MobileHrmJobPostingsScreen() {
 
       <AppModal visible={createOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
+          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-2 pt-4">
             <Text className="text-lg font-semibold text-slate-900">New job posting</Text>
             <ScrollView keyboardShouldPersistTaps="handled" className="mt-3 max-h-[76%]">
               <View className="gap-3">
-                <TextInput value={form.title} onChangeText={(v) => setForm((p) => ({ ...p, title: v }))} placeholder="Title" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.description} onChangeText={(v) => setForm((p) => ({ ...p, description: v }))} placeholder="Description" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
-                <TextInput value={form.location} onChangeText={(v) => setForm((p) => ({ ...p, location: v }))} placeholder="Location" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.salaryRange} onChangeText={(v) => setForm((p) => ({ ...p, salaryRange: v }))} placeholder="Salary range" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.openDate} onChangeText={(v) => setForm((p) => ({ ...p, openDate: v }))} placeholder="Open date (YYYY-MM-DD)" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.closeDate} onChangeText={(v) => setForm((p) => ({ ...p, closeDate: v }))} placeholder="Close date (YYYY-MM-DD)" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.title} onChangeText={(v) => setForm((p) => ({ ...p, title: v }))} placeholder="Title" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.description} onChangeText={(v) => setForm((p) => ({ ...p, description: v }))} placeholder="Description" placeholderTextColor="#475569" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
+                <TextInput value={form.location} onChangeText={(v) => setForm((p) => ({ ...p, location: v }))} placeholder="Location" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.salaryRange} onChangeText={(v) => setForm((p) => ({ ...p, salaryRange: v }))} placeholder="Salary range" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.openDate} onChangeText={(v) => setForm((p) => ({ ...p, openDate: v }))} placeholder="Open date (YYYY-MM-DD)" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.closeDate} onChangeText={(v) => setForm((p) => ({ ...p, closeDate: v }))} placeholder="Close date (YYYY-MM-DD)" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
                 <Pressable onPress={() => setForm((p) => ({ ...p, department: cycleOption(DEPARTMENTS, p.department) }))} className="rounded-lg border border-slate-200 px-3 py-2">
                   <Text className="text-slate-900">Department: {form.department}</Text>
                 </Pressable>
@@ -316,16 +317,16 @@ export function MobileHrmJobPostingsScreen() {
 
       <AppModal visible={editOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
+          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-2 pt-4">
             <Text className="text-lg font-semibold text-slate-900">Edit job posting</Text>
             <ScrollView keyboardShouldPersistTaps="handled" className="mt-3 max-h-[76%]">
               <View className="gap-3">
-                <TextInput value={form.title} onChangeText={(v) => setForm((p) => ({ ...p, title: v }))} placeholder="Title" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.description} onChangeText={(v) => setForm((p) => ({ ...p, description: v }))} placeholder="Description" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
-                <TextInput value={form.location} onChangeText={(v) => setForm((p) => ({ ...p, location: v }))} placeholder="Location" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.salaryRange} onChangeText={(v) => setForm((p) => ({ ...p, salaryRange: v }))} placeholder="Salary range" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.openDate} onChangeText={(v) => setForm((p) => ({ ...p, openDate: v }))} placeholder="Open date (YYYY-MM-DD)" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.closeDate} onChangeText={(v) => setForm((p) => ({ ...p, closeDate: v }))} placeholder="Close date (YYYY-MM-DD)" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.title} onChangeText={(v) => setForm((p) => ({ ...p, title: v }))} placeholder="Title" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.description} onChangeText={(v) => setForm((p) => ({ ...p, description: v }))} placeholder="Description" placeholderTextColor="#475569" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
+                <TextInput value={form.location} onChangeText={(v) => setForm((p) => ({ ...p, location: v }))} placeholder="Location" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.salaryRange} onChangeText={(v) => setForm((p) => ({ ...p, salaryRange: v }))} placeholder="Salary range" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.openDate} onChangeText={(v) => setForm((p) => ({ ...p, openDate: v }))} placeholder="Open date (YYYY-MM-DD)" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.closeDate} onChangeText={(v) => setForm((p) => ({ ...p, closeDate: v }))} placeholder="Close date (YYYY-MM-DD)" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
                 <Pressable onPress={() => setForm((p) => ({ ...p, department: cycleOption(DEPARTMENTS, p.department) }))} className="rounded-lg border border-slate-200 px-3 py-2">
                   <Text className="text-slate-900">Department: {form.department}</Text>
                 </Pressable>

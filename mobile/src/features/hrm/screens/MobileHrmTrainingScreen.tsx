@@ -286,26 +286,26 @@ export function MobileHrmTrainingScreen() {
 
       <AppModal visible={createOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
+          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-2 pt-4">
             <Text className="text-lg font-semibold text-slate-900">New training program</Text>
             <ScrollView keyboardShouldPersistTaps="handled" className="mt-3 max-h-[76%]">
               <View className="gap-3">
-                <TextInput value={form.title} onChangeText={(v) => setForm((p) => ({ ...p, title: v }))} placeholder="Title" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.description} onChangeText={(v) => setForm((p) => ({ ...p, description: v }))} placeholder="Description" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
-                <TextInput value={form.provider} onChangeText={(v) => setForm((p) => ({ ...p, provider: v }))} placeholder="Provider" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.duration} onChangeText={(v) => setForm((p) => ({ ...p, duration: v }))} placeholder="Duration" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.cost} onChangeText={(v) => setForm((p) => ({ ...p, cost: v }))} placeholder="Cost" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.startDate} onChangeText={(v) => setForm((p) => ({ ...p, startDate: v }))} placeholder="Start date (YYYY-MM-DD)" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.endDate} onChangeText={(v) => setForm((p) => ({ ...p, endDate: v }))} placeholder="End date (YYYY-MM-DD)" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.maxParticipants} onChangeText={(v) => setForm((p) => ({ ...p, maxParticipants: v }))} placeholder="Max participants" keyboardType="number-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.title} onChangeText={(v) => setForm((p) => ({ ...p, title: v }))} placeholder="Title" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.description} onChangeText={(v) => setForm((p) => ({ ...p, description: v }))} placeholder="Description" placeholderTextColor="#475569" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
+                <TextInput value={form.provider} onChangeText={(v) => setForm((p) => ({ ...p, provider: v }))} placeholder="Provider" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.duration} onChangeText={(v) => setForm((p) => ({ ...p, duration: v }))} placeholder="Duration" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.cost} onChangeText={(v) => setForm((p) => ({ ...p, cost: v }))} placeholder="Cost" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.startDate} onChangeText={(v) => setForm((p) => ({ ...p, startDate: v }))} placeholder="Start date (YYYY-MM-DD)" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.endDate} onChangeText={(v) => setForm((p) => ({ ...p, endDate: v }))} placeholder="End date (YYYY-MM-DD)" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.maxParticipants} onChangeText={(v) => setForm((p) => ({ ...p, maxParticipants: v }))} placeholder="Max participants" placeholderTextColor="#475569" keyboardType="number-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
                 <Pressable onPress={() => setForm((p) => ({ ...p, trainingType: cycleOption(TRAINING_TYPES, p.trainingType) }))} className="rounded-lg border border-slate-200 px-3 py-2">
                   <Text className="text-slate-900">Type: {form.trainingType}</Text>
                 </Pressable>
                 <Pressable onPress={() => setForm((p) => ({ ...p, status: cycleOption(TRAINING_STATUSES, p.status) }))} className="rounded-lg border border-slate-200 px-3 py-2">
                   <Text className="text-slate-900">Status: {form.status}</Text>
                 </Pressable>
-                <TextInput value={form.objectives} onChangeText={(v) => setForm((p) => ({ ...p, objectives: v }))} placeholder="Objectives (one per line)" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
-                <TextInput value={form.prerequisites} onChangeText={(v) => setForm((p) => ({ ...p, prerequisites: v }))} placeholder="Prerequisites (one per line)" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
+                <TextInput value={form.objectives} onChangeText={(v) => setForm((p) => ({ ...p, objectives: v }))} placeholder="Objectives (one per line)" placeholderTextColor="#475569" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
+                <TextInput value={form.prerequisites} onChangeText={(v) => setForm((p) => ({ ...p, prerequisites: v }))} placeholder="Prerequisites (one per line)" placeholderTextColor="#475569" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
               </View>
             </ScrollView>
             <View className="mt-4 flex-row gap-2">
@@ -322,26 +322,26 @@ export function MobileHrmTrainingScreen() {
 
       <AppModal visible={editOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
+          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-2 pt-4">
             <Text className="text-lg font-semibold text-slate-900">Edit training program</Text>
             <ScrollView keyboardShouldPersistTaps="handled" className="mt-3 max-h-[76%]">
               <View className="gap-3">
-                <TextInput value={form.title} onChangeText={(v) => setForm((p) => ({ ...p, title: v }))} placeholder="Title" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.description} onChangeText={(v) => setForm((p) => ({ ...p, description: v }))} placeholder="Description" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
-                <TextInput value={form.provider} onChangeText={(v) => setForm((p) => ({ ...p, provider: v }))} placeholder="Provider" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.duration} onChangeText={(v) => setForm((p) => ({ ...p, duration: v }))} placeholder="Duration" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.cost} onChangeText={(v) => setForm((p) => ({ ...p, cost: v }))} placeholder="Cost" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.startDate} onChangeText={(v) => setForm((p) => ({ ...p, startDate: v }))} placeholder="Start date (YYYY-MM-DD)" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.endDate} onChangeText={(v) => setForm((p) => ({ ...p, endDate: v }))} placeholder="End date (YYYY-MM-DD)" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.maxParticipants} onChangeText={(v) => setForm((p) => ({ ...p, maxParticipants: v }))} placeholder="Max participants" keyboardType="number-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.title} onChangeText={(v) => setForm((p) => ({ ...p, title: v }))} placeholder="Title" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.description} onChangeText={(v) => setForm((p) => ({ ...p, description: v }))} placeholder="Description" placeholderTextColor="#475569" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
+                <TextInput value={form.provider} onChangeText={(v) => setForm((p) => ({ ...p, provider: v }))} placeholder="Provider" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.duration} onChangeText={(v) => setForm((p) => ({ ...p, duration: v }))} placeholder="Duration" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.cost} onChangeText={(v) => setForm((p) => ({ ...p, cost: v }))} placeholder="Cost" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.startDate} onChangeText={(v) => setForm((p) => ({ ...p, startDate: v }))} placeholder="Start date (YYYY-MM-DD)" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.endDate} onChangeText={(v) => setForm((p) => ({ ...p, endDate: v }))} placeholder="End date (YYYY-MM-DD)" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.maxParticipants} onChangeText={(v) => setForm((p) => ({ ...p, maxParticipants: v }))} placeholder="Max participants" placeholderTextColor="#475569" keyboardType="number-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
                 <Pressable onPress={() => setForm((p) => ({ ...p, trainingType: cycleOption(TRAINING_TYPES, p.trainingType) }))} className="rounded-lg border border-slate-200 px-3 py-2">
                   <Text className="text-slate-900">Type: {form.trainingType}</Text>
                 </Pressable>
                 <Pressable onPress={() => setForm((p) => ({ ...p, status: cycleOption(TRAINING_STATUSES, p.status) }))} className="rounded-lg border border-slate-200 px-3 py-2">
                   <Text className="text-slate-900">Status: {form.status}</Text>
                 </Pressable>
-                <TextInput value={form.objectives} onChangeText={(v) => setForm((p) => ({ ...p, objectives: v }))} placeholder="Objectives (one per line)" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
-                <TextInput value={form.prerequisites} onChangeText={(v) => setForm((p) => ({ ...p, prerequisites: v }))} placeholder="Prerequisites (one per line)" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
+                <TextInput value={form.objectives} onChangeText={(v) => setForm((p) => ({ ...p, objectives: v }))} placeholder="Objectives (one per line)" placeholderTextColor="#475569" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
+                <TextInput value={form.prerequisites} onChangeText={(v) => setForm((p) => ({ ...p, prerequisites: v }))} placeholder="Prerequisites (one per line)" placeholderTextColor="#475569" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
               </View>
             </ScrollView>
             <View className="mt-4 flex-row gap-2">

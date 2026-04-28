@@ -327,27 +327,27 @@ export function MobileHrmPayrollScreen() {
 
       <AppModal visible={createOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
+          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-2 pt-4">
             <Text className="text-lg font-semibold text-slate-900">New payroll record</Text>
             <ScrollView keyboardShouldPersistTaps="handled" className="mt-3 max-h-[76%]">
               <View className="gap-3">
                 <Pressable onPress={cycleEmployee} className="rounded-lg border border-slate-200 px-3 py-2">
                   <Text className="text-slate-900">Employee: {employeeName(form.employeeId)}</Text>
                 </Pressable>
-                <TextInput value={form.payPeriod} onChangeText={(v) => setForm((p) => ({ ...p, payPeriod: v }))} placeholder="Pay period" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.startDate} onChangeText={(v) => setForm((p) => ({ ...p, startDate: v }))} placeholder="Start date (YYYY-MM-DD)" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.endDate} onChangeText={(v) => setForm((p) => ({ ...p, endDate: v }))} placeholder="End date (YYYY-MM-DD)" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.basicSalary} onChangeText={(v) => setForm((p) => ({ ...p, basicSalary: v }))} placeholder="Basic salary" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.allowances} onChangeText={(v) => setForm((p) => ({ ...p, allowances: v }))} placeholder="Allowances" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.deductions} onChangeText={(v) => setForm((p) => ({ ...p, deductions: v }))} placeholder="Deductions" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.overtimePay} onChangeText={(v) => setForm((p) => ({ ...p, overtimePay: v }))} placeholder="Overtime pay" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.bonus} onChangeText={(v) => setForm((p) => ({ ...p, bonus: v }))} placeholder="Bonus" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.netPay} onChangeText={(v) => setForm((p) => ({ ...p, netPay: v }))} placeholder="Net pay (optional)" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.payPeriod} onChangeText={(v) => setForm((p) => ({ ...p, payPeriod: v }))} placeholder="Pay period" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.startDate} onChangeText={(v) => setForm((p) => ({ ...p, startDate: v }))} placeholder="Start date (YYYY-MM-DD)" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.endDate} onChangeText={(v) => setForm((p) => ({ ...p, endDate: v }))} placeholder="End date (YYYY-MM-DD)" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.basicSalary} onChangeText={(v) => setForm((p) => ({ ...p, basicSalary: v }))} placeholder="Basic salary" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.allowances} onChangeText={(v) => setForm((p) => ({ ...p, allowances: v }))} placeholder="Allowances" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.deductions} onChangeText={(v) => setForm((p) => ({ ...p, deductions: v }))} placeholder="Deductions" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.overtimePay} onChangeText={(v) => setForm((p) => ({ ...p, overtimePay: v }))} placeholder="Overtime pay" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.bonus} onChangeText={(v) => setForm((p) => ({ ...p, bonus: v }))} placeholder="Bonus" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.netPay} onChangeText={(v) => setForm((p) => ({ ...p, netPay: v }))} placeholder="Net pay (optional)" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
                 <Pressable onPress={cycleStatus} className="rounded-lg border border-slate-200 px-3 py-2">
                   <Text className="text-slate-900">Status: {form.status}</Text>
                 </Pressable>
-                <TextInput value={form.paymentDate} onChangeText={(v) => setForm((p) => ({ ...p, paymentDate: v }))} placeholder="Payment date (YYYY-MM-DD)" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.notes} onChangeText={(v) => setForm((p) => ({ ...p, notes: v }))} placeholder="Notes" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
+                <TextInput value={form.paymentDate} onChangeText={(v) => setForm((p) => ({ ...p, paymentDate: v }))} placeholder="Payment date (YYYY-MM-DD)" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.notes} onChangeText={(v) => setForm((p) => ({ ...p, notes: v }))} placeholder="Notes" placeholderTextColor="#475569" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
               </View>
             </ScrollView>
             <View className="mt-4 flex-row gap-2">
@@ -364,27 +364,27 @@ export function MobileHrmPayrollScreen() {
 
       <AppModal visible={editOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
+          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-2 pt-4">
             <Text className="text-lg font-semibold text-slate-900">Edit payroll record</Text>
             <ScrollView keyboardShouldPersistTaps="handled" className="mt-3 max-h-[76%]">
               <View className="gap-3">
                 <Pressable onPress={cycleEmployee} className="rounded-lg border border-slate-200 px-3 py-2">
                   <Text className="text-slate-900">Employee: {employeeName(form.employeeId)}</Text>
                 </Pressable>
-                <TextInput value={form.payPeriod} onChangeText={(v) => setForm((p) => ({ ...p, payPeriod: v }))} placeholder="Pay period" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.startDate} onChangeText={(v) => setForm((p) => ({ ...p, startDate: v }))} placeholder="Start date (YYYY-MM-DD)" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.endDate} onChangeText={(v) => setForm((p) => ({ ...p, endDate: v }))} placeholder="End date (YYYY-MM-DD)" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.basicSalary} onChangeText={(v) => setForm((p) => ({ ...p, basicSalary: v }))} placeholder="Basic salary" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.allowances} onChangeText={(v) => setForm((p) => ({ ...p, allowances: v }))} placeholder="Allowances" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.deductions} onChangeText={(v) => setForm((p) => ({ ...p, deductions: v }))} placeholder="Deductions" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.overtimePay} onChangeText={(v) => setForm((p) => ({ ...p, overtimePay: v }))} placeholder="Overtime pay" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.bonus} onChangeText={(v) => setForm((p) => ({ ...p, bonus: v }))} placeholder="Bonus" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.netPay} onChangeText={(v) => setForm((p) => ({ ...p, netPay: v }))} placeholder="Net pay (optional)" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.payPeriod} onChangeText={(v) => setForm((p) => ({ ...p, payPeriod: v }))} placeholder="Pay period" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.startDate} onChangeText={(v) => setForm((p) => ({ ...p, startDate: v }))} placeholder="Start date (YYYY-MM-DD)" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.endDate} onChangeText={(v) => setForm((p) => ({ ...p, endDate: v }))} placeholder="End date (YYYY-MM-DD)" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.basicSalary} onChangeText={(v) => setForm((p) => ({ ...p, basicSalary: v }))} placeholder="Basic salary" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.allowances} onChangeText={(v) => setForm((p) => ({ ...p, allowances: v }))} placeholder="Allowances" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.deductions} onChangeText={(v) => setForm((p) => ({ ...p, deductions: v }))} placeholder="Deductions" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.overtimePay} onChangeText={(v) => setForm((p) => ({ ...p, overtimePay: v }))} placeholder="Overtime pay" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.bonus} onChangeText={(v) => setForm((p) => ({ ...p, bonus: v }))} placeholder="Bonus" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.netPay} onChangeText={(v) => setForm((p) => ({ ...p, netPay: v }))} placeholder="Net pay (optional)" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
                 <Pressable onPress={cycleStatus} className="rounded-lg border border-slate-200 px-3 py-2">
                   <Text className="text-slate-900">Status: {form.status}</Text>
                 </Pressable>
-                <TextInput value={form.paymentDate} onChangeText={(v) => setForm((p) => ({ ...p, paymentDate: v }))} placeholder="Payment date (YYYY-MM-DD)" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.notes} onChangeText={(v) => setForm((p) => ({ ...p, notes: v }))} placeholder="Notes" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
+                <TextInput value={form.paymentDate} onChangeText={(v) => setForm((p) => ({ ...p, paymentDate: v }))} placeholder="Payment date (YYYY-MM-DD)" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+                <TextInput value={form.notes} onChangeText={(v) => setForm((p) => ({ ...p, notes: v }))} placeholder="Notes" placeholderTextColor="#475569" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
               </View>
             </ScrollView>
             <View className="mt-4 flex-row gap-2">

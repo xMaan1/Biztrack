@@ -202,14 +202,14 @@ export function MobileHrmEmployeesScreen() {
   const renderForm = () => (
     <ScrollView keyboardShouldPersistTaps="handled" className="mt-3 max-h-[75%]">
       <View className="gap-3">
-        <TextInput value={form.firstName} onChangeText={(v) => setForm((p) => ({ ...p, firstName: v }))} placeholder="First name" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-        <TextInput value={form.lastName} onChangeText={(v) => setForm((p) => ({ ...p, lastName: v }))} placeholder="Last name" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-        <TextInput value={form.email} onChangeText={(v) => setForm((p) => ({ ...p, email: v }))} placeholder="Email" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" keyboardType="email-address" autoCapitalize="none" />
-        <TextInput value={form.phone} onChangeText={(v) => setForm((p) => ({ ...p, phone: v }))} placeholder="Phone" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-        <TextInput value={form.employeeId} onChangeText={(v) => setForm((p) => ({ ...p, employeeId: v }))} placeholder="Employee ID" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-        <TextInput value={form.position} onChangeText={(v) => setForm((p) => ({ ...p, position: v }))} placeholder="Position" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-        <TextInput value={form.hireDate} onChangeText={(v) => setForm((p) => ({ ...p, hireDate: v }))} placeholder="Hire date (YYYY-MM-DD)" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-        <TextInput value={form.salary} onChangeText={(v) => setForm((p) => ({ ...p, salary: v }))} placeholder="Salary" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+        <TextInput value={form.firstName} onChangeText={(v) => setForm((p) => ({ ...p, firstName: v }))} placeholder="First name" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+        <TextInput value={form.lastName} onChangeText={(v) => setForm((p) => ({ ...p, lastName: v }))} placeholder="Last name" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+        <TextInput value={form.email} onChangeText={(v) => setForm((p) => ({ ...p, email: v }))} placeholder="Email" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" keyboardType="email-address" autoCapitalize="none" />
+        <TextInput value={form.phone} onChangeText={(v) => setForm((p) => ({ ...p, phone: v }))} placeholder="Phone" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+        <TextInput value={form.employeeId} onChangeText={(v) => setForm((p) => ({ ...p, employeeId: v }))} placeholder="Employee ID" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+        <TextInput value={form.position} onChangeText={(v) => setForm((p) => ({ ...p, position: v }))} placeholder="Position" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+        <TextInput value={form.hireDate} onChangeText={(v) => setForm((p) => ({ ...p, hireDate: v }))} placeholder="Hire date (YYYY-MM-DD)" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
+        <TextInput value={form.salary} onChangeText={(v) => setForm((p) => ({ ...p, salary: v }))} placeholder="Salary" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
         <Pressable onPress={() => setForm((p) => ({ ...p, department: cycleOption(DEPARTMENTS, p.department) }))} className="rounded-lg border border-slate-200 px-3 py-2">
           <Text className="text-slate-900">Department: {form.department}</Text>
         </Pressable>
@@ -219,7 +219,7 @@ export function MobileHrmEmployeesScreen() {
         <Pressable onPress={() => setForm((p) => ({ ...p, employmentStatus: cycleOption(EMPLOYMENT_STATUSES, p.employmentStatus) }))} className="rounded-lg border border-slate-200 px-3 py-2">
           <Text className="text-slate-900">Status: {form.employmentStatus}</Text>
         </Pressable>
-        <TextInput value={form.notes} onChangeText={(v) => setForm((p) => ({ ...p, notes: v }))} placeholder="Notes" multiline className="min-h-[86px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
+        <TextInput value={form.notes} onChangeText={(v) => setForm((p) => ({ ...p, notes: v }))} placeholder="Notes" placeholderTextColor="#475569" multiline className="min-h-[86px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
       </View>
     </ScrollView>
   );
@@ -244,6 +244,7 @@ export function MobileHrmEmployeesScreen() {
           value={q}
           onChangeText={setQ}
           placeholder="Search name, email, position…"
+          placeholderTextColor="#475569"
           className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
         />
       </View>
@@ -338,7 +339,7 @@ export function MobileHrmEmployeesScreen() {
 
       <AppModal visible={createOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
+          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-2 pt-4">
             <Text className="text-lg font-semibold text-slate-900">New employee</Text>
             {renderForm()}
             <View className="mt-4 flex-row gap-2">
@@ -355,7 +356,7 @@ export function MobileHrmEmployeesScreen() {
 
       <AppModal visible={editOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
+          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-2 pt-4">
             <Text className="text-lg font-semibold text-slate-900">Edit employee</Text>
             {renderForm()}
             <View className="mt-4 flex-row gap-2">

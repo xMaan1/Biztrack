@@ -181,7 +181,7 @@ export function MobileHrmLeaveManagementScreen() {
 
       <AppModal visible={open} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-6 pt-3">
+          <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-2 pt-3">
             <Text className="mb-3 text-lg font-semibold text-slate-900">
               New leave request
             </Text>
