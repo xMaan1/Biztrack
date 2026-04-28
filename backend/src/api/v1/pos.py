@@ -139,9 +139,14 @@ def convert_db_transaction_to_pydantic(db_txn):
     )
 
 
-def calculate_transaction_totals(items: List[dict], discount: float = 0.0, tax_rate: float = 0.0) -> dict:
+def calculate_transaction_totals(items: List, discount: float = 0.0, tax_rate: float = 0.0) -> dict:
     """Calculate transaction totals"""
-    subtotal = sum(item['total'] for item in items)
+    def get_item_total(item):
+        if isinstance(item, dict):
+            return float(item.get("total", 0.0))
+        return float(getattr(item, "total", 0.0))
+
+    subtotal = sum(get_item_total(item) for item in items)
     discount_amount = subtotal * (discount / 100) if discount > 0 else 0
     taxable_amount = subtotal - discount_amount
     tax_amount = taxable_amount * (tax_rate / 100) if tax_rate > 0 else 0
