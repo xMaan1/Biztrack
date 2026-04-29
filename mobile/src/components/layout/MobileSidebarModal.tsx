@@ -72,8 +72,17 @@ export function MobileSidebarModal({
 
   const isActive = useCallback(
     (path: string, exact: boolean = false) => {
-      if (path === '/' || exact) return activePath === path;
-      return activePath.startsWith(path);
+      const normalizedPath = path.endsWith('/') ? path.slice(0, -1) : path;
+      const normalizedActivePath = activePath.endsWith('/')
+        ? activePath.slice(0, -1)
+        : activePath;
+      if (normalizedPath === '/' || exact) {
+        return normalizedActivePath === normalizedPath;
+      }
+      return (
+        normalizedActivePath === normalizedPath ||
+        normalizedActivePath.startsWith(`${normalizedPath}/`)
+      );
     },
     [activePath],
   );

@@ -87,6 +87,7 @@ export function MobileHealthcareStaffScreen() {
   const load = useCallback(async () => {
     const res = await getStaff({
       search: debounced.trim() || undefined,
+      is_active: true,
       page,
       limit: PAGE_SIZE,
     });
@@ -214,6 +215,8 @@ export function MobileHealthcareStaffScreen() {
         onPress: async () => {
           try {
             await deleteStaff(s.id);
+            setList((prev) => prev.filter((x) => x.id !== s.id));
+            setTotal((prev) => Math.max(0, prev - 1));
             await run(false);
           } catch (e) {
             Alert.alert('Staff', extractErrorMessage(e, 'Delete failed'));

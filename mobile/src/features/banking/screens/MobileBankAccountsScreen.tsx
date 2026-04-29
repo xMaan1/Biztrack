@@ -164,6 +164,7 @@ export function MobileBankAccountsScreen() {
       setBusy(true);
       await updateBankAccount(selected.id, {
         accountName: form.accountName,
+        accountNumber: form.accountNumber,
         routingNumber: form.routingNumber || undefined,
         bankName: form.bankName,
         bankCode: form.bankCode || undefined,

@@ -1,4 +1,4 @@
-import { View, Text, Pressable, ScrollView, Alert, RefreshControl } from 'react-native';
+import { View, Text, Pressable, ScrollView, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MenuHeaderButton } from '../layout/MenuHeaderButton';
 
@@ -33,16 +33,13 @@ function formatUsdDecimal(amount: number): string {
   }).format(amount);
 }
 
-function comingSoon(label: string) {
-  Alert.alert('BizTrack', `${label} is available in the full web app.`);
-}
-
 interface MobileCommerceDashboardProps {
   stats: CommerceStats;
   onLogout: () => void;
   userLabel?: string;
   refreshing?: boolean;
   onRefresh?: () => void;
+  onNavigatePath?: (path: string) => void | Promise<void>;
 }
 
 export function MobileCommerceDashboard({
@@ -51,6 +48,7 @@ export function MobileCommerceDashboard({
   userLabel,
   refreshing = false,
   onRefresh,
+  onNavigatePath,
 }: MobileCommerceDashboardProps) {
   return (
     <ScrollView
@@ -89,7 +87,7 @@ export function MobileCommerceDashboard({
         <View className="mt-4 flex-row flex-wrap gap-2">
           <Pressable
             className="flex-row items-center rounded-lg bg-emerald-600 px-3 py-2 active:bg-emerald-700"
-            onPress={() => comingSoon('Projects')}
+            onPress={() => void onNavigatePath?.('/projects')}
           >
             <Ionicons name="add" size={18} color="#fff" />
             <Text className="ml-1 text-sm font-semibold text-white">
@@ -98,7 +96,7 @@ export function MobileCommerceDashboard({
           </Pressable>
           <Pressable
             className="flex-row items-center rounded-lg border border-emerald-600 px-3 py-2 active:bg-emerald-50"
-            onPress={() => comingSoon('POS sale')}
+            onPress={() => void onNavigatePath?.('/pos/sale')}
           >
             <Ionicons name="cart-outline" size={18} color="#059669" />
             <Text className="ml-1 text-sm font-semibold text-emerald-700">
@@ -196,7 +194,7 @@ export function MobileCommerceDashboard({
           </View>
           <Pressable
             className="mt-4 items-center rounded-lg border border-emerald-600 py-2.5 active:bg-emerald-50"
-            onPress={() => comingSoon('Sales analytics')}
+            onPress={() => void onNavigatePath?.('/sales/analytics')}
           >
             <Text className="font-semibold text-emerald-700">
               View sales analytics
@@ -237,7 +235,7 @@ export function MobileCommerceDashboard({
           </View>
           <Pressable
             className="mt-4 items-center rounded-lg border border-blue-600 py-2.5 active:bg-blue-50"
-            onPress={() => comingSoon('Inventory')}
+            onPress={() => void onNavigatePath?.('/inventory')}
           >
             <Text className="font-semibold text-blue-700">Manage inventory</Text>
           </Pressable>
@@ -253,10 +251,10 @@ export function MobileCommerceDashboard({
           <View className="mt-4 flex-row flex-wrap gap-3">
             {(
               [
-                ['POS', 'cart-outline', () => comingSoon('Point of Sale')],
-                ['CRM', 'people-outline', () => comingSoon('CRM')],
-                ['Inventory', 'cube-outline', () => comingSoon('Inventory')],
-                ['Reports', 'bar-chart-outline', () => comingSoon('Reports')],
+                ['POS', 'cart-outline', () => onNavigatePath?.('/pos')],
+                ['CRM', 'people-outline', () => onNavigatePath?.('/crm')],
+                ['Inventory', 'cube-outline', () => onNavigatePath?.('/inventory')],
+                ['Reports', 'bar-chart-outline', () => onNavigatePath?.('/reports')],
               ] as const
             ).map(([label, icon, onPress]) => (
               <Pressable

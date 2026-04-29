@@ -19,9 +19,10 @@ export async function fetchProjectsPaged(
   limit = 20,
   opts?: { status?: string; priority?: string; search?: string },
 ): Promise<PmProjectsApiResponse> {
+  const safeLimit = Math.min(Math.max(limit, 1), 100);
   const p = new URLSearchParams();
   p.append('page', String(page));
-  p.append('limit', String(limit));
+  p.append('limit', String(safeLimit));
   if (opts?.status) p.append('status', opts.status);
   if (opts?.priority) p.append('priority', opts.priority);
   if (opts?.search) p.append('search', opts.search);

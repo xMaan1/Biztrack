@@ -286,6 +286,14 @@ export class ApiService {
 
   async delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.delete<T>(url, config);
+    if (
+      response.status === 204 ||
+      response.data === '' ||
+      response.data === null ||
+      response.data === undefined
+    ) {
+      return { success: true } as T;
+    }
     return response.data;
   }
 

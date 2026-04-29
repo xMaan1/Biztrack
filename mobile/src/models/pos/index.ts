@@ -123,9 +123,11 @@ export interface POSCategoriesResponse {
 
 export type POSAPIPaymentMethod =
   | 'cash'
-  | 'card'
-  | 'mobile'
-  | 'bank_transfer';
+  | 'credit_card'
+  | 'debit_card'
+  | 'bank_transfer'
+  | 'check'
+  | 'other';
 
 // POS Transaction Types
 export interface POSTransactionItem {
@@ -149,6 +151,7 @@ export interface POSTransactionLineInput {
   unitPrice: number;
   discount: number;
   taxRate: number;
+  taxAmount: number;
   total: number;
 }
 

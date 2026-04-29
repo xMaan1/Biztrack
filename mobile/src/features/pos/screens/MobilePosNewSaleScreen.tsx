@@ -17,9 +17,11 @@ type CartLine = { product: Product; quantity: number; total: number };
 
 const PAYMENT_OPTIONS: { key: POSAPIPaymentMethod; label: string }[] = [
   { key: 'cash', label: 'Cash' },
-  { key: 'card', label: 'Card' },
-  { key: 'mobile', label: 'Mobile' },
-  { key: 'bank_transfer', label: 'Bank' },
+  { key: 'credit_card', label: 'Credit Card' },
+  { key: 'debit_card', label: 'Debit Card' },
+  { key: 'bank_transfer', label: 'Bank Transfer' },
+  { key: 'check', label: 'Check' },
+  { key: 'other', label: 'Other' },
 ];
 
 export function MobilePosNewSaleScreen() {
@@ -143,6 +145,7 @@ export function MobilePosNewSaleScreen() {
         unitPrice: line.product.unitPrice,
         discount: 0,
         taxRate: 0,
+        taxAmount: 0,
         total: line.total,
       })),
       taxRate: 0,

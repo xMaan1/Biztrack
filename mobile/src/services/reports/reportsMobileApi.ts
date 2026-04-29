@@ -55,7 +55,11 @@ export async function uploadSavedReport(
     'file',
     { uri: file.uri, name: file.name, type: file.type } as unknown as Blob,
   );
-  return apiService.post<SavedReportItem>('/reports/saved', fd);
+  return apiService.post<SavedReportItem>('/reports/saved', fd, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
 }
 
 export async function renameSavedReport(

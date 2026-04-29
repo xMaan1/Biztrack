@@ -66,7 +66,7 @@ export function MobileTimeTrackingScreen() {
     try {
       const [em, pr] = await Promise.all([
         getEmployees(1, 200),
-        fetchProjectsPaged(1, 200),
+        fetchProjectsPaged(1, 100),
       ]);
       setEmployees(em.employees ?? []);
       setProjects(pr.projects ?? []);

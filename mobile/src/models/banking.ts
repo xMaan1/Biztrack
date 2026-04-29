@@ -83,6 +83,7 @@ export interface BankAccountCreate {
 
 export interface BankAccountUpdate {
   accountName?: string;
+  accountNumber?: string;
   routingNumber?: string;
   bankName?: string;
   bankCode?: string;

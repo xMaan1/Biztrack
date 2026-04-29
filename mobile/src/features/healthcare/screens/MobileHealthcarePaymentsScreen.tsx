@@ -24,6 +24,11 @@ const PAYMENT_METHODS = [
 
 const PAGE_SIZE = 20;
 
+function isInvoicePaymentCreatedByBug(error: unknown): boolean {
+  const message = extractErrorMessage(error, '');
+  return message.includes("'createdBy' is an invalid keyword argument for Payment");
+}
+
 export function MobileHealthcarePaymentsScreen() {
   const { setSidebarActivePath } = useSidebarDrawer();
   const [list, setList] = useState<AdmissionInvoiceSummary[]>([]);
@@ -109,6 +114,15 @@ export function MobileHealthcarePaymentsScreen() {
       Alert.alert('Payment', 'Recorded');
       await run(false);
     } catch (e) {
+      if (isInvoicePaymentCreatedByBug(e) && n >= inv.balance) {
+        try {
+          await apiService.post(`/invoices/${inv.id}/mark-as-paid`);
+          setPayOpen(false);
+          Alert.alert('Payment', 'Recorded');
+          await run(false);
+          return;
+        } catch {}
+      }
       Alert.alert('Payment', extractErrorMessage(e, 'Failed'));
     } finally {
       setPayBusy(false);

@@ -21,11 +21,9 @@ import type {
 import { PurchaseOrderStatus } from '../../../models/inventory';
 import { AppModal } from '../../../components/layout/AppModal';
 
-const PO_OPEN_STATUSES: string[] = [
-  PurchaseOrderStatus.SUBMITTED,
+const RECEIVING_ELIGIBLE_PO_STATUSES: string[] = [
   PurchaseOrderStatus.ORDERED,
   PurchaseOrderStatus.APPROVED,
-  PurchaseOrderStatus.PARTIALLY_RECEIVED,
 ];
 
 export function MobileReceivingScreen() {
@@ -87,7 +85,13 @@ export function MobileReceivingScreen() {
 
   const eligiblePos = useMemo(
     () =>
-      purchaseOrders.filter((p) => PO_OPEN_STATUSES.includes(String(p.status))),
+      purchaseOrders.filter((p) =>
+        RECEIVING_ELIGIBLE_PO_STATUSES.includes(
+          String(p.status ?? '')
+            .trim()
+            .toLowerCase(),
+        ),
+      ),
     [purchaseOrders],
   );
 
@@ -274,6 +278,11 @@ export function MobileReceivingScreen() {
                   </Pressable>
                 ))}
               </ScrollView>
+              {eligiblePos.length === 0 ? (
+                <Text className="mb-3 text-slate-500">
+                  No approved or ordered purchase orders available.
+                </Text>
+              ) : null}
 
               <Text className="mb-1 text-sm text-slate-600">Warehouse</Text>
               <ScrollView horizontal className="mb-3">

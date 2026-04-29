@@ -18,31 +18,9 @@ function asArray<T>(res: unknown): T[] {
   return Array.isArray(res) ? (res as T[]) : [];
 }
 
-function normalizeLedgerPayload<T extends object>(body: T): T {
-  const payload = { ...(body as Record<string, unknown>) };
-  if ('metadata' in payload && !('meta_data' in payload)) {
-    payload.meta_data = payload.metadata;
-  }
-  const meta = payload.meta_data;
-  if (meta && typeof meta === 'object' && !Array.isArray(meta)) {
-    const compactMeta = Object.fromEntries(
-      Object.entries(meta as Record<string, unknown>).filter(([, value]) => {
-        if (value == null) return false;
-        if (typeof value === 'string') return value.trim().length > 0;
-        if (Array.isArray(value)) return value.length > 0;
-        return true;
-      }),
-    );
-    if (Object.keys(compactMeta).length > 0) {
-      payload.meta_data = compactMeta;
-    } else {
-      delete payload.meta_data;
-    }
-  } else if (meta == null) {
-    delete payload.meta_data;
-  }
-  delete payload.metadata;
-  return payload as T;
+function toDateOnly(value?: string): string | undefined {
+  if (!value) return undefined;
+  return value.slice(0, 10);
 }
 
 export async function getChartOfAccounts(
@@ -92,7 +70,7 @@ export async function createLedgerTransaction(
 ): Promise<LedgerTransactionResponse> {
   return apiService.post<LedgerTransactionResponse>(
     `${base}/transactions`,
-    normalizeLedgerPayload(body),
+    body,
   );
 }
 
@@ -102,7 +80,7 @@ export async function updateLedgerTransaction(
 ): Promise<LedgerTransactionResponse> {
   return apiService.put<LedgerTransactionResponse>(
     `${base}/transactions/${id}`,
-    normalizeLedgerPayload(body),
+    body,
   );
 }
 
@@ -129,8 +107,9 @@ export async function getBudgets(
 export async function getTrialBalance(
   asOfDate?: string,
 ): Promise<TrialBalanceResponse> {
-  const p = asOfDate
-    ? `?as_of_date=${encodeURIComponent(asOfDate)}`
+  const normalizedAsOfDate = toDateOnly(asOfDate);
+  const p = normalizedAsOfDate
+    ? `?as_of_date=${encodeURIComponent(normalizedAsOfDate)}`
     : '';
   return apiService.get<TrialBalanceResponse>(
     `${base}/reports/trial-balance${p}`,
@@ -142,8 +121,10 @@ export async function getIncomeStatement(
   endDate?: string,
 ): Promise<IncomeStatementResponse> {
   const pr = new URLSearchParams();
-  if (startDate) pr.append('start_date', startDate);
-  if (endDate) pr.append('end_date', endDate);
+  const normalizedStartDate = toDateOnly(startDate);
+  const normalizedEndDate = toDateOnly(endDate);
+  if (normalizedStartDate) pr.append('start_date', normalizedStartDate);
+  if (normalizedEndDate) pr.append('end_date', normalizedEndDate);
   const qs = pr.toString();
   return apiService.get<IncomeStatementResponse>(
     `${base}/reports/income-statement${qs ? `?${qs}` : ''}`,
@@ -153,8 +134,9 @@ export async function getIncomeStatement(
 export async function getBalanceSheet(
   asOfDate?: string,
 ): Promise<BalanceSheetResponse> {
-  const p = asOfDate
-    ? `?as_of_date=${encodeURIComponent(asOfDate)}`
+  const normalizedAsOfDate = toDateOnly(asOfDate);
+  const p = normalizedAsOfDate
+    ? `?as_of_date=${encodeURIComponent(normalizedAsOfDate)}`
     : '';
   return apiService.get<BalanceSheetResponse>(
     `${base}/reports/balance-sheet${p}`,

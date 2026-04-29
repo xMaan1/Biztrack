@@ -59,7 +59,7 @@ export function MobileTasksScreen() {
   const loadRefs = useCallback(async () => {
     try {
       const [pr, tm] = await Promise.all([
-        fetchProjectsPaged(1, 200),
+        fetchProjectsPaged(1, 100),
         fetchProjectTeamMembers(),
       ]);
       setProjects(pr.projects ?? []);

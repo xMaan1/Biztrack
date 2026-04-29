@@ -129,7 +129,7 @@ function SalesAccessDenied(props: { onBack: () => void }) {
 
 export function CommerceDashboardScreen() {
   const { logout, user, currentTenant } = useAuth();
-  const { setSidebarActivePath, workspacePath, setWorkspacePath } =
+  const { setSidebarActivePath, workspacePath, setWorkspacePath, navigateMenuPath } =
     useSidebarDrawer();
   const { canViewCRM } = usePermissions();
   const { hasPermission, isOwner, hasModuleAccess } = useRBAC();
@@ -504,6 +504,7 @@ export function CommerceDashboardScreen() {
         }
         refreshing={planLoading || dashboardLoading}
         onRefresh={() => void onRefresh()}
+        onNavigatePath={navigateMenuPath}
       />
     </View>
   );

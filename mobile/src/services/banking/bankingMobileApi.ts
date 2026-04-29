@@ -50,9 +50,96 @@ function pickTills(res: unknown): Till[] {
   return r.tills ?? [];
 }
 
+function toLegacyEnumValue(value: unknown): unknown {
+  if (typeof value !== 'string') return value;
+  return value.toUpperCase();
+}
+
+function normalizeTransactionPayload<T extends Record<string, unknown>>(body: T): T {
+  return {
+    ...body,
+    transactionType: toLegacyEnumValue(body.transactionType),
+    status: toLegacyEnumValue(body.status),
+    paymentMethod: toLegacyEnumValue(body.paymentMethod),
+  } as T;
+}
+
+function buildDashboardFromData(
+  accounts: BankAccount[],
+  transactions: BankTransaction[],
+): BankingDashboard {
+  const totalBankBalance = accounts.reduce(
+    (sum, account) => sum + (account.currentBalance || 0),
+    0,
+  );
+  const totalAvailableBalance = accounts.reduce(
+    (sum, account) => sum + (account.availableBalance || 0),
+    0,
+  );
+  const totalPendingBalance = accounts.reduce(
+    (sum, account) => sum + (account.pendingBalance || 0),
+    0,
+  );
+  const pendingTransactionsCount = transactions.filter((t) => {
+    const status = String(t.status || '').toLowerCase();
+    return status === 'pending' || status === 'processing';
+  }).length;
+  const today = new Date().toISOString().slice(0, 10);
+  const todayTransactions = transactions.filter((t) =>
+    String(t.transactionDate || '').slice(0, 10) === today,
+  );
+  const inflowTypes = new Set(['deposit', 'transfer_in', 'refund', 'interest']);
+  const outflowTypes = new Set(['withdrawal', 'transfer_out', 'payment', 'fee']);
+  const dailyInflow = todayTransactions
+    .filter((t) => inflowTypes.has(String(t.transactionType || '').toLowerCase()))
+    .reduce((sum, t) => sum + Math.abs(Number(t.baseAmount ?? t.amount ?? 0)), 0);
+  const dailyOutflow = todayTransactions
+    .filter((t) => outflowTypes.has(String(t.transactionType || '').toLowerCase()))
+    .reduce((sum, t) => sum + Math.abs(Number(t.baseAmount ?? t.amount ?? 0)), 0);
+  const recentTransactions = [...transactions]
+    .sort(
+      (a, b) =>
+        new Date(String(b.transactionDate || 0)).getTime() -
+        new Date(String(a.transactionDate || 0)).getTime(),
+    )
+    .slice(0, 10);
+
+  return {
+    totalBankBalance,
+    totalAvailableBalance,
+    totalPendingBalance,
+    pendingTransactionsCount,
+    dailyInflow,
+    dailyOutflow,
+    netCashFlow: dailyInflow - dailyOutflow,
+    outstandingReceivables: 0,
+    outstandingPayables: 0,
+    recentTransactions,
+    bankAccountsSummary: accounts.map((account) => ({
+      id: account.id,
+      name: account.accountName,
+      bankName: account.bankName,
+      accountType: account.accountType,
+      currentBalance: account.currentBalance || 0,
+      availableBalance: account.availableBalance || 0,
+      pendingBalance: account.pendingBalance || 0,
+    })),
+  };
+}
+
 export async function getBankingDashboard(): Promise<BankingDashboard> {
-  const res = await apiService.get<BankingDashboard>(`${baseUrl}/dashboard`);
-  return res;
+  try {
+    const res = await apiService.get<BankingDashboard>(`${baseUrl}/dashboard`);
+    return res;
+  } catch {
+    const [accountsRes, transactionsRes] = await Promise.all([
+      apiService.get<unknown>(`${baseUrl}/accounts?active_only=true`),
+      apiService.get<unknown>(`${baseUrl}/transactions?skip=0&limit=100`),
+    ]);
+    const accounts = pickAccounts(accountsRes);
+    const transactions = pickTransactions(transactionsRes);
+    return buildDashboardFromData(accounts, transactions);
+  }
 }
 
 export async function getBankAccounts(activeOnly = false): Promise<BankAccount[]> {
@@ -109,7 +196,10 @@ export async function getBankTransactions(params?: {
 export async function createBankTransaction(
   body: BankTransactionCreate,
 ): Promise<BankTransaction> {
-  const res = await apiService.post<unknown>(`${baseUrl}/transactions`, body);
+  const res = await apiService.post<unknown>(
+    `${baseUrl}/transactions`,
+    normalizeTransactionPayload(body as unknown as Record<string, unknown>),
+  );
   return pickTransaction(res);
 }
 
@@ -119,7 +209,7 @@ export async function updateBankTransaction(
 ): Promise<BankTransaction> {
   const res = await apiService.put<unknown>(
     `${baseUrl}/transactions/${id}`,
-    body,
+    normalizeTransactionPayload(body as unknown as Record<string, unknown>),
   );
   return pickTransaction(res);
 }
