@@ -22,6 +22,7 @@ import {
 } from '../components/WorkshopChrome';
 import { PickerModal } from '../../healthcare/components/PickerModal';
 import { AppModal } from '../../../components/layout/AppModal';
+import { ProductChipSelect } from '../../inventory/screens/products/ProductChipSelect';
 
 const JC_STATUSES = ['draft', 'in_progress', 'completed', 'cancelled'];
 const PRIORITIES = ['low', 'medium', 'high', 'urgent'];
@@ -295,23 +296,14 @@ export function MobileWorkshopJobCardsScreen() {
         value={search}
         onChangeText={setSearch}
       />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-2">
-        <View className="flex-row gap-2">
-          {['all', ...JC_STATUSES].map((s) => (
-            <Pressable
-              key={s}
-              onPress={() => setStatusF(s)}
-              className={`rounded-full px-3 py-1 ${statusF === s ? 'bg-indigo-600' : 'bg-slate-100'}`}
-            >
-              <Text
-                className={`text-xs capitalize ${statusF === s ? 'text-white' : 'text-slate-700'}`}
-              >
-                {s.replace('_', ' ')}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      </ScrollView>
+      <View className="mb-2 rounded-xl border border-slate-200 bg-white px-3 py-3">
+        <ProductChipSelect
+          label="Status"
+          options={['all', ...JC_STATUSES]}
+          value={statusF}
+          onChange={setStatusF}
+        />
+      </View>
 
       {loading && !refreshing ? (
         <View className="py-12 items-center">
@@ -426,37 +418,18 @@ export function MobileWorkshopJobCardsScreen() {
                     : 'Optional'}
                 </Text>
               </Pressable>
-              <WorkshopFieldLabel>Status / Priority</WorkshopFieldLabel>
-              <View className="mb-2 flex-row flex-wrap gap-1">
-                {JC_STATUSES.map((s) => (
-                  <Pressable
-                    key={s}
-                    onPress={() => setForm((f) => ({ ...f, status: s }))}
-                    className={`rounded-full px-2 py-1 ${form.status === s ? 'bg-indigo-600' : 'bg-slate-100'}`}
-                  >
-                    <Text
-                      className={`text-xs capitalize ${form.status === s ? 'text-white' : 'text-slate-700'}`}
-                    >
-                      {s}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-              <View className="mb-2 flex-row flex-wrap gap-1">
-                {PRIORITIES.map((s) => (
-                  <Pressable
-                    key={s}
-                    onPress={() => setForm((f) => ({ ...f, priority: s }))}
-                    className={`rounded-full px-2 py-1 ${form.priority === s ? 'bg-indigo-600' : 'bg-slate-100'}`}
-                  >
-                    <Text
-                      className={`text-xs capitalize ${form.priority === s ? 'text-white' : 'text-slate-700'}`}
-                    >
-                      {s}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
+              <ProductChipSelect
+                label="Status"
+                options={[...JC_STATUSES]}
+                value={form.status}
+                onChange={(s) => setForm((f) => ({ ...f, status: s }))}
+              />
+              <ProductChipSelect
+                label="Priority"
+                options={[...PRIORITIES]}
+                value={form.priority}
+                onChange={(s) => setForm((f) => ({ ...f, priority: s }))}
+              />
               <WorkshopFieldLabel>Vehicle reg / VIN / make / model</WorkshopFieldLabel>
               <TextInput
                 className="mb-1 rounded-lg border border-slate-200 px-3 py-2"

@@ -23,7 +23,7 @@ export class ProductionService {
   async createProductionPlan(
     planData: ProductionPlanCreate,
   ): Promise<ProductionPlan> {
-    const response = await apiService.post(`${this.baseUrl}/`, planData);
+    const response = await apiService.post(this.baseUrl, planData);
     return response;
   }
 
@@ -63,11 +63,12 @@ export class ProductionService {
       queryParams.append('planned_end_date_to', filters.planned_end_date_to);
     if (filters.search) queryParams.append('search', filters.search);
 
-    queryParams.append('page', page.toString());
+    const skip = Math.max(0, (page - 1) * limit);
+    queryParams.append('skip', skip.toString());
     queryParams.append('limit', limit.toString());
 
     const response = await apiService.get(
-      `${this.baseUrl}/?${queryParams.toString()}`,
+      `${this.baseUrl}?${queryParams.toString()}`,
     );
 
     // Transform the response to match ProductionPlansResponse interface

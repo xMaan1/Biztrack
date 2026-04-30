@@ -234,6 +234,29 @@ async def delete_chart_of_accounts_endpoint(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to delete chart of accounts: {str(e)}")
 
+
+def _apply_meta_data_to_ledger_payload(payload: dict) -> None:
+    meta = payload.pop("meta_data", None)
+    if not isinstance(meta, dict):
+        return
+    if "currency" in meta:
+        payload["currency"] = meta["currency"]
+    if "notes" in meta:
+        payload["notes"] = meta["notes"]
+    if "tags" in meta:
+        payload["tags"] = meta["tags"]
+    if "reference_type" in meta:
+        payload["reference_type"] = meta["reference_type"]
+    if "reference_id" in meta:
+        payload["reference_id"] = meta["reference_id"]
+    if "attachments" in meta:
+        payload["attachments"] = meta["attachments"]
+    if "approved_by_id" in meta:
+        payload["approved_by"] = meta["approved_by_id"]
+    if "journal_entry_id" in meta:
+        payload["journal_entry_id"] = meta["journal_entry_id"]
+
+
 # Ledger Transaction Endpoints
 @router.post("/transactions", response_model=LedgerTransactionResponse, status_code=status.HTTP_201_CREATED)
 async def create_ledger_transaction_endpoint(
@@ -253,17 +276,9 @@ async def create_ledger_transaction_endpoint(
             transaction_data["debit_account_id"] = transaction_data.pop("account_id")
         if "contra_account_id" in transaction_data:
             transaction_data["credit_account_id"] = transaction_data.pop("contra_account_id")
-        
-        # Handle meta_data fields
-        if "meta_data" in transaction_data and transaction_data["meta_data"]:
-            meta_data = transaction_data.pop("meta_data")
-            if "currency" in meta_data:
-                transaction_data["currency"] = meta_data["currency"]
-            if "notes" in meta_data:
-                transaction_data["notes"] = meta_data["notes"]
-            if "tags" in meta_data:
-                transaction_data["tags"] = meta_data["tags"]
-        
+
+        _apply_meta_data_to_ledger_payload(transaction_data)
+
         db_transaction = create_ledger_transaction(transaction_data, db)
         
         return LedgerTransactionResponse(
@@ -412,17 +427,9 @@ async def update_ledger_transaction_endpoint(
             update_data["debit_account_id"] = update_data.pop("account_id")
         if "contra_account_id" in update_data:
             update_data["credit_account_id"] = update_data.pop("contra_account_id")
-        
-        # Handle meta_data fields
-        if "meta_data" in update_data and update_data["meta_data"]:
-            meta_data = update_data.pop("meta_data")
-            if "currency" in meta_data:
-                update_data["currency"] = meta_data["currency"]
-            if "notes" in meta_data:
-                update_data["notes"] = meta_data["notes"]
-            if "tags" in meta_data:
-                update_data["tags"] = meta_data["tags"]
-        
+
+        _apply_meta_data_to_ledger_payload(update_data)
+
         # Add updated_at timestamp
         update_data["updated_at"] = datetime.utcnow()
         

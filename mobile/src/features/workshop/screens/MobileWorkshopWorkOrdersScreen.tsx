@@ -16,6 +16,8 @@ import {
   WorkshopFieldLabel,
   WorkshopPrimaryButton,
 } from '../components/WorkshopChrome';
+import { WorkOrderDetailSheet } from '../components/WorkOrderDetailSheet';
+import { ProductChipSelect } from '../../inventory/screens/products/ProductChipSelect';
 
 type WO = {
   id: string;
@@ -38,9 +40,27 @@ type WO = {
   tags?: string[];
 };
 
-const STATUSES = ['draft', 'scheduled', 'in_progress', 'completed', 'cancelled'];
-const PRIORITIES = ['low', 'medium', 'high', 'urgent'];
-const TYPES = ['production', 'maintenance', 'repair', 'inspection', 'custom'];
+const STATUS_OPTIONS = [
+  'all',
+  'draft',
+  'planned',
+  'in_progress',
+  'on_hold',
+  'completed',
+  'cancelled',
+];
+const PRIORITY_OPTIONS = ['all', 'low', 'medium', 'high', 'urgent'];
+const TYPE_OPTIONS = [
+  'all',
+  'production',
+  'maintenance',
+  'repair',
+  'installation',
+  'inspection',
+];
+const FORM_STATUSES = STATUS_OPTIONS.filter((s) => s !== 'all');
+const FORM_PRIORITIES = PRIORITY_OPTIONS.filter((p) => p !== 'all');
+const FORM_TYPES = TYPE_OPTIONS.filter((t) => t !== 'all');
 
 function emptyForm() {
   return {
@@ -72,8 +92,9 @@ export function MobileWorkshopWorkOrdersScreen() {
   const [priorityF, setPriorityF] = useState('all');
   const [typeF, setTypeF] = useState('all');
   const [modalOpen, setModalOpen] = useState(false);
-  const [mode, setMode] = useState<'create' | 'edit' | 'view'>('create');
+  const [mode, setMode] = useState<'create' | 'edit'>('create');
   const [selected, setSelected] = useState<WO | null>(null);
+  const [viewWorkOrder, setViewWorkOrder] = useState<WO | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
 
@@ -131,21 +152,25 @@ export function MobileWorkshopWorkOrdersScreen() {
   }, [list, search, statusF, priorityF, typeF]);
 
   const openCreate = () => {
+    setViewWorkOrder(null);
     setSelected(null);
     setMode('create');
     setForm(emptyForm());
     setModalOpen(true);
   };
 
-  const openView = (w: WO, m: 'edit' | 'view') => {
+  const openEditModal = (w: WO) => {
+    setViewWorkOrder(null);
     setSelected(w);
-    setMode(m);
+    setMode('edit');
     setForm({
       title: w.title || '',
       description: w.description || '',
-      work_order_type: w.work_order_type || 'production',
-      status: w.status || 'draft',
-      priority: w.priority || 'medium',
+      work_order_type: FORM_TYPES.includes(w.work_order_type)
+        ? w.work_order_type
+        : 'production',
+      status: FORM_STATUSES.includes(w.status) ? w.status : 'draft',
+      priority: FORM_PRIORITIES.includes(w.priority) ? w.priority : 'medium',
       planned_start_date: w.planned_start_date?.split('T')[0] ?? '',
       planned_end_date: w.planned_end_date?.split('T')[0] ?? '',
       estimated_hours: String(w.estimated_hours ?? 0),
@@ -161,10 +186,6 @@ export function MobileWorkshopWorkOrdersScreen() {
   };
 
   const submit = async () => {
-    if (mode === 'view') {
-      setModalOpen(false);
-      return;
-    }
     if (!form.title.trim() || !form.description.trim()) {
       Alert.alert('Work order', 'Title and description are required');
       return;
@@ -240,8 +261,6 @@ export function MobileWorkshopWorkOrdersScreen() {
     ]);
   };
 
-  const readOnly = mode === 'view';
-
   return (
     <WorkshopChrome
       title="Work orders"
@@ -260,23 +279,26 @@ export function MobileWorkshopWorkOrdersScreen() {
         value={search}
         onChangeText={setSearch}
       />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-2">
-        <View className="flex-row gap-2 pb-1">
-          {['all', ...STATUSES].map((s) => (
-            <Pressable
-              key={s}
-              onPress={() => setStatusF(s)}
-              className={`rounded-full px-3 py-1 ${statusF === s ? 'bg-indigo-600' : 'bg-slate-100'}`}
-            >
-              <Text
-                className={`text-xs capitalize ${statusF === s ? 'text-white' : 'text-slate-700'}`}
-              >
-                {s}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      </ScrollView>
+      <View className="mb-2 rounded-xl border border-slate-200 bg-white px-3 py-3">
+        <ProductChipSelect
+          label="Status"
+          options={STATUS_OPTIONS}
+          value={statusF}
+          onChange={setStatusF}
+        />
+        <ProductChipSelect
+          label="Priority"
+          options={PRIORITY_OPTIONS}
+          value={priorityF}
+          onChange={setPriorityF}
+        />
+        <ProductChipSelect
+          label="Type"
+          options={TYPE_OPTIONS}
+          value={typeF}
+          onChange={setTypeF}
+        />
+      </View>
 
       {loading && !refreshing ? (
         <View className="py-12 items-center">
@@ -307,16 +329,16 @@ export function MobileWorkshopWorkOrdersScreen() {
               </Text>
               <View className="mt-2 flex-row flex-wrap gap-2">
                 <Pressable
-                  onPress={() => openView(w, 'view')}
-                  className="rounded-lg bg-slate-100 px-2 py-1"
+                  onPress={() => setViewWorkOrder(w)}
+                  className="rounded-lg border border-slate-200 bg-white px-2 py-1"
                 >
-                  <Text className="text-xs font-medium">View</Text>
+                  <Text className="text-xs font-semibold text-slate-800">View</Text>
                 </Pressable>
                 <Pressable
-                  onPress={() => openView(w, 'edit')}
-                  className="rounded-lg bg-indigo-100 px-2 py-1"
+                  onPress={() => openEditModal(w)}
+                  className="rounded-lg border border-blue-200 bg-blue-50 px-2 py-1"
                 >
-                  <Text className="text-xs font-medium text-indigo-900">Edit</Text>
+                  <Text className="text-xs font-semibold text-blue-900">Edit</Text>
                 </Pressable>
                 <Pressable
                   onPress={() => remove(w)}
@@ -330,86 +352,59 @@ export function MobileWorkshopWorkOrdersScreen() {
         />
       )}
 
+      <WorkOrderDetailSheet
+        visible={viewWorkOrder != null}
+        workOrder={viewWorkOrder}
+        onClose={() => setViewWorkOrder(null)}
+        onEdit={(w) => {
+          setViewWorkOrder(null);
+          openEditModal(w as WO);
+        }}
+      />
+
       <AppModal visible={modalOpen} animationType="slide" transparent>
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
+            <View className="mb-2 items-center">
+              <View className="h-1 w-9 rounded-full bg-slate-200" />
+            </View>
             <Text className="mb-3 text-lg font-semibold text-slate-900">
-              {mode === 'create'
-                ? 'New work order'
-                : mode === 'edit'
-                  ? 'Edit work order'
-                  : 'Work order'}
+              {mode === 'create' ? 'New work order' : 'Edit work order'}
             </Text>
             <ScrollView keyboardShouldPersistTaps="handled">
               <WorkshopFieldLabel>Title *</WorkshopFieldLabel>
               <TextInput
-                editable={!readOnly}
                 className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
                 value={form.title}
                 onChangeText={(v) => setForm((f) => ({ ...f, title: v }))}
               />
               <WorkshopFieldLabel>Description *</WorkshopFieldLabel>
               <TextInput
-                editable={!readOnly}
                 className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
                 value={form.description}
                 onChangeText={(v) => setForm((f) => ({ ...f, description: v }))}
                 multiline
               />
-              <WorkshopFieldLabel>Type</WorkshopFieldLabel>
-              <View className="mb-2 flex-row flex-wrap gap-1">
-                {TYPES.map((t) => (
-                  <Pressable
-                    key={t}
-                    disabled={readOnly}
-                    onPress={() => setForm((f) => ({ ...f, work_order_type: t }))}
-                    className={`rounded-full px-2 py-1 ${form.work_order_type === t ? 'bg-indigo-600' : 'bg-slate-100'}`}
-                  >
-                    <Text
-                      className={`text-xs ${form.work_order_type === t ? 'text-white' : 'text-slate-700'}`}
-                    >
-                      {t}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-              <WorkshopFieldLabel>Status</WorkshopFieldLabel>
-              <View className="mb-2 flex-row flex-wrap gap-1">
-                {STATUSES.map((t) => (
-                  <Pressable
-                    key={t}
-                    disabled={readOnly}
-                    onPress={() => setForm((f) => ({ ...f, status: t }))}
-                    className={`rounded-full px-2 py-1 ${form.status === t ? 'bg-indigo-600' : 'bg-slate-100'}`}
-                  >
-                    <Text
-                      className={`text-xs ${form.status === t ? 'text-white' : 'text-slate-700'}`}
-                    >
-                      {t}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-              <WorkshopFieldLabel>Priority</WorkshopFieldLabel>
-              <View className="mb-2 flex-row flex-wrap gap-1">
-                {PRIORITIES.map((t) => (
-                  <Pressable
-                    key={t}
-                    disabled={readOnly}
-                    onPress={() => setForm((f) => ({ ...f, priority: t }))}
-                    className={`rounded-full px-2 py-1 ${form.priority === t ? 'bg-indigo-600' : 'bg-slate-100'}`}
-                  >
-                    <Text
-                      className={`text-xs capitalize ${form.priority === t ? 'text-white' : 'text-slate-700'}`}
-                    >
-                      {t}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
+              <ProductChipSelect
+                label="Type"
+                options={FORM_TYPES}
+                value={form.work_order_type}
+                onChange={(v) => setForm((f) => ({ ...f, work_order_type: v }))}
+              />
+              <ProductChipSelect
+                label="Status"
+                options={FORM_STATUSES}
+                value={form.status}
+                onChange={(v) => setForm((f) => ({ ...f, status: v }))}
+              />
+              <ProductChipSelect
+                label="Priority"
+                options={FORM_PRIORITIES}
+                value={form.priority}
+                onChange={(v) => setForm((f) => ({ ...f, priority: v }))}
+              />
               <WorkshopFieldLabel>Planned start *</WorkshopFieldLabel>
               <TextInput
-                editable={!readOnly}
                 className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
                 placeholder="YYYY-MM-DD"
                 value={form.planned_start_date}
@@ -419,7 +414,6 @@ export function MobileWorkshopWorkOrdersScreen() {
               />
               <WorkshopFieldLabel>Planned end *</WorkshopFieldLabel>
               <TextInput
-                editable={!readOnly}
                 className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
                 placeholder="YYYY-MM-DD"
                 value={form.planned_end_date}
@@ -429,7 +423,6 @@ export function MobileWorkshopWorkOrdersScreen() {
               />
               <WorkshopFieldLabel>Estimated hours *</WorkshopFieldLabel>
               <TextInput
-                editable={!readOnly}
                 className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
                 keyboardType="decimal-pad"
                 value={form.estimated_hours}
@@ -439,14 +432,12 @@ export function MobileWorkshopWorkOrdersScreen() {
               />
               <WorkshopFieldLabel>Location</WorkshopFieldLabel>
               <TextInput
-                editable={!readOnly}
                 className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
                 value={form.location}
                 onChangeText={(v) => setForm((f) => ({ ...f, location: v }))}
               />
               <WorkshopFieldLabel>Instructions</WorkshopFieldLabel>
               <TextInput
-                editable={!readOnly}
                 className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
                 value={form.instructions}
                 onChangeText={(v) =>
@@ -456,7 +447,6 @@ export function MobileWorkshopWorkOrdersScreen() {
               />
               <WorkshopFieldLabel>Materials (comma-separated)</WorkshopFieldLabel>
               <TextInput
-                editable={!readOnly}
                 className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
                 value={form.materialsText}
                 onChangeText={(v) =>
@@ -465,7 +455,6 @@ export function MobileWorkshopWorkOrdersScreen() {
               />
               <WorkshopFieldLabel>Estimated cost</WorkshopFieldLabel>
               <TextInput
-                editable={!readOnly}
                 className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
                 keyboardType="decimal-pad"
                 value={form.estimated_cost}
@@ -474,13 +463,11 @@ export function MobileWorkshopWorkOrdersScreen() {
                 }
               />
             </ScrollView>
-            {!readOnly ? (
-              <WorkshopPrimaryButton
-                label={saving ? 'Saving…' : 'Save'}
-                onPress={() => void submit()}
-                disabled={saving}
-              />
-            ) : null}
+            <WorkshopPrimaryButton
+              label={saving ? 'Saving…' : 'Save'}
+              onPress={() => void submit()}
+              disabled={saving}
+            />
             <Pressable
               className="mt-3 items-center py-2"
               onPress={() => setModalOpen(false)}

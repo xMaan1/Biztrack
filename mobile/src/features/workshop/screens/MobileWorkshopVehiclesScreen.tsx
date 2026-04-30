@@ -17,6 +17,10 @@ import {
   WorkshopFieldLabel,
   WorkshopPrimaryButton,
 } from '../components/WorkshopChrome';
+import {
+  validateVehicleForm,
+  vehiclePayloadForSubmit,
+} from '../vehicleFormValidation';
 
 export function MobileWorkshopVehiclesScreen() {
   const { setSidebarActivePath } = useSidebarDrawer();
@@ -112,17 +116,13 @@ export function MobileWorkshopVehiclesScreen() {
   };
 
   const submit = async () => {
-    const payload: VehicleCreate | VehicleUpdate = {
-      make: form.make || undefined,
-      model: form.model || undefined,
-      year: form.year || undefined,
-      color: form.color || undefined,
-      vin: form.vin || undefined,
-      registration_number: form.registration_number || undefined,
-      mileage: form.mileage || undefined,
-      customer_id: form.customer_id || undefined,
-      notes: form.notes || undefined,
-    };
+    const isCreate = !editing;
+    const err = validateVehicleForm(isCreate, form);
+    if (err) {
+      Alert.alert('Vehicle', err);
+      return;
+    }
+    const payload = vehiclePayloadForSubmit(form, isCreate);
     try {
       setSaving(true);
       if (editing) {
@@ -225,7 +225,7 @@ export function MobileWorkshopVehiclesScreen() {
               {editing ? 'Edit vehicle' : 'New vehicle'}
             </Text>
             <ScrollView keyboardShouldPersistTaps="handled">
-              <WorkshopFieldLabel>Registration</WorkshopFieldLabel>
+              <WorkshopFieldLabel>Registration number *</WorkshopFieldLabel>
               <TextInput
                 className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
                 value={form.registration_number}
@@ -241,7 +241,7 @@ export function MobileWorkshopVehiclesScreen() {
               />
               <View className="mb-2 flex-row gap-2">
                 <View className="flex-1">
-                  <WorkshopFieldLabel>Make</WorkshopFieldLabel>
+                  <WorkshopFieldLabel>Make *</WorkshopFieldLabel>
                   <TextInput
                     className="rounded-lg border border-slate-200 px-2 py-2"
                     value={form.make}
@@ -249,7 +249,7 @@ export function MobileWorkshopVehiclesScreen() {
                   />
                 </View>
                 <View className="flex-1">
-                  <WorkshopFieldLabel>Model</WorkshopFieldLabel>
+                  <WorkshopFieldLabel>Model *</WorkshopFieldLabel>
                   <TextInput
                     className="rounded-lg border border-slate-200 px-2 py-2"
                     value={form.model}

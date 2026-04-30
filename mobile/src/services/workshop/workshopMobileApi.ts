@@ -110,10 +110,11 @@ export async function getProductionPlans(
   if (filters.production_type)
     queryParams.append('production_type', filters.production_type);
   if (filters.search) queryParams.append('search', filters.search);
-  queryParams.append('page', String(page));
+  const skip = Math.max(0, (page - 1) * limit);
+  queryParams.append('skip', String(skip));
   queryParams.append('limit', String(limit));
   const response = await apiService.get<any[]>(
-    `/production/?${queryParams.toString()}`,
+    `/production?${queryParams.toString()}`,
   );
   return {
     production_plans: Array.isArray(response) ? response : [],
@@ -122,7 +123,7 @@ export async function getProductionPlans(
 }
 
 export async function createProductionPlan(body: ProductionPlanCreate) {
-  return apiService.post('/production/', body);
+  return apiService.post('/production', body);
 }
 
 export async function updateProductionPlan(

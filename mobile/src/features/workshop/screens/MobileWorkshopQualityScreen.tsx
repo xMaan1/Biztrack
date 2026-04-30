@@ -28,6 +28,7 @@ import {
 } from '../components/WorkshopChrome';
 import { PickerModal } from '../../healthcare/components/PickerModal';
 import { AppModal } from '../../../components/layout/AppModal';
+import { ProductChipSelect } from '../../inventory/screens/products/ProductChipSelect';
 
 const INSP_TYPES = Object.values(InspectionType);
 const Q_PRIOS = Object.values(QualityPriority);
@@ -256,23 +257,14 @@ export function MobileWorkshopQualityScreen() {
         value={search}
         onChangeText={setSearch}
       />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-2">
-        <View className="flex-row gap-2">
-          {['all', ...Q_STATUSES].map((s) => (
-            <Pressable
-              key={s}
-              onPress={() => setStatusF(s)}
-              className={`rounded-full px-3 py-1 ${statusF === s ? 'bg-indigo-600' : 'bg-slate-100'}`}
-            >
-              <Text
-                className={`text-xs capitalize ${statusF === s ? 'text-white' : 'text-slate-700'}`}
-              >
-                {s.replace(/_/g, ' ')}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      </ScrollView>
+      <View className="mb-2 rounded-xl border border-slate-200 bg-white px-3 py-3">
+        <ProductChipSelect
+          label="Status"
+          options={['all', ...Q_STATUSES]}
+          value={statusF}
+          onChange={setStatusF}
+        />
+      </View>
 
       {loading && !refreshing ? (
         <View className="py-12 items-center">
@@ -358,58 +350,39 @@ export function MobileWorkshopQualityScreen() {
                 }
                 multiline
               />
-              <WorkshopFieldLabel>Inspection type</WorkshopFieldLabel>
-              <View className="mb-2 flex-row flex-wrap gap-1">
-                {INSP_TYPES.map((s) => (
-                  <Pressable
-                    key={s}
-                    onPress={() =>
-                      setForm((f) => ({ ...f, inspection_type: s }))
-                    }
-                    className={`rounded-full px-2 py-1 ${form.inspection_type === s ? 'bg-indigo-600' : 'bg-slate-100'}`}
-                  >
-                    <Text
-                      className={`text-xs capitalize ${form.inspection_type === s ? 'text-white' : 'text-slate-700'}`}
-                    >
-                      {s.replace(/_/g, ' ')}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-              <WorkshopFieldLabel>Priority</WorkshopFieldLabel>
-              <View className="mb-2 flex-row flex-wrap gap-1">
-                {Q_PRIOS.map((s) => (
-                  <Pressable
-                    key={s}
-                    onPress={() => setForm((f) => ({ ...f, priority: s }))}
-                    className={`rounded-full px-2 py-1 ${form.priority === s ? 'bg-indigo-600' : 'bg-slate-100'}`}
-                  >
-                    <Text
-                      className={`text-xs capitalize ${form.priority === s ? 'text-white' : 'text-slate-700'}`}
-                    >
-                      {s.replace(/_/g, ' ')}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-              <WorkshopFieldLabel>Standard</WorkshopFieldLabel>
-              <View className="mb-2 flex-row flex-wrap gap-1">
-                {Q_STDS.map((s) => (
-                  <Pressable
-                    key={s}
-                    onPress={() =>
-                      setForm((f) => ({ ...f, quality_standard: s }))
-                    }
-                    className={`rounded-full px-2 py-1 ${form.quality_standard === s ? 'bg-indigo-600' : 'bg-slate-100'}`}
-                  >
-                    <Text
-                      className={`text-xs capitalize ${form.quality_standard === s ? 'text-white' : 'text-slate-700'}`}
-                    >
-                      {s.replace(/_/g, ' ')}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
+              <ProductChipSelect
+                label="Inspection type"
+                options={[...INSP_TYPES]}
+                value={form.inspection_type}
+                onChange={(s) =>
+                  setForm((f) => ({
+                    ...f,
+                    inspection_type: s as InspectionType,
+                  }))
+                }
+              />
+              <ProductChipSelect
+                label="Priority"
+                options={[...Q_PRIOS]}
+                value={form.priority}
+                onChange={(s) =>
+                  setForm((f) => ({
+                    ...f,
+                    priority: s as QualityPriority,
+                  }))
+                }
+              />
+              <ProductChipSelect
+                label="Standard"
+                options={[...Q_STDS]}
+                value={form.quality_standard}
+                onChange={(s) =>
+                  setForm((f) => ({
+                    ...f,
+                    quality_standard: s as QualityStandard,
+                  }))
+                }
+              />
               <WorkshopFieldLabel>Criteria (comma-separated)</WorkshopFieldLabel>
               <TextInput
                 className="mb-2 rounded-lg border border-slate-200 px-3 py-2"

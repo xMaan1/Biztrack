@@ -50,20 +50,6 @@ function pickTills(res: unknown): Till[] {
   return r.tills ?? [];
 }
 
-function toLegacyEnumValue(value: unknown): unknown {
-  if (typeof value !== 'string') return value;
-  return value.toUpperCase();
-}
-
-function normalizeTransactionPayload<T extends Record<string, unknown>>(body: T): T {
-  return {
-    ...body,
-    transactionType: toLegacyEnumValue(body.transactionType),
-    status: toLegacyEnumValue(body.status),
-    paymentMethod: toLegacyEnumValue(body.paymentMethod),
-  } as T;
-}
-
 function buildDashboardFromData(
   accounts: BankAccount[],
   transactions: BankTransaction[],
@@ -198,7 +184,7 @@ export async function createBankTransaction(
 ): Promise<BankTransaction> {
   const res = await apiService.post<unknown>(
     `${baseUrl}/transactions`,
-    normalizeTransactionPayload(body as unknown as Record<string, unknown>),
+    body,
   );
   return pickTransaction(res);
 }
@@ -209,7 +195,7 @@ export async function updateBankTransaction(
 ): Promise<BankTransaction> {
   const res = await apiService.put<unknown>(
     `${baseUrl}/transactions/${id}`,
-    normalizeTransactionPayload(body as unknown as Record<string, unknown>),
+    body,
   );
   return pickTransaction(res);
 }

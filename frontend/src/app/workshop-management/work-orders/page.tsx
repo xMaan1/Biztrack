@@ -505,6 +505,7 @@ function WorkOrdersContent() {
 
         {/* Work Order Dialog */}
         <WorkOrderDialog
+          key={`${dialogMode}-${selectedWorkOrder?.id ?? 'new'}`}
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           mode={dialogMode}

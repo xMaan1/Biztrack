@@ -7,6 +7,7 @@ import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { OptionSheet } from '../../../components/crm/OptionSheet';
 import { extractErrorMessage } from '../../../utils/errorUtils';
 import { usePermissions } from '../../../hooks/usePermissions';
+import { useAuth } from '../../../contexts/AuthContext';
 import type { ProjectRecord, ProjectTeamMemberRef } from '../../../models/project';
 import { AppModal } from '../../../components/layout/AppModal';
 import {
@@ -36,6 +37,7 @@ function statusLabel(s: string): string {
 export function MobileProjectsScreen() {
   const { workspacePath, setSidebarActivePath } = useSidebarDrawer();
   const { canManageProjects } = usePermissions();
+  const { user } = useAuth();
 
   const [items, setItems] = useState<ProjectRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -112,12 +114,17 @@ export function MobileProjectsScreen() {
   const openCreate = useCallback(() => {
     setName('');
     setDescription('');
-    setManagerId(teamPool[0]?.id ?? '');
+    const selfId = user?.id;
+    const defaultManager =
+      selfId && teamPool.some((m) => m.id === selfId)
+        ? selfId
+        : teamPool[0]?.id ?? '';
+    setManagerId(defaultManager);
     setMemberIds(new Set());
     setStatusPick('planning');
     setPriorityPick('medium');
     setCreateOpen(true);
-  }, [teamPool]);
+  }, [teamPool, user?.id]);
 
   const openEdit = useCallback((p: ProjectRecord) => {
     setSelected(p);

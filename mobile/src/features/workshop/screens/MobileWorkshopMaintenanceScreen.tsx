@@ -36,6 +36,7 @@ import {
 } from '../components/WorkshopChrome';
 import { PickerModal } from '../../healthcare/components/PickerModal';
 import { AppModal } from '../../../components/layout/AppModal';
+import { ProductChipSelect } from '../../inventory/screens/products/ProductChipSelect';
 
 const M_TYPES = Object.values(MaintenanceType);
 const M_PRIOS = Object.values(MaintenancePriority);
@@ -636,58 +637,39 @@ export function MobileWorkshopMaintenanceScreen() {
                     : 'Select'}
                 </Text>
               </Pressable>
-              <WorkshopFieldLabel>Type / Priority / Category</WorkshopFieldLabel>
-              <ScrollView horizontal className="mb-1 max-h-8">
-                <View className="flex-row flex-wrap gap-1">
-                  {M_TYPES.map((t) => (
-                    <Pressable
-                      key={t}
-                      onPress={() =>
-                        setSchForm((f) => ({ ...f, maintenance_type: t }))
-                      }
-                      className={`rounded-full px-2 py-1 ${schForm.maintenance_type === t ? 'bg-indigo-600' : 'bg-slate-100'}`}
-                    >
-                      <Text
-                        className={`text-xs capitalize ${schForm.maintenance_type === t ? 'text-white' : 'text-slate-700'}`}
-                      >
-                        {t.replace(/_/g, ' ')}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
-              </ScrollView>
-              <View className="mb-2 flex-row flex-wrap gap-1">
-                {M_PRIOS.map((p) => (
-                  <Pressable
-                    key={p}
-                    onPress={() => setSchForm((f) => ({ ...f, priority: p }))}
-                    className={`rounded-full px-2 py-1 ${schForm.priority === p ? 'bg-indigo-600' : 'bg-slate-100'}`}
-                  >
-                    <Text
-                      className={`text-xs capitalize ${schForm.priority === p ? 'text-white' : 'text-slate-700'}`}
-                    >
-                      {p.replace(/_/g, ' ')}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-              <View className="mb-2 flex-row flex-wrap gap-1">
-                {M_CATS.map((c) => (
-                  <Pressable
-                    key={c}
-                    onPress={() =>
-                      setSchForm((f) => ({ ...f, category: c }))
-                    }
-                    className={`rounded-full px-2 py-1 ${schForm.category === c ? 'bg-indigo-600' : 'bg-slate-100'}`}
-                  >
-                    <Text
-                      className={`text-xs capitalize ${schForm.category === c ? 'text-white' : 'text-slate-700'}`}
-                    >
-                      {c.replace(/_/g, ' ')}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
+              <ProductChipSelect
+                label="Maintenance type"
+                options={[...M_TYPES]}
+                value={schForm.maintenance_type}
+                onChange={(t) =>
+                  setSchForm((f) => ({
+                    ...f,
+                    maintenance_type: t as MaintenanceType,
+                  }))
+                }
+              />
+              <ProductChipSelect
+                label="Priority"
+                options={[...M_PRIOS]}
+                value={schForm.priority}
+                onChange={(p) =>
+                  setSchForm((f) => ({
+                    ...f,
+                    priority: p as MaintenancePriority,
+                  }))
+                }
+              />
+              <ProductChipSelect
+                label="Category"
+                options={[...M_CATS]}
+                value={schForm.category}
+                onChange={(c) =>
+                  setSchForm((f) => ({
+                    ...f,
+                    category: c as MaintenanceCategory,
+                  }))
+                }
+              />
               <WorkshopFieldLabel>Scheduled date</WorkshopFieldLabel>
               <TextInput
                 className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
@@ -800,38 +782,28 @@ export function MobileWorkshopMaintenanceScreen() {
                   setEqForm((f) => ({ ...f, location: v }))
                 }
               />
-              <WorkshopFieldLabel>Category</WorkshopFieldLabel>
-              <View className="mb-2 flex-row flex-wrap gap-1">
-                {M_CATS.map((c) => (
-                  <Pressable
-                    key={c}
-                    onPress={() => setEqForm((f) => ({ ...f, category: c }))}
-                    className={`rounded-full px-2 py-1 ${eqForm.category === c ? 'bg-indigo-600' : 'bg-slate-100'}`}
-                  >
-                    <Text
-                      className={`text-xs capitalize ${eqForm.category === c ? 'text-white' : 'text-slate-700'}`}
-                    >
-                      {c.replace(/_/g, ' ')}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-              <WorkshopFieldLabel>Status</WorkshopFieldLabel>
-              <View className="mb-2 flex-row flex-wrap gap-1">
-                {EQ_STATUSES.map((s) => (
-                  <Pressable
-                    key={s}
-                    onPress={() => setEqForm((f) => ({ ...f, status: s }))}
-                    className={`rounded-full px-2 py-1 ${eqForm.status === s ? 'bg-indigo-600' : 'bg-slate-100'}`}
-                  >
-                    <Text
-                      className={`text-xs capitalize ${eqForm.status === s ? 'text-white' : 'text-slate-700'}`}
-                    >
-                      {s.replace(/_/g, ' ')}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
+              <ProductChipSelect
+                label="Category"
+                options={[...M_CATS]}
+                value={eqForm.category}
+                onChange={(c) =>
+                  setEqForm((f) => ({
+                    ...f,
+                    category: c as MaintenanceCategory,
+                  }))
+                }
+              />
+              <ProductChipSelect
+                label="Status"
+                options={[...EQ_STATUSES]}
+                value={eqForm.status}
+                onChange={(s) =>
+                  setEqForm((f) => ({
+                    ...f,
+                    status: s as EquipmentStatus,
+                  }))
+                }
+              />
               <WorkshopFieldLabel>Operating hours</WorkshopFieldLabel>
               <TextInput
                 className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
