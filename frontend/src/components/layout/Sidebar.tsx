@@ -939,7 +939,7 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="bg-white/95 backdrop-blur-md border-r border-gray-200 shadow-xl w-64 h-screen flex flex-col">
+    <div className="flex h-full min-h-0 w-full flex-col border-r border-gray-200 bg-white/95 shadow-xl backdrop-blur-md">
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-center">
           <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">

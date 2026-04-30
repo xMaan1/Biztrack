@@ -15,7 +15,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-row">
       {/* Sidebar: static on desktop, overlay on mobile */}
       <div className="hidden md:block">
-        <div className="fixed left-0 top-0 w-64 h-screen z-40">
+        <div className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col overflow-hidden">
           <Sidebar />
         </div>
       </div>
@@ -27,7 +27,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           />
         )}
         <div
-          className={`fixed left-0 top-0 z-50 h-full transform transition-transform duration-300 ${
+          className={`fixed inset-y-0 left-0 z-[60] flex w-64 max-h-[100dvh] flex-col overflow-hidden shadow-2xl transition-transform duration-300 ease-out ${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
