@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { AuthGuard } from '@/src/components/auth';
@@ -22,6 +22,13 @@ export const metadata: Metadata = {
   title: 'BizTrack - Project Management System',
   description:
     'Professional project management and team collaboration platform',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({

@@ -311,18 +311,18 @@ export class ApiService {
           await invoke('offline_enqueue', {
             method,
             url,
-            query_json: config.params ? JSON.stringify(config.params) : null,
-            body_json:
+            queryJson: config.params ? JSON.stringify(config.params) : null,
+            bodyJson:
               config.data !== undefined && config.data !== null
                 ? typeof config.data === 'string'
                   ? config.data
                   : JSON.stringify(config.data)
                 : null,
-            headers_json: JSON.stringify({
+            headersJson: JSON.stringify({
               Authorization: token ? `Bearer ${token}` : config.headers?.Authorization,
               'X-Tenant-ID': tid || (config.headers as Record<string, unknown>)['X-Tenant-ID'],
             }),
-            tenant_id: tid,
+            tenantId: tid,
           });
           (config as { adapter?: (c: typeof config) => Promise<unknown> }).adapter = () =>
             Promise.resolve({
