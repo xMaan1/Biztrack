@@ -184,7 +184,11 @@ export function MobileWarehousesScreen() {
         />
       )}
 
-      <AppModal visible={open} animationType="slide">
+      <AppModal
+        visible={open}
+        animationType="slide"
+        onClose={() => setOpen(false)}
+      >
         <SafeAreaView className="flex-1 bg-slate-50" edges={['top', 'bottom']}>
           <View className="flex-row items-center justify-between border-b border-slate-200 bg-white px-4 py-4">
             <Pressable

@@ -288,7 +288,12 @@ export function MobileHrmPayrollScreen() {
         />
       )}
 
-      <AppModal visible={detail != null} animationType="slide" transparent>
+      <AppModal
+        visible={detail != null}
+        animationType="slide"
+        transparent
+        onClose={() => setDetail(null)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[88%] rounded-t-2xl bg-white p-4">
             <Text className="text-lg font-semibold text-slate-900">Payroll</Text>
@@ -325,7 +330,12 @@ export function MobileHrmPayrollScreen() {
         </View>
       </AppModal>
 
-      <AppModal visible={createOpen} animationType="slide" transparent>
+      <AppModal
+        visible={createOpen}
+        animationType="slide"
+        transparent
+        onClose={() => setCreateOpen(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-2 pt-4">
             <Text className="text-lg font-semibold text-slate-900">New payroll record</Text>
@@ -362,7 +372,12 @@ export function MobileHrmPayrollScreen() {
         </View>
       </AppModal>
 
-      <AppModal visible={editOpen} animationType="slide" transparent>
+      <AppModal
+        visible={editOpen}
+        animationType="slide"
+        transparent
+        onClose={() => setEditOpen(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-2 pt-4">
             <Text className="text-lg font-semibold text-slate-900">Edit payroll record</Text>

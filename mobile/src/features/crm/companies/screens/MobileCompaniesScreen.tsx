@@ -893,7 +893,12 @@ export function MobileCompaniesScreen() {
             
       </MobileFormSheet>
 
-      <AppModal visible={deleteOpen} transparent animationType="fade">
+      <AppModal
+        visible={deleteOpen}
+        transparent
+        animationType="fade"
+        onClose={() => setDeleteOpen(false)}
+      >
         <View className="flex-1 items-center justify-center bg-black/40 px-6">
           <View className="w-full max-w-sm rounded-2xl bg-white p-5">
             <Text className="text-lg font-bold text-slate-900">Delete company</Text>
@@ -921,7 +926,12 @@ export function MobileCompaniesScreen() {
         </View>
       </AppModal>
 
-      <AppModal visible={viewOpen} animationType="slide" transparent>
+      <AppModal
+        visible={viewOpen}
+        animationType="slide"
+        transparent
+        onClose={() => setViewOpen(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="text-lg font-bold text-slate-900">Company</Text>

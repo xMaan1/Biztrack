@@ -1,13 +1,32 @@
-import React from 'react';
-import { Modal, type ModalProps } from 'react-native';
+import React, { useEffect } from 'react';
+import {
+  Modal,
+  BackHandler,
+  Platform,
+  type ModalProps,
+} from 'react-native';
 
-type AppModalProps = Omit<ModalProps, 'onRequestClose'> & {
-  onClose?: () => void;
+export type AppModalProps = Omit<ModalProps, 'onRequestClose'> & {
+  onClose: () => void;
 };
 
-export function AppModal({ onClose, children, ...props }: AppModalProps) {
+export function AppModal({
+  onClose,
+  children,
+  visible,
+  ...props
+}: AppModalProps) {
+  useEffect(() => {
+    if (!visible || Platform.OS !== 'android') return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      onClose();
+      return true;
+    });
+    return () => sub.remove();
+  }, [visible, onClose]);
+
   return (
-    <Modal {...props} onRequestClose={onClose ?? (() => {})}>
+    <Modal {...props} visible={visible} onRequestClose={onClose}>
       {children}
     </Modal>
   );

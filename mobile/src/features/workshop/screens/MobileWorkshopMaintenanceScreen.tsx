@@ -603,7 +603,12 @@ export function MobileWorkshopMaintenanceScreen() {
         onClose={() => setTechPick(false)}
       />
 
-      <AppModal visible={schModal} animationType="slide" transparent>
+      <AppModal
+        visible={schModal}
+        animationType="slide"
+        transparent
+        onClose={() => setSchModal(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-3 text-lg font-semibold">
@@ -732,7 +737,12 @@ export function MobileWorkshopMaintenanceScreen() {
         </View>
       </AppModal>
 
-      <AppModal visible={eqModal} animationType="slide" transparent>
+      <AppModal
+        visible={eqModal}
+        animationType="slide"
+        transparent
+        onClose={() => setEqModal(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-3 text-lg font-semibold">

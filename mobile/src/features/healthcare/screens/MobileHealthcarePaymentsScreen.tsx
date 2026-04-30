@@ -193,7 +193,12 @@ export function MobileHealthcarePaymentsScreen() {
         />
       </View>
 
-      <AppModal visible={payOpen} animationType="slide" transparent>
+      <AppModal
+        visible={payOpen}
+        animationType="slide"
+        transparent
+        onClose={() => setPayOpen(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-3 text-lg font-semibold">Record payment</Text>

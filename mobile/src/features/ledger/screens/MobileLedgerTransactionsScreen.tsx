@@ -406,7 +406,12 @@ export function MobileLedgerTransactionsScreen() {
         />
       )}
 
-      <AppModal visible={createOpen} animationType="slide" transparent>
+      <AppModal
+        visible={createOpen}
+        animationType="slide"
+        transparent
+        onClose={() => setCreateOpen(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="text-lg font-semibold text-slate-900">
@@ -429,7 +434,12 @@ export function MobileLedgerTransactionsScreen() {
         </View>
       </AppModal>
 
-      <AppModal visible={editOpen} animationType="slide" transparent>
+      <AppModal
+        visible={editOpen}
+        animationType="slide"
+        transparent
+        onClose={() => setEditOpen(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="text-lg font-semibold text-slate-900">Edit</Text>

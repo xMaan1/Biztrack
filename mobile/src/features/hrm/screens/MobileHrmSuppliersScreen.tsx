@@ -134,7 +134,12 @@ export function MobileHrmSuppliersScreen() {
         />
       )}
 
-      <AppModal visible={open} animationType="slide" transparent>
+      <AppModal
+        visible={open}
+        animationType="slide"
+        transparent
+        onClose={() => setOpen(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="rounded-t-2xl bg-white px-4 pb-2 pt-3">
             <Text className="mb-3 text-lg font-semibold text-slate-900">
@@ -170,7 +175,12 @@ export function MobileHrmSuppliersScreen() {
         </View>
       </AppModal>
 
-      <AppModal visible={detail != null} animationType="slide" transparent>
+      <AppModal
+        visible={detail != null}
+        animationType="slide"
+        transparent
+        onClose={() => setDetail(null)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[85%] rounded-t-2xl bg-white p-4">
             <Text className="text-lg font-semibold text-slate-900">Supplier</Text>

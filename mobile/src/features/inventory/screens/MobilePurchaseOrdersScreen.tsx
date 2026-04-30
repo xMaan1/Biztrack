@@ -271,7 +271,12 @@ export function MobilePurchaseOrdersScreen() {
         />
       )}
 
-      <AppModal visible={open} animationType="slide" transparent>
+      <AppModal
+        visible={open}
+        animationType="slide"
+        transparent
+        onClose={() => setOpen(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-6 pt-3">
             <Text className="mb-3 text-lg font-semibold text-slate-900">
@@ -408,7 +413,12 @@ export function MobilePurchaseOrdersScreen() {
         </View>
       </AppModal>
 
-      <AppModal visible={productPicker} animationType="slide" transparent>
+      <AppModal
+        visible={productPicker}
+        animationType="slide"
+        transparent
+        onClose={() => setProductPicker(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[85%] rounded-t-2xl bg-white px-3 pb-6 pt-3">
             <TextInput

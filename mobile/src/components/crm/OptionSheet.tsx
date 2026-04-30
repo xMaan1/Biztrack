@@ -19,7 +19,12 @@ export function OptionSheet<T extends string>({
   onClose,
 }: Props<T>) {
   return (
-    <AppModal visible={visible} transparent animationType="fade">
+    <AppModal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onClose={onClose}
+    >
       <Pressable
         className="flex-1 justify-end bg-black/40"
         onPress={onClose}

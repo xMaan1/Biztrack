@@ -305,7 +305,12 @@ export function MobileStockMovementsScreen() {
               />
       </MobileFormSheet>
 
-      <AppModal visible={productPicker} animationType="slide" transparent>
+      <AppModal
+        visible={productPicker}
+        animationType="slide"
+        transparent
+        onClose={() => setProductPicker(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[85%] rounded-t-2xl bg-white px-3 pb-6 pt-3">
             <TextInput

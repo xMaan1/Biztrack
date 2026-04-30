@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useState,
 } from 'react';
+import { BackHandler, Platform } from 'react-native';
 import { useAuth } from './AuthContext';
 import { MobileSidebarModal } from '../components/layout/MobileSidebarModal';
 import { openWebPath } from '../utils/openWebPath';
@@ -22,6 +23,19 @@ type SidebarDrawerContextValue = {
 const SidebarDrawerContext = createContext<
   SidebarDrawerContextValue | undefined
 >(undefined);
+
+function WorkspaceHardwareBack() {
+  const { workspacePath, setWorkspacePath } = useSidebarDrawer();
+  useEffect(() => {
+    if (workspacePath === '/dashboard' || Platform.OS !== 'android') return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      setWorkspacePath('/dashboard');
+      return true;
+    });
+    return () => sub.remove();
+  }, [workspacePath, setWorkspacePath]);
+  return null;
+}
 
 export function SidebarDrawerProvider({
   children,
@@ -63,6 +77,15 @@ export function SidebarDrawerProvider({
     }
   }, [isAuthenticated]);
 
+  useEffect(() => {
+    if (!visible || Platform.OS !== 'android') return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      setVisible(false);
+      return true;
+    });
+    return () => sub.remove();
+  }, [visible]);
+
   return (
     <SidebarDrawerContext.Provider
       value={{
@@ -74,6 +97,7 @@ export function SidebarDrawerProvider({
         navigateMenuPath,
       }}
     >
+      <WorkspaceHardwareBack />
       {children}
       {isAuthenticated ? (
         <MobileSidebarModal

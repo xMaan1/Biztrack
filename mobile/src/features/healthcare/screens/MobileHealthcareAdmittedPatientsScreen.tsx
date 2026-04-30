@@ -433,7 +433,12 @@ export function MobileHealthcareAdmittedPatientsScreen() {
         onClose={() => setFormPatPick(false)}
       />
 
-      <AppModal visible={formOpen} animationType="slide" transparent>
+      <AppModal
+        visible={formOpen}
+        animationType="slide"
+        transparent
+        onClose={() => setFormOpen(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-3 text-lg font-semibold">
@@ -537,7 +542,12 @@ export function MobileHealthcareAdmittedPatientsScreen() {
         </View>
       </AppModal>
 
-      <AppModal visible={billOpen} animationType="slide" transparent>
+      <AppModal
+        visible={billOpen}
+        animationType="slide"
+        transparent
+        onClose={() => setBillOpen(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[75%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-2 font-semibold">Admission invoice</Text>

@@ -537,7 +537,12 @@ export function MobileHealthcareAppointmentsScreen() {
         onClose={() => setFormDoctorPicker(false)}
       />
 
-      <AppModal visible={patientPicker} animationType="slide" transparent>
+      <AppModal
+        visible={patientPicker}
+        animationType="slide"
+        transparent
+        onClose={() => setPatientPicker(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[70%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
             <Text className="mb-2 font-semibold text-slate-900">
@@ -581,7 +586,12 @@ export function MobileHealthcareAppointmentsScreen() {
         </View>
       </AppModal>
 
-      <AppModal visible={formOpen} animationType="slide" transparent>
+      <AppModal
+        visible={formOpen}
+        animationType="slide"
+        transparent
+        onClose={() => setFormOpen(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-4 text-lg font-semibold text-slate-900">
@@ -702,7 +712,12 @@ export function MobileHealthcareAppointmentsScreen() {
         </View>
       </AppModal>
 
-      <AppModal visible={rxOpen} animationType="slide" transparent>
+      <AppModal
+        visible={rxOpen}
+        animationType="slide"
+        transparent
+        onClose={() => setRxOpen(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[85%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-2 text-lg font-semibold">New prescription</Text>
@@ -791,7 +806,12 @@ export function MobileHealthcareAppointmentsScreen() {
         </View>
       </AppModal>
 
-      <AppModal visible={viewRxOpen} animationType="slide" transparent>
+      <AppModal
+        visible={viewRxOpen}
+        animationType="slide"
+        transparent
+        onClose={() => setViewRxOpen(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[80%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
             <Text className="mb-2 font-semibold text-slate-900">
@@ -854,7 +874,12 @@ export function MobileHealthcareAppointmentsScreen() {
         </View>
       </AppModal>
 
-      <AppModal visible={invOpen} animationType="slide" transparent>
+      <AppModal
+        visible={invOpen}
+        animationType="slide"
+        transparent
+        onClose={() => setInvOpen(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[80%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-2 font-semibold">Appointment invoice</Text>

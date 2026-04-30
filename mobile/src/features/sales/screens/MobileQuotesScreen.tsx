@@ -375,7 +375,12 @@ export function MobileQuotesScreen() {
         onClose={() => setStatusOpen(false)}
       />
 
-      <AppModal visible={oppPickerOpen} animationType="slide" transparent>
+      <AppModal
+        visible={oppPickerOpen}
+        animationType="slide"
+        transparent
+        onClose={() => setOppPickerOpen(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[70%] rounded-t-2xl bg-white p-4">
             <Text className="mb-3 text-lg font-semibold text-slate-900">
@@ -537,7 +542,12 @@ export function MobileQuotesScreen() {
             </FormSection>
       </MobileFormSheet>
 
-      <AppModal visible={viewOpen} animationType="fade" transparent>
+      <AppModal
+        visible={viewOpen}
+        animationType="fade"
+        transparent
+        onClose={() => setViewOpen(false)}
+      >
         <View className="flex-1 justify-center bg-black/40 px-4">
           <View className="max-h-[80%] rounded-2xl bg-white p-4">
             <Text className="text-lg font-semibold text-slate-900">Quote</Text>

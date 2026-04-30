@@ -387,7 +387,12 @@ export function MobileProjectsScreen() {
         </Pressable>
       </View>
 
-      <AppModal visible={detailOpen} animationType="slide" transparent>
+      <AppModal
+        visible={detailOpen}
+        animationType="slide"
+        transparent
+        onClose={() => setDetailOpen(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[85%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
             <Text className="text-lg font-semibold text-slate-900">Project</Text>

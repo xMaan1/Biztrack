@@ -355,7 +355,12 @@ export function MobileTasksScreen() {
         />
       )}
 
-      <AppModal visible={detailOpen} animationType="slide" transparent>
+      <AppModal
+        visible={detailOpen}
+        animationType="slide"
+        transparent
+        onClose={() => setDetailOpen(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[85%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
             <Text className="text-lg font-semibold text-slate-900">Task</Text>
@@ -411,7 +416,12 @@ export function MobileTasksScreen() {
         </View>
       </AppModal>
 
-      <AppModal visible={createOpen} animationType="slide" transparent>
+      <AppModal
+        visible={createOpen}
+        animationType="slide"
+        transparent
+        onClose={() => setCreateOpen(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
             <Text className="text-lg font-semibold text-slate-900">New task</Text>
@@ -434,7 +444,12 @@ export function MobileTasksScreen() {
         </View>
       </AppModal>
 
-      <AppModal visible={editOpen} animationType="slide" transparent>
+      <AppModal
+        visible={editOpen}
+        animationType="slide"
+        transparent
+        onClose={() => setEditOpen(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
             <Text className="text-lg font-semibold text-slate-900">Edit task</Text>

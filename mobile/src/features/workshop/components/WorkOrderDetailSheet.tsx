@@ -42,7 +42,12 @@ export function WorkOrderDetailSheet({
 }: Props) {
   const w = workOrder;
   return (
-    <AppModal visible={visible} animationType="slide" transparent>
+    <AppModal
+      visible={visible}
+      animationType="slide"
+      transparent
+      onClose={onClose}
+    >
       <View className="flex-1 justify-end bg-black/45">
         <View className="max-h-[88%] rounded-t-3xl bg-white">
           <View className="items-center pt-3">

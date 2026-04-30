@@ -23,7 +23,12 @@ export function ProductDetailSheet({
   onDelete,
 }: Props) {
   return (
-    <AppModal visible={visible} animationType="slide" transparent>
+    <AppModal
+      visible={visible}
+      animationType="slide"
+      transparent
+      onClose={onClose}
+    >
       <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.45)' }}>
         <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '85%' }}>
           <View style={{ alignItems: 'center', paddingTop: 12 }}>

@@ -28,7 +28,7 @@ export function ProductFormModal({
   onFieldChange,
 }: Props) {
   return (
-    <AppModal visible={visible} animationType="slide">
+    <AppModal visible={visible} animationType="slide" onClose={onClose}>
       <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['top', 'bottom']}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}

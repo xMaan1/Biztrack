@@ -309,7 +309,12 @@ export function MobileUsersScreen() {
         <View className="h-8" />
       </ScrollView>
 
-      <AppModal visible={createOpen} animationType="slide" transparent>
+      <AppModal
+        visible={createOpen}
+        animationType="slide"
+        transparent
+        onClose={() => setCreateOpen(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="text-lg font-semibold text-slate-900">Add user</Text>
@@ -373,7 +378,12 @@ export function MobileUsersScreen() {
         </View>
       </AppModal>
 
-      <AppModal visible={editOpen} animationType="slide" transparent>
+      <AppModal
+        visible={editOpen}
+        animationType="slide"
+        transparent
+        onClose={() => setEditOpen(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="text-lg font-semibold text-slate-900">Edit user</Text>
@@ -418,7 +428,12 @@ export function MobileUsersScreen() {
         </View>
       </AppModal>
 
-      <AppModal visible={deleteOpen} animationType="fade" transparent>
+      <AppModal
+        visible={deleteOpen}
+        animationType="fade"
+        transparent
+        onClose={() => setDeleteOpen(false)}
+      >
         <View className="flex-1 justify-center bg-black/40 px-4">
           <View className="rounded-2xl bg-white p-4">
             <Text className="text-lg font-semibold text-slate-900">Remove user</Text>

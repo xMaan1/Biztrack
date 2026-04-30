@@ -422,7 +422,12 @@ export function MobileHealthcareDailyExpenseScreen() {
         onClose={() => setFormCatPick(false)}
       />
 
-      <AppModal visible={catFormOpen} animationType="slide" transparent>
+      <AppModal
+        visible={catFormOpen}
+        animationType="slide"
+        transparent
+        onClose={() => setCatFormOpen(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-3 text-lg font-semibold">
@@ -453,7 +458,12 @@ export function MobileHealthcareDailyExpenseScreen() {
         </View>
       </AppModal>
 
-      <AppModal visible={expFormOpen} animationType="slide" transparent>
+      <AppModal
+        visible={expFormOpen}
+        animationType="slide"
+        transparent
+        onClose={() => setExpFormOpen(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[85%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-3 text-lg font-semibold">

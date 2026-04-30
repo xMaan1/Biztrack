@@ -242,7 +242,12 @@ export function MobileHealthcarePatientsScreen() {
         />
       </View>
 
-      <AppModal visible={formOpen} animationType="slide" transparent>
+      <AppModal
+        visible={formOpen}
+        animationType="slide"
+        transparent
+        onClose={() => setFormOpen(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-4 text-lg font-semibold text-slate-900">

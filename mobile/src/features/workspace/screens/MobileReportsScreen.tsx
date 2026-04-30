@@ -413,7 +413,12 @@ export function MobileReportsScreen() {
         <View className="h-8" />
       </ScrollView>
 
-      <AppModal visible={addOpen} animationType="slide" transparent>
+      <AppModal
+        visible={addOpen}
+        animationType="slide"
+        transparent
+        onClose={() => setAddOpen(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="text-lg font-semibold text-slate-900">Upload report</Text>
@@ -449,7 +454,12 @@ export function MobileReportsScreen() {
         </View>
       </AppModal>
 
-      <AppModal visible={renameOpen} animationType="fade" transparent>
+      <AppModal
+        visible={renameOpen}
+        animationType="fade"
+        transparent
+        onClose={() => setRenameOpen(false)}
+      >
         <View className="flex-1 justify-center bg-black/40 px-4">
           <View className="rounded-2xl bg-white p-4">
             <Text className="text-lg font-semibold text-slate-900">Rename</Text>

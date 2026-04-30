@@ -12,7 +12,12 @@ export function PickerModal<T extends { id: string; label: string }>(props: {
   onSearchChange?: (q: string) => void;
 }) {
   return (
-    <AppModal visible={props.visible} animationType="slide" transparent>
+    <AppModal
+      visible={props.visible}
+      animationType="slide"
+      transparent
+      onClose={props.onClose}
+    >
       <View className="flex-1 justify-end bg-black/40">
         <View className="max-h-[80%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
           <Text className="mb-3 text-lg font-semibold text-slate-900">

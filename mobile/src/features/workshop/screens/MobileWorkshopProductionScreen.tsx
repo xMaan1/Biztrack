@@ -353,7 +353,12 @@ export function MobileWorkshopProductionScreen() {
         onClose={() => setUserPick(false)}
       />
 
-      <AppModal visible={modalOpen} animationType="slide" transparent>
+      <AppModal
+        visible={modalOpen}
+        animationType="slide"
+        transparent
+        onClose={() => setModalOpen(false)}
+      >
         <View className="flex-1 justify-end bg-black/40">
           <View className="max-h-[94%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-3 text-lg font-semibold">
