@@ -589,26 +589,31 @@ function CRMOpportunitiesContent() {
 
         {/* Create/Edit Opportunity Dialog */}
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>
-                {editingOpportunity ? 'Edit Opportunity' : 'New Opportunity'}
-              </DialogTitle>
-              <DialogDescription>
-                {editingOpportunity
-                  ? 'Update opportunity information'
-                  : 'Create a new sales opportunity'}
-              </DialogDescription>
-            </DialogHeader>
+          <DialogContent className="flex max-h-[min(calc(100dvh_-_2rem),calc(100vh_-_2rem))] max-w-2xl flex-col gap-0 overflow-hidden p-0">
+            <div className="shrink-0 border-b px-6 pb-4 pt-6 pr-14">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingOpportunity ? 'Edit Opportunity' : 'New Opportunity'}
+                </DialogTitle>
+                <DialogDescription>
+                  {editingOpportunity
+                    ? 'Update opportunity information'
+                    : 'Create a new sales opportunity'}
+                </DialogDescription>
+              </DialogHeader>
+            </div>
 
             {errorMessage && (
-              <Alert variant="destructive">
-                <AlertDescription>{errorMessage}</AlertDescription>
-              </Alert>
+              <div className="shrink-0 px-6 pt-3">
+                <Alert variant="destructive">
+                  <AlertDescription>{errorMessage}</AlertDescription>
+                </Alert>
+              </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="col-span-full sm:col-span-2">
                 <Label htmlFor="title">Title *</Label>
                 <Input
                   id="title"
@@ -625,7 +630,7 @@ function CRMOpportunitiesContent() {
                   placeholder="Opportunity title"
                 />
               </div>
-              <div className="col-span-2">
+              <div className="col-span-full sm:col-span-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
@@ -777,7 +782,7 @@ function CRMOpportunitiesContent() {
                   label="Assigned To"
                 />
               </div>
-              <div className="col-span-2">
+              <div className="col-span-full sm:col-span-2">
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea
                   id="notes"
@@ -790,12 +795,13 @@ function CRMOpportunitiesContent() {
               </div>
             </div>
             {formErrorMessage && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="mt-4">
                 <AlertDescription>{formErrorMessage}</AlertDescription>
               </Alert>
             )}
+            </div>
 
-            <DialogFooter>
+            <DialogFooter className="shrink-0 gap-2 border-t bg-background px-6 py-4">
               <Button
                 variant="outline"
                 onClick={() => setShowCreateDialog(false)}
@@ -818,14 +824,16 @@ function CRMOpportunitiesContent() {
           open={!!viewingOpportunity}
           onOpenChange={() => setViewingOpportunity(null)}
         >
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>View Opportunity</DialogTitle>
-              <DialogDescription>Opportunity details</DialogDescription>
-            </DialogHeader>
+          <DialogContent className="flex max-h-[min(calc(100dvh_-_2rem),calc(100vh_-_2rem))] max-w-2xl flex-col gap-0 overflow-hidden p-0">
+            <div className="shrink-0 border-b px-6 pb-4 pt-6 pr-14">
+              <DialogHeader>
+                <DialogTitle>View Opportunity</DialogTitle>
+                <DialogDescription>Opportunity details</DialogDescription>
+              </DialogHeader>
+            </div>
 
             {viewingOpportunity && (
-              <div className="space-y-4">
+              <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-6 py-4">
                 <div>
                   <Label className="text-sm font-medium text-gray-600">
                     Title
@@ -844,7 +852,7 @@ function CRMOpportunitiesContent() {
                     </p>
                   </div>
                 )}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <Label className="text-sm font-medium text-gray-600">
                       Stage
@@ -910,7 +918,7 @@ function CRMOpportunitiesContent() {
                     <p className="text-gray-900">{viewingOpportunity.notes}</p>
                   </div>
                 )}
-                <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                <div className="grid grid-cols-1 gap-4 text-sm text-gray-600 sm:grid-cols-2">
                   <div>
                     <Label className="text-sm font-medium text-gray-600">
                       Created
@@ -927,7 +935,7 @@ function CRMOpportunitiesContent() {
               </div>
             )}
 
-            <DialogFooter>
+            <DialogFooter className="shrink-0 gap-2 border-t bg-background px-6 py-4">
               <Button
                 variant="outline"
                 onClick={() => setViewingOpportunity(null)}

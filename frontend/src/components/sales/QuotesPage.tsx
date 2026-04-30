@@ -199,22 +199,35 @@ export default function QuotesPage() {
     if (value === null || value === undefined) {
       return '';
     }
-    return String(value).trim();
+    return String(value).trim().toLowerCase();
+  };
+
+  const firstValidId = (...values: unknown[]) => {
+    for (const value of values) {
+      const normalized = normalizeId(value);
+      if (normalized) {
+        return normalized;
+      }
+    }
+    return '';
   };
 
   const getQuoteOpportunityId = (quote: Quote) =>
-    normalizeId(
-      (quote as unknown as { opportunityId?: string; opportunity_id?: string })
-        .opportunityId ??
-        (quote as unknown as { opportunityId?: string; opportunity_id?: string })
-          .opportunity_id,
+    firstValidId(
+      (quote as any).opportunityId,
+      (quote as any).opportunity_id,
+      (quote as any).opportunity?.id,
+      (quote as any).opportunity?.opportunityId,
+      (quote as any).opportunity?.opportunity_id,
     );
 
   const getQuoteContactId = (quote: Quote) =>
-    normalizeId(
-      (quote as unknown as { contactId?: string; contact_id?: string }).contactId ??
-        (quote as unknown as { contactId?: string; contact_id?: string })
-          .contact_id,
+    firstValidId(
+      (quote as any).contactId,
+      (quote as any).contact_id,
+      (quote as any).contact?.id,
+      (quote as any).contact?.contactId,
+      (quote as any).contact?.contact_id,
     );
 
   const getOpportunityName = (quote: Quote) => {
@@ -234,14 +247,25 @@ export default function QuotesPage() {
       const opportunity = opportunities.find(
         (o) => normalizeId(o.id) === getQuoteOpportunityId(quote),
       );
-      contactId = normalizeId((opportunity as any)?.contactId);
+      contactId = firstValidId(
+        (opportunity as any)?.contactId,
+        (opportunity as any)?.contact_id,
+      );
     }
     if (!contactId) {
-      return 'Unknown Contact';
+      const inlineContactName = `${(quote as any)?.contact?.firstName || ''} ${(quote as any)?.contact?.lastName || ''}`.trim();
+      return (
+        inlineContactName ||
+        (quote as any)?.contact_name ||
+        (quote as any)?.contactName ||
+        'Unknown Contact'
+      );
     }
-    const contact = contacts.find((c) => normalizeId(c.id) === contactId);
+    const contact = contacts.find((c) =>
+      [normalizeId(c.id), normalizeId((c as any).contactId), normalizeId((c as any).contact_id)].includes(contactId),
+    );
     return contact
-      ? `${contact.firstName} ${contact.lastName}`
+      ? `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || contact.email || 'Unknown Contact'
       : 'Unknown Contact';
   };
 

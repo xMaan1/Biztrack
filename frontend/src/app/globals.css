@@ -106,6 +106,25 @@
   }
 }
 
+html.desktop-app,
+html.desktop-app body {
+  overscroll-behavior: none;
+}
+
+html.desktop-app,
+html.desktop-app body,
+html.desktop-app #__next {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+html.desktop-app input,
+html.desktop-app textarea,
+html.desktop-app [contenteditable='true'] {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
 @layer components {
   .glass-effect {
     @apply bg-white/10 backdrop-blur-md border border-white/20;

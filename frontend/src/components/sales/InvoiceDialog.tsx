@@ -131,10 +131,19 @@ export function InvoiceDialog({
 
   // Fetch products when dialog opens
   useEffect(() => {
-    if (open && mode === 'create' && !installmentFirstDueDate) {
-      setInstallmentFirstDueDate(formData.dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+    if (!open || mode === 'view') {
+      return;
     }
-  }, [open, mode, formData.dueDate]);
+    setCreateInstallmentPlan(false);
+    setInstallmentCount(3);
+    setInstallmentFrequency('monthly');
+    setInstallmentFirstDueDate(
+      (mode === 'edit' ? invoice?.dueDate : undefined) ||
+        new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0],
+    );
+  }, [open, mode, invoice?.id]);
 
   useEffect(() => {
     if (open) {
@@ -420,7 +429,7 @@ export function InvoiceDialog({
       };
       const totals = calculateTotals();
       const options =
-        mode === 'create' && createInstallmentPlan && totals.total > 0
+        mode !== 'view' && createInstallmentPlan && totals.total > 0
           ? {
               installmentPlan: {
                 total_amount: totals.total,
@@ -1330,7 +1339,7 @@ export function InvoiceDialog({
             </CardContent>
           </Card>
 
-          {isCommerce && mode === 'create' && (
+          {isCommerce && mode !== 'view' && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">Installments</CardTitle>

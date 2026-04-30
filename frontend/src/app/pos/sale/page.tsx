@@ -27,6 +27,8 @@ import {
   Product,
   POSTransactionCreate,
   POSPaymentMethod,
+  POSShift,
+  POSShiftStatus,
 } from '@/src/models/pos';
 import {
   ShoppingCart,
@@ -60,6 +62,16 @@ const POSSale = () => {
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  const hasOpenShift = async () => {
+    try {
+      const response = await apiService.get('/pos/shifts');
+      const shifts: POSShift[] = response.shifts || [];
+      return shifts.some((shift) => shift.status === POSShiftStatus.OPEN);
+    } catch {
+      return false;
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -154,6 +166,13 @@ const POSSale = () => {
 
     setLoading(true);
     try {
+      const openShift = await hasOpenShift();
+      if (!openShift) {
+        alert('No open shift found. Please open a shift first.');
+        router.push('/pos/shifts');
+        return;
+      }
+
       const transactionData: POSTransactionCreate = {
         customerName: customerName || undefined,
         items: cart.map((item) => ({
@@ -180,6 +199,11 @@ const POSSale = () => {
       alert('Transaction completed successfully!');
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to create transaction';
+      if (String(errorMessage).toLowerCase().includes('no open shift')) {
+        alert('No open shift found. Please open a shift first.');
+        router.push('/pos/shifts');
+        return;
+      }
       alert(`Transaction Error: ${errorMessage}`);
     } finally {
       setLoading(false);

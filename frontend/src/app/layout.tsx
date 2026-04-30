@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { AuthGuard } from '@/src/components/auth';
+import { DesktopRuntimeClass } from '@/src/components/layout/DesktopRuntimeClass';
 import { AuthProvider } from '@/src/contexts/AuthContext';
 import { RBACProvider } from '@/src/contexts/RBACContext';
 import { CurrencyProvider } from '@/src/contexts/CurrencyContext';
@@ -41,6 +42,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
+        <DesktopRuntimeClass />
         <AuthProvider>
           <RBACProvider>
             <CurrencyProvider>

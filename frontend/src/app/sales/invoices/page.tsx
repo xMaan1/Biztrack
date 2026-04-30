@@ -159,10 +159,21 @@ function InvoicesPageContent() {
   const handleUpdateInvoice = async (
     invoiceId: string,
     invoiceData: Partial<InvoiceCreate>,
+    options?: { installmentPlan?: InstallmentPlanCreateOption },
   ) => {
     try {
       setUpdateError(null);
       await InvoiceService.updateInvoice(invoiceId, invoiceData);
+      if (options?.installmentPlan) {
+        const existingPlan =
+          await InvoiceService.getInvoiceInstallmentPlan(invoiceId);
+        if (!existingPlan) {
+          await InvoiceService.createInstallmentPlan({
+            ...options.installmentPlan,
+            invoice_id: invoiceId,
+          });
+        }
+      }
       setShowEditDialog(false);
       setSelectedInvoice(null);
       setUpdateError(null);
@@ -539,8 +550,9 @@ function InvoicesPageContent() {
               setUpdateError(null);
             }
           }}
-          onSubmit={(data) =>
-            selectedInvoice && handleUpdateInvoice(selectedInvoice.id, data)
+          onSubmit={(data, options) =>
+            selectedInvoice &&
+            handleUpdateInvoice(selectedInvoice.id, data, options)
           }
           mode="edit"
           invoice={selectedInvoice}
