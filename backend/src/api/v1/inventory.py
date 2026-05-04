@@ -838,7 +838,7 @@ def read_receiving(
     _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value))
 ):
     """Get a specific receiving by ID"""
-    receiving = get_receiving_by_id(db, receiving_id, str(tenant_context["tenant_id"]))
+    receiving = get_receiving_by_id(receiving_id, db, str(tenant_context["tenant_id"]))
     if not receiving:
         raise HTTPException(status_code=404, detail="Receiving not found")
     
