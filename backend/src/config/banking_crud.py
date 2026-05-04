@@ -4,6 +4,7 @@ Banking CRUD Operations
 
 from typing import List, Optional, Dict, Any
 from datetime import datetime, date
+from enum import Enum as StdEnum
 from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy import and_, or_, func, desc, asc, cast, String
 from .bank_account_types import bank_account_type_slug
@@ -13,10 +14,22 @@ from .banking_models import (
 )
 
 
+def _bank_txn_status_text_eq(value: str):
+    return func.lower(cast(BankTransaction.status, String)) == str(value).strip().lower()
+
+
+def _bank_txn_type_text_eq(value: str):
+    return func.lower(cast(BankTransaction.transaction_type, String)) == str(value).strip().lower()
+
+
 def _settled_transaction_condition():
     return func.lower(cast(BankTransaction.status, String)).in_(
         ("completed", "posted", "cleared")
     )
+
+
+def _pending_transaction_condition():
+    return _bank_txn_status_text_eq(TransactionStatus.PENDING.value)
 
 
 def _normalize_enum_input(value: Any, enum_cls):
@@ -44,6 +57,15 @@ def _normalize_enum_input(value: Any, enum_cls):
             pass
 
     return value
+
+
+def _bank_enum_storage_str(value: Any) -> Any:
+    if value is None:
+        return None
+    if isinstance(value, StdEnum):
+        return value.value
+    return value
+
 
 # Bank Account CRUD Operations
 def create_bank_account(account_data: Dict[str, Any], db: Session) -> BankAccount:
@@ -152,6 +174,10 @@ def create_bank_transaction(transaction_data: Dict[str, Any], db: Session) -> Ba
         if field_name in transaction_data and transaction_data.get(field_name) is not None:
             transaction_data[field_name] = _normalize_enum_input(transaction_data.get(field_name), enum_cls)
 
+    for _k in ("transaction_type", "status", "payment_method"):
+        if _k in transaction_data and transaction_data.get(_k) is not None:
+            transaction_data[_k] = _bank_enum_storage_str(transaction_data[_k])
+
     amount = float(transaction_data.get("amount") or 0)
     exchange_rate = float(transaction_data.get("exchange_rate") or 1.0)
     if transaction_data.get("base_amount") is None:
@@ -214,11 +240,23 @@ def get_all_bank_transactions(
     if account_id:
         query = query.filter(BankTransaction.bank_account_id == account_id)
     
-    if transaction_type:
-        query = query.filter(BankTransaction.transaction_type == transaction_type)
-    
-    if status:
-        query = query.filter(BankTransaction.status == status)
+    if transaction_type is not None:
+        tt = (
+            transaction_type
+            if isinstance(transaction_type, TransactionType)
+            else _normalize_enum_input(transaction_type, TransactionType)
+        )
+        tv = _bank_enum_storage_str(tt)
+        if tv is not None:
+            query = query.filter(_bank_txn_type_text_eq(tv))
+
+    if status is not None:
+        st = (
+            status if isinstance(status, TransactionStatus) else _normalize_enum_input(status, TransactionStatus)
+        )
+        sv = _bank_enum_storage_str(st)
+        if sv is not None:
+            query = query.filter(_bank_txn_status_text_eq(sv))
     
     if start_date:
         query = query.filter(BankTransaction.transaction_date >= start_date)
@@ -259,7 +297,11 @@ def update_bank_transaction(transaction_id: str, transaction_data: Dict[str, Any
     ):
         if field_name in transaction_data and transaction_data.get(field_name) is not None:
             transaction_data[field_name] = _normalize_enum_input(transaction_data.get(field_name), enum_cls)
-    
+
+    for _k in ("transaction_type", "status", "payment_method"):
+        if _k in transaction_data and transaction_data.get(_k) is not None:
+            transaction_data[_k] = _bank_enum_storage_str(transaction_data[_k])
+
     for key, value in transaction_data.items():
         if hasattr(db_transaction, key):
             setattr(db_transaction, key, value)
@@ -384,7 +426,7 @@ def calculate_account_balance(account_id: str, db: Session, tenant_id: str, as_o
         and_(
             BankTransaction.bank_account_id == account_id,
             BankTransaction.tenant_id == tenant_id,
-            BankTransaction.status == TransactionStatus.PENDING
+            _pending_transaction_condition(),
         )
     )
     
@@ -450,7 +492,7 @@ def get_banking_dashboard_data(db: Session, tenant_id: str) -> Dict[str, Any]:
     pending_transactions_count = db.query(func.count(BankTransaction.id)).filter(
         and_(
             BankTransaction.tenant_id == tenant_id,
-            BankTransaction.status == TransactionStatus.PENDING
+            _pending_transaction_condition(),
         )
     ).scalar() or 0
     

@@ -104,8 +104,8 @@ class BankTransaction(Base):
     transaction_number = Column(String, unique=True, index=True)  # Auto-generated
     transaction_date = Column(DateTime, nullable=False, index=True)
     value_date = Column(DateTime, nullable=True)  # When funds are actually available
-    transaction_type = Column(SQLEnum(TransactionType, values_callable=_pg_enum_values), nullable=False)
-    status = Column(SQLEnum(TransactionStatus, values_callable=_pg_enum_values), default=TransactionStatus.PENDING)
+    transaction_type = Column(String(32), nullable=False)
+    status = Column(String(32), nullable=False, default=TransactionStatus.PENDING.value)
     
     # Amount Information
     amount = Column(Float, nullable=False)
@@ -115,7 +115,7 @@ class BankTransaction(Base):
     base_amount = Column(Float, nullable=False)  # Amount in base currency
     
     # Payment Method and Reference
-    payment_method = Column(SQLEnum(PaymentMethod, values_callable=_pg_enum_values), nullable=True)
+    payment_method = Column(String(32), nullable=True)
     reference_number = Column(String, nullable=True)
     external_reference = Column(String, nullable=True)  # Bank's reference
     check_number = Column(String, nullable=True)
