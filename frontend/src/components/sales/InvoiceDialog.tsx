@@ -707,14 +707,14 @@ export function InvoiceDialog({
         ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Customer Information */}
-          <Card>
+          <Card className="overflow-visible">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-4 w-4" />
                 Customer Information
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="overflow-visible">
               <CustomerSearch
                 value={selectedCustomer}
                 onSelect={handleCustomerSelect}

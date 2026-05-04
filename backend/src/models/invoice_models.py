@@ -287,13 +287,20 @@ class PaymentUpdate(BaseModel):
 class Payment(PaymentBase):
     id: str
     tenant_id: str
-    createdBy: str
+    createdBy: Optional[str] = None
     processedAt: Optional[datetime] = None
     createdAt: datetime
     updatedAt: datetime
 
     class Config:
         from_attributes = True
+
+    @field_validator("paymentDate", mode="before")
+    @classmethod
+    def payment_date_to_str(cls, v):
+        if isinstance(v, datetime):
+            return v.isoformat()
+        return v
 
 class InvoicesResponse(BaseModel):
     invoices: List[Invoice]

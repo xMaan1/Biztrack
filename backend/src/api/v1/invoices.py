@@ -1562,20 +1562,23 @@ def create_payment(
         
         if not invoice:
             raise HTTPException(status_code=404, detail="Invoice not found")
-        
-        # Create payment
+
+        raw_pd = payment_data.paymentDate
+        if raw_pd:
+            payment_dt = datetime.fromisoformat(str(raw_pd).replace("Z", "+00:00"))
+        else:
+            payment_dt = datetime.utcnow()
+
         db_payment = Payment(
             id=str(uuid.uuid4()),
             tenant_id=tenant_id,
-            createdBy=str(current_user.id),
             invoiceId=invoice_id,
             amount=payment_data.amount,
-            paymentMethod=payment_data.paymentMethod,
-            paymentDate=payment_data.paymentDate,
+            paymentMethod=payment_data.paymentMethod.value,
+            paymentDate=payment_dt,
             reference=payment_data.reference,
             notes=payment_data.notes,
-            status=PaymentStatus.COMPLETED,
-            processedAt=datetime.utcnow(),
+            status=PaymentStatus.COMPLETED.value,
             createdAt=datetime.utcnow(),
             updatedAt=datetime.utcnow()
         )

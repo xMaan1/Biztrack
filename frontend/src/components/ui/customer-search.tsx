@@ -5,7 +5,7 @@ import { Input } from './input';
 import { Label } from './label';
 import { Button } from './button';
 import { Badge } from './badge';
-import { Card, CardContent } from './card';
+import { Card } from './card';
 import { Search, User, Building, X, Check } from 'lucide-react';
 import { Customer } from '../../services/CustomerService';
 import InvoiceService from '../../services/InvoiceService';
@@ -161,59 +161,57 @@ export function CustomerSearch({
 
         {/* Dropdown */}
         {isOpen && (
-          <Card className="absolute z-[110] w-full mt-1 max-h-60 overflow-y-auto shadow-lg border">
-            <CardContent className="p-0">
-              {loading ? (
-                <div className="p-4 text-center text-gray-500">
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-                    Searching customers...
-                  </div>
+          <div className="absolute z-[110] left-0 right-0 mt-1 max-h-60 overflow-y-auto rounded-lg border bg-card text-card-foreground shadow-lg">
+            {loading ? (
+              <div className="p-4 text-center text-gray-500">
+                <div className="flex items-center justify-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+                  Searching customers...
                 </div>
-              ) : customers.length > 0 ? (
-                <div className="py-1">
-                  {customers.map((customer) => (
-                    <div
-                      key={customer.id}
-                      className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                      onClick={() => handleCustomerSelect(customer)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          {getCustomerTypeIcon(customer)}
-                          <div>
-                            <div className="font-medium text-gray-900">
-                              {getCustomerDisplayName(customer)}
-                            </div>
-                            <div className="text-sm text-gray-500">{customer.email}</div>
-                            {customer.phone && (
-                              <div className="text-sm text-gray-500">{customer.phone}</div>
-                            )}
+              </div>
+            ) : customers.length > 0 ? (
+              <div className="py-1">
+                {customers.map((customer) => (
+                  <div
+                    key={customer.id}
+                    className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                    onClick={() => handleCustomerSelect(customer)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {getCustomerTypeIcon(customer)}
+                        <div>
+                          <div className="font-medium text-gray-900">
+                            {getCustomerDisplayName(customer)}
                           </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge className={getCustomerStatusColor(customer.customerStatus)}>
-                            {customer.customerStatus}
-                          </Badge>
-                          {selectedCustomer?.id === customer.id && (
-                            <Check className="h-4 w-4 text-green-600" />
+                          <div className="text-sm text-gray-500">{customer.email}</div>
+                          {customer.phone && (
+                            <div className="text-sm text-gray-500">{customer.phone}</div>
                           )}
                         </div>
                       </div>
+                      <div className="flex items-center gap-2">
+                        <Badge className={getCustomerStatusColor(customer.customerStatus)}>
+                          {customer.customerStatus}
+                        </Badge>
+                        {selectedCustomer?.id === customer.id && (
+                          <Check className="h-4 w-4 text-green-600" />
+                        )}
+                      </div>
                     </div>
-                  ))}
-                </div>
-              ) : searchQuery.trim().length >= 2 ? (
-                <div className="p-4 text-center text-gray-500">
-                  No customers found for "{searchQuery}"
-                </div>
-              ) : (
-                <div className="p-4 text-center text-gray-500">
-                  Type at least 2 characters to search customers
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  </div>
+                ))}
+              </div>
+            ) : searchQuery.trim().length >= 2 ? (
+              <div className="p-4 text-center text-gray-500">
+                No customers found for "{searchQuery}"
+              </div>
+            ) : (
+              <div className="p-4 text-center text-gray-500">
+                Type at least 2 characters to search customers
+              </div>
+            )}
+          </div>
         )}
       </div>
 
