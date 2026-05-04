@@ -26,11 +26,13 @@ import {
   X,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useConfirm } from '@/src/contexts/ConfirmContext';
 import { apiService } from '@/src/services/ApiService';
 import { extractErrorMessage } from '@/src/utils/errorUtils';
 import { getInitials } from '@/src/lib/utils';
 
 export default function ProfilePage() {
+  const confirm = useConfirm();
   const { user, refreshUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -194,9 +196,12 @@ export default function ProfilePage() {
       return;
     }
 
-    if (!confirm('Are you sure you want to remove your avatar?')) {
-      return;
-    }
+    const ok = await confirm({
+      description: 'Are you sure you want to remove your avatar?',
+      destructive: true,
+      confirmLabel: 'Remove',
+    });
+    if (!ok) return;
 
     try {
       setAvatarUploading(true);

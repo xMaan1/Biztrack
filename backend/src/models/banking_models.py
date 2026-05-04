@@ -2,6 +2,7 @@
 Banking Pydantic Models for API
 """
 
+import math
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field, field_validator
@@ -373,15 +374,94 @@ class TillBase(BaseModel):
     class Config:
         populate_by_name = True
 
-class TillCreate(TillBase):
-    pass
+class TillCreate(BaseModel):
+    name: str = Field(..., max_length=200)
+    location: Optional[str] = Field(default=None, max_length=500)
+    initial_balance: float = Field(alias="initialBalance", default=0.0)
+    currency: str = Field(default="USD", max_length=10)
+    description: Optional[str] = Field(default=None, max_length=2000)
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def validate_name_required(cls, v):
+        if v is None:
+            raise ValueError("Till name is required")
+        s = str(v).strip()
+        if not s:
+            raise ValueError("Till name is required")
+        return s
+
+    @field_validator("location", "description", mode="before")
+    @classmethod
+    def strip_optional_text(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str):
+            s = v.strip()
+            return s if s else None
+        return v
+
+    @field_validator("currency", mode="before")
+    @classmethod
+    def validate_currency(cls, v):
+        if v is None:
+            return "USD"
+        s = str(v).strip().upper()
+        if not s:
+            return "USD"
+        return s
+
+    @field_validator("initial_balance", mode="after")
+    @classmethod
+    def validate_initial_balance(cls, v: float) -> float:
+        fv = float(v)
+        if not math.isfinite(fv):
+            raise ValueError("initial balance must be a finite number")
+        if fv < -1e15 or fv > 1e15:
+            raise ValueError("initial balance is out of allowed range")
+        return fv
+
+    class Config:
+        populate_by_name = True
 
 class TillUpdate(BaseModel):
-    name: Optional[str] = None
-    location: Optional[str] = None
+    name: Optional[str] = Field(default=None, max_length=200)
+    location: Optional[str] = Field(default=None, max_length=500)
     initial_balance: Optional[float] = Field(alias="initialBalance", default=None)
     is_active: Optional[bool] = Field(alias="isActive", default=None)
-    description: Optional[str] = None
+    description: Optional[str] = Field(default=None, max_length=2000)
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def validate_name_optional(cls, v):
+        if v is None:
+            return None
+        s = str(v).strip()
+        if not s:
+            raise ValueError("Till name cannot be empty")
+        return s
+
+    @field_validator("location", "description", mode="before")
+    @classmethod
+    def strip_optional_text_update(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str):
+            s = v.strip()
+            return s if s else None
+        return v
+
+    @field_validator("initial_balance", mode="after")
+    @classmethod
+    def validate_initial_balance_optional(cls, v: Optional[float]) -> Optional[float]:
+        if v is None:
+            return None
+        fv = float(v)
+        if not math.isfinite(fv):
+            raise ValueError("initial balance must be a finite number")
+        if fv < -1e15 or fv > 1e15:
+            raise ValueError("initial balance is out of allowed range")
+        return fv
 
     class Config:
         populate_by_name = True

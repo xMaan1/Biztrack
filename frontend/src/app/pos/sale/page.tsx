@@ -39,6 +39,7 @@ import {
   Package,
 } from 'lucide-react';
 import { DashboardLayout } from '../../../components/layout';
+import { toast } from 'sonner';
 
 interface CartItem {
   product: Product;
@@ -79,7 +80,7 @@ const POSSale = () => {
       setProducts(response.products || []);
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to load products';
-      alert(`Load Error: ${errorMessage}`);
+      toast.error(`Load Error: ${errorMessage}`);
       }
   };
 
@@ -91,7 +92,7 @@ const POSSale = () => {
       setProducts(response.products || []);
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to search products';
-      alert(`Search Error: ${errorMessage}`);
+      toast.error(`Search Error: ${errorMessage}`);
       }
   };
 
@@ -168,7 +169,7 @@ const POSSale = () => {
     try {
       const openShift = await hasOpenShift();
       if (!openShift) {
-        alert('No open shift found. Please open a shift first.');
+        toast.warning('No open shift found. Please open a shift first.');
         router.push('/pos/shifts');
         return;
       }
@@ -196,15 +197,15 @@ const POSSale = () => {
 
       // Clear cart and show success
       clearCart();
-      alert('Transaction completed successfully!');
+      toast.success('Transaction completed successfully!');
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to create transaction';
       if (String(errorMessage).toLowerCase().includes('no open shift')) {
-        alert('No open shift found. Please open a shift first.');
+        toast.warning('No open shift found. Please open a shift first.');
         router.push('/pos/shifts');
         return;
       }
-      alert(`Transaction Error: ${errorMessage}`);
+      toast.error(`Transaction Error: ${errorMessage}`);
     } finally {
       setLoading(false);
     }

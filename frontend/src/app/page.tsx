@@ -25,6 +25,7 @@ import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { apiService } from '../services/ApiService';
 import { LandingNav } from '../components/landing/LandingNav';
 import { extractErrorMessage } from '../utils/errorUtils';
+import { toast } from 'sonner';
 import {
   Check,
   Star,
@@ -191,7 +192,7 @@ export default function LandingPage() {
 
       if (existingTenants && existingTenants.length > 0) {
         // User already has tenants - show message and redirect to dashboard
-        alert('You already have a workspace! Redirecting to your dashboard.');
+        toast.info('You already have a workspace. Redirecting to your dashboard.');
         router.push('/dashboard');
         return;
       }
@@ -242,7 +243,7 @@ export default function LandingPage() {
           window.location.href = response.checkout_url;
         } catch (redirectError) {
           console.error('Failed to redirect to checkout:', redirectError);
-          alert('Workspace created but failed to redirect to payment. Please contact support.');
+          toast.error('Workspace created but failed to redirect to payment. Please contact support.');
         }
       } else if (response.success && response.tenant) {
         setSubscriptionModal({ isOpen: false, plan: null });
@@ -260,7 +261,7 @@ export default function LandingPage() {
           }
         } catch (error) {
           console.error('Error setting up tenant:', error);
-          alert('Workspace created but there was an issue setting it up. Please refresh the page and try again.');
+          toast.error('Workspace created but there was an issue setting it up. Please refresh the page and try again.');
         }
       } else {
         const errorMessage = response.error || response.message || 'Unknown error';
@@ -269,7 +270,7 @@ export default function LandingPage() {
     } catch (error: any) {
       console.error('Failed to create workspace:', error);
       const errorMessage = extractErrorMessage(error, 'Failed to create workspace. Please try again.');
-      alert(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

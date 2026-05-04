@@ -38,6 +38,7 @@ import {
   Download,
 } from 'lucide-react';
 import { DashboardLayout } from '../../../components/layout';
+import { toast } from 'sonner';
 import { useCurrency } from '../../../contexts/CurrencyContext';
 
 interface SalesReport {
@@ -196,7 +197,7 @@ const POSReports = () => {
 
   const exportReport = (type: string) => {
     // This would implement actual export functionality
-    alert(`${type} report export functionality would be implemented here`);
+    toast.info(`${type} report export is not implemented yet.`);
   };
 
   return (

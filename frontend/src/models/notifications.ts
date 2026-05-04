@@ -14,6 +14,7 @@ export enum NotificationCategory {
   QUALITY = 'quality',
   MAINTENANCE = 'maintenance',
   LEDGER = 'ledger',
+  PROJECTS = 'projects',
   SYSTEM = 'system'
 }
 
@@ -31,6 +32,70 @@ export interface Notification {
   notification_data?: Record<string, any>;
   created_at: string;
   updated_at: string;
+}
+
+export function resolveNotificationActionPath(actionUrl: string): string {
+  if (!actionUrl || typeof actionUrl !== 'string') {
+    return actionUrl;
+  }
+  const trimmed = actionUrl.trim();
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+  let parsed: URL;
+  try {
+    parsed = new URL(
+      trimmed,
+      typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
+    );
+  } catch {
+    return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  }
+  const path = parsed.pathname;
+  const routeMap: Array<[RegExp, string]> = [
+    [/^\/crm\/customers\/[^/]+\/?$/, '/crm/customers'],
+    [/^\/crm\/leads\/[^/]+\/?$/, '/crm/leads'],
+    [/^\/crm\/opportunities\/[^/]+\/?$/, '/crm/opportunities'],
+    [/^\/work-orders\/[^/]+\/?$/, '/workshop-management/work-orders'],
+    [/^\/job-cards\/[^/]+\/?$/, '/workshop-management/job-cards'],
+    [/^\/hrm\/applications\/[^/]+\/?$/, '/hrm/job-postings'],
+  ];
+  for (const [pattern, target] of routeMap) {
+    if (pattern.test(path)) {
+      return `${target}${parsed.search}${parsed.hash}`;
+    }
+  }
+  return `${path}${parsed.search}${parsed.hash}`;
+}
+
+export function getNotificationTargetHref(
+  notification: Notification & {
+    actionUrl?: string;
+    metadata?: Record<string, unknown>;
+  },
+): string | null {
+  const direct = (notification.action_url || notification.actionUrl || '').trim();
+  if (direct) {
+    return direct;
+  }
+  const data =
+    notification.notification_data ||
+    (notification as { metadata?: Record<string, unknown> }).metadata;
+  if (!data || typeof data !== 'object') {
+    return null;
+  }
+  const d = data as Record<string, unknown>;
+  const str = (k: string) =>
+    typeof d[k] === 'string' ? (d[k] as string).trim() : '';
+  if (str('resource_url')) return str('resource_url');
+  if (str('target_url')) return str('target_url');
+  if (str('action_url')) return str('action_url');
+  if (d.customer_id) return '/crm/customers';
+  if (d.lead_id) return '/crm/leads';
+  if (d.opportunity_id) return '/crm/opportunities';
+  if (d.event_id) return '/events';
+  if (d.task_id) return '/tasks';
+  return null;
 }
 
 export interface NotificationCreate {
@@ -144,6 +209,8 @@ export const getCategoryDisplayName = (category: NotificationCategory): string =
       return 'Maintenance';
     case NotificationCategory.LEDGER:
       return 'Finance';
+    case NotificationCategory.PROJECTS:
+      return 'Projects';
     case NotificationCategory.SYSTEM:
       return 'System';
     default:
@@ -167,6 +234,8 @@ export const getCategoryIcon = (category: NotificationCategory): string => {
       return 'Wrench';
     case NotificationCategory.LEDGER:
       return 'Calculator';
+    case NotificationCategory.PROJECTS:
+      return 'FolderOpen';
     case NotificationCategory.SYSTEM:
       return 'Settings';
     default:

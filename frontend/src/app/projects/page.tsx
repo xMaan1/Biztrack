@@ -28,12 +28,17 @@ import { apiService } from '../../services/ApiService';
 import { Project, User } from '../../models';
 import { Plus, Search, Star, MoreVertical, Calendar, Eye, Edit, Trash2, FolderOpen, CheckSquare, RefreshCw } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
 } from '../../components/ui/dropdown-menu';
+
+function projectDateKey(s: string) {
+  return s.trim().replace(/T.*$/, '').slice(0, 10);
+}
 
 const ProjectCard = React.memo(({
   project,
@@ -509,7 +514,7 @@ export default function ProjectsPage() {
 
         const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to delete project';
 
-        alert(`Delete Error: ${errorMessage}`);
+        toast.error(`Delete Error: ${errorMessage}`);
 
       }
 
@@ -533,7 +538,9 @@ export default function ProjectsPage() {
         setFormError('End date is required');
         return;
       }
-      if (new Date(formData.endDate) < new Date(formData.startDate)) {
+      const startKey = projectDateKey(formData.startDate);
+      const endKey = projectDateKey(formData.endDate);
+      if (startKey.length === 10 && endKey.length === 10 && endKey < startKey) {
         setFormError('End date must be on or after start date');
         return;
       }
@@ -916,6 +923,7 @@ export default function ProjectsPage() {
                       id="project-form-start"
                       type="date"
                       required
+                      max={formData.endDate ? projectDateKey(formData.endDate) : undefined}
                       value={formData.startDate || ''}
                       onChange={(e) =>
                         setFormData({ ...formData, startDate: e.target.value })
@@ -929,7 +937,7 @@ export default function ProjectsPage() {
                       type="date"
                       required
                       value={formData.endDate || ''}
-                      min={formData.startDate || undefined}
+                      min={formData.startDate ? projectDateKey(formData.startDate) : undefined}
                       onChange={(e) =>
                         setFormData({ ...formData, endDate: e.target.value })
                       }

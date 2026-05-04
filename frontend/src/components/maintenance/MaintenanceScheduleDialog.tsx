@@ -28,6 +28,7 @@ import {
   EquipmentResponse,
 } from '@/src/models/maintenance';
 import { maintenanceService } from '@/src/services/MaintenanceService';
+import { toast } from 'sonner';
 
 interface MaintenanceScheduleDialogProps {
   open: boolean;
@@ -116,7 +117,7 @@ export function MaintenanceScheduleDialog({
     e.preventDefault();
 
     if (!formData.title || !formData.equipment_id || !formData.scheduled_date) {
-      alert('Please fill in all required fields');
+      toast.error('Please fill in all required fields');
       return;
     }
 
@@ -153,7 +154,7 @@ export function MaintenanceScheduleDialog({
         tags: [],
       });
     } catch (error) {
-      alert('Failed to create maintenance schedule. Please try again.');
+      toast.error('Failed to create maintenance schedule. Please try again.');
     } finally {
       setLoading(false);
     }

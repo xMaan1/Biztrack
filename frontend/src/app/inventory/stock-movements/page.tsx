@@ -48,6 +48,7 @@ import {
 } from '../../../models/inventory';
 import { Product } from '../../../models/pos';
 import { DashboardLayout } from '../../../components/layout';
+import { toast } from 'sonner';
 import { formatDate } from '../../../lib/utils';
 import {
   Dialog,
@@ -143,7 +144,7 @@ function StockMovementsContent() {
       }
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to load stock movements';
-      alert(`Load Error: ${errorMessage}`);
+      toast.error(`Load Error: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -174,7 +175,7 @@ function StockMovementsContent() {
       closeDeleteDialog();
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to delete stock movement';
-      alert(`Delete Error: ${errorMessage}`);
+      toast.error(`Delete Error: ${errorMessage}`);
     } finally {
       setDeleteLoading(false);
     }
@@ -188,7 +189,7 @@ function StockMovementsContent() {
       !newMovement.referenceNumber ||
       newMovement.quantity <= 0
     ) {
-      alert('Please fill in all required fields');
+      toast.error('Please fill in all required fields');
       return;
     }
 
@@ -200,7 +201,7 @@ function StockMovementsContent() {
       fetchData();
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to create stock movement';
-      alert(`Create Error: ${errorMessage}`);
+      toast.error(`Create Error: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -266,7 +267,7 @@ function StockMovementsContent() {
       !editMovement.referenceNumber ||
       editMovement.quantity <= 0
     ) {
-      alert('Please fill in all required fields');
+      toast.error('Please fill in all required fields');
       return;
     }
 
@@ -277,7 +278,7 @@ function StockMovementsContent() {
       fetchData();
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to update stock movement';
-      alert(`Update Error: ${errorMessage}`);
+      toast.error(`Update Error: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }

@@ -6,6 +6,7 @@ import { SuperAdminGuard } from '@/src/components/guards/PermissionGuard';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { apiService } from '@/src/services/ApiService';
 import { extractErrorMessage } from '@/src/utils/errorUtils';
+import { useConfirm } from '@/src/contexts/ConfirmContext';
 import { DashboardLayout } from '../../../../components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
 import { Button } from '@/src/components/ui/button';
@@ -124,6 +125,7 @@ export default function TenantDetailsPage() {
 }
 
 function TenantDetailsContent() {
+  const confirm = useConfirm();
   const params = useParams();
   const router = useRouter();
   const { getCurrencySymbol, formatCurrency } = useCurrency();
@@ -179,7 +181,12 @@ function TenantDetailsContent() {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm('Are you sure you want to remove this user from the tenant?')) return;
+    const ok = await confirm({
+      description: 'Are you sure you want to remove this user from the tenant?',
+      destructive: true,
+      confirmLabel: 'Remove',
+    });
+    if (!ok) return;
 
     try {
       setActionLoading(`delete-user-${userId}`);
@@ -193,7 +200,12 @@ function TenantDetailsContent() {
   };
 
   const handleDeleteInvoice = async (invoiceId: string) => {
-    if (!confirm('Are you sure you want to delete this invoice?')) return;
+    const ok = await confirm({
+      description: 'Are you sure you want to delete this invoice?',
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
 
     try {
       setActionLoading(`delete-invoice-${invoiceId}`);
@@ -241,7 +253,12 @@ function TenantDetailsContent() {
   };
 
   const handleDeleteProject = async (projectId: string) => {
-    if (!confirm('Are you sure you want to delete this project?')) return;
+    const ok = await confirm({
+      description: 'Are you sure you want to delete this project?',
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
 
     try {
       setActionLoading(`delete-project-${projectId}`);
@@ -255,7 +272,12 @@ function TenantDetailsContent() {
   };
 
   const handleDeleteCustomer = async (customerId: string) => {
-    if (!confirm('Are you sure you want to delete this customer?')) return;
+    const ok = await confirm({
+      description: 'Are you sure you want to delete this customer?',
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
 
     try {
       setActionLoading(`delete-customer-${customerId}`);

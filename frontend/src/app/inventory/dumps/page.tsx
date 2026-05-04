@@ -52,6 +52,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { inventoryService } from '../../../services/InventoryService';
 import { StockMovement, StockMovementStatus, StockMovementCreate, StockMovementType, Warehouse } from '../../../models/inventory';
 import { DashboardLayout } from '../../../components/layout';
+import { toast } from 'sonner';
 import { apiService } from '../../../services/ApiService';
 import { Product } from '../../../models/pos';
 import { Textarea } from '../../../components/ui/textarea';
@@ -201,7 +202,7 @@ function DumpsContent() {
 
   const handleRecordDamage = async () => {
     if (!newDamage.productId || !newDamage.warehouseId || newDamage.quantity <= 0) {
-      alert('Please fill in all required fields (Product, Warehouse, and Quantity)');
+      toast.error('Please fill in all required fields (Product, Warehouse, and Quantity)');
       return;
     }
 
@@ -211,10 +212,10 @@ function DumpsContent() {
       setIsRecordDamageOpen(false);
       resetDamageForm();
       loadDumps();
-      alert('Damage recorded successfully');
+      toast.success('Damage recorded successfully');
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to record damage';
-      alert(`Error: ${errorMessage}`);
+      toast.error(`Error: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -284,7 +285,7 @@ function DumpsContent() {
     if (!selectedDump) return;
     
     if (!editDamage.productId || !editDamage.warehouseId || editDamage.quantity <= 0) {
-      alert('Please fill in all required fields (Product, Warehouse, and Quantity)');
+      toast.error('Please fill in all required fields (Product, Warehouse, and Quantity)');
       return;
     }
 
@@ -293,10 +294,10 @@ function DumpsContent() {
       await inventoryService.updateStockMovement(selectedDump.id, editDamage);
       setIsEditModalOpen(false);
       loadDumps();
-      alert('Damage record updated successfully');
+      toast.success('Damage record updated successfully');
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to update damage record';
-      alert(`Error: ${errorMessage}`);
+      toast.error(`Error: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }

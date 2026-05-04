@@ -58,6 +58,7 @@ import { useCustomOptions } from '../../hooks/useCustomOptions';
 import { CustomOptionDialog } from '../../components/common/CustomOptionDialog';
 import { useCachedApi } from '../../hooks/useCachedApi';
 import { useCurrency } from '../../contexts/CurrencyContext';
+import { toast } from 'sonner';
 
 export default function SalesPage() {
   return (
@@ -137,7 +138,7 @@ function SalesContent() {
       await createCustomLeadSource(name, description);
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to create custom lead source';
-      alert(`Create Error: ${errorMessage}`);
+      toast.error(`Create Error: ${errorMessage}`);
       }
   };
 
@@ -170,7 +171,7 @@ function SalesContent() {
       refetchDashboard();
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to create lead';
-      alert(`Create Error: ${errorMessage}`);
+      toast.error(`Create Error: ${errorMessage}`);
       }
   };
 
@@ -201,7 +202,7 @@ function SalesContent() {
       refetchDashboard();
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to create opportunity';
-      alert(`Create Error: ${errorMessage}`);
+      toast.error(`Create Error: ${errorMessage}`);
       }
   };
 

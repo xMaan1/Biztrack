@@ -16,6 +16,7 @@ import EventCard from './EventCard';
 import EventForm from './EventForm';
 import { useApiService } from '../../hooks/useApiService';
 import { toast } from 'sonner';
+import { useConfirm } from '@/src/contexts/ConfirmContext';
 
 interface Event {
   id: string;
@@ -33,6 +34,7 @@ interface Event {
 }
 
 export default function EventsList() {
+  const confirm = useConfirm();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -132,13 +134,17 @@ export default function EventsList() {
   };
 
   const handleDeleteEvent = async (id: string) => {
-    if (confirm('Are you sure you want to delete this event?')) {
-      try {
-        await apiService.deleteEvent(id);
-        setEvents(events.filter((event) => event.id !== id));
-      } catch (error) {
-        }
-    }
+    const ok = await confirm({
+      description: 'Are you sure you want to delete this event?',
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
+    try {
+      await apiService.deleteEvent(id);
+      setEvents(events.filter((event) => event.id !== id));
+    } catch (error) {
+      }
   };
 
   const handleJoinEvent = async (id: string) => {

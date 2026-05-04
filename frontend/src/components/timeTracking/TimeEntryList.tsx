@@ -21,12 +21,23 @@ import {
   TableRow,
 } from '../ui/table';
 import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../ui/dialog';
+import { Label } from '../ui/label';
+import { Textarea } from '../ui/textarea';
+import {
   Clock,
   Trash2,
   Check,
   X,
   Search,
 } from 'lucide-react';
+import { toast } from 'sonner';
+import { useConfirm } from '@/src/contexts/ConfirmContext';
 import { timeTrackingService } from '../../services/TimeTrackingService';
 import { TimeEntry, TimeEntryFilters } from '../../models/timeTracking';
 
@@ -41,6 +52,7 @@ export function TimeEntryList({
   projects = [], 
   tasks = [] 
 }: TimeEntryListProps) {
+  const confirm = useConfirm();
   const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -48,6 +60,10 @@ export function TimeEntryList({
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalEntries, setTotalEntries] = useState(0);
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [pendingRejectEntry, setPendingRejectEntry] =
+    useState<TimeEntry | null>(null);
 
   useEffect(() => {
     fetchTimeEntries();
@@ -80,8 +96,13 @@ export function TimeEntryList({
   };
 
   const handleDelete = async (timeEntry: TimeEntry) => {
-    if (!confirm('Are you sure you want to delete this time entry?')) return;
-    
+    const ok = await confirm({
+      description: 'Are you sure you want to delete this time entry?',
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
+
     try {
       await timeTrackingService.deleteTimeEntry(timeEntry.id);
       await fetchTimeEntries();
@@ -98,14 +119,27 @@ export function TimeEntryList({
     }
   };
 
-  const handleReject = async (timeEntry: TimeEntry) => {
-    const reason = prompt('Reason for rejection:');
-    if (!reason) return;
-    
+  const openRejectDialog = (timeEntry: TimeEntry) => {
+    setPendingRejectEntry(timeEntry);
+    setRejectReason('');
+    setRejectOpen(true);
+  };
+
+  const submitReject = async () => {
+    if (!pendingRejectEntry) return;
+    const reason = rejectReason.trim();
+    if (!reason) {
+      toast.error('Please enter a reason for rejection');
+      return;
+    }
     try {
-      await timeTrackingService.rejectTimeEntry(timeEntry.id, reason);
+      await timeTrackingService.rejectTimeEntry(pendingRejectEntry.id, reason);
+      setRejectOpen(false);
+      setPendingRejectEntry(null);
+      setRejectReason('');
       await fetchTimeEntries();
     } catch (error) {
+      toast.error('Failed to reject time entry');
     }
   };
 
@@ -272,7 +306,7 @@ export function TimeEntryList({
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleReject(entry)}
+                              onClick={() => openRejectDialog(entry)}
                             >
                               <X className="h-4 w-4" />
                             </Button>
@@ -320,6 +354,44 @@ export function TimeEntryList({
           )}
         </div>
       </CardContent>
+      <Dialog
+        open={rejectOpen}
+        onOpenChange={(open) => {
+          setRejectOpen(open);
+          if (!open) {
+            setPendingRejectEntry(null);
+            setRejectReason('');
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject time entry</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="reject-reason">Reason for rejection</Label>
+            <Textarea
+              id="reject-reason"
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              rows={3}
+              placeholder="Enter reason…"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setRejectOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="button" variant="destructive" onClick={submitReject}>
+              Reject
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

@@ -37,9 +37,11 @@ import {
   Eye,
 } from 'lucide-react';
 import { DashboardLayout } from '../../../components/layout';
+import { useConfirm } from '@/src/contexts/ConfirmContext';
 import { useCurrency } from '../../../contexts/CurrencyContext';
 
 const POSShifts = () => {
+  const confirm = useConfirm();
   const { } = useAuth();
   const { formatCurrency } = useCurrency();
   const [shifts, setShifts] = useState<POSShift[]>([]);
@@ -88,7 +90,11 @@ const POSShifts = () => {
   };
 
   const handleCloseShift = async (shiftId: string) => {
-    if (!confirm('Are you sure you want to close this shift?')) return;
+    const ok = await confirm({
+      description: 'Are you sure you want to close this shift?',
+      confirmLabel: 'Close shift',
+    });
+    if (!ok) return;
 
     try {
       await apiService.put(`/pos/shifts/${shiftId}`, {

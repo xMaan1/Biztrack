@@ -134,7 +134,7 @@ class NotificationService:
                 "is_read": notification.is_read,
                 "read_at": notification.read_at.isoformat() if notification.read_at else None,
                 "action_url": notification.action_url,
-                "metadata": notification.notification_data,
+                "notification_data": notification.notification_data,
                 "created_at": notification.created_at.isoformat(),
                 "updated_at": notification.updated_at.isoformat()
             }

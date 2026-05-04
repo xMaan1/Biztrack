@@ -42,6 +42,7 @@ import {
   MapPin,
 } from 'lucide-react';
 import CRMService from '@/src/services/CRMService';
+import { toast } from 'sonner';
 import {
   Company,
   Industry,
@@ -164,7 +165,7 @@ function CRMCompaniesContent() {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      alert('Company name is required');
+      toast.error('Company name is required');
       return;
     }
 

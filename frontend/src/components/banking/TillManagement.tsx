@@ -20,6 +20,57 @@ import type { Till, TillCreate, TillUpdate, TillTransaction, TillTransactionCrea
 import { getTillTransactionTypeLabel, getTillTransactionTypeColor } from '@/src/models/banking';
 import { formatDate } from '@/src/lib/utils';
 
+function getTillApiErrorMessage(error: unknown, fallback: string): string {
+  const err = error as { response?: { data?: { detail?: unknown } } };
+  const d = err.response?.data?.detail;
+  if (typeof d === 'string') return d;
+  if (Array.isArray(d)) {
+    const msgs = d
+      .map((x: { msg?: string }) => x?.msg)
+      .filter((m): m is string => Boolean(m));
+    if (msgs.length) return msgs.join(', ');
+  }
+  return fallback;
+}
+
+function validateTillCreate(data: TillCreate): string | null {
+  const name = (data.name ?? '').trim();
+  if (!name) return 'Till name is required';
+  if (name.length > 200) return 'Till name must be 200 characters or less';
+  const bal = data.initialBalance ?? 0;
+  if (typeof bal !== 'number' || !Number.isFinite(bal)) {
+    return 'Initial balance must be a valid number';
+  }
+  if (bal < -1e15 || bal > 1e15) return 'Initial balance is out of allowed range';
+  if (data.location != null && String(data.location).length > 500) return 'Location is too long';
+  if (data.description != null && String(data.description).length > 2000) {
+    return 'Description is too long';
+  }
+  const cur = (data.currency ?? 'USD').trim();
+  if (!cur || cur.length > 10) return 'Currency is invalid';
+  return null;
+}
+
+function validateTillUpdate(data: TillUpdate): string | null {
+  if (data.name !== undefined && data.name !== null) {
+    const name = String(data.name).trim();
+    if (!name) return 'Till name cannot be empty';
+    if (name.length > 200) return 'Till name must be 200 characters or less';
+  }
+  if (data.initialBalance !== undefined && data.initialBalance !== null) {
+    const bal = data.initialBalance;
+    if (typeof bal !== 'number' || !Number.isFinite(bal)) {
+      return 'Initial balance must be a valid number';
+    }
+    if (bal < -1e15 || bal > 1e15) return 'Initial balance is out of allowed range';
+  }
+  if (data.location != null && String(data.location).length > 500) return 'Location is too long';
+  if (data.description != null && String(data.description).length > 2000) {
+    return 'Description is too long';
+  }
+  return null;
+}
+
 interface TillManagementProps {
   tills: Till[];
   onRefresh: () => void;
@@ -81,9 +132,20 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
   });
 
   const handleCreateTill = async () => {
+    const payload: TillCreate = {
+      ...tillFormData,
+      name: tillFormData.name.trim(),
+      location: tillFormData.location?.trim() || undefined,
+      description: tillFormData.description?.trim() || undefined,
+    };
+    const validationError = validateTillCreate(payload);
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
     try {
       setLoading(true);
-      await tillService.createTill(tillFormData);
+      await tillService.createTill(payload);
       toast.success('Till created successfully');
       setShowCreateTillModal(false);
       setTillFormData({
@@ -95,7 +157,7 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
       });
       onRefresh();
     } catch (error) {
-      toast.error('Failed to create till');
+      toast.error(getTillApiErrorMessage(error, 'Failed to create till'));
     } finally {
       setLoading(false);
     }
@@ -128,14 +190,25 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
   const handleUpdateTill = async () => {
     if (!tillToEdit) return;
 
+    const payload: TillUpdate = {
+      ...editTillFormData,
+      name: editTillFormData.name?.trim(),
+      location: editTillFormData.location?.trim() || undefined,
+      description: editTillFormData.description?.trim() || undefined,
+    };
+    const validationError = validateTillUpdate(payload);
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
     try {
       setLoading(true);
-      await tillService.updateTill(tillToEdit.id, editTillFormData);
+      await tillService.updateTill(tillToEdit.id, payload);
       toast.success('Till updated successfully');
       closeEditModal();
       onRefresh();
     } catch (error) {
-      toast.error('Failed to update till');
+      toast.error(getTillApiErrorMessage(error, 'Failed to update till'));
     } finally {
       setLoading(false);
     }
@@ -211,6 +284,9 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
       setLoading(false);
     }
   };
+
+  const createTillError = validateTillCreate(tillFormData);
+  const editTillError = validateTillUpdate(editTillFormData);
 
   return (
     <div className="space-y-6">
@@ -292,6 +368,7 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
               <Input
                 id="name"
                 value={tillFormData.name}
+                maxLength={200}
                 onChange={(e) => setTillFormData({ ...tillFormData, name: e.target.value })}
                 placeholder="e.g., Main Office Drawer"
               />
@@ -301,6 +378,7 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
               <Input
                 id="location"
                 value={tillFormData.location}
+                maxLength={500}
                 onChange={(e) => setTillFormData({ ...tillFormData, location: e.target.value })}
                 placeholder="e.g., Office Reception"
               />
@@ -312,7 +390,13 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
                 type="number"
                 step="0.01"
                 value={tillFormData.initialBalance}
-                onChange={(e) => setTillFormData({ ...tillFormData, initialBalance: parseFloat(e.target.value) || 0 })}
+                onChange={(e) => {
+                  const raw = parseFloat(e.target.value);
+                  setTillFormData({
+                    ...tillFormData,
+                    initialBalance: Number.isFinite(raw) ? raw : 0,
+                  });
+                }}
               />
             </div>
             <div className="grid gap-2">
@@ -320,14 +404,20 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
               <Textarea
                 id="description"
                 value={tillFormData.description}
+                maxLength={2000}
                 onChange={(e) => setTillFormData({ ...tillFormData, description: e.target.value })}
                 placeholder="Add any notes about this till"
               />
             </div>
+            {createTillError && (
+              <p className="text-sm text-destructive">{createTillError}</p>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreateTillModal(false)}>Cancel</Button>
-            <Button onClick={handleCreateTill} disabled={loading}>Create Till</Button>
+            <Button onClick={handleCreateTill} disabled={loading || createTillError !== null}>
+              Create Till
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -507,6 +597,7 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
               <Input
                 id="edit-name"
                 value={editTillFormData.name}
+                maxLength={200}
                 onChange={(e) => setEditTillFormData({ ...editTillFormData, name: e.target.value })}
                 placeholder="e.g., Main Office Drawer"
               />
@@ -516,6 +607,7 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
               <Input
                 id="edit-location"
                 value={editTillFormData.location}
+                maxLength={500}
                 onChange={(e) => setEditTillFormData({ ...editTillFormData, location: e.target.value })}
                 placeholder="e.g., Office Reception"
               />
@@ -527,7 +619,13 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
                 type="number"
                 step="0.01"
                 value={editTillFormData.initialBalance}
-                onChange={(e) => setEditTillFormData({ ...editTillFormData, initialBalance: parseFloat(e.target.value) || 0 })}
+                onChange={(e) => {
+                  const raw = parseFloat(e.target.value);
+                  setEditTillFormData({
+                    ...editTillFormData,
+                    initialBalance: Number.isFinite(raw) ? raw : 0,
+                  });
+                }}
               />
             </div>
             <div className="grid gap-2">
@@ -535,6 +633,7 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
               <Textarea
                 id="edit-description"
                 value={editTillFormData.description}
+                maxLength={2000}
                 onChange={(e) => setEditTillFormData({ ...editTillFormData, description: e.target.value })}
                 placeholder="Add any notes about this till"
               />
@@ -547,10 +646,13 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
               />
               <Label htmlFor="edit-isActive">Active</Label>
             </div>
+            {editTillError && (
+              <p className="text-sm text-destructive">{editTillError}</p>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={closeEditModal}>Cancel</Button>
-            <Button onClick={handleUpdateTill} disabled={loading || !editTillFormData.name}>
+            <Button onClick={handleUpdateTill} disabled={loading || editTillError !== null}>
               {loading ? 'Updating...' : 'Update Till'}
             </Button>
           </DialogFooter>

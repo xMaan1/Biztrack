@@ -36,6 +36,7 @@ import { ContactDeleteDialog } from '@/src/components/crm/contacts/ContactDelete
 import { useAuth } from '@/src/contexts/AuthContext';
 import { User } from '@/src/models';
 import { apiService } from '@/src/services/ApiService';
+import { toast } from 'sonner';
 import { type UserSearchItem } from '@/src/components/ui/user-search';
 
 export default function CRMContactsPage() {
@@ -230,7 +231,7 @@ function CRMContactsContent() {
     e.preventDefault();
 
     if (!formData.firstName.trim() || !formData.lastName.trim()) {
-      alert('First name and last name are required');
+      toast.error('First name and last name are required');
       return;
     }
 

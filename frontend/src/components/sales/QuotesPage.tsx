@@ -47,6 +47,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useConfirm } from '@/src/contexts/ConfirmContext';
 import apiService from '../../services/ApiService';
 import { QuoteStatus } from '../../models/sales';
 import { Quote } from '../../models/sales';
@@ -54,6 +55,7 @@ import { Opportunity, Contact } from '../../models/crm';
 import { DashboardLayout } from '../layout';
 
 export default function QuotesPage() {
+  const confirm = useConfirm();
   const { getCurrencySymbol, formatCurrency } = useCurrency();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
@@ -141,7 +143,12 @@ export default function QuotesPage() {
   };
 
   const handleDeleteQuote = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this quote?')) return;
+    const ok = await confirm({
+      description: 'Are you sure you want to delete this quote?',
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     try {
       await apiService.deleteQuote(id);
       toast.success('Quote deleted successfully');

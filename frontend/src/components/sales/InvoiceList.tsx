@@ -38,6 +38,7 @@ import { Invoice } from '../../models/sales';
 import InvoiceService from '../../services/InvoiceService';
 import { extractErrorMessage } from '../../utils/errorUtils';
 import { toast } from 'sonner';
+import { useConfirm } from '@/src/contexts/ConfirmContext';
 import { SendInvoiceEmailDialog } from './SendInvoiceEmailDialog';
 
 interface InvoiceListProps {
@@ -72,6 +73,7 @@ export function InvoiceList({
   totalPages,
   onPageChange,
 }: InvoiceListProps) {
+  const confirm = useConfirm();
   const { formatCurrency } = useCurrency();
   const [downloading, setDownloading] = useState<string | null>(null);
   const [selectedInvoices, setSelectedInvoices] = useState<Set<string>>(new Set());
@@ -260,11 +262,14 @@ export function InvoiceList({
 
   const handleBulkDelete = async () => {
     if (!onBulkDelete || selectedInvoices.size === 0) return;
-    
-    if (!confirm(`Are you sure you want to delete ${selectedInvoices.size} invoices? This action cannot be undone.`)) {
-      return;
-    }
-    
+
+    const ok = await confirm({
+      description: `Are you sure you want to delete ${selectedInvoices.size} invoices? This action cannot be undone.`,
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
+
     setBulkLoading('delete');
     try {
       await onBulkDelete(Array.from(selectedInvoices));

@@ -12,19 +12,25 @@ import {
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Card, CardContent } from '../ui/card';
-import { 
-  Check, 
-  X, 
-  Clock, 
+import {
+  Check,
+  X,
+  Clock,
   ExternalLink,
   Info,
   CheckCircle,
   AlertTriangle,
   XCircle,
   Settings,
-  Bell
+  Bell,
+  FolderOpen,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { useRouter } from 'next/navigation';
+import {
+  getNotificationTargetHref,
+  resolveNotificationActionPath,
+} from '../../models/notifications';
 
 interface NotificationItemProps {
   notification: Notification;
@@ -32,45 +38,14 @@ interface NotificationItemProps {
   onAction?: () => void;
 }
 
-const resolveNotificationUrl = (actionUrl: string): string => {
-  if (!actionUrl) {
-    return actionUrl;
-  }
-
-  let parsed: URL;
-  try {
-    parsed = new URL(actionUrl, window.location.origin);
-  } catch {
-    return actionUrl;
-  }
-
-  const path = parsed.pathname;
-
-  const routeMap: Array<[RegExp, string]> = [
-    [/^\/crm\/customers\/[^/]+\/?$/, '/crm/customers'],
-    [/^\/crm\/leads\/[^/]+\/?$/, '/crm/leads'],
-    [/^\/crm\/opportunities\/[^/]+\/?$/, '/crm/opportunities'],
-    [/^\/work-orders\/[^/]+\/?$/, '/workshop-management/work-orders'],
-    [/^\/job-cards\/[^/]+\/?$/, '/workshop-management/job-cards'],
-    [/^\/hrm\/applications\/[^/]+\/?$/, '/hrm/job-postings'],
-  ];
-
-  for (const [pattern, target] of routeMap) {
-    if (pattern.test(path)) {
-      return `${target}${parsed.search}${parsed.hash}`;
-    }
-  }
-
-  return `${path}${parsed.search}${parsed.hash}`;
-};
-
 const iconMap = {
   CheckCircle,
   AlertTriangle,
   XCircle,
   Info,
   Settings,
-  Bell
+  Bell,
+  FolderOpen,
 };
 
 export default function NotificationItem({ 
@@ -78,6 +53,7 @@ export default function NotificationItem({
   compact = false, 
   onAction 
 }: NotificationItemProps) {
+  const router = useRouter();
   const { markAsRead, markAsUnread, deleteNotification } = useNotifications();
 
   const handleMarkAsRead = async () => {
@@ -99,12 +75,38 @@ export default function NotificationItem({
   };
 
   const handleActionClick = () => {
-    if (notification.action_url) {
-      const resolvedUrl = resolveNotificationUrl(notification.action_url);
-      window.open(resolvedUrl, '_blank');
+    const rawHref = getNotificationTargetHref(notification);
+    if (!rawHref) {
+      return;
     }
-    onAction?.();
+    const resolvedPath = resolveNotificationActionPath(rawHref);
+    const go = () => {
+      try {
+        if (/^https?:\/\//i.test(resolvedPath)) {
+          const u = new URL(resolvedPath);
+          if (u.origin === window.location.origin) {
+            router.push(u.pathname + u.search + u.hash);
+          } else {
+            window.open(resolvedPath, '_blank', 'noopener,noreferrer');
+          }
+        } else {
+          const path =
+            resolvedPath.startsWith('/') ? resolvedPath : `/${resolvedPath}`;
+          router.push(path);
+        }
+      } catch {
+        window.open(rawHref, '_blank', 'noopener,noreferrer');
+      }
+      onAction?.();
+    };
+    if (!notification.is_read) {
+      markAsRead(notification.id).then(go).catch(go);
+    } else {
+      go();
+    }
   };
+
+  const detailHref = getNotificationTargetHref(notification);
 
   const typeColor = getNotificationTypeColor(notification.type);
   const typeIconName = getNotificationTypeIcon(notification.type);
@@ -159,7 +161,7 @@ export default function NotificationItem({
                 <span className="text-xs text-gray-400">{timeAgo}</span>
               </div>
               
-              {notification.action_url && (
+              {detailHref && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -239,7 +241,7 @@ export default function NotificationItem({
               </div>
             </div>
             
-            {notification.action_url && (
+            {detailHref && (
               <div className="mt-3 pt-3 border-t border-gray-200">
                 <Button
                   variant="outline"

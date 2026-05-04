@@ -39,6 +39,7 @@ import {
   deleteSavedReport,
   type SavedReportItem,
 } from '../../services/savedReportsService';
+import { useConfirm } from '@/src/contexts/ConfirmContext';
 
 interface DashboardData {
   work_orders: {
@@ -90,6 +91,7 @@ interface DashboardData {
 }
 
 export default function ReportsPage() {
+  const confirm = useConfirm();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
@@ -238,7 +240,12 @@ export default function ReportsPage() {
   };
 
   const handleDeleteSaved = async (id: string) => {
-    if (!confirm('Delete this stored report?')) return;
+    const ok = await confirm({
+      description: 'Delete this stored report?',
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     try {
       await deleteSavedReport(id);
       await loadSavedReports();

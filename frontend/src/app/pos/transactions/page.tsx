@@ -43,6 +43,7 @@ import {
   Package,
 } from 'lucide-react';
 import { DashboardLayout } from '../../../components/layout';
+import { toast } from 'sonner';
 
 const POSTransactions = () => {
   const { } = useAuth();
@@ -70,7 +71,7 @@ const POSTransactions = () => {
       setTransactions(response.transactions || []);
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to load transactions';
-      alert(`Load Error: ${errorMessage}`);
+      toast.error(`Load Error: ${errorMessage}`);
       } finally {
       setLoading(false);
     }

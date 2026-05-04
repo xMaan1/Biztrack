@@ -28,8 +28,10 @@ import {
 import { User } from '../../models/auth';
 import { apiService } from '../../services/ApiService';
 import { cn, getInitials } from '../../lib/utils';
+import { useConfirm } from '@/src/contexts/ConfirmContext';
 
 export default function UsersList() {
+  const confirm = useConfirm();
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,7 +72,12 @@ export default function UsersList() {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user?')) return;
+    const ok = await confirm({
+      description: 'Are you sure you want to delete this user?',
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
 
     try {
       await apiService.deleteUser(userId);

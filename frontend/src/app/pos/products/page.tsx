@@ -424,14 +424,16 @@ const POSProducts = () => {
           {filteredProducts.map((product) => (
             <Card key={product.id} className="relative">
               <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <CardTitle className="text-lg">{product.name}</CardTitle>
-                    <CardDescription className="text-sm">
+                <div className="flex flex-col gap-2 min-w-0 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <CardTitle className="text-lg leading-tight line-clamp-2 break-words">
+                      {product.name}
+                    </CardTitle>
+                    <CardDescription className="text-sm truncate">
                       SKU: {product.sku}
                     </CardDescription>
                   </div>
-                  <div className="flex items-center space-x-1">
+                  <div className="flex shrink-0 flex-wrap items-center justify-end gap-1 sm:pt-0.5">
                     <Button
                       variant="ghost"
                       size="sm"

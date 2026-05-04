@@ -35,6 +35,7 @@ import {
 } from '../ui/dialog';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { investmentService, Investment, InvestmentDashboardStats } from '../../services/InvestmentService';
+import { toast } from 'sonner';
 import InvestmentForm from './InvestmentForm';
 import InvestmentDetails from './InvestmentDetails';
 import {
@@ -204,7 +205,7 @@ export default function InvestmentList() {
       await fetchStats();
       setDeletingInvestment(null);
     } catch (error) {
-      alert('Failed to delete investment. Please try again.');
+      toast.error('Failed to delete investment. Please try again.');
     }
   };
 

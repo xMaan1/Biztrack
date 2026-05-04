@@ -147,7 +147,7 @@ function ProductsContent() {
               <ShoppingCart className="mr-2 h-4 w-4" />
               Manage in POS
             </Button>
-            <Button onClick={() => router.push('/pos/products')}>
+            <Button onClick={() => router.push('/pos/products?openAdd=true')}>
               <Plus className="mr-2 h-4 w-4" />
               Add Product
             </Button>
@@ -285,7 +285,7 @@ function ProductsContent() {
                     : 'Get started by adding your first product'}
                 </p>
                 {!searchTerm && (
-                  <Button onClick={() => router.push('/pos/products')}>
+                  <Button onClick={() => router.push('/pos/products?openAdd=true')}>
                     <Plus className="mr-2 h-4 w-4" />
                     Add Product
                   </Button>

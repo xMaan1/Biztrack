@@ -28,6 +28,7 @@ import * as yup from 'yup';
 import { Project } from '../../models/project/Project';
 import { User } from '../../models/auth';
 import { apiService } from '../../services/ApiService';
+import { toast } from 'sonner';
 
 const schema = yup.object({
   name: yup.string().required('Project name is required'),
@@ -131,7 +132,7 @@ export default function ProjectDialog({
         );
       } catch (error: any) {
         const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to load users';
-        alert(`Load Error: ${errorMessage}`);
+        toast.error(`Load Error: ${errorMessage}`);
         } finally {
         setLoadingUsers(false);
       }
@@ -217,7 +218,7 @@ export default function ProjectDialog({
       onClose();
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to save project';
-      alert(`Save Error: ${errorMessage}`);
+      toast.error(`Save Error: ${errorMessage}`);
       } finally {
       setLoading(false);
     }

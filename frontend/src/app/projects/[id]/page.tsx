@@ -62,12 +62,14 @@ import { extractErrorMessage } from '../../../utils/errorUtils';
 import { useAuth } from '../../../hooks/useAuth';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { DashboardLayout } from '../../../components/layout';
+import { useConfirm } from '@/src/contexts/ConfirmContext';
 import { ProjectDialog } from '../../../components/projects';
 import { TaskCard } from '../../../components/tasks';
 
 export default function ProjectDetailsPage() {
   const params = useParams();
   const router = useRouter();
+  const confirm = useConfirm();
   const { user } = useAuth();
   const { canManageProjects } = usePermissions();
   const { getCurrencySymbol } = useCurrency();
@@ -124,13 +126,13 @@ export default function ProjectDetailsPage() {
   };
 
   const handleDeleteProject = async () => {
-    if (
-      !confirm(
+    const ok = await confirm({
+      description:
         'Are you sure you want to delete this project? This action cannot be undone.',
-      )
-    ) {
-      return;
-    }
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
 
     try {
       await apiService.deleteProject(projectId);

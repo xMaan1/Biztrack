@@ -8,6 +8,26 @@ import {
   NotificationFilters
 } from '../models/notifications';
 
+function normalizeNotification(raw: Record<string, unknown>): Notification {
+  const action_url =
+    (typeof raw.action_url === 'string'
+      ? raw.action_url
+      : typeof raw.actionUrl === 'string'
+        ? raw.actionUrl
+        : undefined) ?? undefined;
+  const notification_data =
+    raw.notification_data !== undefined && raw.notification_data !== null
+      ? (raw.notification_data as Record<string, unknown>)
+      : raw.metadata !== undefined && raw.metadata !== null
+        ? (raw.metadata as Record<string, unknown>)
+        : undefined;
+  return {
+    ...(raw as unknown as Notification),
+    action_url,
+    notification_data,
+  };
+}
+
 class NotificationService {
   private baseUrl = '/notifications';
 
@@ -22,8 +42,14 @@ class NotificationService {
 
     const queryString = params.toString();
     const url = queryString ? `${this.baseUrl}?${queryString}` : this.baseUrl;
-    
-    return apiService.get(url);
+
+    const res = await apiService.get<NotificationListResponse>(url);
+    return {
+      ...res,
+      notifications: (res.notifications || []).map((n) =>
+        normalizeNotification(n as unknown as Record<string, unknown>),
+      ),
+    };
   }
 
   async getUnreadCount(): Promise<UnreadCountResponse> {

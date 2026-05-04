@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useLayoutEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '../../lib/utils';
@@ -54,6 +54,10 @@ import {
   Bell,
   Car,
 } from 'lucide-react';
+
+const SIDEBAR_STORAGE_SEARCH = 'biztrack:sidebar:search';
+const SIDEBAR_STORAGE_EXPANDED = 'biztrack:sidebar:expanded';
+const SIDEBAR_STORAGE_SCROLL = 'biztrack:sidebar:scroll';
 
 interface SubMenuItem {
   text: string;
@@ -756,7 +760,82 @@ export default function Sidebar() {
       ? 'Medical supply orders'
       : subItem.text;
   const { user } = useAuth();
-  const { accessibleModules, hasModuleAccess, hasPermission, isOwner } = usePermissions();
+  const { accessibleModules, hasModuleAccess, hasPermission, isOwner, initializing: rbacInitializing } = usePermissions();
+
+  const navRef = useRef<HTMLElement | null>(null);
+  const scrollSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const didRestoreScrollRef = useRef(false);
+  const [persistReady, setPersistReady] = useState(false);
+
+  useEffect(() => {
+    try {
+      const s = sessionStorage.getItem(SIDEBAR_STORAGE_SEARCH);
+      if (s !== null) setSearchQuery(s);
+      const ex = sessionStorage.getItem(SIDEBAR_STORAGE_EXPANDED);
+      if (ex) {
+        const arr = JSON.parse(ex) as string[];
+        if (Array.isArray(arr)) setExpandedItems(new Set(arr));
+      }
+    } catch {
+    }
+    setPersistReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!persistReady) return;
+    try {
+      sessionStorage.setItem(SIDEBAR_STORAGE_SEARCH, searchQuery);
+    } catch {
+    }
+  }, [searchQuery, persistReady]);
+
+  useEffect(() => {
+    if (!persistReady) return;
+    try {
+      const expandedArr: string[] = [];
+      expandedItems.forEach((x) => expandedArr.push(x));
+      sessionStorage.setItem(SIDEBAR_STORAGE_EXPANDED, JSON.stringify(expandedArr));
+    } catch {
+    }
+  }, [expandedItems, persistReady]);
+
+  useLayoutEffect(() => {
+    if (planLoading) return;
+    const el = navRef.current;
+    if (!el || didRestoreScrollRef.current) return;
+    didRestoreScrollRef.current = true;
+    try {
+      const raw = sessionStorage.getItem(SIDEBAR_STORAGE_SCROLL);
+      if (raw == null) return;
+      const n = parseInt(raw, 10);
+      if (Number.isNaN(n)) return;
+      el.scrollTop = n;
+    } catch {
+    }
+  }, [planLoading]);
+
+  useEffect(() => {
+    return () => {
+      if (scrollSaveTimeoutRef.current) {
+        clearTimeout(scrollSaveTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleNavScroll = () => {
+    const el = navRef.current;
+    if (!el) return;
+    if (scrollSaveTimeoutRef.current) {
+      clearTimeout(scrollSaveTimeoutRef.current);
+    }
+    scrollSaveTimeoutRef.current = setTimeout(() => {
+      try {
+        sessionStorage.setItem(SIDEBAR_STORAGE_SCROLL, String(el.scrollTop));
+      } catch {
+      }
+      scrollSaveTimeoutRef.current = null;
+    }, 120);
+  };
 
   const toggleExpanded = (itemText: string) => {
     const newExpanded = new Set(expandedItems);
@@ -870,44 +949,26 @@ export default function Sidebar() {
     });
   }, [searchQuery, planInfo, planLoading, user, accessibleModules, hasModuleAccess, hasPermission, isOwner]);
 
-  // Handle auto-expanding items when searching
+  const filteredItemsRef = useRef(filteredItems);
+  filteredItemsRef.current = filteredItems;
+
   useEffect(() => {
     if (!searchQuery.trim()) {
       return;
     }
 
-    const query = searchQuery.toLowerCase();
-    const newExpanded = new Set(expandedItems);
-
-    filteredItems.forEach((item) => {
-      if (!item.subItems) return;
-
-      const parentMatches = item.text.toLowerCase().includes(query);
-      const childMatches = item.subItems.some((subItem) => {
-        const label = purchaseOrdersNavLabel(subItem);
-        if (user?.userRole === 'super_admin') {
-          return (
-            label.toLowerCase().includes(query) ||
-            subItem.text.toLowerCase().includes(query)
-          );
+    setExpandedItems((prev) => {
+      const next = new Set(prev);
+      let changed = false;
+      filteredItemsRef.current.forEach((item) => {
+        if (item.subItems?.length && !next.has(item.text)) {
+          next.add(item.text);
+          changed = true;
         }
-        const subItemAvailable =
-          subItem.planTypes.includes('*') ||
-          (planInfo && subItem.planTypes.includes(planInfo.planType));
-        return (
-          subItemAvailable &&
-          (label.toLowerCase().includes(query) ||
-            subItem.text.toLowerCase().includes(query))
-        );
       });
-
-      if (parentMatches || childMatches) {
-        newExpanded.add(item.text);
-      }
+      return changed ? next : prev;
     });
-
-    setExpandedItems(newExpanded);
-  }, [searchQuery, filteredItems, planInfo, planLoading, user]);
+  }, [searchQuery, planLoading, planInfo?.planType, user?.userRole, rbacInitializing]);
 
   const isActive = (path: string, exact: boolean = false) => {
     if (path === '/invoices') {
@@ -985,7 +1046,11 @@ export default function Sidebar() {
         )}
       </div>
 
-      <nav className="p-4 space-y-3 flex-1 overflow-y-auto">
+      <nav
+        ref={navRef}
+        className="p-4 space-y-3 flex-1 overflow-y-auto"
+        onScroll={handleNavScroll}
+      >
         {planLoading ? (
           <div className="space-y-3">
             {[...Array(6)].map((_, index) => (

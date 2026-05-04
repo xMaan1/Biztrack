@@ -23,6 +23,7 @@ import { Opportunity, OpportunityStage } from '../../../models/crm';
 import { Contact, ContactType } from '../../../models/crm';
 import { Company, Industry } from '../../../models/crm';
 import { DashboardLayout } from '../../../components/layout';
+import { toast } from 'sonner';
 import {
   TrendingUp,
   Users,
@@ -62,7 +63,7 @@ export default function SalesAnalyticsPage() {
       setCompanies(companiesResponse.companies || []);
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to load analytics data';
-      alert(`Load Error: ${errorMessage}`);
+      toast.error(`Load Error: ${errorMessage}`);
       } finally {
       setLoading(false);
     }

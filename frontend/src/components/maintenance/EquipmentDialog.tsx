@@ -26,6 +26,7 @@ import {
   EquipmentStatus,
 } from '@/src/models/maintenance';
 import { maintenanceService } from '@/src/services/MaintenanceService';
+import { toast } from 'sonner';
 
 interface EquipmentDialogProps {
   open: boolean;
@@ -120,7 +121,7 @@ export function EquipmentDialog({
     e.preventDefault();
 
     if (!formData.name || !formData.category) {
-      alert('Please fill in all required fields');
+      toast.error('Please fill in all required fields');
       return;
     }
 
@@ -163,7 +164,7 @@ export function EquipmentDialog({
         tags: [],
       });
     } catch (error) {
-      alert('Failed to create equipment. Please try again.');
+      toast.error('Failed to create equipment. Please try again.');
     } finally {
       setLoading(false);
     }

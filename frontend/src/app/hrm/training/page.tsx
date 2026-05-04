@@ -59,6 +59,7 @@ import {
   TrainingStatus,
 } from '@/src/models/hrm';
 import { DashboardLayout } from '@/src/components/layout';
+import { toast } from 'sonner';
 
 export default function HRMTrainingPage() {
   return (
@@ -130,7 +131,7 @@ function HRMTrainingContent() {
       await HRMService.getEmployees({}, 1, 100);
     } catch (err: any) {
       const errorMessage = err?.response?.data?.detail || err?.message || 'Failed to load employees';
-      alert(`Load Error: ${errorMessage}`);
+      toast.error(`Load Error: ${errorMessage}`);
       }
   };
 

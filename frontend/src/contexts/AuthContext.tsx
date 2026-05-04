@@ -11,6 +11,7 @@ import {
   type TenantSyncProgressPayload,
 } from '@/src/services/tenantOfflineSync';
 import { isTauriApp } from '@/src/lib/isTauriApp';
+import { toast } from 'sonner';
 
 interface Tenant {
   id: string;
@@ -176,7 +177,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await apiService.logout();
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to logout';
-      alert(`Logout Error: ${errorMessage}`);
+      toast.error(`Logout Error: ${errorMessage}`);
       } finally {
       const sessionManager = new SessionManager();
       setUser(null);

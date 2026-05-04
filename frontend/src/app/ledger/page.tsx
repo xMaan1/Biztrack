@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { LedgerService } from '@/src/services/ledgerService';
 import DashboardLayout from '@/src/components/layout/DashboardLayout';
+import { toast } from 'sonner';
 import {
   LedgerTransactionResponse,
   BudgetResponse,
@@ -176,7 +177,7 @@ function LedgerDashboardContent() {
     e.preventDefault();
     try {
       if (!journalEntryForm.description) {
-        alert('Please fill in the description');
+        toast.error('Please fill in the description');
         return;
       }
 
@@ -187,11 +188,11 @@ function LedgerDashboardContent() {
       };
 
       await LedgerService.createJournalEntry(journalData);
-      alert('Journal entry created successfully!');
+      toast.success('Journal entry created successfully!');
       closeJournalEntryModal();
       handleRefresh();
     } catch (error) {
-      alert('Failed to create journal entry. Please try again.');
+      toast.error('Failed to create journal entry. Please try again.');
     }
   };
 
@@ -199,7 +200,7 @@ function LedgerDashboardContent() {
     e.preventDefault();
     try {
       if (!accountBalanceForm.accountId) {
-        alert('Please select an account');
+        toast.error('Please select an account');
         return;
       }
 
@@ -211,12 +212,12 @@ function LedgerDashboardContent() {
       const account = chartOfAccounts?.find(
         (acc) => acc.id === accountBalanceForm.accountId,
       );
-      alert(
-        `Account Balance for ${account?.account_name}:\nAs of: ${accountBalanceForm.asOfDate}\nBalance: ${formatCurrency(balance.balance)}`,
-      );
+      toast.success('Account balance', {
+        description: `${account?.account_name ?? 'Account'} · As of ${accountBalanceForm.asOfDate} · Balance ${formatCurrency(balance.balance)}`,
+      });
       closeAccountBalanceModal();
     } catch (error) {
-      alert('Failed to get account balance. Please try again.');
+      toast.error('Failed to get account balance. Please try again.');
     }
   };
 

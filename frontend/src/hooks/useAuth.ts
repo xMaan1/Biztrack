@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { User, LoginCredentials } from '@/src/models/auth';
 import { apiService } from '@/src/services/ApiService';
 import { SessionManager } from '@/src/services/SessionManager';
+import { toast } from 'sonner';
 
 interface Tenant {
   id: string;
@@ -99,7 +100,7 @@ export function useAuth() {
       await apiService.logout();
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to logout';
-      alert(`Logout Error: ${errorMessage}`);
+      toast.error(`Logout Error: ${errorMessage}`);
       } finally {
       const sessionManager = new SessionManager();
       setUser(null);

@@ -48,6 +48,7 @@ import {
   CRMLeadFilters,
 } from '@/src/models/crm';
 import { DashboardLayout } from '../../../components/layout';
+import { useConfirm } from '@/src/contexts/ConfirmContext';
 import { useCustomOptions } from '../../../hooks/useCustomOptions';
 import { CustomOptionDialog } from '../../../components/common/CustomOptionDialog';
 
@@ -60,6 +61,7 @@ export default function CRMLeadsPage() {
 }
 
 function CRMLeadsContent() {
+  const confirm = useConfirm();
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const searchParams = useSearchParams();
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -211,13 +213,17 @@ function CRMLeadsContent() {
   };
 
   const handleDeleteLead = async (id: string) => {
-    if (confirm('Are you sure you want to delete this lead?')) {
-      try {
-        await CRMService.deleteLead(id);
-        loadLeads();
-      } catch (err) {
-        }
-    }
+    const ok = await confirm({
+      description: 'Are you sure you want to delete this lead?',
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
+    try {
+      await CRMService.deleteLead(id);
+      loadLeads();
+    } catch (err) {
+      }
   };
 
   const handleSearch = () => {

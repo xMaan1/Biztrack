@@ -55,10 +55,12 @@ import { apiService } from '../../services/ApiService';
 import { extractErrorMessage } from '../../utils/errorUtils';
 import { User } from '../../models/auth';
 import { DashboardLayout } from '../../components/layout';
+import { useConfirm } from '@/src/contexts/ConfirmContext';
 import { cn, getInitials } from '../../lib/utils';
 import AddMemberModal from '../../components/team/AddMemberModal';
 
 export default function TeamPage() {
+  const confirm = useConfirm();
   const [teamMembers, setTeamMembers] = useState<User[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -253,9 +255,12 @@ export default function TeamPage() {
   };
 
   const handleRemoveMember = async (memberId: string, memberName: string) => {
-    if (!confirm(`Are you sure you want to remove ${memberName} from the team?`)) {
-      return;
-    }
+    const ok = await confirm({
+      description: `Are you sure you want to remove ${memberName} from the team?`,
+      destructive: true,
+      confirmLabel: 'Remove',
+    });
+    if (!ok) return;
 
     try {
       setLoading(true);

@@ -47,6 +47,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useConfirm } from '@/src/contexts/ConfirmContext';
 import CRMService from '../../services/CRMService';
 import apiService from '../../services/ApiService';
 import { ContractStatus } from '../../models/sales';
@@ -55,6 +56,7 @@ import { Opportunity, Contact, Company } from '../../models/crm';
 import { DashboardLayout } from '../layout';
 
 export default function ContractsPage() {
+  const confirm = useConfirm();
   const { getCurrencySymbol, formatCurrency } = useCurrency();
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
@@ -149,7 +151,12 @@ export default function ContractsPage() {
   };
 
   const handleDeleteContract = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this contract?')) return;
+    const ok = await confirm({
+      description: 'Are you sure you want to delete this contract?',
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     try {
       await apiService.deleteContract(id);
       toast.success('Contract deleted successfully');

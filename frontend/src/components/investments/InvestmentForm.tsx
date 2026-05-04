@@ -25,6 +25,7 @@ import { Badge } from '../ui/badge';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { investmentService, InvestmentCreate, Investment } from '../../services/InvestmentService';
 import { Loader2, Calendar, FileText, Tag } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface InvestmentFormProps {
   isOpen: boolean;
@@ -88,11 +89,11 @@ export default function InvestmentForm({ isOpen, onClose, onSuccess, editingInve
 
     // Validation
     if (!formData.description.trim()) {
-      alert('Please enter a description');
+      toast.error('Please enter a description');
       return;
     }
     if (formData.amount <= 0) {
-      alert('Amount must be greater than 0');
+      toast.error('Amount must be greater than 0');
       return;
     }
 
@@ -108,7 +109,7 @@ export default function InvestmentForm({ isOpen, onClose, onSuccess, editingInve
       onClose();
       router.refresh();
     } catch (error) {
-      alert(`Failed to ${editingInvestment ? 'update' : 'create'} investment. Please try again.`);
+      toast.error(`Failed to ${editingInvestment ? 'update' : 'create'} investment. Please try again.`);
     } finally {
       setLoading(false);
     }
