@@ -89,10 +89,10 @@ export default function ContractsPage() {
     try {
       const [contractsData, opportunitiesData, contactsData, companiesData] =
         await Promise.all([
-          apiService.getContracts(),
-          CRMService.getOpportunities({}, 1, 100),
-          CRMService.getContacts({}, 1, 100),
-          CRMService.getCompanies({}, 1, 100),
+          apiService.getContracts({ page: 1, limit: 100 }),
+          CRMService.getOpportunities({}, 1, 500),
+          CRMService.getContacts({}, 1, 500),
+          CRMService.getCompanies({}, 1, 500),
         ]);
       setContracts(contractsData.contracts || []);
       setOpportunities(opportunitiesData.opportunities || []);
@@ -176,16 +176,41 @@ export default function ContractsPage() {
     }
   };
 
+  const idsMatch = (a: string | undefined, b: string | undefined) => {
+    if (a == null || b == null) return false;
+    const na = String(a).replace(/-/g, '').toLowerCase();
+    const nb = String(b).replace(/-/g, '').toLowerCase();
+    return na.length > 0 && na === nb;
+  };
+
+  const resolveContactId = (contract: Contract) => {
+    if (contract.contactId) return contract.contactId;
+    const opp = opportunities.find((o) =>
+      idsMatch(o.id, contract.opportunityId),
+    );
+    return opp?.contactId ?? '';
+  };
+
+  const resolveCompanyId = (contract: Contract) => {
+    if (contract.companyId) return contract.companyId;
+    const opp = opportunities.find((o) =>
+      idsMatch(o.id, contract.opportunityId),
+    );
+    return opp?.companyId ?? '';
+  };
+
   const getContactName = (contactId: string) => {
-    const contact = contacts.find((c) => c.id === contactId);
+    if (!contactId) return 'Unknown Contact';
+    const contact = contacts.find((c) => idsMatch(c.id, contactId));
     return contact
-      ? `${contact.firstName} ${contact.lastName}`
+      ? `${contact.firstName} ${contact.lastName}`.trim()
       : 'Unknown Contact';
   };
 
   const getCompanyName = (companyId: string) => {
-    const company = companies.find((c) => c.id === companyId);
-    return company?.name || 'Unknown Company';
+    if (!companyId) return 'Unknown Company';
+    const company = companies.find((c) => idsMatch(c.id, companyId));
+    return company?.name?.trim() || 'Unknown Company';
   };
 
   if (loading) {
@@ -516,10 +541,12 @@ export default function ContractsPage() {
                     </TableCell>
                     <TableCell>{contract.title}</TableCell>
                     <TableCell>
-                      {getCompanyName(contract.companyId || '')}
+                      {contract.companyName?.trim() ||
+                        getCompanyName(resolveCompanyId(contract))}
                     </TableCell>
                     <TableCell>
-                      {getContactName(contract.contactId || '')}
+                      {contract.contactName?.trim() ||
+                        getContactName(resolveContactId(contract))}
                     </TableCell>
                     <TableCell>
                       {getCurrencySymbol()}{(contract.value || 0).toLocaleString()}

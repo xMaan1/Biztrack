@@ -836,6 +836,71 @@ async def delete_quote(
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error deleting quote: {str(e)}")
 
+def serialize_contracts_response(
+    contracts: List[Contract],
+    db: Session,
+) -> List[ContractPydantic]:
+    if not contracts:
+        return []
+    opp_id_list = []
+    for c in contracts:
+        if c.opportunityId:
+            try:
+                opp_id_list.append(uuid.UUID(str(c.opportunityId).strip()))
+            except (ValueError, TypeError, AttributeError):
+                pass
+    opps_by_id = {}
+    if opp_id_list:
+        for row in db.query(Opportunity).filter(Opportunity.id.in_(opp_id_list)).all():
+            opps_by_id[str(row.id)] = row
+
+    eff_pairs = []
+    all_contact_ids = []
+    all_company_ids = []
+    for c in contracts:
+        opp = None
+        if c.opportunityId:
+            try:
+                ok = str(uuid.UUID(str(c.opportunityId).strip()))
+                opp = opps_by_id.get(ok)
+            except (ValueError, TypeError, AttributeError):
+                opp = None
+        ecid = getattr(c, "contactId", None) or (opp.contactId if opp else None)
+        ecoid = getattr(c, "companyId", None) or (opp.companyId if opp else None)
+        eff_pairs.append((ecid, ecoid))
+        if ecid is not None:
+            all_contact_ids.append(ecid)
+        if ecoid is not None:
+            all_company_ids.append(ecoid)
+
+    uniq_contact_ids = list({str(x): x for x in all_contact_ids}.values())
+    uniq_company_ids = list({str(x): x for x in all_company_ids}.values())
+
+    contact_name_map = {}
+    if uniq_contact_ids:
+        for ct in db.query(Contact).filter(Contact.id.in_(uniq_contact_ids)).all():
+            contact_name_map[str(ct.id)] = f"{(ct.firstName or '').strip()} {(ct.lastName or '').strip()}".strip()
+
+    company_name_map = {}
+    if uniq_company_ids:
+        for cp in db.query(Company).filter(Company.id.in_(uniq_company_ids)).all():
+            company_name_map[str(cp.id)] = (cp.name or "").strip()
+
+    out = []
+    for c, (ecid, ecoid) in zip(contracts, eff_pairs):
+        base = ContractPydantic.model_validate(c)
+        out.append(
+            base.model_copy(
+                update={
+                    "contactId": ecid,
+                    "companyId": ecoid,
+                    "contactName": contact_name_map.get(str(ecid)) if ecid is not None else None,
+                    "companyName": company_name_map.get(str(ecoid)) if ecoid is not None else None,
+                }
+            )
+        )
+    return out
+
 # Contract endpoints
 @router.get("/contracts", response_model=ContractsResponse)
 async def get_contracts(
@@ -861,9 +926,9 @@ async def get_contracts(
         
         total = query.count()
         contracts = query.offset((page - 1) * limit).limit(limit).all()
-        
-        contracts_data = [ContractPydantic.model_validate(contract) for contract in contracts]
-        
+
+        contracts_data = serialize_contracts_response(contracts, db)
+
         return ContractsResponse(
             contracts=contracts_data,
             pagination={
@@ -886,9 +951,16 @@ async def create_contract(
 ):
     """Create a new contract"""
     try:
+        payload = contract_data.dict()
+        for fk in ("contactId", "companyId"):
+            if payload.get(fk) is not None:
+                payload[fk] = uuid.UUID(str(payload[fk]))
+            else:
+                payload[fk] = None
+
         contract = Contract(
             id=uuid.uuid4(),
-            **contract_data.dict(),
+            **payload,
             contractNumber=generate_contract_number(),
             tenant_id=uuid.UUID(tenant_context["tenant_id"]) if tenant_context else uuid.uuid4(),
             createdBy=uuid.UUID(str(current_user.id)),
@@ -900,7 +972,7 @@ async def create_contract(
         db.commit()
         db.refresh(contract)
         
-        return ContractPydantic.model_validate(contract)
+        return serialize_contracts_response([contract], db)[0]
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error creating contract: {str(e)}")
@@ -924,13 +996,16 @@ async def update_contract(
             raise HTTPException(status_code=404, detail="Contract not found")
         
         for field, value in contract_data.dict(exclude_unset=True).items():
-            setattr(contract, field, value)
+            if field in ("contactId", "companyId") and value is not None:
+                setattr(contract, field, uuid.UUID(str(value)))
+            else:
+                setattr(contract, field, value)
         
         contract.updatedAt = datetime.now()
         db.commit()
         db.refresh(contract)
         
-        return ContractPydantic.model_validate(contract)
+        return serialize_contracts_response([contract], db)[0]
     except HTTPException:
         raise
     except Exception as e:

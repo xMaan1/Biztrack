@@ -360,6 +360,8 @@ export interface Contract {
   opportunityId: string;
   contactId?: string;
   companyId?: string;
+  contactName?: string;
+  companyName?: string;
   startDate: string;
   endDate: string;
   value: number;

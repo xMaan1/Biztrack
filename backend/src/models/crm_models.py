@@ -707,6 +707,8 @@ class ContractBase(BaseModel):
     notes: Optional[str] = None
     autoRenew: bool = False
     renewalTerms: Optional[str] = None
+    contactId: Optional[UUID] = None
+    companyId: Optional[UUID] = None
 
 class ContractCreate(ContractBase):
     pass
@@ -721,6 +723,8 @@ class ContractUpdate(BaseModel):
     notes: Optional[str] = None
     autoRenew: Optional[bool] = None
     renewalTerms: Optional[str] = None
+    contactId: Optional[UUID] = None
+    companyId: Optional[UUID] = None
 
 class Contract(ContractBase):
     id: UUID
@@ -732,6 +736,8 @@ class Contract(ContractBase):
     activatedAt: Optional[datetime] = None
     createdAt: datetime
     updatedAt: datetime
+    contactName: Optional[str] = None
+    companyName: Optional[str] = None
 
     class Config:
         from_attributes = True

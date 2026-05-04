@@ -43,6 +43,8 @@ class Contract(Base):
     description = Column(Text, nullable=True)
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
     opportunityId = Column(String, nullable=True)
+    contactId = Column(UUID(as_uuid=True), ForeignKey("contacts.id"), nullable=True)
+    companyId = Column(UUID(as_uuid=True), ForeignKey("companies.id"), nullable=True)
     startDate = Column(DateTime, nullable=False)
     endDate = Column(DateTime, nullable=False)
     value = Column(Float, nullable=False)
