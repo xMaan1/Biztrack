@@ -1,6 +1,7 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator, model_validator
 from typing import Optional, List, Dict, Any
-from datetime import datetime
+from datetime import datetime, date
+import uuid as uuid_stdlib
 from enum import Enum
 from .common import Pagination
 
@@ -173,7 +174,99 @@ class JobPostingBase(BaseModel):
     tags: List[str] = []
 
 class JobPostingCreate(JobPostingBase):
-    pass
+
+    @field_validator('title')
+    @classmethod
+    def validate_title(cls, v: str) -> str:
+        t = (v or '').strip()
+        if len(t) < 2:
+            raise ValueError('Title must be at least 2 characters')
+        if len(t) > 200:
+            raise ValueError('Title must be at most 200 characters')
+        return t
+
+    @field_validator('description')
+    @classmethod
+    def validate_description(cls, v: str) -> str:
+        t = (v or '').strip()
+        if len(t) < 20:
+            raise ValueError('Description must be at least 20 characters')
+        if len(t) > 20000:
+            raise ValueError('Description is too long')
+        return t
+
+    @field_validator('location')
+    @classmethod
+    def validate_location(cls, v: str) -> str:
+        t = (v or '').strip()
+        if len(t) < 2:
+            raise ValueError('Location must be at least 2 characters')
+        if len(t) > 200:
+            raise ValueError('Location must be at most 200 characters')
+        return t
+
+    @field_validator('openDate')
+    @classmethod
+    def validate_open_date(cls, v: str) -> str:
+        if not v or not str(v).strip():
+            raise ValueError('Open date is required')
+        s = str(v).strip()[:10]
+        try:
+            date.fromisoformat(s)
+        except ValueError:
+            raise ValueError('Open date must be a valid date (YYYY-MM-DD)')
+        return v
+
+    @field_validator('closeDate')
+    @classmethod
+    def validate_close_date_optional(cls, v: Optional[str]) -> Optional[str]:
+        if v is None or str(v).strip() == '':
+            return None
+        s = str(v).strip()[:10]
+        try:
+            date.fromisoformat(s)
+        except ValueError:
+            raise ValueError('Close date must be a valid date (YYYY-MM-DD)')
+        return v
+
+    @field_validator('salaryRange')
+    @classmethod
+    def validate_salary_range(cls, v: Optional[str]) -> Optional[str]:
+        if v is None or str(v).strip() == '':
+            return None
+        s = str(v).strip()
+        if len(s) > 500:
+            raise ValueError('Salary range must be at most 500 characters')
+        return s
+
+    @field_validator('hiringManagerId')
+    @classmethod
+    def validate_hiring_manager_id(cls, v: Optional[str]) -> Optional[str]:
+        if v is None or str(v).strip() == '':
+            return None
+        try:
+            uuid_stdlib.UUID(str(v).strip())
+        except ValueError:
+            raise ValueError('Hiring manager id must be a valid UUID')
+        return str(v).strip()
+
+    @model_validator(mode='after')
+    def validate_dates_and_published(self):
+        open_raw = self.openDate
+        close_raw = self.closeDate
+        open_d = date.fromisoformat(str(open_raw).strip()[:10])
+        if close_raw:
+            close_d = date.fromisoformat(str(close_raw).strip()[:10])
+            if close_d < open_d:
+                raise ValueError('Close date must be on or after open date')
+        if self.status == JobStatus.PUBLISHED:
+            reqs = [x for x in (self.requirements or []) if str(x).strip()]
+            if len(reqs) < 1:
+                raise ValueError('Published postings must include at least one requirement')
+            resps = [x for x in (self.responsibilities or []) if str(x).strip()]
+            if len(resps) < 1:
+                raise ValueError('Published postings must include at least one responsibility')
+        return self
 
 class JobPostingUpdate(BaseModel):
     title: Optional[str] = None
@@ -190,6 +283,92 @@ class JobPostingUpdate(BaseModel):
     closeDate: Optional[str] = None
     hiringManagerId: Optional[str] = None
     tags: Optional[List[str]] = None
+
+    @field_validator('title')
+    @classmethod
+    def validate_title_opt(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        t = v.strip()
+        if len(t) < 2:
+            raise ValueError('Title must be at least 2 characters')
+        if len(t) > 200:
+            raise ValueError('Title must be at most 200 characters')
+        return t
+
+    @field_validator('description')
+    @classmethod
+    def validate_description_opt(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        t = v.strip()
+        if len(t) < 20:
+            raise ValueError('Description must be at least 20 characters')
+        if len(t) > 20000:
+            raise ValueError('Description is too long')
+        return t
+
+    @field_validator('location')
+    @classmethod
+    def validate_location_opt(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        t = v.strip()
+        if len(t) < 2:
+            raise ValueError('Location must be at least 2 characters')
+        if len(t) > 200:
+            raise ValueError('Location must be at most 200 characters')
+        return t
+
+    @field_validator('openDate', 'closeDate')
+    @classmethod
+    def validate_date_strings_opt(cls, v: Optional[str]) -> Optional[str]:
+        if v is None or str(v).strip() == '':
+            return None
+        s = str(v).strip()[:10]
+        try:
+            date.fromisoformat(s)
+        except ValueError:
+            raise ValueError('Date must be valid (YYYY-MM-DD)')
+        return v
+
+    @field_validator('salaryRange')
+    @classmethod
+    def validate_salary_opt(cls, v: Optional[str]) -> Optional[str]:
+        if v is None or str(v).strip() == '':
+            return None
+        s = str(v).strip()
+        if len(s) > 500:
+            raise ValueError('Salary range must be at most 500 characters')
+        return s
+
+    @field_validator('hiringManagerId')
+    @classmethod
+    def validate_hiring_uuid_opt(cls, v: Optional[str]) -> Optional[str]:
+        if v is None or str(v).strip() == '':
+            return None
+        try:
+            uuid_stdlib.UUID(str(v).strip())
+        except ValueError:
+            raise ValueError('Hiring manager id must be a valid UUID')
+        return str(v).strip()
+
+    @model_validator(mode='after')
+    def validate_update_rules(self):
+        od, cd = self.openDate, self.closeDate
+        if od is not None and cd is not None:
+            o = date.fromisoformat(str(od).strip()[:10])
+            c = date.fromisoformat(str(cd).strip()[:10])
+            if c < o:
+                raise ValueError('Close date must be on or after open date')
+        if self.status == JobStatus.PUBLISHED:
+            if self.requirements is not None:
+                if len([x for x in self.requirements if str(x).strip()]) < 1:
+                    raise ValueError('Published postings must include at least one requirement')
+            if self.responsibilities is not None:
+                if len([x for x in self.responsibilities if str(x).strip()]) < 1:
+                    raise ValueError('Published postings must include at least one responsibility')
+        return self
 
 class JobPosting(JobPostingBase):
     id: str

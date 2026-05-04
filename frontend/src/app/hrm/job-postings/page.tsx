@@ -57,6 +57,64 @@ import { DashboardLayout } from '@/src/components/layout';
 import { useCustomDepartments } from '@/src/hooks/useCustomDepartments';
 import { useCachedApi } from '@/src/hooks/useCachedApi';
 import { CustomOptionDialog } from '@/src/components/common/CustomOptionDialog';
+import { extractErrorMessage } from '@/src/utils/errorUtils';
+
+function validateJobPostingForm(
+  data: JobPostingCreate,
+  isPublished: boolean,
+): Record<string, string> {
+  const e: Record<string, string> = {};
+  const title = data.title?.trim() ?? '';
+  if (title.length < 2) e.title = 'Title must be at least 2 characters';
+  else if (title.length > 200) e.title = 'Title must be at most 200 characters';
+
+  const desc = data.description?.trim() ?? '';
+  if (desc.length < 20) e.description = 'Description must be at least 20 characters';
+  else if (desc.length > 20000) e.description = 'Description is too long';
+
+  const loc = data.location?.trim() ?? '';
+  if (loc.length < 2) e.location = 'Location must be at least 2 characters';
+  else if (loc.length > 200) e.location = 'Location must be at most 200 characters';
+
+  if (!data.openDate?.trim()) e.openDate = 'Open date is required';
+
+  if (data.openDate?.trim() && data.closeDate?.trim()) {
+    const o = new Date(`${data.openDate}T12:00:00`);
+    const c = new Date(`${data.closeDate}T12:00:00`);
+    if (!Number.isNaN(o.getTime()) && !Number.isNaN(c.getTime()) && c < o) {
+      e.closeDate = 'Close date must be on or after open date';
+    }
+  }
+
+  const sal = data.salaryRange?.trim();
+  if (sal && sal.length > 500) {
+    e.salaryRange = 'Salary range must be at most 500 characters';
+  }
+
+  if (data.hiringManagerId?.trim()) {
+    const u = data.hiringManagerId.trim();
+    if (
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        u,
+      )
+    ) {
+      e.hiringManagerId = 'Hiring manager must be a valid UUID';
+    }
+  }
+
+  if (isPublished) {
+    const reqs = (data.requirements || []).filter((x) => String(x).trim());
+    const resps = (data.responsibilities || []).filter((x) => String(x).trim());
+    if (reqs.length < 1) {
+      e.requirements = 'Add at least one requirement to publish';
+    }
+    if (resps.length < 1) {
+      e.responsibilities = 'Add at least one responsibility to publish';
+    }
+  }
+
+  return e;
+}
 
 export default function HRMJobPostingsPage() {
   return (
@@ -83,6 +141,7 @@ function HRMJobPostingsContent() {
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [showCustomDepartmentDialog, setShowCustomDepartmentDialog] =
     useState(false);
 
@@ -171,12 +230,22 @@ function HRMJobPostingsContent() {
     });
     setEditingJobPosting(null);
     setError(null);
+    setFormErrors({});
   };
 
   const handleSubmit = async () => {
     try {
       setSubmitting(true);
       setError(null);
+
+      const published = formData.status === JobStatus.PUBLISHED;
+      const fieldErrs = validateJobPostingForm(formData, published);
+      setFormErrors(fieldErrs);
+      if (Object.keys(fieldErrs).length > 0) {
+        setError('Please fix the highlighted fields.');
+        setSubmitting(false);
+        return;
+      }
 
       if (editingJobPosting) {
         await HRMService.updateJobPosting(editingJobPosting.id, formData);
@@ -190,7 +259,9 @@ function HRMJobPostingsContent() {
       resetForm();
       refetchJobPostings();
     } catch (err) {
-      setError('Failed to save job posting. Please try again.');
+      setError(
+        extractErrorMessage(err, 'Failed to save job posting. Please try again.'),
+      );
       } finally {
       setSubmitting(false);
     }
@@ -214,6 +285,7 @@ function HRMJobPostingsContent() {
       hiringManagerId: jobPosting.hiringManagerId || '',
       tags: jobPosting.tags,
     });
+    setFormErrors({});
     setShowCreateDialog(true);
   };
 
@@ -309,6 +381,7 @@ function HRMJobPostingsContent() {
           </div>
           <Button
             onClick={() => {
+              setFormErrors({});
               setShowCreateDialog(true);
               resetForm();
             }}
@@ -617,7 +690,16 @@ function HRMJobPostingsContent() {
         </Card>
 
         {/* Create/Edit Job Posting Dialog */}
-        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <Dialog
+          open={showCreateDialog}
+          onOpenChange={(open) => {
+            setShowCreateDialog(open);
+            if (!open) {
+              setFormErrors({});
+              setError(null);
+            }
+          }}
+        >
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
@@ -646,7 +728,11 @@ function HRMJobPostingsContent() {
                     setFormData((prev) => ({ ...prev, title: e.target.value }))
                   }
                   placeholder="e.g., Senior Software Engineer"
+                  className={formErrors.title ? 'border-red-500' : ''}
                 />
+                {formErrors.title && (
+                  <p className="text-sm text-red-600 mt-1">{formErrors.title}</p>
+                )}
               </div>
               <div>
                 <Label htmlFor="department">Department *</Label>
@@ -726,7 +812,11 @@ function HRMJobPostingsContent() {
                     }))
                   }
                   placeholder="e.g., New York, NY"
+                  className={formErrors.location ? 'border-red-500' : ''}
                 />
+                {formErrors.location && (
+                  <p className="text-sm text-red-600 mt-1">{formErrors.location}</p>
+                )}
               </div>
               <div>
                 <Label htmlFor="salaryRange">Salary Range</Label>
@@ -740,7 +830,13 @@ function HRMJobPostingsContent() {
                     }))
                   }
                   placeholder={`e.g., ${getCurrencySymbol()}80,000 - ${getCurrencySymbol()}120,000`}
+                  className={formErrors.salaryRange ? 'border-red-500' : ''}
                 />
+                {formErrors.salaryRange && (
+                  <p className="text-sm text-red-600 mt-1">
+                    {formErrors.salaryRange}
+                  </p>
+                )}
               </div>
               <div>
                 <Label htmlFor="status">Status *</Label>
@@ -777,7 +873,11 @@ function HRMJobPostingsContent() {
                       openDate: e.target.value,
                     }))
                   }
+                  className={formErrors.openDate ? 'border-red-500' : ''}
                 />
+                {formErrors.openDate && (
+                  <p className="text-sm text-red-600 mt-1">{formErrors.openDate}</p>
+                )}
               </div>
               <div>
                 <Label htmlFor="closeDate">Close Date</Label>
@@ -791,7 +891,11 @@ function HRMJobPostingsContent() {
                       closeDate: e.target.value,
                     }))
                   }
+                  className={formErrors.closeDate ? 'border-red-500' : ''}
                 />
+                {formErrors.closeDate && (
+                  <p className="text-sm text-red-600 mt-1">{formErrors.closeDate}</p>
+                )}
               </div>
               <div className="col-span-2">
                 <Label htmlFor="description">Job Description *</Label>
@@ -806,7 +910,13 @@ function HRMJobPostingsContent() {
                   }
                   placeholder="Detailed job description..."
                   rows={4}
+                  className={formErrors.description ? 'border-red-500' : ''}
                 />
+                {formErrors.description && (
+                  <p className="text-sm text-red-600 mt-1">
+                    {formErrors.description}
+                  </p>
+                )}
               </div>
               <div className="col-span-2">
                 <Label htmlFor="requirements">
@@ -825,7 +935,13 @@ function HRMJobPostingsContent() {
                   }
                   placeholder="Enter requirements, one per line..."
                   rows={3}
+                  className={formErrors.requirements ? 'border-red-500' : ''}
                 />
+                {formErrors.requirements && (
+                  <p className="text-sm text-red-600 mt-1">
+                    {formErrors.requirements}
+                  </p>
+                )}
               </div>
               <div className="col-span-2">
                 <Label htmlFor="responsibilities">
@@ -844,7 +960,13 @@ function HRMJobPostingsContent() {
                   }
                   placeholder="Enter responsibilities, one per line..."
                   rows={3}
+                  className={formErrors.responsibilities ? 'border-red-500' : ''}
                 />
+                {formErrors.responsibilities && (
+                  <p className="text-sm text-red-600 mt-1">
+                    {formErrors.responsibilities}
+                  </p>
+                )}
               </div>
               <div className="col-span-2">
                 <Label htmlFor="benefits">Benefits (one per line)</Label>

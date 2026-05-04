@@ -600,7 +600,7 @@ async def get_hrm_job_by_id(
 ):
     """Get a specific job posting by ID"""
     try:
-        job = get_job_posting_by_id(db, job_id, tenant_context["tenant_id"] if tenant_context else None)
+        job = get_job_posting_by_id(job_id, db, tenant_context["tenant_id"] if tenant_context else None)
         if not job:
             raise HTTPException(status_code=404, detail="Job posting not found")
         
