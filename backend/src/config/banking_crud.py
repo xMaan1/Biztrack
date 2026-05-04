@@ -5,12 +5,18 @@ Banking CRUD Operations
 from typing import List, Optional, Dict, Any
 from datetime import datetime, date
 from sqlalchemy.orm import Session, joinedload, selectinload
-from sqlalchemy import and_, or_, func, desc, asc
+from sqlalchemy import and_, or_, func, desc, asc, cast, String
 from .bank_account_types import bank_account_type_slug
 from .banking_models import (
     BankAccount, BankTransaction, CashPosition, Till, TillTransaction,
     TransactionType, TransactionStatus, PaymentMethod, TillTransactionType
 )
+
+
+def _settled_transaction_condition():
+    return func.lower(cast(BankTransaction.status, String)).in_(
+        ("completed", "posted", "cleared")
+    )
 
 
 def _normalize_enum_input(value: Any, enum_cls):
@@ -357,7 +363,7 @@ def calculate_account_balance(account_id: str, db: Session, tenant_id: str, as_o
         and_(
             BankTransaction.bank_account_id == account_id,
             BankTransaction.tenant_id == tenant_id,
-            BankTransaction.status == TransactionStatus.COMPLETED
+            _settled_transaction_condition(),
         )
     )
     
@@ -454,7 +460,7 @@ def get_banking_dashboard_data(db: Session, tenant_id: str) -> Dict[str, Any]:
         and_(
             BankTransaction.tenant_id == tenant_id,
             func.date(BankTransaction.transaction_date) == today,
-            BankTransaction.status == TransactionStatus.COMPLETED
+            _settled_transaction_condition(),
         )
     ).all()
     
