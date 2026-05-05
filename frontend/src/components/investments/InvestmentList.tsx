@@ -401,7 +401,7 @@ export default function InvestmentList() {
                     )}
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Button
                         size="sm"
                         variant="outline"
@@ -456,9 +456,20 @@ export default function InvestmentList() {
                         </Button>
                       )}
                       {investment.status === 'completed' && (
-                        <span className="text-sm text-green-600 font-medium">
-                          Approved
-                        </span>
+                        <>
+                          <span className="text-sm text-green-600 font-medium whitespace-nowrap">
+                            Approved
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDelete(investment)}
+                            className="h-8 px-2 text-red-600 border-red-600 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-3 w-3 mr-1" />
+                            Delete
+                          </Button>
+                        </>
                       )}
                       {investment.status === 'cancelled' && (
                         <span className="text-sm text-red-600 font-medium">
@@ -514,7 +525,9 @@ export default function InvestmentList() {
           <DialogHeader>
             <DialogTitle>Delete Investment</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this investment? This action cannot be undone.
+              {deletingInvestment?.status === 'completed'
+                ? 'This approved investment will be removed and its linked investment transactions will be deleted. This cannot be undone.'
+                : 'Are you sure you want to delete this investment? This action cannot be undone.'}
               {deletingInvestment && (
                 <div className="mt-2 p-3 bg-gray-50 rounded-md">
                   <p className="font-medium">{deletingInvestment.investment_number}</p>

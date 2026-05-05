@@ -452,10 +452,14 @@ async def delete_investment(
         
         if not investment:
             raise HTTPException(status_code=404, detail="Investment not found")
-        
-        if investment.status == InvestmentStatus.COMPLETED:
-            raise HTTPException(status_code=400, detail="Cannot delete completed investment")
-        
+
+        inv_id = investment.id
+        db.query(InvestmentTransaction).filter(
+            InvestmentTransaction.investment_id == inv_id
+        ).delete(synchronize_session=False)
+        db.query(EquipmentInvestment).filter(
+            EquipmentInvestment.investment_id == inv_id
+        ).delete(synchronize_session=False)
         db.delete(investment)
         db.commit()
     except HTTPException:

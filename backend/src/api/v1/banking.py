@@ -79,6 +79,16 @@ def _pydantic_bank_account_from_orm(orm) -> BankAccount:
     d = {a.key: getattr(orm, a.key) for a in sa_inspect(orm).mapper.column_attrs}
     return BankAccount.model_validate(d)
 
+
+def _pydantic_bank_transaction_from_orm(orm: BankTransaction) -> BankTransactionModel:
+    from sqlalchemy.inspection import inspect as sa_inspect
+    d = {a.key: getattr(orm, a.key) for a in sa_inspect(orm).mapper.column_attrs}
+    if d.get("tags") is None:
+        d["tags"] = []
+    if d.get("attachments") is None:
+        d["attachments"] = []
+    return BankTransactionModel.model_validate(d)
+
 # Bank Account Endpoints
 @router.post("/accounts", response_model=BankAccountResponse, status_code=status.HTTP_201_CREATED)
 def create_bank_account_endpoint(
@@ -203,7 +213,9 @@ def create_bank_transaction_endpoint(
         _coerce_bank_transaction_row_enums(transaction_data)
         
         db_transaction = create_bank_transaction(transaction_data, db)
-        return BankTransactionResponse(bank_transaction=db_transaction)
+        return BankTransactionResponse(
+            bank_transaction=_pydantic_bank_transaction_from_orm(db_transaction)
+        )
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create bank transaction: {str(e)}")
@@ -228,7 +240,8 @@ def get_bank_transactions_endpoint(
             account_id, transaction_type, status, start_date, end_date
         )
         
-        return BankTransactionsResponse(bank_transactions=transactions, total=len(transactions))
+        serialized = [_pydantic_bank_transaction_from_orm(t) for t in transactions]
+        return BankTransactionsResponse(bank_transactions=serialized, total=len(serialized))
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch bank transactions: {str(e)}")
@@ -245,7 +258,9 @@ def get_bank_transaction_endpoint(
     if not transaction:
         raise HTTPException(status_code=404, detail="Bank transaction not found")
     
-    return BankTransactionResponse(bank_transaction=transaction)
+    return BankTransactionResponse(
+        bank_transaction=_pydantic_bank_transaction_from_orm(transaction)
+    )
 
 @router.put("/transactions/{transaction_id}", response_model=BankTransactionResponse)
 def update_bank_transaction_endpoint(
@@ -268,7 +283,9 @@ def update_bank_transaction_endpoint(
         if not db_transaction:
             raise HTTPException(status_code=404, detail="Bank transaction not found")
         
-        return BankTransactionResponse(bank_transaction=db_transaction)
+        return BankTransactionResponse(
+            bank_transaction=_pydantic_bank_transaction_from_orm(db_transaction)
+        )
         
     except HTTPException:
         raise
@@ -370,6 +387,10 @@ def get_banking_dashboard_endpoint(
     """Get banking dashboard data"""
     try:
         dashboard_data = get_banking_dashboard_data(db, str(tenant_context["tenant_id"]))
+        dashboard_data["recent_transactions"] = [
+            _pydantic_bank_transaction_from_orm(t)
+            for t in dashboard_data["recent_transactions"]
+        ]
         return BankingDashboard(**dashboard_data)
         
     except Exception as e:

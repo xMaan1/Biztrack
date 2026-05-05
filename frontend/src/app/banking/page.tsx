@@ -205,6 +205,12 @@ function BankingDashboardContent() {
     }
   };
 
+  const getBankAccountDisplay = (accountId: string) => {
+    const acc = bankAccounts.find((a) => a.id === accountId);
+    if (!acc) return accountId ? 'Unknown account' : '—';
+    return `${acc.accountName} · ${acc.bankName}`;
+  };
+
   const getStatusBadge = (status: TransactionStatus) => {
     const statusConfig = {
       [TransactionStatus.PENDING]: { variant: 'secondary', label: 'Pending' },
@@ -446,11 +452,12 @@ function BankingDashboardContent() {
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
+                  <TableHead className="min-w-[10rem]">Account</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Amount</TableHead>
@@ -464,6 +471,11 @@ function BankingDashboardContent() {
                   <TableRow key={transaction.id}>
                     <TableCell>
                       {formatDate(transaction.transactionDate)}
+                    </TableCell>
+                    <TableCell className="max-w-[14rem]">
+                      <div className="truncate text-sm" title={getBankAccountDisplay(transaction.bankAccountId)}>
+                        {getBankAccountDisplay(transaction.bankAccountId)}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
@@ -509,8 +521,10 @@ function BankingDashboardContent() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => router.push(`/banking/transactions/${transaction.id}`)}
+                        onClick={() => router.push('/banking/transactions')}
+                        title="Open transactions"
                       >
+                        <Eye className="h-4 w-4" />
                       </Button>
                     </TableCell>
                   </TableRow>

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
   Card,
@@ -71,12 +70,12 @@ import {
 } from '../../../models/qualityControl';
 import QualityControlService from '../../../services/QualityControlService';
 import { DashboardLayout } from '../../../components/layout';
-import { formatDate } from '../../../lib/utils';
+import { cn, formatDate } from '../../../lib/utils';
 
 interface QualityCheckDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  mode: 'create' | 'edit';
+  mode: 'create' | 'edit' | 'view';
   check: QualityCheck | null;
   onSuccess: () => void;
 }
@@ -100,7 +99,7 @@ function QualityCheckDialog({ open, onOpenChange, mode, check, onSuccess }: Qual
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (check && mode === 'edit') {
+    if (check && (mode === 'edit' || mode === 'view')) {
       setFormData({
         title: check.title || '',
         description: check.description || '',
@@ -137,6 +136,7 @@ function QualityCheckDialog({ open, onOpenChange, mode, check, onSuccess }: Qual
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (mode === 'view') return;
     setLoading(true);
 
     try {
@@ -160,11 +160,52 @@ function QualityCheckDialog({ open, onOpenChange, mode, check, onSuccess }: Qual
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>
-            {mode === 'create' ? 'Create Quality Check' : 'Edit Quality Check'}
+            {mode === 'create'
+              ? 'Create Quality Check'
+              : mode === 'edit'
+                ? 'Edit Quality Check'
+                : 'View Quality Check'}
           </DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
+          {check && mode === 'view' && (
+            <div className="grid grid-cols-2 gap-3 rounded-lg border bg-muted/40 p-4 text-sm">
+              <div>
+                <span className="text-muted-foreground">ID</span>
+                <p className="font-mono text-xs break-all">{check.id}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Status</span>
+                <div className="mt-1">
+                  <Badge className={getQualityStatusColor(check.status)}>
+                    {check.status.replace('_', ' ')}
+                  </Badge>
+                </div>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Completion</span>
+                <p className="font-medium">{check.completion_percentage}%</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Inspections</span>
+                <p className="font-medium">
+                  {check.passed_inspections}/{check.total_inspections} passed
+                  {check.pending_inspections > 0
+                    ? ` · ${check.pending_inspections} pending`
+                    : ''}
+                </p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Created</span>
+                <p>{formatDate(check.created_at)}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Updated</span>
+                <p>{formatDate(check.updated_at)}</p>
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium">Title</label>
@@ -172,7 +213,9 @@ function QualityCheckDialog({ open, onOpenChange, mode, check, onSuccess }: Qual
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 placeholder="Quality check title"
-                required
+                required={mode !== 'view'}
+                readOnly={mode === 'view'}
+                className={cn(mode === 'view' && 'bg-muted')}
               />
             </div>
             <div>
@@ -180,8 +223,9 @@ function QualityCheckDialog({ open, onOpenChange, mode, check, onSuccess }: Qual
               <Select
                 value={formData.inspection_type}
                 onValueChange={(value) => setFormData({ ...formData, inspection_type: value as InspectionType })}
+                disabled={mode === 'view'}
               >
-                <SelectTrigger>
+                <SelectTrigger className={cn(mode === 'view' && 'bg-muted')}>
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -203,8 +247,12 @@ function QualityCheckDialog({ open, onOpenChange, mode, check, onSuccess }: Qual
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Quality check description"
-              className="w-full p-2 border rounded-md"
+              className={cn(
+                'w-full p-2 border rounded-md',
+                mode === 'view' && 'bg-muted resize-none',
+              )}
               rows={3}
+              readOnly={mode === 'view'}
             />
           </div>
 
@@ -214,8 +262,9 @@ function QualityCheckDialog({ open, onOpenChange, mode, check, onSuccess }: Qual
               <Select
                 value={formData.priority}
                 onValueChange={(value) => setFormData({ ...formData, priority: value as QualityPriority })}
+                disabled={mode === 'view'}
               >
-                <SelectTrigger>
+                <SelectTrigger className={cn(mode === 'view' && 'bg-muted')}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -231,8 +280,9 @@ function QualityCheckDialog({ open, onOpenChange, mode, check, onSuccess }: Qual
               <Select
                 value={formData.quality_standard}
                 onValueChange={(value) => setFormData({ ...formData, quality_standard: value as QualityStandard })}
+                disabled={mode === 'view'}
               >
-                <SelectTrigger>
+                <SelectTrigger className={cn(mode === 'view' && 'bg-muted')}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -255,6 +305,8 @@ function QualityCheckDialog({ open, onOpenChange, mode, check, onSuccess }: Qual
                 value={formData.estimated_duration_minutes}
                 onChange={(e) => setFormData({ ...formData, estimated_duration_minutes: parseInt(e.target.value) || 60 })}
                 min="1"
+                readOnly={mode === 'view'}
+                className={cn(mode === 'view' && 'bg-muted')}
               />
             </div>
             <div>
@@ -263,6 +315,8 @@ function QualityCheckDialog({ open, onOpenChange, mode, check, onSuccess }: Qual
                 type="date"
                 value={formData.scheduled_date}
                 onChange={(e) => setFormData({ ...formData, scheduled_date: e.target.value })}
+                readOnly={mode === 'view'}
+                className={cn(mode === 'view' && 'bg-muted')}
               />
             </div>
           </div>
@@ -273,11 +327,13 @@ function QualityCheckDialog({ open, onOpenChange, mode, check, onSuccess }: Qual
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {mode === 'view' ? 'Close' : 'Cancel'}
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Saving...' : mode === 'create' ? 'Create' : 'Update'}
-            </Button>
+            {mode !== 'view' && (
+              <Button type="submit" disabled={loading}>
+                {loading ? 'Saving...' : mode === 'create' ? 'Create' : 'Update'}
+              </Button>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>
@@ -294,7 +350,6 @@ export default function QualityControlPage() {
 }
 
 function QualityControlContent() {
-  const router = useRouter();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -313,7 +368,7 @@ function QualityControlContent() {
   // Modal states
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedCheck, setSelectedCheck] = useState<QualityCheck | null>(null);
-  const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
+  const [dialogMode, setDialogMode] = useState<'create' | 'edit' | 'view'>('create');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [checkToDelete, setCheckToDelete] = useState<QualityCheck | null>(null);
 
@@ -408,6 +463,12 @@ function QualityControlContent() {
   const handleEditCheck = (check: QualityCheck) => {
     setSelectedCheck(check);
     setDialogMode('edit');
+    setDialogOpen(true);
+  };
+
+  const handleViewCheck = (check: QualityCheck) => {
+    setSelectedCheck(check);
+    setDialogMode('view');
     setDialogOpen(true);
   };
 
@@ -741,11 +802,7 @@ function QualityControlContent() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
-                                onClick={() =>
-                                  router.push(
-                                    `/quality-control/checks/${check.id}`,
-                                  )
-                                }
+                                onClick={() => handleViewCheck(check)}
                               >
                                 <Eye className="mr-2 h-4 w-4" />
                                 View Details

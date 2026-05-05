@@ -30,7 +30,6 @@ import ProductionService from '../../../../services/ProductionService';
 import { useAuth } from '../../../../hooks/useAuth';
 import { DashboardLayout } from '../../../../components/layout';
 import { useRouter } from 'next/navigation';
-import ProductionPlanDialog from '../../../../components/production/ProductionPlanDialog';
 import {
   cn,
   getStatusColor,
@@ -43,10 +42,6 @@ export default function ProductionDashboardPage() {
   const router = useRouter();
   const [dashboard, setDashboard] = useState<ProductionDashboard | null>(null);
   const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<ProductionPlan | null>(null);
-  const [dialogMode, setDialogMode] = useState<'view'>('view');
-
   useEffect(() => {
     fetchDashboard();
   }, []);
@@ -64,9 +59,7 @@ export default function ProductionDashboardPage() {
   };
 
   const handleViewPlan = (plan: ProductionPlan) => {
-    setSelectedPlan(plan);
-    setDialogMode('view');
-    setDialogOpen(true);
+    router.push(`/workshop-management/production/${plan.id}`);
   };
 
   const getStatusIcon = (status: string) => {
@@ -462,16 +455,6 @@ export default function ProductionDashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Production Plan Dialog */}
-        <ProductionPlanDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          mode={dialogMode}
-          plan={selectedPlan}
-          onSuccess={() => {
-            setDialogOpen(false);
-          }}
-        />
       </div>
     </DashboardLayout>
   );

@@ -290,23 +290,23 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <h2 className="text-2xl font-bold tracking-tight">Till Management</h2>
           <p className="text-muted-foreground">Manage physical cash in the office</p>
         </div>
-        <Button onClick={() => setShowCreateTillModal(true)}>
+        <Button onClick={() => setShowCreateTillModal(true)} className="w-full shrink-0 sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           Create Till
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
         {tills.map((till) => (
-          <Card key={till.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>{till.name}</CardTitle>
+          <Card key={till.id} className="hover:shadow-lg transition-shadow overflow-hidden min-w-0">
+            <CardHeader className="space-y-2 pb-3">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <CardTitle className="text-lg leading-tight break-words pr-2">{till.name}</CardTitle>
                 {till.isActive ? (
                   <Badge className="bg-green-500">Active</Badge>
                 ) : (
@@ -326,29 +326,35 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
                     <span className="text-sm">{till.location}</span>
                   </div>
                 )}
-                <div className="flex items-center gap-2 mt-4">
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-stretch">
                   <Button
                     variant="outline"
-                    className="flex-1"
+                    className="w-full min-w-0 justify-center sm:flex-1 sm:basis-[min(100%,12rem)]"
                     onClick={() => handleViewTransactions(till)}
                   >
-                    <Eye className="h-4 w-4 mr-2" />
-                    View Transactions
+                    <Eye className="h-4 w-4 mr-2 shrink-0" />
+                    <span className="truncate">View Transactions</span>
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => openEditModal(till)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => openDeleteModal(till)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-2 w-full sm:w-auto sm:flex-none sm:shrink-0 justify-center sm:justify-stretch">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="flex-1 sm:flex-none sm:size-10"
+                      onClick={() => openEditModal(till)}
+                      aria-label="Edit till"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="flex-1 sm:flex-none sm:size-10"
+                      onClick={() => openDeleteModal(till)}
+                      aria-label="Delete till"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </CardContent>

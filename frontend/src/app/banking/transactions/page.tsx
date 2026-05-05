@@ -403,6 +403,12 @@ function BankTransactionsContent() {
     }
   };
 
+  const getBankAccountDisplay = (accountId: string) => {
+    const acc = bankAccounts.find((a) => a.id === accountId);
+    if (!acc) return accountId ? 'Unknown account' : '—';
+    return `${acc.accountName} · ${acc.bankName}`;
+  };
+
   const getStatusBadge = (status: TransactionStatus) => {
     const statusConfig = {
       [TransactionStatus.PENDING]: { variant: 'secondary', label: 'Pending' },
@@ -435,10 +441,12 @@ function BankTransactionsContent() {
   };
 
   const filteredTransactions = (transactions || []).filter(transaction => {
+    const accountLabel = getBankAccountDisplay(transaction.bankAccountId).toLowerCase();
     const matchesSearch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          transaction.counterpartyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          transaction.referenceNumber?.includes(searchTerm) ||
-                         transaction.transactionNumber.includes(searchTerm);
+                         transaction.transactionNumber.includes(searchTerm) ||
+                         accountLabel.includes(searchTerm.toLowerCase());
     
     const matchesAccount = selectedAccount === 'all' || transaction.bankAccountId === selectedAccount;
     const matchesType = selectedType === 'all' || transaction.transactionType === selectedType;
@@ -554,11 +562,12 @@ function BankTransactionsContent() {
           <CardHeader>
             <CardTitle>Transactions ({filteredTransactions.length})</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
+                  <TableHead className="min-w-[10rem]">Account</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Counterparty</TableHead>
@@ -581,6 +590,11 @@ function BankTransactionsContent() {
                             Value: {formatDate(transaction.valueDate)}
                           </div>
                         )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="max-w-[14rem]">
+                      <div className="truncate text-sm" title={getBankAccountDisplay(transaction.bankAccountId)}>
+                        {getBankAccountDisplay(transaction.bankAccountId)}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -901,6 +915,13 @@ function BankTransactionsContent() {
                       {getStatusBadge(viewingTransaction.status)}
                     </div>
                   </div>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Bank Account</Label>
+                  <p className="text-sm font-medium mt-1">
+                    {getBankAccountDisplay(viewingTransaction.bankAccountId)}
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
