@@ -1,11 +1,14 @@
+import { BrowserRouter } from 'react-router-dom'
 import { ConfigProvider } from 'antd'
-import { HomePage } from './pages/HomePage'
+import { AppRoutes } from './routes/AppRoutes'
 import { antdTheme } from './theme'
 
 export default function App() {
   return (
-    <ConfigProvider theme={antdTheme}>
-      <HomePage />
-    </ConfigProvider>
+    <BrowserRouter>
+      <ConfigProvider theme={antdTheme}>
+        <AppRoutes />
+      </ConfigProvider>
+    </BrowserRouter>
   )
 }
