@@ -1,5 +1,5 @@
 export const routes = {
-  home: '/',
+  landing: '/',
 } as const
 
 export type RouteKey = keyof typeof routes

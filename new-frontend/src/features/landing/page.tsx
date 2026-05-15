@@ -6,7 +6,7 @@ import { LandingNav } from './components/LandingNav'
 import { PricingSection } from './components/PricingSection'
 import { TestimonialsSection } from './components/TestimonialsSection'
 
-export function HomePage() {
+export function LandingPage() {
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
   }
