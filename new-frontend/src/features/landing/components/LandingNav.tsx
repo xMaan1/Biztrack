@@ -1,9 +1,7 @@
 import { BuildOutlined } from '@ant-design/icons'
 import { Button } from 'antd'
-
-function scrollToId(id: string) {
-  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
-}
+import { Link } from 'react-router-dom'
+import { trialRegisterPath } from '../utils/plan'
 
 export function LandingNav() {
   return (
@@ -36,10 +34,13 @@ export function LandingNav() {
             </a>
           </div>
 
-          <div className="flex items-center">
-            <Button type="primary" onClick={() => scrollToId('pricing')}>
-              Get Started
-            </Button>
+          <div className="flex items-center gap-3">
+            <Link to="/login">
+              <Button type="text">Sign in</Button>
+            </Link>
+            <Link to={trialRegisterPath('professional')}>
+              <Button type="primary">Get Started</Button>
+            </Link>
           </div>
         </div>
       </div>

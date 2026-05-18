@@ -1,6 +1,8 @@
 import { CheckOutlined } from '@ant-design/icons'
 import { Button, Card, Typography } from 'antd'
+import { Link } from 'react-router-dom'
 import { LANDING_PLANS } from '../constants/plans'
+import { trialRegisterPath } from '../utils/plan'
 
 export function PricingSection() {
   return (
@@ -36,8 +38,7 @@ export function PricingSection() {
                   {plan.name}
                 </Typography.Title>
                 <div className="text-foreground mb-2 text-4xl font-bold">
-                  $
-                  {plan.price}
+                  ${plan.price}
                   <span className="text-muted-foreground text-lg font-normal">/month</span>
                 </div>
                 <p className="text-muted-foreground">{plan.description}</p>
@@ -64,14 +65,16 @@ export function PricingSection() {
                   ))}
                 </div>
 
-                <Button
-                  disabled
-                  className={`!w-full !border-0 !bg-blue-600 !text-white hover:!bg-blue-700 group-hover:scale-105 disabled:!bg-blue-600 disabled:!text-white disabled:opacity-100 ${
-                    plan.planType === 'enterprise' ? '!shadow-lg' : ''
-                  }`}
-                >
-                  Start Free Trial
-                </Button>
+                <Link to={trialRegisterPath(plan.planType)}>
+                  <Button
+                    type="primary"
+                    className={`!w-full !border-0 !bg-blue-600 !text-white hover:!bg-blue-700 group-hover:scale-105 ${
+                      plan.planType === 'enterprise' ? '!shadow-lg' : ''
+                    }`}
+                  >
+                    Start Free Trial
+                  </Button>
+                </Link>
               </div>
             </Card>
           ))}
