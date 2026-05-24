@@ -4,9 +4,9 @@ __all__ = ["PlanType", "TenantMemberRole", "PLAN_TYPES", "TENANT_MEMBER_ROLES"]
 
 
 class PlanType(StrEnum):
-    STARTER = "starter"
-    PROFESSIONAL = "professional"
-    ENTERPRISE = "enterprise"
+    HEALTHCARE = "healthcare"
+    COMMERCE = "commerce"
+    WORKSHOP = "workshop"
 
 
 class TenantMemberRole(StrEnum):

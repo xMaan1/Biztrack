@@ -1,7 +1,9 @@
+export type PlanType = 'healthcare' | 'commerce' | 'workshop'
+
 export type Plan = {
   id: string
   name: string
-  planType: string
+  planType: PlanType
   price: number
   maxProjects: number
   maxUsers: number
@@ -11,60 +13,60 @@ export type Plan = {
 
 export const LANDING_PLANS: Plan[] = [
   {
-    id: 'starter',
-    name: 'Starter',
-    planType: 'starter',
+    id: 'healthcare',
+    name: 'Healthcare Module',
+    planType: 'healthcare',
     price: 29,
     maxProjects: 5,
     maxUsers: 10,
-    description: 'Perfect for small teams getting started',
+    description: 'Patient records, appointments, and clinical workflows',
     features: [
-      'Up to 5 projects',
-      '10 team members',
-      'Basic reporting',
-      'Email support',
-      'Core CRM',
-      'Mobile app access',
-      'Invoice management',
-      'Task tracking',
+      'Patient management',
+      'Appointment scheduling',
+      'Medical records',
+      'Staff directory',
+      'Billing & claims',
+      'Prescription tracking',
+      'Lab results',
+      'HIPAA-ready access controls',
     ],
   },
   {
-    id: 'professional',
-    name: 'Professional',
-    planType: 'professional',
+    id: 'commerce',
+    name: 'Commerce Pro',
+    planType: 'commerce',
     price: 79,
     maxProjects: 25,
     maxUsers: 50,
-    description: 'For growing businesses that need more power',
+    description: 'Inventory, sales, and retail operations in one place',
     features: [
-      'Up to 25 projects',
-      '50 team members',
-      'Advanced analytics',
-      'Priority support',
-      'HR & payroll',
       'Inventory management',
-      'Workflow automation',
-      'API access',
+      'Point of sale',
+      'Purchase orders',
+      'Supplier management',
+      'Sales analytics',
+      'Multi-location stock',
+      'Invoice & payments',
+      'Customer CRM',
     ],
   },
   {
-    id: 'enterprise',
-    name: 'Enterprise',
-    planType: 'enterprise',
+    id: 'workshop',
+    name: 'Workshop Management',
+    planType: 'workshop',
     price: 199,
     maxProjects: 100,
     maxUsers: 250,
-    description: 'Full power for larger organizations',
+    description: 'Job cards, production, and workshop floor control',
     features: [
-      'Up to 100 projects',
-      '250 team members',
-      'Dedicated onboarding',
-      'SSO & advanced security',
-      'Custom integrations',
-      'SLA & uptime guarantee',
-      'Audit logs',
-      'Dedicated account manager',
+      'Job card management',
+      'Work order tracking',
+      'Vehicle & asset registry',
+      'Production scheduling',
+      'Parts inventory',
+      'Technician assignments',
+      'Maintenance schedules',
+      'Workshop reporting',
     ],
   },
 ]

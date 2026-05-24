@@ -3,20 +3,20 @@ import { Button, Card, Typography } from 'antd'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { getPlanByType } from '../landing/utils/plan'
-import { EnterpriseDashboard } from './components/EnterpriseDashboard'
-import { ProfessionalDashboard } from './components/ProfessionalDashboard'
-import { StarterDashboard } from './components/StarterDashboard'
+import { CommerceDashboard } from './components/CommerceDashboard'
+import { HealthcareDashboard } from './components/HealthcareDashboard'
+import { WorkshopDashboard } from './components/WorkshopDashboard'
 
 const { Text, Title } = Typography
 
 function PlanDashboard({ planType }: { planType: string | null | undefined }) {
-  if (planType === 'starter') {
-    return <StarterDashboard />
+  if (planType === 'healthcare') {
+    return <HealthcareDashboard />
   }
-  if (planType === 'enterprise') {
-    return <EnterpriseDashboard />
+  if (planType === 'workshop') {
+    return <WorkshopDashboard />
   }
-  return <ProfessionalDashboard />
+  return <CommerceDashboard />
 }
 
 export function DashboardPage() {
@@ -44,7 +44,7 @@ export function DashboardPage() {
           </Title>
           <Text type="secondary">
             {user?.tenant_name}
-            {plan ? ` · ${plan.name} plan` : ''}
+            {plan ? ` · ${plan.name}` : ''}
           </Text>
         </Card>
         <PlanDashboard planType={user?.plan_type} />

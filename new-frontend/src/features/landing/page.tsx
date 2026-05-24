@@ -19,14 +19,14 @@ export function LandingPage() {
     <div className="from-background via-background to-muted/20 min-h-screen bg-gradient-to-br">
       <LandingNav />
       <HeroSection
-        onStartFreeTrial={() => navigate(trialRegisterPath('professional'))}
+        onStartFreeTrial={() => navigate(trialRegisterPath('commerce'))}
         onSeeHowItWorks={() => scrollTo('features')}
       />
       <FeaturesSection />
       <PricingSection />
       <TestimonialsSection />
       <LandingCtaSection
-        onGetStarted={() => navigate(trialRegisterPath('professional'))}
+        onGetStarted={() => navigate(trialRegisterPath('commerce'))}
         onViewPricing={() => scrollTo('pricing')}
       />
       <LandingFooter />

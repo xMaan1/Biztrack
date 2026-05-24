@@ -20,12 +20,12 @@ export function PricingSection() {
             <Card
               key={plan.id}
               className={`group relative transition-all duration-300 hover:shadow-xl ${
-                plan.planType === 'enterprise'
+                plan.planType === 'commerce'
                   ? 'border-primary scale-100 border shadow-lg lg:scale-105'
                   : 'border-border hover:border-primary/50 border'
               }`}
             >
-              {plan.planType === 'enterprise' ? (
+              {plan.planType === 'commerce' ? (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 transform">
                   <span className="bg-primary text-primary-foreground rounded-full px-4 py-2 text-sm shadow-sm">
                     Most Popular
@@ -69,7 +69,7 @@ export function PricingSection() {
                   <Button
                     type="primary"
                     className={`!w-full !border-0 !bg-blue-600 !text-white hover:!bg-blue-700 group-hover:scale-105 ${
-                      plan.planType === 'enterprise' ? '!shadow-lg' : ''
+                      plan.planType === 'commerce' ? '!shadow-lg' : ''
                     }`}
                   >
                     Start Free Trial

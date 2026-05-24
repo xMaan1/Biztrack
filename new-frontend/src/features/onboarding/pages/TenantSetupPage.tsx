@@ -14,7 +14,7 @@ export function TenantSetupPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const planParam = searchParams.get('plan')
-  const planType = (isPlanType(planParam) ? planParam : 'professional') as PlanType
+  const planType = (isPlanType(planParam) ? planParam : 'commerce') as PlanType
   const plan = getPlanByType(planType)
 
   const [error, setError] = useState('')

@@ -1,7 +1,8 @@
-export type PlanType = 'starter' | 'professional' | 'enterprise'
+export type { PlanType } from '../landing/utils/plan'
 
 export type { TenantMemberRole } from '../tenants/types'
 
+import type { PlanType } from '../landing/utils/plan'
 import type { TenantMemberRole } from '../tenants/types'
 
 export interface MeResponse {

@@ -38,7 +38,7 @@ export function LandingNav() {
             <Link to="/login">
               <Button type="text">Sign in</Button>
             </Link>
-            <Link to={trialRegisterPath('professional')}>
+            <Link to={trialRegisterPath('commerce')}>
               <Button type="primary">Get Started</Button>
             </Link>
           </div>

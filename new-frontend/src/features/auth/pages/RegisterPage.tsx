@@ -14,7 +14,7 @@ export function RegisterPage() {
   const [searchParams] = useSearchParams()
   const planParam = searchParams.get('plan')
   const plan = getPlanByType(planParam)
-  const planType = isPlanType(planParam) ? planParam : 'professional'
+  const planType = isPlanType(planParam) ? planParam : 'commerce'
 
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
