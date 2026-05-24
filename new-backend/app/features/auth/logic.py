@@ -5,7 +5,7 @@ from fastapi import HTTPException, Request, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.features.auth.schemas import LoginRequest, MeResponse, RegisterRequest
-from app.models.tenant import Tenant
+from app.models.tenant import Tenant, TenantMember
 from app.models.user import User
 from app.repositories import tenant as tenant_repo
 from app.repositories import user as user_repo
@@ -95,35 +95,33 @@ async def login_with_password(
         request.session["tenant_id"] = str(member.tenant_id)
 
 
-async def _resolve_tenant(
+async def _resolve_tenant_membership(
     session: AsyncSession,
     request_session: dict,
     user: User,
-) -> Tenant | None:
+) -> tuple[Tenant, TenantMember] | tuple[None, None]:
+    member = await tenant_repo.get_member_for_user(session, user.id)
+    if not member:
+        return None, None
+
     tenant_id = parse_tenant_id(request_session.get("tenant_id"))
     if tenant_id:
         tenant = await tenant_repo.get_tenant(session, tenant_id)
-        if tenant and tenant.is_active:
-            member = await tenant_repo.get_member_for_user(session, user.id)
-            if member and member.tenant_id == tenant.id:
-                return tenant
-
-    member = await tenant_repo.get_member_for_user(session, user.id)
-    if not member:
-        return None
+        if tenant and tenant.is_active and member.tenant_id == tenant.id:
+            return tenant, member
 
     tenant = await tenant_repo.get_tenant(session, member.tenant_id)
     if tenant and tenant.is_active:
         request_session["tenant_id"] = str(tenant.id)
-        return tenant
-    return None
+        return tenant, member
+    return None, None
 
 
 async def build_me_response(session: AsyncSession, request_session: dict) -> MeResponse:
     user = await get_current_user(session, request_session)
-    tenant = await _resolve_tenant(session, request_session, user)
+    tenant, member = await _resolve_tenant_membership(session, request_session, user)
 
-    if not tenant:
+    if not tenant or not member:
         return MeResponse(
             username=user.username,
             email=user.email,
@@ -141,6 +139,7 @@ async def build_me_response(session: AsyncSession, request_session: dict) -> MeR
         tenant_id=str(tenant.id),
         tenant_name=tenant.name,
         plan_type=tenant.plan_type,
+        tenant_role=member.role,
     )
 
 

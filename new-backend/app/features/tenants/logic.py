@@ -2,7 +2,7 @@ from fastapi import HTTPException, Request, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.features.auth.logic import get_current_user
-from app.features.tenants.constants import PLAN_TYPES
+from app.features.tenants.constants import PLAN_TYPES, TenantMemberRole
 from app.features.tenants.schemas import CreateTenantRequest, TenantSummary
 from app.repositories import tenant as tenant_repo
 
@@ -29,7 +29,10 @@ async def create_tenant_for_user(
         session, name=name, plan_type=payload.plan_type.value
     )
     await tenant_repo.create_tenant_member(
-        session, tenant_id=tenant.id, user_id=user.id, role="owner"
+        session,
+        tenant_id=tenant.id,
+        user_id=user.id,
+        role=TenantMemberRole.OWNER,
     )
 
     request.session["tenant_id"] = str(tenant.id)
@@ -38,4 +41,5 @@ async def create_tenant_for_user(
         id=str(tenant.id),
         name=tenant.name,
         plan_type=payload.plan_type,
+        role=TenantMemberRole.OWNER,
     )

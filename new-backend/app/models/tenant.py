@@ -24,4 +24,4 @@ class TenantMember(Entity, table=True):
     user_id: UUID = Field(
         sa_column=Column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     )
-    role: str = Field(default="owner", sa_column=Column(String(32), nullable=False))
+    role: str = Field(sa_column=Column(String(32), nullable=False))

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from app.features.tenants.constants import PlanType
+from app.features.tenants.constants import PlanType, TenantMemberRole
 
 
 class CreateTenantRequest(BaseModel):
@@ -12,3 +12,11 @@ class TenantSummary(BaseModel):
     id: str
     name: str
     plan_type: PlanType
+    role: TenantMemberRole
+
+
+class TenantMemberSummary(BaseModel):
+    id: str
+    tenant_id: str
+    user_id: str
+    role: TenantMemberRole

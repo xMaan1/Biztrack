@@ -23,3 +23,4 @@ class MeResponse(BaseModel):
     tenant_id: str | None = None
     tenant_name: str | None = None
     plan_type: str | None = None
+    tenant_role: str | None = None

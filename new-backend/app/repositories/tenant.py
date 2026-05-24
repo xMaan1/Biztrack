@@ -3,6 +3,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
+from app.features.tenants.constants import TenantMemberRole
 from app.models.tenant import Tenant, TenantMember
 
 
@@ -39,9 +40,13 @@ async def create_tenant_member(
     *,
     tenant_id: UUID,
     user_id: UUID,
-    role: str = "owner",
+    role: TenantMemberRole | str,
 ) -> TenantMember:
-    member = TenantMember(tenant_id=tenant_id, user_id=user_id, role=role)
+    member = TenantMember(
+        tenant_id=tenant_id,
+        user_id=user_id,
+        role=role.value if isinstance(role, TenantMemberRole) else role,
+    )
     session.add(member)
     await session.commit()
     await session.refresh(member)

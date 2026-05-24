@@ -1,5 +1,9 @@
 export type PlanType = 'starter' | 'professional' | 'enterprise'
 
+export type { TenantMemberRole } from '../tenants/types'
+
+import type { TenantMemberRole } from '../tenants/types'
+
 export interface MeResponse {
   username: string
   email: string
@@ -9,6 +13,7 @@ export interface MeResponse {
   tenant_id?: string | null
   tenant_name?: string | null
   plan_type?: PlanType | null
+  tenant_role?: TenantMemberRole | null
 }
 
 export interface LoginRequest {
@@ -22,9 +27,4 @@ export interface RegisterRequest {
   password: string
   first_name?: string
   last_name?: string
-}
-
-export interface CreateTenantRequest {
-  name: string
-  plan_type: PlanType
 }
