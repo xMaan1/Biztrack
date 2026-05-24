@@ -5,8 +5,10 @@ from fastapi import HTTPException, Request, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.features.auth.schemas import LoginRequest, MeResponse, RegisterRequest
-from app.models.tenant import Tenant, TenantMember
+from app.models.tenant import Tenant
 from app.models.user import User
+from app.repositories import tenant as tenant_repo
+from app.repositories import user as user_repo
 
 
 def normalize_email(value: str) -> str:
@@ -50,9 +52,9 @@ async def authenticate_user(
     password: str,
 ) -> User | None:
     normalized = normalize_email(username)
-    user = await User.by_email(session, normalized)
+    user = await user_repo.get_by_email(session, normalized)
     if not user:
-        user = await User.by_username(session, normalized)
+        user = await user_repo.get_by_username(session, normalized)
     if not user or not user.is_active:
         return None
     if not verify_password(password, user.password_hash):
@@ -65,7 +67,7 @@ async def get_current_user(session: AsyncSession, request_session: dict) -> User
     if not user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
 
-    user = await User.get(session, user_id)
+    user = await user_repo.get_user(session, user_id)
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid session")
     return user
@@ -88,7 +90,7 @@ async def login_with_password(
             detail="Invalid username or password",
         )
     sign_in_user(request, user)
-    member = await TenantMember.for_user(session, user.id)
+    member = await tenant_repo.get_member_for_user(session, user.id)
     if member:
         request.session["tenant_id"] = str(member.tenant_id)
 
@@ -100,17 +102,17 @@ async def _resolve_tenant(
 ) -> Tenant | None:
     tenant_id = parse_tenant_id(request_session.get("tenant_id"))
     if tenant_id:
-        tenant = await Tenant.get(session, tenant_id)
+        tenant = await tenant_repo.get_tenant(session, tenant_id)
         if tenant and tenant.is_active:
-            member = await TenantMember.for_user(session, user.id)
+            member = await tenant_repo.get_member_for_user(session, user.id)
             if member and member.tenant_id == tenant.id:
                 return tenant
 
-    member = await TenantMember.for_user(session, user.id)
+    member = await tenant_repo.get_member_for_user(session, user.id)
     if not member:
         return None
 
-    tenant = await Tenant.get(session, member.tenant_id)
+    tenant = await tenant_repo.get_tenant(session, member.tenant_id)
     if tenant and tenant.is_active:
         request_session["tenant_id"] = str(tenant.id)
         return tenant
@@ -146,12 +148,12 @@ async def register_user(session: AsyncSession, payload: RegisterRequest) -> User
     email = normalize_email(payload.email)
     username = payload.username.strip()
 
-    if await User.by_email(session, email):
+    if await user_repo.get_by_email(session, email):
         raise HTTPException(status_code=400, detail="Email already registered")
-    if await User.by_username(session, username):
+    if await user_repo.get_by_username(session, username):
         raise HTTPException(status_code=400, detail="Username already taken")
 
-    return await User.create(
+    return await user_repo.create_user(
         session,
         username=username,
         email=email,

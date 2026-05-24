@@ -11,8 +11,8 @@ from app.features.tenants.schemas import CreateTenantRequest, TenantSummary
 router = APIRouter(prefix="/tenants", tags=["tenants"])
 
 
-@router.post("/setup")
-async def setup_tenant(
+@router.post("/create")
+async def create_tenant(
     payload: CreateTenantRequest,
     request: Request,
     session: Annotated[AsyncSession, Depends(get_db)],

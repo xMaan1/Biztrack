@@ -7,7 +7,7 @@ const credentials: RequestCredentials = 'include'
 export async function setupTenantRequest(
   payload: CreateTenantRequest,
 ): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/tenants/setup`, {
+  const response = await fetch(`${API_BASE_URL}/tenants/create`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials,
