@@ -10,6 +10,7 @@ import {
 import { usePermissions } from '../../hooks/usePermissions';
 import type { SubMenuItemDef } from '../../navigation/sidebarMenuData';
 import { AppModal } from '../../components/layout/AppModal';
+import { VerifiedCompanyBadge } from '../common/VerifiedCompanyBadge';
 
 function subRolesAllowed(
   sub: SubMenuItemDef,
@@ -386,6 +387,9 @@ export function MobileSidebarModal({
                 {user.email}
               </Text>
             ) : null}
+            <View className="mb-3">
+              <VerifiedCompanyBadge align="center" />
+            </View>
             <Pressable
               className="flex-row items-center justify-center gap-2 rounded-xl bg-slate-200 py-2.5 active:bg-slate-300"
               onPress={() => {

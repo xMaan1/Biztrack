@@ -13,6 +13,7 @@ import { LoginCredentials, RegisterData } from '@/src/models/auth';
 import { apiService } from '@/src/services/ApiService';
 import { extractErrorMessage } from '@/src/utils/errorUtils';
 import { toast } from 'sonner';
+import { VerifiedCompanyBadge } from '@/src/components/common/VerifiedCompanyBadge';
 
 interface AuthFormProps {
   mode: 'login' | 'signup';
@@ -95,7 +96,7 @@ export default function AuthForm({ mode, onSuccess }: AuthFormProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4">
       <Card className="w-full max-w-md modern-card">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
@@ -232,6 +233,7 @@ export default function AuthForm({ mode, onSuccess }: AuthFormProps) {
           </form>
         </CardContent>
       </Card>
+      <VerifiedCompanyBadge tooltipPosition="below" />
     </div>
   );
 }

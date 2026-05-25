@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { LoginCredentials } from '../models/auth';
 import { extractErrorMessage } from '../utils/errorUtils';
+import { VerifiedCompanyBadge } from '../components/common/VerifiedCompanyBadge';
 
 export function LoginScreen() {
   const { login } = useAuth();
@@ -142,6 +143,10 @@ export function LoginScreen() {
               )}
             </Pressable>
           </View>
+        </View>
+
+        <View className="mt-6 w-full max-w-md self-center">
+          <VerifiedCompanyBadge />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

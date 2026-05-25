@@ -24,6 +24,7 @@ import { isTauriApp } from '@/src/lib/isTauriApp';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { apiService } from '../services/ApiService';
 import { LandingNav } from '../components/landing/LandingNav';
+import { VerifiedCompanyBadge } from '../components/common/VerifiedCompanyBadge';
 import { extractErrorMessage } from '../utils/errorUtils';
 import { toast } from 'sonner';
 import {
@@ -644,6 +645,9 @@ export default function LandingPage() {
               <p className="text-muted-foreground text-sm">
                 Complete business management platform for modern enterprises.
               </p>
+              <div className="mt-4">
+                <VerifiedCompanyBadge align="left" />
+              </div>
             </div>
             <div>
               <h4 className="font-semibold mb-4">Product</h4>
@@ -757,7 +761,8 @@ export default function LandingPage() {
               </ul>
             </div>
           </div>
-          <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
+          <div className="border-t mt-8 flex flex-col items-center gap-4 pt-8 text-center text-sm text-muted-foreground">
+            <VerifiedCompanyBadge />
             <p>&copy; 2024 BizTrack. All rights reserved.</p>
           </div>
         </div>
