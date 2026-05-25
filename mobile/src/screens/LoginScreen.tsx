@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { LoginCredentials } from '../models/auth';
 import { extractErrorMessage } from '../utils/errorUtils';
 import { VerifiedCompanyBadge } from '../components/common/VerifiedCompanyBadge';
+import { BizTrackLogo } from '../components/brand/BizTrackLogo';
 
 export function LoginScreen() {
   const { login } = useAuth();
@@ -69,6 +70,10 @@ export function LoginScreen() {
         contentContainerClassName="min-h-full grow justify-center bg-slate-50 px-4 py-8"
         className="flex-1 bg-slate-50"
       >
+        <View className="mb-6 items-center">
+          <BizTrackLogo size="hero" />
+        </View>
+
         <View className="w-full max-w-md self-center rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <Text className="text-center text-2xl font-bold text-slate-900">
             Welcome Back

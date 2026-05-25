@@ -8,6 +8,7 @@ import { NetworkSyncProvider } from './src/contexts/NetworkSyncContext';
 import { RBACProvider } from './src/contexts/RBACContext';
 import { SidebarDrawerProvider } from './src/contexts/SidebarDrawerContext';
 import { LoginScreen } from './src/screens/LoginScreen';
+import { BizTrackLogo } from './src/components/brand/BizTrackLogo';
 import { CommerceDashboardScreen } from './src/screens/CommerceDashboardScreen';
 
 function RootBody() {
@@ -15,8 +16,9 @@ function RootBody() {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-slate-50">
-        <ActivityIndicator size="large" color="#2563eb" />
+      <View className="flex-1 items-center justify-center bg-slate-50 px-6">
+        <BizTrackLogo size="hero" />
+        <ActivityIndicator size="large" color="#2563eb" className="mt-8" />
         <Text className="mt-3 text-slate-600">Loading…</Text>
       </View>
     );
@@ -54,8 +56,9 @@ export default function App() {
       <SafeAreaView className="flex-1 bg-slate-50">
         <StatusBar style="dark" />
         {!hydrated ? (
-          <View className="flex-1 items-center justify-center bg-slate-50">
-            <ActivityIndicator size="large" color="#2563eb" />
+          <View className="flex-1 items-center justify-center bg-slate-50 px-6">
+            <BizTrackLogo size="hero" />
+            <ActivityIndicator size="large" color="#2563eb" className="mt-8" />
             <Text className="mt-3 text-slate-600">Starting…</Text>
           </View>
         ) : (

@@ -24,6 +24,7 @@ import { isTauriApp } from '@/src/lib/isTauriApp';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { apiService } from '../services/ApiService';
 import { LandingNav } from '../components/landing/LandingNav';
+import { BizTrackLogo } from '../components/brand/BizTrackLogo';
 import { VerifiedCompanyBadge } from '../components/common/VerifiedCompanyBadge';
 import { extractErrorMessage } from '../utils/errorUtils';
 import { toast } from 'sonner';
@@ -376,6 +377,9 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent"></div>
         <div className="container mx-auto relative z-10">
           <div className="text-center max-w-4xl mx-auto">
+            <div className="flex justify-center mb-8">
+              <BizTrackLogo size="hero" />
+            </div>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary border border-primary/20 mb-6">
               <Star className="h-4 w-4 fill-primary" />
               <span className="text-sm font-medium">
@@ -641,7 +645,7 @@ export default function LandingPage() {
         <div className="container mx-auto">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <h3 className="font-semibold text-lg mb-4">BizTrack</h3>
+              <BizTrackLogo size="md" showText className="mb-4" />
               <p className="text-muted-foreground text-sm">
                 Complete business management platform for modern enterprises.
               </p>

@@ -19,6 +19,7 @@ import { isTauriApp } from '@/src/lib/isTauriApp';
 import { useRBAC } from '../../contexts/RBACContext';
 import { getInitials } from '../../lib/utils';
 import NotificationBell from '../notifications/NotificationBell';
+import { BizTrackLogo } from '../brand/BizTrackLogo';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -74,6 +75,11 @@ export default function Header({ onMenuClick }: HeaderProps) {
           >
             <Menu className="h-5 w-5" />
           </Button>
+          <BizTrackLogo
+            size="sm"
+            href="/dashboard"
+            className="md:hidden"
+          />
         </div>
 
         {/* Right side - Notifications and User menu */}

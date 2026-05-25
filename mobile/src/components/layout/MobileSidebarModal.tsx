@@ -11,6 +11,7 @@ import { usePermissions } from '../../hooks/usePermissions';
 import type { SubMenuItemDef } from '../../navigation/sidebarMenuData';
 import { AppModal } from '../../components/layout/AppModal';
 import { VerifiedCompanyBadge } from '../common/VerifiedCompanyBadge';
+import { BizTrackLogo } from '../brand/BizTrackLogo';
 
 function subRolesAllowed(
   sub: SubMenuItemDef,
@@ -138,9 +139,9 @@ export function MobileSidebarModal({
           className="h-full w-[300px] max-w-[88%] border-r border-slate-200 bg-white"
         >
           <View className="border-b border-slate-200 px-4 pb-3 pt-2">
-            <Text className="text-center text-xl font-bold text-blue-600">
-              BizTrack
-            </Text>
+            <View className="items-center">
+              <BizTrackLogo size="md" />
+            </View>
             {planInfo || isSuperAdminNoTenant ? (
               <View className="mt-2">
                 <Text className="text-center text-xs text-slate-500">
@@ -400,9 +401,9 @@ export function MobileSidebarModal({
               <Ionicons name="log-out-outline" size={20} color="#334155" />
               <Text className="font-semibold text-slate-800">Sign out</Text>
             </Pressable>
-            <Text className="mt-2 text-center text-xs text-slate-400">
-              BizTrack
-            </Text>
+            <View className="mt-2 items-center opacity-70">
+              <BizTrackLogo size="sm" />
+            </View>
           </View>
         </SafeAreaView>
 

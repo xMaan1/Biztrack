@@ -55,6 +55,7 @@ import {
   Car,
 } from 'lucide-react';
 import { VerifiedCompanyBadge } from '@/src/components/common/VerifiedCompanyBadge';
+import { BizTrackLogo } from '../brand/BizTrackLogo';
 
 const SIDEBAR_STORAGE_SEARCH = 'biztrack:sidebar:search';
 const SIDEBAR_STORAGE_EXPANDED = 'biztrack:sidebar:expanded';
@@ -1004,9 +1005,7 @@ export default function Sidebar() {
     <div className="flex h-full min-h-0 w-full flex-col border-r border-gray-200 bg-white/95 shadow-xl backdrop-blur-md">
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-center">
-          <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            BizTrack
-          </h2>
+          <BizTrackLogo size="md" href="/dashboard" />
         </div>
         {planInfo && (
           <div className="mt-2 text-center">

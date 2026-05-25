@@ -24,6 +24,13 @@ export const metadata: Metadata = {
   title: 'BizTrack - Project Management System',
   description:
     'Professional project management and team collaboration platform',
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/biztrack-icon.png', type: 'image/png', sizes: '256x256' },
+    ],
+    apple: '/apple-icon.png',
+  },
 };
 
 export const viewport: Viewport = {
