@@ -3,12 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '../components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -23,20 +17,74 @@ import { useAuth } from '../contexts/AuthContext';
 import { isTauriApp } from '@/src/lib/isTauriApp';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { apiService } from '../services/ApiService';
+import dynamic from 'next/dynamic';
 import { LandingNav } from '../components/landing/LandingNav';
+import { LazyLandingSection } from '../components/landing/LazyLandingSection';
 import { BizTrackLogo } from '../components/brand/BizTrackLogo';
 import { VerifiedCompanyBadge } from '../components/common/VerifiedCompanyBadge';
+import type { LandingPlan } from '../components/landing/LandingPricingSection';
+
+const ProductCrmOverviewSection = dynamic(
+  () =>
+    import('../components/landing/ProductCrmOverviewSection').then((m) => ({
+      default: m.ProductCrmOverviewSection,
+    })),
+  { ssr: false },
+);
+
+const FeaturesSection = dynamic(
+  () =>
+    import('../components/landing/FeaturesSection').then((m) => ({
+      default: m.FeaturesSection,
+    })),
+  { ssr: false },
+);
+
+const ReviewsReputationSection = dynamic(
+  () =>
+    import('../components/landing/ReviewsReputationSection').then((m) => ({
+      default: m.ReviewsReputationSection,
+    })),
+  { ssr: false },
+);
+
+const ImpactCommitmentSection = dynamic(
+  () =>
+    import('../components/landing/ImpactCommitmentSection').then((m) => ({
+      default: m.ImpactCommitmentSection,
+    })),
+  { ssr: false },
+);
+
+const CompanyVerificationSection = dynamic(
+  () =>
+    import('../components/landing/CompanyVerificationSection').then((m) => ({
+      default: m.CompanyVerificationSection,
+    })),
+  { ssr: false },
+);
+
+const LandingCtaSection = dynamic(
+  () =>
+    import('../components/landing/LandingCtaSection').then((m) => ({
+      default: m.LandingCtaSection,
+    })),
+  { ssr: false },
+);
+
+const LandingPricingSection = dynamic(
+  () =>
+    import('../components/landing/LandingPricingSection').then((m) => ({
+      default: m.LandingPricingSection,
+    })),
+  { ssr: false },
+);
 import { extractErrorMessage } from '../utils/errorUtils';
 import { toast } from 'sonner';
 import {
-  Check,
   Star,
   Users,
   FolderOpen,
-  BarChart3,
-  Shield,
-  Zap,
-  Globe,
   ArrowRight,
   Loader2,
   CheckCircle,
@@ -278,74 +326,11 @@ export default function LandingPage() {
     }
   };
 
-  const features = [
-    {
-      icon: FolderOpen,
-      title: 'Project Management',
-      description:
-        'Plan, track, and manage projects with ease. Set milestones, assign tasks, and monitor progress in real-time.',
-    },
-    {
-      icon: Users,
-      title: 'Team Collaboration',
-      description:
-        'Work together seamlessly with team chat, file sharing, and real-time collaboration tools.',
-    },
-    {
-      icon: BarChart3,
-      title: 'Advanced Analytics',
-      description:
-        'Get insights into your business performance with comprehensive dashboards and reports.',
-    },
-    {
-      icon: Shield,
-      title: 'Enterprise Security',
-      description:
-        'Bank-level security with role-based access control, audit logs, and data encryption.',
-    },
-    {
-      icon: Zap,
-      title: 'Automation',
-      description:
-        'Automate repetitive tasks and workflows to boost productivity and reduce errors.',
-    },
-    {
-      icon: Globe,
-      title: 'Multi-tenant',
-      description:
-        'Scale your business with our robust multi-tenant architecture designed for growth.',
-    },
-  ];
-
   const stats = [
     { label: 'Active Users', value: '10,000+', icon: Users },
     { label: 'Projects Managed', value: '50,000+', icon: FolderOpen },
     { label: 'Uptime', value: '99.9%', icon: CheckCircle },
     { label: 'Customer Satisfaction', value: '4.9/5', icon: Star },
-  ];
-
-  const testimonials = [
-    {
-      name: 'Sarah Johnson',
-      role: 'CEO, TechFlow Solutions',
-      content:
-        'BizTrack transformed our business operations. The project management and analytics features are game-changers.',
-      rating: 5,
-    },
-    {
-      name: 'Michael Chen',
-      role: 'Operations Manager, Global Manufacturing',
-      content:
-        'We\'ve increased productivity by 40% since implementing BizTrack. The automation features are incredible.',
-      rating: 5,
-    },
-    {
-      name: 'Emily Rodriguez',
-      role: 'HR Director, Healthcare Plus',
-      content:
-        'The multi-tenant setup and security features give us peace of mind while managing multiple locations.',
-      rating: 5,
-    },
   ];
 
   if (desktopApp) {
@@ -368,40 +353,40 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      {/* Navigation */}
+    <div className="min-h-screen bg-white">
       <LandingNav />
 
-      {/* Hero Section */}
-      <section className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent"></div>
-        <div className="container mx-auto relative z-10">
-          <div className="text-center max-w-4xl mx-auto">
-            <div className="flex justify-center mb-8">
+      <section className="relative py-16 sm:py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/80 via-white to-emerald-50/50" />
+        <div className="container mx-auto relative z-10 max-w-4xl">
+          <div className="text-center mx-auto">
+            <div className="flex justify-center mb-6 sm:mb-8">
               <BizTrackLogo size="hero" />
             </div>
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary border border-primary/20 mb-6">
-              <Star className="h-4 w-4 fill-primary" />
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80 mb-6">
+              <Star className="h-4 w-4 fill-emerald-600 text-emerald-600" />
               <span className="text-sm font-medium">
                 Trusted by 10,000+ businesses
               </span>
             </div>
 
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-6 bg-gradient-to-r from-foreground via-foreground to-primary bg-clip-text text-transparent">
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight mb-6 text-slate-900">
               Complete Business
-              <span className="block">Management Platform</span>
+              <span className="block bg-gradient-to-r from-blue-700 to-emerald-600 bg-clip-text text-transparent">
+                Management Platform
+              </span>
             </h1>
 
-            <p className="text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto mb-8 leading-relaxed">
+            <p className="text-lg sm:text-xl text-slate-600 max-w-3xl mx-auto mb-8 leading-relaxed">
               Streamline your business operations with our comprehensive ERP
               solution. Manage projects, sales, HR, inventory, and more from a
               single dashboard.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-10 sm:mb-12">
               <Button
                 size="lg"
-                className="text-lg px-8 py-6 h-auto"
+                className="text-base sm:text-lg px-8 py-6 h-auto bg-blue-600 hover:bg-blue-700"
                 onClick={() => router.push('/signup')}
               >
                 Start Free Trial
@@ -410,10 +395,10 @@ export default function LandingPage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="text-lg px-8 py-6 h-auto"
+                className="text-base sm:text-lg px-8 py-6 h-auto border-blue-200 text-blue-800 hover:bg-blue-50"
                 onClick={() =>
                   document
-                    .getElementById('features')
+                    .getElementById('overview')
                     ?.scrollIntoView({ behavior: 'smooth' })
                 }
               >
@@ -421,17 +406,19 @@ export default function LandingPage() {
               </Button>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8 max-w-4xl mx-auto">
               {stats.map((stat, index) => (
-                <div key={index} className="text-center">
+                <div
+                  key={index}
+                  className="rounded-xl border border-slate-200/80 bg-white/80 px-3 py-4 sm:p-4 shadow-sm"
+                >
                   <div className="flex justify-center mb-2">
-                    <stat.icon className="h-8 w-8 text-primary" />
+                    <stat.icon className="h-7 w-7 sm:h-8 sm:w-8 text-blue-600" />
                   </div>
-                  <div className="text-2xl font-bold text-foreground">
+                  <div className="text-xl sm:text-2xl font-bold text-slate-900">
                     {stat.value}
                   </div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-xs sm:text-sm text-slate-500">
                     {stat.label}
                   </div>
                 </div>
@@ -441,204 +428,38 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="py-24 px-4 sm:px-6 lg:px-8 bg-muted/30">
-        <div className="container mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
-              Everything You Need to Succeed
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Powerful features designed to streamline your business operations
-              and boost productivity
-            </p>
-          </div>
+      <LazyLandingSection minHeight="min-h-[400px]">
+        <ProductCrmOverviewSection />
+      </LazyLandingSection>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-            {features.map((feature, index) => (
-              <Card
-                key={index}
-                className="group hover:shadow-lg transition-all duration-300 border-0 bg-card/50 backdrop-blur-sm"
-              >
-                <CardHeader className="text-center pb-4">
-                  <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                    <feature.icon className="h-8 w-8 text-primary" />
-                  </div>
-                  <CardTitle className="text-xl">{feature.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground text-center leading-relaxed">
-                    {feature.description}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+      <LazyLandingSection minHeight="min-h-[480px]">
+        <FeaturesSection />
+      </LazyLandingSection>
 
-      {/* Pricing Section */}
-      <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8">
-        <div className="container mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
-              Choose Your Plan
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Start free and scale as you grow. All plans include a 14-day free
-              trial.
-            </p>
-          </div>
+      <LazyLandingSection minHeight="min-h-[520px]">
+        <ReviewsReputationSection />
+      </LazyLandingSection>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {plans.map((plan) => (
-              <Card
-                key={plan.id}
-                className={`relative group hover:shadow-xl transition-all duration-300 ${
-                  plan.planType === 'enterprise'
-                    ? 'border-primary shadow-lg scale-105'
-                    : 'border-border hover:border-primary/50'
-                }`}
-              >
-                {plan.planType === 'enterprise' && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-primary text-primary-foreground px-4 py-2 text-sm">
-                      Most Popular
-                    </Badge>
-                  </div>
-                )}
+      <LazyLandingSection minHeight="min-h-[480px]">
+        <ImpactCommitmentSection />
+      </LazyLandingSection>
 
-                <CardHeader className="text-center pb-6">
-                  <CardTitle className="text-2xl mb-2">{plan.name}</CardTitle>
-                  <div className="text-4xl font-bold text-foreground mb-2">
-                    {getCurrencySymbol()}{plan.price}
-                    <span className="text-lg font-normal text-muted-foreground">
-                      /month
-                    </span>
-                  </div>
-                  <p className="text-muted-foreground">{plan.description}</p>
-                </CardHeader>
+      <LazyLandingSection minHeight="min-h-[360px]">
+        <CompanyVerificationSection />
+      </LazyLandingSection>
 
-                <CardContent className="space-y-6">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Projects</span>
-                      <span className="font-medium">{plan.maxProjects}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">
-                        Team Members
-                      </span>
-                      <span className="font-medium">{plan.maxUsers}</span>
-                    </div>
-                  </div>
+      <LazyLandingSection minHeight="min-h-[280px]">
+        <LandingCtaSection />
+      </LazyLandingSection>
 
-                  <div className="space-y-3">
-                    {plan.features.slice(0, 6).map((feature, index) => (
-                      <div key={index} className="flex items-center space-x-3">
-                        <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-                        <span className="text-sm text-muted-foreground">
-                          {feature}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <Button
-                    className={`w-full group-hover:scale-105 transition-transform bg-blue-600 hover:bg-blue-700 ${
-                      plan.planType === 'enterprise' ? 'shadow-lg' : ''
-                    }`}
-                    onClick={() => handleSubscribe(plan)}
-                  >
-                    {isAuthenticated ? 'Create Workspace' : 'Start Free Trial'}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-muted/30">
-        <div className="container mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
-              Loved by Businesses Worldwide
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              See what our customers have to say about their experience
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {testimonials.map((testimonial, index) => (
-              <Card
-                key={index}
-                className="text-center border-0 bg-card/50 backdrop-blur-sm"
-              >
-                <CardContent className="pt-6">
-                  <div className="flex justify-center mb-4">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className="h-5 w-5 text-yellow-400 fill-yellow-400"
-                      />
-                    ))}
-                  </div>
-                  <p className="text-muted-foreground mb-4 italic">
-                    "{testimonial.content}"
-                  </p>
-                  <div>
-                    <div className="font-semibold text-foreground">
-                      {testimonial.name}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {testimonial.role}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
-        <div className="container mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
-            Ready to Transform Your Business?
-          </h2>
-          <p className="text-xl mb-8 opacity-90 max-w-3xl mx-auto">
-            Join thousands of companies already using BizTrack to streamline
-            their operations and boost productivity
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              size="lg"
-              variant="secondary"
-              className="text-lg px-8 py-6 h-auto"
-              onClick={() => router.push('/signup')}
-            >
-              Get Started Today
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="text-lg px-8 py-6 h-auto border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary"
-              onClick={() =>
-                document
-                  .getElementById('pricing')
-                  ?.scrollIntoView({ behavior: 'smooth' })
-              }
-            >
-              View Pricing
-            </Button>
-          </div>
-        </div>
-      </section>
+      <LazyLandingSection minHeight="min-h-[400px]">
+        <LandingPricingSection
+          plans={plans as LandingPlan[]}
+          currencySymbol={getCurrencySymbol()}
+          isAuthenticated={isAuthenticated}
+          onSubscribe={handleSubscribe}
+        />
+      </LazyLandingSection>
 
       {/* Footer */}
       <footer className="py-16 px-4 sm:px-6 lg:px-8 border-t bg-muted/50">
@@ -656,6 +477,14 @@ export default function LandingPage() {
             <div>
               <h4 className="font-semibold mb-4">Product</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>
+                  <a
+                    href="#overview"
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Overview
+                  </a>
+                </li>
                 <li>
                   <a
                     href="#features"
@@ -695,6 +524,30 @@ export default function LandingPage() {
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
                   <a
+                    href="#csr"
+                    className="hover:text-foreground transition-colors"
+                  >
+                    CSR
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#verification"
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Verification
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#reviews"
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Reviews
+                  </a>
+                </li>
+                <li>
+                  <a
                     href="#"
                     className="hover:text-foreground transition-colors"
                   >
@@ -719,7 +572,7 @@ export default function LandingPage() {
                 </li>
                 <li>
                   <a
-                    href="#"
+                    href="#contact"
                     className="hover:text-foreground transition-colors"
                   >
                     Contact

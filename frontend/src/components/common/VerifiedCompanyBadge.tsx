@@ -44,7 +44,7 @@ export function VerifiedCompanyBadge({
         id="verified-company-details"
         role="tooltip"
         className={cn(
-          'pointer-events-none absolute z-50 w-72 max-w-[calc(100vw-2rem)] rounded-lg border border-slate-200 bg-white p-3 text-left shadow-lg',
+          'pointer-events-none absolute z-[100] w-72 max-w-[calc(100vw-2rem)] rounded-lg border border-slate-200 bg-white p-3 text-left shadow-xl',
           'opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100',
           tooltipPosition === 'above' ? 'bottom-full mb-2' : 'top-full mt-2',
           align === 'center' ? 'left-1/2 -translate-x-1/2' : 'left-0',
