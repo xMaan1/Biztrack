@@ -1925,7 +1925,10 @@ async def delete_customer_endpoint(
     """Delete customer - delegates to CRM module"""
     if not tenant_context:
         raise HTTPException(status_code=400, detail="Tenant context required")
-    success = delete_customer(db, customer_id, tenant_context["tenant_id"])
+    try:
+        success = delete_customer(db, customer_id, tenant_context["tenant_id"])
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))
     if not success:
         raise HTTPException(status_code=404, detail="Customer not found")
     return {"message": "Customer deleted successfully"}

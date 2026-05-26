@@ -1,8 +1,10 @@
 'use client';
 
-import Image from 'next/image';
-import Link from 'next/link';
 import { Button } from '../ui/button';
+import {
+  CharityPartnerCard,
+  type CharityPartner,
+} from './CharityPartnerCard';
 import {
   Card,
   CardContent,
@@ -11,28 +13,28 @@ import {
 } from '../ui/card';
 import { Heart, Leaf, Recycle, FileX2, ArrowRight } from 'lucide-react';
 
-const CHARITY_PARTNERS = [
+const CHARITY_PARTNERS: CharityPartner[] = [
   {
     name: 'Hopeful Welfare Foundation',
     href: 'https://hopefulwelfare.org/',
     logo: '/partners/hopeful-welfare-foundation.png',
-    width: 180,
-    height: 183,
-    logoClassName: 'h-16 w-auto max-w-[180px] object-contain',
-    tileClassName:
-      'bg-gradient-to-br from-sky-50 to-sky-100/90 border-sky-200/80',
+    width: 1378,
+    height: 1118,
+    label: 'Hopeful Welfare Foundation',
+    imageQuality: 100,
+    unoptimized: true,
+    logoFrameClassName: 'bg-gradient-to-br from-white to-slate-50',
   },
   {
     name: 'IKCA',
-    fullName: 'Imran Khan Cancer Appeal',
     href: 'https://www.ikca.org.uk/',
     logo: '/partners/ikca.png',
     width: 161,
     height: 78,
-    logoClassName: 'h-14 w-auto max-w-[200px] object-contain',
-    tileClassName: 'bg-background',
+    label: 'Imran Khan Cancer Appeal',
+    logoClassName: 'max-h-[3.25rem] max-w-[11rem]',
   },
-] as const;
+];
 
 const SUSTAINABILITY_ITEMS = [
   {
@@ -96,28 +98,9 @@ export function ImpactCommitmentSection() {
                 <p className="text-sm font-medium text-foreground mb-4">
                   Partner organizations we support
                 </p>
-                <div className="flex flex-col sm:flex-row gap-6 items-center justify-center sm:justify-start">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
                   {CHARITY_PARTNERS.map((partner) => (
-                    <Link
-                      key={partner.name}
-                      href={partner.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`flex flex-col items-center gap-2 rounded-xl border border-border/60 px-5 py-4 transition-colors hover:border-primary/40 hover:shadow-sm ${partner.tileClassName}`}
-                    >
-                      <Image
-                        src={partner.logo}
-                        alt={partner.name}
-                        width={partner.width}
-                        height={partner.height}
-                        className={partner.logoClassName}
-                      />
-                      <span className="text-xs font-medium text-muted-foreground text-center">
-                        {'fullName' in partner && partner.fullName
-                          ? partner.fullName
-                          : partner.name}
-                      </span>
-                    </Link>
+                    <CharityPartnerCard key={partner.name} partner={partner} />
                   ))}
                 </div>
               </div>

@@ -5,6 +5,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func, desc, cast, String, extract
 from sqlalchemy.exc import IntegrityError
 from .crm_models import Lead, Contact, Company, Opportunity, SalesActivity, Customer, CustomerGuarantor
+from .job_card_models import JobCard
+from .vehicle_models import Vehicle
 from .core_models import User
 from .database_config import get_db
 from ..services.s3_service import s3_service
@@ -360,18 +362,45 @@ def update_customer(db: Session, customer_id: str, customer_data: Dict[str, Any]
         raise
 
 def delete_customer(db: Session, customer_id: str, tenant_id: str) -> bool:
-    """Delete customer"""
     customer = get_customer_by_id(db, customer_id, tenant_id)
     if not customer:
+        return False
+
+    try:
+        cust_uuid = uuid.UUID(str(customer_id))
+        tenant_uuid = uuid.UUID(str(tenant_id))
+    except (ValueError, TypeError):
         return False
 
     _delete_s3_for_file_url(customer.image_url)
     for att in (customer.attachments or []):
         _delete_s3_for_file_url(_attachment_url_from_stored(att))
 
-    db.delete(customer)
-    db.commit()
-    return True
+    try:
+        db.query(CustomerGuarantor).filter(
+            and_(
+                CustomerGuarantor.customer_id == cust_uuid,
+                CustomerGuarantor.tenant_id == tenant_uuid,
+            )
+        ).delete(synchronize_session=False)
+
+        db.query(JobCard).filter(
+            and_(JobCard.customer_id == cust_uuid, JobCard.tenant_id == tenant_uuid)
+        ).update({JobCard.customer_id: None}, synchronize_session=False)
+
+        db.query(Vehicle).filter(
+            and_(Vehicle.customer_id == cust_uuid, Vehicle.tenant_id == tenant_uuid)
+        ).update({Vehicle.customer_id: None}, synchronize_session=False)
+
+        db.delete(customer)
+        db.commit()
+        return True
+    except IntegrityError as e:
+        db.rollback()
+        raise ValueError(
+            "Cannot delete customer because related records still reference them. "
+            "Remove or reassign linked records first."
+        ) from e
 
 def get_customer_stats(db: Session, tenant_id: str, scope_user_id: Optional[str] = None) -> Dict[str, Any]:
     """Get customer statistics"""
