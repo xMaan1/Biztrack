@@ -1,4 +1,6 @@
-from fastapi import FastAPI, Request, Response, HTTPException, status
+from fastapi import FastAPI, Request, Response, HTTPException, status, Depends
+from sqlalchemy.orm import Session
+from sqlalchemy import and_
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -8,7 +10,7 @@ import logging
 # Configure logging
 logger = logging.getLogger(__name__)
 
-from .config.database import create_tables, get_plans
+from .config.database import create_tables, get_plans, get_db
 from .api.v1 import auth, users, projects, tasks, tenants, plans, sales, crm, hrm, healthcare, custom_options, invoices, invoice_customization, installments, delivery_notes, pos, inventory, subscriptions, work_orders, job_cards, vehicles, production, quality_control, maintenance, ledger, admin, file_upload, deduct_stock, customer_import, dashboard, investments, reports, notifications, banking, rbac_users, events, profile
 from .core.security import security_middleware
 from .core.tenant_middleware import tenant_middleware
@@ -17,7 +19,6 @@ from .core.monitoring import system_monitor, perform_health_check
 from .core.error_handling import error_handler
 from .core.security import security_middleware as security_middleware_instance
 from fastapi.exceptions import RequestValidationError
-from sqlalchemy.orm import Session
 
 app = FastAPI(title="BizTrack - Project Management & Sales API", version="1.0.0")
 
@@ -295,3 +296,48 @@ async def get_public_plans():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch plans"
         )
+
+
+@app.get("/public/invoices/{invoice_id}/pdf")
+async def public_invoice_pdf(
+    invoice_id: str,
+    token: str,
+    db: Session = Depends(get_db),
+):
+    from .services.invoice_share import verify_invoice_share_token
+    from .config.invoice_models import Invoice
+    from .api.v1.pdf_generator_modern import generate_modern_invoice_pdf
+
+    payload = verify_invoice_share_token(token)
+    if str(payload.get("invoice_id")) != str(invoice_id):
+        raise HTTPException(status_code=404, detail="Invoice not found")
+
+    invoice = db.query(Invoice).filter(
+        and_(
+            Invoice.id == invoice_id,
+            Invoice.tenant_id == payload["tenant_id"],
+        )
+    ).first()
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+
+    try:
+        pdf_content = generate_modern_invoice_pdf(invoice, db)
+    except ValueError as e:
+        if "customization is required" in str(e):
+            raise HTTPException(
+                status_code=400,
+                detail="Invoice PDF is not available for this invoice.",
+            )
+        raise HTTPException(status_code=500, detail="Failed to generate invoice PDF")
+    except Exception as e:
+        logger.error(f"Public invoice PDF error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate invoice PDF")
+
+    return Response(
+        content=pdf_content,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'inline; filename="invoice-{invoice.invoiceNumber}.pdf"'
+        },
+    )

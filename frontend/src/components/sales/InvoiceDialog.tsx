@@ -38,6 +38,7 @@ import { Vehicle } from '../../models/workshop';
 import { Product } from '../../models/pos';
 import { apiService } from '../../services/ApiService';
 import { usePlanInfo } from '../../hooks/usePlanInfo';
+import { resolveCustomerPhone } from '@/src/utils/phoneUtils';
 
 export type InstallmentPlanCreateOption = Omit<InstallmentPlanCreate, 'invoice_id'>;
 
@@ -166,6 +167,7 @@ export function InvoiceDialog({
         customerId: invoice.customerId,
         customerName: invoice.customerName,
         customerEmail: invoice.customerEmail,
+        customerPhone: invoice.customerPhone || '',
         shippingAddress: invoice.shippingAddress || '',
         issueDate: invoice.issueDate,
         dueDate: invoice.dueDate,
@@ -296,12 +298,12 @@ export function InvoiceDialog({
     setSelectedCustomer(customer);
 
     if (customer) {
-      // Update form data with customer information
       setFormData((prev) => ({
         ...prev,
         customerId: customer.id,
         customerName: `${customer.firstName} ${customer.lastName}`,
         customerEmail: customer.email,
+        customerPhone: resolveCustomerPhone(customer),
       }));
 
       // Clear customer-related errors
@@ -318,6 +320,7 @@ export function InvoiceDialog({
         customerId: '',
         customerName: '',
         customerEmail: '',
+        customerPhone: '',
       }));
     }
   };

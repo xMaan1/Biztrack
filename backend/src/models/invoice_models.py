@@ -104,6 +104,7 @@ class InvoiceCreate(BaseModel):
     customerId: str
     customerName: str
     customerEmail: Optional[str] = None
+    customerPhone: Optional[str] = None
     billingAddress: Optional[str] = None
     shippingAddress: Optional[str] = None
     issueDate: str
@@ -134,8 +135,10 @@ class InvoiceCreate(BaseModel):
     partsTotal: Optional[float] = 0.0
 
 class InvoiceUpdate(BaseModel):
+    customerId: Optional[str] = None
     customerName: Optional[str] = None
     customerEmail: Optional[str] = None
+    customerPhone: Optional[str] = None
     shippingAddress: Optional[str] = None
     issueDate: Optional[str] = None
     dueDate: Optional[str] = None

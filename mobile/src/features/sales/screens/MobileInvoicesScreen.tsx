@@ -320,7 +320,7 @@ export function MobileInvoicesScreen() {
   const handleWhatsApp = async () => {
     if (!selected) return;
     try {
-      const res = await sendInvoiceWhatsApp(selected.id);
+      const res = await sendInvoiceWhatsApp(selected.id, { pickContact: true });
       if (res.whatsapp_url) {
         await Linking.openURL(res.whatsapp_url);
       }

@@ -105,6 +105,7 @@ export interface InvoiceCreate {
   customerId: string;
   customerName: string;
   customerEmail: string;
+  customerPhone?: string;
   shippingAddress?: string;
   issueDate: string;
   dueDate: string;
@@ -141,6 +142,7 @@ export interface InvoiceCreate {
 export interface InvoiceUpdate {
   customerName?: string;
   customerEmail?: string;
+  customerPhone?: string;
   shippingAddress?: string;
   issueDate?: string;
   dueDate?: string;

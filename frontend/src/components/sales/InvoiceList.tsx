@@ -79,9 +79,9 @@ export function InvoiceList({
   const [selectedInvoices, setSelectedInvoices] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState<string | null>(null);
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
-  const [sendingWhatsApp, setSendingWhatsApp] = useState<string | null>(null);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [selectedInvoiceForEmail, setSelectedInvoiceForEmail] = useState<Invoice | null>(null);
+  const [sharingWhatsApp, setSharingWhatsApp] = useState<string | null>(null);
 
   const handleSendEmail = (invoice: Invoice) => {
     setSelectedInvoiceForEmail(invoice);
@@ -107,60 +107,39 @@ export function InvoiceList({
     }
   };
 
-  const handleSendWhatsApp = async (invoice: Invoice) => {
-    if (!invoice.customerPhone) {
-      toast.error('Customer phone number is required to send invoice via WhatsApp');
-      return;
-    }
+  const openWhatsAppShare = (url: string) => {
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.target = '_blank';
+    anchor.rel = 'noopener noreferrer';
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+  };
 
+  const handleShareWhatsApp = async (invoice: Invoice) => {
+    setSharingWhatsApp(invoice.id);
     try {
-      setSendingWhatsApp(invoice.id);
-      const response = await InvoiceService.sendInvoiceWhatsApp(invoice.id);
-      window.open(response.whatsapp_url, '_blank');
-      toast.success('Opening WhatsApp...');
-    } catch (error: any) {
-      const errorMessage = extractErrorMessage(error, 'Failed to generate WhatsApp link');
-      toast.error(errorMessage);
+      const res = await InvoiceService.sendInvoiceWhatsApp(invoice.id, {
+        pickContact: true,
+      });
+      openWhatsAppShare(res.whatsapp_url);
+    } catch (error: unknown) {
+      toast.error(
+        extractErrorMessage(error, 'Could not open WhatsApp'),
+      );
     } finally {
-      setSendingWhatsApp(null);
+      setSharingWhatsApp(null);
     }
   };
 
   const handleBulkSendWhatsApp = async () => {
-    if (selectedInvoices.size === 0) return;
-    
-    const selectedInvoiceData = invoices.filter(inv => selectedInvoices.has(inv.id));
-    
-    if (selectedInvoiceData.length === 0) return;
-    
-    const invoicesWithPhone = selectedInvoiceData.filter(inv => inv.customerPhone);
-    
-    if (invoicesWithPhone.length === 0) {
-      toast.error('None of the selected invoices have customer phone numbers');
+    if (selectedInvoices.size !== 1) {
+      toast.info('Select one invoice, then use Share on WhatsApp.');
       return;
     }
-    
-    if (invoicesWithPhone.length !== selectedInvoiceData.length) {
-      toast.warning(`${selectedInvoiceData.length - invoicesWithPhone.length} invoice(s) skipped (no phone number)`);
-    }
-    
-    setBulkLoading('whatsapp');
-    try {
-      for (const invoice of invoicesWithPhone) {
-        try {
-          const response = await InvoiceService.sendInvoiceWhatsApp(invoice.id);
-          window.open(response.whatsapp_url, '_blank');
-          await new Promise(resolve => setTimeout(resolve, 500));
-        } catch (error) {
-          console.error(`Failed to send WhatsApp for invoice ${invoice.invoiceNumber}:`, error);
-        }
-      }
-      toast.success(`Opening WhatsApp for ${invoicesWithPhone.length} invoice(s)...`);
-    } catch (error) {
-      toast.error('Failed to generate WhatsApp links');
-    } finally {
-      setBulkLoading(null);
-    }
+    const invoice = invoices.find((inv) => selectedInvoices.has(inv.id));
+    if (invoice) await handleShareWhatsApp(invoice);
   };
 
   const handleDownload = async (invoiceId: string) => {
@@ -534,24 +513,22 @@ export function InvoiceList({
                           </>
                         )}
                       </DropdownMenuItem>
-                      {invoice.customerPhone && (
-                        <DropdownMenuItem
-                          onClick={() => handleSendWhatsApp(invoice)}
-                          disabled={sendingWhatsApp === invoice.id}
-                        >
-                          {sendingWhatsApp === invoice.id ? (
-                            <>
-                              <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-green-600" />
-                              Opening WhatsApp...
-                            </>
-                          ) : (
-                            <>
-                              <MessageCircle className="h-4 w-4 mr-2" />
-                              Send via WhatsApp
-                            </>
-                          )}
-                        </DropdownMenuItem>
-                      )}
+                      <DropdownMenuItem
+                        onClick={() => void handleShareWhatsApp(invoice)}
+                        disabled={sharingWhatsApp === invoice.id}
+                      >
+                        {sharingWhatsApp === invoice.id ? (
+                          <>
+                            <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-green-600" />
+                            Opening…
+                          </>
+                        ) : (
+                          <>
+                            <MessageCircle className="h-4 w-4 mr-2" />
+                            Share on WhatsApp
+                          </>
+                        )}
+                      </DropdownMenuItem>
                       {invoice.status === 'sent' && (
                         <DropdownMenuItem
                           onClick={() => onMarkAsPaid(invoice.id)}
@@ -626,6 +603,7 @@ export function InvoiceList({
         invoice={selectedInvoiceForEmail}
         onSend={handleEmailSend}
       />
+
     </div>
   );
 }
