@@ -39,6 +39,9 @@ import { Product } from '../../models/pos';
 import { apiService } from '../../services/ApiService';
 import { usePlanInfo } from '../../hooks/usePlanInfo';
 import { resolveCustomerPhone } from '@/src/utils/phoneUtils';
+import { getCustomerDisplayName } from '@/src/utils/customerUtils';
+import { CreateCustomerDialog } from '../crm/CreateCustomerDialog';
+import { UserPlus } from 'lucide-react';
 
 export type InstallmentPlanCreateOption = Omit<InstallmentPlanCreate, 'invoice_id'>;
 
@@ -119,6 +122,7 @@ export function InvoiceDialog({
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [showCreateCustomerDialog, setShowCreateCustomerDialog] = useState(false);
 
   // Update currency when global currency changes
   useEffect(() => {
@@ -301,7 +305,7 @@ export function InvoiceDialog({
       setFormData((prev) => ({
         ...prev,
         customerId: customer.id,
-        customerName: `${customer.firstName} ${customer.lastName}`,
+        customerName: getCustomerDisplayName(customer),
         customerEmail: customer.email,
         customerPhone: resolveCustomerPhone(customer),
       }));
@@ -468,6 +472,7 @@ export function InvoiceDialog({
   );
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -717,15 +722,30 @@ export function InvoiceDialog({
                 Customer Information
               </CardTitle>
             </CardHeader>
-            <CardContent className="overflow-visible">
-              <CustomerSearch
-                value={selectedCustomer}
-                onSelect={handleCustomerSelect}
-                placeholder="Search for existing customers..."
-                label="Select Customer"
-                required={true}
-                error={errors.customer}
-              />
+            <CardContent className="overflow-visible space-y-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+                <div className="flex-1 min-w-0">
+                  <CustomerSearch
+                    value={selectedCustomer}
+                    onSelect={handleCustomerSelect}
+                    placeholder="Search for existing customers..."
+                    label="Select Customer"
+                    required={true}
+                    error={errors.customer}
+                  />
+                </div>
+                {mode !== 'view' && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="shrink-0"
+                    onClick={() => setShowCreateCustomerDialog(true)}
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    New Customer
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </Card>
 
@@ -1428,5 +1448,14 @@ export function InvoiceDialog({
         )}
       </DialogContent>
     </Dialog>
+
+    <CreateCustomerDialog
+      open={showCreateCustomerDialog}
+      onOpenChange={setShowCreateCustomerDialog}
+      onCreated={(customer) => {
+        handleCustomerSelect(customer);
+      }}
+    />
+    </>
   );
 }

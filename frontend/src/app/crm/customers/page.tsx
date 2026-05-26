@@ -27,7 +27,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/src/components/ui/dialog';
 import {
   Table,
@@ -84,6 +83,14 @@ import fileUploadService from '@/src/services/FileUploadService';
 import { DashboardLayout } from '../../../components/layout';
 import { toast } from 'sonner';
 import CustomerImportDialog from '../../../components/crm/CustomerImportDialog';
+import { CreateCustomerDialog } from '@/src/components/crm/CreateCustomerDialog';
+import { CustomerTypeNameFields } from '@/src/components/crm/CustomerTypeNameFields';
+import {
+  buildCustomerCreatePayload,
+  getCustomerDisplayName,
+  isBusinessPlaceholderLastName,
+  validateCustomerNameFields,
+} from '@/src/utils/customerUtils';
 import { extractErrorMessage } from '@/src/utils/errorUtils';
 import { Camera, X, UserPlus } from 'lucide-react';
 import { Textarea } from '@/src/components/ui/textarea';
@@ -147,12 +154,8 @@ function CustomersContent() {
     relation: '',
   });
   const [editingGuarantorId, setEditingGuarantorId] = useState<string | null>(null);
-  const [createGuarantors, setCreateGuarantors] = useState<GuarantorCreate[]>([]);
-  const [guarantorDialogSource, setGuarantorDialogSource] = useState<'create' | 'edit'>('edit');
-  const [editingCreateGuarantorIndex, setEditingCreateGuarantorIndex] = useState<number | null>(null);
   const [photoRemoved, setPhotoRemoved] = useState(false);
   const customerPhotoInputRef = React.useRef<HTMLInputElement>(null);
-  const attachmentFileInputCreateRef = React.useRef<HTMLInputElement>(null);
   const attachmentFileInputEditRef = React.useRef<HTMLInputElement>(null);
   const [attachmentUploading, setAttachmentUploading] = useState(false);
 
@@ -198,44 +201,17 @@ function CustomersContent() {
     }
   };
 
-  const handleCreateCustomer = async () => {
-    try {
-      if (!formData.firstName || !formData.lastName) {
-        toast.error('Please fill in all required fields (First Name, Last Name)');
-        return;
-      }
-      const payload: CustomerCreate = {
-        ...formData,
-        emails: (formData.emails || []).filter((e) => e.value.trim()),
-        phones: (formData.phones || []).filter((p) => p.value.trim()),
-      };
-      const created = await CustomerService.createCustomer(payload);
-      if (customerPhotoPreview) {
-        try {
-          await CustomerService.uploadCustomerPhoto(created.id, customerPhotoPreview);
-        } catch (photoErr) {
-          toast.warning(extractErrorMessage(photoErr, 'Customer created but photo upload failed'));
-        }
-      }
-      for (const g of createGuarantors) {
-        try {
-          await crmService.createGuarantor(created.id, g);
-        } catch (guarErr) {
-          toast.warning(extractErrorMessage(guarErr, 'Customer created but one or more guarantors could not be added'));
-        }
-      }
-      toast.success('Customer created successfully');
-      setIsCreateDialogOpen(false);
-      resetForm();
-      loadCustomers();
-      loadStats();
-    } catch (error: any) {
-      toast.error(extractErrorMessage(error, 'Failed to create customer'));
-    }
-  };
-
   const handleUpdateCustomer = async () => {
     if (!selectedCustomer) return;
+    const nameError = validateCustomerNameFields(
+      formData.customerType,
+      formData.firstName,
+      formData.lastName,
+    );
+    if (nameError) {
+      toast.error(nameError);
+      return;
+    }
     try {
       if (photoRemoved && selectedCustomer.image_url) {
         try {
@@ -251,11 +227,9 @@ function CustomersContent() {
           toast.warning(extractErrorMessage(e, 'Photo upload failed'));
         }
       }
-      const updatePayload: CustomerUpdate = {
-        ...formData,
-        emails: (formData.emails || []).filter((e) => e.value.trim()),
-        phones: (formData.phones || []).filter((p) => p.value.trim()),
-      };
+      const updatePayload: CustomerUpdate = buildCustomerCreatePayload(
+        formData as CustomerCreate,
+      );
       await CustomerService.updateCustomer(selectedCustomer.id, updatePayload);
       toast.success('Customer updated successfully');
       setIsEditDialogOpen(false);
@@ -315,14 +289,16 @@ function CustomersContent() {
     setCustomerPhotoPreview(null);
     setPhotoRemoved(false);
     setGuarantors([]);
-    setCreateGuarantors([]);
   };
 
   const openEditDialog = async (customer: Customer) => {
     setSelectedCustomer(customer);
+    const isBusiness = customer.customerType === 'business';
     setFormData({
       firstName: customer.firstName,
-      lastName: customer.lastName,
+      lastName: isBusiness && isBusinessPlaceholderLastName(customer.lastName)
+        ? ''
+        : customer.lastName,
       emails: defaultEmailRowsFromEntity(customer),
       phones: defaultPhoneRowsFromEntity(customer),
       cnic: customer.cnic || '',
@@ -445,16 +421,12 @@ function CustomersContent() {
   const emptyGuarantorForm: GuarantorCreate = { name: '', mobile: '', cnic: '', residential_address: '', official_address: '', occupation: '', relation: '' };
 
   const openAddGuarantor = () => {
-    setGuarantorDialogSource('edit');
-    setEditingCreateGuarantorIndex(null);
     setGuarantorForm(emptyGuarantorForm);
     setEditingGuarantorId(null);
     setGuarantorDialogOpen(true);
   };
 
   const openEditGuarantor = (g: Guarantor) => {
-    setGuarantorDialogSource('edit');
-    setEditingCreateGuarantorIndex(null);
     setGuarantorForm({
       name: g.name,
       mobile: g.mobile || '',
@@ -468,42 +440,9 @@ function CustomersContent() {
     setGuarantorDialogOpen(true);
   };
 
-  const openAddGuarantorForCreate = () => {
-    setGuarantorDialogSource('create');
-    setEditingCreateGuarantorIndex(null);
-    setGuarantorForm(emptyGuarantorForm);
-    setEditingGuarantorId(null);
-    setGuarantorDialogOpen(true);
-  };
-
-  const openEditGuarantorForCreate = (g: GuarantorCreate, index: number) => {
-    setGuarantorDialogSource('create');
-    setEditingCreateGuarantorIndex(index);
-    setGuarantorForm({ ...g });
-    setEditingGuarantorId(null);
-    setGuarantorDialogOpen(true);
-  };
-
-  const handleDeleteCreateGuarantor = (index: number) => {
-    setCreateGuarantors((prev) => prev.filter((_, i) => i !== index));
-    toast.success('Guarantor removed');
-  };
-
   const handleGuarantorDialogSubmit = () => {
-    if (guarantorDialogSource === 'create') {
-      if (editingCreateGuarantorIndex !== null && editingCreateGuarantorIndex >= 0) {
-        setCreateGuarantors((prev) => prev.map((item, idx) => (idx === editingCreateGuarantorIndex ? guarantorForm : item)));
-      } else {
-        setCreateGuarantors((prev) => [...prev, guarantorForm]);
-      }
-      setGuarantorForm(emptyGuarantorForm);
-      setEditingCreateGuarantorIndex(null);
-      setGuarantorDialogOpen(false);
-      toast.success(editingCreateGuarantorIndex !== null ? 'Guarantor updated' : 'Guarantor added');
-    } else {
-      if (editingGuarantorId) handleUpdateGuarantor();
-      else handleAddGuarantor();
-    }
+    if (editingGuarantorId) handleUpdateGuarantor();
+    else handleAddGuarantor();
   };
 
   const getStatusBadge = (status: string) => {
@@ -559,370 +498,18 @@ function CustomersContent() {
               <Upload className="w-4 h-4 mr-2" />
               Import Customers
             </Button>
-            <Dialog
+            <Button onClick={() => setIsCreateDialogOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Customer
+            </Button>
+            <CreateCustomerDialog
               open={isCreateDialogOpen}
               onOpenChange={setIsCreateDialogOpen}
-            >
-              <DialogTrigger asChild>
-                <Button onClick={() => resetForm()}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Customer
-                </Button>
-              </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Create New Customer</DialogTitle>
-                <DialogDescription>
-                  Add a new customer to your CRM system
-                </DialogDescription>
-              </DialogHeader>
-              <div className="flex items-center gap-4 pb-4 border-b">
-                <div
-                  className="w-20 h-20 rounded-full border-2 border-dashed flex items-center justify-center bg-muted cursor-pointer overflow-hidden"
-                  onClick={() => customerPhotoInputRef.current?.click()}
-                >
-                  {customerPhotoPreview ? (
-                    <img src={customerPhotoPreview} alt="Preview" className="w-full h-full object-cover" />
-                  ) : (
-                    <Camera className="h-8 w-8 text-muted-foreground" />
-                  )}
-                </div>
-                <div>
-                  <Label className="text-sm text-muted-foreground">Customer photo (optional)</Label>
-                  <input
-                    ref={customerPhotoInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleCustomerPhotoChange}
-                  />
-                  <Button type="button" variant="outline" size="sm" className="mt-1" onClick={() => customerPhotoInputRef.current?.click()}>
-                    Choose image
-                  </Button>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="firstName">First Name *</Label>
-                  <Input
-                    id="firstName"
-                    value={formData.firstName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, firstName: e.target.value })
-                    }
-                    placeholder="John"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="lastName">Last Name *</Label>
-                  <Input
-                    id="lastName"
-                    value={formData.lastName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, lastName: e.target.value })
-                    }
-                    placeholder="Doe"
-                  />
-                </div>
-                <LabeledContactFields
-                  emails={formData.emails || [{ value: '', label: 'personal' }]}
-                  phones={formData.phones || [{ value: '', label: 'work' }]}
-                  onEmailsChange={(emails) =>
-                    setFormData({ ...formData, emails })
-                  }
-                  onPhonesChange={(phones) =>
-                    setFormData({ ...formData, phones })
-                  }
-                />
-                <div>
-                  <Label htmlFor="cnic">CNIC</Label>
-                  <Input
-                    id="cnic"
-                    value={formData.cnic}
-                    onChange={(e) =>
-                      setFormData({ ...formData, cnic: e.target.value })
-                    }
-                    placeholder="12345-1234567-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="customerType">Customer Type</Label>
-                  <Select
-                    value={formData.customerType}
-                    onValueChange={(value) =>
-                      setFormData({
-                        ...formData,
-                        customerType: value as 'individual' | 'business',
-                      })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="individual">Individual</SelectItem>
-                      <SelectItem value="business">Business</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="customerStatus">Status</Label>
-                  <Select
-                    value={formData.customerStatus}
-                    onValueChange={(value) =>
-                      setFormData({
-                        ...formData,
-                        customerStatus: value as
-                          | 'active'
-                          | 'inactive'
-                          | 'blocked',
-                      })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                      <SelectItem value="blocked">Blocked</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="creditLimit">Credit Limit</Label>
-                  <Input
-                    id="creditLimit"
-                    type="number"
-                    value={formData.creditLimit}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        creditLimit: parseFloat(e.target.value) || 0,
-                      })
-                    }
-                    placeholder="0.00"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="paymentTerms">Payment Terms</Label>
-                  <Select
-                    value={formData.paymentTerms}
-                    onValueChange={(value) =>
-                      setFormData({
-                        ...formData,
-                        paymentTerms: value as 'Credit' | 'Card' | 'Cash' | 'Due Payments',
-                      })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Credit">Credit</SelectItem>
-                      <SelectItem value="Card">Card</SelectItem>
-                      <SelectItem value="Cash">Cash</SelectItem>
-                      <SelectItem value="Due Payments">Due Payments</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="col-span-2">
-                  <Label htmlFor="address">Billing Address</Label>
-                  <Input
-                    id="address"
-                    value={formData.address}
-                    onChange={(e) =>
-                      setFormData({ ...formData, address: e.target.value })
-                    }
-                    placeholder="Street address, building number"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="city">City</Label>
-                  <Input
-                    id="city"
-                    value={formData.city}
-                    onChange={(e) =>
-                      setFormData({ ...formData, city: e.target.value })
-                    }
-                    placeholder="Karachi"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="state">State/Province</Label>
-                  <Input
-                    id="state"
-                    value={formData.state}
-                    onChange={(e) =>
-                      setFormData({ ...formData, state: e.target.value })
-                    }
-                    placeholder="Sindh"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="country">Country</Label>
-                  <Input
-                    id="country"
-                    value={formData.country}
-                    onChange={(e) =>
-                      setFormData({ ...formData, country: e.target.value })
-                    }
-                    placeholder="Pakistan"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="postalCode">Postal Code</Label>
-                  <Input
-                    id="postalCode"
-                    value={formData.postalCode}
-                    onChange={(e) =>
-                      setFormData({ ...formData, postalCode: e.target.value })
-                    }
-                    placeholder="75000"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <Label htmlFor="tags">Tags (comma separated)</Label>
-                  <Input
-                    id="tags"
-                    value={formData.tags?.join(', ') || ''}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        tags: e.target.value
-                          .split(',')
-                          .map((tag) => tag.trim())
-                          .filter(Boolean),
-                      })
-                    }
-                    placeholder="vip, regular, premium"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description || ''}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                    placeholder="Notes or profile summary for this customer"
-                    rows={4}
-                    className="resize-y min-h-[80px]"
-                  />
-                </div>
-                <div className="col-span-2 space-y-2">
-                  <Label>Attachments</Label>
-                  <input
-                    ref={attachmentFileInputCreateRef}
-                    type="file"
-                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                    className="hidden"
-                    onChange={handleAttachmentFile}
-                  />
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={attachmentUploading}
-                      onClick={() => attachmentFileInputCreateRef.current?.click()}
-                    >
-                      <Paperclip className="h-4 w-4 mr-1" />
-                      {attachmentUploading ? 'Uploading…' : 'Add file'}
-                    </Button>
-                    <span className="text-xs text-muted-foreground">PDF, DOC, DOCX (max 10MB)</span>
-                  </div>
-                  {(formData.attachments || []).length > 0 && (
-                    <ul className="border rounded-md divide-y text-sm">
-                      {(formData.attachments || []).map((att, idx) => (
-                        <li
-                          key={`${att.url}-${idx}`}
-                          className="flex items-center justify-between gap-2 px-3 py-2"
-                        >
-                          <span className="truncate flex-1" title={att.original_filename || att.url}>
-                            {att.original_filename || 'Attachment'}
-                          </span>
-                          <div className="flex items-center gap-1 shrink-0">
-                            <a
-                              href={att.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary inline-flex items-center"
-                              aria-label="Open file"
-                            >
-                              <ExternalLink className="h-4 w-4" />
-                            </a>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 text-destructive"
-                              onClick={() => removeAttachmentAt(idx)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </div>
-              <div className="border-t pt-4 mt-4">
-                <div className="flex items-center justify-between mb-2">
-                  <Label className="text-sm font-medium">Guarantors / Friends</Label>
-                  <Button type="button" variant="outline" size="sm" onClick={openAddGuarantorForCreate}>
-                    <UserPlus className="h-4 w-4 mr-1" /> Add
-                  </Button>
-                </div>
-                {createGuarantors.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-2">No guarantors added.</p>
-                ) : (
-                  <div className="border rounded overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Mobile</TableHead>
-                          <TableHead>CNIC</TableHead>
-                          <TableHead>Relation</TableHead>
-                          <TableHead className="w-24">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {createGuarantors.map((g, idx) => (
-                          <TableRow key={idx}>
-                            <TableCell className="font-medium">{g.name}</TableCell>
-                            <TableCell>{g.mobile || '-'}</TableCell>
-                            <TableCell>{g.cnic || '-'}</TableCell>
-                            <TableCell>{g.relation || '-'}</TableCell>
-                            <TableCell>
-                              <Button variant="ghost" size="sm" onClick={() => openEditGuarantorForCreate(g, idx)}>
-                                <Edit className="h-3 w-3" />
-                              </Button>
-                              <Button variant="ghost" size="sm" onClick={() => handleDeleteCreateGuarantor(idx)}>
-                                <Trash2 className="h-3 w-3 text-red-600" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </div>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setIsCreateDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button onClick={handleCreateCustomer}>Create Customer</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+              onCreated={() => {
+                loadCustomers();
+                loadStats();
+              }}
+            />
           </div>
         </div>
 
@@ -1101,7 +688,7 @@ function CustomersContent() {
                         <TableCell>
                           <div>
                             <div className="font-medium">
-                              {customer.firstName} {customer.lastName}
+                              {getCustomerDisplayName(customer)}
                             </div>
                             <div className="text-sm text-muted-foreground">
                               {(() => {
@@ -1298,28 +885,32 @@ function CustomersContent() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="editFirstName">First Name *</Label>
-                <Input
-                  id="editFirstName"
-                  value={formData.firstName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, firstName: e.target.value })
-                  }
-                  placeholder="John"
-                />
-              </div>
-              <div>
-                <Label htmlFor="editLastName">Last Name *</Label>
-                <Input
-                  id="editLastName"
-                  value={formData.lastName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, lastName: e.target.value })
-                  }
-                  placeholder="Doe"
-                />
-              </div>
+              <CustomerTypeNameFields
+                customerType={formData.customerType || 'individual'}
+                firstName={formData.firstName}
+                lastName={formData.lastName}
+                typeFieldId="editCustomerType"
+                firstNameFieldId="editFirstName"
+                lastNameFieldId="editLastName"
+                businessNameFieldId="editBusinessName"
+                onCustomerTypeChange={(type) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    customerType: type,
+                    ...(type === 'business'
+                      ? { lastName: '' }
+                      : prev.customerType === 'business'
+                        ? { firstName: '', lastName: '' }
+                        : {}),
+                  }))
+                }
+                onFirstNameChange={(firstName) =>
+                  setFormData((prev) => ({ ...prev, firstName }))
+                }
+                onLastNameChange={(lastName) =>
+                  setFormData((prev) => ({ ...prev, lastName }))
+                }
+              />
               <LabeledContactFields
                 emails={formData.emails || [{ value: '', label: 'personal' }]}
                 phones={formData.phones || [{ value: '', label: 'work' }]}
@@ -1340,26 +931,6 @@ function CustomersContent() {
                   }
                   placeholder="12345-1234567-1"
                 />
-              </div>
-              <div>
-                <Label htmlFor="editCustomerType">Customer Type</Label>
-                <Select
-                  value={formData.customerType}
-                  onValueChange={(value) =>
-                    setFormData({
-                      ...formData,
-                      customerType: value as 'individual' | 'business',
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="individual">Individual</SelectItem>
-                    <SelectItem value="business">Business</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
               <div>
                 <Label htmlFor="editCustomerStatus">Status</Label>
@@ -1623,7 +1194,7 @@ function CustomersContent() {
         <Dialog open={guarantorDialogOpen} onOpenChange={setGuarantorDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{(editingGuarantorId ?? (editingCreateGuarantorIndex !== null && editingCreateGuarantorIndex >= 0)) ? 'Edit Guarantor' : 'Add Guarantor'}</DialogTitle>
+              <DialogTitle>{editingGuarantorId ? 'Edit Guarantor' : 'Add Guarantor'}</DialogTitle>
             </DialogHeader>
             <div className="grid gap-3">
               <div>
@@ -1672,7 +1243,9 @@ function CustomersContent() {
               <DialogDescription>
                 Are you sure you want to delete{' '}
                 <strong>
-                  {customerToDelete?.firstName} {customerToDelete?.lastName}
+                  {customerToDelete
+                    ? getCustomerDisplayName(customerToDelete)
+                    : ''}
                 </strong>
                 ? This action cannot be undone.
               </DialogDescription>

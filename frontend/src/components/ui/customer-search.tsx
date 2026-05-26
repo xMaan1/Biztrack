@@ -9,6 +9,7 @@ import { Card } from './card';
 import { Search, User, Building, X, Check } from 'lucide-react';
 import { Customer } from '../../services/CustomerService';
 import InvoiceService from '../../services/InvoiceService';
+import { getCustomerDisplayName } from '@/src/utils/customerUtils';
 
 interface CustomerSearchProps {
   value?: Customer | null;
@@ -99,10 +100,6 @@ export function CustomerSearch({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
     setIsOpen(true);
-  };
-
-  const getCustomerDisplayName = (customer: Customer) => {
-    return `${customer.firstName} ${customer.lastName}`;
   };
 
   const getCustomerTypeIcon = (customer: Customer) => {
