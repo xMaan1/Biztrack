@@ -1308,12 +1308,12 @@ def send_invoice_whatsapp(
             raise HTTPException(status_code=404, detail="Invoice not found")
 
         from ...services.invoice_share import (
-            create_invoice_share_token,
-            public_invoice_pdf_url,
+            create_or_get_invoice_share_code,
+            public_invoice_short_url,
         )
 
-        share_token = create_invoice_share_token(str(invoice.id), str(tenant_id))
-        pdf_url = public_invoice_pdf_url(str(invoice.id), share_token)
+        share_code = create_or_get_invoice_share_code(db, str(invoice.id), str(tenant_id))
+        pdf_url = public_invoice_short_url(share_code)
 
         message = (
             f"Hi! Here is your invoice {invoice.invoiceNumber} "

@@ -12,6 +12,7 @@ const publicRoutes = [
   '/favicon.ico',
   '/manifest.json',
   '/events/google/callback',
+  '/i/',
 ];
 
 // List of protected routes that require authentication

@@ -49,7 +49,7 @@ from .production_models import (
 )
 
 from .invoice_models import (
-    Invoice, Payment, DeliveryNote
+    Invoice, Payment, DeliveryNote, InvoiceShareLink
 )
 
 from .installment_models import (

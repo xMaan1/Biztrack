@@ -298,15 +298,31 @@ async def get_public_plans():
         )
 
 
+@app.get("/public/i/{code}")
+async def public_invoice_pdf_short(
+    code: str,
+    db: Session = Depends(get_db),
+):
+    from .services.invoice_share import (
+        build_invoice_pdf_response,
+        resolve_invoice_from_share_code,
+    )
+
+    invoice = resolve_invoice_from_share_code(db, code)
+    return build_invoice_pdf_response(invoice, db)
+
+
 @app.get("/public/invoices/{invoice_id}/pdf")
 async def public_invoice_pdf(
     invoice_id: str,
     token: str,
     db: Session = Depends(get_db),
 ):
-    from .services.invoice_share import verify_invoice_share_token
+    from .services.invoice_share import (
+        build_invoice_pdf_response,
+        verify_invoice_share_token,
+    )
     from .config.invoice_models import Invoice
-    from .api.v1.pdf_generator_modern import generate_modern_invoice_pdf
 
     payload = verify_invoice_share_token(token)
     if str(payload.get("invoice_id")) != str(invoice_id):
@@ -321,23 +337,4 @@ async def public_invoice_pdf(
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
 
-    try:
-        pdf_content = generate_modern_invoice_pdf(invoice, db)
-    except ValueError as e:
-        if "customization is required" in str(e):
-            raise HTTPException(
-                status_code=400,
-                detail="Invoice PDF is not available for this invoice.",
-            )
-        raise HTTPException(status_code=500, detail="Failed to generate invoice PDF")
-    except Exception as e:
-        logger.error(f"Public invoice PDF error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to generate invoice PDF")
-
-    return Response(
-        content=pdf_content,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'inline; filename="invoice-{invoice.invoiceNumber}.pdf"'
-        },
-    )
+    return build_invoice_pdf_response(invoice, db)
