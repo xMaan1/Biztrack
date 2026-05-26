@@ -4,6 +4,8 @@
 
 import React from 'react';
 
+import Link from 'next/link';
+
 import { useRouter } from 'next/navigation';
 
 import { Button } from '../ui/button';
@@ -26,7 +28,13 @@ const NAV_LINKS = [
 
   { href: '#verification', label: 'Verify' },
 
-  { href: '#contact', label: 'Contact' },
+] as const;
+
+const PAGE_LINKS = [
+
+  { href: '/about', label: 'About Us' },
+
+  { href: '/contact', label: 'Contact' },
 
 ] as const;
 
@@ -69,6 +77,24 @@ export function LandingNav() {
                 {link.label}
 
               </a>
+
+            ))}
+
+            {PAGE_LINKS.map((link) => (
+
+              <Link
+
+                key={link.href}
+
+                href={link.href}
+
+                className="text-sm font-medium text-slate-700 hover:text-blue-700 transition-colors"
+
+              >
+
+                {link.label}
+
+              </Link>
 
             ))}
 
@@ -167,6 +193,24 @@ export function LandingNav() {
               {link.label}
 
             </a>
+
+          ))}
+
+          {PAGE_LINKS.map((link) => (
+
+            <Link
+
+              key={link.href}
+
+              href={link.href}
+
+              className="shrink-0 text-xs font-medium text-slate-600 hover:text-blue-700 whitespace-nowrap"
+
+            >
+
+              {link.label}
+
+            </Link>
 
           ))}
 

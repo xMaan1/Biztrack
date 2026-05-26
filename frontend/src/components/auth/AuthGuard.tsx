@@ -17,6 +17,8 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   // List of public routes that don't require authentication
   const publicRoutes = [
     '/', // Landing page
+    '/about',
+    '/contact',
     '/login', // Login page
     '/signup', // Signup page
     '/client-portal', // Client portal (if exists)

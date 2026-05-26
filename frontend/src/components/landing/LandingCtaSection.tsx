@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { ArrowRight, Calendar, Mail } from 'lucide-react';
 import { Button } from '../ui/button';
 
@@ -40,10 +41,10 @@ export function LandingCtaSection() {
             className="text-base sm:text-lg px-8 py-6 h-auto border-white/80 bg-transparent text-white hover:bg-white/10 hover:text-white"
             asChild
           >
-            <a href="mailto:info@biztrack.co.uk">
+            <Link href="/contact">
               <Mail className="mr-2 h-5 w-5" />
               Contact Us
-            </a>
+            </Link>
           </Button>
         </div>
 
