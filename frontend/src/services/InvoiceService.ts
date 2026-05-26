@@ -89,23 +89,12 @@ class InvoiceService {
     return response;
   }
 
-  async sendInvoiceWhatsApp(
-    invoiceId: string,
-    options?: { phoneNumber?: string; pickContact?: boolean },
-  ): Promise<{
+  async sendInvoiceWhatsApp(invoiceId: string): Promise<{
     whatsapp_url: string;
     formatted_message: string;
-    phone_digits?: string | null;
     pdf_url?: string;
   }> {
-    const body: { phone_number?: string; pick_contact?: boolean } = {
-      pick_contact: options?.pickContact !== false,
-    };
-    if (options?.phoneNumber?.trim()) {
-      body.phone_number = options.phoneNumber.trim();
-      body.pick_contact = false;
-    }
-    return apiService.post(`${this.baseUrl}/${invoiceId}/send-whatsapp`, body);
+    return apiService.post(`${this.baseUrl}/${invoiceId}/send-whatsapp`);
   }
 
   async markInvoiceAsPaid(invoiceId: string): Promise<void> {

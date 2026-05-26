@@ -120,9 +120,7 @@ export function InvoiceList({
   const handleShareWhatsApp = async (invoice: Invoice) => {
     setSharingWhatsApp(invoice.id);
     try {
-      const res = await InvoiceService.sendInvoiceWhatsApp(invoice.id, {
-        pickContact: true,
-      });
+      const res = await InvoiceService.sendInvoiceWhatsApp(invoice.id);
       openWhatsAppShare(res.whatsapp_url);
     } catch (error: unknown) {
       toast.error(

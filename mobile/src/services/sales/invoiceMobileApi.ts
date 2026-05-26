@@ -78,25 +78,12 @@ export async function sendInvoiceEmail(
   );
 }
 
-export async function sendInvoiceWhatsApp(
-  invoiceId: string,
-  options?: { phoneNumber?: string; pickContact?: boolean },
-): Promise<{
+export async function sendInvoiceWhatsApp(invoiceId: string): Promise<{
   whatsapp_url: string;
   formatted_message: string;
-  phone_digits?: string | null;
   pdf_url?: string;
 }> {
-  const body: { phone_number?: string; pick_contact?: boolean } = {};
-  if (options?.pickContact) {
-    body.pick_contact = true;
-  } else if (options?.phoneNumber?.trim()) {
-    body.phone_number = options.phoneNumber.trim();
-  }
-  return apiService.post(
-    `/invoices/${invoiceId}/send-whatsapp`,
-    Object.keys(body).length > 0 ? body : { pick_contact: true },
-  );
+  return apiService.post(`/invoices/${invoiceId}/send-whatsapp`);
 }
 
 export async function markInvoicePaid(invoiceId: string): Promise<void> {

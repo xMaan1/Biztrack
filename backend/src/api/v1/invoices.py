@@ -25,7 +25,7 @@ from ...config.database import User
 from ...config.invoice_models import Invoice, Payment
 from ...config.crm_crud import (
     create_customer, get_customer_by_id, get_customers, update_customer, delete_customer,
-    get_customer_stats, search_customers
+    get_customer_stats, search_customers, resolve_phone_from_customer,
 )
 from ...services.inventory_sync_service import InventorySyncService
 from ...services.email_service import EmailService
@@ -48,14 +48,7 @@ class SendInvoiceRequest(BaseModel):
     message: Optional[str] = None
 
 
-class SendInvoiceWhatsAppRequest(BaseModel):
-    phone_number: Optional[str] = None
-    pick_contact: bool = False
-
-
 def _resolve_invoice_customer_phone(db, tenant_id: str, invoice_data, customer=None) -> str:
-    from ...services.phone_utils import resolve_phone_from_customer
-
     explicit = getattr(invoice_data, "customerPhone", None)
     if explicit and str(explicit).strip():
         return str(explicit).strip()
@@ -68,23 +61,6 @@ def _resolve_invoice_customer_phone(db, tenant_id: str, invoice_data, customer=N
         return resolve_phone_from_customer(customer) or ""
     return ""
 
-
-def _resolve_phone_for_invoice(db, tenant_id: str, invoice, override: Optional[str] = None) -> str:
-    from ...services.phone_utils import resolve_phone_from_customer
-
-    if override and str(override).strip():
-        return str(override).strip()
-    if invoice.customerPhone and str(invoice.customerPhone).strip():
-        return str(invoice.customerPhone).strip()
-    if invoice.customerId:
-        try:
-            customer = get_customer_by_id(db, str(invoice.customerId), tenant_id)
-            resolved = resolve_phone_from_customer(customer)
-            if resolved:
-                return resolved
-        except Exception:
-            pass
-    return ""
 
 def generate_invoice_number(tenant_id: str, db: Session) -> str:
     """Generate unique invoice number with proper race condition handling"""
@@ -1107,8 +1083,6 @@ def update_invoice(
                 customer = get_customer_by_id(
                     db, str(update_data["customerId"]), tenant_id
                 )
-                from ...services.phone_utils import resolve_phone_from_customer
-
                 resolved = resolve_phone_from_customer(customer)
                 if resolved:
                     invoice.customerPhone = resolved
@@ -1312,7 +1286,6 @@ def send_invoice(
 @router.post("/{invoice_id}/send-whatsapp")
 def send_invoice_whatsapp(
     invoice_id: str,
-    request: Optional[SendInvoiceWhatsAppRequest] = Body(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     tenant_context: dict = Depends(get_tenant_context),
@@ -1334,31 +1307,14 @@ def send_invoice_whatsapp(
         if not invoice:
             raise HTTPException(status_code=404, detail="Invoice not found")
 
-        from ...services.phone_utils import (
-            normalize_phone_for_whatsapp,
-            build_whatsapp_url,
-            build_whatsapp_picker_url,
-        )
         from ...services.invoice_share import (
             create_invoice_share_token,
             public_invoice_pdf_url,
         )
 
-        pick_contact = bool(request and request.pick_contact)
-        override = (
-            request.phone_number.strip()
-            if request and request.phone_number and str(request.phone_number).strip()
-            else None
-        )
-
         share_token = create_invoice_share_token(str(invoice.id), str(tenant_id))
         pdf_url = public_invoice_pdf_url(str(invoice.id), share_token)
 
-        due_label = (
-            invoice.dueDate.strftime("%Y-%m-%d")
-            if invoice.dueDate
-            else "As agreed"
-        )
         message = (
             f"Hi! Here is your invoice {invoice.invoiceNumber} "
             f"for {invoice.customerName}. "
@@ -1366,30 +1322,13 @@ def send_invoice_whatsapp(
             f"View/download PDF: {pdf_url}"
         )
 
-        if pick_contact:
-            return {
-                "whatsapp_url": build_whatsapp_picker_url(message),
-                "formatted_message": message,
-                "phone_digits": None,
-                "pdf_url": pdf_url,
-            }
-
-        phone_raw = override or _resolve_phone_for_invoice(db, tenant_id, invoice, None)
-        if not phone_raw:
-            raise HTTPException(
-                status_code=400,
-                detail="Enter a phone number or use share without number.",
-            )
-
-        try:
-            phone_digits = normalize_phone_for_whatsapp(phone_raw)
-        except ValueError as e:
-            raise HTTPException(status_code=400, detail=str(e))
+        whatsapp_url = (
+            f"https://api.whatsapp.com/send/?text={urllib.parse.quote(message)}"
+        )
 
         return {
-            "whatsapp_url": build_whatsapp_url(phone_digits, message),
+            "whatsapp_url": whatsapp_url,
             "formatted_message": message,
-            "phone_digits": phone_digits,
             "pdf_url": pdf_url,
         }
 

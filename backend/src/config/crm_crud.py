@@ -41,6 +41,32 @@ def _attachment_urls_set(attachments: Any) -> set:
         return set()
     return {u for u in (_attachment_url_from_stored(a) for a in attachments) if u}
 
+def _phone_from_phones_list(phones: Any) -> Optional[str]:
+    if not phones or not isinstance(phones, list):
+        return None
+    for item in phones:
+        if isinstance(item, dict):
+            value = item.get("value") or item.get("phone") or item.get("number")
+            if value and str(value).strip():
+                return str(value).strip()
+        elif isinstance(item, str) and item.strip():
+            return item.strip()
+    return None
+
+
+def resolve_phone_from_customer(customer: Any) -> Optional[str]:
+    if not customer:
+        return None
+    for attr in ("phone", "mobile"):
+        value = getattr(customer, attr, None)
+        if value and str(value).strip():
+            return str(value).strip()
+    listed = _phone_from_phones_list(getattr(customer, "phones", None))
+    if listed:
+        return listed
+    return None
+
+
 def _delete_s3_for_file_url(url: Optional[str]) -> None:
     if not url or not (str(url).startswith("http://") or str(url).startswith("https://")):
         return
