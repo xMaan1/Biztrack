@@ -164,7 +164,7 @@ const allMenuItems: MenuItem[] = [
     text: 'CRM',
     icon: Users,
     roles: ['*'],
-    planTypes: ['commerce', 'healthcare'], // Commerce and Healthcare focused
+    planTypes: ['commerce', 'agency', 'healthcare'],
     gradient: 'from-blue-500 to-indigo-500',
     subItems: [
       {
@@ -172,42 +172,42 @@ const allMenuItems: MenuItem[] = [
         icon: LayoutDashboard,
         path: '/crm',
         roles: ['*'],
-        planTypes: ['commerce', 'healthcare'],
+        planTypes: ['commerce', 'agency', 'healthcare'],
       },
       {
         text: 'Customers',
         icon: Users,
         path: '/crm/customers',
         roles: ['*'],
-        planTypes: ['commerce', 'healthcare'],
+        planTypes: ['commerce', 'agency', 'healthcare'],
       },
       {
         text: 'Companies',
         icon: Building,
         path: '/crm/companies',
         roles: ['*'],
-        planTypes: ['commerce', 'healthcare'],
+        planTypes: ['commerce', 'agency', 'healthcare'],
       },
       {
         text: 'Contacts',
         icon: Users,
         path: '/crm/contacts',
         roles: ['*'],
-        planTypes: ['commerce', 'healthcare'],
+        planTypes: ['commerce', 'agency', 'healthcare'],
       },
       {
         text: 'Leads',
         icon: Target,
         path: '/crm/leads',
         roles: ['*'],
-        planTypes: ['commerce', 'healthcare'],
+        planTypes: ['commerce', 'agency', 'healthcare'],
       },
       {
         text: 'Opportunities',
         icon: TrendingUp,
         path: '/crm/opportunities',
         roles: ['*'],
-        planTypes: ['commerce', 'healthcare'],
+        planTypes: ['commerce', 'agency', 'healthcare'],
       },
     ],
   },
@@ -231,7 +231,7 @@ const allMenuItems: MenuItem[] = [
     text: 'Sales',
     icon: DollarSign,
     roles: ['*'],
-    planTypes: ['commerce'], // Commerce focused
+    planTypes: ['commerce', 'agency'],
     gradient: 'from-green-500 to-emerald-500',
     subItems: [
       {
@@ -239,42 +239,42 @@ const allMenuItems: MenuItem[] = [
         icon: FileText,
         path: '/sales/quotes',
         roles: ['*'],
-        planTypes: ['commerce'],
+        planTypes: ['commerce', 'agency'],
       },
       {
         text: 'Contracts',
         icon: FileCheck,
         path: '/sales/contracts',
         roles: ['*'],
-        planTypes: ['commerce'],
+        planTypes: ['commerce', 'agency'],
       },
       {
         text: 'Analytics',
         icon: BarChart3,
         path: '/sales/analytics',
         roles: ['*'],
-        planTypes: ['commerce'],
+        planTypes: ['commerce', 'agency'],
       },
       {
         text: 'Invoices',
         icon: Banknote,
         path: '/sales/invoices',
         roles: ['*'],
-        planTypes: ['commerce'],
+        planTypes: ['commerce', 'agency'],
       },
       {
         text: 'Installments',
         icon: Calendar,
         path: '/sales/installments',
         roles: ['*'],
-        planTypes: ['commerce'],
+        planTypes: ['commerce', 'agency'],
       },
       {
         text: 'Delivery Notes',
         icon: Truck,
         path: '/sales/delivery-notes',
         roles: ['*'],
-        planTypes: ['commerce'],
+        planTypes: ['commerce', 'agency'],
       },
     ],
   },
@@ -282,7 +282,7 @@ const allMenuItems: MenuItem[] = [
     text: 'POS',
     icon: Banknote,
     roles: ['*'],
-    planTypes: ['commerce'], // Commerce focused
+    planTypes: ['commerce', 'agency'],
     gradient: 'from-yellow-500 to-orange-500',
     subItems: [
       {
@@ -290,42 +290,42 @@ const allMenuItems: MenuItem[] = [
         icon: LayoutDashboard,
         path: '/pos',
         roles: ['*'],
-        planTypes: ['commerce'],
+        planTypes: ['commerce', 'agency'],
       },
       {
         text: 'New Sale',
         icon: Plus,
         path: '/pos/sale',
         roles: ['*'],
-        planTypes: ['commerce'],
+        planTypes: ['commerce', 'agency'],
       },
       {
         text: 'Products',
         icon: Package,
         path: '/pos/products',
         roles: ['*'],
-        planTypes: ['commerce'],
+        planTypes: ['commerce', 'agency'],
       },
       {
         text: 'Transactions',
         icon: Receipt,
         path: '/pos/transactions',
         roles: ['*'],
-        planTypes: ['commerce'],
+        planTypes: ['commerce', 'agency'],
       },
       {
         text: 'Shifts',
         icon: Clock3,
         path: '/pos/shifts',
         roles: ['*'],
-        planTypes: ['commerce'],
+        planTypes: ['commerce', 'agency'],
       },
       {
         text: 'Reports',
         icon: BarChart3,
         path: '/pos/reports',
         roles: ['*'],
-        planTypes: ['commerce'],
+        planTypes: ['commerce', 'agency'],
       },
     ],
   },
@@ -994,6 +994,8 @@ export default function Sidebar() {
         return 'Workshop Master';
       case 'commerce':
         return 'Commerce Pro';
+      case 'agency':
+        return 'Agency Pro';
       case 'healthcare':
         return 'Healthcare Suite';
       default:

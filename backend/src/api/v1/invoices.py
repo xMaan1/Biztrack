@@ -29,6 +29,7 @@ from ...config.crm_crud import (
 )
 from ...services.inventory_sync_service import InventorySyncService
 from ...services.email_service import EmailService
+from ...core.plan_types import is_retail_plan
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/invoices", tags=["Invoices"])
@@ -608,7 +609,7 @@ def create_invoice(
             raise HTTPException(status_code=400, detail="Tenant context required")
             
         tenant_id = tenant_context["tenant_id"]
-        is_commerce_plan = str(tenant_context.get("plan_type", "")).lower() == "commerce"
+        is_commerce_plan = is_retail_plan(str(tenant_context.get("plan_type", "")))
         
         # Validate required fields
         if not invoice_data.customerName:
@@ -953,7 +954,7 @@ def update_invoice(
             raise HTTPException(status_code=400, detail="Tenant context required")
             
         tenant_id = tenant_context["tenant_id"]
-        is_commerce_plan = str(tenant_context.get("plan_type", "")).lower() == "commerce"
+        is_commerce_plan = is_retail_plan(str(tenant_context.get("plan_type", "")))
         
         invoice = db.query(Invoice).filter(
             and_(

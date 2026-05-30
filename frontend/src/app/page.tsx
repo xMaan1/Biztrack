@@ -79,6 +79,14 @@ const LandingPricingSection = dynamic(
     })),
   { ssr: false },
 );
+
+const LandingPlanModulesSection = dynamic(
+  () =>
+    import('../components/landing/LandingPlanModulesSection').then((m) => ({
+      default: m.LandingPlanModulesSection,
+    })),
+  { ssr: false },
+);
 import { extractErrorMessage } from '../utils/errorUtils';
 import { toast } from 'sonner';
 import {
@@ -450,6 +458,10 @@ export default function LandingPage() {
 
       <LazyLandingSection minHeight="min-h-[280px]">
         <LandingCtaSection />
+      </LazyLandingSection>
+
+      <LazyLandingSection minHeight="min-h-[360px]">
+        <LandingPlanModulesSection />
       </LazyLandingSection>
 
       <LazyLandingSection minHeight="min-h-[400px]">

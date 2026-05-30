@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Subscription Plans & Super Admin Seeding Script
-Creates the 3 subscription tiers and a super admin user for the system
+Creates the 4 industry subscription plans and a super admin user for the system
 """
 
 import json
@@ -152,8 +152,32 @@ def seed_plans(engine):
             print("Operation cancelled.")
             return
     
-    # Define the 3 plans
+    commerce_features = [
+        "Inventory Management",
+        "Point of Sale (POS)",
+        "Customer Relationship Management (CRM)",
+        "Sales & Invoicing",
+        "Purchase Orders",
+        "Warehouse Management",
+        "Financial Reports",
+        "Multi-location Support",
+        "E-commerce Integration",
+        "Barcode Scanning",
+        "Customer Portal",
+        "Email Marketing",
+    ]
+
     plans = [
+        {
+            "name": "Agency Pro",
+            "description": "CRM, sales, POS, and operations for agencies and client-service teams",
+            "planType": "agency",
+            "price": 99.99,
+            "billingCycle": "monthly",
+            "maxProjects": 50,
+            "maxUsers": 25,
+            "features": list(commerce_features),
+        },
         {
             "name": "Commerce Pro",
             "description": "Complete ERP solution for retail, e-commerce, and distribution businesses",
@@ -162,20 +186,7 @@ def seed_plans(engine):
             "billingCycle": "monthly",
             "maxProjects": 50,
             "maxUsers": 25,
-            "features": [
-                "Inventory Management",
-                "Point of Sale (POS)",
-                "Customer Relationship Management (CRM)",
-                "Sales & Invoicing",
-                "Purchase Orders",
-                "Warehouse Management",
-                "Financial Reports",
-                "Multi-location Support",
-                "E-commerce Integration",
-                "Barcode Scanning",
-                "Customer Portal",
-                "Email Marketing"
-            ]
+            "features": list(commerce_features),
         },
         {
             "name": "Workshop Master",

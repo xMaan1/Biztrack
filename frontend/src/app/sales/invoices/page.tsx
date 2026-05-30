@@ -61,7 +61,8 @@ function InvoicesPageContent() {
   const { formatCurrency } = useCurrency();
   const { isOwner, canViewInvoices } = usePermissions();
   const { planInfo } = usePlanInfo();
-  const isCommerce = planInfo?.planType === 'commerce';
+  const isCommerce =
+    planInfo?.planType === 'commerce' || planInfo?.planType === 'agency';
   const [dashboard, setDashboard] = useState<InvoiceDashboard | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);

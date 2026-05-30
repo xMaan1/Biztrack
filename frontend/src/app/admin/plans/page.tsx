@@ -25,6 +25,7 @@ import {
   Package,
   Star,
   Zap,
+  Building2,
 } from 'lucide-react';
 
 interface Plan {
@@ -156,6 +157,8 @@ function AdminPlansContent() {
         return <Package className="h-5 w-5 text-purple-500" />;
       case 'commerce':
         return <TrendingUp className="h-5 w-5 text-green-600" />;
+      case 'agency':
+        return <Building2 className="h-5 w-5 text-indigo-600" />;
       case 'workshop':
         return <Settings className="h-5 w-5 text-orange-500" />;
       default:
@@ -173,6 +176,8 @@ function AdminPlansContent() {
         return 'bg-purple-100 text-purple-800';
       case 'commerce':
         return 'bg-emerald-100 text-emerald-800';
+      case 'agency':
+        return 'bg-indigo-100 text-indigo-800';
       case 'workshop':
         return 'bg-orange-100 text-orange-800';
       default:

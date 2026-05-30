@@ -196,6 +196,7 @@ class PlanType(str, Enum):
     STARTER = "starter"
     PROFESSIONAL = "professional"
     ENTERPRISE = "enterprise"
+    AGENCY = "agency"
     COMMERCE = "commerce"
     WORKSHOP = "workshop"
     HEALTHCARE = "healthcare"

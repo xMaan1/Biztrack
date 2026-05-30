@@ -12,6 +12,8 @@ import {
   MobileCommerceDashboard,
   type CommerceStats,
 } from '../components/dashboard/MobileCommerceDashboard';
+import { MobileAgencyDashboard } from '../components/dashboard/MobileAgencyDashboard';
+import { isRetailPlan } from '../utils/planTypes';
 import { NonCommerceScreen } from './NonCommerceScreen';
 import { MobileCrmDashboardScreen } from './MobileCrmDashboardScreen';
 import {
@@ -151,8 +153,8 @@ export function CommerceDashboardScreen() {
     await Promise.all([refreshPlanInfo(), refetch()]);
   }, [refreshPlanInfo, refetch]);
 
-  const commerceHome =
-    planInfo?.planType === 'commerce' && workspacePath === '/dashboard';
+  const retailHome =
+    isRetailPlan(planInfo?.planType) && workspacePath === '/dashboard';
   const workshopHome =
     planInfo?.planType === 'workshop' && workspacePath === '/dashboard';
 
@@ -167,7 +169,7 @@ export function CommerceDashboardScreen() {
     ? true
     : Boolean(
         planInfo &&
-          (commerceHome || workshopHome) &&
+          (retailHome || workshopHome) &&
           dashboardLoading &&
           !dashboardData,
       );
@@ -214,7 +216,7 @@ export function CommerceDashboardScreen() {
     );
   }
 
-  if (dashboardError && (commerceHome || workshopHome)) {
+  if (dashboardError && (retailHome || workshopHome)) {
     return (
       <View className="flex-1 bg-slate-50">
         <View className="flex-row items-center border-b border-slate-200 bg-white px-3 py-2">
@@ -393,7 +395,7 @@ export function CommerceDashboardScreen() {
     return <NonCommerceScreen planType={planInfo.planType} />;
   }
 
-  if (planInfo.planType !== 'commerce') {
+  if (!isRetailPlan(planInfo.planType)) {
     return <NonCommerceScreen planType={planInfo.planType} />;
   }
 
@@ -492,9 +494,14 @@ export function CommerceDashboardScreen() {
     ? `${[user?.firstName, user?.lastName].filter(Boolean).join(' ')} · ${user?.email ?? ''}`
     : user?.email ?? '';
 
+  const DashboardComponent =
+    planInfo.planType === 'agency'
+      ? MobileAgencyDashboard
+      : MobileCommerceDashboard;
+
   return (
     <View className="flex-1 bg-slate-50">
-      <MobileCommerceDashboard
+      <DashboardComponent
         stats={stats}
         onLogout={logout}
         userLabel={

@@ -18,6 +18,7 @@ import { BizTrackLogo } from '../brand/BizTrackLogo';
 
 const NAV_LINKS = [
 
+  { href: '#modules', label: 'Modules' },
   { href: '#overview', label: 'Overview' },
 
   { href: '#features', label: 'Features' },

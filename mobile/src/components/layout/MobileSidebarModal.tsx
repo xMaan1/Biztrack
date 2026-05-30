@@ -35,6 +35,8 @@ function getPlanDisplayName(
       return 'Workshop Master';
     case 'commerce':
       return 'Commerce Pro';
+    case 'agency':
+      return 'Agency Pro';
     case 'healthcare':
       return 'Healthcare Suite';
     default:

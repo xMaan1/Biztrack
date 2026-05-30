@@ -65,7 +65,8 @@ export function InvoiceDialog({
   const { currency, formatCurrency } = useCurrency();
   const { planInfo } = usePlanInfo();
   const isWorkshop = planInfo?.planType === 'workshop';
-  const isCommerce = planInfo?.planType === 'commerce';
+  const isCommerce =
+    planInfo?.planType === 'commerce' || planInfo?.planType === 'agency';
   const [createInstallmentPlan, setCreateInstallmentPlan] = useState(false);
   const [installmentCount, setInstallmentCount] = useState(3);
   const [installmentFrequency, setInstallmentFrequency] = useState('monthly');
