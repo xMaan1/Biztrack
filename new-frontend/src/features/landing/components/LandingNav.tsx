@@ -1,47 +1,88 @@
-import { BuildOutlined } from '@ant-design/icons'
+import { Link, useNavigate } from 'react-router-dom'
 import { Button } from 'antd'
-import { Link } from 'react-router-dom'
-import { trialRegisterPath } from '../utils/plan'
+import { useAuth } from '../../auth/AuthContext'
+import { BizTrackLogo } from '../../../components/brand/BizTrackLogo'
+
+const NAV_LINKS = [
+  { href: '#modules', label: 'Modules' },
+  { href: '#overview', label: 'Overview' },
+  { href: '#features', label: 'Features' },
+  { href: '#reviews', label: 'Reviews' },
+  { href: '#csr', label: 'CSR' },
+  { href: '#verification', label: 'Verify' },
+] as const
 
 export function LandingNav() {
-  return (
-    <nav className="border-border border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <BuildOutlined className="text-primary text-3xl" />
-            <span className="text-foreground text-xl font-bold">BizTrack</span>
-          </div>
+  const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
 
-          <div className="hidden items-center space-x-8 md:flex">
-            <a
-              href="#features"
-              className="text-foreground hover:text-primary text-sm font-medium transition-colors"
-            >
-              Features
-            </a>
+  return (
+    <nav className="sticky top-0 z-50 border-b border-blue-100/80 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex h-14 items-center justify-between gap-4 sm:h-16">
+          <BizTrackLogo size="md" showText href="/" />
+
+          <div className="hidden items-center gap-6 lg:flex xl:gap-8">
+            {NAV_LINKS.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className="text-sm font-medium text-slate-700 transition-colors hover:text-blue-700"
+              >
+                {link.label}
+              </a>
+            ))}
             <a
               href="#pricing"
-              className="text-foreground hover:text-primary text-sm font-medium transition-colors"
+              className="text-sm font-medium text-slate-700 transition-colors hover:text-blue-700"
             >
               Pricing
             </a>
-            <a
-              href="#about"
-              className="text-foreground hover:text-primary text-sm font-medium transition-colors"
-            >
-              About
-            </a>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Link to="/login">
-              <Button type="text">Sign in</Button>
-            </Link>
-            <Link to={trialRegisterPath('commerce')}>
-              <Button type="primary">Get Started</Button>
-            </Link>
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            {isAuthenticated ? (
+              <Button
+                size="middle"
+                type="primary"
+                className="!bg-blue-600 hover:!bg-blue-700"
+                onClick={() => navigate('/dashboard')}
+              >
+                Dashboard
+              </Button>
+            ) : (
+              <>
+                <Link to="/login" className="hidden sm:inline-flex">
+                  <Button size="middle" className="!border-slate-200">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/register">
+                  <Button size="middle" type="primary" className="!bg-emerald-600 hover:!bg-emerald-700">
+                    Get Started
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
+        </div>
+
+        <div className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-2 [scrollbar-width:none] lg:hidden">
+          {NAV_LINKS.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              className="shrink-0 whitespace-nowrap text-xs font-medium text-slate-600 hover:text-blue-700"
+            >
+              {link.label}
+            </a>
+          ))}
+          <a
+            href="#pricing"
+            className="shrink-0 whitespace-nowrap text-xs font-medium text-slate-600 hover:text-blue-700"
+          >
+            Pricing
+          </a>
         </div>
       </div>
     </nav>

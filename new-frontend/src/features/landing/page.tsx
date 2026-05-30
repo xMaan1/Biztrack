@@ -1,11 +1,15 @@
 import { useNavigate } from 'react-router-dom'
+import { CompanyVerificationSection } from './components/CompanyVerificationSection'
 import { FeaturesSection } from './components/FeaturesSection'
 import { HeroSection } from './components/HeroSection'
+import { ImpactCommitmentSection } from './components/ImpactCommitmentSection'
 import { LandingCtaSection } from './components/LandingCtaSection'
 import { LandingFooter } from './components/LandingFooter'
 import { LandingNav } from './components/LandingNav'
+import { LandingPlanModulesSection } from './components/LandingPlanModulesSection'
 import { PricingSection } from './components/PricingSection'
-import { TestimonialsSection } from './components/TestimonialsSection'
+import { ProductCrmOverviewSection } from './components/ProductCrmOverviewSection'
+import { ReviewsReputationSection } from './components/ReviewsReputationSection'
 import { trialRegisterPath } from './utils/plan'
 
 export function LandingPage() {
@@ -16,19 +20,20 @@ export function LandingPage() {
   }
 
   return (
-    <div className="from-background via-background to-muted/20 min-h-screen bg-gradient-to-br">
+    <div className="min-h-screen bg-white">
       <LandingNav />
       <HeroSection
-        onStartFreeTrial={() => navigate(trialRegisterPath('commerce'))}
-        onSeeHowItWorks={() => scrollTo('features')}
+        onStartFreeTrial={() => navigate(trialRegisterPath('agency'))}
+        onSeeHowItWorks={() => scrollTo('overview')}
       />
+      <ProductCrmOverviewSection />
       <FeaturesSection />
+      <ReviewsReputationSection />
+      <ImpactCommitmentSection />
+      <CompanyVerificationSection />
+      <LandingCtaSection onBookDemo={() => navigate('/register')} />
+      <LandingPlanModulesSection />
       <PricingSection />
-      <TestimonialsSection />
-      <LandingCtaSection
-        onGetStarted={() => navigate(trialRegisterPath('commerce'))}
-        onViewPricing={() => scrollTo('pricing')}
-      />
       <LandingFooter />
     </div>
   )

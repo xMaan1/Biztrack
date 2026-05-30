@@ -1,92 +1,120 @@
+import { BizTrackLogo } from '../../../components/brand/BizTrackLogo'
+import { VerifiedCompanyBadge } from '../../../components/common/VerifiedCompanyBadge'
+import { COMPANY_REGISTRATION } from '../constants/companyRegistration'
+
 export function LandingFooter() {
   return (
-    <footer className="bg-muted/50 border-border border-t px-4 py-16 sm:px-6 lg:px-8">
-      <div className="mx-auto w-full max-w-[1400px]">
+    <footer className="border-t bg-muted/50 px-4 py-16 sm:px-6 lg:px-8">
+      <div className="container mx-auto">
         <div className="grid gap-8 md:grid-cols-4">
-          <div id="about">
-            <h3 className="text-foreground mb-4 text-lg font-semibold">BizTrack</h3>
-            <p className="text-muted-foreground text-sm">
+          <div>
+            <BizTrackLogo size="md" showText className="mb-4" />
+            <p className="text-sm text-muted-foreground">
               Complete business management platform for modern enterprises.
             </p>
+            <div className="mt-4">
+              <VerifiedCompanyBadge align="left" />
+            </div>
           </div>
           <div>
-            <h4 className="text-foreground mb-4 font-semibold">Product</h4>
-            <ul className="text-muted-foreground space-y-2 text-sm">
+            <h4 className="mb-4 font-semibold">Product</h4>
+            <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <a href="#features" className="hover:text-foreground transition-colors">
+                <a href="/#overview" className="transition-colors hover:text-foreground">
+                  Overview
+                </a>
+              </li>
+              <li>
+                <a href="/#features" className="transition-colors hover:text-foreground">
                   Features
                 </a>
               </li>
               <li>
-                <a href="#pricing" className="hover:text-foreground transition-colors">
+                <a href="/#pricing" className="transition-colors hover:text-foreground">
                   Pricing
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-foreground transition-colors">
+                <a href="#" className="transition-colors hover:text-foreground">
                   Documentation
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-foreground transition-colors">
+                <a href="#" className="transition-colors hover:text-foreground">
                   API
                 </a>
               </li>
             </ul>
           </div>
           <div>
-            <h4 className="text-foreground mb-4 font-semibold">Company</h4>
-            <ul className="text-muted-foreground space-y-2 text-sm">
+            <h4 className="mb-4 font-semibold">Company</h4>
+            <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <a href="#" className="hover:text-foreground transition-colors">
+                <a href="/#csr" className="transition-colors hover:text-foreground">
+                  CSR
+                </a>
+              </li>
+              <li>
+                <a href="/#verification" className="transition-colors hover:text-foreground">
+                  Verification
+                </a>
+              </li>
+              <li>
+                <a href="/#reviews" className="transition-colors hover:text-foreground">
+                  Reviews
+                </a>
+              </li>
+              <li>
+                <a href="#" className="transition-colors hover:text-foreground">
                   About
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-foreground transition-colors">
+                <a href="#" className="transition-colors hover:text-foreground">
                   Blog
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-foreground transition-colors">
+                <a href="#" className="transition-colors hover:text-foreground">
                   Careers
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-foreground transition-colors">
+                <a href="mailto:support@biztrack.uk" className="transition-colors hover:text-foreground">
                   Contact
                 </a>
               </li>
             </ul>
           </div>
           <div>
-            <h4 className="text-foreground mb-4 font-semibold">Support</h4>
-            <ul className="text-muted-foreground space-y-2 text-sm">
+            <h4 className="mb-4 font-semibold">Support</h4>
+            <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <a href="#" className="hover:text-foreground transition-colors">
+                <a href="#" className="transition-colors hover:text-foreground">
                   Help Center
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-foreground transition-colors">
+                <a href="#" className="transition-colors hover:text-foreground">
                   Community
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-foreground transition-colors">
+                <a href="#" className="transition-colors hover:text-foreground">
                   Status
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-foreground transition-colors">
+                <a href="#" className="transition-colors hover:text-foreground">
                   Security
                 </a>
               </li>
             </ul>
           </div>
         </div>
-        <div className="text-muted-foreground border-border mt-8 border-t pt-8 text-center text-sm">
-          <p>&copy; 2026 BizTrack. All rights reserved.</p>
+        <div className="mt-8 flex flex-col items-center gap-4 border-t pt-8 text-center text-sm text-muted-foreground">
+          <VerifiedCompanyBadge />
+          <p>&copy; {COMPANY_REGISTRATION.copyrightYear} BizTrack. All rights reserved.</p>
         </div>
       </div>
     </footer>
