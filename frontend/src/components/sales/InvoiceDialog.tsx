@@ -41,6 +41,7 @@ import { usePlanInfo } from '../../hooks/usePlanInfo';
 import { resolveCustomerPhone } from '@/src/utils/phoneUtils';
 import { getCustomerDisplayName } from '@/src/utils/customerUtils';
 import { CreateCustomerDialog } from '../crm/CreateCustomerDialog';
+import { CommerceInvoiceForm } from './CommerceInvoiceForm';
 import { UserPlus } from 'lucide-react';
 
 export type InstallmentPlanCreateOption = Omit<InstallmentPlanCreate, 'invoice_id'>;
@@ -65,8 +66,9 @@ export function InvoiceDialog({
   const { currency, formatCurrency } = useCurrency();
   const { planInfo } = usePlanInfo();
   const isWorkshop = planInfo?.planType === 'workshop';
-  const isCommerce =
+  const isCommerceOrAgency =
     planInfo?.planType === 'commerce' || planInfo?.planType === 'agency';
+  const useCommerceInvoiceLayout = planInfo?.planType === 'commerce';
   const [createInstallmentPlan, setCreateInstallmentPlan] = useState(false);
   const [installmentCount, setInstallmentCount] = useState(3);
   const [installmentFrequency, setInstallmentFrequency] = useState('monthly');
@@ -124,6 +126,7 @@ export function InvoiceDialog({
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [showCreateCustomerDialog, setShowCreateCustomerDialog] = useState(false);
+  const [commerceFormKey, setCommerceFormKey] = useState(0);
 
   // Update currency when global currency changes
   useEffect(() => {
@@ -330,9 +333,36 @@ export function InvoiceDialog({
     }
   };
 
+  const clearFieldError = (key: string) => {
+    if (errors[key]) {
+      setErrors((prev) => ({ ...prev, [key]: '' }));
+    }
+  };
+
+  const handleProductSelect = (productId: string) => {
+    const product = products.find((p) => p.id === productId);
+    setNewItem((prev) => ({
+      ...prev,
+      productId,
+      description: product?.name || prev.description,
+      unitPrice: product?.unitPrice ?? prev.unitPrice,
+    }));
+  };
+
+  const resetNewItem = () => {
+    setNewItem({
+      description: '',
+      quantity: 1,
+      unitPrice: 0,
+      discount: 0,
+      taxRate: 0,
+      productId: '',
+    });
+  };
+
   const addItem = () => {
     const itemErrors: { [key: string]: string } = {};
-    if (isCommerce && !newItem.productId) {
+    if (isCommerceOrAgency && !newItem.productId) {
       itemErrors.newItemProduct = 'Please select a product';
     }
     if (!newItem.description.trim()) {
@@ -349,14 +379,75 @@ export function InvoiceDialog({
       return;
     }
     setItems((prev) => [...prev, { ...newItem }]);
-    setNewItem({
-      description: '',
-      quantity: 1,
-      unitPrice: 0,
-      discount: 0,
+    resetNewItem();
+  };
+
+  const addExtraItem = () => {
+    const itemErrors: { [key: string]: string } = {};
+    if (!newItem.description.trim()) {
+      itemErrors.newItemDescription = 'Description is required';
+    }
+    if (newItem.quantity <= 0) {
+      itemErrors.newItemQuantity = 'Quantity must be greater than 0';
+    }
+    if (newItem.unitPrice < 0) {
+      itemErrors.newItemUnitPrice = 'Unit price cannot be negative';
+    }
+    if (Object.keys(itemErrors).length > 0) {
+      setErrors((prev) => ({ ...prev, ...itemErrors }));
+      return;
+    }
+    setItems((prev) => [...prev, { ...newItem, productId: newItem.productId || '' }]);
+    resetNewItem();
+  };
+
+  const clearInvoice = () => {
+    setFormData({
+      customerId: '',
+      customerName: '',
+      customerEmail: '',
+      customerPhone: '',
+      shippingAddress: '',
+      issueDate: new Date().toISOString().split('T')[0],
+      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split('T')[0],
+      orderNumber: '',
+      orderTime: new Date().toISOString().slice(0, 16),
+      paymentTerms: 'Cash',
+      currency: currency,
       taxRate: 0,
-      productId: '',
+      discount: 0,
+      notes: '',
+      terms: '',
+      items: [],
+      opportunityId: '',
+      quoteId: '',
+      projectId: '',
+      vehicleMake: '',
+      vehicleModel: '',
+      vehicleYear: '',
+      vehicleColor: '',
+      vehicleVin: '',
+      vehicleReg: '',
+      vehicleMileage: '',
+      documentNo: '',
+      jobDescription: '',
+      partsDescription: '',
+      labourTotal: 0,
+      partsTotal: 0,
     });
+    setItems([]);
+    setSelectedCustomer(null);
+    resetNewItem();
+    setCreateInstallmentPlan(false);
+    setInstallmentCount(3);
+    setInstallmentFrequency('monthly');
+    setInstallmentFirstDueDate(
+      new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    );
+    setErrors({});
+    setCommerceFormKey((k) => k + 1);
   };
 
 
@@ -400,9 +491,6 @@ export function InvoiceDialog({
 
     // Validate items
     items.forEach((item, index) => {
-      if (isCommerce && !item.productId) {
-        newErrors[`item_${index}_productId`] = 'Product is required';
-      }
       if (!item.description.trim()) {
         newErrors[`item_${index}_description`] = 'Item description is required';
       }
@@ -475,8 +563,14 @@ export function InvoiceDialog({
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent
+        className={
+          useCommerceInvoiceLayout && mode !== 'view'
+            ? 'max-h-[96vh] w-[99vw] max-w-[1600px] overflow-y-auto p-2 sm:p-3'
+            : 'max-w-4xl max-h-[90vh] overflow-y-auto'
+        }
+      >
+        <DialogHeader className={useCommerceInvoiceLayout && mode !== 'view' ? 'sr-only' : undefined}>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
             {mode === 'create' ? 'Create New Invoice' : mode === 'edit' ? 'Edit Invoice' : 'View Invoice'}
@@ -713,6 +807,41 @@ export function InvoiceDialog({
               </Button>
             </div>
           </div>
+        ) : useCommerceInvoiceLayout ? (
+        <form onSubmit={handleSubmit}>
+          <CommerceInvoiceForm
+            key={commerceFormKey}
+            mode={mode === 'view' ? 'create' : mode}
+            formData={formData}
+            errors={errors}
+            items={items}
+            newItem={newItem}
+            products={products}
+            selectedCustomer={selectedCustomer}
+            totals={totals}
+            loading={loading}
+            error={error}
+            createInstallmentPlan={createInstallmentPlan}
+            installmentCount={installmentCount}
+            installmentFrequency={installmentFrequency}
+            installmentFirstDueDate={installmentFirstDueDate}
+            onInputChange={handleInputChange}
+            onCustomerSelect={handleCustomerSelect}
+            onNewItemChange={setNewItem}
+            onProductSelect={handleProductSelect}
+            onAddItem={addItem}
+            onAddExtraItem={addExtraItem}
+            onRemoveItem={removeItem}
+            onClearInvoice={clearInvoice}
+            onCancel={() => onOpenChange(false)}
+            onNewCustomer={() => setShowCreateCustomerDialog(true)}
+            setCreateInstallmentPlan={setCreateInstallmentPlan}
+            setInstallmentCount={setInstallmentCount}
+            setInstallmentFrequency={setInstallmentFrequency}
+            setInstallmentFirstDueDate={setInstallmentFirstDueDate}
+            clearFieldError={clearFieldError}
+          />
+        </form>
         ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Customer Information */}
@@ -1363,7 +1492,7 @@ export function InvoiceDialog({
             </CardContent>
           </Card>
 
-          {isCommerce && mode !== 'view' && (
+          {isCommerceOrAgency && mode !== 'view' && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">Installments</CardTitle>
