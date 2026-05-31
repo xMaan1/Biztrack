@@ -312,7 +312,7 @@ export function InvoiceDialog({
         ...prev,
         customerId: customer.id,
         customerName: getCustomerDisplayName(customer),
-        customerEmail: customer.email,
+        customerEmail: customer.email ?? '',
         customerPhone: resolveCustomerPhone(customer),
       }));
 
@@ -590,7 +590,7 @@ export function InvoiceDialog({
       };
       const totals = calculateTotals();
       const options =
-        mode !== 'view' && createInstallmentPlan && totals.total > 0
+        createInstallmentPlan && totals.total > 0
           ? {
               installmentPlan: {
                 total_amount: totals.total,

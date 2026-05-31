@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
   Card,
@@ -76,7 +75,6 @@ export default function ProductionPage() {
 }
 
 function ProductionContent() {
-  const router = useRouter();
   const [productionPlans, setProductionPlans] = useState<ProductionPlan[]>([]);
   const [filteredPlans, setFilteredPlans] = useState<ProductionPlan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,7 +84,7 @@ function ProductionContent() {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<ProductionPlan | null>(null);
-  const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
+  const [dialogMode, setDialogMode] = useState<'create' | 'edit' | 'view'>('create');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [planToDelete, setPlanToDelete] = useState<ProductionPlan | null>(null);
   const [sortBy, setSortBy] = useState<string>('newest');

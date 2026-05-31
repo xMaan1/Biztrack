@@ -18,8 +18,6 @@ import {
 import { Textarea } from '@/src/components/ui/textarea';
 import { Label } from '@/src/components/ui/label';
 import {
-  CreditCard,
-  Calendar,
   RefreshCw,
   XCircle,
   CheckCircle,
@@ -27,7 +25,6 @@ import {
   AlertTriangle,
   Loader2,
   ArrowLeft,
-  BarChart3,
 } from 'lucide-react';
 import { apiService } from '@/src/services/ApiService';
 import { useCurrency } from '@/src/contexts/CurrencyContext';

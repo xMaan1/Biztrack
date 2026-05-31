@@ -19,7 +19,6 @@ import {
   TableRow,
 } from '@/src/components/ui/table';
 import {
-  CreditCard,
   Search,
   RefreshCw,
   Eye,

@@ -3,7 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/src/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
+import { Card, CardContent } from '@/src/components/ui/card';
 import { XCircle } from 'lucide-react';
 
 export default function SubscriptionCancelPage() {

@@ -170,7 +170,7 @@ export default function JobCardDialog({
         },
         assigned_to_id: formData.assigned_to_id || undefined,
         planned_date: formData.planned_date ? formData.planned_date + 'T12:00:00Z' : undefined,
-        completed_at: formData.date_time_out ? formData.date_time_out + ':00Z' : (mode === 'edit' ? null : undefined),
+        completed_at: formData.date_time_out ? formData.date_time_out + ':00Z' : undefined,
         labor_estimate: formData.labor_estimate,
         parts_estimate: formData.parts_estimate,
         vat_rate: formData.vat_rate / 100,

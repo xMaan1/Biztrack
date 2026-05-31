@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../../components/ui/select';
-import { Plus, Search, Edit, Trash2, ClipboardList, FileDown } from 'lucide-react';
+import { Plus, Edit, Trash2, ClipboardList, FileDown } from 'lucide-react';
 import { apiService } from '../../../services/ApiService';
 import { DashboardLayout } from '../../../components/layout';
 import { JobCard } from '../../../models/workshop';

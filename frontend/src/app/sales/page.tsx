@@ -77,7 +77,7 @@ function SalesContent() {
     { ttl: 30000 }
   );
   
-  const { data: leadsData, loading: leadsLoading, refetch: refetchLeads } = useCachedApi<any>(
+  const { data: leadsData, loading: leadsLoading, refetch: refetchLeads } = useCachedApi<Lead[]>(
     'sales_leads',
     async () => {
       const resp = await apiService.get('/sales/leads');
@@ -87,7 +87,7 @@ function SalesContent() {
   );
   const leads = leadsData || [];
   
-  const { data: opportunitiesData, loading: opportunitiesLoading, refetch: refetchOpportunities } = useCachedApi<any>(
+  const { data: opportunitiesData, loading: opportunitiesLoading, refetch: refetchOpportunities } = useCachedApi<Opportunity[]>(
     'sales_opportunities',
     async () => {
       const resp = await apiService.get('/sales/opportunities');

@@ -143,10 +143,10 @@ export default function SalesAnalyticsPage() {
   // Contact Metrics
   const totalContacts = filteredContacts.length;
   const leadContacts = filteredContacts.filter(
-    (c) => c.type === ContactType.LEAD,
+    (c) => c.contactType === ContactType.LEAD,
   ).length;
   const customerContacts = filteredContacts.filter(
-    (c) => c.type === ContactType.CUSTOMER,
+    (c) => c.contactType === ContactType.CUSTOMER,
   ).length;
   const leadToCustomerRate =
     leadContacts > 0 ? (customerContacts / leadContacts) * 100 : 0;

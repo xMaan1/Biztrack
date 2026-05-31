@@ -36,7 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/src/components/ui/select';
-import { Building2, Edit, Trash2, ChevronRight, ChevronLeft, UserPlus, Receipt, Plus, X } from 'lucide-react';
+import { Edit, Trash2, ChevronRight, ChevronLeft, UserPlus, Receipt, Plus, X } from 'lucide-react';
 import healthcareService from '@/src/services/HealthcareService';
 import type { Admission, AdmissionCreate, AdmissionUpdate, Doctor, Patient } from '@/src/models/healthcare';
 import { ADMISSION_STATUSES } from '@/src/models/healthcare';

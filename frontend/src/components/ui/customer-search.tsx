@@ -5,7 +5,6 @@ import { Input } from './input';
 import { Label } from './label';
 import { Button } from './button';
 import { Badge } from './badge';
-import { Card } from './card';
 import { Search, User, Building, X, Check } from 'lucide-react';
 import { Customer } from '../../services/CustomerService';
 import InvoiceService from '../../services/InvoiceService';

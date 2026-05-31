@@ -78,6 +78,7 @@ export interface Lead {
   jobTitle?: string;
   status: LeadStatus;
   source: LeadSource;
+  leadSource?: LeadSource;
   assignedTo?: string;
   notes?: string;
   tags: string[];

@@ -58,7 +58,7 @@ export default function HealthcareDailyExpensePage() {
 
 function DailyExpenseContent() {
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
-  const [categoriesTotal, setCategoriesTotal] = useState(0);
+  const [, setCategoriesTotal] = useState(0);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [expenses, setExpenses] = useState<DailyExpense[]>([]);
   const [expensesTotal, setExpensesTotal] = useState(0);

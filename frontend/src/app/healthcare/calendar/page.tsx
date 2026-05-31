@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { DashboardLayout } from '@/src/components/layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
 import { Button } from '@/src/components/ui/button';
 import {
   ChevronLeft,
@@ -163,23 +163,6 @@ function CalendarContent() {
   const openDay = (d: Date) => {
     setSelectedDate(d);
     setDayDialogOpen(true);
-  };
-
-  const openAddForDate = (d: Date) => {
-    setSelectedDate(d);
-    setEditingAppointment(null);
-    setFormData({
-      doctor_id: doctors[0]?.id ?? '',
-      patient_id: '__none__',
-      patient_name: '',
-      patient_phone: '',
-      appointment_date: format(d, 'yyyy-MM-dd'),
-      start_time: '09:00',
-      end_time: '09:30',
-      status: 'scheduled',
-      notes: '',
-    });
-    setFormOpen(true);
   };
 
   const openAddFromCalendar = () => {

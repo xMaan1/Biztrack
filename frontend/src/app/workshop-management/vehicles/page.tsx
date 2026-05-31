@@ -5,7 +5,7 @@ import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
-import { Plus, Search, Edit, Trash2, Car } from 'lucide-react';
+import { Plus, Edit, Trash2, Car } from 'lucide-react';
 import { apiService } from '../../../services/ApiService';
 import { DashboardLayout } from '../../../components/layout';
 import { Vehicle } from '../../../models/workshop';
