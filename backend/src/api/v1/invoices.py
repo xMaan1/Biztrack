@@ -181,6 +181,7 @@ def transform_invoice_to_pydantic(db_invoice: Invoice):
                     taxRate=item.get('taxRate', 0),
                     taxAmount=item.get('taxAmount', 0),
                     total=item.get('total', 0),
+                    unit=item.get('unit'),
                     productId=str(item.get('productId')) if item.get('productId') else None,
                     projectId=str(item.get('projectId')) if item.get('projectId') else None,
                     taskId=str(item.get('taskId')) if item.get('taskId') else None
@@ -694,6 +695,7 @@ def create_invoice(
             product_description = item_data.description
             product_unit_price = item_data.unitPrice
             product_sku = ""
+            item_unit = item_data.unit or "piece"
             
             if item_data.productId:
                 try:
@@ -707,6 +709,8 @@ def create_invoice(
                         product_description = product.name
                         product_unit_price = product.unitPrice
                         product_sku = product.sku
+                        if not item_data.unit and product.unit:
+                            item_unit = product.unit
                     else:
                         raise HTTPException(status_code=400, detail="Invalid product selected")
                 except Exception as e:
@@ -730,6 +734,7 @@ def create_invoice(
                 "taxRate": float(item_data.taxRate or 0),
                 "taxAmount": round(item_tax, 2),
                 "total": round(item_total, 2),
+                "unit": item_unit,
                 "productId": item_data.productId,
                 "productSku": product_sku,
                 "projectId": item_data.projectId,
@@ -1003,6 +1008,7 @@ def update_invoice(
                         unit_price = item_data.get('unitPrice', 0)
                         discount = item_data.get('discount', 0)
                         tax_rate = item_data.get('taxRate', 0)
+                        unit = item_data.get('unit')
                         product_id = item_data.get('productId')
                         project_id = item_data.get('projectId')
                         task_id = item_data.get('taskId')
@@ -1012,6 +1018,7 @@ def update_invoice(
                         unit_price = item_data.unitPrice
                         discount = item_data.discount
                         tax_rate = item_data.taxRate
+                        unit = item_data.unit
                         product_id = item_data.productId
                         project_id = item_data.projectId
                         task_id = item_data.taskId
@@ -1027,6 +1034,7 @@ def update_invoice(
                         raise HTTPException(status_code=400, detail="Item unit price cannot be negative")
                     if is_commerce_plan and not product_id:
                         raise HTTPException(status_code=400, detail="Product is required for commerce invoices")
+                    item_unit = unit or "piece"
                     if product_id:
                         from ...config.inventory_models import Product
                         product = db.query(Product).filter(
@@ -1035,6 +1043,8 @@ def update_invoice(
                         ).first()
                         if not product:
                             raise HTTPException(status_code=400, detail="Invalid product selected")
+                        if not unit and product.unit:
+                            item_unit = product.unit
                     
                     # Calculate item total
                     item_subtotal = quantity * unit_price
@@ -1052,6 +1062,7 @@ def update_invoice(
                         "taxRate": float(tax_rate or 0),
                         "taxAmount": round(item_tax, 2),
                         "total": round(item_total, 2),
+                        "unit": item_unit,
                         "productId": product_id,
                         "projectId": project_id,
                         "taskId": task_id

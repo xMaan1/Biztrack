@@ -122,6 +122,7 @@ export function InvoiceDialog({
     discount: 0,
     taxRate: 0,
     productId: '',
+    unit: 'piece',
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -213,6 +214,7 @@ export function InvoiceDialog({
           unitPrice: item.unitPrice,
           discount: item.discount,
           taxRate: item.taxRate,
+          unit: item.unit,
           productId: item.productId,
           projectId: item.projectId,
           taskId: item.taskId,
@@ -346,7 +348,22 @@ export function InvoiceDialog({
       productId,
       description: product?.name || prev.description,
       unitPrice: product?.unitPrice ?? prev.unitPrice,
+      unit: product?.unitOfMeasure || prev.unit || 'piece',
     }));
+  };
+
+  const syncProductUnit = async (productId: string, unit: string) => {
+    const product = products.find((p) => p.id === productId);
+    if (!product || product.unitOfMeasure === unit) return;
+    try {
+      await apiService.put(`/pos/products/${productId}`, { unitOfMeasure: unit });
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === productId ? { ...p, unitOfMeasure: unit as Product['unitOfMeasure'] } : p,
+        ),
+      );
+    } catch {
+    }
   };
 
   const resetNewItem = () => {
@@ -357,10 +374,11 @@ export function InvoiceDialog({
       discount: 0,
       taxRate: 0,
       productId: '',
+      unit: 'piece',
     });
   };
 
-  const addItem = () => {
+  const addItem = async () => {
     const itemErrors: { [key: string]: string } = {};
     if (isCommerceOrAgency && !newItem.productId) {
       itemErrors.newItemProduct = 'Please select a product';
@@ -378,11 +396,16 @@ export function InvoiceDialog({
       setErrors((prev) => ({ ...prev, ...itemErrors }));
       return;
     }
-    setItems((prev) => [...prev, { ...newItem }]);
+    const product = products.find((p) => p.id === newItem.productId);
+    const unit = newItem.unit?.trim() || product?.unitOfMeasure || 'piece';
+    setItems((prev) => [...prev, { ...newItem, unit }]);
+    if (newItem.productId && unit !== product?.unitOfMeasure) {
+      await syncProductUnit(newItem.productId, unit);
+    }
     resetNewItem();
   };
 
-  const addExtraItem = () => {
+  const addExtraItem = async () => {
     const itemErrors: { [key: string]: string } = {};
     if (!newItem.description.trim()) {
       itemErrors.newItemDescription = 'Description is required';
@@ -397,7 +420,49 @@ export function InvoiceDialog({
       setErrors((prev) => ({ ...prev, ...itemErrors }));
       return;
     }
-    setItems((prev) => [...prev, { ...newItem, productId: newItem.productId || '' }]);
+
+    const description = newItem.description.trim();
+    const unit = newItem.unit?.trim() || 'piece';
+    let productId = newItem.productId || '';
+
+    const existingByName = products.find(
+      (p) => p.name.toLowerCase() === description.toLowerCase(),
+    );
+
+    if (existingByName) {
+      productId = existingByName.id;
+    } else if (!productId) {
+      try {
+        setLoading(true);
+        const sku = `EXT-${Date.now().toString(36).toUpperCase()}`;
+        const response = await apiService.post('/pos/products', {
+          name: description,
+          sku,
+          category: 'other',
+          unitPrice: newItem.unitPrice,
+          costPrice: newItem.unitPrice,
+          stockQuantity: 0,
+          minStockLevel: 0,
+          unitOfMeasure: unit,
+        });
+        const created: Product = response.product;
+        setProducts((prev) => [...prev, created]);
+        productId = created.id;
+      } catch {
+        setErrors((prev) => ({
+          ...prev,
+          newItemDescription: 'Failed to save item to inventory',
+        }));
+        return;
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    setItems((prev) => [
+      ...prev,
+      { ...newItem, description, productId, unit },
+    ]);
     resetNewItem();
   };
 

@@ -29,6 +29,7 @@ export interface InvoiceItem {
   taxRate: number;
   taxAmount: number;
   total: number;
+  unit?: string;
   productId?: string;
   productSku?: string;
   projectId?: string;
@@ -41,6 +42,7 @@ export interface InvoiceItemCreate {
   unitPrice: number;
   discount: number;
   taxRate: number;
+  unit?: string;
   productId?: string;
   projectId?: string;
   taskId?: string;

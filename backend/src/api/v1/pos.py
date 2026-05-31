@@ -49,7 +49,7 @@ def convert_db_product_to_pydantic(db_product):
         stockQuantity=db_product.stockQuantity,
         minStockLevel=db_product.minStockLevel,
         maxStockLevel=db_product.maxStockLevel,
-        unitOfMeasure=UnitOfMeasure(db_product.unit) if db_product.unit else UnitOfMeasure.PIECE,
+        unitOfMeasure=db_product.unit or "piece",
         barcode=db_product.barcode,
         expiryDate=db_product.expiryDate.isoformat() if db_product.expiryDate else None,
         batchNumber=db_product.batchNumber,

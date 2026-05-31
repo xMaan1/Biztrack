@@ -81,7 +81,7 @@ class ProductBase(BaseModel):
     stockQuantity: int
     minStockLevel: int = 0
     maxStockLevel: Optional[int] = None
-    unitOfMeasure: UnitOfMeasure = UnitOfMeasure.PIECE
+    unitOfMeasure: str = "piece"
     barcode: Optional[str] = None
     expiryDate: Optional[str] = None
     batchNumber: Optional[str] = None

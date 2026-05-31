@@ -40,6 +40,7 @@ class InvoiceItem(BaseModel):
     taxRate: float = 0.0
     taxAmount: float = 0.0
     total: float
+    unit: Optional[str] = None
     productId: Optional[Any] = None
     projectId: Optional[str] = None
     taskId: Optional[str] = None
@@ -50,6 +51,7 @@ class InvoiceItemCreate(BaseModel):
     unitPrice: float
     discount: float = 0.0
     taxRate: float = 0.0
+    unit: Optional[str] = None
     productId: Optional[str] = None
     projectId: Optional[str] = None
     taskId: Optional[str] = None
@@ -60,6 +62,7 @@ class InvoiceItemUpdate(BaseModel):
     unitPrice: Optional[float] = None
     discount: Optional[float] = None
     taxRate: Optional[float] = None
+    unit: Optional[str] = None
     productId: Optional[str] = None
     projectId: Optional[str] = None
     taskId: Optional[str] = None

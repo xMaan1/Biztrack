@@ -20,6 +20,8 @@ import { useCurrency } from '../../contexts/CurrencyContext';
 import InvoiceService from '../../services/InvoiceService';
 import { getCustomerDisplayName } from '@/src/utils/customerUtils';
 import { Trash2, FileText } from 'lucide-react';
+import { UnitOfMeasureSelect } from './UnitOfMeasureSelect';
+import { formatUnitLabel } from '../../constants/unitOfMeasureOptions';
 
 export interface CommerceInvoiceTotals {
   subtotal: number;
@@ -48,7 +50,7 @@ export interface CommerceInvoiceFormProps {
   onNewItemChange: (item: InvoiceItemCreate) => void;
   onProductSelect: (productId: string) => void;
   onAddItem: () => void;
-  onAddExtraItem: () => void;
+  onAddExtraItem: () => void | Promise<void>;
   onRemoveItem: (index: number) => void;
   onClearInvoice: () => void;
   onCancel: () => void;
@@ -159,10 +161,13 @@ export function CommerceInvoiceForm({
 
   const billBalance = Math.max(0, totals.total - paidAmount);
 
-  const productUnit = (productId?: string) => {
-    if (!productId) return '';
-    const p = products.find((x) => x.id === productId);
-    return p?.unitOfMeasure || '';
+  const resolveItemUnit = (item: InvoiceItemCreate) => {
+    if (item.unit) return item.unit;
+    if (item.productId) {
+      const p = products.find((x) => x.id === item.productId);
+      return p?.unitOfMeasure || '';
+    }
+    return '';
   };
 
   const updateNewItem = (patch: Partial<InvoiceItemCreate>) => {
@@ -424,10 +429,9 @@ export function CommerceInvoiceForm({
               />
             </InlineField>
             <InlineField label="Units / Packs:">
-              <Input
-                readOnly
-                value={productUnit(newItem.productId)}
-                className={`${inputCls} bg-muted`}
+              <UnitOfMeasureSelect
+                value={newItem.unit || resolveItemUnit(newItem) || 'piece'}
+                onChange={(unit) => updateNewItem({ unit })}
               />
             </InlineField>
           </div>
@@ -593,7 +597,7 @@ export function CommerceInvoiceForm({
                       {item.quantity}
                     </td>
                     <td className="border border-border px-2 py-1">
-                      {productUnit(item.productId) || '—'}
+                      {formatUnitLabel(resolveItemUnit(item)) || '—'}
                     </td>
                     <td className="border border-border px-2 py-1 text-right">
                       {formatCurrency(item.unitPrice)}
