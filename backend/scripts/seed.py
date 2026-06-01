@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Subscription Plans & Super Admin Seeding Script
-Creates the 4 industry subscription plans and a super admin user for the system
+Creates the 5 industry subscription plans and a super admin user for the system
 """
 
 import json
@@ -232,6 +232,29 @@ def seed_plans(engine):
                 "Lab Management",
                 "Pharmacy Integration",
                 "Medical Device Tracking"
+            ]
+        },
+        {
+            "name": "NGO Impact",
+            "description": "Operations and impact management for nonprofits, charities, and NGOs",
+            "planType": "ngo",
+            "price": 79.99,
+            "billingCycle": "monthly",
+            "maxProjects": 75,
+            "maxUsers": 40,
+            "features": [
+                "Program & Project Tracking",
+                "Donor Management",
+                "Grant Management",
+                "Volunteer Management",
+                "Beneficiary Records",
+                "Fundraising Campaigns",
+                "Expense Tracking",
+                "Financial Reports",
+                "Team Collaboration",
+                "Impact Reporting",
+                "Document Management",
+                "Compliance & Audit Trail"
             ]
         }
     ]

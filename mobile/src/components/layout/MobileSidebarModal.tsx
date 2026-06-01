@@ -39,6 +39,8 @@ function getPlanDisplayName(
       return 'Agency Pro';
     case 'healthcare':
       return 'Healthcare Suite';
+    case 'ngo':
+      return 'NGO Impact';
     default:
       return planInfo.planName;
   }
