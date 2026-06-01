@@ -73,6 +73,13 @@ function LandingPlanCard({
   isAuthenticated,
   onSubscribe,
 }: LandingPlanCardProps) {
+  const highlightBadge =
+    plan.planType === 'ngo' ? (
+      <Badge className="bg-violet-600 px-4 py-1.5 text-white">For Nonprofits</Badge>
+    ) : plan.planType === 'enterprise' ? (
+      <Badge className="bg-blue-600 px-4 py-1.5 text-white">Most Popular</Badge>
+    ) : null;
+
   return (
     <Card
       className={cn(
@@ -86,20 +93,15 @@ function LandingPlanCard({
           'border-slate-200 hover:border-blue-200',
       )}
     >
-      {plan.planType === 'ngo' && (
-        <div className="absolute -top-3 left-1/2 z-10 -translate-x-1/2">
-          <Badge className="bg-violet-600 px-4 py-1.5 text-white">
-            For Nonprofits
-          </Badge>
-        </div>
-      )}
-      {plan.planType === 'enterprise' && (
-        <div className="absolute -top-3 left-1/2 z-10 -translate-x-1/2">
-          <Badge className="bg-blue-600 px-4 py-1.5 text-white">Most Popular</Badge>
-        </div>
-      )}
-
-      <CardHeader className="pb-4 pt-8 text-center">
+      <CardHeader
+        className={cn(
+          'pb-4 text-center',
+          highlightBadge ? 'space-y-3 pt-6' : 'pt-8',
+        )}
+      >
+        {highlightBadge && (
+          <div className="flex justify-center">{highlightBadge}</div>
+        )}
         <CardTitle className="text-2xl text-slate-900">{plan.name}</CardTitle>
         <div className="mt-2 text-4xl font-bold text-slate-900">
           {currencySymbol}
@@ -192,7 +194,7 @@ export function LandingPricingSection({
             {bottomRow.length > 0 && (
               <div
                 className={cn(
-                  'mx-auto grid max-w-6xl grid-cols-1 gap-6 sm:gap-8',
+                  'mx-auto grid max-w-6xl grid-cols-1 gap-6 pt-1 sm:gap-8',
                   bottomRow.length === 1 && 'max-w-md',
                   bottomRow.length === 2 &&
                     'max-w-4xl sm:grid-cols-2 lg:max-w-5xl',
