@@ -695,6 +695,7 @@ async def delete_tenant_invoice(
     
     try:
         from ...config.invoice_models import Invoice
+        from ...config.invoice_crud import delete_invoice_dependencies
         
         invoice = db.query(Invoice).filter(
             Invoice.id == invoice_id,
@@ -706,7 +707,8 @@ async def delete_tenant_invoice(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Invoice not found"
             )
-        
+
+        delete_invoice_dependencies(db, invoice_id, tenant_id)
         db.delete(invoice)
         db.commit()
         

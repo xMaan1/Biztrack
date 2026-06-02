@@ -23,6 +23,7 @@ from ...models.crm import (
 )
 from ...config.database import User
 from ...config.invoice_models import Invoice, Payment
+from ...config.invoice_crud import delete_invoice_dependencies
 from ...config.crm_crud import (
     create_customer, get_customer_by_id, get_customers, update_customer, delete_customer,
     get_customer_stats, search_customers, resolve_phone_from_customer,
@@ -520,26 +521,15 @@ def bulk_delete_invoices(
                     errors.append(f"Invoice {invoice_id} not found")
                     continue
                 
-                # Handle foreign key constraint by deleting related invoice_items first
                 try:
-                    check_items_query = text("""
-                        SELECT COUNT(*) FROM information_schema.tables 
-                        WHERE table_name = 'invoice_items'
-                    """)
-                    result = db.execute(check_items_query)
-                    items_table_exists = result.fetchone()[0] > 0
-                    
-                    if items_table_exists:
-                        delete_items_query = text("""
-                            DELETE FROM invoice_items 
-                            WHERE "invoiceId" = :invoice_id
-                        """)
-                        db.execute(delete_items_query, {"invoice_id": invoice_id})
-                
-                except Exception as items_error:
-                    errors.append(f"Could not delete invoice items for {invoice.invoiceNumber}: {str(items_error)}")
-                
-                # Delete the invoice
+                    delete_invoice_dependencies(db, str(invoice_id), tenant_id)
+                except Exception as dep_error:
+                    failed_count += 1
+                    errors.append(
+                        f"Could not delete related records for {invoice.invoiceNumber}: {str(dep_error)}"
+                    )
+                    continue
+
                 db.delete(invoice)
                 processed_count += 1
                 
@@ -1144,29 +1134,9 @@ def delete_invoice(
         
         if not invoice:
             raise HTTPException(status_code=404, detail="Invoice not found")
-        
-        try:
-            check_items_query = text("""
-                SELECT COUNT(*) FROM information_schema.tables 
-                WHERE table_name = 'invoice_items'
-            """)
-            result = db.execute(check_items_query)
-            items_table_exists = result.fetchone()[0] > 0
-            
-            if items_table_exists:
-                # Delete related invoice items first
-                delete_items_query = text("""
-                    DELETE FROM invoice_items 
-                    WHERE "invoiceId" = :invoice_id
-                """)
-                db.execute(delete_items_query, {"invoice_id": invoice_id})
-                print(f"🗑️  Deleted related invoice items for invoice {invoice_id}")
-        
-        except Exception as items_error:
-            print(f"⚠️  Could not delete invoice items: {str(items_error)}")
-            # Continue with invoice deletion - the constraint might not exist
-        
-        # Now delete the invoice
+
+        delete_invoice_dependencies(db, invoice_id, tenant_id)
+
         db.delete(invoice)
         db.commit()
         
@@ -1177,7 +1147,7 @@ def delete_invoice(
         raise
     except Exception as e:
         db.rollback()
-        print(f"Error deleting invoice: {str(e)}")
+        logger.error("Error deleting invoice: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to delete invoice: {str(e)}")
 
 @router.post("/{invoice_id}/send")
