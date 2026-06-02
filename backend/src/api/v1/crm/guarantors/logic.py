@@ -14,9 +14,7 @@ from .schemas import GuarantorCreate, GuarantorUpdate, GuarantorResponse
 def _create_guarantor(db: Session, customer_id: str, guarantor_data: Dict[str, Any], tenant_id: str) -> CustomerGuarantor:
     if not get_customer_by_id(db, customer_id, tenant_id):
         raise ValueError("Customer not found")
-    data = dict(guarantor_data)
-    data["tenant_id"] = tenant_id
-    data["customer_id"] = customer_id
+    data = {**guarantor_data, "tenant_id": tenant_id, "customer_id": customer_id}
     data["createdAt"] = datetime.utcnow()
     data["updatedAt"] = datetime.utcnow()
     guarantor = CustomerGuarantor(**data)

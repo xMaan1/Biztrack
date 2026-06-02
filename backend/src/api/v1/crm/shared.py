@@ -2,11 +2,26 @@ import base64
 import logging
 import uuid
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Type, TypeVar
 
 from fastapi import HTTPException, status
 from pydantic import BaseModel as PydanticBaseModel
 from sqlalchemy.orm import Session
+
+T = TypeVar("T", bound=PydanticBaseModel)
+
+
+def orm_to_schema(schema_cls: Type[T], orm, **extra) -> T:
+    inst = schema_cls.model_validate(orm, from_attributes=True)
+    updates = {}
+    if hasattr(orm, "id"):
+        updates["id"] = str(orm.id)
+    if hasattr(orm, "tenant_id"):
+        updates["tenant_id"] = str(orm.tenant_id)
+    updates.update(extra)
+    if updates:
+        return inst.model_copy(update=updates)
+    return inst
 
 from ....services.s3_service import s3_service
 from .db_common import attachment_item_to_dict

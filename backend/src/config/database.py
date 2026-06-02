@@ -92,7 +92,7 @@ from .event_models import (
 
 from .saved_reports_models import SavedReport
 
-from .healthcare_models import Doctor, HealthcareStaff, Appointment, Prescription, Patient, ExpenseCategory, DailyExpense, Admission
+from ..models.healthcare import Doctor, HealthcareStaff, Appointment, Prescription, Patient, ExpenseCategory, DailyExpense, Admission
 
 # Import all CRUD functions
 from .core_crud import (
@@ -196,7 +196,7 @@ from .hrm_crud import (
     get_hrm_dashboard_data
 )
 
-from .healthcare_crud import (
+from ..api.v1.healthcare.doctors.logic import (
     get_doctor_by_id,
     get_doctor_by_pmdc,
     get_doctors,
@@ -204,41 +204,55 @@ from .healthcare_crud import (
     create_doctor,
     update_doctor,
     delete_doctor,
+)
+from ..api.v1.healthcare.patients.logic import (
     get_patient_by_id,
     get_patients,
     get_patients_count,
     create_patient,
     update_patient,
     delete_patient,
+)
+from ..api.v1.healthcare.staff.logic import (
     get_healthcare_staff_by_id,
     get_healthcare_staff,
     get_healthcare_staff_count,
-    create_healthcare_staff,
-    update_healthcare_staff,
+    insert_healthcare_staff as create_healthcare_staff,
+    patch_healthcare_staff as update_healthcare_staff,
+)
+from ..api.v1.healthcare.appointments.logic import (
     get_appointment_by_id,
     get_appointments,
     get_appointments_count,
     create_appointment,
     update_appointment,
     delete_appointment,
+)
+from ..api.v1.healthcare.prescriptions.logic import (
     get_prescription_by_id,
     get_prescriptions,
     get_prescriptions_count,
     create_prescription,
     update_prescription,
     delete_prescription,
+)
+from ..api.v1.healthcare.expense_categories.logic import (
     get_expense_category_by_id,
     get_expense_categories,
     get_expense_categories_count,
     create_expense_category,
     update_expense_category,
     delete_expense_category,
+)
+from ..api.v1.healthcare.daily_expenses.logic import (
     get_daily_expense_by_id,
     get_daily_expenses,
     get_daily_expenses_count,
     create_daily_expense,
     update_daily_expense,
     delete_daily_expense,
+)
+from ..api.v1.healthcare.admissions.logic import (
     get_admission_by_id,
     get_admissions,
     get_admissions_count,

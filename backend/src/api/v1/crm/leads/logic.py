@@ -19,7 +19,7 @@ from ..http_common import (
     user_display_name,
     visible_or_404,
 )
-from ..repository import create_entity, delete_by_id, get_by_id, list_for_tenant, update_entity
+from ...repository import create_entity, delete_by_id, get_by_id, list_for_tenant, update_entity
 from ..shared import _contact_create_to_orm_dict
 from ..contacts.schemas import ContactCreate
 from .schemas import LeadCreate, LeadUpdate, CRMLeadsResponse
@@ -115,14 +115,16 @@ def get_crm_leads(
 def create_crm_lead(lead_data: LeadCreate, current_user, db: Session, tenant_context: Optional[dict] = None):
     try:
         ctx = require_tenant(tenant_context)
-        lead_dict = lead_data.dict()
+        lead_dict = {
+            **lead_data.model_dump(),
+            "tenant_id": ctx["tenant_id"],
+            "id": uuid.uuid4(),
+            "createdById": safe_uuid(current_user.id),
+            "createdAt": datetime.utcnow(),
+            "updatedAt": datetime.utcnow(),
+        }
         if lead_dict.get("assignedTo"):
             lead_dict["assignedToId"] = lead_dict.pop("assignedTo", None)
-        lead_dict["tenant_id"] = ctx["tenant_id"]
-        lead_dict["id"] = uuid.uuid4()
-        lead_dict["createdById"] = safe_uuid(current_user.id)
-        lead_dict["createdAt"] = datetime.utcnow()
-        lead_dict["updatedAt"] = datetime.utcnow()
         lead_dict = {k: v for k, v in lead_dict.items() if k in ORM_KEYS}
         lead = create_lead(lead_dict, db)
         name = f"{lead_data.firstName} {lead_data.lastName}".strip() or "Lead"
@@ -157,7 +159,7 @@ def update_crm_lead(lead_id: str, lead_data: LeadUpdate, current_user, db: Sessi
         ctx = require_tenant(tenant_context)
         tid = tenant_id_optional(tenant_context)
         lead = visible_or_404(get_lead_by_id(lead_id, db, tid), tenant_context, current_user, detail="Lead not found")
-        update_data = lead_data.dict(exclude_unset=True)
+        update_data = lead_data.model_dump(exclude_unset=True)
         update_data["updatedAt"] = datetime.utcnow()
         if "assignedTo" in update_data:
             update_data["assignedToId"] = update_data.pop("assignedTo", None)

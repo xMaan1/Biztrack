@@ -15,7 +15,7 @@ from ..http_common import (
     tenant_id_optional,
     visible_or_404,
 )
-from ..repository import create_entity, delete_by_id, get_by_id, list_for_tenant, update_entity
+from ...repository import create_entity, delete_by_id, get_by_id, list_for_tenant, update_entity
 from ..shared import _pydantic_company_from_orm
 from .schemas import Company, CompanyCreate, CompanyUpdate, CRMCompaniesResponse
 

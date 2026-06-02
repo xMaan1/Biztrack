@@ -17,7 +17,7 @@ from ..http_common import (
     user_display_name,
     visible_or_404,
 )
-from ..repository import create_entity, delete_by_id, get_by_id, list_for_tenant, update_entity
+from ...repository import create_entity, delete_by_id, get_by_id, list_for_tenant, update_entity
 from .schemas import Opportunity, OpportunityCreate, OpportunityUpdate, CRMOpportunitiesResponse
 
 
