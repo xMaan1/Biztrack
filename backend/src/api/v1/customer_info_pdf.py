@@ -16,7 +16,8 @@ from ...config.installment_models import InstallmentPlan, Installment
 from ...config.installment_crud import get_installment_plan_by_id, get_installments_by_plan
 from ...config.invoice_models import Invoice, Payment
 from ...config.invoice_crud import get_invoice_by_id
-from ...config.crm_crud import get_customer_by_id, get_guarantors_by_customer
+from ...api.v1.crm.customers.logic import get_customer_by_id
+from ...api.v1.crm.guarantors.logic import get_guarantors_by_customer
 from ...core.currency import format_currency
 
 FRONTEND_COLORS = {

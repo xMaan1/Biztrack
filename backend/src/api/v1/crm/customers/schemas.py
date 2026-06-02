@@ -3,14 +3,13 @@ from typing import Optional, List, Any
 from datetime import datetime
 from uuid import UUID
 
-from .labeled_contact_items import LabeledEmailItem, LabeledPhoneItem
+from .....models.labeled_contact_items import LabeledEmailItem, LabeledPhoneItem
 
 class CustomerAttachmentItem(BaseModel):
     url: str
     original_filename: Optional[str] = None
     s3_key: Optional[str] = None
 
-# Customer Models
 class CustomerBase(BaseModel):
     firstName: str = Field(..., min_length=1, max_length=100)
     lastName: str = Field(..., min_length=1, max_length=100)
@@ -119,7 +118,7 @@ class CustomerResponse(CustomerBase):
     isActive: bool
     createdAt: datetime
     updatedAt: datetime
-    
+
     @model_validator(mode='before')
     @classmethod
     def hydrate_customer_orm(cls, data: Any):
@@ -160,42 +159,3 @@ class CustomerStatsResponse(BaseModel):
     individual_customers: int
     business_customers: int
     recent_customers: int
-
-
-class GuarantorBase(BaseModel):
-    name: str
-    mobile: Optional[str] = None
-    cnic: Optional[str] = None
-    residential_address: Optional[str] = None
-    official_address: Optional[str] = None
-    occupation: Optional[str] = None
-    relation: Optional[str] = None
-    display_order: Optional[int] = 0
-
-
-class GuarantorCreate(GuarantorBase):
-    pass
-
-
-class GuarantorUpdate(BaseModel):
-    name: Optional[str] = None
-    mobile: Optional[str] = None
-    cnic: Optional[str] = None
-    residential_address: Optional[str] = None
-    official_address: Optional[str] = None
-    occupation: Optional[str] = None
-    relation: Optional[str] = None
-    display_order: Optional[int] = None
-
-
-class GuarantorResponse(GuarantorBase):
-    id: UUID
-    tenant_id: UUID
-    customer_id: UUID
-    createdAt: datetime
-    updatedAt: datetime
-    
-    class Config:
-        from_attributes = True
-
-

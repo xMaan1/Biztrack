@@ -15,8 +15,8 @@ from .project_models import (
     Project, Task
 )
 
-from .crm_models import (
-    Lead, Contact, Company, Opportunity, SalesActivity, Customer
+from ..models.crm import (
+    Lead, Contact, Company, Opportunity, SalesActivity, Customer, CustomerGuarantor
 )
 
 from .sales_models import (
@@ -125,30 +125,27 @@ from .project_crud import (
     create_task, update_task, delete_task, get_task_stats
 )
 
-from .crm_crud import (
-    # Lead functions
+from ..api.v1.crm.leads.logic import (
     get_lead_by_id, get_all_leads, get_leads, get_leads_by_status, get_leads_by_assignee,
     create_lead, update_lead, delete_lead,
-    
-    # Contact functions
+)
+from ..api.v1.crm.contacts.logic import (
     get_contact_by_id, get_all_contacts, get_contacts, get_contacts_by_company,
-    create_contact, update_contact, delete_contact,
-    
-    # Company functions
+    create_contact, update_contact, delete_contact, search_contacts,
+)
+from ..api.v1.crm.companies.logic import (
     get_company_by_id, get_all_companies, get_companies, get_companies_by_industry,
     create_company, update_company, delete_company,
-    
-    # Opportunity functions
+)
+from ..api.v1.crm.opportunities.logic import (
     get_opportunity_by_id, get_all_opportunities, get_opportunities, get_opportunities_by_stage, get_opportunities_by_assignee,
     create_opportunity, update_opportunity, delete_opportunity,
-    
-    # SalesActivity functions
+)
+from ..api.v1.crm.activities.logic import (
     get_sales_activity_by_id, get_all_sales_activities, get_sales_activities, get_sales_activities_by_assignee,
     create_sales_activity, update_sales_activity, delete_sales_activity,
-    
-    # CRM Dashboard functions
-    get_crm_dashboard_data
 )
+from ..api.v1.crm.dashboard.logic import get_crm_dashboard_data
 
 from .hrm_crud import (
     # Employee functions

@@ -55,7 +55,7 @@ def create_job_card(job_card_data: dict, db: Session, tenant_id: str = None) -> 
     customer_id = data.get("customer_id")
     if customer_id and tenant_id:
         try:
-            from .crm_crud import get_customer_by_id
+            from ..api.v1.crm.customers.logic import get_customer_by_id
             customer = get_customer_by_id(db, str(customer_id), tenant_id)
             if customer:
                 data["customer_name"] = f"{getattr(customer, 'firstName', '') or ''} {getattr(customer, 'lastName', '') or ''}".strip() or None
@@ -77,7 +77,7 @@ def update_job_card(job_card_id: str, update_data: dict, db: Session, tenant_id:
     if customer_id is not None and tenant_id:
         if customer_id:
             try:
-                from .crm_crud import get_customer_by_id
+                from ..api.v1.crm.customers.logic import get_customer_by_id
                 customer = get_customer_by_id(db, str(customer_id), tenant_id)
                 if customer:
                     update_data["customer_name"] = f"{getattr(customer, 'firstName', '') or ''} {getattr(customer, 'lastName', '') or ''}".strip() or None

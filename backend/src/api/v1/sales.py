@@ -17,9 +17,7 @@ from ...models.crm_models import (
     SalesDashboard, SalesMetrics, SalesPipeline
 )
 from ...config.sales_models import Quote, Contract
-from ...config.crm_models import (
-    Lead, Contact, Company, Opportunity, SalesActivity
-)
+from ...models.crm import Lead, Contact, Company, Opportunity, SalesActivity
 from ...models.common import LeadStatus, LeadSource, OpportunityStage, QuoteStatus, ContractStatus, ContactType, ActivityType
 from ...config.database import (
     get_db, get_user_by_id

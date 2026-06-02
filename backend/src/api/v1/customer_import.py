@@ -17,8 +17,8 @@ from openpyxl import load_workbook
 from ...config.database import get_db
 from ...api.dependencies import get_current_user, get_tenant_context
 from ...config.database import User
-from ...config.crm_models import Customer
-from ...config.crm_crud import create_customer, get_customer_by_email
+from ...models.crm import Customer
+from ...api.v1.crm.customers.logic import create_customer, get_customer_by_email
 from ...models.crm import CustomerCreate
 
 # Configure logging

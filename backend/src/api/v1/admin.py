@@ -494,7 +494,7 @@ async def get_tenant_complete_details(
             })
         
         # Get customers count and details
-        from ...config.crm_models import Customer
+        from ...models.crm import Customer
         customers = db.query(Customer).filter(Customer.tenant_id == tenant.id).all()
         customer_data = []
         for customer in customers:
@@ -786,7 +786,7 @@ async def delete_tenant_customer(
         )
     
     try:
-        from ...config.crm_models import Customer
+        from ...models.crm import Customer
         
         customer = db.query(Customer).filter(
             Customer.id == customer_id,

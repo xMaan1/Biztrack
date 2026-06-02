@@ -29,16 +29,8 @@ import {
 } from '@/src/components/ui/dialog';
 import { Label } from '@/src/components/ui/label';
 import { Textarea } from '@/src/components/ui/textarea';
-import {
-  Users,
-  Plus,
-  Search,
-  Filter,
-  Edit,
-  Trash2,
-  Eye,
-  Building2,
-} from 'lucide-react';
+import { Plus, Search, Filter } from 'lucide-react';
+import { LeadsListCard } from '@/src/components/crm/leads/LeadsListCard';
 import CRMService from '@/src/services/CRMService';
 import {
   Lead,
@@ -66,6 +58,8 @@ function CRMLeadsContent() {
   const searchParams = useSearchParams();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [listLoading, setListLoading] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
   const [filters, setFilters] = useState<CRMLeadFilters>({});
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -103,16 +97,21 @@ function CRMLeadsContent() {
 
   const loadLeads = useCallback(async () => {
     try {
-      setLoading(true);
+      if (leads.length === 0) {
+        setLoading(true);
+      } else {
+        setListLoading(true);
+      }
       const response = await CRMService.getLeads(filters, page, 10);
       setLeads(response.leads);
       setTotalPages(response.pagination.pages);
+      setTotalCount(response.pagination.total);
     } catch (err) {
-      // setError('Failed to load leads');
       } finally {
       setLoading(false);
+      setListLoading(false);
     }
-  }, [filters, page]);
+  }, [filters, page, leads.length]);
 
   useEffect(() => {
     loadLeads();
@@ -245,7 +244,27 @@ function CRMLeadsContent() {
     setPage(1);
   };
 
-  if (loading) {
+  const openEditLead = (lead: Lead) => {
+    setSelectedLead(lead);
+    setFormData({
+      firstName: lead.firstName,
+      lastName: lead.lastName,
+      email: lead.email,
+      phone: lead.phone || '',
+      company: lead.company || '',
+      jobTitle: lead.jobTitle || '',
+      status: lead.status,
+      source: lead.leadSource ?? lead.source,
+      notes: lead.notes || '',
+      tags: lead.tags,
+      score: lead.score,
+      budget: lead.budget,
+      timeline: lead.timeline || '',
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  if (loading && leads.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -344,166 +363,20 @@ function CRMLeadsContent() {
           </CardContent>
         </Card>
 
-        {/* Leads List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Leads ({leads.length})</CardTitle>
-            <CardDescription>
-              Manage your sales leads and track their progress
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {leads.map((lead) => (
-                <div
-                  key={lead.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex items-center space-x-2">
-                        <Users className="w-5 h-5 text-gray-500" />
-                        <div>
-                          <div className="font-medium">
-                            {lead.firstName} {lead.lastName}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {lead.email}
-                          </div>
-                        </div>
-                      </div>
-                      {lead.company && (
-                        <div className="flex items-center space-x-1 text-sm text-gray-500">
-                          <Building2 className="w-4 h-4" />
-                          <span>{lead.company}</span>
-                        </div>
-                      )}
-                      {lead.jobTitle && (
-                        <span className="text-sm text-gray-500">
-                          {lead.jobTitle}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center space-x-2 mt-2">
-                      <Badge
-                        className={CRMService.getLeadStatusColor(lead.status ?? 'new')}
-                      >
-                        {(lead.status ?? 'new').charAt(0).toUpperCase() +
-                          (lead.status ?? 'new').slice(1)}
-                      </Badge>
-                      <Badge variant="outline">
-                        {((lead.leadSource ?? lead.source) ?? '')
-                          .replace('_', ' ')
-                          .charAt(0)
-                          .toUpperCase() +
-                          ((lead.leadSource ?? lead.source) ?? '')
-                            .replace('_', ' ')
-                            .slice(1)}
-                      </Badge>
-                      {lead.score > 0 && (
-                        <Badge variant="secondary">Score: {lead.score}</Badge>
-                      )}
-                      {lead.budget && (
-                        <Badge variant="outline">
-                          Budget: {CRMService.formatCurrency(lead.budget)}
-                        </Badge>
-                      )}
-                    </div>
-                    {lead.notes && (
-                      <div className="text-sm text-gray-600 mt-2">
-                        {lead.notes}
-                      </div>
-                    )}
-                    <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
-                      <span>
-                        Created: {CRMService.formatDate(lead.createdAt)}
-                      </span>
-                      {lead.lastContactDate && (
-                        <span>
-                          Last Contact:{' '}
-                          {CRMService.formatDate(lead.lastContactDate)}
-                        </span>
-                      )}
-                      {lead.nextFollowUpDate && (
-                        <span>
-                          Next Follow-up:{' '}
-                          {CRMService.formatDate(lead.nextFollowUpDate)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedLead(lead);
-                        setIsViewDialogOpen(true);
-                      }}
-                    >
-                      <Eye className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedLead(lead);
-                        setFormData({
-                          firstName: lead.firstName,
-                          lastName: lead.lastName,
-                          email: lead.email,
-                          phone: lead.phone || '',
-                          company: lead.company || '',
-                          jobTitle: lead.jobTitle || '',
-                          status: lead.status,
-                          source: lead.leadSource ?? lead.source,
-                          notes: lead.notes || '',
-                          tags: lead.tags,
-                          score: lead.score,
-                          budget: lead.budget,
-                          timeline: lead.timeline || '',
-                        });
-                        setIsEditDialogOpen(true);
-                      }}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteLead(lead.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex justify-center items-center space-x-2 mt-6">
-                <Button
-                  variant="outline"
-                  onClick={() => setPage(Math.max(1, page - 1))}
-                  disabled={page === 1}
-                >
-                  Previous
-                </Button>
-                <span className="text-sm">
-                  Page {page} of {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  onClick={() => setPage(Math.min(totalPages, page + 1))}
-                  disabled={page === totalPages}
-                >
-                  Next
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <LeadsListCard
+          leads={leads}
+          totalCount={totalCount}
+          page={page}
+          totalPages={totalPages}
+          listLoading={listLoading}
+          onPageChange={setPage}
+          onView={(lead) => {
+            setSelectedLead(lead);
+            setIsViewDialogOpen(true);
+          }}
+          onEdit={openEditLead}
+          onDelete={handleDeleteLead}
+        />
 
         {/* Create Lead Dialog */}
         <Dialog

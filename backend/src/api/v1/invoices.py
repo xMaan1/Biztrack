@@ -24,10 +24,11 @@ from ...models.crm import (
 from ...config.database import User
 from ...config.invoice_models import Invoice, Payment
 from ...config.invoice_crud import delete_invoice_dependencies
-from ...config.crm_crud import (
+from ...api.v1.crm.customers.logic import (
     create_customer, get_customer_by_id, get_customers, update_customer, delete_customer,
-    get_customer_stats, search_customers, resolve_phone_from_customer,
+    get_customer_stats, search_customers,
 )
+from ...api.v1.crm.db_common import resolve_phone_from_customer
 from ...services.inventory_sync_service import InventorySyncService
 from ...services.email_service import EmailService
 from ...core.plan_types import is_retail_plan
@@ -739,7 +740,7 @@ def create_invoice(
         # Populate customer details from customer record if customerId exists
         if invoice_data.customerId:
             try:
-                from ...config.crm_crud import get_customer_by_id
+                from ...api.v1.crm.customers.logic import get_customer_by_id
                 customer = get_customer_by_id(db, invoice_data.customerId, tenant_id)
                 if customer:
                     if not db_invoice.customerPhone:

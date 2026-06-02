@@ -50,10 +50,16 @@ export default function CRMContactsPage() {
   );
 }
 
+const CONTACTS_PAGE_SIZE = 20;
+
 function CRMContactsContent() {
   const { user } = useAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
+  const [listLoading, setListLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [filters, setFilters] = useState<CRMContactFilters>({});
   const [search, setSearch] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -103,22 +109,7 @@ function CRMContactsContent() {
   const [users, setUsers] = useState<User[]>([]);
   const attachmentFileInputRef = React.useRef<HTMLInputElement>(null);
   const [attachmentUploading, setAttachmentUploading] = useState(false);
-
-  useEffect(() => {
-    loadContacts();
-    loadCompanies();
-  }, [filters]);
-
-  const loadContacts = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await CRMService.getContacts(filters, 1, 500);
-      setContacts(response.contacts);
-    } catch (err) {
-    } finally {
-      setLoading(false);
-    }
-  }, [filters]);
+  const initialContactsLoad = React.useRef(true);
 
   const loadCompanies = useCallback(async () => {
     try {
@@ -127,6 +118,44 @@ function CRMContactsContent() {
     } catch (err) {
     }
   }, []);
+
+  const loadContacts = useCallback(async () => {
+    try {
+      if (initialContactsLoad.current) {
+        setLoading(true);
+      } else {
+        setListLoading(true);
+      }
+      const response = await CRMService.getContacts(
+        filters,
+        page,
+        CONTACTS_PAGE_SIZE,
+      );
+      setContacts(response.contacts);
+      setTotalPages(Math.max(1, response.pagination.pages));
+      setTotalCount(response.pagination.total);
+    } catch (err) {
+    } finally {
+      setLoading(false);
+      setListLoading(false);
+      initialContactsLoad.current = false;
+    }
+  }, [filters, page]);
+
+  useEffect(() => {
+    loadCompanies();
+  }, [loadCompanies]);
+
+  useEffect(() => {
+    loadContacts();
+  }, [loadContacts]);
+
+  const handleFiltersChange: React.Dispatch<
+    React.SetStateAction<CRMContactFilters>
+  > = (action) => {
+    setFilters(action);
+    setPage(1);
+  };
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -181,11 +210,13 @@ function CRMContactsContent() {
 
   const handleSearch = () => {
     setFilters((prev: CRMContactFilters) => ({ ...prev, search }));
+    setPage(1);
   };
 
   const resetFilters = () => {
     setFilters({});
     setSearch('');
+    setPage(1);
   };
 
   const handleCreateCustomContactType = async (
@@ -406,7 +437,7 @@ function CRMContactsContent() {
     }
   };
 
-  if (loading) {
+  if (loading && contacts.length === 0) {
     return <ContactsLoadingState />;
   }
 
@@ -433,7 +464,7 @@ function CRMContactsContent() {
           onSearchChange={setSearch}
           onSearchSubmit={handleSearch}
           filters={filters}
-          setFilters={setFilters}
+          setFilters={handleFiltersChange}
           onResetFilters={resetFilters}
           users={users}
         />
@@ -441,6 +472,11 @@ function CRMContactsContent() {
         <ContactsListCard
           contacts={contacts}
           companies={companies}
+          totalCount={totalCount}
+          page={page}
+          totalPages={totalPages}
+          listLoading={listLoading}
+          onPageChange={setPage}
           onView={handleView}
           onEdit={handleEdit}
           onDelete={handleDelete}

@@ -722,7 +722,7 @@ def generate_delivery_note_pdf(delivery_note, invoice, db: Session) -> bytes:
         company_email = (customization or {}).get('company_email', '')
         customer_type = 'cash'
         try:
-            from ...config.crm_crud import get_customer_by_id
+            from ...api.v1.crm.customers.logic import get_customer_by_id
             if invoice.customerId:
                 customer = get_customer_by_id(db, invoice.customerId, str(invoice.tenant_id))
                 if customer and getattr(customer, 'paymentTerms', None):

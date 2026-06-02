@@ -27,6 +27,11 @@ import {
 type ContactsListCardProps = {
   contacts: Contact[];
   companies: Company[];
+  totalCount: number;
+  page: number;
+  totalPages: number;
+  listLoading?: boolean;
+  onPageChange: (page: number) => void;
   onView: (contact: Contact) => void;
   onEdit: (contact: Contact) => void;
   onDelete: (contact: Contact) => void;
@@ -51,6 +56,11 @@ function birthdayShort(contact: Contact): string {
 export function ContactsListCard({
   contacts,
   companies,
+  totalCount,
+  page,
+  totalPages,
+  listLoading = false,
+  onPageChange,
   onView,
   onEdit,
   onDelete,
@@ -60,13 +70,18 @@ export function ContactsListCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Contacts ({contacts.length})</CardTitle>
+        <CardTitle>Contacts ({totalCount})</CardTitle>
         <CardDescription>
           Manage your customer contacts and track interactions
         </CardDescription>
       </CardHeader>
-      <CardContent className="p-0 sm:p-6 pt-0">
-        <div className="rounded-md border">
+      <CardContent className="p-0 sm:p-6 pt-0 space-y-4">
+        <div className={`rounded-md border relative ${listLoading ? 'opacity-60 pointer-events-none' : ''}`}>
+          {listLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </div>
+          )}
           <Table>
             <TableHeader>
               <TableRow>
@@ -83,6 +98,13 @@ export function ContactsListCard({
               </TableRow>
             </TableHeader>
             <TableBody>
+              {!listLoading && contacts.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
+                    No contacts found
+                  </TableCell>
+                </TableRow>
+              )}
               {contacts.map((contact) => {
                 const co = contact.companyId
                   ? companyById.get(contact.companyId)
@@ -174,6 +196,31 @@ export function ContactsListCard({
             </TableBody>
           </Table>
         </div>
+        {totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-0 sm:px-0 pb-2">
+            <p className="text-sm text-muted-foreground">
+              Page {page} of {totalPages}
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onPageChange(Math.max(1, page - 1))}
+                disabled={page <= 1 || listLoading}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onPageChange(Math.min(totalPages, page + 1))}
+                disabled={page >= totalPages || listLoading}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
