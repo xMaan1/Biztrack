@@ -20,14 +20,20 @@ export function PricingSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 xl:grid-cols-4">
-          {LANDING_PLANS.map((plan) => (
+        <div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-6">
+          {LANDING_PLANS.map((plan, index) => (
             <div
               key={plan.id}
               className={`relative rounded-xl border bg-white shadow-sm transition-all duration-300 hover:shadow-lg ${
                 plan.planType === 'agency'
                   ? 'border-blue-400 ring-2 ring-blue-200/60 lg:scale-[1.02]'
                   : 'border-slate-200 hover:border-blue-200'
+              } md:col-span-1 lg:col-span-2 ${
+                LANDING_PLANS.length === 5 && index === 3
+                  ? 'lg:col-start-2'
+                  : LANDING_PLANS.length === 5 && index === 4
+                    ? 'lg:col-start-4'
+                    : ''
               }`}
             >
               {plan.planType === 'agency' ? (

@@ -2,7 +2,7 @@ import { LANDING_PLANS, type Plan, type PlanType } from '../constants/plans'
 
 export type { PlanType }
 
-export const PLAN_TYPES: PlanType[] = ['agency', 'healthcare', 'commerce', 'workshop']
+export const PLAN_TYPES: PlanType[] = ['agency', 'healthcare', 'commerce', 'workshop', 'ngo']
 
 export function isPlanType(value: string | null | undefined): value is PlanType {
   return Boolean(value && PLAN_TYPES.includes(value as PlanType))

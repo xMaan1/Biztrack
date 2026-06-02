@@ -1,4 +1,4 @@
-export type PlanType = 'agency' | 'healthcare' | 'commerce' | 'workshop'
+export type PlanType = 'agency' | 'healthcare' | 'commerce' | 'workshop' | 'ngo'
 
 export type Plan = {
   id: string
@@ -24,6 +24,21 @@ const COMMERCE_FEATURES = [
   'Barcode Scanning',
   'Customer Portal',
   'Email Marketing',
+]
+
+const NGO_FEATURES = [
+  'Donor Management',
+  'Grant Tracking',
+  'Program & Beneficiary Management',
+  'Volunteer Management',
+  'Campaign & Event Planning',
+  'Budgeting & Fund Accounting',
+  'Impact Reporting',
+  'Multi-branch Coordination',
+  'Document Management',
+  'SMS & Email Outreach',
+  'Partner Collaboration Portal',
+  'Compliance & Audit Trails',
 ]
 
 export const LANDING_PLANS: Plan[] = [
@@ -92,5 +107,15 @@ export const LANDING_PLANS: Plan[] = [
       'Pharmacy Integration',
       'Medical Device Tracking',
     ],
+  },
+  {
+    id: 'ngo',
+    name: 'NGO Impact',
+    planType: 'ngo',
+    price: 79.99,
+    maxProjects: 80,
+    maxUsers: 40,
+    description: 'Purpose-built operations for non-profits managing programs, donors, and impact',
+    features: NGO_FEATURES,
   },
 ]

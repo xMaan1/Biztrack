@@ -3,15 +3,23 @@ import { Button, Card, Typography } from 'antd'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { getPlanByType } from '../landing/utils/plan'
+import { AgencyDashboard } from './components/AgencyDashboard'
 import { CommerceDashboard } from './components/CommerceDashboard'
 import { HealthcareDashboard } from './components/HealthcareDashboard'
+import { NgoDashboard } from './components/NgoDashboard'
 import { WorkshopDashboard } from './components/WorkshopDashboard'
 
 const { Text, Title } = Typography
 
 function PlanDashboard({ planType }: { planType: string | null | undefined }) {
+  if (planType === 'agency') {
+    return <AgencyDashboard />
+  }
   if (planType === 'healthcare') {
     return <HealthcareDashboard />
+  }
+  if (planType === 'ngo') {
+    return <NgoDashboard />
   }
   if (planType === 'workshop') {
     return <WorkshopDashboard />

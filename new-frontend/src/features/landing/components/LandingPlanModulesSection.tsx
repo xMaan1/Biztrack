@@ -1,5 +1,6 @@
 import {
   BankOutlined,
+  GlobalOutlined,
   HeartOutlined,
   ShoppingCartOutlined,
   ToolOutlined,
@@ -12,7 +13,7 @@ const PLAN_MODULES: {
   title: string
   planType: string
   description: string
-  accent: 'indigo' | 'emerald' | 'orange' | 'rose'
+  accent: 'indigo' | 'emerald' | 'orange' | 'rose' | 'cyan'
 }[] = [
   {
     Icon: BankOutlined,
@@ -42,6 +43,13 @@ const PLAN_MODULES: {
     description: 'Patients, appointments, prescriptions, admissions, and clinic billing.',
     accent: 'rose',
   },
+  {
+    Icon: GlobalOutlined,
+    title: 'NGO Module',
+    planType: 'ngo',
+    description: 'Donors, grants, programs, volunteers, and impact reporting for non-profits.',
+    accent: 'cyan',
+  },
 ]
 
 const accentStyles = {
@@ -65,6 +73,11 @@ const accentStyles = {
     icon: 'bg-rose-600 text-white',
     badge: 'bg-rose-100 text-rose-800',
   },
+  cyan: {
+    card: 'border-cyan-200/80 bg-gradient-to-br from-cyan-50/90 to-white hover:border-cyan-300',
+    icon: 'bg-cyan-600 text-white',
+    badge: 'bg-cyan-100 text-cyan-800',
+  },
 }
 
 export function LandingPlanModulesSection() {
@@ -76,7 +89,7 @@ export function LandingPlanModulesSection() {
       <div className="container mx-auto max-w-6xl">
         <div className="mb-12 text-center sm:mb-16">
           <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-indigo-700">
-            Four industry modules
+            Five industry modules
           </p>
           <h2 className="mb-4 text-3xl font-bold text-slate-900 sm:text-4xl lg:text-5xl">
             Pick the workspace that fits your business
@@ -87,14 +100,17 @@ export function LandingPlanModulesSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
-          {PLAN_MODULES.map((mod) => {
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-6">
+          {PLAN_MODULES.map((mod, index) => {
             const styles = accentStyles[mod.accent]
             return (
               <div
                 key={mod.planType}
                 className={cn(
                   'rounded-xl border shadow-sm transition-all duration-300 hover:shadow-md',
+                  'md:col-span-1 lg:col-span-2',
+                  PLAN_MODULES.length === 5 && index === 3 && 'lg:col-start-2',
+                  PLAN_MODULES.length === 5 && index === 4 && 'lg:col-start-4',
                   styles.card,
                 )}
               >
