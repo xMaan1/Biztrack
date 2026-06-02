@@ -22,6 +22,7 @@ wheels/
 MANIFEST
 
 # Virtual Environment
+.venv/
 venv/
 env/
 ENV/
@@ -86,9 +87,6 @@ coverage.xml
 
 # Jupyter Notebook
 .ipynb_checkpoints
-
-# pyenv
-.python-version
 
 # pipenv
 Pipfile.lock

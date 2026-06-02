@@ -28,6 +28,15 @@ apt-get install -y \
   certbot \
   python3-certbot-nginx
 
+echo "Installing uv..."
+if ! command -v uv >/dev/null 2>&1; then
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+fi
+export PATH="${HOME}/.local/bin:${PATH}"
+if ! grep -q '.local/bin' "${HOME}/.bashrc" 2>/dev/null; then
+  echo 'export PATH="${HOME}/.local/bin:${PATH}"' >> "${HOME}/.bashrc"
+fi
+
 echo "Installing PM2 globally..."
 npm install -g pm2
 

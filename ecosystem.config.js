@@ -2,15 +2,16 @@ module.exports = {
   apps: [
     {
       name: 'biztrack-backend',
-      script: './venv/bin/uvicorn',
-      args: 'src.main:app --host 0.0.0.0 --port 8000 --workers 2',
+      script: 'uv',
+      args:
+        "run --no-sync fastapi run --host 0.0.0.0 --port 8000 --workers 2 --proxy-headers --forwarded-allow-ips '*'",
       cwd: './backend',
-      interpreter: 'venv/bin/python',
       instances: 1,
       exec_mode: 'fork',
       env: {
         NODE_ENV: 'production',
-        PYTHONUNBUFFERED: '1'
+        PYTHONUNBUFFERED: '1',
+        PATH: `${process.env.HOME}/.local/bin:${process.env.PATH}`,
       },
       error_file: './logs/backend-error.log',
       out_file: './logs/backend-out.log',
@@ -20,7 +21,8 @@ module.exports = {
       max_restarts: 10,
       min_uptime: '10s',
       watch: false,
-      max_memory_restart: '1G'
+      max_memory_restart: '1G',
+      kill_timeout: 10000,
     },
     {
       name: 'biztrack-frontend',
@@ -31,7 +33,7 @@ module.exports = {
       exec_mode: 'fork',
       env: {
         NODE_ENV: 'production',
-        PORT: 3000
+        PORT: 3000,
       },
       error_file: './logs/frontend-error.log',
       out_file: './logs/frontend-out.log',
@@ -41,8 +43,7 @@ module.exports = {
       max_restarts: 10,
       min_uptime: '10s',
       watch: false,
-      max_memory_restart: '1G'
-    }
-  ]
+      max_memory_restart: '1G',
+    },
+  ],
 };
-

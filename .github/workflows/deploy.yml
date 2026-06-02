@@ -23,6 +23,8 @@ jobs:
             backend:
               - 'backend/**'
               - 'ecosystem.config.js'
+              - 'scripts/ensure-uv.sh'
+              - 'scripts/deploy-backend-uv.sh'
             frontend:
               - 'frontend/**'
 
@@ -115,18 +117,17 @@ jobs:
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         run: |
           ssh -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_HOST} "DEPLOY_PATH='${DEPLOY_PATH}' bash" << 'ENDSSH'
-            set -e
-            echo "🚀 Setting up backend..."
-            cd ${DEPLOY_PATH}/backend
-            if [ ! -d "venv" ]; then
-              echo "Creating virtual environment..."
-              python3 -m venv venv
+            set -euo pipefail
+            export PATH="${HOME}/.local/bin:${PATH}"
+            if ! command -v uv >/dev/null 2>&1; then
+              echo "Installing uv..."
+              curl -LsSf https://astral.sh/uv/install.sh | sh
+              export PATH="${HOME}/.local/bin:${PATH}"
             fi
-            source venv/bin/activate
-            echo "Upgrading pip..."
-            pip install --upgrade pip
-            echo "Installing dependencies..."
-            pip install -r requirements.txt
+            echo "🚀 Setting up backend with uv..."
+            cd "${DEPLOY_PATH}/backend"
+            uv python install
+            uv sync --frozen --no-dev
             echo "✅ Backend setup completed successfully!"
           ENDSSH
 
@@ -182,12 +183,10 @@ jobs:
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         run: |
           ssh -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_HOST} "DEPLOY_PATH='${DEPLOY_PATH}' bash" << 'ENDSSH'
-            set -e
-            echo "🔄 Updating ecosystem.config.js interpreter path..."
-            INTERPRETER_PATH="${DEPLOY_PATH}/backend/venv/bin/python"
-            sed -i "s|interpreter: 'venv/bin/python'|interpreter: '${INTERPRETER_PATH}'|g" ${DEPLOY_PATH}/ecosystem.config.js || true
+            set -euo pipefail
+            export PATH="${HOME}/.local/bin:${PATH}"
             echo "🔄 Restarting PM2 processes..."
-            cd ${DEPLOY_PATH}
+            cd "${DEPLOY_PATH}"
             pm2 delete biztrack-backend biztrack-frontend 2>/dev/null || true
             pm2 start ecosystem.config.js --update-env
             if [ $? -ne 0 ]; then
