@@ -634,6 +634,11 @@ export function InvoiceDialog({
             ? 'max-h-[96vh] w-[99vw] max-w-[1600px] overflow-y-auto p-2 sm:p-3'
             : 'max-w-4xl max-h-[90vh] overflow-y-auto'
         }
+        onInteractOutside={(event) => {
+          if (mode !== 'view') {
+            event.preventDefault();
+          }
+        }}
       >
         <DialogHeader className={useCommerceInvoiceLayout && mode !== 'view' ? 'sr-only' : undefined}>
           <DialogTitle className="flex items-center gap-2">

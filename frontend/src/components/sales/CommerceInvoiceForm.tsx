@@ -722,12 +722,15 @@ export function CommerceInvoiceForm({
         </div>
       </section>
 
-      <details className="rounded-lg border border-border bg-card px-3 py-2 text-sm">
-        <summary className="cursor-pointer font-medium text-muted-foreground">
-          Installments &amp; advanced
-        </summary>
-        <div className="mt-2 space-y-2">
-          <div className="flex items-center gap-2">
+      <section className="rounded-lg border border-border bg-card px-3 py-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold">Installment Plan</h3>
+            <p className="text-xs text-muted-foreground">
+              Split this invoice into scheduled payments.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-2 py-1.5">
             <input
               type="checkbox"
               id="createInstallmentPlan"
@@ -735,10 +738,17 @@ export function CommerceInvoiceForm({
               onChange={(e) => setCreateInstallmentPlan(e.target.checked)}
               className="rounded border-input text-primary focus:ring-ring"
             />
-            <label htmlFor="createInstallmentPlan">Create installment plan</label>
+            <label htmlFor="createInstallmentPlan" className="text-sm font-medium">
+              Enable installments
+            </label>
           </div>
-          {createInstallmentPlan && (
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        </div>
+        {createInstallmentPlan && (
+          <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">
+                Number of installments
+              </label>
               <Input
                 type="number"
                 min={1}
@@ -748,8 +758,12 @@ export function CommerceInvoiceForm({
                   setInstallmentCount(parseInt(e.target.value, 10) || 1)
                 }
                 className={inputCls}
-                placeholder="Installments"
               />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">
+                Frequency
+              </label>
               <Select value={installmentFrequency} onValueChange={setInstallmentFrequency}>
                 <SelectTrigger className={inputCls}>
                   <SelectValue />
@@ -760,6 +774,11 @@ export function CommerceInvoiceForm({
                   <SelectItem value="quarterly">Quarterly</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">
+                First due date
+              </label>
               <Input
                 type="date"
                 value={installmentFirstDueDate}
@@ -767,9 +786,9 @@ export function CommerceInvoiceForm({
                 className={inputCls}
               />
             </div>
-          )}
-        </div>
-      </details>
+          </div>
+        )}
+      </section>
 
       <input type="hidden" value={formData.issueDate} readOnly />
       <input type="hidden" value={formData.currency} readOnly />
