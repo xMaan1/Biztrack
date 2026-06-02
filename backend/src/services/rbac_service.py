@@ -101,6 +101,10 @@ GRANULAR_PERMISSIONS = {
         *_crud("healthcare:admissions"),
         *_crud("healthcare:expenses"),
     ],
+    "ngo": [
+        *_crud("ngo:donors"),
+        *_crud("ngo:partner-organizations"),
+    ],
 }
 
 
@@ -130,7 +134,8 @@ class RBACService:
             ModulePermission.EVENTS_VIEW, ModulePermission.EVENTS_CREATE, ModulePermission.EVENTS_UPDATE, ModulePermission.EVENTS_DELETE,
             ModulePermission.USERS_VIEW, ModulePermission.USERS_CREATE, ModulePermission.USERS_UPDATE, ModulePermission.USERS_DELETE,
             ModulePermission.REPORTS_VIEW, ModulePermission.REPORTS_EXPORT,
-            ModulePermission.HEALTHCARE_VIEW, ModulePermission.HEALTHCARE_CREATE, ModulePermission.HEALTHCARE_UPDATE, ModulePermission.HEALTHCARE_DELETE
+            ModulePermission.HEALTHCARE_VIEW, ModulePermission.HEALTHCARE_CREATE, ModulePermission.HEALTHCARE_UPDATE, ModulePermission.HEALTHCARE_DELETE,
+            ModulePermission.NGO_VIEW, ModulePermission.NGO_CREATE, ModulePermission.NGO_UPDATE, ModulePermission.NGO_DELETE
         ], *[permissions for permissions in GRANULAR_PERMISSIONS.values()]),
         TenantRole.CRM_MANAGER: _merge_permissions([
             ModulePermission.CRM_VIEW, ModulePermission.CRM_CREATE, ModulePermission.CRM_UPDATE, ModulePermission.CRM_DELETE,
@@ -261,7 +266,7 @@ class RBACService:
         """Get list of modules user has access to"""
         # Owners have access to all modules
         if RBACService.is_owner(db, user_id, tenant_id):
-            all_modules = ['crm', 'sales', 'pos', 'inventory', 'hrm', 'projects', 'reports', 'events', 'work-orders', 'production', 'quality', 'maintenance', 'banking', 'ledger', 'finance', 'settings', 'notifications', 'users', 'dashboard', 'healthcare']
+            all_modules = ['crm', 'sales', 'pos', 'inventory', 'hrm', 'projects', 'reports', 'events', 'work-orders', 'production', 'quality', 'maintenance', 'banking', 'ledger', 'finance', 'settings', 'notifications', 'users', 'dashboard', 'healthcare', 'ngo']
             return all_modules
 
         user_permissions = RBACService.get_user_permissions(db, user_id, tenant_id)

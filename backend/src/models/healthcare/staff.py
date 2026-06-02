@@ -23,5 +23,5 @@ class HealthcareStaff(Base):
         Index("ix_healthcare_staff_tenant_id", "tenant_id"),
     )
 
-    tenant = relationship("Tenant", back_populates="healthcare_staff")
+    tenant = relationship("Tenant")
     user = relationship("User")

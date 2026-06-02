@@ -6,19 +6,10 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from ....api.crm_access import crm_record_visible, filter_crm_rows
+from ..http_common import require_tenant, tenant_id_str
 
 logger = logging.getLogger(__name__)
 T = TypeVar("T")
-
-
-def require_tenant(tenant_context: Optional[dict]) -> dict:
-    if not tenant_context:
-        raise HTTPException(status_code=400, detail="Tenant context required")
-    return tenant_context
-
-
-def tenant_id_str(tenant_context: Optional[dict]) -> str:
-    return str(require_tenant(tenant_context)["tenant_id"])
 
 
 def tenant_id_optional(tenant_context: Optional[dict]) -> Optional[str]:

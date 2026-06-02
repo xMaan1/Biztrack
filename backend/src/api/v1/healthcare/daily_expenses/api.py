@@ -5,7 +5,7 @@ from datetime import date as date_type
 
 from .....config.database import get_db
 from .....api.dependencies import get_current_user, get_tenant_context
-from ..http_common import tenant_id_str
+from ...http_common import tenant_id_str
 from .schemas import DailyExpense, DailyExpenseCreate, DailyExpenseUpdate, DailyExpensesResponse
 from . import logic
 

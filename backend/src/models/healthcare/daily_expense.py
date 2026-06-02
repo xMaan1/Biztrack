@@ -25,5 +25,5 @@ class DailyExpense(Base):
         Index("ix_healthcare_daily_expenses_expense_date", "tenant_id", "expense_date"),
     )
 
-    tenant = relationship("Tenant", back_populates="daily_expenses")
+    tenant = relationship("Tenant")
     category = relationship("ExpenseCategory", back_populates="expenses")

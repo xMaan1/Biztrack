@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from ..repository import create_entity, delete_by_id, get_by_id, update_entity
-from .http_common import skip_limit
+from ..http_common import skip_limit
 
 
 def update_record(entity_id, update_data, db, tenant_id, get_fn):

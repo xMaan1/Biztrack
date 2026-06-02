@@ -114,6 +114,8 @@ RESOURCE_PATH_MAP = {
     "/healthcare/admissions": "healthcare:admissions",
     "/healthcare/daily-expenses": "healthcare:expenses",
     "/healthcare/expense-categories": "healthcare:expenses",
+    "/ngo/donors": "ngo:donors",
+    "/ngo/partner-organizations": "ngo:partner-organizations",
 }
 
 KNOWN_GENERIC_SEGMENTS = {

@@ -32,6 +32,6 @@ class Admission(Base):
         Index("ix_healthcare_admissions_doctor_id", "doctor_id"),
     )
 
-    tenant = relationship("Tenant", back_populates="admissions")
+    tenant = relationship("Tenant")
     patient = relationship("Patient", back_populates="admissions")
     doctor = relationship("Doctor", back_populates="admissions")

@@ -6,7 +6,6 @@ from .database_config import (
     engine, SessionLocal, Base, create_tables, get_db
 )
 
-# Import all models
 from .core_models import (
     User, Tenant, Plan, Subscription, TenantUser, project_team_members
 )
@@ -91,8 +90,6 @@ from .event_models import (
 )
 
 from .saved_reports_models import SavedReport
-
-from ..models.healthcare import Doctor, HealthcareStaff, Appointment, Prescription, Patient, ExpenseCategory, DailyExpense, Admission
 
 # Import all CRUD functions
 from .core_crud import (

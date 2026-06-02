@@ -79,6 +79,9 @@ Base = declarative_base()
 
 def create_tables():
     """Create all database tables"""
+    from ..models.registry import register_all_models
+
+    register_all_models()
     Base.metadata.create_all(bind=engine)
 
 def get_db():

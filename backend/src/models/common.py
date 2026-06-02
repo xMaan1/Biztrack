@@ -82,6 +82,10 @@ class ModulePermission(str, Enum):
     HEALTHCARE_CREATE = "healthcare:create"
     HEALTHCARE_UPDATE = "healthcare:update"
     HEALTHCARE_DELETE = "healthcare:delete"
+    NGO_VIEW = "ngo:view"
+    NGO_CREATE = "ngo:create"
+    NGO_UPDATE = "ngo:update"
+    NGO_DELETE = "ngo:delete"
 
 class ProjectStatus(str, Enum):
     PLANNING = "planning"

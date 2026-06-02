@@ -26,6 +26,6 @@ class Prescription(Base):
         Index("ix_healthcare_prescriptions_appointment_id", "appointment_id"),
     )
 
-    tenant = relationship("Tenant", back_populates="prescriptions")
+    tenant = relationship("Tenant")
     appointment = relationship("Appointment", back_populates="prescriptions")
     doctor = relationship("Doctor", back_populates="prescriptions")

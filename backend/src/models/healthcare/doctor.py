@@ -29,7 +29,7 @@ class Doctor(Base):
         Index("ix_healthcare_doctors_tenant_id", "tenant_id"),
     )
 
-    tenant = relationship("Tenant", back_populates="doctors")
+    tenant = relationship("Tenant")
     appointments = relationship("Appointment", back_populates="doctor", passive_deletes=True)
     prescriptions = relationship("Prescription", back_populates="doctor", passive_deletes=True)
     admissions = relationship("Admission", back_populates="doctor", passive_deletes=True)

@@ -21,5 +21,5 @@ class ExpenseCategory(Base):
         Index("ix_healthcare_expense_categories_tenant_id", "tenant_id"),
     )
 
-    tenant = relationship("Tenant", back_populates="expense_categories")
+    tenant = relationship("Tenant")
     expenses = relationship("DailyExpense", back_populates="category")
