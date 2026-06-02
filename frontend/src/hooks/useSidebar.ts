@@ -38,6 +38,15 @@ const MODULE_MAP: Record<string, string> = {
   Events: 'events',
   Reports: 'reports',
   Dashboard: 'dashboard',
+  'Donor Management': 'ngo',
+  'Donation Management': 'ngo',
+  'Gift & Inventory': 'ngo',
+  'Volunteer Management': 'ngo',
+  'Relief Projects': 'projects',
+  'Charity Reports': 'reports',
+  'Charity Events': 'events',
+  'Charity Banking': 'banking',
+  'Fund Accounting': 'ledger',
 };
 
 function getModuleForMenuItem(item: MenuItem): string | null {
@@ -280,6 +289,8 @@ export function useSidebar() {
         return 'Agency Pro';
       case 'healthcare':
         return 'Healthcare Suite';
+      case 'ngo':
+        return 'Charity Pro';
       default:
         return planInfo.planName;
     }
