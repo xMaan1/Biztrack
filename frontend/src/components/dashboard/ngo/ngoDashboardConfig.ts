@@ -43,7 +43,7 @@ export const NGO_QUICK_ACTIONS: NgoQuickAction[] = [
 export const NGO_QUICK_LINKS = [
   { href: '/ngo/relief-projects', label: 'Relief projects' },
   { href: '/ngo/donors', label: 'Donors' },
-  { href: '/ngo/donation-leads', label: 'Donation leads' },
+  { href: '/ngo/donor-leads', label: 'Donor leads' },
   { href: '/events', label: 'Charity events' },
   { href: '/ngo/ledger', label: 'Fund accounting' },
   { href: '/ngo/volunteers', label: 'Volunteers' },

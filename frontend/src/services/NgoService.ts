@@ -4,6 +4,10 @@ import type {
   DonorCreate,
   DonorUpdate,
   DonorsResponse,
+  DonorLead,
+  DonorLeadCreate,
+  DonorLeadUpdate,
+  DonorLeadsResponse,
   PartnerOrganization,
   PartnerOrganizationCreate,
   PartnerOrganizationUpdate,
@@ -43,6 +47,42 @@ export class NgoService {
 
   async deleteDonor(id: string): Promise<void> {
     return apiService.delete(`/ngo/donors/${id}`);
+  }
+
+  async getDonorLeads(params?: {
+    search?: string;
+    status?: string;
+    source?: string;
+    created_date?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<DonorLeadsResponse> {
+    const searchParams = new URLSearchParams();
+    if (params?.search) searchParams.set('search', params.search);
+    if (params?.status) searchParams.set('status', params.status);
+    if (params?.source) searchParams.set('source', params.source);
+    if (params?.created_date) searchParams.set('created_date', params.created_date);
+    searchParams.set('page', String(params?.page ?? 1));
+    searchParams.set('limit', String(params?.limit ?? 50));
+    return apiService.get<DonorLeadsResponse>(
+      `/ngo/donor-leads?${searchParams.toString()}`,
+    );
+  }
+
+  async getDonorLead(id: string): Promise<DonorLead> {
+    return apiService.get<DonorLead>(`/ngo/donor-leads/${id}`);
+  }
+
+  async createDonorLead(body: DonorLeadCreate): Promise<DonorLead> {
+    return apiService.post<DonorLead>('/ngo/donor-leads', body);
+  }
+
+  async updateDonorLead(id: string, body: DonorLeadUpdate): Promise<DonorLead> {
+    return apiService.put<DonorLead>(`/ngo/donor-leads/${id}`, body);
+  }
+
+  async deleteDonorLead(id: string): Promise<void> {
+    return apiService.delete(`/ngo/donor-leads/${id}`);
   }
 
   async getPartnerOrganizations(params?: {

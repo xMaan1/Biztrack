@@ -1,6 +1,4 @@
 export const NGO_STUB_PAGE_TITLES: Record<string, string> = {
-  'donor-contacts': 'Donor Contacts',
-  'donation-leads': 'Donation Leads',
   'gift-opportunities': 'Gift Opportunities',
   'donation-receipts': 'Donation Receipts',
   'contribution-agreements': 'Contribution Agreements',

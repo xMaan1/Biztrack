@@ -87,16 +87,9 @@ export const allMenuItems: MenuItem[] = [
         planTypes: ['ngo'],
       },
       {
-        text: 'Donor Contacts',
-        icon: Contact,
-        path: '/ngo/donor-contacts',
-        roles: ['*'],
-        planTypes: ['ngo'],
-      },
-      {
-        text: 'Donation Leads',
+        text: 'Donor Leads',
         icon: Target,
-        path: '/ngo/donation-leads',
+        path: '/ngo/donor-leads',
         roles: ['*'],
         planTypes: ['ngo'],
       },

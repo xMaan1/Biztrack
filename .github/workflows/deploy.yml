@@ -11,6 +11,7 @@ jobs:
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
+      migrations: ${{ steps.filter.outputs.migrations }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -27,6 +28,9 @@ jobs:
               - 'scripts/deploy-backend-uv.sh'
             frontend:
               - 'frontend/**'
+            migrations:
+              - 'backend/alembic/versions/**'
+              - '!backend/alembic/versions/.gitkeep'
 
   sync-code:
     runs-on: ubuntu-latest
@@ -131,6 +135,39 @@ jobs:
             echo "✅ Backend setup completed successfully!"
           ENDSSH
 
+  run-migrations:
+    runs-on: ubuntu-latest
+    needs: [check-changes, sync-code, deploy-backend]
+    if: needs.check-changes.outputs.migrations == 'true'
+    steps:
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known hosts
+        run: |
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Run Alembic migrations
+        env:
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          ssh -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_HOST} "DEPLOY_PATH='${DEPLOY_PATH}' bash" << 'ENDSSH'
+            set -euo pipefail
+            export PATH="${HOME}/.local/bin:${PATH}"
+            cd "${DEPLOY_PATH}/backend"
+            if [ ! -f .env ]; then
+              echo "❌ Error: backend/.env not found on server (DATABASE_URL required)"
+              exit 1
+            fi
+            echo "🔄 Running Alembic migrations..."
+            uv run alembic upgrade head
+            echo "✅ Migrations completed successfully!"
+          ENDSSH
+
   deploy-frontend:
     runs-on: ubuntu-latest
     needs: [check-changes, sync-code]
@@ -164,8 +201,14 @@ jobs:
 
   restart-services:
     runs-on: ubuntu-latest
-    needs: [check-changes, sync-code, deploy-backend, deploy-frontend]
-    if: always() && (needs.check-changes.outputs.backend == 'true' || needs.check-changes.outputs.frontend == 'true')
+    needs: [check-changes, sync-code, deploy-backend, run-migrations, deploy-frontend]
+    if: |
+      always() &&
+      needs.check-changes.result == 'success' &&
+      (needs.check-changes.outputs.backend == 'true' || needs.check-changes.outputs.frontend == 'true') &&
+      (needs.deploy-backend.result == 'success' || needs.deploy-backend.result == 'skipped') &&
+      (needs.run-migrations.result == 'success' || needs.run-migrations.result == 'skipped') &&
+      (needs.deploy-frontend.result == 'success' || needs.deploy-frontend.result == 'skipped')
     steps:
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0

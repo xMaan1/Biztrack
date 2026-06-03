@@ -25,7 +25,7 @@ export type DonorQuickAction = {
 
 export const MOCK_DONOR_DASHBOARD_STATS: DonorDashboardStat[] = [
   {
-    label: 'Total Donation Leads',
+    label: 'Total Donor Leads',
     value: '37',
     change: '+12',
     changeLabel: 'active leads',
@@ -118,9 +118,8 @@ export const MOCK_DONOR_PIPELINE: DonorPipelineStage[] = [
 ];
 
 export const MOCK_DONOR_QUICK_ACTIONS: DonorQuickAction[] = [
-  { href: '/ngo/donation-leads', label: 'Manage Leads', accent: 'emerald' },
+  { href: '/ngo/donor-leads', label: 'Manage Donor Leads', accent: 'emerald' },
   { href: '/ngo/donors', label: 'Manage Donors', accent: 'blue' },
-  { href: '/ngo/donor-contacts', label: 'Manage Contacts', accent: 'purple' },
   { href: '/ngo/partner-organizations', label: 'Partner Orgs', accent: 'orange' },
   { href: '/ngo/gift-opportunities', label: 'Gift Opportunities', accent: 'teal' },
 ];

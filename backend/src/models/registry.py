@@ -89,7 +89,7 @@ def register_all_models():
         DailyExpense,
         Admission,
     )
-    from .ngo import Donor, PartnerOrganization
+    from .ngo import Donor, DonorLead, PartnerOrganization
 
     _ = (
         PasswordResetToken,
@@ -191,5 +191,6 @@ def register_all_models():
         DailyExpense,
         Admission,
         Donor,
+        DonorLead,
         PartnerOrganization,
     )
