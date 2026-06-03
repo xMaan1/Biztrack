@@ -33,7 +33,6 @@ import {
 } from '../../../components/ui/dialog';
 import { Alert, AlertDescription } from '../../../components/ui/alert';
 import {
-  Plus,
   Filter,
   Settings,
   AlertTriangle,
@@ -49,6 +48,7 @@ import {
   InvoiceDashboard,
 } from '../../../models/sales';
 import { InvoiceDialog, InstallmentPlanCreateOption } from '../../../components/sales/InvoiceDialog';
+import { CreateInvoiceSection } from '../../../components/sales/CreateInvoiceSection';
 import { InvoiceList } from '../../../components/sales/InvoiceList';
 import { InvoiceDashboard as InvoiceDashboardComponent } from '../../../components/sales/InvoiceDashboard';
 import { InvoiceCustomizationDialog } from '../../../components/sales/InvoiceCustomizationDialog';
@@ -70,7 +70,7 @@ function InvoicesPageContent() {
   const [activeTab, setActiveTab] = useState('invoices');
 
   // Dialog states
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -150,10 +150,10 @@ function InvoicesPageContent() {
           invoice_id: created.id,
         });
       }
-      setShowCreateDialog(false);
+      setCreateError(null);
       loadData();
     } catch (err) {
-      setError(extractErrorMessage(err, 'Failed to create invoice'));
+      setCreateError(extractErrorMessage(err, 'Failed to create invoice'));
     }
   };
 
@@ -258,7 +258,6 @@ function InvoicesPageContent() {
 
   const handleEdit = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
-    setShowCreateDialog(false);
     setShowViewDialog(false);
     setUpdateError(null);
     setShowEditDialog(true);
@@ -334,15 +333,10 @@ function InvoicesPageContent() {
               <Settings className="h-4 w-4" />
               Customize Invoice
             </Button>
-            <Button
-              onClick={() => setShowCreateDialog(true)}
-              className="modern-button"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Create Invoice
-            </Button>
           </div>
         </div>
+
+        <CreateInvoiceSection onSubmit={handleCreateInvoice} error={createError} />
 
         {/* Customization Notice */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -533,14 +527,6 @@ function InvoicesPageContent() {
             </Card>
           </TabsContent>
         </Tabs>
-
-        {/* Create Invoice Dialog */}
-        <InvoiceDialog
-          open={showCreateDialog}
-          onOpenChange={setShowCreateDialog}
-          onSubmit={handleCreateInvoice}
-          mode="create"
-        />
 
         {/* Edit Invoice Dialog */}
         <InvoiceDialog
