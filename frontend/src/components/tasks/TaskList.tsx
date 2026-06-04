@@ -99,6 +99,15 @@ export const TaskList: React.FC<TaskListProps> = ({
     loadTasks();
   }, [filters, page]);
 
+  useEffect(() => {
+    const hasActiveTimer = tasks.some((task) => task.isTimerActive);
+    if (!hasActiveTimer) return;
+    const interval = setInterval(() => {
+      void loadTasks();
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [tasks]);
+
   const loadInitialData = async () => {
     try {
       const [projectsRes, usersRes] = await Promise.all([

@@ -1,14 +1,14 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List, Dict, Any
 from datetime import datetime
-from .common import (
+from .platform.enums import (
     UserRole,
     TenantRole,
     SubscriptionStatus,
     PlanType,
     PlanFeature,
-    Pagination
 )
+from .common import Pagination
 
 class Permission(BaseModel):
     code: str

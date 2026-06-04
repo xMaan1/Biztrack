@@ -7,7 +7,7 @@ from datetime import datetime
 from uuid import UUID
 
 from .....models.labeled_contact_items import LabeledEmailItem, LabeledPhoneItem
-from .....models.common import (
+from .....models.crm.enums import (
     LeadStatus,
     LeadSource,
     OpportunityStage,
@@ -17,8 +17,8 @@ from .....models.common import (
     QuoteStatus,
     ContractStatus,
     Industry,
-    Pagination,
 )
+from .....models.common import Pagination
 
 from ..leads.schemas import Lead
 from ..activities.schemas import SalesActivity

@@ -9,7 +9,7 @@ from .workshop_models import WorkOrder, WorkOrderStatus, WorkOrderPriority
 from .hrm_models import Employee, LeaveRequest
 from .inventory_models import Product, Warehouse, PurchaseOrder
 from .invoice_models import Invoice, Payment
-from .project_models import Project, Task
+from ..models.projects import Project, Task
 from .core_models import User
 from .pos_models import POSTransaction
 

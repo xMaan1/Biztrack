@@ -7,6 +7,17 @@ from .contact import Contact
 from .company import Company
 from .opportunity import Opportunity
 from .sales_activity import SalesActivity
+from .enums import (
+    LeadStatus,
+    LeadSource,
+    OpportunityStage,
+    ContactType,
+    ActivityType,
+    CompanySize,
+    Industry,
+    QuoteStatus,
+    ContractStatus,
+)
 
 __all__ = [
     "Lead",
@@ -16,6 +27,15 @@ __all__ = [
     "Company",
     "Opportunity",
     "SalesActivity",
+    "LeadStatus",
+    "LeadSource",
+    "OpportunityStage",
+    "ContactType",
+    "ActivityType",
+    "CompanySize",
+    "Industry",
+    "QuoteStatus",
+    "ContractStatus",
     "CustomerAttachmentItem",
     "CustomerBase",
     "CustomerCreate",

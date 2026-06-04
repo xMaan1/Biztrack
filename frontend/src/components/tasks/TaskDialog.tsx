@@ -80,6 +80,11 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     assignedTo: '',
     dueDate: '',
     estimatedHours: 0,
+    estimatedMinutes: 0,
+    estimatedSeconds: 0,
+    reminderHours: 0,
+    reminderMinutes: 15,
+    reminderSeconds: 0,
     actualHours: 0,
     tags: [],
   });
@@ -100,6 +105,11 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
         assignedTo: task.assignedTo?.id || 'unassigned',
         dueDate: task.dueDate || '',
         estimatedHours: task.estimatedHours || 0,
+        estimatedMinutes: task.estimatedMinutes || 0,
+        estimatedSeconds: task.estimatedSeconds || 0,
+        reminderHours: task.reminderHours || 0,
+        reminderMinutes: task.reminderMinutes ?? 15,
+        reminderSeconds: task.reminderSeconds || 0,
         actualHours: task.actualHours || 0,
         tags: task.tags || [],
       });
@@ -115,6 +125,11 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
         assignedTo: 'unassigned',
         dueDate: '',
         estimatedHours: 0,
+        estimatedMinutes: 0,
+        estimatedSeconds: 0,
+        reminderHours: 0,
+        reminderMinutes: 15,
+        reminderSeconds: 0,
         actualHours: 0,
         tags: [],
       });
@@ -152,7 +167,24 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     if (!submitData.description?.trim()) delete submitData.description;
     if (submitData.assignedTo === 'unassigned') delete submitData.assignedTo;
     if (!submitData.dueDate) delete submitData.dueDate;
-    if (!submitData.estimatedHours) delete submitData.estimatedHours;
+    const hasEstimate =
+      (submitData.estimatedHours || 0) > 0 ||
+      (submitData.estimatedMinutes || 0) > 0 ||
+      (submitData.estimatedSeconds || 0) > 0;
+    if (!hasEstimate) {
+      delete submitData.estimatedHours;
+      delete submitData.estimatedMinutes;
+      delete submitData.estimatedSeconds;
+    }
+    const hasReminder =
+      (submitData.reminderHours || 0) > 0 ||
+      (submitData.reminderMinutes || 0) > 0 ||
+      (submitData.reminderSeconds || 0) > 0;
+    if (!hasReminder) {
+      delete submitData.reminderHours;
+      delete submitData.reminderMinutes;
+      delete submitData.reminderSeconds;
+    }
     if (!submitData.actualHours) delete submitData.actualHours;
     if (!submitData.tags?.length) delete submitData.tags;
 
@@ -330,40 +362,115 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="estimatedHours">Estimated Hours</Label>
-              <Input
-                id="estimatedHours"
-                type="number"
-                value={formData.estimatedHours}
-                onChange={(e) =>
-                  handleInputChange(
-                    'estimatedHours',
-                    parseFloat(e.target.value) || 0,
-                  )
-                }
-                min="0"
-                step="0.5"
-                className="mt-1"
-              />
+            <div className="md:col-span-2">
+              <Label>Estimated Time</Label>
+              <div className="mt-1 grid grid-cols-3 gap-2">
+                <div>
+                  <Label htmlFor="estimatedHours" className="text-xs text-muted-foreground">
+                    Hours
+                  </Label>
+                  <Input
+                    id="estimatedHours"
+                    type="number"
+                    min="0"
+                    value={formData.estimatedHours}
+                    onChange={(e) =>
+                      handleInputChange('estimatedHours', parseInt(e.target.value, 10) || 0)
+                    }
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="estimatedMinutes" className="text-xs text-muted-foreground">
+                    Minutes
+                  </Label>
+                  <Input
+                    id="estimatedMinutes"
+                    type="number"
+                    min="0"
+                    max="59"
+                    value={formData.estimatedMinutes}
+                    onChange={(e) =>
+                      handleInputChange('estimatedMinutes', parseInt(e.target.value, 10) || 0)
+                    }
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="estimatedSeconds" className="text-xs text-muted-foreground">
+                    Seconds
+                  </Label>
+                  <Input
+                    id="estimatedSeconds"
+                    type="number"
+                    min="0"
+                    max="59"
+                    value={formData.estimatedSeconds}
+                    onChange={(e) =>
+                      handleInputChange('estimatedSeconds', parseInt(e.target.value, 10) || 0)
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="md:col-span-2">
+              <Label>Reminder When Time Left</Label>
+              <div className="mt-1 grid grid-cols-3 gap-2">
+                <div>
+                  <Label htmlFor="reminderHours" className="text-xs text-muted-foreground">
+                    Hours
+                  </Label>
+                  <Input
+                    id="reminderHours"
+                    type="number"
+                    min="0"
+                    value={formData.reminderHours}
+                    onChange={(e) =>
+                      handleInputChange('reminderHours', parseInt(e.target.value, 10) || 0)
+                    }
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="reminderMinutes" className="text-xs text-muted-foreground">
+                    Minutes
+                  </Label>
+                  <Input
+                    id="reminderMinutes"
+                    type="number"
+                    min="0"
+                    max="59"
+                    value={formData.reminderMinutes}
+                    onChange={(e) =>
+                      handleInputChange('reminderMinutes', parseInt(e.target.value, 10) || 0)
+                    }
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="reminderSeconds" className="text-xs text-muted-foreground">
+                    Seconds
+                  </Label>
+                  <Input
+                    id="reminderSeconds"
+                    type="number"
+                    min="0"
+                    max="59"
+                    value={formData.reminderSeconds}
+                    onChange={(e) =>
+                      handleInputChange('reminderSeconds', parseInt(e.target.value, 10) || 0)
+                    }
+                  />
+                </div>
+              </div>
             </div>
 
             {isEditing && (
               <div>
-                <Label htmlFor="actualHours">Actual Hours</Label>
+                <Label htmlFor="actualHours">Tracked Hours (read-only sync)</Label>
                 <Input
                   id="actualHours"
                   type="number"
                   value={formData.actualHours}
-                  onChange={(e) =>
-                    handleInputChange(
-                      'actualHours',
-                      parseFloat(e.target.value) || 0,
-                    )
-                  }
-                  min="0"
-                  step="0.5"
-                  className="mt-1"
+                  readOnly
+                  className="mt-1 bg-muted"
                 />
               </div>
             )}

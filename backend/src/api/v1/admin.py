@@ -479,7 +479,7 @@ async def get_tenant_complete_details(
             })
         
         # Get projects count and details
-        from ...config.project_models import Project
+        from ...models.projects import Project
         projects = db.query(Project).filter(Project.tenant_id == tenant.id).all()
         project_data = []
         for project in projects:
@@ -741,7 +741,7 @@ async def delete_tenant_project(
         )
     
     try:
-        from ...config.project_models import Project
+        from ...models.projects import Project
         
         project = db.query(Project).filter(
             Project.id == project_id,

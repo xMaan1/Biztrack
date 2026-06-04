@@ -5,9 +5,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-
-DONOR_TYPES = ("individual", "corporate", "anonymous")
-DONOR_STATUSES = ("active", "inactive")
+from .....models.ngo.enums import DonorType, DonorStatus
 
 
 class DonorBase(BaseModel):
@@ -15,25 +13,27 @@ class DonorBase(BaseModel):
     email: str = Field(..., min_length=3, max_length=255)
     phone: Optional[str] = Field(None, max_length=50)
     organization: Optional[str] = Field(None, max_length=255)
-    donor_type: str = Field(default="individual")
-    status: str = Field(default="active")
+    donor_type: str = Field(default=DonorType.INDIVIDUAL.value)
+    status: str = Field(default=DonorStatus.ACTIVE.value)
     address: Optional[str] = None
     notes: Optional[str] = None
 
     @field_validator("donor_type")
     @classmethod
     def validate_donor_type(cls, v: str) -> str:
-        key = (v or "individual").strip().lower()
-        if key not in DONOR_TYPES:
-            raise ValueError(f"donor_type must be one of: {', '.join(DONOR_TYPES)}")
+        key = (v or DonorType.INDIVIDUAL.value).strip().lower()
+        allowed = {item.value for item in DonorType}
+        if key not in allowed:
+            raise ValueError(f"donor_type must be one of: {', '.join(sorted(allowed))}")
         return key
 
     @field_validator("status")
     @classmethod
     def validate_status(cls, v: str) -> str:
-        key = (v or "active").strip().lower()
-        if key not in DONOR_STATUSES:
-            raise ValueError(f"status must be one of: {', '.join(DONOR_STATUSES)}")
+        key = (v or DonorStatus.ACTIVE.value).strip().lower()
+        allowed = {item.value for item in DonorStatus}
+        if key not in allowed:
+            raise ValueError(f"status must be one of: {', '.join(sorted(allowed))}")
         return key
 
     @field_validator("email")
@@ -64,8 +64,9 @@ class DonorUpdate(BaseModel):
         if v is None:
             return v
         key = v.strip().lower()
-        if key not in DONOR_TYPES:
-            raise ValueError(f"donor_type must be one of: {', '.join(DONOR_TYPES)}")
+        allowed = {item.value for item in DonorType}
+        if key not in allowed:
+            raise ValueError(f"donor_type must be one of: {', '.join(sorted(allowed))}")
         return key
 
     @field_validator("status")
@@ -74,8 +75,9 @@ class DonorUpdate(BaseModel):
         if v is None:
             return v
         key = v.strip().lower()
-        if key not in DONOR_STATUSES:
-            raise ValueError(f"status must be one of: {', '.join(DONOR_STATUSES)}")
+        allowed = {item.value for item in DonorStatus}
+        if key not in allowed:
+            raise ValueError(f"status must be one of: {', '.join(sorted(allowed))}")
         return key
 
     @field_validator("email")

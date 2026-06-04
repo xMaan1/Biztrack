@@ -290,6 +290,52 @@ Best regards,
             logger.error(f"Failed to send assignment email to {to_email}: {str(e)}")
             return False
 
+    def send_task_time_reminder_email(
+        self,
+        to_email: str,
+        assignee_name: str,
+        task_title: str,
+        remaining_time: str,
+        estimated_time: str,
+        tracked_time: str,
+    ) -> bool:
+        try:
+            if not to_email:
+                return False
+            if not self.smtp_username or not self.smtp_password:
+                logger.warning("SMTP credentials not configured. Task time reminder not sent.")
+                return False
+            msg = MIMEMultipart()
+            msg['From'] = f"{self.from_name} <{self.from_email}>"
+            msg['To'] = to_email
+            msg['Subject'] = f"Task time reminder: {task_title[:50]}{'...' if len(task_title) > 50 else ''}"
+            body = f"""
+Dear {assignee_name},
+
+Your assigned task is running low on estimated time.
+
+Task: {task_title}
+Estimated time: {estimated_time}
+Time tracked so far: {tracked_time}
+Time remaining: {remaining_time}
+
+Please review the task and update progress if needed.
+
+Best regards,
+{self.from_name}
+            """
+            msg.attach(MIMEText(body.strip(), 'plain'))
+            server = smtplib.SMTP(self.smtp_server, self.smtp_port)
+            server.starttls()
+            server.login(self.smtp_username, self.smtp_password)
+            server.sendmail(self.from_email, to_email, msg.as_string())
+            server.quit()
+            logger.info(f"Task time reminder sent to {to_email} for task: {task_title[:30]}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to send task time reminder to {to_email}: {str(e)}")
+            return False
+
     def test_email_connection(self) -> bool:
         """Test email connection"""
         try:

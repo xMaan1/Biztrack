@@ -10,7 +10,7 @@ def register_all_models():
         project_team_members,
     )
 
-    from ..config.project_models import Project, Task
+    from .projects import Project, Task
     from .crm import Lead, Contact, Company, Opportunity, SalesActivity, Customer, CustomerGuarantor
     from ..config.sales_models import Quote, Contract
     from ..config.hrm_models import (

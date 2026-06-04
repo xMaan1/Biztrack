@@ -5,42 +5,43 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-PARTNER_SECTORS = ("relief", "medical", "education", "food")
-PARTNER_SIZES = ("small", "medium", "large")
-PARTNER_STATUSES = ("active", "inactive")
+from .....models.ngo.enums import PartnerSector, PartnerSize, PartnerStatus
 
 
 class PartnerOrganizationBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     email: str = Field(..., min_length=3, max_length=255)
-    sector: str = Field(default="relief")
-    organization_size: str = Field(default="medium")
+    sector: str = Field(default=PartnerSector.RELIEF.value)
+    organization_size: str = Field(default=PartnerSize.MEDIUM.value)
     website: Optional[str] = Field(None, max_length=512)
     location: Optional[str] = Field(None, max_length=512)
-    status: str = Field(default="active")
+    status: str = Field(default=PartnerStatus.ACTIVE.value)
 
     @field_validator("sector")
     @classmethod
     def validate_sector(cls, v: str) -> str:
-        key = (v or "relief").strip().lower()
-        if key not in PARTNER_SECTORS:
-            raise ValueError(f"sector must be one of: {', '.join(PARTNER_SECTORS)}")
+        key = (v or PartnerSector.RELIEF.value).strip().lower()
+        allowed = {item.value for item in PartnerSector}
+        if key not in allowed:
+            raise ValueError(f"sector must be one of: {', '.join(sorted(allowed))}")
         return key
 
     @field_validator("organization_size")
     @classmethod
     def validate_size(cls, v: str) -> str:
-        key = (v or "medium").strip().lower()
-        if key not in PARTNER_SIZES:
-            raise ValueError(f"organization_size must be one of: {', '.join(PARTNER_SIZES)}")
+        key = (v or PartnerSize.MEDIUM.value).strip().lower()
+        allowed = {item.value for item in PartnerSize}
+        if key not in allowed:
+            raise ValueError(f"organization_size must be one of: {', '.join(sorted(allowed))}")
         return key
 
     @field_validator("status")
     @classmethod
     def validate_status(cls, v: str) -> str:
-        key = (v or "active").strip().lower()
-        if key not in PARTNER_STATUSES:
-            raise ValueError(f"status must be one of: {', '.join(PARTNER_STATUSES)}")
+        key = (v or PartnerStatus.ACTIVE.value).strip().lower()
+        allowed = {item.value for item in PartnerStatus}
+        if key not in allowed:
+            raise ValueError(f"status must be one of: {', '.join(sorted(allowed))}")
         return key
 
     @field_validator("email")
@@ -69,8 +70,9 @@ class PartnerOrganizationUpdate(BaseModel):
         if v is None:
             return v
         key = v.strip().lower()
-        if key not in PARTNER_SECTORS:
-            raise ValueError(f"sector must be one of: {', '.join(PARTNER_SECTORS)}")
+        allowed = {item.value for item in PartnerSector}
+        if key not in allowed:
+            raise ValueError(f"sector must be one of: {', '.join(sorted(allowed))}")
         return key
 
     @field_validator("organization_size")
@@ -79,8 +81,9 @@ class PartnerOrganizationUpdate(BaseModel):
         if v is None:
             return v
         key = v.strip().lower()
-        if key not in PARTNER_SIZES:
-            raise ValueError(f"organization_size must be one of: {', '.join(PARTNER_SIZES)}")
+        allowed = {item.value for item in PartnerSize}
+        if key not in allowed:
+            raise ValueError(f"organization_size must be one of: {', '.join(sorted(allowed))}")
         return key
 
     @field_validator("status")
@@ -89,8 +92,9 @@ class PartnerOrganizationUpdate(BaseModel):
         if v is None:
             return v
         key = v.strip().lower()
-        if key not in PARTNER_STATUSES:
-            raise ValueError(f"status must be one of: {', '.join(PARTNER_STATUSES)}")
+        allowed = {item.value for item in PartnerStatus}
+        if key not in allowed:
+            raise ValueError(f"status must be one of: {', '.join(sorted(allowed))}")
         return key
 
     @field_validator("email")

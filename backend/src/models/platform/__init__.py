@@ -4,6 +4,14 @@ from .tenant import Tenant
 from .billing import Plan, Subscription
 from .rbac import Role, TenantUser
 from .auth import PasswordResetToken
+from .enums import (
+    UserRole,
+    TenantRole,
+    ModulePermission,
+    SubscriptionStatus,
+    PlanType,
+    PlanFeature,
+)
 
 __all__ = [
     "project_team_members",
@@ -14,4 +22,10 @@ __all__ = [
     "Role",
     "TenantUser",
     "PasswordResetToken",
+    "UserRole",
+    "TenantRole",
+    "ModulePermission",
+    "SubscriptionStatus",
+    "PlanType",
+    "PlanFeature",
 ]

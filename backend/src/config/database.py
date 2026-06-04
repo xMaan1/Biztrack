@@ -10,7 +10,7 @@ from .core_models import (
     User, Tenant, Plan, Subscription, TenantUser, project_team_members
 )
 
-from .project_models import (
+from ..models.projects import (
     Project, Task
 )
 
@@ -112,14 +112,13 @@ from .core_crud import (
     get_tenant_user, get_tenant_users, get_user_tenants, create_tenant_user, update_tenant_user, delete_tenant_user
 )
 
-from .project_crud import (
-    # Project functions
+from ..api.v1.projects.items.logic import (
     get_project_by_id, get_all_projects, get_projects_by_manager, get_project_ids_with_tasks_assigned_to,
     create_project, update_project, delete_project, get_project_stats,
-    
-    # Task functions
+)
+from ..api.v1.tasks.items.logic import (
     get_task_by_id, get_all_tasks, get_tasks_by_project, get_subtasks_by_parent, get_main_tasks_by_project, get_task_with_subtasks, get_tasks_by_assignee, get_tasks_by_creator,
-    create_task, update_task, delete_task, get_task_stats
+    create_task, update_task, delete_task, get_task_stats,
 )
 
 from ..api.v1.crm.leads.logic import (

@@ -5,8 +5,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-DONOR_LEAD_STATUSES = ("new", "contacted", "qualified", "converted", "lost")
-DONOR_LEAD_SOURCES = ("website", "event", "referral", "social_media", "campaign", "other")
+from .....models.ngo.enums import DonorLeadStatus, DonorLeadSource
 
 
 class DonorLeadBase(BaseModel):
@@ -15,27 +14,29 @@ class DonorLeadBase(BaseModel):
     phone: Optional[str] = Field(None, max_length=50)
     organization: Optional[str] = Field(None, max_length=255)
     expected_donation: float = Field(default=0, ge=0)
-    status: str = Field(default="new")
-    source: str = Field(default="other")
+    status: str = Field(default=DonorLeadStatus.NEW.value)
+    source: str = Field(default=DonorLeadSource.OTHER.value)
     assigned_to: Optional[str] = Field(None, max_length=255)
     notes: Optional[str] = None
 
     @field_validator("status")
     @classmethod
     def validate_status(cls, v: str) -> str:
-        key = (v or "new").strip().lower()
-        if key not in DONOR_LEAD_STATUSES:
-            raise ValueError(f"status must be one of: {', '.join(DONOR_LEAD_STATUSES)}")
+        key = (v or DonorLeadStatus.NEW.value).strip().lower()
+        allowed = {item.value for item in DonorLeadStatus}
+        if key not in allowed:
+            raise ValueError(f"status must be one of: {', '.join(sorted(allowed))}")
         return key
 
     @field_validator("source")
     @classmethod
     def validate_source(cls, v: str) -> str:
-        key = (v or "other").strip().lower().replace(" ", "_")
+        key = (v or DonorLeadSource.OTHER.value).strip().lower().replace(" ", "_")
         if key == "socialmedia":
-            key = "social_media"
-        if key not in DONOR_LEAD_SOURCES:
-            raise ValueError(f"source must be one of: {', '.join(DONOR_LEAD_SOURCES)}")
+            key = DonorLeadSource.SOCIAL_MEDIA.value
+        allowed = {item.value for item in DonorLeadSource}
+        if key not in allowed:
+            raise ValueError(f"source must be one of: {', '.join(sorted(allowed))}")
         return key
 
     @field_validator("email")
@@ -66,8 +67,9 @@ class DonorLeadUpdate(BaseModel):
         if v is None:
             return v
         key = v.strip().lower()
-        if key not in DONOR_LEAD_STATUSES:
-            raise ValueError(f"status must be one of: {', '.join(DONOR_LEAD_STATUSES)}")
+        allowed = {item.value for item in DonorLeadStatus}
+        if key not in allowed:
+            raise ValueError(f"status must be one of: {', '.join(sorted(allowed))}")
         return key
 
     @field_validator("source")
@@ -77,9 +79,10 @@ class DonorLeadUpdate(BaseModel):
             return v
         key = v.strip().lower().replace(" ", "_")
         if key == "socialmedia":
-            key = "social_media"
-        if key not in DONOR_LEAD_SOURCES:
-            raise ValueError(f"source must be one of: {', '.join(DONOR_LEAD_SOURCES)}")
+            key = DonorLeadSource.SOCIAL_MEDIA.value
+        allowed = {item.value for item in DonorLeadSource}
+        if key not in allowed:
+            raise ValueError(f"source must be one of: {', '.join(sorted(allowed))}")
         return key
 
     @field_validator("email")

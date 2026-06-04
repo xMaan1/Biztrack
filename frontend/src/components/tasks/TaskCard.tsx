@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
@@ -21,6 +21,7 @@ import {
   Circle,
   Trash2,
   Edit,
+  AlertTriangle,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -29,8 +30,12 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from '../../components/ui/dropdown-menu';
-// Add more imports for your UI components as needed
 import { Task, TaskStatus, TaskPriority, SubTask } from '../../models/task';
+import {
+  formatDurationHms,
+  getEstimatedDurationSeconds,
+  hasEstimatedDuration,
+} from '../../utils/taskTimeUtils';
 
 interface TaskCardProps {
   task: Task;
@@ -126,6 +131,40 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const [subtaskMenuOpenId, setSubtaskMenuOpenId] = useState<string | null>(
     null,
   );
+  const [snapshotAt, setSnapshotAt] = useState(Date.now());
+  const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    setSnapshotAt(Date.now());
+  }, [task.trackedSeconds, task.isTimerActive, task.activeTimerStartedAt]);
+
+  useEffect(() => {
+    if (!task.isTimerActive) return;
+    const id = setInterval(() => setTick((t) => t + 1), 1000);
+    return () => clearInterval(id);
+  }, [task.isTimerActive]);
+
+  const liveTrackedSeconds = useMemo(() => {
+    const base = task.trackedSeconds || 0;
+    if (!task.isTimerActive) return base;
+    return base + Math.floor((Date.now() - snapshotAt) / 1000);
+  }, [task.trackedSeconds, task.isTimerActive, snapshotAt, tick]);
+
+  const estimatedSeconds = getEstimatedDurationSeconds(task);
+  const liveRemainingSeconds = useMemo(() => {
+    if (!estimatedSeconds) return null;
+    return Math.max(0, estimatedSeconds - liveTrackedSeconds);
+  }, [estimatedSeconds, liveTrackedSeconds]);
+
+  const isTimeLow = useMemo(() => {
+    if (task.isTimeLow) return true;
+    if (!liveRemainingSeconds) return false;
+    const threshold =
+      (task.reminderHours || 0) * 3600 +
+      (task.reminderMinutes || 0) * 60 +
+      (task.reminderSeconds || 0);
+    return threshold > 0 && liveRemainingSeconds <= threshold;
+  }, [task, liveRemainingSeconds]);
 
   const showTaskActionsMenu =
     (canUpdateTasks && (onEdit || onStatusChange)) ||
@@ -209,6 +248,18 @@ export const TaskCard: React.FC<TaskCardProps> = ({
         <div className="flex gap-2 mb-2 flex-wrap">
           {getStatusBadge(task.status)}
           {getPriorityBadge(task.priority)}
+          {isTimeLow && (
+            <Badge className="bg-amber-100 text-amber-800 border-amber-200">
+              <AlertTriangle className="mr-1 h-3 w-3" />
+              Low Time
+            </Badge>
+          )}
+          {task.isTimerActive && (
+            <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">
+              <Timer className="mr-1 h-3 w-3 animate-pulse" />
+              Timer Running
+            </Badge>
+          )}
           {task.tags.map((tag, index) => (
             <Badge
               key={index}
@@ -242,11 +293,23 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               </span>
             </div>
           )}
-          {task.estimatedHours && (
+          {(hasEstimatedDuration(task) || liveTrackedSeconds > 0) && (
             <div className="flex items-center gap-1">
               <Timer className="h-4 w-4 text-gray-400" />
               <span className="text-xs text-gray-700">
-                {task.actualHours}h / {task.estimatedHours}h
+                {formatDurationHms(liveTrackedSeconds)}
+                {hasEstimatedDuration(task)
+                  ? ` / ${formatDurationHms(estimatedSeconds)}`
+                  : ''}
+              </span>
+            </div>
+          )}
+          {liveRemainingSeconds !== null && hasEstimatedDuration(task) && (
+            <div className="flex items-center gap-1">
+              <span
+                className={`text-xs ${isTimeLow ? 'font-semibold text-amber-700' : 'text-gray-500'}`}
+              >
+                {formatDurationHms(liveRemainingSeconds)} left
               </span>
             </div>
           )}
@@ -301,7 +364,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           </span>
         </div>
 
-        {/* Subtasks */}
         {showSubtasks && (
           <div className="mt-3 border-t pt-2 space-y-2">
             {(task.subtasks || []).map((subtask) => (

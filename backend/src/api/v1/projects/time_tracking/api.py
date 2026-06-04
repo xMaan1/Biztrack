@@ -6,33 +6,22 @@ import json
 import uuid
 from datetime import datetime, timedelta
 
-from ...models.project_models import (
-    Project, ProjectCreate, ProjectUpdate, ProjectsResponse, TasksResponse, Task
-)
-from ...models.user_models import TeamMember
-from ...models.hrm_models import TimeEntry, TimeEntryCreate, TimeEntryUpdate, HRMTimeEntriesResponse
-from ...config.database import (
-    get_db, get_user_by_id, create_project, get_project_by_id,
-    get_all_projects, update_project, delete_project, get_tasks_by_project,
-    get_project_ids_with_tasks_assigned_to,
+from .....models.user_models import TeamMember
+from .....models.hrm_models import TimeEntry, TimeEntryCreate, TimeEntryUpdate, HRMTimeEntriesResponse
+from .....config.database import (
+    get_db, get_user_by_id,
     get_time_entries, get_time_entry_by_id, create_time_entry, update_time_entry, delete_time_entry,
-    User, Project as DBProject, Task as DBTask
+    User,
 )
-from ...config.hrm_models import TimeEntry as DBTimeEntry, Employee as DBEmployee
-from ...api.dependencies import get_current_user, get_tenant_context, require_permission, can_see_all_tasks
-from ...models.common import ModulePermission
+from .....models.projects import Project as DBProject, Task as DBTask
+from .....config.hrm_models import TimeEntry as DBTimeEntry, Employee as DBEmployee
+from .....api.dependencies import get_current_user, get_tenant_context, require_permission, can_see_all_tasks
+from .....models.common import ModulePermission
+from .....services.task_time_service import sync_task_actual_hours, check_and_send_task_time_reminder
+from ..items import logic as project_logic
+from ...tasks.items import logic as task_logic
 
 router = APIRouter(prefix="/projects", tags=["projects"])
-
-def transform_user_to_team_member(user: User) -> TeamMember:
-    """Transform a User to TeamMember format"""
-    return TeamMember(
-        id=str(user.id),
-        name=f"{user.firstName or ''} {user.lastName or ''}".strip() or user.userName,
-        email=user.email,
-        role=user.userRole,
-        avatar=user.avatar
-    )
 
 def transform_db_time_entry_to_pydantic(db_entry: DBTimeEntry) -> TimeEntry:
     """Transform SQLAlchemy TimeEntry to Pydantic TimeEntry"""
@@ -52,82 +41,6 @@ def transform_db_time_entry_to_pydantic(db_entry: DBTimeEntry) -> TimeEntry:
         createdBy=str(db_entry.createdAt) if db_entry.createdAt else "",
         createdAt=db_entry.createdAt.isoformat() if db_entry.createdAt else "",
         updatedAt=db_entry.updatedAt.isoformat() if db_entry.updatedAt else ""
-    )
-
-def transform_project_to_response(project: DBProject) -> Project:
-    """Transform database project to response format"""
-    return Project(
-        id=str(project.id),
-        tenant_id=str(project.tenant_id),
-        name=project.name,
-        description=project.description,
-        status=project.status.value if hasattr(project.status, 'value') else project.status,
-        priority=project.priority.value if hasattr(project.priority, 'value') else project.priority,
-        startDate=project.startDate,
-        endDate=project.endDate,
-        completionPercent=project.completionPercent,
-        budget=project.budget,
-        actualCost=project.actualCost,
-        notes=project.notes,
-        clientEmail=project.clientEmail,
-        projectManagerId=str(project.projectManagerId),
-        createdById=str(project.createdById) if project.createdById else None,
-        projectManager=transform_user_to_team_member(project.projectManager),
-        teamMembers=[transform_user_to_team_member(member) for member in project.teamMembers],
-        createdAt=project.createdAt,
-        updatedAt=project.updatedAt,
-        activities=[]  # TODO: Implement activities
-    )
-
-@router.get("", response_model=ProjectsResponse)
-async def get_projects(
-    status: Optional[str] = Query(None),
-    priority: Optional[str] = Query(None),
-    search: Optional[str] = Query(None),
-    page: int = Query(1, ge=1),
-    limit: int = Query(10, ge=1, le=100),
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user),
-    tenant_context: Optional[dict] = Depends(get_tenant_context),
-    _: dict = Depends(require_permission(ModulePermission.PROJECTS_VIEW.value))
-):
-    """Get all projects with optional filtering (tenant-scoped). Team members only see projects that have tasks assigned to them."""
-    skip = (page - 1) * limit
-    tenant_id = tenant_context["tenant_id"] if tenant_context else None
-
-    query = db.query(DBProject).filter(DBProject.tenant_id == tenant_id)
-
-    if not can_see_all_tasks(tenant_context or {}):
-        allowed_project_ids = get_project_ids_with_tasks_assigned_to(str(current_user.id), db, tenant_id)
-        query = query.filter(DBProject.id.in_(allowed_project_ids))
-
-    if status:
-        query = query.filter(DBProject.status == status)
-    if priority:
-        query = query.filter(DBProject.priority == priority)
-    if search:
-        search_lower = f"%{search.lower()}%"
-        query = query.filter(
-            or_(
-                func.lower(DBProject.name).like(search_lower),
-                func.lower(DBProject.description).like(search_lower)
-            )
-        )
-
-    total = query.count()
-
-    projects = query.order_by(DBProject.createdAt.desc()).offset(skip).limit(limit).all()
-    
-    project_list = [transform_project_to_response(project) for project in projects]
-    
-    return ProjectsResponse(
-        projects=project_list,
-        pagination={
-            "page": page,
-            "limit": limit,
-            "total": total,
-            "pages": (total + limit - 1) // limit
-        }
     )
 
 @router.get("/time-entries", response_model=HRMTimeEntriesResponse)
@@ -609,6 +522,12 @@ async def stop_project_time_session(
         
         db.commit()
         db.refresh(time_entry)
+
+        if time_entry.taskId:
+            task = task_logic.get_task_by_id(str(time_entry.taskId), db, tenant_id)
+            if task:
+                sync_task_actual_hours(db, task)
+                check_and_send_task_time_reminder(db, task)
         
         return {"timeEntry": transform_db_time_entry_to_pydantic(time_entry)}
     except Exception as e:
@@ -719,322 +638,3 @@ async def resume_project_time_session(
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error resuming time session: {str(e)}")
 
-@router.get("/team-members")
-async def get_project_team_members(
-    db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context),
-    _: dict = Depends(require_permission(ModulePermission.PROJECTS_VIEW.value))
-):
-    from ...models.common import UserRole
-    from ...config.database import get_all_users
-
-    tenant_id = tenant_context["tenant_id"] if tenant_context else None
-    users = get_all_users(db, tenant_id=tenant_id)
-    team_members = []
-
-    for user in users:
-        if user.isActive and user.userRole in [UserRole.PROJECT_MANAGER.value, UserRole.TEAM_MEMBER.value]:
-            team_members.append({
-                "id": str(user.id),
-                "name": f"{user.firstName or ''} {user.lastName or ''}".strip() or user.userName,
-                "email": user.email,
-                "role": user.userRole,
-                "avatar": user.avatar
-            })
-
-    return {"teamMembers": team_members}
-
-@router.get("/{project_id}", response_model=Project)
-async def get_project(
-    project_id: str,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user),
-    tenant_context: Optional[dict] = Depends(get_tenant_context),
-    _: dict = Depends(require_permission(ModulePermission.PROJECTS_VIEW.value))
-):
-    """Get a specific project. Team members only see projects that have tasks assigned to them."""
-    import uuid
-    tenant_id = tenant_context["tenant_id"] if tenant_context else None
-    try:
-        uuid.UUID(str(project_id))
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid project_id format. Must be a UUID.")
-    project = get_project_by_id(project_id, db, tenant_id=tenant_id)
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
-    if not can_see_all_tasks(tenant_context or {}):
-        allowed_project_ids = get_project_ids_with_tasks_assigned_to(str(current_user.id), db, tenant_id)
-        if project.id not in allowed_project_ids:
-            raise HTTPException(status_code=404, detail="Project not found")
-    return transform_project_to_response(project)
-
-@router.post("", response_model=Project)
-async def create_new_project(
-    project_data: ProjectCreate, 
-    current_user = Depends(get_current_user),
-    db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context),
-    _: dict = Depends(require_permission(ModulePermission.PROJECTS_CREATE.value))
-):
-    """Create a new project"""
-    try:
-        tenant_id = tenant_context["tenant_id"] if tenant_context else None
-        created_by = str(current_user.id)
-        
-        # Validate project manager ID
-        if not project_data.projectManagerId or project_data.projectManagerId.strip() == '':
-            raise HTTPException(status_code=400, detail="Project manager is required")
-        
-        # Verify project manager exists
-        project_manager = get_user_by_id(project_data.projectManagerId, db)
-        if not project_manager:
-            raise HTTPException(status_code=400, detail="Project manager not found")
-        
-        # Check tenant access for project manager
-        if tenant_context:
-            from ...config.database import TenantUser
-            tenant_user = db.query(TenantUser).filter(
-                TenantUser.userId == project_manager.id,
-                TenantUser.tenant_id == tenant_context["tenant_id"]
-            ).first()
-            if not tenant_user:
-                raise HTTPException(status_code=400, detail="Project manager not in tenant")
-        
-        # Verify team members exist
-        team_members = []
-        for member_id in project_data.teamMemberIds:
-            # Skip empty or invalid IDs
-            if not member_id or member_id.strip() == '':
-                continue
-                
-            member = get_user_by_id(member_id, db)
-            if not member:
-                raise HTTPException(status_code=400, detail=f"Team member {member_id} not found")
-            # Check tenant access for team member
-            if tenant_context:
-                from ...config.database import TenantUser
-                tenant_user = db.query(TenantUser).filter(
-                    TenantUser.userId == member.id,
-                    TenantUser.tenant_id == tenant_context["tenant_id"]
-                ).first()
-                if not tenant_user:
-                    raise HTTPException(status_code=400, detail=f"Team member {member_id} not in tenant")
-            team_members.append(member)
-        
-        # Create project data
-        project_dict = project_data.model_dump()
-        team_member_ids = project_dict.pop('teamMemberIds')
-        
-        # Set additional fields
-        project_dict.update({
-            "id": str(uuid.uuid4()),
-            "tenant_id": tenant_id,
-            "createdById": created_by,
-            "createdAt": datetime.utcnow(),
-            "updatedAt": datetime.utcnow()
-        })
-        
-        # Create project
-        db_project = create_project(project_dict, db)
-        
-        # Add team members
-        db_project.teamMembers = team_members
-        db.commit()
-        db.refresh(db_project)
-        
-        try:
-            from ...services.notification_service import create_project_notification_for_all_tenant_users, send_assignment_notification
-            from ...config.notification_models import NotificationType, NotificationCategory
-            user_name = f"{current_user.firstName} {current_user.lastName}".strip() if hasattr(current_user, 'firstName') else current_user.userName if hasattr(current_user, 'userName') else "A user"
-            create_project_notification_for_all_tenant_users(
-                db,
-                str(tenant_id),
-                "New Project Created",
-                f"{user_name} created a new project: {project_data.name}",
-                NotificationType.INFO,
-                f"/projects/{str(db_project.id)}",
-                {"project_id": str(db_project.id), "created_by": str(current_user.id)}
-            )
-            if project_manager:
-                send_assignment_notification(
-                    db, str(tenant_id), project_manager, user_name,
-                    "Project (Manager)", project_data.name,
-                    action_url=f"/projects/{str(db_project.id)}",
-                    category=NotificationCategory.PROJECTS
-                )
-            for member in team_members:
-                if member.id != project_manager.id:
-                    send_assignment_notification(
-                        db, str(tenant_id), member, user_name,
-                        "Project (Team)", project_data.name,
-                        action_url=f"/projects/{str(db_project.id)}",
-                        category=NotificationCategory.PROJECTS
-                    )
-        except Exception as notification_error:
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(f"Failed to create notification: {notification_error}", exc_info=True)
-        return transform_project_to_response(db_project)
-    except HTTPException:
-        raise
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to create project: {str(e)}")
-
-@router.put("/{project_id}", response_model=Project)
-async def update_existing_project(
-    project_id: str, 
-    project_data: ProjectUpdate, 
-    current_user = Depends(get_current_user),
-    db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context),
-    _: dict = Depends(require_permission(ModulePermission.PROJECTS_UPDATE.value))
-):
-    """Update a project"""
-    tenant_id = tenant_context["tenant_id"] if tenant_context else None
-    project = get_project_by_id(project_id, db, tenant_id=tenant_id)
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
-    
-    update_dict = project_data.model_dump(exclude_unset=True)
-    updated_team_members = None
-    if 'teamMemberIds' in update_dict:
-        team_member_ids = update_dict.pop('teamMemberIds')
-        team_members = []
-        for member_id in team_member_ids:
-            member = get_user_by_id(member_id, db)
-            if not member:
-                raise HTTPException(status_code=400, detail=f"Team member {member_id} not found")
-            # Check tenant access for team member
-            if tenant_context and str(member.tenant_id) != tenant_context["tenant_id"]:
-                raise HTTPException(status_code=400, detail=f"Team member {member_id} not in tenant")
-            team_members.append(member)
-        updated_team_members = team_members
-        project.teamMembers = team_members
-    if 'status' in update_dict and hasattr(update_dict['status'], 'value'):
-        update_dict['status'] = update_dict['status'].value
-    if 'priority' in update_dict and hasattr(update_dict['priority'], 'value'):
-        update_dict['priority'] = update_dict['priority'].value
-    # Update other fields
-    updated_project = update_project(project_id, update_dict, db, tenant_id=tenant_id)
-    try:
-        from ...services.notification_service import create_project_notification_for_all_tenant_users, send_assignment_notification
-        from ...config.notification_models import NotificationType, NotificationCategory
-        user_name = f"{current_user.firstName} {current_user.lastName}".strip() if hasattr(current_user, 'firstName') else current_user.userName if hasattr(current_user, 'userName') else "A user"
-        create_project_notification_for_all_tenant_users(
-            db,
-            str(tenant_id),
-            "Project Updated",
-            f"{user_name} updated the project: {updated_project.name}",
-            NotificationType.INFO,
-            f"/projects/{project_id}",
-            {"project_id": project_id, "updated_by": str(current_user.id)}
-        )
-        if tenant_id and 'projectManagerId' in update_dict and update_dict.get('projectManagerId'):
-            new_pm = get_user_by_id(update_dict['projectManagerId'], db)
-            if new_pm:
-                send_assignment_notification(
-                    db, str(tenant_id), new_pm, user_name,
-                    "Project (Manager)", updated_project.name,
-                    action_url=f"/projects/{project_id}",
-                    category=NotificationCategory.PROJECTS
-                )
-        if tenant_id and updated_team_members is not None:
-            for member in updated_team_members:
-                send_assignment_notification(
-                    db, str(tenant_id), member, user_name,
-                    "Project (Team)", updated_project.name,
-                    action_url=f"/projects/{project_id}",
-                    category=NotificationCategory.PROJECTS
-                )
-    except Exception as notification_error:
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.error(f"Failed to create notification: {notification_error}", exc_info=True)
-    return transform_project_to_response(updated_project)
-
-@router.delete("/{project_id}")
-async def delete_existing_project(
-    project_id: str, 
-    current_user = Depends(get_current_user),
-    db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context),
-    _: dict = Depends(require_permission(ModulePermission.PROJECTS_DELETE.value))
-):
-    """Delete a project"""
-    tenant_id = tenant_context["tenant_id"] if tenant_context else None
-    success = delete_project(project_id, db, tenant_id=tenant_id)
-    if not success:
-        raise HTTPException(status_code=404, detail="Project not found")
-    
-    return {"message": "Project deleted successfully"}
-
-def transform_task_to_response(task: DBTask):
-    """Transform database task to response format for project tasks"""
-    return Task(
-        id=str(task.id),
-        tenant_id=str(task.tenant_id),
-        title=task.title,
-        description=task.description,
-        status=task.status,
-        priority=task.priority,
-        projectId=str(task.projectId),
-        assignedToId=str(task.assignedToId) if task.assignedToId else None,
-        createdById=str(task.createdById),
-        parentTaskId=str(task.parentTaskId) if task.parentTaskId else None,
-        assignedTo={
-            "id": str(task.assignedTo.id),
-            "name": f"{task.assignedTo.firstName or ''} {task.assignedTo.lastName or ''}".strip() or task.assignedTo.userName,
-            "email": task.assignedTo.email
-        } if task.assignedTo else None,
-        dueDate=task.dueDate,
-        estimatedHours=task.estimatedHours,
-        actualHours=task.actualHours,
-        tags=json.loads(task.tags) if task.tags else [],
-        createdBy={
-            "id": str(task.createdBy.id),
-            "name": f"{task.createdBy.firstName or ''} {task.createdBy.lastName or ''}".strip() or task.createdBy.userName,
-            "email": task.createdBy.email
-        },
-        completedAt=task.completedAt,
-        createdAt=task.createdAt,
-        updatedAt=task.updatedAt,
-        subtasks=[],
-        subtaskCount=0,
-        completedSubtaskCount=0
-    )
-
-@router.get("/{project_id}/tasks", response_model=TasksResponse)
-async def get_project_tasks(
-    project_id: str,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user),
-    tenant_context: Optional[dict] = Depends(get_tenant_context),
-    _: dict = Depends(require_permission(ModulePermission.PROJECTS_VIEW.value))
-):
-    tenant_id = tenant_context["tenant_id"] if tenant_context else None
-    project = get_project_by_id(project_id, db, tenant_id=tenant_id)
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
-    if not can_see_all_tasks(tenant_context or {}):
-        allowed_project_ids = get_project_ids_with_tasks_assigned_to(str(current_user.id), db, tenant_id)
-        if project.id not in allowed_project_ids:
-            raise HTTPException(status_code=404, detail="Project not found")
-    tasks = get_tasks_by_project(project_id, db, tenant_id=tenant_id)
-    if not can_see_all_tasks(tenant_context or {}):
-        uid = str(current_user.id)
-        tasks = [
-            t for t in tasks
-            if (t.assignedToId and str(t.assignedToId) == uid) or str(t.createdById) == uid
-        ]
-    task_list = [transform_task_to_response(task) for task in tasks]
-    
-    return TasksResponse(
-        tasks=task_list,
-        pagination={
-            "page": 1,
-            "limit": len(task_list),
-            "total": len(task_list),
-            "pages": 1
-        }
-    )

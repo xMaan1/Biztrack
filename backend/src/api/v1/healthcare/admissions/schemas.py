@@ -2,13 +2,15 @@ from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime, date
 
+from .....models.healthcare.enums import AdmissionStatus
+
 
 class AdmissionBase(BaseModel):
     patient_id: str
     doctor_id: str
     admit_date: date
     discharge_date: Optional[date] = None
-    status: str = "admitted"
+    status: str = AdmissionStatus.ADMITTED.value
     ward: str
     room_or_bed: Optional[str] = None
     diagnosis: Optional[str] = None
@@ -16,7 +18,7 @@ class AdmissionBase(BaseModel):
 
 
 class AdmissionCreate(AdmissionBase):
-    status: str = "admitted"
+    status: str = AdmissionStatus.ADMITTED.value
 
 
 class AdmissionUpdate(BaseModel):

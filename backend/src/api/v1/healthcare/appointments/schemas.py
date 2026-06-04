@@ -2,6 +2,8 @@ from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime, date
 
+from .....models.healthcare.enums import AppointmentStatus
+
 
 class AppointmentBase(BaseModel):
     doctor_id: str
@@ -11,7 +13,7 @@ class AppointmentBase(BaseModel):
     appointment_date: date
     start_time: str
     end_time: str
-    status: str = "scheduled"
+    status: str = AppointmentStatus.SCHEDULED.value
     notes: Optional[str] = None
 
 
