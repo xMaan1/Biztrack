@@ -16,7 +16,6 @@ import { resolveItemUnit } from '@/src/utils/sales/commerceInvoiceUtils';
 import { UnitOfMeasureSelect } from '../UnitOfMeasureSelect';
 import { COMMERCE_INPUT_CLS } from './constants';
 import { InlineField } from './InlineField';
-import { CommerceInvoiceProductSearchTable } from './CommerceInvoiceProductSearchTable';
 import type { CommerceInvoiceTotals } from './types';
 
 type CommerceInvoiceProductEntrySectionProps = {
@@ -26,7 +25,6 @@ type CommerceInvoiceProductEntrySectionProps = {
   newItem: InvoiceItemCreate;
   products: Product[];
   productSearch: string;
-  filteredProducts: Product[];
   totals: CommerceInvoiceTotals;
   onProductSearchChange: (value: string) => void;
   onProductSelect: (productId: string) => void;
@@ -35,7 +33,6 @@ type CommerceInvoiceProductEntrySectionProps = {
   onAddExtraItem: () => void | Promise<void>;
   onInputChange: (field: keyof InvoiceCreate, value: string | number) => void;
   onSetPaidAmount: (value: number) => void;
-  onPickProduct: (product: Product) => void;
   clearFieldError: (key: string) => void;
 };
 
@@ -46,7 +43,6 @@ export function CommerceInvoiceProductEntrySection({
   newItem,
   products,
   productSearch,
-  filteredProducts,
   totals,
   onProductSearchChange,
   onProductSelect,
@@ -55,7 +51,6 @@ export function CommerceInvoiceProductEntrySection({
   onAddExtraItem,
   onInputChange,
   onSetPaidAmount,
-  onPickProduct,
   clearFieldError,
 }: CommerceInvoiceProductEntrySectionProps) {
   const router = useRouter();
@@ -112,12 +107,6 @@ export function CommerceInvoiceProductEntrySection({
               className={COMMERCE_INPUT_CLS}
             />
           </InlineField>
-          {productSearch.trim() && (
-            <CommerceInvoiceProductSearchTable
-              products={filteredProducts}
-              onSelect={onPickProduct}
-            />
-          )}
           <InlineField label="Discount %:">
             <Input
               type="number"

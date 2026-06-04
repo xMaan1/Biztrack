@@ -18,6 +18,8 @@ import { COMMERCE_INLINE_EDIT_CLS } from './constants';
 type CommerceInvoiceItemsTableProps = {
   items: InvoiceItemCreate[];
   products: Product[];
+  productSearch: string;
+  searchResults: Product[];
   itemsError?: string;
   getItemFieldValue: (
     index: number,
@@ -31,20 +33,26 @@ type CommerceInvoiceItemsTableProps = {
   ) => void;
   onItemFieldBlur: (index: number, field: CommerceItemNumericField) => void;
   onRemoveItem: (index: number) => void;
+  onPickProduct: (product: Product) => void;
 };
 
 export function CommerceInvoiceItemsTable({
   items,
   products,
+  productSearch,
+  searchResults,
   itemsError,
   getItemFieldValue,
   onItemFieldChange,
   onItemFieldBlur,
   onRemoveItem,
+  onPickProduct,
 }: CommerceInvoiceItemsTableProps) {
   const { formatCurrency } = useCurrency();
+  const isSearching = productSearch.trim().length > 0;
+  const showTable = items.length > 0 || isSearching;
 
-  if (items.length === 0) {
+  if (!showTable) {
     if (!itemsError) return null;
     return (
       <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-sm text-destructive">
@@ -82,8 +90,60 @@ export function CommerceInvoiceItemsTable({
             </tr>
           </thead>
           <tbody>
+            {isSearching &&
+              (searchResults.length === 0 ? (
+                <tr className="bg-muted/30">
+                  <td
+                    colSpan={9}
+                    className="border border-border px-3 py-2 text-center text-muted-foreground"
+                  >
+                    No products found
+                  </td>
+                </tr>
+              ) : (
+                searchResults.slice(0, 20).map((p) => (
+                  <tr
+                    key={`search-${p.id}`}
+                    className="cursor-pointer bg-muted/20 hover:bg-accent"
+                    onClick={() => onPickProduct(p)}
+                  >
+                    <td className="border border-border px-2 py-1 text-muted-foreground">—</td>
+                    <td className="border border-border px-2 py-1">
+                      <div>{p.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {p.sku}
+                        {p.barcode ? ` · ${p.barcode}` : ''}
+                        · Stock {p.stockQuantity}
+                        {p.category ? ` · ${p.category}` : ''}
+                      </div>
+                    </td>
+                    <td className="border border-border px-2 py-1 text-right text-muted-foreground">
+                      —
+                    </td>
+                    <td className="border border-border px-2 py-1">
+                      {formatUnitLabel(p.unitOfMeasure) || '—'}
+                    </td>
+                    <td className="border border-border px-2 py-1 text-right">
+                      {formatCurrency(p.unitPrice)}
+                    </td>
+                    <td className="border border-border px-2 py-1 text-right text-muted-foreground">
+                      —
+                    </td>
+                    <td className="border border-border px-2 py-1 text-right text-muted-foreground">
+                      —
+                    </td>
+                    <td className="border border-border px-2 py-1 text-right text-muted-foreground">
+                      —
+                    </td>
+                    <td className="border border-border px-2 py-1 text-center text-muted-foreground">
+                      —
+                    </td>
+                  </tr>
+                ))
+              ))}
+
             {items.map((item, index) => (
-              <tr key={`${item.productId}-${index}`} className="bg-card">
+              <tr key={`item-${item.productId}-${index}`} className="bg-card">
                 <td className="border border-border px-2 py-1">{index + 1}</td>
                 <td className="border border-border px-2 py-1">{item.description}</td>
                 <td className="border border-border px-2 py-1 text-right">

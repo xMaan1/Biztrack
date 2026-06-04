@@ -91,7 +91,6 @@ export function CommerceInvoiceForm({
         newItem={newItem}
         products={products}
         productSearch={ui.productSearch}
-        filteredProducts={ui.filteredProducts}
         totals={totals}
         onProductSearchChange={ui.setProductSearch}
         onProductSelect={onProductSelect}
@@ -100,18 +99,20 @@ export function CommerceInvoiceForm({
         onAddExtraItem={onAddExtraItem}
         onInputChange={onInputChange}
         onSetPaidAmount={ui.setPaidAmount}
-        onPickProduct={pickProduct}
         clearFieldError={clearFieldError}
       />
 
       <CommerceInvoiceItemsTable
         items={items}
         products={products}
+        productSearch={ui.productSearch}
+        searchResults={ui.filteredProducts}
         itemsError={errors.items}
         getItemFieldValue={ui.getItemFieldValue}
         onItemFieldChange={ui.handleItemFieldChange}
         onItemFieldBlur={ui.handleItemFieldBlur}
         onRemoveItem={onRemoveItem}
+        onPickProduct={pickProduct}
       />
 
       <CommerceInvoiceTotalsSection
