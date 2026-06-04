@@ -36,6 +36,7 @@ export function CommerceInvoiceFormSection({ mode, form, error }: CommerceInvoic
         onAddItem={form.addItem}
         onAddExtraItem={form.addExtraItem}
         onRemoveItem={form.removeItem}
+        onUpdateItem={form.updateItem}
         onClearInvoice={form.clearInvoice}
         onCancel={form.handleDismiss}
         onNewCustomer={() => form.setShowCreateCustomerDialog(true)}

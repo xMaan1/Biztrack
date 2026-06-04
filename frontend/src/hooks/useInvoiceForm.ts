@@ -270,6 +270,12 @@ export function useInvoiceForm({
     setItems((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const updateItem = (index: number, patch: Partial<InvoiceItemCreate>) => {
+    setItems((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, ...patch } : item)),
+    );
+  };
+
   const totals = useMemo(
     () => calculateInvoiceTotals(formData, items),
     [formData, items],
@@ -348,6 +354,7 @@ export function useInvoiceForm({
     addItem,
     addExtraItem,
     removeItem,
+    updateItem,
     clearInvoice,
     clearFieldError,
     handleSubmit,

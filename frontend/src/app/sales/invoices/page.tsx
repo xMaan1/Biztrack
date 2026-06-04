@@ -38,6 +38,9 @@ import {
   AlertTriangle,
   CheckCircle,
   Edit,
+  LayoutDashboard,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { DashboardLayout } from '../../../components/layout';
 import InvoiceService from '../../../services/InvoiceService';
@@ -68,6 +71,7 @@ function InvoicesPageContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('invoices');
+  const [showInvoiceDashboard, setShowInvoiceDashboard] = useState(false);
 
   // Dialog states
   const [createError, setCreateError] = useState<string | null>(null);
@@ -94,13 +98,16 @@ function InvoicesPageContent() {
 
   const loadData = useCallback(async () => {
     if (loadingRef.current) return;
-    
+
     try {
       loadingRef.current = true;
       setLoading(true);
       setError(null);
 
       if (activeTab === 'dashboard' && userIsOwner) {
+        const dashboardData = await InvoiceService.getDashboard();
+        setDashboard(dashboardData);
+      } else if (activeTab === 'overdue') {
         const dashboardData = await InvoiceService.getDashboard();
         setDashboard(dashboardData);
       } else {
@@ -127,6 +134,7 @@ function InvoicesPageContent() {
   const filtersString = useMemo(() => JSON.stringify(filters), [filters]);
 
   useEffect(() => {
+    if (!showInvoiceDashboard) return;
     if (!hasViewPermission) {
       setActiveTab('invoices');
       return;
@@ -136,7 +144,7 @@ function InvoicesPageContent() {
       return;
     }
     loadData();
-  }, [activeTab, currentPage, filtersString, searchTerm, statusFilter, loadData, hasViewPermission, userIsOwner]);
+  }, [showInvoiceDashboard, activeTab, currentPage, filtersString, searchTerm, statusFilter, loadData, hasViewPermission, userIsOwner]);
 
   const handleCreateInvoice = async (
     invoiceData: InvoiceCreate,
@@ -284,7 +292,7 @@ function InvoicesPageContent() {
     loadData();
   };
 
-  if (loading && activeTab === 'dashboard') {
+  if (showInvoiceDashboard && loading && activeTab === 'dashboard') {
     return (
       <DashboardLayout>
         <div className="container mx-auto p-6">
@@ -296,7 +304,7 @@ function InvoicesPageContent() {
     );
   }
 
-  if (error && activeTab === 'dashboard') {
+  if (showInvoiceDashboard && error && activeTab === 'dashboard') {
     return (
       <DashboardLayout>
         <div className="container mx-auto p-6">
@@ -338,27 +346,24 @@ function InvoicesPageContent() {
 
         <CreateInvoiceSection onSubmit={handleCreateInvoice} error={createError} />
 
-        {/* Customization Notice */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-start">
-            <div className="flex-shrink-0">
-              <Settings className="h-5 w-5 text-blue-400" />
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-blue-800">
-                Customize Your Invoice Template
-              </h3>
-              <div className="mt-2 text-sm text-blue-700">
-                <p>
-                  Before downloading invoices, please customize your invoice template with your company details,
-                  payment information, and styling preferences using the "Customize Invoice" button above.
-                </p>
-              </div>
-            </div>
-          </div>
+        <div className="flex justify-center">
+          <Button
+            type="button"
+            variant="outline"
+            className="flex items-center gap-2 px-6"
+            onClick={() => setShowInvoiceDashboard((prev) => !prev)}
+          >
+            <LayoutDashboard className="h-4 w-4" />
+            Invoice Dashboard
+            {showInvoiceDashboard ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </Button>
         </div>
 
-        {/* Tabs */}
+        {showInvoiceDashboard && (
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className={`grid w-full ${isOwner() ? 'grid-cols-3' : 'grid-cols-2'}`}>
             {isOwner() && (
@@ -527,6 +532,26 @@ function InvoicesPageContent() {
             </Card>
           </TabsContent>
         </Tabs>
+        )}
+
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <Settings className="h-5 w-5 text-blue-400" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-blue-800">
+                Customize Your Invoice Template
+              </h3>
+              <div className="mt-2 text-sm text-blue-700">
+                <p>
+                  Before downloading invoices, please customize your invoice template with your company details,
+                  payment information, and styling preferences using the "Customize Invoice" button above.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Edit Invoice Dialog */}
         <InvoiceDialog
