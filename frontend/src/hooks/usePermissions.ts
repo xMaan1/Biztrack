@@ -28,6 +28,7 @@ export function usePermissions() {
     loading,
     initializing,
     
+    canViewUsers: () => hasPermission('users:view') || isOwner(),
     canManageUsers: () => hasPermission('users:create') || isOwner(),
     canViewCRM: () => hasModuleAccess('crm'),
     canManageCRM: () => hasPermission('crm:create') || isOwner(),

@@ -145,6 +145,11 @@ export const RBAC_PERMISSION_MODULES: PermissionModule[] = [
     ],
   },
   {
+    label: 'Dashboard',
+    permissions: [{ label: 'View', value: 'dashboard:view' }],
+    submodules: [],
+  },
+  {
     label: 'Users',
     permissions: crud('users'),
     submodules: [],
@@ -165,6 +170,7 @@ export const RBAC_PERMISSION_MODULES: PermissionModule[] = [
 ];
 
 export const SIDEBAR_PATH_PERMISSIONS: Record<string, string> = {
+  '/dashboard': 'dashboard:view',
   '/crm': 'crm:dashboard:view',
   '/crm/customers': 'crm:customers:view',
   '/workshop-management/customers': 'crm:customers:view',

@@ -3,6 +3,8 @@
 import React, { useEffect, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { usePermissions } from '@/src/hooks/usePermissions';
+import { getDefaultLandingPath } from '@/src/utils/getDefaultLandingPath';
 import { isTauriApp } from '@/src/lib/isTauriApp';
 
 interface AuthGuardProps {
@@ -11,6 +13,7 @@ interface AuthGuardProps {
 
 export default function AuthGuard({ children }: AuthGuardProps) {
   const { loading, isAuthenticated } = useAuth();
+  const { userPermissions, initializing: rbacInitializing } = usePermissions();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -73,11 +76,20 @@ export default function AuthGuard({ children }: AuthGuardProps) {
         isAuthenticated &&
         (pathname === '/login' || pathname === '/signup')
       ) {
-        router.push('/dashboard');
+        if (!rbacInitializing && userPermissions) {
+          router.push(
+            getDefaultLandingPath(
+              userPermissions.permissions,
+              userPermissions.is_owner,
+            ),
+          );
+        } else if (!rbacInitializing) {
+          router.push('/dashboard');
+        }
         return;
       }
     }
-  }, [isAuthenticated, loading, pathname, router, isProtectedRoute]);
+  }, [isAuthenticated, loading, pathname, router, isProtectedRoute, rbacInitializing, userPermissions]);
 
   // Show loading spinner while checking authentication
   if (loading) {

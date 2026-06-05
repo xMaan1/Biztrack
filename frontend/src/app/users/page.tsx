@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRBAC } from '@/src/contexts/RBACContext';
 import { usePermissions } from '@/src/hooks/usePermissions';
-import { OwnerGuard } from '@/src/components/guards/PermissionGuard';
+import { PermissionGuard } from '@/src/components/guards/PermissionGuard';
 import { DashboardLayout } from '../../components/layout';
 import { Button } from '@/src/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
@@ -40,7 +40,7 @@ import { RoleManagementModal } from '@/src/components/users/RoleManagementModal'
 
 export default function UserManagementPage() {
   const { tenantUsers, roles, loading, removeTenantUser } = useRBAC();
-  const { canManageUsers } = usePermissions();
+  const { canManageUsers, hasPermission, isOwner } = usePermissions();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showRoleModal, setShowRoleModal] = useState(false);
@@ -90,7 +90,7 @@ export default function UserManagementPage() {
   return (
     <DashboardLayout>
       <div className="container mx-auto p-6 space-y-6">
-        <OwnerGuard>
+        <PermissionGuard permission="users:view" fallback={<div className="text-center py-12 text-muted-foreground">You do not have permission to view user management.</div>} redirectTo={null}>
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">User Management</h1>
@@ -98,23 +98,27 @@ export default function UserManagementPage() {
               Manage users and their permissions within your organization
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowRoleModal(true)}
-              className="flex items-center gap-2"
-            >
-              <Shield className="h-4 w-4" />
-              Manage Roles
-            </Button>
-            <Button
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2"
-            >
-              <UserPlus className="h-4 w-4" />
-              Add User
-            </Button>
-          </div>
+          {canManageUsers() && (
+            <div className="flex gap-2">
+              {(isOwner() || hasPermission('users:update')) && (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowRoleModal(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Shield className="h-4 w-4" />
+                  Manage Roles
+                </Button>
+              )}
+              <Button
+                onClick={() => setShowCreateModal(true)}
+                className="flex items-center gap-2"
+              >
+                <UserPlus className="h-4 w-4" />
+                Add User
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Stats Cards */}
@@ -334,7 +338,7 @@ export default function UserManagementPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        </OwnerGuard>
+        </PermissionGuard>
       </div>
     </DashboardLayout>
   );

@@ -4,6 +4,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { usePermissions } from '@/src/hooks/usePermissions';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { getDefaultLandingPath } from '@/src/utils/getDefaultLandingPath';
 
 interface PermissionGuardProps {
   children: React.ReactNode;
@@ -11,7 +12,7 @@ interface PermissionGuardProps {
   module?: string;
   requireOwner?: boolean;
   fallback?: React.ReactNode;
-  redirectTo?: string;
+  redirectTo?: string | null;
 }
 
 export function PermissionGuard({
@@ -20,12 +21,11 @@ export function PermissionGuard({
   module,
   requireOwner = false,
   fallback = <div>Access Denied</div>,
-  redirectTo = '/dashboard'
+  redirectTo = undefined,
 }: PermissionGuardProps) {
   const { hasPermission, hasModuleAccess, isOwner, userPermissions, loading, initializing } = usePermissions();
   const router = useRouter();
 
-  // Check if user has required access
   const hasAccess = (() => {
     if (requireOwner && !isOwner()) return false;
     if (permission && !hasPermission(permission)) return false;
@@ -33,12 +33,18 @@ export function PermissionGuard({
     return true;
   })();
 
-  // Redirect if no access and redirectTo is specified
+  const resolvedRedirect = redirectTo === undefined
+    ? getDefaultLandingPath(
+        userPermissions?.permissions || [],
+        userPermissions?.is_owner || false,
+      )
+    : redirectTo;
+
   React.useEffect(() => {
-    if (!loading && !initializing && userPermissions && !hasAccess && redirectTo) {
-      router.push(redirectTo);
+    if (!loading && !initializing && userPermissions && !hasAccess && resolvedRedirect) {
+      router.push(resolvedRedirect);
     }
-  }, [hasAccess, redirectTo, router, loading, initializing, userPermissions]);
+  }, [hasAccess, resolvedRedirect, router, loading, initializing, userPermissions]);
 
   if (loading || initializing || !userPermissions) {
     return <div className="flex items-center justify-center p-8">
@@ -57,7 +63,7 @@ interface ModuleGuardProps {
   children: React.ReactNode;
   module: string;
   fallback?: React.ReactNode;
-  redirectTo?: string;
+  redirectTo?: string | null;
 }
 
 export function ModuleGuard({ children, module, fallback, redirectTo }: ModuleGuardProps) {
@@ -71,7 +77,7 @@ export function ModuleGuard({ children, module, fallback, redirectTo }: ModuleGu
 interface OwnerGuardProps {
   children: React.ReactNode;
   fallback?: React.ReactNode;
-  redirectTo?: string;
+  redirectTo?: string | null;
 }
 
 export function OwnerGuard({ children, fallback, redirectTo }: OwnerGuardProps) {

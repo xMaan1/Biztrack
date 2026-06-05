@@ -33,7 +33,7 @@ router = APIRouter(prefix="/rbac", tags=["rbac"])
 async def get_roles(
     db: Session = Depends(get_db),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
-    current_user = Depends(get_current_user)
+    current_user = Depends(require_permission(ModulePermission.USERS_VIEW.value))
 ):
     """Get all roles for the tenant"""
     from ...models.common import Pagination
@@ -194,7 +194,7 @@ async def delete_role(
 async def get_tenant_users(
     db: Session = Depends(get_db),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
-    current_user = Depends(get_current_user)
+    current_user = Depends(require_permission(ModulePermission.USERS_VIEW.value))
 ):
     """Get all tenant users with their roles and permissions"""
     if not tenant_context:

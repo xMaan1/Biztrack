@@ -105,6 +105,8 @@ GRANULAR_PERMISSIONS = {
         *_crud("ngo:donors"),
         *_crud("ngo:partner-organizations"),
     ],
+    "users": _crud("users"),
+    "dashboard": ["dashboard:view"],
 }
 
 
@@ -214,8 +216,9 @@ class RBACService:
         # Add custom permissions
         custom_permissions = tenant_user.custom_permissions or []
 
-        # Combine and deduplicate
         all_permissions = list(set(role_permissions + custom_permissions))
+        if all_permissions and "dashboard:view" not in all_permissions:
+            all_permissions.append("dashboard:view")
         return all_permissions
     
     @staticmethod
@@ -277,10 +280,9 @@ class RBACService:
                 module = permission.split(':')[0]
                 modules.add(module)
 
-        accessible_modules = list(modules)
-        logger.info(f"[RBAC DEBUG] Non-owner accessible modules: {accessible_modules}")
-        logger.info(f"[RBAC DEBUG] User permissions: {user_permissions}")
-        return accessible_modules
+        if user_permissions and "dashboard" not in modules:
+            modules.add("dashboard")
+        return list(modules)
     
     @staticmethod
     def validate_email_uniqueness(db: Session, email: str, tenant_id: str = None, exclude_user_id: Optional[str] = None) -> bool:
