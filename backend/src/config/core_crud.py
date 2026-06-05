@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
-from .core_models import User, Tenant, Plan, Subscription, TenantUser
+from .core_models import User, Tenant, Plan, Subscription
 
 # User functions
 def get_user_by_email(email: str, db: Session) -> Optional[User]:
@@ -170,48 +170,3 @@ def delete_subscription(subscription_id: str, db: Session) -> bool:
         return True
     return False
 
-# TenantUser functions
-def get_tenant_user(tenant_id: str, user_id: str, db: Session) -> Optional[TenantUser]:
-    return db.query(TenantUser).filter(
-        TenantUser.tenant_id == tenant_id,
-        TenantUser.userId == user_id
-    ).first()
-
-def get_tenant_users(tenant_id: str, db: Session, skip: int = 0, limit: int = 100) -> List[TenantUser]:
-    return db.query(TenantUser).filter(
-        TenantUser.tenant_id == tenant_id,
-        TenantUser.isActive == True
-    ).offset(skip).limit(limit).all()
-
-def get_user_tenants(user_id: str, db: Session) -> List[TenantUser]:
-    """Get all tenants for a specific user"""
-    return db.query(TenantUser).filter(
-        TenantUser.userId == user_id,
-        TenantUser.isActive == True
-    ).all()
-
-def create_tenant_user(tenant_user_data: dict, db: Session) -> TenantUser:
-    db_tenant_user = TenantUser(**tenant_user_data)
-    db.add(db_tenant_user)
-    db.commit()
-    db.refresh(db_tenant_user)
-    return db_tenant_user
-
-def update_tenant_user(tenant_user_id: str, update_data: dict, db: Session) -> Optional[TenantUser]:
-    tenant_user = db.query(TenantUser).filter(TenantUser.id == tenant_user_id).first()
-    if tenant_user:
-        for key, value in update_data.items():
-            if hasattr(tenant_user, key) and value is not None:
-                setattr(tenant_user, key, value)
-        tenant_user.updatedAt = datetime.utcnow()
-        db.commit()
-        db.refresh(tenant_user)
-    return tenant_user
-
-def delete_tenant_user(tenant_user_id: str, db: Session) -> bool:
-    tenant_user = db.query(TenantUser).filter(TenantUser.id == tenant_user_id).first()
-    if tenant_user:
-        db.delete(tenant_user)
-        db.commit()
-        return True
-    return False

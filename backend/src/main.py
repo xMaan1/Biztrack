@@ -11,7 +11,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 from .config.database import create_tables, get_plans, get_db
-from .api.v1 import auth, users, tenants, plans, sales, crm, hrm, healthcare, ngo, custom_options, invoices, invoice_customization, installments, delivery_notes, pos, inventory, subscriptions, work_orders, job_cards, vehicles, production, quality_control, maintenance, ledger, admin, file_upload, deduct_stock, customer_import, dashboard, investments, reports, notifications, banking, rbac_users, events, profile
+from .api.v1 import auth, users, tenants, plans, sales, crm, hrm, healthcare, ngo, custom_options, invoices, invoice_customization, installments, delivery_notes, pos, inventory, subscriptions, work_orders, job_cards, vehicles, production, quality_control, maintenance, ledger, admin, file_upload, deduct_stock, customer_import, dashboard, investments, reports, notifications, banking, events, profile
+from .api.v1.rbac.router import router as rbac_router
 from .api.v1.projects.router import router as projects_router
 from .api.v1.tasks.router import router as tasks_router
 from .core.security import security_middleware
@@ -167,7 +168,7 @@ async def audit_middleware(request: Request, call_next):
 # Include all routes
 app.include_router(auth.router)
 app.include_router(users.router)
-app.include_router(rbac_users.router)
+app.include_router(rbac_router)
 app.include_router(profile.router)
 app.include_router(projects_router)
 app.include_router(tasks_router)

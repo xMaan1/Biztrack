@@ -108,10 +108,12 @@ from .core_crud import (
     get_subscription_by_id, get_tenant_subscription, get_subscription_by_tenant, get_all_subscriptions,
     create_subscription, update_subscription, delete_subscription,
     
-    # TenantUser functions
-    get_tenant_user, get_tenant_users, get_user_tenants, create_tenant_user, update_tenant_user, delete_tenant_user
 )
 
+from ..api.v1.rbac.tenant_users.logic import (
+    get_tenant_user, get_tenant_users, get_user_tenants,
+    create_tenant_user, update_tenant_user, delete_tenant_user,
+)
 from ..api.v1.projects.items.logic import (
     get_project_by_id, get_all_projects, get_projects_by_manager, get_project_ids_with_tasks_assigned_to,
     create_project, update_project, delete_project, get_project_stats,

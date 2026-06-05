@@ -200,57 +200,19 @@ class Subscription(SubscriptionBase):
     class Config:
         from_attributes = True
 
-class RoleBase(BaseModel):
-    name: str
-    display_name: str
-    description: Optional[str] = None
-    permissions: List[str] = []
-    isActive: bool = True
-
-class RoleCreate(RoleBase):
-    pass
-
-class RoleUpdate(BaseModel):
-    display_name: Optional[str] = None
-    description: Optional[str] = None
-    permissions: Optional[List[str]] = None
-    isActive: Optional[bool] = None
-
-class Role(RoleBase):
-    id: str
-    tenant_id: str
-    createdAt: datetime
-    updatedAt: datetime
-
-    class Config:
-        from_attributes = True
-
-class TenantUserBase(BaseModel):
-    tenant_id: str
-    userId: str
-    role_id: str
-    custom_permissions: Optional[List[str]] = []
-    isActive: bool = True
-
-class TenantUserCreate(TenantUserBase):
-    pass
-
-class TenantUserUpdate(BaseModel):
-    role_id: Optional[str] = None
-    custom_permissions: Optional[List[str]] = None
-    isActive: Optional[bool] = None
-
-class TenantUser(TenantUserBase):
-    id: str
-    invitedBy: Optional[str] = None
-    joinedAt: datetime
-    createdAt: datetime
-    updatedAt: datetime
-    role: Optional[Role] = None
-    user: Optional[User] = None
-
-    class Config:
-        from_attributes = True
+from .rbac_models import (
+    Role,
+    RoleBase,
+    RoleCreate,
+    RoleUpdate,
+    RolesResponse,
+    TenantUser,
+    TenantUserBase,
+    TenantUserCreate,
+    TenantUserUpdate,
+    TenantUsersResponse,
+    UserWithPermissions,
+)
 
 class UsersResponse(BaseModel):
     users: List[User]
@@ -261,32 +223,6 @@ class PlansResponse(BaseModel):
 class TenantsResponse(BaseModel):
     tenants: List[Tenant]
     pagination: Pagination
-
-class TenantUsersResponse(BaseModel):
-    users: List[TenantUser]
-    pagination: Pagination
-
-class RolesResponse(BaseModel):
-    roles: List[Role]
-    pagination: Pagination
-
-class UserWithPermissions(BaseModel):
-    id: str
-    tenant_user_id: Optional[str] = None
-    userName: str
-    email: str
-    firstName: Optional[str] = None
-    lastName: Optional[str] = None
-    avatar: Optional[str] = None
-    isActive: bool
-    role: Optional[Role] = None
-    role_id: Optional[str] = None
-    custom_permissions: Optional[List[str]] = []
-    permissions: List[str] = []
-    joinedAt: datetime
-
-    class Config:
-        from_attributes = True
 
 class SubscribeRequest(BaseModel):
     planId: str

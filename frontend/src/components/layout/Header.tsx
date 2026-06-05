@@ -16,7 +16,7 @@ import {
 import { Menu, Settings, LogOut, User, Loader2 } from 'lucide-react';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { isTauriApp } from '@/src/lib/isTauriApp';
-import { useRBAC } from '../../contexts/RBACContext';
+import { usePermissions } from '@/src/hooks/usePermissions';
 import { getInitials } from '../../lib/utils';
 import NotificationBell from '../notifications/NotificationBell';
 import { BizTrackLogo } from '../brand/BizTrackLogo';
@@ -27,7 +27,7 @@ interface HeaderProps {
 
 export default function Header({ onMenuClick }: HeaderProps) {
   const { user, logout, tauriTenantSync } = useAuth();
-  const { isOwner, userPermissions } = useRBAC();
+  const { roleDisplayName, initializing } = usePermissions();
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -117,9 +117,15 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   <p className="text-xs leading-none text-muted-foreground">
                     {user?.email}
                   </p>
-                  <Badge variant="secondary" className="w-fit text-xs mt-1">
-                    {user && userPermissions ? (isOwner() ? 'OWNER' : 'MEMBER') : 'LOADING...'}
-                  </Badge>
+                  {roleDisplayName ? (
+                    <Badge variant="secondary" className="w-fit text-xs mt-1">
+                      {roleDisplayName}
+                    </Badge>
+                  ) : initializing ? (
+                    <Badge variant="secondary" className="w-fit text-xs mt-1">
+                      Loading...
+                    </Badge>
+                  ) : null}
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />

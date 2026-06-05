@@ -1,0 +1,302 @@
+import logging
+from datetime import datetime
+from typing import List, Optional
+from uuid import UUID
+
+from fastapi import HTTPException, status
+from sqlalchemy import and_
+from sqlalchemy.orm import Session
+
+from .....config.database import create_user, get_user_by_email, get_user_by_id
+from .....config.notification_models import Notification, NotificationPreference
+from .....core.auth import get_password_hash
+from .....models.platform import User as UserORM
+from .....models.rbac import Role as RoleORM, TenantUser as TenantUserORM
+from .....models.user_models import User, UserCreate
+from .....services.rbac_service import RBACService
+from ..shared import (
+    ensure_owner_role_assignment,
+    get_tenant_role,
+    role_orm_to_schema,
+    send_user_invitation,
+)
+from .schemas import TenantUser, TenantUserCreate, TenantUserUpdate, UserWithPermissions
+
+logger = logging.getLogger(__name__)
+
+
+def get_tenant_user(tenant_id: str, user_id: str, db: Session) -> Optional[TenantUserORM]:
+    return db.query(TenantUserORM).filter(
+        TenantUserORM.tenant_id == tenant_id,
+        TenantUserORM.userId == user_id,
+    ).first()
+
+
+def get_tenant_users(tenant_id: str, db: Session, skip: int = 0, limit: int = 100) -> List[TenantUserORM]:
+    return db.query(TenantUserORM).filter(
+        TenantUserORM.tenant_id == tenant_id,
+        TenantUserORM.isActive == True,
+    ).offset(skip).limit(limit).all()
+
+
+def get_user_tenants(user_id: str, db: Session) -> List[TenantUserORM]:
+    return db.query(TenantUserORM).filter(
+        TenantUserORM.userId == user_id,
+        TenantUserORM.isActive == True,
+    ).all()
+
+
+def create_tenant_user(tenant_user_data: dict, db: Session) -> TenantUserORM:
+    db_tenant_user = TenantUserORM(**tenant_user_data)
+    db.add(db_tenant_user)
+    db.commit()
+    db.refresh(db_tenant_user)
+    return db_tenant_user
+
+
+def update_tenant_user(tenant_user_id: str, update_data: dict, db: Session) -> Optional[TenantUserORM]:
+    tenant_user = db.query(TenantUserORM).filter(TenantUserORM.id == tenant_user_id).first()
+    if tenant_user:
+        for key, value in update_data.items():
+            if hasattr(tenant_user, key) and value is not None:
+                setattr(tenant_user, key, value)
+        tenant_user.updatedAt = datetime.utcnow()
+        db.commit()
+        db.refresh(tenant_user)
+    return tenant_user
+
+
+def delete_tenant_user(tenant_user_id: str, db: Session) -> bool:
+    tenant_user = db.query(TenantUserORM).filter(TenantUserORM.id == tenant_user_id).first()
+    if tenant_user:
+        db.delete(tenant_user)
+        db.commit()
+        return True
+    return False
+
+
+def _tenant_user_to_schema(tenant_user: TenantUserORM) -> TenantUser:
+    return TenantUser(
+        id=str(tenant_user.id),
+        tenant_id=str(tenant_user.tenant_id),
+        userId=str(tenant_user.userId),
+        role_id=str(tenant_user.role_id),
+        custom_permissions=tenant_user.custom_permissions,
+        isActive=tenant_user.isActive,
+        invitedBy=str(tenant_user.invitedBy) if tenant_user.invitedBy else None,
+        joinedAt=tenant_user.joinedAt,
+        createdAt=tenant_user.createdAt,
+        updatedAt=tenant_user.updatedAt,
+    )
+
+
+def get_tenant_users_list(db: Session, tenant_id: Optional[str]) -> List[UserWithPermissions]:
+    if not tenant_id:
+        return []
+    tenant_users = db.query(TenantUserORM).join(UserORM).join(RoleORM).filter(
+        TenantUserORM.tenant_id == tenant_id
+    ).all()
+    user_list = []
+    for tenant_user in tenant_users:
+        user_permissions = RBACService.get_user_permissions(db, str(tenant_user.userId), tenant_id)
+        user_list.append(UserWithPermissions(
+            id=str(tenant_user.userId),
+            tenant_user_id=str(tenant_user.id),
+            userName=tenant_user.user.userName,
+            email=tenant_user.user.email,
+            firstName=tenant_user.user.firstName,
+            lastName=tenant_user.user.lastName,
+            avatar=tenant_user.user.avatar,
+            isActive=tenant_user.isActive,
+            role=role_orm_to_schema(tenant_user.role_obj) if tenant_user.role_obj else None,
+            role_id=str(tenant_user.role_id),
+            custom_permissions=tenant_user.custom_permissions or [],
+            permissions=user_permissions,
+            joinedAt=tenant_user.joinedAt,
+        ))
+    return user_list
+
+
+def add_user_to_tenant(
+    db: Session,
+    tenant_id: str,
+    user_data: TenantUserCreate,
+    current_user,
+) -> TenantUser:
+    user = get_user_by_id(user_data.userId, db)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    existing_tenant_user = db.query(TenantUserORM).filter(
+        and_(
+            TenantUserORM.userId == user_data.userId,
+            TenantUserORM.tenant_id == tenant_id,
+        )
+    ).first()
+    role = get_tenant_role(db, user_data.role_id, tenant_id)
+    if not role:
+        raise HTTPException(status_code=404, detail="Role not found")
+    ensure_owner_role_assignment(db, role, str(current_user.id), tenant_id)
+    if existing_tenant_user:
+        if existing_tenant_user.isActive:
+            raise HTTPException(status_code=400, detail="User already exists in this tenant")
+        existing_tenant_user.isActive = True
+        existing_tenant_user.role_id = user_data.role_id
+        existing_tenant_user.custom_permissions = user_data.custom_permissions
+        db.commit()
+        db.refresh(existing_tenant_user)
+        send_user_invitation(db, tenant_id, user, role, current_user)
+        return _tenant_user_to_schema(existing_tenant_user)
+    tenant_user = TenantUserORM(
+        tenant_id=tenant_id,
+        userId=user_data.userId,
+        role_id=user_data.role_id,
+        role=role.name,
+        custom_permissions=user_data.custom_permissions,
+        isActive=user_data.isActive,
+        invitedBy=str(current_user.id),
+    )
+    db.add(tenant_user)
+    db.commit()
+    db.refresh(tenant_user)
+    send_user_invitation(db, tenant_id, user, role, current_user)
+    return _tenant_user_to_schema(tenant_user)
+
+
+def update_rbac_tenant_user(
+    db: Session,
+    tenant_id: str,
+    tenant_user_id: str,
+    user_data: TenantUserUpdate,
+    current_user,
+) -> TenantUser:
+    try:
+        tenant_user_uuid = UUID(tenant_user_id)
+        tenant_id_uuid = UUID(tenant_id)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=400, detail="Invalid ID format")
+    tenant_user = db.query(TenantUserORM).filter(
+        and_(TenantUserORM.id == tenant_user_uuid, TenantUserORM.tenant_id == tenant_id_uuid)
+    ).first()
+    if not tenant_user:
+        raise HTTPException(status_code=404, detail="Tenant user not found")
+    if user_data.role_id:
+        role = get_tenant_role(db, user_data.role_id, tenant_id)
+        if not role:
+            raise HTTPException(status_code=404, detail="Role not found")
+        ensure_owner_role_assignment(db, role, str(current_user.id), tenant_id)
+    update_dict = user_data.dict(exclude_unset=True)
+    if 'role_id' in update_dict and update_dict['role_id']:
+        try:
+            update_dict['role_id'] = UUID(update_dict['role_id'])
+        except (ValueError, TypeError):
+            raise HTTPException(status_code=400, detail="Invalid role ID format")
+    for key, value in update_dict.items():
+        if hasattr(tenant_user, key) and value is not None:
+            setattr(tenant_user, key, value)
+    tenant_user.updatedAt = datetime.utcnow()
+    db.commit()
+    db.refresh(tenant_user)
+    return _tenant_user_to_schema(tenant_user)
+
+
+def _remove_tenant_user_record(
+    db: Session,
+    tenant_user: TenantUserORM,
+    tenant_id: str,
+    current_user_id: str,
+) -> dict:
+    if str(tenant_user.userId) == str(current_user_id):
+        raise HTTPException(status_code=400, detail="You cannot remove yourself from the tenant")
+    user_id_uuid = tenant_user.userId
+    other_tenant_users_count = db.query(TenantUserORM).filter(
+        and_(
+            TenantUserORM.userId == user_id_uuid,
+            TenantUserORM.tenant_id != tenant_id,
+        )
+    ).count()
+    db.delete(tenant_user)
+    if other_tenant_users_count == 0:
+        user = db.query(UserORM).filter(UserORM.id == user_id_uuid).first()
+        if user:
+            db.query(Notification).filter(Notification.user_id == user_id_uuid).delete()
+            db.query(NotificationPreference).filter(NotificationPreference.user_id == user_id_uuid).delete()
+            db.delete(user)
+    db.commit()
+    return {"message": "User removed from tenant successfully"}
+
+
+def remove_tenant_user(
+    db: Session,
+    tenant_id: str,
+    tenant_user_id: str,
+    current_user_id: str,
+) -> dict:
+    tenant_user = db.query(TenantUserORM).filter(
+        and_(TenantUserORM.id == tenant_user_id, TenantUserORM.tenant_id == tenant_id)
+    ).first()
+    if not tenant_user:
+        raise HTTPException(status_code=404, detail="Tenant user not found")
+    return _remove_tenant_user_record(db, tenant_user, tenant_id, current_user_id)
+
+
+def remove_user_by_id(
+    db: Session,
+    tenant_id: str,
+    user_id: str,
+    current_user_id: str,
+) -> dict:
+    tenant_user = db.query(TenantUserORM).filter(
+        and_(TenantUserORM.userId == user_id, TenantUserORM.tenant_id == tenant_id)
+    ).first()
+    if not tenant_user:
+        raise HTTPException(status_code=404, detail="User not found in this tenant")
+    return _remove_tenant_user_record(db, tenant_user, tenant_id, current_user_id)
+
+
+def create_user_for_tenant(
+    db: Session,
+    tenant_id: str,
+    user_data: UserCreate,
+    role_id: str,
+    current_user,
+) -> User:
+    existing_global_user = get_user_by_email(user_data.email, db)
+    if existing_global_user:
+        raise HTTPException(
+            status_code=400,
+            detail="A user with this email already exists. Please use a different email or add the existing user to this tenant.",
+        )
+    if not RBACService.validate_username_uniqueness(db, user_data.userName, tenant_id):
+        raise HTTPException(status_code=400, detail="Username already taken in this tenant")
+    role = get_tenant_role(db, role_id, tenant_id)
+    if not role:
+        raise HTTPException(status_code=404, detail="Role not found")
+    ensure_owner_role_assignment(db, role, str(current_user.id), tenant_id)
+    hashed_password = get_password_hash(user_data.password)
+    user_dict = user_data.dict()
+    user_dict.pop('password')
+    user_dict['hashedPassword'] = hashed_password
+    user_dict['tenant_id'] = UUID(tenant_id)
+    db_user = create_user(user_dict, db)
+    tenant_user = TenantUserORM(
+        tenant_id=UUID(tenant_id),
+        userId=UUID(str(db_user.id)),
+        role_id=UUID(role_id),
+        role=role.name,
+        custom_permissions=[],
+        isActive=True,
+        invitedBy=UUID(str(current_user.id)),
+    )
+    db.add(tenant_user)
+    db.commit()
+    send_user_invitation(db, tenant_id, db_user, role, current_user)
+    return User(
+        userId=str(db_user.id),
+        userName=db_user.userName,
+        email=db_user.email,
+        firstName=db_user.firstName,
+        lastName=db_user.lastName,
+        userRole=db_user.userRole,
+        avatar=db_user.avatar,
+        permissions=[],
+    )

@@ -2,7 +2,7 @@ from .associations import project_team_members
 from .user import User
 from .tenant import Tenant
 from .billing import Plan, Subscription
-from .rbac import Role, TenantUser
+from ..rbac import Role, TenantUser
 from .auth import PasswordResetToken
 from .enums import (
     UserRole,

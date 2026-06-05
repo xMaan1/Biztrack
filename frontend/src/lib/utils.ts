@@ -39,6 +39,15 @@ export function getInitials(name: string) {
     .slice(0, 2);
 }
 
+export function formatRoleDisplayName(
+  role?: { display_name?: string; name?: string } | null,
+): string | null {
+  if (!role) return null;
+  if (role.display_name?.trim()) return role.display_name.trim();
+  if (!role.name?.trim()) return null;
+  return role.name.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 export function getStatusColor(status: string) {
   switch (status.toLowerCase()) {
     case 'completed':

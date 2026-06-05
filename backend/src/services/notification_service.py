@@ -9,7 +9,7 @@ from ..config.notification_crud import (
     create_or_update_notification_preference, get_user_notification_preferences
 )
 from ..config.notification_models import NotificationType, NotificationCategory
-from ..config.core_crud import get_tenant_users
+from ..config.database import get_tenant_users
 
 class NotificationService:
     def __init__(self, db: Session):

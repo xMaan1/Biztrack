@@ -2,13 +2,12 @@ def register_all_models():
     from .platform import (
         PasswordResetToken,
         Plan,
-        Role,
         Subscription,
         Tenant,
-        TenantUser,
         User,
         project_team_members,
     )
+    from .rbac import Role, TenantUser
 
     from .projects import Project, Task
     from .crm import Lead, Contact, Company, Opportunity, SalesActivity, Customer, CustomerGuarantor

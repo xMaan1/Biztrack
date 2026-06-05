@@ -59,6 +59,10 @@ export interface UserPermissions {
   permissions: string[];
   accessible_modules: string[];
   is_owner: boolean;
+  role?: {
+    name: string;
+    display_name: string;
+  } | null;
 }
 
 export interface CreateUserData {

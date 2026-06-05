@@ -1,13 +1,12 @@
 from ..models.platform import (
     PasswordResetToken,
     Plan,
-    Role,
     Subscription,
     Tenant,
-    TenantUser,
     User,
     project_team_members,
 )
+from ..models.rbac import Role, TenantUser
 
 __all__ = [
     "project_team_members",

@@ -2,6 +2,7 @@
 
 import { useRBAC } from '@/src/contexts/RBACContext';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { formatRoleDisplayName } from '@/src/lib/utils';
 
 export function usePermissions() {
   const { user } = useAuth();
@@ -11,14 +12,19 @@ export function usePermissions() {
     tu => tu.id === user?.id
   );
 
-  const currentUserRole = currentTenantUser?.role;
+  const currentUserRole = userPermissions?.role || currentTenantUser?.role;
   const currentRoleName = currentUserRole?.name || currentTenantUser?.role_id;
+  const roleDisplayName =
+    user?.userRole === 'super_admin'
+      ? 'Super Admin'
+      : formatRoleDisplayName(currentUserRole);
 
   return {
     currentUser: user,
     currentTenantUser,
     currentRole: currentUserRole,
     currentRoleName,
+    roleDisplayName,
     permissions: userPermissions?.permissions || [],
     accessibleModules: userPermissions?.accessible_modules || [],
     isOwner: isOwner,
