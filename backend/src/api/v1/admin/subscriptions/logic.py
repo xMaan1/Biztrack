@@ -1,7 +1,7 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-from .....config.core_models import Tenant as TenantModel, Subscription, Plan
+from .....models.platform import Tenant as TenantModel, Subscription, Plan
 from ..http_common import require_super_admin
 
 

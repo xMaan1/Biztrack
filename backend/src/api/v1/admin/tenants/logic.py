@@ -5,7 +5,8 @@ from fastapi import HTTPException, status
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from .....config.core_models import Tenant as TenantModel, User, Subscription, Plan, TenantUser
+from .....models.platform import Tenant as TenantModel, User, Subscription, Plan
+from .....models.rbac import TenantUser
 from .....models.crm import Customer
 from .....models.invoices import Invoice
 from .....models.projects import Project

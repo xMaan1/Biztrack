@@ -2,7 +2,8 @@ from fastapi import HTTPException, status
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
-from .....config.core_models import Tenant as TenantModel, TenantUser
+from .....models.platform import Tenant as TenantModel
+from .....models.rbac import TenantUser
 from .....models.crm import Customer
 from .....models.invoices import Invoice
 from .....models.invoice_models import InvoiceResponse
@@ -10,6 +11,7 @@ from .....models.projects import Project
 from .....api.v1.invoices.db_common import delete_invoice_dependencies
 from .....api.v1.invoices.shared import transform_invoice_to_pydantic
 from ..http_common import require_super_admin
+from .schemas import ResourceDeleteResponse
 
 
 async def get_tenant_invoice_details(
@@ -84,10 +86,10 @@ async def delete_tenant_user(
         db.delete(tenant_user)
         db.commit()
 
-        return {
-            "success": True,
-            "message": "User removed from tenant successfully"
-        }
+        return ResourceDeleteResponse(
+            success=True,
+            message="User removed from tenant successfully"
+        )
 
     except HTTPException:
         raise
@@ -123,10 +125,10 @@ async def delete_tenant_invoice(
         db.delete(invoice)
         db.commit()
 
-        return {
-            "success": True,
-            "message": "Invoice deleted successfully"
-        }
+        return ResourceDeleteResponse(
+            success=True,
+            message="Invoice deleted successfully"
+        )
 
     except HTTPException:
         raise
@@ -161,10 +163,10 @@ async def delete_tenant_project(
         db.delete(project)
         db.commit()
 
-        return {
-            "success": True,
-            "message": "Project deleted successfully"
-        }
+        return ResourceDeleteResponse(
+            success=True,
+            message="Project deleted successfully"
+        )
 
     except HTTPException:
         raise
@@ -199,10 +201,10 @@ async def delete_tenant_customer(
         db.delete(customer)
         db.commit()
 
-        return {
-            "success": True,
-            "message": "Customer deleted successfully"
-        }
+        return ResourceDeleteResponse(
+            success=True,
+            message="Customer deleted successfully"
+        )
 
     except HTTPException:
         raise
