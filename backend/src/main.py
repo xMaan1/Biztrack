@@ -326,7 +326,7 @@ async def public_invoice_pdf(
         build_invoice_pdf_response,
         verify_invoice_share_token,
     )
-    from .config.invoice_models import Invoice
+    from .models.invoices import Invoice
 
     payload = verify_invoice_share_token(token)
     if str(payload.get("invoice_id")) != str(invoice_id):

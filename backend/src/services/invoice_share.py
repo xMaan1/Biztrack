@@ -10,7 +10,7 @@ from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from ..core.auth import SECRET_KEY, ALGORITHM
-from ..config.invoice_models import Invoice, InvoiceShareLink
+from ..models.invoices import Invoice, InvoiceShareLink
 
 INVOICE_SHARE_EXPIRE_DAYS = int(os.getenv("INVOICE_SHARE_EXPIRE_DAYS", "90"))
 

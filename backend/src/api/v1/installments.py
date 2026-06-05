@@ -25,7 +25,7 @@ from ...config.installment_crud import (
     apply_payment_to_installment,
     get_installments_by_plan,
 )
-from ...config.invoice_crud import get_invoice_by_id
+from ...api.v1.invoices.items.logic import get_invoice_by_id
 
 router = APIRouter(prefix="/installments", tags=["Installments"])
 

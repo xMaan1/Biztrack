@@ -807,7 +807,7 @@ async def get_profit_loss_dashboard(
 ):
     """Get comprehensive profit/loss dashboard data"""
     try:
-        from ...config.invoice_models import Invoice, Payment
+        from ...models.invoices import Invoice, Payment
         from ...config.inventory_models import PurchaseOrder, StockMovement, Product
         from ...config.sales_models import Quote, Contract
         

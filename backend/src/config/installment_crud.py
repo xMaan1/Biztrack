@@ -3,8 +3,8 @@ from typing import List, Optional
 from dateutil.relativedelta import relativedelta
 from sqlalchemy.orm import Session
 from .installment_models import InstallmentPlan, Installment
-from .invoice_models import Invoice, Payment
-from .invoice_crud import get_invoice_by_id, update_invoice
+from ..models.invoices import Invoice, Payment
+from ..api.v1.invoices.items.logic import get_invoice_by_id, update_invoice
 
 
 def get_installment_plan_by_id(plan_id: str, db: Session, tenant_id: str = None) -> Optional[InstallmentPlan]:

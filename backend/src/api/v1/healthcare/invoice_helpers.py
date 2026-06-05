@@ -7,8 +7,8 @@ from fastapi import HTTPException, status
 from sqlalchemy import and_, desc, func
 from sqlalchemy.orm import Session
 
-from ....config.invoice_crud import create_invoice
-from ....config.invoice_models import Invoice
+from ....api.v1.invoices.items.logic import create_invoice
+from ....models.invoices import Invoice
 
 
 def line_items_from_healthcare_input(line_items: List[Dict[str, Any]]) -> List[dict]:

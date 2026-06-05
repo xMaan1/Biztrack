@@ -38,7 +38,7 @@ def register_all_models():
     from ..config.job_card_models import JobCard
     from ..config.vehicle_models import Vehicle
     from ..config.production_models import ProductionPlan, ProductionStep, ProductionSchedule
-    from ..config.invoice_models import Invoice, Payment, DeliveryNote, InvoiceShareLink
+    from ..models.invoices import Invoice, Payment, DeliveryNote, InvoiceShareLink
     from ..config.installment_models import InstallmentPlan, Installment
     from ..config.invoice_customization_models import InvoiceCustomization
     from ..config.ledger_models import (

@@ -47,7 +47,7 @@ from .production_models import (
     ProductionPlan, ProductionStep, ProductionSchedule, ProductionStatus, ProductionPriority, ProductionType
 )
 
-from .invoice_models import (
+from ..models.invoices import (
     Invoice, Payment, DeliveryNote, InvoiceShareLink
 )
 

@@ -10,8 +10,8 @@ from ...config.database import get_db
 from ...config.database import User
 from ...api.dependencies import get_current_user, get_tenant_context, require_permission
 from ...models.common import ModulePermission
-from ...config.invoice_models import Invoice, DeliveryNote
-from ...config.invoice_crud import get_invoice_by_id
+from ...models.invoices import Invoice, DeliveryNote
+from ...api.v1.invoices.items.logic import get_invoice_by_id
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/delivery-notes", tags=["Delivery Notes"])

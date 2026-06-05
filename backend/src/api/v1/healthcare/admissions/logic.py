@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from .....models.healthcare import Admission, Patient
 from ...repository import get_by_id, create_entity, delete_by_id
-from .....config.invoice_crud import get_invoices_by_order_prefix, get_invoices_by_order_prefix_count
+from .....api.v1.invoices.items.logic import get_invoices_by_order_prefix, get_invoices_by_order_prefix_count
 from ..logic_common import create_payload, update_record
 from ..shared import admission_to_schema
 from ..invoice_helpers import create_healthcare_draft_invoice
