@@ -5,7 +5,6 @@ import { InvoicesPlanRedirect } from '@/src/components/sales/InvoicesPlanRedirec
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '../../../components/ui/card';
@@ -20,58 +19,37 @@ import {
   SelectValue,
 } from '../../../components/ui/select';
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '../../../components/ui/tabs';
-import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '../../../components/ui/dialog';
 import { Alert, AlertDescription } from '../../../components/ui/alert';
-import {
-  Filter,
-  Settings,
-  AlertTriangle,
-  CheckCircle,
-  Edit,
-  LayoutDashboard,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
+import { Filter, Settings } from 'lucide-react';
 import { DashboardLayout } from '../../../components/layout';
+import { PermissionGuard } from '@/src/components/guards/PermissionGuard';
 import InvoiceService from '../../../services/InvoiceService';
 import {
   Invoice,
   InvoiceCreate,
   InvoiceFilters,
-  InvoiceDashboard,
 } from '../../../models/sales';
 import { InvoiceDialog, InstallmentPlanCreateOption } from '../../../components/sales/InvoiceDialog';
 import { CreateInvoiceSection } from '../../../components/sales/CreateInvoiceSection';
 import { InvoiceList } from '../../../components/sales/InvoiceList';
-import { InvoiceDashboard as InvoiceDashboardComponent } from '../../../components/sales/InvoiceDashboard';
 import { InvoiceCustomizationDialog } from '../../../components/sales/InvoiceCustomizationDialog';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { usePermissions } from '@/src/hooks/usePermissions';
 import { usePlanInfo } from '@/src/hooks/usePlanInfo';
 import { extractErrorMessage } from '@/src/utils/errorUtils';
 
 function InvoicesPageContent() {
-  const { formatCurrency } = useCurrency();
-  const { isOwner, canViewInvoices } = usePermissions();
+  const { canViewInvoices } = usePermissions();
   const { planInfo } = usePlanInfo();
   const isCommerce =
     planInfo?.planType === 'commerce' || planInfo?.planType === 'agency';
-  const [dashboard, setDashboard] = useState<InvoiceDashboard | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('invoices');
-  const [showInvoiceDashboard, setShowInvoiceDashboard] = useState(false);
 
   // Dialog states
   const [createError, setCreateError] = useState<string | null>(null);
@@ -93,58 +71,41 @@ function InvoicesPageContent() {
   const [totalPages, setTotalPages] = useState(1);
 
   const hasViewPermission = useMemo(() => canViewInvoices(), [canViewInvoices]);
-  const userIsOwner = useMemo(() => isOwner(), [isOwner]);
   const loadingRef = useRef(false);
 
   const loadData = useCallback(async () => {
-    if (loadingRef.current) return;
+    if (loadingRef.current || !hasViewPermission) return;
 
     try {
       loadingRef.current = true;
       setLoading(true);
       setError(null);
 
-      if (activeTab === 'dashboard' && userIsOwner) {
-        const dashboardData = await InvoiceService.getDashboard();
-        setDashboard(dashboardData);
-      } else if (activeTab === 'overdue') {
-        const dashboardData = await InvoiceService.getDashboard();
-        setDashboard(dashboardData);
-      } else {
-        const response = await InvoiceService.getInvoices(
-          {
-            ...filters,
-            search: searchTerm,
-            status: statusFilter !== 'all' ? statusFilter : undefined,
-          },
-          currentPage,
-          10,
-        );
-        setInvoices(response.invoices || []);
-        setTotalPages(response.pagination?.pages || 1);
-      }
+      const response = await InvoiceService.getInvoices(
+        {
+          ...filters,
+          search: searchTerm,
+          status: statusFilter !== 'all' ? statusFilter : undefined,
+        },
+        currentPage,
+        10,
+      );
+      setInvoices(response.invoices || []);
+      setTotalPages(response.pagination?.pages || 1);
     } catch (err) {
       setError(extractErrorMessage(err, 'Failed to load data'));
     } finally {
       setLoading(false);
       loadingRef.current = false;
     }
-  }, [activeTab, filters, searchTerm, statusFilter, currentPage, userIsOwner]);
+  }, [filters, searchTerm, statusFilter, currentPage, hasViewPermission]);
 
   const filtersString = useMemo(() => JSON.stringify(filters), [filters]);
 
   useEffect(() => {
-    if (!showInvoiceDashboard) return;
-    if (!hasViewPermission) {
-      setActiveTab('invoices');
-      return;
-    }
-    if (!userIsOwner && activeTab === 'dashboard') {
-      setActiveTab('invoices');
-      return;
-    }
+    if (!hasViewPermission) return;
     loadData();
-  }, [showInvoiceDashboard, activeTab, currentPage, filtersString, searchTerm, statusFilter, loadData, hasViewPermission, userIsOwner]);
+  }, [currentPage, filtersString, searchTerm, statusFilter, loadData, hasViewPermission]);
 
   const handleCreateInvoice = async (
     invoiceData: InvoiceCreate,
@@ -292,34 +253,9 @@ function InvoicesPageContent() {
     loadData();
   };
 
-  if (showInvoiceDashboard && loading && activeTab === 'dashboard') {
-    return (
-      <DashboardLayout>
-        <div className="container mx-auto p-6">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-lg">Loading Invoice Dashboard...</div>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  if (showInvoiceDashboard && error && activeTab === 'dashboard') {
-    return (
-      <DashboardLayout>
-        <div className="container mx-auto p-6">
-          <div className="text-center">
-            <div className="text-red-600 mb-4">Error: {error}</div>
-            <Button onClick={loadData}>Retry</Button>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
   return (
     <DashboardLayout>
-      <div className="container mx-auto p-6 space-y-6">
+      <div className="w-full min-w-0 max-w-full space-y-4 px-3 py-4 sm:space-y-6 sm:px-4 md:px-5">
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
@@ -346,193 +282,82 @@ function InvoicesPageContent() {
 
         <CreateInvoiceSection onSubmit={handleCreateInvoice} error={createError} />
 
-        <div className="flex justify-center">
-          <Button
-            type="button"
-            variant="outline"
-            className="flex items-center gap-2 px-6"
-            onClick={() => setShowInvoiceDashboard((prev) => !prev)}
-          >
-            <LayoutDashboard className="h-4 w-4" />
-            Invoice Dashboard
-            {showInvoiceDashboard ? (
-              <ChevronUp className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Filter className="h-5 w-5" />
+              Filters
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+              <div>
+                <Label htmlFor="search">Search</Label>
+                <Input
+                  id="search"
+                  placeholder="Search invoices..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                />
+              </div>
+              <div>
+                <Label htmlFor="status">Status</Label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="sent">Sent</SelectItem>
+                    <SelectItem value="viewed">Viewed</SelectItem>
+                    <SelectItem value="paid">Paid</SelectItem>
+                    <SelectItem value="overdue">Overdue</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="dateFrom">From Date</Label>
+                <Input
+                  id="dateFrom"
+                  type="date"
+                  value={filters.dateFrom || ''}
+                  onChange={(e) => handleFilterChange({ dateFrom: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="dateTo">To Date</Label>
+                <Input
+                  id="dateTo"
+                  type="date"
+                  value={filters.dateTo || ''}
+                  onChange={(e) => handleFilterChange({ dateTo: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="mt-4 flex justify-end">
+              <Button onClick={handleSearch}>Apply Filters</Button>
+            </div>
+          </CardContent>
+        </Card>
 
-        {showInvoiceDashboard && (
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className={`grid w-full ${isOwner() ? 'grid-cols-3' : 'grid-cols-2'}`}>
-            {isOwner() && (
-              <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            )}
-            <TabsTrigger value="invoices">All Invoices</TabsTrigger>
-            <TabsTrigger value="overdue">Overdue</TabsTrigger>
-          </TabsList>
-
-          {/* Dashboard Tab - Only visible to owners */}
-          {isOwner() && (
-            <TabsContent value="dashboard" className="space-y-6">
-              {dashboard && <InvoiceDashboardComponent dashboard={dashboard} />}
-            </TabsContent>
-          )}
-
-          {/* Invoices Tab */}
-          <TabsContent value="invoices" className="space-y-6">
-            {/* Filters */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Filter className="h-5 w-5" />
-                  Filters
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div>
-                    <Label htmlFor="search">Search</Label>
-                    <Input
-                      id="search"
-                      placeholder="Search invoices..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="status">Status</Label>
-                    <Select
-                      value={statusFilter}
-                      onValueChange={setStatusFilter}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="All Statuses" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Statuses</SelectItem>
-                        <SelectItem value="draft">Draft</SelectItem>
-                        <SelectItem value="sent">Sent</SelectItem>
-                        <SelectItem value="viewed">Viewed</SelectItem>
-                        <SelectItem value="paid">Paid</SelectItem>
-                        <SelectItem value="overdue">Overdue</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="dateFrom">From Date</Label>
-                    <Input
-                      id="dateFrom"
-                      type="date"
-                      value={filters.dateFrom || ''}
-                      onChange={(e) =>
-                        handleFilterChange({ dateFrom: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="dateTo">To Date</Label>
-                    <Input
-                      id="dateTo"
-                      type="date"
-                      value={filters.dateTo || ''}
-                      onChange={(e) =>
-                        handleFilterChange({ dateTo: e.target.value })
-                      }
-                    />
-                  </div>
-                </div>
-                <div className="flex justify-end mt-4">
-                  <Button onClick={handleSearch}>Apply Filters</Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Invoices List */}
-            <InvoiceList
-              invoices={invoices}
-              loading={loading}
-              onEdit={handleEdit}
-              onView={handleView}
-              onDelete={handleDelete}
-              onSend={handleSendInvoice}
-              onMarkAsPaid={handleMarkAsPaid}
-              onBulkSend={handleBulkSend}
-              onBulkMarkAsPaid={handleBulkMarkAsPaid}
-              onBulkMarkAsUnpaid={handleBulkMarkAsUnpaid}
-              onBulkDelete={handleBulkDelete}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
-          </TabsContent>
-
-          {/* Overdue Tab */}
-          <TabsContent value="overdue" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-red-600">
-                  <AlertTriangle className="h-5 w-5" />
-                  Overdue Invoices
-                </CardTitle>
-                <CardDescription>
-                  Invoices that are past their due date and require immediate
-                  attention
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {dashboard?.overdueInvoices &&
-                dashboard.overdueInvoices.length > 0 ? (
-                  <div className="space-y-4">
-                    {dashboard.overdueInvoices.map((invoice) => (
-                      <div
-                        key={invoice.id}
-                        className="flex items-center justify-between p-4 border border-red-200 rounded-lg bg-red-50"
-                      >
-                        <div>
-                          <h4 className="font-medium text-gray-900">
-                            {invoice.invoiceNumber} - {invoice.customerName}
-                          </h4>
-                          <p className="text-sm text-gray-600">
-                            Due: {InvoiceService.formatDate(invoice.dueDate)} •
-                            Amount:{' '}
-                            {formatCurrency(invoice.total)}
-                          </p>
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button
-                            size="sm"
-                            onClick={() => handleMarkAsPaid(invoice.id)}
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Mark Paid
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEdit(invoice)}
-                          >
-                            <Edit className="h-4 w-4 mr-1" />
-                            Edit
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
-                    <p>No overdue invoices! All invoices are up to date.</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-        )}
+        <InvoiceList
+          invoices={invoices}
+          loading={loading}
+          onEdit={handleEdit}
+          onView={handleView}
+          onDelete={handleDelete}
+          onSend={handleSendInvoice}
+          onMarkAsPaid={handleMarkAsPaid}
+          onBulkSend={handleBulkSend}
+          onBulkMarkAsPaid={handleBulkMarkAsPaid}
+          onBulkMarkAsUnpaid={handleBulkMarkAsUnpaid}
+          onBulkDelete={handleBulkDelete}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-start">
@@ -638,7 +463,19 @@ function InvoicesPageContent() {
 export default function InvoicesPage() {
   return (
     <InvoicesPlanRedirect>
-      <InvoicesPageContent />
+      <PermissionGuard
+        permission="sales:invoices:view"
+        fallback={
+          <DashboardLayout>
+            <div className="px-3 py-12 text-center text-muted-foreground sm:px-4 md:px-5">
+              You do not have permission to view invoices.
+            </div>
+          </DashboardLayout>
+        }
+        redirectTo={null}
+      >
+        <InvoicesPageContent />
+      </PermissionGuard>
     </InvoicesPlanRedirect>
   );
 }

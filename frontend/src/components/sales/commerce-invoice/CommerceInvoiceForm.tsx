@@ -68,7 +68,7 @@ export function CommerceInvoiceForm({
   };
 
   return (
-    <div className="flex flex-col gap-2 text-foreground">
+    <div className="flex w-full min-w-0 max-w-full flex-col gap-2 text-foreground">
       <CommerceInvoiceFormHeader mode={mode} onClearInvoice={onClearInvoice} />
 
       <CommerceInvoiceDetailsSection

@@ -1,10 +1,24 @@
 import { VerifiedCompanyBadge } from '@/src/components/common/VerifiedCompanyBadge';
 
-export function SidebarFooter() {
+interface SidebarFooterProps {
+  collapsed?: boolean;
+}
+
+export function SidebarFooter({ collapsed = false }: SidebarFooterProps) {
+  if (collapsed) {
+    return (
+      <div className="shrink-0 overflow-visible border-t border-gray-200 bg-gradient-to-r from-gray-50 to-blue-50 px-2 py-3">
+        <div className="flex items-center justify-center overflow-visible">
+          <VerifiedCompanyBadge variant="icon" tooltipPosition="right" />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-4 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-blue-50">
-      <div className="mb-3 flex justify-center">
-        <VerifiedCompanyBadge className="scale-90" />
+    <div className="shrink-0 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-blue-50 p-4">
+      <div className="mb-3 flex justify-center overflow-hidden">
+        <VerifiedCompanyBadge className="max-w-full" />
       </div>
       <div className="text-center">
         <p className="text-xs text-gray-500 mb-1">Powered by</p>

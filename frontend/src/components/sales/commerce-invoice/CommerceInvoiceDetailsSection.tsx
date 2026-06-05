@@ -1,6 +1,5 @@
 'use client';
 
-import { Button } from '@/src/components/ui/button';
 import { Input } from '@/src/components/ui/input';
 import {
   Select,
@@ -13,6 +12,7 @@ import type { Customer } from '@/src/services/CustomerService';
 import type { InvoiceCreate } from '@/src/models/sales';
 import { getCustomerDisplayName } from '@/src/utils/customerUtils';
 import { COMMERCE_INPUT_CLS } from './constants';
+import { AddCustomerButton } from './AddCustomerButton';
 import { InlineField } from './InlineField';
 
 type CommerceInvoiceDetailsSectionProps = {
@@ -107,54 +107,49 @@ export function CommerceInvoiceDetailsSection({
               className={COMMERCE_INPUT_CLS}
             />
           </InlineField>
-          <div className="flex min-h-[34px] items-start gap-2">
-            <span className="w-[108px] shrink-0 pt-1.5 text-right text-sm font-medium text-muted-foreground">
-              Customer Name:
-            </span>
-            <div className="flex min-w-0 flex-1 flex-col gap-1">
-              <div className="flex gap-2">
-                <Input
-                  value={customerSearch}
-                  onChange={(e) => onCustomerSearchChange(e.target.value)}
-                  placeholder="Search Customer"
-                  className={`${COMMERCE_INPUT_CLS} w-[120px] shrink-0`}
-                />
-                <Select value={selectedCustomer?.id || ''} onValueChange={onCustomerPick}>
-                  <SelectTrigger
-                    className={`${COMMERCE_INPUT_CLS} min-w-0 flex-1 ${errors.customer ? 'border-destructive' : ''}`}
-                  >
-                    <SelectValue placeholder="Select Customer" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {selectedCustomer &&
-                      !customerOptions.some((c) => c.id === selectedCustomer.id) && (
-                        <SelectItem value={selectedCustomer.id}>
-                          {getCustomerDisplayName(selectedCustomer)}
-                        </SelectItem>
-                      )}
-                    {customerOptions.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {getCustomerDisplayName(c)}
+        </div>
+      </div>
+
+      <div className="mt-3 border-t border-border/60 pt-3">
+        <div className="flex flex-col gap-2 lg:flex-row lg:items-start">
+          <span className="shrink-0 pt-2 text-sm font-medium text-muted-foreground lg:w-[108px] lg:text-right">
+            Customer Name: *
+          </span>
+          <div className="min-w-0 flex-1 space-y-1">
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_auto] md:items-center">
+              <Input
+                value={customerSearch}
+                onChange={(e) => onCustomerSearchChange(e.target.value)}
+                placeholder="Search by name, email, phone..."
+                className={`${COMMERCE_INPUT_CLS} h-10 w-full`}
+              />
+              <Select value={selectedCustomer?.id || ''} onValueChange={onCustomerPick}>
+                <SelectTrigger
+                  className={`${COMMERCE_INPUT_CLS} h-10 w-full md:max-w-[260px] ${errors.customer ? 'border-destructive' : ''}`}
+                >
+                  <SelectValue placeholder="Select customer" />
+                </SelectTrigger>
+                <SelectContent>
+                  {selectedCustomer &&
+                    !customerOptions.some((c) => c.id === selectedCustomer.id) && (
+                      <SelectItem value={selectedCustomer.id}>
+                        {getCustomerDisplayName(selectedCustomer)}
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {onNewCustomer && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-8 shrink-0 px-2 text-xs"
-                    onClick={onNewCustomer}
-                  >
-                    +
-                  </Button>
-                )}
-              </div>
-              {errors.customer && (
-                <p className="text-xs text-destructive">{errors.customer}</p>
-              )}
+                    )}
+                  {customerOptions.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {getCustomerDisplayName(c)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {onNewCustomer ? (
+                <AddCustomerButton onClick={onNewCustomer} className="w-full md:w-auto md:justify-self-end" />
+              ) : null}
             </div>
+            {errors.customer ? (
+              <p className="text-xs text-destructive">{errors.customer}</p>
+            ) : null}
           </div>
         </div>
       </div>

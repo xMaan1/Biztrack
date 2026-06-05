@@ -57,6 +57,7 @@ RESOURCE_PATH_MAP = {
     "/sales/quotes": "sales:quotes",
     "/sales/contracts": "sales:contracts",
     "/sales/analytics": "sales:analytics",
+    "/invoices/dashboard": "sales:invoice_dashboard",
     "/invoices": "sales:invoices",
     "/installments": "sales:installments",
     "/delivery-notes": "sales:delivery_notes",

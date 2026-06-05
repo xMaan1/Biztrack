@@ -43,6 +43,10 @@ export const RBAC_PERMISSION_MODULES: PermissionModule[] = [
       { label: 'Contracts', permissions: crud('sales:contracts') },
       { label: 'Analytics', permissions: [{ label: 'View', value: 'sales:analytics:view' }] },
       { label: 'Invoices', permissions: crud('sales:invoices') },
+      {
+        label: 'Invoice Dashboard',
+        permissions: [{ label: 'View', value: 'sales:invoice_dashboard:view' }],
+      },
       { label: 'Installments', permissions: crud('sales:installments') },
       { label: 'Delivery Notes', permissions: crud('sales:delivery_notes') },
     ],
@@ -182,6 +186,7 @@ export const SIDEBAR_PATH_PERMISSIONS: Record<string, string> = {
   '/sales/contracts': 'sales:contracts:view',
   '/sales/analytics': 'sales:analytics:view',
   '/sales/invoices': 'sales:invoices:view',
+  '/sales/invoice-dashboard': 'sales:invoice_dashboard:view',
   '/invoices': 'sales:invoices:view',
   '/sales/installments': 'sales:installments:view',
   '/sales/delivery-notes': 'sales:delivery_notes:view',

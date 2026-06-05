@@ -445,6 +445,13 @@ export const allMenuItems: MenuItem[] = [
         planTypes: ['commerce', 'agency'],
       },
       {
+        text: 'Invoice Dashboard',
+        icon: LayoutDashboard,
+        path: '/sales/invoice-dashboard',
+        roles: ['*'],
+        planTypes: ['commerce', 'agency'],
+      },
+      {
         text: 'Installments',
         icon: Calendar,
         path: '/sales/installments',

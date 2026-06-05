@@ -27,6 +27,7 @@ GRANULAR_PERMISSIONS = {
         *_crud("sales:contracts"),
         "sales:analytics:view",
         *_crud("sales:invoices"),
+        "sales:invoice_dashboard:view",
         *_crud("sales:installments"),
         *_crud("sales:delivery_notes"),
     ],

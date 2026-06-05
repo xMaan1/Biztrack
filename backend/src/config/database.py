@@ -287,18 +287,15 @@ from .inventory_crud import (
     get_inventory_dashboard_stats
 )
 
-from .invoice_crud import (
-    # Invoice functions
+from ..api.v1.invoices.items.logic import (
     get_invoice_by_id, get_invoice_by_number, get_all_invoices, get_invoices, get_invoices_by_status,
     get_invoices_by_customer, get_overdue_invoices, create_invoice, update_invoice, delete_invoice,
-    
-    # Payment functions
+)
+from ..api.v1.invoices.payments.logic import (
     get_payment_by_id, get_all_payments, get_payments, get_payments_by_invoice, get_payments_by_status,
     create_payment, update_payment, delete_payment,
-    
-    # Invoice Dashboard functions
-    get_invoice_dashboard_data
 )
+from ..api.v1.invoices.dashboard.logic import get_invoice_dashboard_data
 
 from .pos_crud import (
     # POS Shift functions

@@ -59,11 +59,18 @@ export function usePermissions() {
     canViewSales: () => hasModuleAccess('sales'),
     canManageSales: () => hasPermission('sales:create') || isOwner(),
     canViewInvoices: () =>
-      hasModuleAccess('sales') ||
-      hasPermission('sales:view') ||
       hasPermission('sales:invoices:view') ||
+      hasPermission('sales:view') ||
+      hasModuleAccess('sales') ||
       isOwner(),
-    canManageInvoices: () => hasPermission('sales:create') || hasPermission('sales:update') || isOwner(),
+    canManageInvoices: () =>
+      hasPermission('sales:invoices:create') ||
+      hasPermission('sales:invoices:update') ||
+      hasPermission('sales:create') ||
+      hasPermission('sales:update') ||
+      isOwner(),
+    canViewInvoiceDashboard: () =>
+      hasPermission('sales:invoice_dashboard:view') || isOwner(),
     canViewReports: () => hasPermission('reports:view') || isOwner(),
     canExportReports: () => hasPermission('reports:export') || isOwner(),
     canCreateTasks: () => hasPermission('projects:tasks:create') || isOwner(),

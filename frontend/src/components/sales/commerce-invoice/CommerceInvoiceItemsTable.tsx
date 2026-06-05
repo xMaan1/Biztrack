@@ -62,12 +62,12 @@ export function CommerceInvoiceItemsTable({
   }
 
   return (
-    <section className="overflow-hidden rounded-lg border border-border">
+    <section className="w-full min-w-0 overflow-hidden rounded-lg border border-border">
       {itemsError && (
         <p className="bg-destructive/10 px-3 py-1.5 text-sm text-destructive">{itemsError}</p>
       )}
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[880px] border-collapse text-sm">
+        <table className="w-full min-w-0 border-collapse text-sm table-fixed md:min-w-[720px] lg:min-w-0 lg:table-auto">
           <thead>
             <tr className="bg-primary text-primary-foreground">
               <th className="border border-primary/80 px-2 py-1.5 text-left font-semibold">S No</th>

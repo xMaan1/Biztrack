@@ -1,193 +1,9 @@
-from pydantic import BaseModel, EmailStr, field_validator
-from typing import Optional, List, Dict, Any
+from __future__ import annotations
+
+from pydantic import BaseModel
+from typing import Optional, Dict, Any
 from datetime import datetime
-from enum import Enum
-from .common import Pagination
 
-class InvoiceStatus(str, Enum):
-    DRAFT = "draft"
-    SENT = "sent"
-    VIEWED = "viewed"
-    PAID = "paid"
-    PARTIALLY_PAID = "partially_paid"
-    OVERDUE = "overdue"
-    CANCELLED = "cancelled"
-    VOID = "void"
-
-class PaymentMethod(str, Enum):
-    CREDIT_CARD = "credit_card"
-    BANK_TRANSFER = "bank_transfer"
-    CASH = "cash"
-    CHECK = "check"
-    PAYPAL = "paypal"
-    STRIPE = "stripe"
-    OTHER = "other"
-
-class PaymentStatus(str, Enum):
-    PENDING = "pending"
-    PROCESSING = "processing"
-    COMPLETED = "completed"
-    FAILED = "failed"
-    REFUNDED = "refunded"
-    CANCELLED = "cancelled"
-
-class InvoiceItem(BaseModel):
-    id: Any
-    description: str
-    quantity: float
-    unitPrice: float
-    discount: float = 0.0
-    taxRate: float = 0.0
-    taxAmount: float = 0.0
-    total: float
-    unit: Optional[str] = None
-    productId: Optional[Any] = None
-    projectId: Optional[str] = None
-    taskId: Optional[str] = None
-
-class InvoiceItemCreate(BaseModel):
-    description: str
-    quantity: float
-    unitPrice: float
-    discount: float = 0.0
-    taxRate: float = 0.0
-    unit: Optional[str] = None
-    productId: Optional[str] = None
-    projectId: Optional[str] = None
-    taskId: Optional[str] = None
-
-class InvoiceItemUpdate(BaseModel):
-    description: Optional[str] = None
-    quantity: Optional[float] = None
-    unitPrice: Optional[float] = None
-    discount: Optional[float] = None
-    taxRate: Optional[float] = None
-    unit: Optional[str] = None
-    productId: Optional[str] = None
-    projectId: Optional[str] = None
-    taskId: Optional[str] = None
-
-class InvoiceBase(BaseModel):
-    invoiceNumber: str
-    customerId: Any
-    customerName: str
-    customerEmail: str
-    customerPhone: Optional[str] = None
-    billingAddress: str
-    shippingAddress: Optional[str] = None
-    issueDate: datetime
-    dueDate: datetime
-    orderNumber: Optional[str] = None
-    orderTime: Optional[datetime] = None
-    paymentTerms: str = "Net 30"
-    currency: str = "USD"
-    subtotal: float = 0.0
-    taxRate: float = 0.0
-    taxAmount: float = 0.0
-    discount: float = 0.0
-    total: float = 0.0
-    notes: Optional[str] = None
-    terms: Optional[str] = None
-    status: InvoiceStatus = InvoiceStatus.DRAFT
-    items: List[InvoiceItem] = []
-    vehicleMake: Optional[str] = None
-    vehicleModel: Optional[str] = None
-    vehicleYear: Optional[str] = None
-    vehicleColor: Optional[str] = None
-    vehicleVin: Optional[str] = None
-    vehicleReg: Optional[str] = None
-    vehicleMileage: Optional[str] = None
-    documentNo: Optional[str] = None
-    jobDescription: Optional[str] = None
-    partsDescription: Optional[str] = None
-    labourTotal: Optional[float] = 0.0
-    partsTotal: Optional[float] = 0.0
-
-class InvoiceCreate(BaseModel):
-    customerId: str
-    customerName: str
-    customerEmail: Optional[str] = None
-    customerPhone: Optional[str] = None
-    billingAddress: Optional[str] = None
-    shippingAddress: Optional[str] = None
-    issueDate: str
-    dueDate: str
-    orderNumber: Optional[str] = None
-    orderTime: Optional[str] = None
-    paymentTerms: str = "Net 30"
-    currency: str = "USD"
-    taxRate: float = 0.0
-    discount: float = 0.0
-    notes: Optional[str] = None
-    terms: Optional[str] = None
-    items: List[InvoiceItemCreate] = []
-    opportunityId: Optional[str] = None
-    quoteId: Optional[str] = None
-    projectId: Optional[str] = None
-    vehicleMake: Optional[str] = None
-    vehicleModel: Optional[str] = None
-    vehicleYear: Optional[str] = None
-    vehicleColor: Optional[str] = None
-    vehicleVin: Optional[str] = None
-    vehicleReg: Optional[str] = None
-    vehicleMileage: Optional[str] = None
-    documentNo: Optional[str] = None
-    jobDescription: Optional[str] = None
-    partsDescription: Optional[str] = None
-    labourTotal: Optional[float] = 0.0
-    partsTotal: Optional[float] = 0.0
-
-class InvoiceUpdate(BaseModel):
-    customerId: Optional[str] = None
-    customerName: Optional[str] = None
-    customerEmail: Optional[str] = None
-    customerPhone: Optional[str] = None
-    shippingAddress: Optional[str] = None
-    issueDate: Optional[str] = None
-    dueDate: Optional[str] = None
-    orderNumber: Optional[str] = None
-    orderTime: Optional[str] = None
-    paymentTerms: Optional[str] = None
-    currency: Optional[str] = None
-    taxRate: Optional[float] = None
-    discount: Optional[float] = None
-    notes: Optional[str] = None
-    terms: Optional[str] = None
-    status: Optional[InvoiceStatus] = None
-    items: Optional[List[InvoiceItemCreate]] = None
-    vehicleMake: Optional[str] = None
-    vehicleModel: Optional[str] = None
-    vehicleYear: Optional[str] = None
-    vehicleColor: Optional[str] = None
-    vehicleVin: Optional[str] = None
-    vehicleReg: Optional[str] = None
-    vehicleMileage: Optional[str] = None
-    documentNo: Optional[str] = None
-    jobDescription: Optional[str] = None
-    partsDescription: Optional[str] = None
-    labourTotal: Optional[float] = None
-    partsTotal: Optional[float] = None
-
-class Invoice(InvoiceBase):
-    id: Any
-    tenant_id: Any
-    createdBy: Any
-    opportunityId: Optional[str] = None
-    quoteId: Optional[str] = None
-    projectId: Optional[str] = None
-    sentAt: Optional[datetime] = None
-    viewedAt: Optional[datetime] = None
-    paidAt: Optional[datetime] = None
-    overdueAt: Optional[datetime] = None
-    createdAt: datetime
-    updatedAt: datetime
-    payments: List[Dict[str, Any]] = []
-    totalPaid: float = 0.0
-    balance: float = 0.0
-    daysOverdue: int = 0
-
-    class Config:
-        from_attributes = True
 
 class InvoiceCustomizationBase(BaseModel):
     company_name: str
@@ -217,8 +33,10 @@ class InvoiceCustomizationBase(BaseModel):
     default_currency: str = "USD"
     custom_fields: Optional[Dict[str, Any]] = {}
 
+
 class InvoiceCustomizationCreate(InvoiceCustomizationBase):
     pass
+
 
 class InvoiceCustomizationUpdate(BaseModel):
     company_name: Optional[str] = None
@@ -248,6 +66,7 @@ class InvoiceCustomizationUpdate(BaseModel):
     default_currency: Optional[str] = None
     custom_fields: Optional[Dict[str, Any]] = None
 
+
 class InvoiceCustomization(InvoiceCustomizationBase):
     id: str
     tenant_id: str
@@ -255,9 +74,10 @@ class InvoiceCustomization(InvoiceCustomizationBase):
     is_active: bool
     created_at: datetime
     updated_at: datetime
-    
+
     class Config:
         from_attributes = True
+
 
 class InvoiceCustomizationResponse(BaseModel):
     customization: InvoiceCustomization
@@ -265,94 +85,76 @@ class InvoiceCustomizationResponse(BaseModel):
     class Config:
         from_attributes = True
 
-class PaymentBase(BaseModel):
-    invoiceId: str
-    amount: float
-    paymentMethod: PaymentMethod
-    paymentDate: str
-    reference: Optional[str] = None
-    notes: Optional[str] = None
-    status: PaymentStatus = PaymentStatus.PENDING
 
-class PaymentCreate(BaseModel):
-    invoiceId: str
-    amount: float
-    paymentMethod: PaymentMethod
-    paymentDate: str
-    reference: Optional[str] = None
-    notes: Optional[str] = None
+def __getattr__(name: str):
+    import importlib
 
-class PaymentUpdate(BaseModel):
-    amount: Optional[float] = None
-    paymentMethod: Optional[PaymentMethod] = None
-    paymentDate: Optional[str] = None
-    reference: Optional[str] = None
-    notes: Optional[str] = None
-    status: Optional[PaymentStatus] = None
+    _items = {
+        "InvoiceStatus",
+        "InvoiceItem",
+        "InvoiceItemCreate",
+        "InvoiceItemUpdate",
+        "InvoiceBase",
+        "InvoiceCreate",
+        "InvoiceUpdate",
+        "Invoice",
+        "InvoiceResponse",
+        "InvoicesResponse",
+        "InvoiceFilters",
+    }
+    _payments = {
+        "PaymentMethod",
+        "PaymentStatus",
+        "PaymentBase",
+        "PaymentCreate",
+        "PaymentUpdate",
+        "Payment",
+        "PaymentResponse",
+        "PaymentsResponse",
+        "PaymentFilters",
+    }
+    _dashboard = {
+        "InvoiceMetrics",
+        "InvoiceDashboard",
+    }
+    if name in _items:
+        m = importlib.import_module("..api.v1.invoices.items.schemas", __package__)
+        return getattr(m, name)
+    if name in _payments:
+        m = importlib.import_module("..api.v1.invoices.payments.schemas", __package__)
+        return getattr(m, name)
+    if name in _dashboard:
+        m = importlib.import_module("..api.v1.invoices.dashboard.schemas", __package__)
+        return getattr(m, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
-class Payment(PaymentBase):
-    id: str
-    tenant_id: str
-    createdBy: Optional[str] = None
-    processedAt: Optional[datetime] = None
-    createdAt: datetime
-    updatedAt: datetime
 
-    class Config:
-        from_attributes = True
-
-    @field_validator("paymentDate", mode="before")
-    @classmethod
-    def payment_date_to_str(cls, v):
-        if isinstance(v, datetime):
-            return v.isoformat()
-        return v
-
-class InvoicesResponse(BaseModel):
-    invoices: List[Invoice]
-    pagination: Pagination
-
-class InvoiceResponse(BaseModel):
-    invoice: Invoice
-
-class PaymentsResponse(BaseModel):
-    payments: List[Payment]
-    pagination: Pagination
-
-class PaymentResponse(BaseModel):
-    payment: Payment
-
-class InvoiceMetrics(BaseModel):
-    totalInvoices: int
-    paidInvoices: int
-    overdueInvoices: int
-    draftInvoices: int
-    totalRevenue: float
-    outstandingAmount: float
-    overdueAmount: float
-    averagePaymentTime: float
-
-class InvoiceDashboard(BaseModel):
-    metrics: InvoiceMetrics
-    recentInvoices: List[Invoice]
-    overdueInvoices: List[Invoice]
-    topCustomers: List[Dict[str, Any]]
-    monthlyRevenue: List[Dict[str, Any]]
-
-class InvoiceFilters(BaseModel):
-    status: Optional[str] = None
-    customerId: Optional[str] = None
-    dateFrom: Optional[str] = None
-    dateTo: Optional[str] = None
-    amountFrom: Optional[float] = None
-    amountTo: Optional[float] = None
-    search: Optional[str] = None
-
-class PaymentFilters(BaseModel):
-    invoiceId: Optional[str] = None
-    paymentMethod: Optional[str] = None
-    status: Optional[str] = None
-    dateFrom: Optional[str] = None
-    dateTo: Optional[str] = None
-    search: Optional[str] = None
-
+__all__ = [
+    "InvoiceCustomizationBase",
+    "InvoiceCustomizationCreate",
+    "InvoiceCustomizationUpdate",
+    "InvoiceCustomization",
+    "InvoiceCustomizationResponse",
+    "InvoiceStatus",
+    "InvoiceItem",
+    "InvoiceItemCreate",
+    "InvoiceItemUpdate",
+    "InvoiceBase",
+    "InvoiceCreate",
+    "InvoiceUpdate",
+    "Invoice",
+    "InvoiceResponse",
+    "InvoicesResponse",
+    "InvoiceFilters",
+    "PaymentMethod",
+    "PaymentStatus",
+    "PaymentBase",
+    "PaymentCreate",
+    "PaymentUpdate",
+    "Payment",
+    "PaymentResponse",
+    "PaymentsResponse",
+    "PaymentFilters",
+    "InvoiceMetrics",
+    "InvoiceDashboard",
+]

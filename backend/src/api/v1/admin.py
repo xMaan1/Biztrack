@@ -615,7 +615,7 @@ async def get_tenant_invoice_details(
         
         # Convert invoice to response format
         from ...models.invoice_models import InvoiceResponse
-        from ...api.v1.invoices import transform_invoice_to_pydantic
+        from ...api.v1.invoices.shared import transform_invoice_to_pydantic
         try:
             pydantic_invoice = transform_invoice_to_pydantic(invoice)
             return InvoiceResponse(invoice=pydantic_invoice)

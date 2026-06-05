@@ -6,3 +6,4 @@ export { SidebarSubMenuItem } from './SidebarSubMenuItem';
 export { SidebarNavSkeleton } from './SidebarNavSkeleton';
 export { SidebarEmptySearch } from './SidebarEmptySearch';
 export { SidebarFooter } from './SidebarFooter';
+export { SidebarCollapseToggle } from './SidebarCollapseToggle';

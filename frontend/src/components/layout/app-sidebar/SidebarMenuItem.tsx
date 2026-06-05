@@ -12,6 +12,8 @@ interface SidebarMenuItemProps {
   isSubItemAvailable: (subItem: SubMenuItem) => boolean;
   hasPathPermission: (path?: string) => boolean;
   getSubItemLabel: (subItem: SubMenuItem) => string;
+  collapsed?: boolean;
+  onExpandSidebar?: () => void;
 }
 
 export function SidebarMenuItem({
@@ -22,6 +24,8 @@ export function SidebarMenuItem({
   isSubItemAvailable,
   hasPathPermission,
   getSubItemLabel,
+  collapsed = false,
+  onExpandSidebar,
 }: SidebarMenuItemProps) {
   const hasSubItems = Boolean(item.subItems?.length);
   const isMainItemActive = Boolean(item.path && isActive(item.path, item.text === 'Dashboard'));
@@ -29,6 +33,54 @@ export function SidebarMenuItem({
     hasSubItems &&
       item.subItems!.some((subItem) => isActive(subItem.path, subItem.text === 'Dashboard')),
   );
+
+  const handleParentClick = () => {
+    if (collapsed && onExpandSidebar) {
+      onExpandSidebar();
+      onToggle();
+      return;
+    }
+    onToggle();
+  };
+
+  if (collapsed) {
+    if (item.path) {
+      return (
+        <Link
+          href={item.path}
+          title={item.text}
+          className={cn(
+            'flex items-center justify-center rounded-xl p-2.5 transition-all duration-200',
+            isMainItemActive
+              ? 'bg-gradient-to-r ' + item.gradient + ' text-white shadow-lg'
+              : 'text-gray-700 hover:bg-gray-100',
+          )}
+        >
+          <item.icon
+            className={cn('h-5 w-5', isMainItemActive ? 'text-white' : 'text-gray-600')}
+          />
+        </Link>
+      );
+    }
+
+    return (
+      <button
+        type="button"
+        title={item.text}
+        onClick={handleParentClick}
+        className={cn(
+          'flex w-full items-center justify-center rounded-xl p-2.5 transition-all duration-200',
+          hasActiveSubItem
+            ? 'bg-gradient-to-r ' + item.gradient + ' text-white shadow-lg'
+            : 'text-gray-700 hover:bg-gray-100',
+        )}
+      >
+        <item.icon
+          className={cn('h-5 w-5', hasActiveSubItem ? 'text-white' : 'text-gray-600')}
+        />
+      </button>
+    );
+  }
 
   return (
     <div className="space-y-1">

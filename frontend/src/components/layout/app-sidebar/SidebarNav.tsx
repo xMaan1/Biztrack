@@ -16,6 +16,8 @@ interface SidebarNavProps {
   isSubItemAvailable: (subItem: SubMenuItem) => boolean;
   hasPathPermission: (path?: string) => boolean;
   getSubItemLabel: (subItem: SubMenuItem) => string;
+  collapsed?: boolean;
+  onExpandSidebar?: () => void;
 }
 
 export function SidebarNav({
@@ -30,11 +32,13 @@ export function SidebarNav({
   isSubItemAvailable,
   hasPathPermission,
   getSubItemLabel,
+  collapsed = false,
+  onExpandSidebar,
 }: SidebarNavProps) {
   return (
     <nav
       ref={navRef}
-      className="p-4 space-y-3 flex-1 overflow-y-auto"
+      className={collapsed ? 'flex-1 space-y-2 overflow-y-auto p-2' : 'flex-1 space-y-3 overflow-y-auto p-4'}
       onScroll={onScroll}
     >
       {loading ? (
@@ -50,6 +54,8 @@ export function SidebarNav({
             isSubItemAvailable={isSubItemAvailable}
             hasPathPermission={hasPathPermission}
             getSubItemLabel={getSubItemLabel}
+            collapsed={collapsed}
+            onExpandSidebar={onExpandSidebar}
           />
         ))
       )}

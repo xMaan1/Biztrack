@@ -13,7 +13,7 @@ export function CommerceInvoiceFormHeader({
   onClearInvoice,
 }: CommerceInvoiceFormHeaderProps) {
   return (
-    <div className="flex items-center justify-between gap-3 pr-11">
+    <div className="flex items-center justify-between gap-3">
       <h2 className="flex items-center gap-2 text-lg font-semibold leading-none">
         <FileText className="h-5 w-5 text-primary" />
         {mode === 'create' ? 'Create New Invoice' : 'Edit Invoice'}
