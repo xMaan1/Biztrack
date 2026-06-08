@@ -404,7 +404,7 @@ export const allMenuItems: MenuItem[] = [
   {
     text: 'Invoicing',
     icon: Banknote,
-    path: '/invoices',
+    path: '/sales/invoice-dashboard',
     roles: ['*'],
     planTypes: ['workshop', 'healthcare'],
     gradient: 'from-green-500 to-emerald-500',
@@ -438,15 +438,8 @@ export const allMenuItems: MenuItem[] = [
         planTypes: ['commerce', 'agency'],
       },
       {
-        text: 'Invoices',
+        text: 'Invoicing',
         icon: Banknote,
-        path: '/sales/invoices',
-        roles: ['*'],
-        planTypes: ['commerce', 'agency'],
-      },
-      {
-        text: 'Invoice Dashboard',
-        icon: LayoutDashboard,
         path: '/sales/invoice-dashboard',
         roles: ['*'],
         planTypes: ['commerce', 'agency'],

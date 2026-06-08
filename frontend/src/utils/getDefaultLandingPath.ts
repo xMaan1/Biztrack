@@ -8,7 +8,7 @@ const LANDING_PRIORITY = [
   '/tasks',
   '/team',
   '/inventory/products',
-  '/sales/invoices',
+  '/sales/invoice-dashboard',
   '/hrm/employees',
   '/reports',
   '/events',

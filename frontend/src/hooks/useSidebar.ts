@@ -83,6 +83,12 @@ export function useSidebar() {
   const hasPathPermission = useCallback(
     (path?: string) => {
       if (!path || isOwner()) return true;
+      if (path === '/sales/invoice-dashboard') {
+        return (
+          hasPermission('sales:invoices:view') ||
+          hasPermission('sales:invoice_dashboard:view')
+        );
+      }
       const requiredPermission = SIDEBAR_PATH_PERMISSIONS[path];
       if (!requiredPermission) return true;
       return hasPermission(requiredPermission);
@@ -263,8 +269,15 @@ export function useSidebar() {
 
   const isActive = useCallback(
     (path: string, exact: boolean = false) => {
-      if (path === '/invoices') {
-        return pathname === '/invoices' || pathname.startsWith('/invoices/');
+      if (path === '/sales/invoice-dashboard') {
+        return (
+          pathname === '/sales/invoice-dashboard' ||
+          pathname.startsWith('/sales/invoice-dashboard/') ||
+          pathname === '/sales/invoices' ||
+          pathname.startsWith('/sales/invoices/') ||
+          pathname === '/invoices' ||
+          pathname.startsWith('/invoices/')
+        );
       }
       if (path === '/' || exact) {
         return pathname === path;

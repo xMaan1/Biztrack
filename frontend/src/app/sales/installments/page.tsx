@@ -221,7 +221,7 @@ export default function InstallmentsPage() {
                       <tr key={plan.id} className="border-b hover:bg-gray-50">
                         <td className="py-2">
                           <Link
-                            href={`/sales/invoices?invoice=${plan.invoice_id}`}
+                            href={`/sales/invoice-dashboard?tab=invoices&invoice=${plan.invoice_id}`}
                             className="text-blue-600 hover:underline"
                           >
                             {plan.invoice_id.slice(0, 8)}...
@@ -270,7 +270,7 @@ export default function InstallmentsPage() {
                   <p>
                     Invoice:{' '}
                     <Link
-                      href={`/sales/invoices?invoice=${selectedPlan.invoice_id}`}
+                      href={`/sales/invoice-dashboard?tab=invoices&invoice=${selectedPlan.invoice_id}`}
                       className="text-blue-600 hover:underline"
                     >
                       {selectedPlan.invoice_id}
