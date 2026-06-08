@@ -117,16 +117,16 @@ export function CommerceInvoiceDetailsSection({
             Customer Name: *
           </span>
           <div className="min-w-0 flex-1 space-y-1">
-            <div className="grid grid-cols-1 gap-2 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_auto] md:items-center">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center">
               <Input
                 value={customerSearch}
                 onChange={(e) => onCustomerSearchChange(e.target.value)}
                 placeholder="Search by name, email, phone..."
-                className={`${COMMERCE_INPUT_CLS} h-10 w-full`}
+                className={`${COMMERCE_INPUT_CLS} h-10 min-w-0 flex-1`}
               />
               <Select value={selectedCustomer?.id || ''} onValueChange={onCustomerPick}>
                 <SelectTrigger
-                  className={`${COMMERCE_INPUT_CLS} h-10 w-full md:max-w-[260px] ${errors.customer ? 'border-destructive' : ''}`}
+                  className={`${COMMERCE_INPUT_CLS} h-10 w-full shrink-0 md:w-[220px] ${errors.customer ? 'border-destructive' : ''}`}
                 >
                   <SelectValue placeholder="Select customer" />
                 </SelectTrigger>
@@ -145,7 +145,7 @@ export function CommerceInvoiceDetailsSection({
                 </SelectContent>
               </Select>
               {onNewCustomer ? (
-                <AddCustomerButton onClick={onNewCustomer} className="w-full md:w-auto md:justify-self-end" />
+                <AddCustomerButton onClick={onNewCustomer} className="w-full shrink-0 md:w-auto" />
               ) : null}
             </div>
             {errors.customer ? (
