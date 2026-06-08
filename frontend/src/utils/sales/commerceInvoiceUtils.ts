@@ -3,6 +3,7 @@ import type { InvoiceItemCreate } from '@/src/models/sales';
 import { lineItemTotal } from '@/src/utils/sales/invoiceFormUtils';
 
 export type CommerceItemNumericField = 'quantity' | 'unitPrice' | 'discount';
+export type CommerceItemTextField = 'description' | 'unit';
 
 export function lineGross(item: InvoiceItemCreate): number {
   return item.quantity * item.unitPrice;
@@ -48,7 +49,7 @@ export function sumItemDiscountAmount(items: InvoiceItemCreate[]): number {
 
 export function itemFieldKey(
   index: number,
-  field: CommerceItemNumericField,
+  field: CommerceItemNumericField | CommerceItemTextField,
 ): string {
   return `${index}-${field}`;
 }

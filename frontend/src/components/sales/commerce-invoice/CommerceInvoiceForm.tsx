@@ -109,8 +109,11 @@ export function CommerceInvoiceForm({
         searchResults={ui.filteredProducts}
         itemsError={errors.items}
         getItemFieldValue={ui.getItemFieldValue}
+        getItemTextFieldValue={ui.getItemTextFieldValue}
         onItemFieldChange={ui.handleItemFieldChange}
         onItemFieldBlur={ui.handleItemFieldBlur}
+        onItemTextFieldChange={ui.handleItemTextFieldChange}
+        onItemTextFieldBlur={ui.handleItemTextFieldBlur}
         onRemoveItem={onRemoveItem}
         onPickProduct={pickProduct}
       />

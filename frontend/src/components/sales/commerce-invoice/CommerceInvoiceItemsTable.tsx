@@ -5,13 +5,14 @@ import { Input } from '@/src/components/ui/input';
 import type { Product } from '@/src/models/pos';
 import type { InvoiceItemCreate } from '@/src/models/sales';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
-import { formatUnitLabel } from '@/src/constants/unitOfMeasureOptions';
 import {
   lineGross,
   lineNet,
   resolveItemUnit,
   type CommerceItemNumericField,
+  type CommerceItemTextField,
 } from '@/src/utils/sales/commerceInvoiceUtils';
+import { UnitOfMeasureSelect } from '../UnitOfMeasureSelect';
 import { Trash2 } from 'lucide-react';
 import { COMMERCE_INLINE_EDIT_CLS } from './constants';
 
@@ -26,12 +27,23 @@ type CommerceInvoiceItemsTableProps = {
     field: CommerceItemNumericField,
     fallback: number,
   ) => string;
+  getItemTextFieldValue: (
+    index: number,
+    field: CommerceItemTextField,
+    fallback: string,
+  ) => string;
   onItemFieldChange: (
     index: number,
     field: CommerceItemNumericField,
     raw: string,
   ) => void;
   onItemFieldBlur: (index: number, field: CommerceItemNumericField) => void;
+  onItemTextFieldChange: (
+    index: number,
+    field: CommerceItemTextField,
+    raw: string,
+  ) => void;
+  onItemTextFieldBlur: (index: number, field: CommerceItemTextField) => void;
   onRemoveItem: (index: number) => void;
   onPickProduct: (product: Product) => void;
 };
@@ -43,8 +55,11 @@ export function CommerceInvoiceItemsTable({
   searchResults,
   itemsError,
   getItemFieldValue,
+  getItemTextFieldValue,
   onItemFieldChange,
   onItemFieldBlur,
+  onItemTextFieldChange,
+  onItemTextFieldBlur,
   onRemoveItem,
   onPickProduct,
 }: CommerceInvoiceItemsTableProps) {
@@ -120,9 +135,7 @@ export function CommerceInvoiceItemsTable({
                     <td className="border border-border px-2 py-1 text-right text-muted-foreground">
                       —
                     </td>
-                    <td className="border border-border px-2 py-1">
-                      {formatUnitLabel(p.unitOfMeasure) || '—'}
-                    </td>
+                    <td className="border border-border px-2 py-1 text-muted-foreground">—</td>
                     <td className="border border-border px-2 py-1 text-right">
                       {formatCurrency(p.unitPrice)}
                     </td>
@@ -145,12 +158,37 @@ export function CommerceInvoiceItemsTable({
             {items.map((item, index) => (
               <tr key={`item-${item.productId}-${index}`} className="bg-card">
                 <td className="border border-border px-2 py-1">{index + 1}</td>
-                <td className="border border-border px-2 py-1">{item.description}</td>
+                <td className="border border-border px-2 py-1">
+                  <Input
+                    type="text"
+                    value={getItemTextFieldValue(index, 'description', item.description)}
+                    onChange={(e) =>
+                      onItemTextFieldChange(index, 'description', e.target.value)
+                    }
+                    onBlur={() => onItemTextFieldBlur(index, 'description')}
+                    className={`${COMMERCE_INLINE_EDIT_CLS} w-full min-w-[120px]`}
+                  />
+                </td>
                 <td className="border border-border px-2 py-1 text-right">
-                  {item.quantity}
+                  <Input
+                    type="text"
+                    inputMode="decimal"
+                    value={getItemFieldValue(index, 'quantity', item.quantity)}
+                    onChange={(e) => onItemFieldChange(index, 'quantity', e.target.value)}
+                    onBlur={() => onItemFieldBlur(index, 'quantity')}
+                    className={`${COMMERCE_INLINE_EDIT_CLS} ml-auto w-20 text-right`}
+                  />
                 </td>
                 <td className="border border-border px-2 py-1">
-                  {formatUnitLabel(resolveItemUnit(item, products)) || '—'}
+                  <UnitOfMeasureSelect
+                    value={getItemTextFieldValue(
+                      index,
+                      'unit',
+                      resolveItemUnit(item, products) || 'piece',
+                    )}
+                    onChange={(unit) => onItemTextFieldChange(index, 'unit', unit)}
+                    className={`${COMMERCE_INLINE_EDIT_CLS} h-8 w-full min-w-[88px]`}
+                  />
                 </td>
                 <td className="border border-border px-2 py-1 text-right">
                   <Input

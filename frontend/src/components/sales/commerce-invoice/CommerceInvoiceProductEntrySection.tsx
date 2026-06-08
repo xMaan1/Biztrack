@@ -142,9 +142,14 @@ export function CommerceInvoiceProductEntrySection({
           <InlineField label="Quantity:">
             <Input
               type="number"
+              min="0.01"
+              step="0.01"
               value={newItem.quantity}
-              readOnly
-              className={`${COMMERCE_INPUT_CLS} bg-muted`}
+              onChange={(e) => {
+                updateNewItem({ quantity: parseFloat(e.target.value) || 0 });
+                clearFieldError('newItemQuantity');
+              }}
+              className={`${COMMERCE_INPUT_CLS} ${errors.newItemQuantity ? 'border-destructive' : ''}`}
             />
           </InlineField>
           <InlineField label="Price:">

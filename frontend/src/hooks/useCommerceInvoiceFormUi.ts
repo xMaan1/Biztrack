@@ -12,6 +12,7 @@ import {
   sumItemDiscountAmount,
   sumItemQuantities,
   type CommerceItemNumericField,
+  type CommerceItemTextField,
 } from '@/src/utils/sales/commerceInvoiceUtils';
 
 type UseCommerceInvoiceFormUiOptions = {
@@ -70,6 +71,31 @@ export function useCommerceInvoiceFormUi({
     return draft !== undefined ? draft : String(fallback);
   };
 
+  const normalizeNumericField = (
+    field: CommerceItemNumericField,
+    parsed: number,
+  ): number => {
+    if (field === 'discount') {
+      return Math.min(100, Math.max(0, parsed));
+    }
+    if (field === 'quantity') {
+      return Math.max(0.01, parsed);
+    }
+    if (field === 'unitPrice') {
+      return Math.max(0, parsed);
+    }
+    return parsed;
+  };
+
+  const getItemTextFieldValue = (
+    index: number,
+    field: CommerceItemTextField,
+    fallback: string,
+  ) => {
+    const draft = itemFieldDrafts[itemFieldKey(index, field)];
+    return draft !== undefined ? draft : fallback;
+  };
+
   const handleItemFieldChange = (
     index: number,
     field: CommerceItemNumericField,
@@ -81,11 +107,7 @@ export function useCommerceInvoiceFormUi({
     }));
     const parsed = parseDraftNumber(raw);
     if (parsed !== null) {
-      const value =
-        field === 'discount'
-          ? Math.min(100, Math.max(0, parsed))
-          : parsed;
-      onUpdateItem(index, { [field]: value });
+      onUpdateItem(index, { [field]: normalizeNumericField(field, parsed) });
     }
   };
 
@@ -95,13 +117,30 @@ export function useCommerceInvoiceFormUi({
     if (raw !== undefined) {
       const parsed = parseDraftNumber(raw);
       if (parsed !== null) {
-        const value =
-          field === 'discount'
-            ? Math.min(100, Math.max(0, parsed))
-            : parsed;
-        onUpdateItem(index, { [field]: value });
+        onUpdateItem(index, { [field]: normalizeNumericField(field, parsed) });
       }
     }
+    setItemFieldDrafts((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
+
+  const handleItemTextFieldChange = (
+    index: number,
+    field: CommerceItemTextField,
+    raw: string,
+  ) => {
+    setItemFieldDrafts((prev) => ({
+      ...prev,
+      [itemFieldKey(index, field)]: raw,
+    }));
+    onUpdateItem(index, { [field]: raw });
+  };
+
+  const handleItemTextFieldBlur = (index: number, field: CommerceItemTextField) => {
+    const key = itemFieldKey(index, field);
     setItemFieldDrafts((prev) => {
       const next = { ...prev };
       delete next[key];
@@ -123,7 +162,10 @@ export function useCommerceInvoiceFormUi({
     totalQuantity,
     totalItemDiscount,
     getItemFieldValue,
+    getItemTextFieldValue,
     handleItemFieldChange,
     handleItemFieldBlur,
+    handleItemTextFieldChange,
+    handleItemTextFieldBlur,
   };
 }
