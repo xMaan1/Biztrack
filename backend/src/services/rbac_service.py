@@ -3,6 +3,12 @@ from typing import List, Optional
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
+from ..config.database import get_subscription_by_tenant
+from ..core.plan_types import (
+    filter_modules_for_plan,
+    filter_permissions_for_plan,
+    is_module_excluded_for_plan,
+)
 from ..models.common import ModulePermission, TenantRole
 from ..models.platform import User
 from ..models.rbac import Role, TenantUser
@@ -178,7 +184,21 @@ DEFAULT_ROLE_PERMISSIONS = {
 }
 
 
+OWNER_ACCESSIBLE_MODULES = [
+    'crm', 'sales', 'pos', 'inventory', 'hrm', 'projects', 'reports', 'events',
+    'work-orders', 'production', 'quality', 'maintenance', 'banking', 'ledger',
+    'finance', 'settings', 'notifications', 'users', 'dashboard', 'healthcare', 'ngo',
+]
+
+
 class RBACService:
+    @staticmethod
+    def _get_tenant_plan_type(db: Session, tenant_id: str) -> Optional[str]:
+        subscription = get_subscription_by_tenant(tenant_id, db)
+        if not subscription or not subscription.plan:
+            return None
+        return subscription.plan.planType
+
     @staticmethod
     def create_default_roles(db: Session, tenant_id: str) -> List[Role]:
         roles = []
@@ -212,16 +232,24 @@ class RBACService:
         all_permissions = list(set(role_permissions + custom_permissions))
         if all_permissions and "dashboard:view" not in all_permissions:
             all_permissions.append("dashboard:view")
-        return all_permissions
+        plan_type = RBACService._get_tenant_plan_type(db, tenant_id)
+        return filter_permissions_for_plan(all_permissions, plan_type)
 
     @staticmethod
     def has_permission(db: Session, user_id: str, tenant_id: str, permission: str) -> bool:
+        plan_type = RBACService._get_tenant_plan_type(db, tenant_id)
+        module = permission.split(":")[0] if ":" in permission else ""
+        if module and is_module_excluded_for_plan(plan_type, module):
+            return False
         if RBACService.is_owner(db, user_id, tenant_id):
             return True
         return permission in RBACService.get_user_permissions(db, user_id, tenant_id)
 
     @staticmethod
     def has_module_access(db: Session, user_id: str, tenant_id: str, module: str) -> bool:
+        plan_type = RBACService._get_tenant_plan_type(db, tenant_id)
+        if is_module_excluded_for_plan(plan_type, module):
+            return False
         user_permissions = RBACService.get_user_permissions(db, user_id, tenant_id)
         return any(p.startswith(f"{module}:") for p in user_permissions)
 
@@ -249,17 +277,20 @@ class RBACService:
 
     @staticmethod
     def get_accessible_modules(db: Session, user_id: str, tenant_id: str) -> List[str]:
+        plan_type = RBACService._get_tenant_plan_type(db, tenant_id)
         if RBACService.is_owner(db, user_id, tenant_id):
-            return [
-                'crm', 'sales', 'pos', 'inventory', 'hrm', 'projects', 'reports', 'events',
-                'work-orders', 'production', 'quality', 'maintenance', 'banking', 'ledger',
-                'finance', 'settings', 'notifications', 'users', 'dashboard', 'healthcare', 'ngo',
-            ]
-        user_permissions = RBACService.get_user_permissions(db, user_id, tenant_id)
-        modules = {permission.split(':')[0] for permission in user_permissions if ':' in permission}
-        if user_permissions:
-            modules.add("dashboard")
-        return list(modules)
+            modules = list(OWNER_ACCESSIBLE_MODULES)
+        else:
+            user_permissions = RBACService.get_user_permissions(db, user_id, tenant_id)
+            modules = {
+                permission.split(':')[0]
+                for permission in user_permissions
+                if ':' in permission
+            }
+            if user_permissions:
+                modules.add("dashboard")
+            modules = list(modules)
+        return filter_modules_for_plan(modules, plan_type)
 
     @staticmethod
     def validate_email_uniqueness(db: Session, email: str, tenant_id: str = None, exclude_user_id: Optional[str] = None) -> bool:

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ModuleGuard } from '@/src/components/guards/PermissionGuard';
 import {
   Card,
   CardContent,
@@ -39,11 +38,7 @@ import { useRouter } from 'next/navigation';
 import { useCurrency } from '../../contexts/CurrencyContext';
 
 export default function POSDashboard() {
-  return (
-    <ModuleGuard module="pos" fallback={<div>You don't have access to POS module</div>}>
-      <POSDashboardContent />
-    </ModuleGuard>
-  );
+  return <POSDashboardContent />;
 }
 
 const POSDashboardContent = () => {
