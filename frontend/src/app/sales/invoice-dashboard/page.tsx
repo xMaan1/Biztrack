@@ -169,16 +169,16 @@ function InvoiceDashboardPageContent() {
                 Dashboard
               </TabsTrigger>
             )}
-            {showDashboard && (
-              <TabsTrigger value="overdue" className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4" />
-                Overdue
-              </TabsTrigger>
-            )}
             {showInvoices && (
               <TabsTrigger value="invoices" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 Invoices
+              </TabsTrigger>
+            )}
+            {showDashboard && (
+              <TabsTrigger value="overdue" className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4" />
+                Overdue
               </TabsTrigger>
             )}
           </TabsList>
@@ -189,6 +189,12 @@ function InvoiceDashboardPageContent() {
             </TabsContent>
           )}
 
+          {showInvoices && (
+            <TabsContent value="invoices" className="space-y-6">
+              <InvoiceManagementPanel onInvoicesChange={loadDashboard} />
+            </TabsContent>
+          )}
+
           {showDashboard && (
             <TabsContent value="overdue" className="space-y-6">
               <InvoiceOverduePanel
@@ -196,12 +202,6 @@ function InvoiceDashboardPageContent() {
                 onMarkAsPaid={handleMarkAsPaid}
                 onEdit={handleEdit}
               />
-            </TabsContent>
-          )}
-
-          {showInvoices && (
-            <TabsContent value="invoices" className="space-y-6">
-              <InvoiceManagementPanel onInvoicesChange={loadDashboard} />
             </TabsContent>
           )}
         </Tabs>
