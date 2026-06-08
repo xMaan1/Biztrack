@@ -54,7 +54,7 @@ export function CommerceInvoiceForm({
 
   const pickProduct = (product: Product) => {
     onProductSelect(product.id);
-    ui.setProductSearch(product.name);
+    ui.setProductSearch('');
     clearFieldError('newItemProduct');
     clearFieldError('newItemDescription');
   };
