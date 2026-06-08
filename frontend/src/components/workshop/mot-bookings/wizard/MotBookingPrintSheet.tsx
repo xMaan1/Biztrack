@@ -22,6 +22,7 @@ export function MotBookingPrintSheet({ booking }: MotBookingPrintSheetProps) {
   return (
     <div id="mot-print-sheet" className="hidden print:fixed print:inset-0 print:z-[9999] print:block print:bg-white print:p-8">
       <div className="mx-auto max-w-[800px] border-2 border-slate-200 bg-white p-8 font-sans text-slate-900">
+        <div className="flex items-start justify-between">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.3em] text-slate-500">
               MOT Test Booking
