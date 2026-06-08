@@ -1,20 +1,15 @@
 'use client';
 
 import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
 import type { Product } from '@/src/models/pos';
 import type { InvoiceItemCreate } from '@/src/models/sales';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
 import {
-  lineGross,
-  lineNet,
-  resolveItemUnit,
-  type CommerceItemNumericField,
-  type CommerceItemTextField,
-} from '@/src/utils/sales/commerceInvoiceUtils';
-import { UnitOfMeasureSelect } from '../UnitOfMeasureSelect';
+  formatSalePrice,
+  itemToTableRow,
+  PRODUCT_TABLE_COLUMNS,
+  productToTableRow,
+} from '@/src/utils/sales/commerceProductTableUtils';
 import { Trash2 } from 'lucide-react';
-import { COMMERCE_INLINE_EDIT_CLS } from './constants';
 
 type CommerceInvoiceItemsTableProps = {
   items: InvoiceItemCreate[];
@@ -22,31 +17,58 @@ type CommerceInvoiceItemsTableProps = {
   productSearch: string;
   searchResults: Product[];
   itemsError?: string;
-  getItemFieldValue: (
-    index: number,
-    field: CommerceItemNumericField,
-    fallback: number,
-  ) => string;
-  getItemTextFieldValue: (
-    index: number,
-    field: CommerceItemTextField,
-    fallback: string,
-  ) => string;
-  onItemFieldChange: (
-    index: number,
-    field: CommerceItemNumericField,
-    raw: string,
-  ) => void;
-  onItemFieldBlur: (index: number, field: CommerceItemNumericField) => void;
-  onItemTextFieldChange: (
-    index: number,
-    field: CommerceItemTextField,
-    raw: string,
-  ) => void;
-  onItemTextFieldBlur: (index: number, field: CommerceItemTextField) => void;
   onRemoveItem: (index: number) => void;
   onPickProduct: (product: Product) => void;
 };
+
+function CatalogTableHeader({ showAction }: { showAction: boolean }) {
+  return (
+    <thead>
+      <tr className="bg-primary text-primary-foreground">
+        {PRODUCT_TABLE_COLUMNS.map((column) => (
+          <th
+            key={column}
+            className={`border border-primary/80 px-2 py-1.5 font-semibold ${
+              column === 'Sale Price' || column === 'Total Qty' ? 'text-right' : 'text-left'
+            }`}
+          >
+            {column}
+          </th>
+        ))}
+        {showAction && (
+          <th className="border border-primary/80 px-2 py-1.5 text-center font-semibold">
+            Action
+          </th>
+        )}
+      </tr>
+    </thead>
+  );
+}
+
+function CatalogTableCells({
+  row,
+  className = '',
+}: {
+  row: ReturnType<typeof productToTableRow>;
+  className?: string;
+}) {
+  return (
+    <>
+      <td className={`border border-border px-2 py-1 ${className}`}>{row.code}</td>
+      <td className={`border border-border px-2 py-1 ${className}`}>{row.name}</td>
+      <td className={`border border-border px-2 py-1 ${className}`}>{row.type}</td>
+      <td className={`border border-border px-2 py-1 ${className}`}>{row.pack}</td>
+      <td className={`border border-border px-2 py-1 ${className}`}>{row.company}</td>
+      <td className={`border border-border px-2 py-1 ${className}`}>{row.vendor}</td>
+      <td className={`border border-border px-2 py-1 ${className}`}>{row.category}</td>
+      <td className={`border border-border px-2 py-1 text-right ${className}`}>
+        {formatSalePrice(row.salePrice)}
+      </td>
+      <td className={`border border-border px-2 py-1 text-right ${className}`}>{row.totalQty}</td>
+      <td className={`border border-border px-2 py-1 ${className}`}>{row.totalUnits}</td>
+    </>
+  );
+}
 
 export function CommerceInvoiceItemsTable({
   items,
@@ -54,16 +76,9 @@ export function CommerceInvoiceItemsTable({
   productSearch,
   searchResults,
   itemsError,
-  getItemFieldValue,
-  getItemTextFieldValue,
-  onItemFieldChange,
-  onItemFieldBlur,
-  onItemTextFieldChange,
-  onItemTextFieldBlur,
   onRemoveItem,
   onPickProduct,
 }: CommerceInvoiceItemsTableProps) {
-  const { formatCurrency } = useCurrency();
   const isSearching = productSearch.trim().length > 0;
   const showTable = items.length > 0 || isSearching;
 
@@ -76,159 +91,71 @@ export function CommerceInvoiceItemsTable({
     );
   }
 
+  const columnCount = PRODUCT_TABLE_COLUMNS.length + (items.length > 0 ? 1 : 0);
+
   return (
     <section className="w-full min-w-0 overflow-hidden rounded-lg border border-border">
       {itemsError && (
         <p className="bg-destructive/10 px-3 py-1.5 text-sm text-destructive">{itemsError}</p>
       )}
       <div className="overflow-x-auto">
-        <table className="w-full min-w-0 border-collapse text-sm table-fixed md:min-w-[720px] lg:min-w-0 lg:table-auto">
-          <thead>
-            <tr className="bg-primary text-primary-foreground">
-              <th className="border border-primary/80 px-2 py-1.5 text-left font-semibold">S No</th>
-              <th className="border border-primary/80 px-2 py-1.5 text-left font-semibold">Name</th>
-              <th className="border border-primary/80 px-2 py-1.5 text-right font-semibold">Qty</th>
-              <th className="border border-primary/80 px-2 py-1.5 text-left font-semibold">Units</th>
-              <th className="border border-primary/80 px-2 py-1.5 text-right font-semibold">Rate</th>
-              <th className="border border-primary/80 px-2 py-1.5 text-right font-semibold">
-                G Amount
-              </th>
-              <th className="border border-primary/80 px-2 py-1.5 text-right font-semibold">
-                Extra Discount %
-              </th>
-              <th className="border border-primary/80 px-2 py-1.5 text-right font-semibold">
-                Net Amount
-              </th>
-              <th className="border border-primary/80 px-2 py-1.5 text-center font-semibold">
-                Action
-              </th>
-            </tr>
-          </thead>
+        <table className="w-full min-w-0 border-collapse text-sm md:min-w-[960px]">
+          <CatalogTableHeader showAction={items.length > 0} />
           <tbody>
             {isSearching &&
               (searchResults.length === 0 ? (
                 <tr className="bg-muted/30">
                   <td
-                    colSpan={9}
+                    colSpan={columnCount}
                     className="border border-border px-3 py-2 text-center text-muted-foreground"
                   >
                     No products found
                   </td>
                 </tr>
               ) : (
-                searchResults.slice(0, 20).map((p) => (
-                  <tr
-                    key={`search-${p.id}`}
-                    className="cursor-pointer bg-muted/20 hover:bg-accent"
-                    onClick={() => onPickProduct(p)}
-                  >
-                    <td className="border border-border px-2 py-1 text-muted-foreground">—</td>
-                    <td className="border border-border px-2 py-1">
-                      <div>{p.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {p.sku}
-                        {p.barcode ? ` · ${p.barcode}` : ''}
-                        · Stock {p.stockQuantity}
-                        {p.category ? ` · ${p.category}` : ''}
-                      </div>
-                    </td>
-                    <td className="border border-border px-2 py-1 text-right text-muted-foreground">
-                      —
-                    </td>
-                    <td className="border border-border px-2 py-1 text-muted-foreground">—</td>
-                    <td className="border border-border px-2 py-1 text-right">
-                      {formatCurrency(p.unitPrice)}
-                    </td>
-                    <td className="border border-border px-2 py-1 text-right text-muted-foreground">
-                      —
-                    </td>
-                    <td className="border border-border px-2 py-1 text-right text-muted-foreground">
-                      —
-                    </td>
-                    <td className="border border-border px-2 py-1 text-right text-muted-foreground">
-                      —
-                    </td>
-                    <td className="border border-border px-2 py-1 text-center text-muted-foreground">
-                      —
-                    </td>
-                  </tr>
-                ))
+                searchResults.slice(0, 20).map((product, index) => {
+                  const row = productToTableRow(product);
+                  return (
+                    <tr
+                      key={`search-${product.id}`}
+                      className={`cursor-pointer hover:bg-accent ${
+                        index % 2 === 0 ? 'bg-card' : 'bg-muted/20'
+                      }`}
+                      onClick={() => onPickProduct(product)}
+                    >
+                      <CatalogTableCells row={row} />
+                      {items.length > 0 && (
+                        <td className="border border-border px-2 py-1 text-center text-muted-foreground">
+                          —
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })
               ))}
 
-            {items.map((item, index) => (
-              <tr key={`item-${item.productId}-${index}`} className="bg-card">
-                <td className="border border-border px-2 py-1">{index + 1}</td>
-                <td className="border border-border px-2 py-1">
-                  <Input
-                    type="text"
-                    value={getItemTextFieldValue(index, 'description', item.description)}
-                    onChange={(e) =>
-                      onItemTextFieldChange(index, 'description', e.target.value)
-                    }
-                    onBlur={() => onItemTextFieldBlur(index, 'description')}
-                    className={`${COMMERCE_INLINE_EDIT_CLS} w-full min-w-[120px]`}
-                  />
-                </td>
-                <td className="border border-border px-2 py-1 text-right">
-                  <Input
-                    type="text"
-                    inputMode="decimal"
-                    value={getItemFieldValue(index, 'quantity', item.quantity)}
-                    onChange={(e) => onItemFieldChange(index, 'quantity', e.target.value)}
-                    onBlur={() => onItemFieldBlur(index, 'quantity')}
-                    className={`${COMMERCE_INLINE_EDIT_CLS} ml-auto w-20 text-right`}
-                  />
-                </td>
-                <td className="border border-border px-2 py-1">
-                  <UnitOfMeasureSelect
-                    value={getItemTextFieldValue(
-                      index,
-                      'unit',
-                      resolveItemUnit(item, products) || 'piece',
-                    )}
-                    onChange={(unit) => onItemTextFieldChange(index, 'unit', unit)}
-                    className={`${COMMERCE_INLINE_EDIT_CLS} h-8 w-full min-w-[88px]`}
-                  />
-                </td>
-                <td className="border border-border px-2 py-1 text-right">
-                  <Input
-                    type="text"
-                    inputMode="decimal"
-                    value={getItemFieldValue(index, 'unitPrice', item.unitPrice)}
-                    onChange={(e) => onItemFieldChange(index, 'unitPrice', e.target.value)}
-                    onBlur={() => onItemFieldBlur(index, 'unitPrice')}
-                    className={`${COMMERCE_INLINE_EDIT_CLS} ml-auto w-24 text-right`}
-                  />
-                </td>
-                <td className="border border-border px-2 py-1 text-right">
-                  {formatCurrency(lineGross(item))}
-                </td>
-                <td className="border border-border px-2 py-1 text-right">
-                  <Input
-                    type="text"
-                    inputMode="decimal"
-                    value={getItemFieldValue(index, 'discount', item.discount)}
-                    onChange={(e) => onItemFieldChange(index, 'discount', e.target.value)}
-                    onBlur={() => onItemFieldBlur(index, 'discount')}
-                    className={`${COMMERCE_INLINE_EDIT_CLS} ml-auto w-20 text-right`}
-                  />
-                </td>
-                <td className="border border-border px-2 py-1 text-right font-medium">
-                  {formatCurrency(lineNet(item))}
-                </td>
-                <td className="border border-border px-2 py-1 text-center">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onRemoveItem(index)}
-                    className="h-7 w-7 p-0 text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </td>
-              </tr>
-            ))}
+            {items.map((item, index) => {
+              const row = itemToTableRow(item, products);
+              return (
+                <tr
+                  key={`item-${item.productId}-${index}`}
+                  className={index % 2 === 0 ? 'bg-card' : 'bg-muted/20'}
+                >
+                  <CatalogTableCells row={row} />
+                  <td className="border border-border px-2 py-1 text-center">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onRemoveItem(index)}
+                      className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

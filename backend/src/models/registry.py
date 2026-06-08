@@ -52,7 +52,7 @@ def register_all_models():
     )
     from ..config.banking_models import BankAccount, BankTransaction, CashPosition
     from ..config.investment_models import Investment, EquipmentInvestment, InvestmentTransaction
-    from ..config.pos_models import POSShift, POSTransaction, PosProductCategory
+    from ..models.pos import POSShift, POSTransaction, PosProductCategory
     from ..config.custom_options_models import (
         CustomEventType,
         CustomDepartment,

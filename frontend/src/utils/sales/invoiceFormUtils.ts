@@ -12,12 +12,38 @@ export const EMPTY_NEW_ITEM: InvoiceItemCreate = {
   unit: 'piece',
 };
 
+function pad2(value: number): string {
+  return String(value).padStart(2, '0');
+}
+
+export function toLocalDateInputValue(date: Date = new Date()): string {
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+}
+
+export function toLocalDateTimeInputValue(date: Date = new Date()): string {
+  return `${toLocalDateInputValue(date)}T${pad2(date.getHours())}:${pad2(date.getMinutes())}`;
+}
+
+export function parseToLocalDateTimeInputValue(value: string): string {
+  if (!value) return toLocalDateTimeInputValue();
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) {
+    return value;
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return toLocalDateTimeInputValue();
+  }
+  return toLocalDateTimeInputValue(parsed);
+}
+
 export function defaultDueDate(): string {
-  return new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const date = new Date();
+  date.setDate(date.getDate() + 30);
+  return toLocalDateInputValue(date);
 }
 
 export function defaultOrderTime(): string {
-  return new Date().toISOString().slice(0, 16);
+  return toLocalDateTimeInputValue();
 }
 
 export function emptyInvoiceForm(currency: string): InvoiceCreate {
@@ -26,7 +52,7 @@ export function emptyInvoiceForm(currency: string): InvoiceCreate {
     customerName: '',
     customerEmail: '',
     shippingAddress: '',
-    issueDate: new Date().toISOString().split('T')[0],
+    issueDate: toLocalDateInputValue(),
     dueDate: defaultDueDate(),
     orderNumber: '',
     orderTime: defaultOrderTime(),
@@ -65,7 +91,9 @@ export function invoiceFormDataFromInvoice(invoice: Invoice): InvoiceCreate {
     issueDate: invoice.issueDate,
     dueDate: invoice.dueDate,
     orderNumber: invoice.orderNumber || '',
-    orderTime: invoice.orderTime || defaultOrderTime(),
+    orderTime: invoice.orderTime
+      ? parseToLocalDateTimeInputValue(String(invoice.orderTime))
+      : defaultOrderTime(),
     paymentTerms: invoice.paymentTerms,
     currency: invoice.currency,
     taxRate: invoice.taxRate,

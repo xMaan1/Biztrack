@@ -72,7 +72,7 @@ from .investment_models import (
     Investment, EquipmentInvestment, InvestmentTransaction
 )
 
-from .pos_models import (
+from ..models.pos import (
     POSShift, POSTransaction, PosProductCategory
 )
 
@@ -297,23 +297,20 @@ from ..api.v1.invoices.payments.logic import (
 )
 from ..api.v1.invoices.dashboard.logic import get_invoice_dashboard_data
 
-from .pos_crud import (
-    # POS Shift functions
+from ..api.v1.pos.shifts.logic import (
     get_pos_shift_by_id, get_all_pos_shifts, get_pos_shifts, get_open_pos_shift,
     create_pos_shift, update_pos_shift, delete_pos_shift,
-    
-    # POS Transaction functions
+)
+from ..api.v1.pos.transactions.logic import (
     get_pos_transaction_by_id, get_all_pos_transactions, get_pos_transactions,
     get_pos_transactions_by_shift, get_pos_transactions_by_date_range,
     create_pos_transaction, update_pos_transaction, delete_pos_transaction,
-    
-    # POS Product Category functions
+)
+from ..api.v1.pos.categories.logic import (
     get_pos_categories, get_pos_category_by_id, get_pos_category_by_name,
     create_pos_category, delete_pos_category,
-    
-    # POS Dashboard functions
-    get_pos_dashboard_data
 )
+from ..api.v1.pos.dashboard.logic import get_pos_dashboard_data
 
 from .workshop_crud import (
     # Work Order functions

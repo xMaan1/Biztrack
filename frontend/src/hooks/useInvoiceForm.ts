@@ -74,7 +74,7 @@ export function useInvoiceForm({
 
   const fetchProducts = useCallback(async () => {
     try {
-      const response = await apiService.get('/pos/products');
+      const response = await apiService.get('/pos/products?limit=1000&page=1');
       setProducts(response.products || []);
     } catch {
       setProducts([]);

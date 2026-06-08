@@ -59,6 +59,11 @@ export interface Product {
   name: string;
   sku: string;
   description?: string;
+  brand?: string;
+  productType?: string;
+  packSize?: number;
+  supplierId?: string;
+  supplierName?: string;
   unitPrice: number;
   costPrice: number;
   stockQuantity: number;
@@ -82,6 +87,10 @@ export interface ProductCreate {
   name: string;
   sku: string;
   description?: string;
+  brand?: string;
+  productType?: string;
+  packSize?: number;
+  supplierId?: string;
   unitPrice: number;
   costPrice: number;
   stockQuantity: number;
@@ -101,6 +110,10 @@ export interface ProductUpdate {
   name?: string;
   sku?: string;
   description?: string;
+  brand?: string;
+  productType?: string;
+  packSize?: number;
+  supplierId?: string;
   unitPrice?: number;
   costPrice?: number;
   stockQuantity?: number;

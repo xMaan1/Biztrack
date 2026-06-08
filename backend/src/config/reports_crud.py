@@ -11,7 +11,7 @@ from .inventory_models import Product, Warehouse, PurchaseOrder
 from ..models.invoices import Invoice, Payment
 from ..models.projects import Project, Task
 from .core_models import User
-from .pos_models import POSTransaction
+from ..models.pos import POSTransaction
 
 @cached_sync(ttl=60, key_prefix="reports_dashboard_")
 def get_reports_dashboard_data(db: Session, tenant_id: str, filters: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:

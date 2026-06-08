@@ -76,6 +76,9 @@ class ProductBase(BaseModel):
     sku: str
     description: Optional[str] = None
     category: str
+    brand: Optional[str] = None
+    productType: Optional[str] = None
+    packSize: int = 1
     unitPrice: float
     costPrice: float
     stockQuantity: int
@@ -110,6 +113,10 @@ class ProductCreate(BaseModel):
     sku: str
     description: Optional[str] = None
     category: str
+    brand: Optional[str] = None
+    productType: Optional[str] = None
+    packSize: int = 1
+    supplierId: Optional[str] = None
     unitPrice: float
     costPrice: float
     stockQuantity: int
@@ -131,6 +138,10 @@ class ProductUpdate(BaseModel):
     sku: Optional[str] = None
     description: Optional[str] = None
     category: Optional[str] = None
+    brand: Optional[str] = None
+    productType: Optional[str] = None
+    packSize: Optional[int] = None
+    supplierId: Optional[str] = None
     unitPrice: Optional[float] = None
     costPrice: Optional[float] = None
     stockQuantity: Optional[int] = None
