@@ -43,7 +43,7 @@ export default function AgencyDashboard({
 }: AgencyDashboardProps) {
   const { getCurrencySymbol } = useCurrency();
   const handleCreateProject = () => onNavigate('/projects');
-  const handleNewSale = () => onNavigate('/pos/sale');
+  const handleCreateInvoice = () => onNavigate('/sales/invoices');
   const handleViewSales = () => onNavigate('/sales');
   const handleViewInventory = () => onNavigate('/inventory');
   const handleAddInvestment = () => onNavigate('/ledger/investments');
@@ -68,12 +68,12 @@ export default function AgencyDashboard({
             New Project
           </Button>
           <Button
-            onClick={handleNewSale}
+            onClick={handleCreateInvoice}
             variant="outline"
             className="border-indigo-600 text-indigo-600 hover:bg-indigo-50"
           >
             <ShoppingCart className="mr-2 h-4 w-4" />
-            New Sale
+            Create Invoice
           </Button>
           <Button
             onClick={handleAddInvestment}
@@ -189,7 +189,7 @@ export default function AgencyDashboard({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Store className="h-5 w-5 text-violet-600" />
-              Inventory & POS
+              Inventory
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -230,12 +230,12 @@ export default function AgencyDashboard({
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Button
-              onClick={() => onNavigate('/pos')}
+              onClick={handleCreateInvoice}
               variant="outline"
               className="h-20 flex-col gap-2"
             >
               <ShoppingCart className="h-6 w-6" />
-              <span className="text-sm">Point of Sale</span>
+              <span className="text-sm">Create Invoice</span>
             </Button>
 
             <Button

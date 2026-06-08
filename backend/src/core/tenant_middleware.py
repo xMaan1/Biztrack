@@ -12,8 +12,11 @@ from ..config.database import (
     get_tenant_users, get_user_by_email
 )
 from ..api.dependencies import get_current_user
+from .plan_types import is_agency_plan
 
 logger = logging.getLogger(__name__)
+
+AGENCY_POS_ALLOWED_PREFIXES = ("/pos/products", "/pos/categories")
 
 class TenantMiddleware:
     def __init__(self):
@@ -246,6 +249,16 @@ class TenantMiddleware:
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Inventory feature not available in your current plan"
                 )
+
+            if is_agency_plan(tenant_context.get("plan_type")):
+                path = request.url.path
+                if path.startswith("/pos") and not any(
+                    path.startswith(prefix) for prefix in AGENCY_POS_ALLOWED_PREFIXES
+                ):
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="POS is not available on the Agency plan",
+                    )
                 
         finally:
             db.close()

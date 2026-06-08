@@ -1,6 +1,7 @@
 import { useRBAC } from '../../contexts/RBACContext';
 import { useSidebarDrawer } from '../../contexts/SidebarDrawerContext';
 import { evalSidebarPathPermission } from '../../hooks/useSidebarFilteredMenu';
+import { usePlanInfo } from '../../hooks/usePlanInfo';
 import { MenuHeaderButton } from '../../components/layout/MenuHeaderButton';
 import { View, Text, Pressable } from 'react-native';
 import { MobilePosDashboardScreen } from './screens/MobilePosDashboardScreen';
@@ -38,9 +39,16 @@ function PosAccessDenied(props: { onBack: () => void }) {
 export function PosRouter() {
   const { workspacePath, setWorkspacePath } = useSidebarDrawer();
   const { hasPermission, isOwner, hasModuleAccess } = useRBAC();
+  const { planInfo } = usePlanInfo();
 
   if (!isPosWorkspacePath(workspacePath)) {
     return null;
+  }
+
+  if (planInfo?.planType === 'agency') {
+    return (
+      <PosAccessDenied onBack={() => setWorkspacePath('/dashboard')} />
+    );
   }
 
   const ok =

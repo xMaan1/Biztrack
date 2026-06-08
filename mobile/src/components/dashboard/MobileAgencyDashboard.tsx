@@ -83,11 +83,11 @@ export function MobileAgencyDashboard({
           </Pressable>
           <Pressable
             className="flex-row items-center rounded-lg border border-indigo-600 px-3 py-2 active:bg-indigo-50"
-            onPress={() => void onNavigatePath?.('/pos/sale')}
+            onPress={() => void onNavigatePath?.('/sales/invoices')}
           >
-            <Ionicons name="cart-outline" size={18} color="#4f46e5" />
+            <Ionicons name="document-text-outline" size={18} color="#4f46e5" />
             <Text className="ml-1 text-sm font-semibold text-indigo-700">
-              New sale
+              Create invoice
             </Text>
           </Pressable>
         </View>
@@ -175,7 +175,7 @@ export function MobileAgencyDashboard({
           <View className="flex-row items-center gap-2">
             <Ionicons name="storefront-outline" size={20} color="#7c3aed" />
             <Text className="text-base font-semibold text-slate-900">
-              Inventory & POS
+              Inventory
             </Text>
           </View>
           <Pressable
