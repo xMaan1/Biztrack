@@ -11,6 +11,7 @@ import { ProductFormDialog } from '@/src/components/pos/products/ProductFormDial
 import { ProductViewDialog } from '@/src/components/pos/products/ProductViewDialog';
 import { ProductDeleteDialog } from '@/src/components/pos/products/ProductDeleteDialog';
 import { AddCategoryDialog } from '@/src/components/pos/products/AddCategoryDialog';
+import { AddVendorDialog } from '@/src/components/pos/products/AddVendorDialog';
 
 export default function POSProductsPage() {
   const { formatCurrency } = useCurrency();
@@ -52,6 +53,7 @@ export default function POSProductsPage() {
           onFormChange={(patch) => page.setFormData((prev) => ({ ...prev, ...patch }))}
           onSubmit={page.handleSubmit}
           onAddCategoryClick={() => page.setIsAddCategoryOpen(true)}
+          onAddVendorClick={() => page.handleAddVendorDialogOpenChange(true)}
         />
 
         <ProductViewDialog
@@ -68,6 +70,17 @@ export default function POSProductsPage() {
           onOpenChange={page.setIsAddCategoryOpen}
           onCategoryNameChange={page.setNewCategoryName}
           onSubmit={page.handleAddCategory}
+        />
+
+        <AddVendorDialog
+          open={page.isAddVendorOpen}
+          vendorName={page.newVendorName}
+          vendorCode={page.newVendorCode}
+          loading={page.addVendorLoading}
+          onOpenChange={page.handleAddVendorDialogOpenChange}
+          onVendorNameChange={page.handleVendorNameChange}
+          onVendorCodeChange={page.handleVendorCodeChange}
+          onSubmit={page.handleAddVendor}
         />
 
         <ProductDeleteDialog

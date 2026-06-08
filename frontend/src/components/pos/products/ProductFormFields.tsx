@@ -1,6 +1,6 @@
 'use client';
 
-import { FolderPlus } from 'lucide-react';
+import { FolderPlus, UserPlus } from 'lucide-react';
 import { Button } from '@/src/components/ui/button';
 import { Input } from '@/src/components/ui/input';
 import { Label } from '@/src/components/ui/label';
@@ -22,6 +22,7 @@ type ProductFormFieldsProps = {
   suppliers: Supplier[];
   onChange: (patch: Partial<ProductFormData>) => void;
   onAddCategoryClick: () => void;
+  onAddVendorClick: () => void;
 };
 
 export function ProductFormFields({
@@ -30,6 +31,7 @@ export function ProductFormFields({
   suppliers,
   onChange,
   onAddCategoryClick,
+  onAddVendorClick,
 }: ProductFormFieldsProps) {
   const categoryOptions = categories.length ? categories : Object.values(ProductCategory);
 
@@ -89,6 +91,32 @@ export function ProductFormFields({
             </Button>
           </div>
         </div>
+        <div className="space-y-2">
+          <div className="flex items-end gap-2">
+            <div className="flex-1 space-y-2">
+              <Label htmlFor="supplierId">Vendor</Label>
+              <Select
+                value={formData.supplierId || 'none'}
+                onValueChange={(value) => onChange({ supplierId: value === 'none' ? '' : value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select vendor" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No vendor</SelectItem>
+                  {suppliers.map((supplier) => (
+                    <SelectItem key={supplier.id} value={supplier.id}>
+                      {supplier.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="button" variant="outline" size="icon" onClick={onAddVendorClick} title="Add vendor">
+              <UserPlus className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -113,35 +141,14 @@ export function ProductFormFields({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="brand">Company</Label>
-          <Input
-            id="brand"
-            value={formData.brand}
-            onChange={(e) => onChange({ brand: e.target.value })}
-            placeholder="e.g. Logitech"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="supplierId">Vendor</Label>
-          <Select
-            value={formData.supplierId || 'none'}
-            onValueChange={(value) => onChange({ supplierId: value === 'none' ? '' : value })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select vendor" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">No vendor</SelectItem>
-              {suppliers.map((supplier) => (
-                <SelectItem key={supplier.id} value={supplier.id}>
-                  {supplier.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="brand">Company</Label>
+        <Input
+          id="brand"
+          value={formData.brand}
+          onChange={(e) => onChange({ brand: e.target.value })}
+          placeholder="e.g. Logitech"
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4">

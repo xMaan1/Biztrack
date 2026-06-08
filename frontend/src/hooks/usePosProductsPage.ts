@@ -13,6 +13,7 @@ import {
   filterProducts,
   formDataToPayload,
   productToFormData,
+  vendorCodeFromName,
 } from '@/src/components/pos/products/productUtils';
 
 export function usePosProductsPage() {
@@ -29,6 +30,10 @@ export function usePosProductsPage() {
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [addCategoryLoading, setAddCategoryLoading] = useState(false);
+  const [isAddVendorOpen, setIsAddVendorOpen] = useState(false);
+  const [newVendorName, setNewVendorName] = useState('');
+  const [newVendorCode, setNewVendorCode] = useState('');
+  const [addVendorLoading, setAddVendorLoading] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
@@ -155,6 +160,47 @@ export function usePosProductsPage() {
     }
   }, [newCategoryName, fetchCategories]);
 
+  const handleAddVendorDialogOpenChange = useCallback((open: boolean) => {
+    setIsAddVendorOpen(open);
+    if (!open) {
+      setNewVendorName('');
+      setNewVendorCode('');
+    }
+  }, []);
+
+  const handleVendorNameChange = useCallback((name: string) => {
+    setNewVendorName(name);
+    setNewVendorCode((prev) => {
+      const autoFromPrev = vendorCodeFromName(newVendorName);
+      if (!prev || prev === autoFromPrev) {
+        return vendorCodeFromName(name);
+      }
+      return prev;
+    });
+  }, [newVendorName]);
+
+  const handleVendorCodeChange = useCallback((code: string) => {
+    setNewVendorCode(code);
+  }, []);
+
+  const handleAddVendor = useCallback(async () => {
+    const name = newVendorName.trim();
+    const code = newVendorCode.trim() || vendorCodeFromName(name);
+    if (!name || !code) return;
+    setAddVendorLoading(true);
+    try {
+      const response = await HRMService.createSupplier({ name, code });
+      await fetchSuppliers();
+      setFormData((prev) => ({ ...prev, supplierId: response.supplier.id }));
+      setNewVendorName('');
+      setNewVendorCode('');
+      setIsAddVendorOpen(false);
+    } catch {
+    } finally {
+      setAddVendorLoading(false);
+    }
+  }, [newVendorName, newVendorCode, fetchSuppliers]);
+
   const clearFilters = useCallback(() => {
     setFilters(defaultFilters());
   }, []);
@@ -180,11 +226,18 @@ export function usePosProductsPage() {
     isAddCategoryOpen,
     newCategoryName,
     addCategoryLoading,
+    isAddVendorOpen,
+    newVendorName,
+    newVendorCode,
+    addVendorLoading,
     setFilters,
     setFormData,
     setViewingProduct,
     setIsAddCategoryOpen,
     setNewCategoryName,
+    handleAddVendorDialogOpenChange,
+    handleVendorNameChange,
+    handleVendorCodeChange,
     openNewProductDialog,
     handleDialogClose,
     handleSubmit,
@@ -193,6 +246,7 @@ export function usePosProductsPage() {
     handleDeleteConfirm,
     handleDeleteCancel,
     handleAddCategory,
+    handleAddVendor,
     clearFilters,
   };
 }
