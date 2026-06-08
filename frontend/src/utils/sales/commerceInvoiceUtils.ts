@@ -2,7 +2,7 @@ import type { Product } from '@/src/models/pos';
 import type { InvoiceItemCreate } from '@/src/models/sales';
 import { lineItemTotal } from '@/src/utils/sales/invoiceFormUtils';
 
-export type CommerceItemNumericField = 'quantity' | 'unitPrice';
+export type CommerceItemNumericField = 'quantity' | 'unitPrice' | 'discount';
 
 export function lineGross(item: InvoiceItemCreate): number {
   return item.quantity * item.unitPrice;

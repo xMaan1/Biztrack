@@ -198,3 +198,4 @@ class InvoiceFilters(BaseModel):
     amountFrom: Optional[float] = None
     amountTo: Optional[float] = None
     search: Optional[str] = None
+    orderPrefix: Optional[str] = None

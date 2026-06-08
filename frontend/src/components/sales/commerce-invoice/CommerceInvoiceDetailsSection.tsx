@@ -44,12 +44,13 @@ export function CommerceInvoiceDetailsSection({
     <section className="rounded-lg border border-border bg-card px-3 pb-3 pt-2">
       <div className="grid grid-cols-1 gap-x-6 gap-y-2 lg:grid-cols-3">
         <div className="space-y-1.5">
-          <InlineField label="Bill No:">
+          <InlineField label="Order Number:">
             <Input
               id="orderNumber"
               value={formData.orderNumber || ''}
-              onChange={(e) => onInputChange('orderNumber', e.target.value)}
-              className={COMMERCE_INPUT_CLS}
+              readOnly
+              placeholder="Auto-generated (ORD-YYYYMMDD-0001)"
+              className={`${COMMERCE_INPUT_CLS} bg-muted`}
             />
           </InlineField>
           <InlineField label="Bill Type:" required>

@@ -30,60 +30,94 @@ def resolve_invoice_customer_phone(db, tenant_id: str, invoice_data, customer=No
 
 
 def generate_invoice_number(tenant_id: str, db: Session) -> str:
-    year = datetime.now().year
-    month = datetime.now().month
-    max_retries = 10
+    now = datetime.now()
+    prefix = f"INV-{now.year:04d}{now.month:02d}{now.day:02d}"
+    max_retries = 100
     for attempt in range(max_retries):
         highest_invoice = db.query(Invoice).filter(
             and_(
                 Invoice.tenant_id == tenant_id,
-                func.extract("year", Invoice.createdAt) == year,
-                func.extract("month", Invoice.createdAt) == month,
+                Invoice.invoiceNumber.like(f"{prefix}-%"),
             )
         ).order_by(desc(Invoice.invoiceNumber)).first()
 
-        if highest_invoice:
+        if highest_invoice and highest_invoice.invoiceNumber:
             try:
-                parts = highest_invoice.invoiceNumber.split("-")
-                if len(parts) == 3:
-                    last_number = int(parts[2])
-                    new_number = last_number + 1
-                else:
-                    count = db.query(Invoice).filter(
-                        and_(
-                            Invoice.tenant_id == tenant_id,
-                            func.extract("year", Invoice.createdAt) == year,
-                            func.extract("month", Invoice.createdAt) == month,
-                        )
-                    ).count()
-                    new_number = count + 1
+                new_number = int(highest_invoice.invoiceNumber.split("-")[-1]) + 1
             except (ValueError, IndexError):
                 count = db.query(Invoice).filter(
                     and_(
                         Invoice.tenant_id == tenant_id,
-                        func.extract("year", Invoice.createdAt) == year,
-                        func.extract("month", Invoice.createdAt) == month,
+                        Invoice.invoiceNumber.like(f"{prefix}-%"),
                     )
                 ).count()
                 new_number = count + 1
         else:
             new_number = 1
 
-        new_invoice_number = f"INV-{year}{month:02d}-{new_number:04d}"
+        candidate = f"{prefix}-{new_number:04d}"
         existing_invoice = db.query(Invoice).filter(
-            Invoice.invoiceNumber == new_invoice_number
+            and_(
+                Invoice.tenant_id == tenant_id,
+                Invoice.invoiceNumber == candidate,
+            )
         ).first()
 
         if not existing_invoice:
-            return new_invoice_number
+            return candidate
 
         if attempt < max_retries - 1:
             continue
         timestamp = int(time.time() * 1000) % 10000
-        return f"INV-{year}{month:02d}-{timestamp:04d}"
+        return f"{prefix}-{timestamp:04d}"
 
     timestamp = int(time.time() * 1000) % 10000
-    return f"INV-{year}{month:02d}-{timestamp:04d}"
+    return f"{prefix}-{timestamp:04d}"
+
+
+def generate_order_number(tenant_id: str, db: Session) -> str:
+    now = datetime.now()
+    prefix = f"ORD-{now.year:04d}{now.month:02d}{now.day:02d}"
+    max_retries = 100
+    for attempt in range(max_retries):
+        highest_order = db.query(Invoice).filter(
+            and_(
+                Invoice.tenant_id == tenant_id,
+                Invoice.orderNumber.like(f"{prefix}-%"),
+            )
+        ).order_by(desc(Invoice.orderNumber)).first()
+
+        if highest_order and highest_order.orderNumber:
+            try:
+                new_number = int(highest_order.orderNumber.split("-")[-1]) + 1
+            except (ValueError, IndexError):
+                count = db.query(Invoice).filter(
+                    and_(
+                        Invoice.tenant_id == tenant_id,
+                        Invoice.orderNumber.like(f"{prefix}-%"),
+                    )
+                ).count()
+                new_number = count + 1
+        else:
+            new_number = 1
+
+        candidate = f"{prefix}-{new_number:04d}"
+        existing = db.query(Invoice).filter(
+            and_(
+                Invoice.tenant_id == tenant_id,
+                Invoice.orderNumber == candidate,
+            )
+        ).first()
+        if not existing:
+            return candidate
+
+        if attempt < max_retries - 1:
+            continue
+        timestamp = int(time.time() * 1000) % 10000
+        return f"{prefix}-{timestamp:04d}"
+
+    timestamp = int(time.time() * 1000) % 10000
+    return f"{prefix}-{timestamp:04d}"
 
 
 def calculate_invoice_totals(items: List, tax_rate: float, discount: float) -> dict:

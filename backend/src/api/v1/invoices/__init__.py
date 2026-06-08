@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import Optional
 
@@ -11,6 +11,7 @@ from .payments.api import router as payments_router
 from .items.api import router as items_router
 from .items.schemas import InvoiceCreate, InvoiceUpdate, InvoiceResponse, InvoicesResponse
 from .items import logic as items_logic
+from .shared import generate_order_number
 
 router = APIRouter(prefix="/invoices", tags=["Invoices"])
 router.include_router(bulk_router)
@@ -30,6 +31,19 @@ def create_invoice(
     return items_logic.create_invoice_endpoint(invoice_data, db, current_user, tenant_context)
 
 
+@router.get("/next-order-number")
+def get_next_order_number(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context),
+    _: dict = Depends(require_permission("sales:invoices:view")),
+):
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    tenant_id = tenant_context["tenant_id"]
+    return {"orderNumber": generate_order_number(tenant_id, db)}
+
+
 @router.get("", response_model=InvoicesResponse)
 def get_invoices(
     page: int = Query(1, ge=1),
@@ -41,6 +55,7 @@ def get_invoices(
     amount_from: Optional[float] = None,
     amount_to: Optional[float] = None,
     search: Optional[str] = None,
+    order_prefix: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     tenant_context: dict = Depends(get_tenant_context),
@@ -48,7 +63,7 @@ def get_invoices(
 ):
     return items_logic.get_invoices_endpoint(
         db, current_user, tenant_context, page, limit,
-        status, customer_id, date_from, date_to, amount_from, amount_to, search,
+        status, customer_id, date_from, date_to, amount_from, amount_to, search, order_prefix,
     )
 
 

@@ -26,6 +26,11 @@ class InvoiceService {
     return response.invoice;
   }
 
+  async getNextOrderNumber(): Promise<string> {
+    const response = await apiService.get(`${this.baseUrl}/next-order-number`);
+    return response.orderNumber;
+  }
+
   async getInvoices(
     filters: InvoiceFilters = {},
     page: number = 1,
@@ -35,10 +40,18 @@ class InvoiceService {
     params.append('page', page.toString());
     params.append('limit', limit.toString());
 
-    // Add filters, filtering out undefined values and converting to strings
+    const filterParamKeys: Record<string, string> = {
+      customerId: 'customer_id',
+      dateFrom: 'date_from',
+      dateTo: 'date_to',
+      amountFrom: 'amount_from',
+      amountTo: 'amount_to',
+      orderPrefix: 'order_prefix',
+    };
+
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
-        params.append(key, value.toString());
+        params.append(filterParamKeys[key] ?? key, value.toString());
       }
     });
 

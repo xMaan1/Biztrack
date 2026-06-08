@@ -118,9 +118,16 @@ export function useInvoiceForm({
       setItems([]);
       setSelectedCustomer(null);
       setSelectedVehicle(null);
+      if (mode === 'create' && useCommerceInvoiceLayout) {
+        InvoiceService.getNextOrderNumber()
+          .then((orderNumber) => {
+            setFormData((prev) => ({ ...prev, orderNumber }));
+          })
+          .catch(() => {});
+      }
     }
     setErrors({});
-  }, [invoice, mode, isActive, currency]);
+  }, [invoice, mode, isActive, currency, useCommerceInvoiceLayout]);
 
   const handleInputChange = (field: keyof InvoiceCreate, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -253,7 +260,8 @@ export function useInvoiceForm({
   };
 
   const clearInvoice = useCallback(() => {
-    setFormData(emptyInvoiceForm(currency));
+    const nextForm = emptyInvoiceForm(currency);
+    setFormData(nextForm);
     setItems([]);
     setSelectedCustomer(null);
     setSelectedVehicle(null);
@@ -264,7 +272,14 @@ export function useInvoiceForm({
     setInstallmentFirstDueDate(defaultDueDate());
     setErrors({});
     setCommerceFormKey((k) => k + 1);
-  }, [currency]);
+    if (useCommerceInvoiceLayout) {
+      InvoiceService.getNextOrderNumber()
+        .then((orderNumber) => {
+          setFormData((prev) => ({ ...prev, orderNumber }));
+        })
+        .catch(() => {});
+    }
+  }, [currency, useCommerceInvoiceLayout]);
 
   const removeItem = (index: number) => {
     setItems((prev) => prev.filter((_, i) => i !== index));

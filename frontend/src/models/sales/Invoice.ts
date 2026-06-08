@@ -184,4 +184,5 @@ export interface InvoiceFilters {
   amountFrom?: number;
   amountTo?: number;
   search?: string;
+  orderPrefix?: string;
 }

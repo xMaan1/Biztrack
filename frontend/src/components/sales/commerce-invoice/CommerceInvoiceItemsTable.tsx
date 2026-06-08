@@ -147,14 +147,7 @@ export function CommerceInvoiceItemsTable({
                 <td className="border border-border px-2 py-1">{index + 1}</td>
                 <td className="border border-border px-2 py-1">{item.description}</td>
                 <td className="border border-border px-2 py-1 text-right">
-                  <Input
-                    type="text"
-                    inputMode="decimal"
-                    value={getItemFieldValue(index, 'quantity', item.quantity)}
-                    onChange={(e) => onItemFieldChange(index, 'quantity', e.target.value)}
-                    onBlur={() => onItemFieldBlur(index, 'quantity')}
-                    className={`${COMMERCE_INLINE_EDIT_CLS} ml-auto w-20 text-right`}
-                  />
+                  {item.quantity}
                 </td>
                 <td className="border border-border px-2 py-1">
                   {formatUnitLabel(resolveItemUnit(item, products)) || '—'}
@@ -172,7 +165,16 @@ export function CommerceInvoiceItemsTable({
                 <td className="border border-border px-2 py-1 text-right">
                   {formatCurrency(lineGross(item))}
                 </td>
-                <td className="border border-border px-2 py-1 text-right">{item.discount}%</td>
+                <td className="border border-border px-2 py-1 text-right">
+                  <Input
+                    type="text"
+                    inputMode="decimal"
+                    value={getItemFieldValue(index, 'discount', item.discount)}
+                    onChange={(e) => onItemFieldChange(index, 'discount', e.target.value)}
+                    onBlur={() => onItemFieldBlur(index, 'discount')}
+                    className={`${COMMERCE_INLINE_EDIT_CLS} ml-auto w-20 text-right`}
+                  />
+                </td>
                 <td className="border border-border px-2 py-1 text-right font-medium">
                   {formatCurrency(lineNet(item))}
                 </td>

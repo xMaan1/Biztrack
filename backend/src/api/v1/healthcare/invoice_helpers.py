@@ -1,14 +1,11 @@
 import uuid
-import time
 from datetime import datetime, timedelta
 from typing import Any, Dict, List
 
 from fastapi import HTTPException, status
-from sqlalchemy import and_, desc, func
 from sqlalchemy.orm import Session
 
 from ....api.v1.invoices.items.logic import create_invoice
-from ....models.invoices import Invoice
 
 
 def line_items_from_healthcare_input(line_items: List[Dict[str, Any]]) -> List[dict]:
@@ -60,47 +57,9 @@ def calculate_invoice_totals(items: List[Dict], tax_rate: float, discount: float
 
 
 def generate_invoice_number(tenant_id: str, db: Session) -> str:
-    year = datetime.now().year
-    month = datetime.now().month
-    for attempt in range(10):
-        highest_invoice = db.query(Invoice).filter(
-            and_(
-                Invoice.tenant_id == tenant_id,
-                func.extract("year", Invoice.createdAt) == year,
-                func.extract("month", Invoice.createdAt) == month,
-            )
-        ).order_by(desc(Invoice.invoiceNumber)).first()
-        if highest_invoice:
-            try:
-                parts = highest_invoice.invoiceNumber.split("-")
-                if len(parts) == 3:
-                    new_number = int(parts[2]) + 1
-                else:
-                    count = db.query(Invoice).filter(
-                        and_(
-                            Invoice.tenant_id == tenant_id,
-                            func.extract("year", Invoice.createdAt) == year,
-                            func.extract("month", Invoice.createdAt) == month,
-                        )
-                    ).count()
-                    new_number = count + 1
-            except (ValueError, IndexError):
-                count = db.query(Invoice).filter(
-                    and_(
-                        Invoice.tenant_id == tenant_id,
-                        func.extract("year", Invoice.createdAt) == year,
-                        func.extract("month", Invoice.createdAt) == month,
-                    )
-                ).count()
-                new_number = count + 1
-        else:
-            new_number = 1
-        new_invoice_number = f"INV-{year}{month:02d}-{new_number:04d}"
-        if not db.query(Invoice).filter(Invoice.invoiceNumber == new_invoice_number).first():
-            return new_invoice_number
-        if attempt >= 9:
-            return f"INV-{year}{month:02d}-{int(time.time() * 1000) % 10000:04d}"
-    return f"INV-{year}{month:02d}-{int(time.time() * 1000) % 10000:04d}"
+    from .....api.v1.invoices.shared import generate_invoice_number as shared_generate_invoice_number
+
+    return shared_generate_invoice_number(tenant_id, db)
 
 
 def build_draft_invoice_payload(

@@ -81,7 +81,11 @@ export function useCommerceInvoiceFormUi({
     }));
     const parsed = parseDraftNumber(raw);
     if (parsed !== null) {
-      onUpdateItem(index, { [field]: parsed });
+      const value =
+        field === 'discount'
+          ? Math.min(100, Math.max(0, parsed))
+          : parsed;
+      onUpdateItem(index, { [field]: value });
     }
   };
 
@@ -91,7 +95,11 @@ export function useCommerceInvoiceFormUi({
     if (raw !== undefined) {
       const parsed = parseDraftNumber(raw);
       if (parsed !== null) {
-        onUpdateItem(index, { [field]: parsed });
+        const value =
+          field === 'discount'
+            ? Math.min(100, Math.max(0, parsed))
+            : parsed;
+        onUpdateItem(index, { [field]: value });
       }
     }
     setItemFieldDrafts((prev) => {

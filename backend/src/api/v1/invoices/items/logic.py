@@ -15,6 +15,7 @@ from ...crm.db_common import resolve_phone_from_customer
 from ..db_common import delete_invoice_dependencies
 from ..shared import (
     generate_invoice_number,
+    generate_order_number,
     calculate_invoice_totals,
     transform_invoice_to_pydantic,
     resolve_invoice_customer_phone,
@@ -158,6 +159,11 @@ def create_invoice_endpoint(
             raise HTTPException(status_code=400, detail="Invalid date format")
 
         invoice_number = generate_invoice_number(tenant_id, db)
+        provided_order_number = (invoice_data.orderNumber or "").strip()
+        if provided_order_number and not provided_order_number.upper().startswith("ORD-"):
+            order_number = provided_order_number
+        else:
+            order_number = generate_order_number(tenant_id, db)
         totals = calculate_invoice_totals(invoice_data.items, invoice_data.taxRate, invoice_data.discount)
 
         db_invoice = Invoice(
@@ -173,7 +179,7 @@ def create_invoice_endpoint(
             shippingAddress=invoice_data.shippingAddress,
             issueDate=issue_date,
             dueDate=due_date,
-            orderNumber=invoice_data.orderNumber,
+            orderNumber=order_number,
             orderTime=datetime.fromisoformat(invoice_data.orderTime) if invoice_data.orderTime else None,
             paymentTerms=invoice_data.paymentTerms,
             currency=invoice_data.currency,
@@ -352,6 +358,7 @@ def get_invoices_endpoint(
     amount_from: Optional[float],
     amount_to: Optional[float],
     search: Optional[str],
+    order_prefix: Optional[str] = None,
 ):
     try:
         if not tenant_context:
@@ -372,10 +379,15 @@ def get_invoices_endpoint(
             query = query.filter(Invoice.total >= amount_from)
         if amount_to:
             query = query.filter(Invoice.total <= amount_to)
+        if order_prefix:
+            normalized_prefix = order_prefix.strip().upper()
+            if normalized_prefix:
+                query = query.filter(Invoice.orderNumber.ilike(f"{normalized_prefix}%"))
         if search:
             normalized_search = " ".join(search.split())
             search_filter = or_(
                 Invoice.invoiceNumber.ilike(f"%{normalized_search}%"),
+                Invoice.orderNumber.ilike(f"%{normalized_search}%"),
                 func.regexp_replace(Invoice.customerName, r"\s+", " ", "g").ilike(f"%{normalized_search}%"),
                 Invoice.customerEmail.ilike(f"%{normalized_search}%"),
                 Invoice.vehicleReg.ilike(f"%{normalized_search}%"),

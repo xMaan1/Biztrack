@@ -57,6 +57,7 @@ export function InvoiceManagementPanel({ onInvoicesChange }: InvoiceManagementPa
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [filters, setFilters] = useState<InvoiceFilters>({});
   const [searchTerm, setSearchTerm] = useState('');
+  const [orderPrefix, setOrderPrefix] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -79,7 +80,8 @@ export function InvoiceManagementPanel({ onInvoicesChange }: InvoiceManagementPa
       const response = await InvoiceService.getInvoices(
         {
           ...filters,
-          search: searchTerm,
+          search: searchTerm || undefined,
+          orderPrefix: orderPrefix.trim() || undefined,
           status: statusFilter !== 'all' ? statusFilter : undefined,
         },
         currentPage,
@@ -93,14 +95,14 @@ export function InvoiceManagementPanel({ onInvoicesChange }: InvoiceManagementPa
       setLoading(false);
       loadingRef.current = false;
     }
-  }, [filters, searchTerm, statusFilter, currentPage, hasViewPermission]);
+  }, [filters, searchTerm, orderPrefix, statusFilter, currentPage, hasViewPermission]);
 
   const filtersString = useMemo(() => JSON.stringify(filters), [filters]);
 
   useEffect(() => {
     if (!hasViewPermission) return;
     loadData();
-  }, [currentPage, filtersString, searchTerm, statusFilter, loadData, hasViewPermission]);
+  }, [currentPage, filtersString, searchTerm, orderPrefix, statusFilter, loadData, hasViewPermission]);
 
   const handleCreateInvoice = async (
     invoiceData: InvoiceCreate,
@@ -287,14 +289,24 @@ export function InvoiceManagementPanel({ onInvoicesChange }: InvoiceManagementPa
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
             <div>
               <Label htmlFor="search">Search</Label>
               <Input
                 id="search"
-                placeholder="Search invoices..."
+                placeholder="Customer, invoice #..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              />
+            </div>
+            <div>
+              <Label htmlFor="orderPrefix">Order Number</Label>
+              <Input
+                id="orderPrefix"
+                placeholder="ORD-20250608"
+                value={orderPrefix}
+                onChange={(e) => setOrderPrefix(e.target.value.toUpperCase())}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               />
             </div>
