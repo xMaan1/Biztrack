@@ -1,5 +1,4 @@
 import type { Product } from '@/src/models/pos';
-import type { InvoiceItemCreate } from '@/src/models/sales';
 
 export type ProductTableRow = {
   code: string;
@@ -51,30 +50,6 @@ export function productToTableRow(product: Product): ProductTableRow {
     salePrice: product.unitPrice ?? 0,
     totalQty: product.stockQuantity ?? 0,
     totalUnits: formatTotalUnits(product.stockQuantity ?? 0, packSize, product.unitOfMeasure),
-  };
-}
-
-export function itemToTableRow(item: InvoiceItemCreate, products: Product[]): ProductTableRow {
-  if (item.productId) {
-    const product = products.find((p) => p.id === item.productId);
-    if (product) {
-      return productToTableRow(product);
-    }
-  }
-
-  return {
-    code: '—',
-    name: item.description || '—',
-    type: '—',
-    pack: '—',
-    company: '—',
-    vendor: '—',
-    category: '—',
-    salePrice: item.unitPrice ?? 0,
-    totalQty: item.quantity ?? 0,
-    totalUnits: item.unit
-      ? `${item.quantity} ${formatUnitLabel(item.unit)}`
-      : String(item.quantity ?? 0),
   };
 }
 
