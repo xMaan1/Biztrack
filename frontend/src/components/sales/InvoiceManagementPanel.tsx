@@ -32,7 +32,6 @@ import {
   InvoiceFilters,
 } from '../../models/sales';
 import { InvoiceDialog, InstallmentPlanCreateOption } from './InvoiceDialog';
-import { CreateInvoiceSection } from './CreateInvoiceSection';
 import { InvoiceList } from './InvoiceList';
 import { InvoiceCustomizationDialog } from './InvoiceCustomizationDialog';
 import { usePermissions } from '@/src/hooks/usePermissions';
@@ -47,7 +46,6 @@ export function InvoiceManagementPanel({ onInvoicesChange }: InvoiceManagementPa
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [createError, setCreateError] = useState<string | null>(null);
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -103,26 +101,6 @@ export function InvoiceManagementPanel({ onInvoicesChange }: InvoiceManagementPa
     if (!hasViewPermission) return;
     loadData();
   }, [currentPage, filtersString, searchTerm, orderPrefix, statusFilter, loadData, hasViewPermission]);
-
-  const handleCreateInvoice = async (
-    invoiceData: InvoiceCreate,
-    options?: { installmentPlan?: InstallmentPlanCreateOption }
-  ) => {
-    try {
-      const created = await InvoiceService.createInvoice(invoiceData);
-      if (options?.installmentPlan) {
-        await InvoiceService.createInstallmentPlan({
-          ...options.installmentPlan,
-          invoice_id: created.id,
-        });
-      }
-      setCreateError(null);
-      loadData();
-      notifyChange();
-    } catch (err) {
-      setCreateError(extractErrorMessage(err, 'Failed to create invoice'));
-    }
-  };
 
   const handleUpdateInvoice = async (
     invoiceId: string,
@@ -278,8 +256,6 @@ export function InvoiceManagementPanel({ onInvoicesChange }: InvoiceManagementPa
           Customize Invoice
         </Button>
       </div>
-
-      <CreateInvoiceSection onSubmit={handleCreateInvoice} error={createError} />
 
       <Card>
         <CardHeader>

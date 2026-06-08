@@ -89,6 +89,12 @@ export function useSidebar() {
           hasPermission('sales:invoice_dashboard:view')
         );
       }
+      if (path === '/sales/invoices' || path === '/invoices') {
+        return (
+          hasPermission('sales:invoices:create') ||
+          hasPermission('sales:invoices:update')
+        );
+      }
       const requiredPermission = SIDEBAR_PATH_PERMISSIONS[path];
       if (!requiredPermission) return true;
       return hasPermission(requiredPermission);
@@ -272,11 +278,13 @@ export function useSidebar() {
       if (path === '/sales/invoice-dashboard') {
         return (
           pathname === '/sales/invoice-dashboard' ||
-          pathname.startsWith('/sales/invoice-dashboard/') ||
-          pathname === '/sales/invoices' ||
-          pathname.startsWith('/sales/invoices/') ||
-          pathname === '/invoices' ||
-          pathname.startsWith('/invoices/')
+          pathname.startsWith('/sales/invoice-dashboard/')
+        );
+      }
+      if (path === '/sales/invoices' || path === '/invoices') {
+        return (
+          pathname === path ||
+          pathname.startsWith(`${path}/`)
         );
       }
       if (path === '/' || exact) {

@@ -1,18 +1,12 @@
 'use client';
 
-import { Suspense } from 'react';
-import { InvoicePageRedirect } from '@/src/components/sales/InvoicePageRedirect';
+import { InvoicesPlanRedirect } from '@/src/components/sales/InvoicesPlanRedirect';
+import { CreateInvoicePage } from '@/src/components/sales/CreateInvoicePage';
 
 export default function InvoicesPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-[50vh] items-center justify-center text-sm text-muted-foreground">
-          Redirecting
-        </div>
-      }
-    >
-      <InvoicePageRedirect />
-    </Suspense>
+    <InvoicesPlanRedirect>
+      <CreateInvoicePage />
+    </InvoicesPlanRedirect>
   );
 }

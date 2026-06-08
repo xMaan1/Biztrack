@@ -23,7 +23,7 @@ export function NgoDashboardHeader() {
           </Link>
         </Button>
         <Button variant="outline" className="border-emerald-600 text-emerald-700" asChild>
-          <Link href="/sales/invoice-dashboard?tab=invoices">
+          <Link href="/sales/invoices">
             <HeartHandshake className="mr-2 h-4 w-4" />
             New Donation
           </Link>
