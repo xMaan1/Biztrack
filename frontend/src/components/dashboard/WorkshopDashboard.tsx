@@ -27,6 +27,7 @@ import {
   AlertCircle,
   Sparkles,
   ChevronRight,
+  ClipboardCheck,
 } from 'lucide-react';
 
 interface WorkshopStats {
@@ -360,6 +361,23 @@ export default function WorkshopDashboard({
                   <div className="flex-1 text-left">
                     <div className="font-medium">Create Work Order</div>
                     <div className="text-xs text-muted-foreground">New production task</div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </Button>
+
+              <Button
+                onClick={() => onNavigate('/workshop-management/mot-bookings')}
+                variant="outline"
+                className="w-full justify-start h-auto py-3 hover:bg-orange-50 hover:border-orange-300"
+              >
+                <div className="flex items-center gap-3 w-full">
+                  <div className="p-2 bg-orange-100 rounded-lg">
+                    <ClipboardCheck className="h-4 w-4 text-orange-600" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <div className="font-medium">MOT Bookings</div>
+                    <div className="text-xs text-muted-foreground">Schedule MOT checkups</div>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>

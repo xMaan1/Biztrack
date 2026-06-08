@@ -1,0 +1,220 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Edit,
+  Printer,
+  XCircle,
+} from 'lucide-react';
+import { ModuleGuard } from '@/src/components/guards/PermissionGuard';
+import { DashboardLayout } from '@/src/components/layout';
+import { Button } from '@/src/components/ui/button';
+import { Badge } from '@/src/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
+import motBookingService from '@/src/services/MotBookingService';
+import type { MotBooking } from '@/src/models/workshop/MotBooking';
+import { getMotStatusColor, getMotStatusLabel } from '@/src/models/workshop/MotBooking';
+import {
+  MotBookingPrintSheet,
+  printMotBooking,
+} from '@/src/components/workshop/mot-bookings/wizard/MotBookingPrintSheet';
+import { getVehicleBrandStyle } from '@/src/components/workshop/mot-bookings/wizard/motBrandStyle';
+import {
+  formatBookingDateTime,
+  getDeliveryOptionLabel,
+} from '@/src/components/workshop/mot-bookings/wizard/wizardUtils';
+import { MOT_INSPECTION_PRICE } from '@/src/components/workshop/mot-bookings/wizard/wizardTypes';
+
+function MotBookingConfirmationContent() {
+  const params = useParams();
+  const router = useRouter();
+  const bookingId = params.id as string;
+  const [booking, setBooking] = useState<MotBooking | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [cancelling, setCancelling] = useState(false);
+
+  useEffect(() => {
+    motBookingService
+      .getBooking(bookingId)
+      .then(setBooking)
+      .catch(() => setBooking(null))
+      .finally(() => setLoading(false));
+  }, [bookingId]);
+
+  const handleCancel = async () => {
+    if (!booking || !confirm('Are you sure you want to cancel this MOT booking?')) return;
+    setCancelling(true);
+    try {
+      const updated = await motBookingService.updateBookingStatus(booking.id, {
+        status: 'cancelled',
+      });
+      setBooking(updated);
+    } catch {
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="container mx-auto flex min-h-[400px] items-center justify-center p-6">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!booking) {
+    return (
+      <DashboardLayout>
+        <div className="container mx-auto p-6 text-center">
+          <p className="text-muted-foreground">Booking not found.</p>
+          <Button asChild className="mt-4">
+            <Link href="/workshop-management/mot-bookings">Back to bookings</Link>
+          </Button>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  const brand = getVehicleBrandStyle(booking.vehicle_make || '');
+  const meta = (booking.booking_meta || {}) as Record<string, unknown>;
+  const retailer = (meta.retailer || {}) as Record<string, string>;
+  const isCancelled = booking.status === 'cancelled';
+
+  return (
+    <DashboardLayout>
+      <div className="no-print container mx-auto max-w-3xl space-y-6 p-4 sm:p-6">
+        <Button variant="ghost" asChild className="gap-2 rounded-xl">
+          <Link href="/workshop-management/mot-bookings">
+            <ArrowLeft className="h-4 w-4" />
+            Back to bookings
+          </Link>
+        </Button>
+
+        <div className="overflow-hidden rounded-3xl border bg-gradient-to-br from-emerald-50 via-background to-blue-50/50 p-8 text-center dark:from-emerald-950/20">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 text-white">
+            <CheckCircle2 className="h-8 w-8" />
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {isCancelled ? 'Booking Cancelled' : 'MOT Booked Successfully'}
+          </h1>
+          <p className="mt-2 text-muted-foreground">
+            Reference MOT-{booking.id.slice(0, 8).toUpperCase()}
+          </p>
+          <Badge className={`mt-4 ${getMotStatusColor(booking.status)}`}>
+            {getMotStatusLabel(booking.status)}
+          </Badge>
+        </div>
+
+        <Card className="overflow-hidden rounded-2xl">
+          <CardHeader className="bg-gradient-to-r from-blue-600/10 to-purple-600/10">
+            <div className="flex items-center gap-4">
+              <div
+                className={`flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br ${brand.gradient} text-sm font-black text-white`}
+              >
+                {brand.initials}
+              </div>
+              <div>
+                <CardTitle className="uppercase">
+                  {[booking.vehicle_make, booking.vehicle_model].filter(Boolean).join(' ')}
+                </CardTitle>
+                <p className="font-mono text-sm text-muted-foreground">
+                  {booking.vehicle_registration}
+                </p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-6">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                  Date & Time
+                </p>
+                <p className="font-medium">
+                  {formatBookingDateTime(
+                    booking.booking_date?.slice(0, 10) || '',
+                    booking.start_time,
+                  )}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                  Total
+                </p>
+                <p className="text-xl font-bold">
+                  £{Number(booking.price || MOT_INSPECTION_PRICE).toFixed(2)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                  Customer
+                </p>
+                <p className="font-medium">{booking.customer_name}</p>
+                <p className="text-sm text-muted-foreground">{booking.customer_phone}</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                  Retailer
+                </p>
+                <p className="font-medium">{booking.retailer_name || retailer.name}</p>
+              </div>
+            </div>
+            {booking.delivery_option && (
+              <p className="text-sm text-muted-foreground">
+                {getDeliveryOptionLabel(
+                  booking.delivery_option as 'drop_off' | 'wait_security' | 'wait_on_site',
+                )}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Button
+            onClick={printMotBooking}
+            className="h-12 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 font-semibold"
+          >
+            <Printer className="mr-2 h-4 w-4" />
+            Print MOT
+          </Button>
+          <Button
+            variant="outline"
+            disabled={isCancelled}
+            onClick={() =>
+              router.push(`/workshop-management/mot-bookings/new?amend=${booking.id}`)
+            }
+            className="h-12 rounded-xl"
+          >
+            <Edit className="mr-2 h-4 w-4" />
+            Amend MOT
+          </Button>
+          <Button
+            variant="destructive"
+            disabled={isCancelled || cancelling}
+            onClick={handleCancel}
+            className="h-12 rounded-xl"
+          >
+            <XCircle className="mr-2 h-4 w-4" />
+            {cancelling ? 'Cancelling...' : 'Cancel MOT'}
+          </Button>
+        </div>
+      </div>
+
+      <MotBookingPrintSheet booking={booking} />
+    </DashboardLayout>
+  );
+}
+
+export default function MotBookingConfirmationPage() {
+  return (
+    <ModuleGuard module="production">
+      <MotBookingConfirmationContent />
+    </ModuleGuard>
+  );
+}

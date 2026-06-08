@@ -174,3 +174,9 @@ html.desktop-app [contenteditable='true'] {
     @apply bg-white/20 backdrop-blur-lg border border-white/30 shadow-xl;
   }
 }
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
