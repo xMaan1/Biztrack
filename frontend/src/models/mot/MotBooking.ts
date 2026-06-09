@@ -18,8 +18,6 @@ export interface MotBooking {
   vehicle_make?: string;
   vehicle_model?: string;
   vehicle_year?: string;
-  retailer_id?: string;
-  retailer_name?: string;
   delivery_option?: string;
   booking_meta?: Record<string, unknown>;
   booking_date: string;
@@ -45,8 +43,6 @@ export interface MotBookingCreate {
   vehicle_make?: string;
   vehicle_model?: string;
   vehicle_year?: string;
-  retailer_id?: string;
-  retailer_name?: string;
   delivery_option?: string;
   booking_meta?: Record<string, unknown>;
   booking_date: string;

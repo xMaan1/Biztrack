@@ -15,7 +15,6 @@ type MotBookingPrintSheetProps = {
 export function MotBookingPrintSheet({ booking }: MotBookingPrintSheetProps) {
   const meta = (booking.booking_meta || {}) as Record<string, unknown>;
   const customer = (meta.customer || {}) as Record<string, string>;
-  const retailer = (meta.retailer || {}) as Record<string, string>;
   const brand = getVehicleBrandStyle(booking.vehicle_make || '');
   const bookingRef = booking.id.slice(0, 8).toUpperCase();
 
@@ -83,16 +82,6 @@ export function MotBookingPrintSheet({ booking }: MotBookingPrintSheetProps) {
               </p>
             )}
           </section>
-
-          <section>
-            <h2 className="mb-2 text-xs font-bold uppercase tracking-widest text-slate-500">
-              Retailer
-            </h2>
-            <p className="font-semibold">{booking.retailer_name || retailer.name}</p>
-            <p className="text-sm text-slate-600">
-              {[retailer.addressLine1, retailer.city, retailer.postcode].filter(Boolean).join(', ')}
-            </p>
-          </section>
         </div>
 
         <div className="mt-8 rounded-xl bg-slate-50 p-5">
@@ -104,7 +93,7 @@ export function MotBookingPrintSheet({ booking }: MotBookingPrintSheetProps) {
             <span>TOTAL</span>
             <span>£{Number(booking.price || MOT_INSPECTION_PRICE).toFixed(2)}</span>
           </div>
-          <p className="mt-2 text-xs text-slate-500">*Payable at your selected retailer</p>
+          <p className="mt-2 text-xs text-slate-500">*Payable on day of appointment</p>
         </div>
 
         <div className="mt-8 flex items-end justify-between border-t border-slate-200 pt-6">

@@ -2,9 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import motRetailerService from '@/src/services/MotRetailerService';
 import motBookingService from '@/src/services/MotBookingService';
-import type { MotRetailer } from '@/src/models/mot/MotRetailer';
 import type { MotVehicleSubStep, MotWizardData, MotWizardStep } from '@/src/components/mot-bookings/wizard/wizardTypes';
 import { emptyMotWizardData } from '@/src/components/mot-bookings/wizard/wizardTypes';
 import {
@@ -12,12 +10,10 @@ import {
   clearWizardDraft,
   isCustomerDetailsComplete,
   isDateTimeComplete,
-  isRetailerComplete,
   isServicesComplete,
   isVehicleDetailsComplete,
   isVehicleModelComplete,
   loadWizardDraft,
-  retailerToWizard,
   saveWizardDraft,
   wizardDataToBookingPayload,
 } from '@/src/components/mot-bookings/wizard/wizardUtils';
@@ -26,13 +22,17 @@ type MotBookingWizardOptions = {
   confirmationPath?: (bookingId: string) => string;
 };
 
+function normalizeWizardStep(step: number): MotWizardStep {
+  if (step <= 1) return 1;
+  if (step === 2) return 2;
+  return Math.min(Math.max(step - 1, 2), 5) as MotWizardStep;
+}
+
 export type MotBookingWizardState = {
   loading: boolean;
   currentStep: MotWizardStep;
   vehicleSubStep: MotVehicleSubStep;
   data: MotWizardData;
-  savedRetailers: MotRetailer[];
-  savingRetailer: boolean;
   confirming: boolean;
   privacyModalOpen: boolean;
   setPrivacyModalOpen: (open: boolean) => void;
@@ -41,7 +41,6 @@ export type MotBookingWizardState = {
   primaryNextLabel: string;
   showSidebarNext: boolean;
   updateVehicle: (patch: Partial<MotWizardData['vehicle']>) => void;
-  updateRetailer: (patch: Partial<MotWizardData['retailer']>) => void;
   updateServices: (patch: Partial<MotWizardData['services']>) => void;
   updateDateTime: (patch: Partial<MotWizardData['dateTime']>) => void;
   updateCustomer: (patch: Partial<MotWizardData['customer']>) => void;
@@ -49,11 +48,9 @@ export type MotBookingWizardState = {
   goToStep: (step: MotWizardStep) => void;
   confirmVehicleDetails: () => void;
   completeVehicleStep: () => void;
-  selectSavedRetailer: (retailer: MotRetailer) => void;
-  saveRetailer: (setAsDefault: boolean) => Promise<void>;
   handlePrimaryNext: () => void;
   openPrivacyModal: () => void;
-  confirmPrivacyAndGoToStep6: () => void;
+  confirmPrivacyAndGoToConfirm: () => void;
   submitBooking: () => Promise<void>;
   setVehicleSubStep: (subStep: MotVehicleSubStep) => void;
   setCurrentStep: (step: MotWizardStep) => void;
@@ -68,7 +65,6 @@ export function useMotBookingWizard(options: MotBookingWizardOptions = {}): MotB
   const [currentStep, setCurrentStep] = useState<MotWizardStep>(1);
   const [vehicleSubStep, setVehicleSubStep] = useState<MotVehicleSubStep>('details');
   const [data, setData] = useState<MotWizardData>(emptyMotWizardData());
-  const [savedRetailers, setSavedRetailers] = useState<MotRetailer[]>([]);
   const [loading, setLoading] = useState(true);
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -76,31 +72,11 @@ export function useMotBookingWizard(options: MotBookingWizardOptions = {}): MotB
 
   const maxAvailableStep = useMemo((): MotWizardStep => {
     if (!isVehicleModelComplete(data)) return 1;
-    if (!isRetailerComplete(data)) return 2;
-    if (!isServicesComplete(data)) return 3;
-    if (!isDateTimeComplete(data)) return 4;
-    if (!isCustomerDetailsComplete(data)) return 5;
-    return 6;
+    if (!isServicesComplete(data)) return 2;
+    if (!isDateTimeComplete(data)) return 3;
+    if (!isCustomerDetailsComplete(data)) return 4;
+    return 5;
   }, [data]);
-
-  const fetchRetailers = useCallback(async (applyDefault = false) => {
-    try {
-      const response = await motRetailerService.getRetailers();
-      const retailers = response.retailers || [];
-      setSavedRetailers(retailers);
-      if (applyDefault) {
-        const defaultRetailer = retailers.find((r) => r.is_default);
-        if (defaultRetailer) {
-          setData((prev) => {
-            if (prev.retailer.id || prev.retailer.name) return prev;
-            return { ...prev, retailer: retailerToWizard(defaultRetailer) };
-          });
-        }
-      }
-    } catch {
-      setSavedRetailers([]);
-    }
-  }, []);
 
   useEffect(() => {
     const init = async () => {
@@ -109,12 +85,11 @@ export function useMotBookingWizard(options: MotBookingWizardOptions = {}): MotB
           const booking = await motBookingService.getBooking(amendId);
           setData(bookingToWizardData(booking));
           setAmendBookingId(amendId);
-          setCurrentStep(6);
+          setCurrentStep(5);
           setVehicleSubStep('model');
         } catch {
           setData(emptyMotWizardData());
         }
-        await fetchRetailers(false);
         setLoading(false);
         return;
       }
@@ -122,14 +97,13 @@ export function useMotBookingWizard(options: MotBookingWizardOptions = {}): MotB
       const draft = loadWizardDraft();
       if (draft) {
         setData(draft.data);
-        setCurrentStep(Math.min(draft.step, 6) as MotWizardStep);
+        setCurrentStep(normalizeWizardStep(draft.step));
         setVehicleSubStep(draft.vehicleSubStep === 'model' ? 'model' : 'details');
       }
-      await fetchRetailers(!draft);
       setLoading(false);
     };
     init();
-  }, [amendId, fetchRetailers]);
+  }, [amendId]);
 
   useEffect(() => {
     if (!loading) {
@@ -139,10 +113,6 @@ export function useMotBookingWizard(options: MotBookingWizardOptions = {}): MotB
 
   const updateVehicle = useCallback((patch: Partial<MotWizardData['vehicle']>) => {
     setData((prev) => ({ ...prev, vehicle: { ...prev.vehicle, ...patch } }));
-  }, []);
-
-  const updateRetailer = useCallback((patch: Partial<MotWizardData['retailer']>) => {
-    setData((prev) => ({ ...prev, retailer: { ...prev.retailer, ...patch } }));
   }, []);
 
   const updateServices = useCallback((patch: Partial<MotWizardData['services']>) => {
@@ -172,7 +142,7 @@ export function useMotBookingWizard(options: MotBookingWizardOptions = {}): MotB
 
   const goToStep = useCallback(
     (step: MotWizardStep) => {
-      if (step > 6) return;
+      if (step > 5) return;
       setCurrentStep(step);
       if (step === 1) {
         setVehicleSubStep(isVehicleDetailsComplete(data) ? 'model' : 'details');
@@ -191,18 +161,14 @@ export function useMotBookingWizard(options: MotBookingWizardOptions = {}): MotB
     setCurrentStep(2);
   }, [data]);
 
-  const selectSavedRetailer = useCallback((retailer: MotRetailer) => {
-    setData((prev) => ({ ...prev, retailer: retailerToWizard(retailer) }));
-  }, []);
-
   const openPrivacyModal = useCallback(() => {
     if (!isCustomerDetailsComplete(data)) return;
     setPrivacyModalOpen(true);
   }, [data]);
 
-  const confirmPrivacyAndGoToStep6 = useCallback(() => {
+  const confirmPrivacyAndGoToConfirm = useCallback(() => {
     setPrivacyModalOpen(false);
-    setCurrentStep(6);
+    setCurrentStep(5);
   }, []);
 
   const submitBooking = useCallback(async () => {
@@ -232,19 +198,15 @@ export function useMotBookingWizard(options: MotBookingWizardOptions = {}): MotB
       else completeVehicleStep();
       return;
     }
-    if (currentStep === 2 && isRetailerComplete(data)) {
+    if (currentStep === 2 && isServicesComplete(data)) {
       setCurrentStep(3);
       return;
     }
-    if (currentStep === 3 && isServicesComplete(data)) {
+    if (currentStep === 3 && isDateTimeComplete(data)) {
       setCurrentStep(4);
       return;
     }
-    if (currentStep === 4 && isDateTimeComplete(data)) {
-      setCurrentStep(5);
-      return;
-    }
-    if (currentStep === 5 && isCustomerDetailsComplete(data)) {
+    if (currentStep === 4 && isCustomerDetailsComplete(data)) {
       openPrivacyModal();
     }
   }, [
@@ -262,29 +224,26 @@ export function useMotBookingWizard(options: MotBookingWizardOptions = {}): MotB
         ? isVehicleDetailsComplete(data)
         : isVehicleModelComplete(data);
     }
-    if (currentStep === 2) return isRetailerComplete(data);
-    if (currentStep === 3) return isServicesComplete(data);
-    if (currentStep === 4) return isDateTimeComplete(data);
-    if (currentStep === 5) return isCustomerDetailsComplete(data);
+    if (currentStep === 2) return isServicesComplete(data);
+    if (currentStep === 3) return isDateTimeComplete(data);
+    if (currentStep === 4) return isCustomerDetailsComplete(data);
     return false;
   }, [currentStep, vehicleSubStep, data]);
 
   const primaryNextLabel = useMemo(() => {
     if (currentStep === 1 && vehicleSubStep === 'details') return 'Confirm';
-    if (currentStep === 4) return 'Continue to Step 5';
-    if (currentStep === 5) return 'Next Step';
+    if (currentStep === 3) return 'Continue to Step 4';
+    if (currentStep === 4) return 'Next Step';
     return 'Next Step';
   }, [currentStep, vehicleSubStep]);
 
-  const showSidebarNext = currentStep >= 1 && currentStep <= 5;
+  const showSidebarNext = currentStep >= 1 && currentStep <= 4;
 
   return {
     loading,
     currentStep,
     vehicleSubStep,
     data,
-    savedRetailers,
-    savingRetailer: false,
     confirming,
     privacyModalOpen,
     setPrivacyModalOpen,
@@ -293,7 +252,6 @@ export function useMotBookingWizard(options: MotBookingWizardOptions = {}): MotB
     primaryNextLabel,
     showSidebarNext,
     updateVehicle,
-    updateRetailer,
     updateServices,
     updateDateTime,
     updateCustomer,
@@ -301,11 +259,9 @@ export function useMotBookingWizard(options: MotBookingWizardOptions = {}): MotB
     goToStep,
     confirmVehicleDetails,
     completeVehicleStep,
-    selectSavedRetailer,
-    saveRetailer: async () => {},
     handlePrimaryNext,
     openPrivacyModal,
-    confirmPrivacyAndGoToStep6,
+    confirmPrivacyAndGoToConfirm,
     submitBooking,
     setVehicleSubStep,
     setCurrentStep,

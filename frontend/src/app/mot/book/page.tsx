@@ -16,7 +16,7 @@ function MotBookContent() {
     );
   }
 
-  return <MotBookingWizardShell wizard={wizard} isPublic />;
+  return <MotBookingWizardShell wizard={wizard} />;
 }
 
 export default function MotBookPage() {

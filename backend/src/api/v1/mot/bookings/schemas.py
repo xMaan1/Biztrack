@@ -14,7 +14,6 @@ class MotBookingBase(BaseModel):
     vehicle_make: Optional[str] = None
     vehicle_model: Optional[str] = None
     vehicle_year: Optional[str] = None
-    retailer_id: Optional[str] = None
     delivery_option: Optional[str] = None
     booking_meta: Optional[Dict[str, Any]] = None
     booking_date: date
@@ -41,7 +40,6 @@ class MotBookingUpdate(BaseModel):
     vehicle_make: Optional[str] = None
     vehicle_model: Optional[str] = None
     vehicle_year: Optional[str] = None
-    retailer_id: Optional[str] = None
     delivery_option: Optional[str] = None
     booking_meta: Optional[Dict[str, Any]] = None
     booking_date: Optional[date] = None
@@ -65,7 +63,6 @@ class MotBookingStatusUpdate(BaseModel):
 class MotBooking(MotBookingBase):
     id: str
     is_active: bool = True
-    retailer_name: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 

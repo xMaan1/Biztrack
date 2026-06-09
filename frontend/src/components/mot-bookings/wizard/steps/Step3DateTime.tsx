@@ -26,7 +26,7 @@ import {
   parseLocalDate,
 } from '../motCalendarUtils';
 
-type Step4DateTimeProps = {
+type Step3DateTimeProps = {
   dateTime: MotWizardDateTime;
   onChange: (patch: Partial<MotWizardDateTime>) => void;
   onBack: () => void;
@@ -34,13 +34,13 @@ type Step4DateTimeProps = {
   canNext: boolean;
 };
 
-export function Step4DateTime({
+export function Step3DateTime({
   dateTime,
   onChange,
   onBack,
   onNext,
   canNext,
-}: Step4DateTimeProps) {
+}: Step3DateTimeProps) {
   const searchParams = useSearchParams();
   const amendBookingId = searchParams.get('amend');
 
@@ -103,7 +103,7 @@ export function Step4DateTime({
   return (
     <div className="space-y-8">
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Step 04</p>
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Step 03</p>
         <h2 className="mt-2 text-3xl font-bold tracking-tight">Select a Date & Time</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           All fields are mandatory unless otherwise stated.

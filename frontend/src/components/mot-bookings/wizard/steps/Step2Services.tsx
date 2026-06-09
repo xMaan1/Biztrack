@@ -8,7 +8,7 @@ import { ArrowLeft } from 'lucide-react';
 import type { MotWizardServices } from '../wizardTypes';
 import { MOT_INSPECTION_PRICE } from '../wizardTypes';
 
-type Step3ServicesProps = {
+type Step2ServicesProps = {
   services: MotWizardServices;
   onChange: (patch: Partial<MotWizardServices>) => void;
   onBack: () => void;
@@ -16,17 +16,17 @@ type Step3ServicesProps = {
   canNext: boolean;
 };
 
-export function Step3Services({
+export function Step2Services({
   services,
   onChange,
   onBack,
   onNext,
   canNext,
-}: Step3ServicesProps) {
+}: Step2ServicesProps) {
   return (
     <div className="space-y-8">
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Step 03</p>
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Step 02</p>
         <h2 className="mt-2 text-3xl font-bold tracking-tight">Services</h2>
         <p className="mt-2 text-muted-foreground">
           Select the services you need for your MOT appointment.

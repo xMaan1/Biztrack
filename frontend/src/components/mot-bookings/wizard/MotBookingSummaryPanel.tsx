@@ -2,12 +2,10 @@
 
 import { Sparkles } from 'lucide-react';
 import { Button } from '@/src/components/ui/button';
-import { cn } from '@/src/lib/utils';
 import type { MotWizardData, MotWizardStep } from './wizardTypes';
 import {
   calculateTotalCost,
   formatBookingDateTime,
-  formatRetailerAddress,
   formatVehicleSummary,
   getDeliveryOptionLabel,
 } from './wizardUtils';
@@ -73,7 +71,6 @@ export function MotBookingSummaryPanel({
   showNext = true,
 }: MotBookingSummaryPanelProps) {
   const vehicleSummary = formatVehicleSummary(data);
-  const retailerLines = formatRetailerAddress(data.retailer);
   const total = calculateTotalCost(data);
   const deliveryLabel = getDeliveryOptionLabel(data.dateTime.deliveryOption);
   const dateTimeLabel = formatBookingDateTime(
@@ -108,22 +105,8 @@ export function MotBookingSummaryPanel({
         </SummarySection>
 
         <SummarySection
-          title="Your Retailer"
-          step={2}
-          currentStep={currentStep}
-          onEdit={onEditStep}
-          hasContent={Boolean(data.retailer.name)}
-        >
-          {retailerLines.map((line) => (
-            <p key={line} className={cn(line === data.retailer.name && 'font-semibold')}>
-              {line}
-            </p>
-          ))}
-        </SummarySection>
-
-        <SummarySection
           title="Your Services"
-          step={3}
+          step={2}
           currentStep={currentStep}
           onEdit={onEditStep}
           hasContent={data.services.motInspection || Boolean(data.services.otherServices.trim())}
@@ -134,7 +117,7 @@ export function MotBookingSummaryPanel({
               <span className="font-bold">£{MOT_INSPECTION_PRICE.toFixed(2)}</span>
             </div>
           )}
-          {deliveryLabel && currentStep >= 4 && (
+          {deliveryLabel && currentStep >= 3 && (
             <p className="text-xs text-muted-foreground">{deliveryLabel}</p>
           )}
           {data.services.otherServices.trim() && (
@@ -147,12 +130,12 @@ export function MotBookingSummaryPanel({
             <span className="text-xs font-bold uppercase tracking-widest">Total Cost*</span>
             <span className="text-lg font-bold">£{total.toFixed(2)}</span>
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">*Payable at your selected retailer</p>
+          <p className="mt-1 text-xs text-muted-foreground">*Payable on day of appointment</p>
         </div>
 
         <SummarySection
           title="Your Date and Time"
-          step={4}
+          step={3}
           currentStep={currentStep}
           onEdit={onEditStep}
           hasContent={Boolean(dateTimeLabel)}
@@ -161,10 +144,10 @@ export function MotBookingSummaryPanel({
           {deliveryLabel && <p className="text-xs text-muted-foreground">{deliveryLabel}</p>}
         </SummarySection>
 
-        {currentStep >= 5 && (
+        {currentStep >= 4 && (
           <SummarySection
             title="Your Details"
-            step={5}
+            step={4}
             currentStep={currentStep}
             onEdit={onEditStep}
             hasContent={Boolean(data.customer.firstName && data.customer.lastName)}

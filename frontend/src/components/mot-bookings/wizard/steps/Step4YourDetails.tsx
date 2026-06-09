@@ -16,7 +16,7 @@ import { ArrowLeft } from 'lucide-react';
 import type { MotWizardCustomer } from '../wizardTypes';
 import { MOT_TITLE_OPTIONS } from '../wizardTypes';
 
-type Step5YourDetailsProps = {
+type Step4YourDetailsProps = {
   customer: MotWizardCustomer;
   onChange: (patch: Partial<MotWizardCustomer>) => void;
   onConsentChange: (patch: Partial<MotWizardCustomer['contactConsent']>) => void;
@@ -25,18 +25,18 @@ type Step5YourDetailsProps = {
   canNext: boolean;
 };
 
-export function Step5YourDetails({
+export function Step4YourDetails({
   customer,
   onChange,
   onConsentChange,
   onBack,
   onNext,
   canNext,
-}: Step5YourDetailsProps) {
+}: Step4YourDetailsProps) {
   return (
     <div className="space-y-8">
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Step 05</p>
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Step 04</p>
         <h2 className="mt-2 text-3xl font-bold tracking-tight">Your Details</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           All fields are mandatory unless otherwise stated. By submitting this form you agree to our

@@ -9,12 +9,11 @@ import {
   formatBookingDateTime,
   formatCustomerAddress,
   formatCustomerName,
-  formatRetailerAddress,
   formatVehicleSummary,
   getDeliveryOptionLabel,
 } from '../wizardUtils';
 
-type Step6ConfirmSummaryProps = {
+type Step5ConfirmSummaryProps = {
   data: MotWizardData;
   onEditStep: (step: MotWizardStep) => void;
   onBack: () => void;
@@ -52,21 +51,20 @@ function SummaryBlock({
   );
 }
 
-export function Step6ConfirmSummary({
+export function Step5ConfirmSummary({
   data,
   onEditStep,
   onBack,
   onConfirm,
   confirming,
-}: Step6ConfirmSummaryProps) {
+}: Step5ConfirmSummaryProps) {
   const total = calculateTotalCost(data);
-  const retailerLines = formatRetailerAddress(data.retailer);
   const customerLines = formatCustomerAddress(data);
 
   return (
     <div className="space-y-8">
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Step 06</p>
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Step 05</p>
         <h2 className="mt-2 text-3xl font-bold tracking-tight">Confirm Your Booking</h2>
         <p className="mt-2 text-muted-foreground">
           Review all details below. Press confirm to complete your MOT booking.
@@ -80,15 +78,7 @@ export function Step6ConfirmSummary({
           <p className="text-muted-foreground">{data.vehicle.mileage} miles</p>
         </SummaryBlock>
 
-        <SummaryBlock title="Your Retailer" step={2} onEdit={onEditStep}>
-          {retailerLines.map((line) => (
-            <p key={line} className={line === data.retailer.name ? 'font-semibold' : ''}>
-              {line}
-            </p>
-          ))}
-        </SummaryBlock>
-
-        <SummaryBlock title="Your Services" step={3} onEdit={onEditStep}>
+        <SummaryBlock title="Your Services" step={2} onEdit={onEditStep}>
           {data.services.motInspection && (
             <div className="flex justify-between font-medium">
               <span>Carry Out MOT Inspection</span>
@@ -103,13 +93,13 @@ export function Step6ConfirmSummary({
           </p>
         </SummaryBlock>
 
-        <SummaryBlock title="Your Date and Time" step={4} onEdit={onEditStep}>
+        <SummaryBlock title="Your Date and Time" step={3} onEdit={onEditStep}>
           <p className="font-medium">
             {formatBookingDateTime(data.dateTime.bookingDate, data.dateTime.bookingTime)}
           </p>
         </SummaryBlock>
 
-        <SummaryBlock title="Your Details" step={5} onEdit={onEditStep}>
+        <SummaryBlock title="Your Details" step={4} onEdit={onEditStep}>
           <p className="font-semibold">{formatCustomerName(data)}</p>
           <p>{data.customer.email}</p>
           <p>{data.customer.telephone}</p>
@@ -125,7 +115,7 @@ export function Step6ConfirmSummary({
             <span className="uppercase tracking-wide">Total Cost*</span>
             <span>£{total.toFixed(2)}</span>
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">*Payable at your selected retailer</p>
+          <p className="mt-1 text-xs text-muted-foreground">*Payable on day of appointment</p>
         </div>
       </div>
 

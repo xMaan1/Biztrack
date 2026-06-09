@@ -82,8 +82,6 @@ export default function MotConfirmationPage() {
   }
 
   const brand = getVehicleBrandStyle(booking.vehicle_make || '');
-  const meta = (booking.booking_meta || {}) as Record<string, unknown>;
-  const retailer = (meta.retailer || {}) as Record<string, string>;
   const isCancelled = booking.status === 'cancelled';
 
   return (
@@ -156,12 +154,6 @@ export default function MotConfirmationPage() {
                 </p>
                 <p className="font-medium">{booking.customer_name}</p>
                 <p className="text-sm text-muted-foreground">{booking.customer_phone}</p>
-              </div>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                  Retailer
-                </p>
-                <p className="font-medium">{booking.retailer_name || retailer.name}</p>
               </div>
             </div>
             {booking.delivery_option && (

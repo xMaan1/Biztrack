@@ -32,8 +32,8 @@ export function MotPrivacyConfirmModal({
           <DialogTitle className="text-center text-xl">Privacy & Data Notice</DialogTitle>
           <DialogDescription className="space-y-3 pt-2 text-center text-sm leading-relaxed">
             <p>
-              We will use your personal details to process your MOT booking, contact you about your
-              appointment, and share relevant information with your selected retailer.
+              We will use your personal details to process your MOT booking and contact you about
+              your appointment.
             </p>
             <p>
               Your data is stored securely and handled in accordance with our Privacy Policy. You

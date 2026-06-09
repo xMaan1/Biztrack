@@ -1,8 +1,7 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Boolean, DateTime, Date, Text, ForeignKey, Index, Numeric
+from sqlalchemy import Column, String, Boolean, DateTime, Date, Text, Index, Numeric
 from sqlalchemy.dialects.postgresql import UUID, JSONB
-from sqlalchemy.orm import relationship
 from ...config.database_config import Base
 
 
@@ -17,7 +16,6 @@ class MotBooking(Base):
     vehicle_make = Column(String(100))
     vehicle_model = Column(String(100))
     vehicle_year = Column(String(10))
-    retailer_id = Column(UUID(as_uuid=True), ForeignKey("mot_retailers.id", ondelete="SET NULL"), nullable=True)
     delivery_option = Column(String(50))
     booking_meta = Column(JSONB, nullable=True)
     booking_date = Column(Date, nullable=False)
@@ -33,8 +31,6 @@ class MotBooking(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    retailer = relationship("MotRetailer", foreign_keys=[retailer_id])
 
     __table_args__ = (
         Index("ix_mot_bookings_booking_date", "booking_date"),

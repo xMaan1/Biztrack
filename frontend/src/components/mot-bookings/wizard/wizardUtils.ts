@@ -1,7 +1,6 @@
 import type {
   MotDeliveryOption,
   MotWizardData,
-  MotWizardRetailer,
   MotWizardVehicle,
 } from './wizardTypes';
 import { MOT_DELIVERY_OPTIONS, MOT_INSPECTION_PRICE } from './wizardTypes';
@@ -44,17 +43,6 @@ export function formatVehicleSummary(data: MotWizardData): string {
   return '';
 }
 
-export function formatRetailerAddress(retailer: MotWizardRetailer): string[] {
-  const lines = [
-    retailer.name,
-    retailer.addressLine1,
-    retailer.addressLine2,
-    [retailer.city, retailer.county].filter(Boolean).join(', '),
-    retailer.postcode,
-  ].filter(Boolean);
-  return lines;
-}
-
 export function getDeliveryOptionLabel(option: MotDeliveryOption | ''): string {
   if (!option) return '';
   return MOT_DELIVERY_OPTIONS.find((o) => o.value === option)?.label ?? '';
@@ -90,16 +78,6 @@ export function isVehicleDetailsComplete(data: MotWizardData): boolean {
 
 export function isVehicleModelComplete(data: MotWizardData): boolean {
   return Boolean(data.vehicle.model.trim());
-}
-
-export function isRetailerComplete(data: MotWizardData): boolean {
-  const { retailer } = data;
-  return Boolean(
-    retailer.name.trim() &&
-      retailer.addressLine1.trim() &&
-      retailer.city.trim() &&
-      retailer.postcode.trim(),
-  );
 }
 
 export function isServicesComplete(data: MotWizardData): boolean {
@@ -170,7 +148,6 @@ export function wizardDataToBookingPayload(data: MotWizardData) {
     vehicle_make: data.vehicle.make,
     vehicle_model: data.vehicle.model,
     vehicle_year: data.vehicle.year,
-    retailer_id: data.retailer.id || undefined,
     delivery_option: data.dateTime.deliveryOption || undefined,
     booking_date: data.dateTime.bookingDate,
     start_time: data.dateTime.bookingTime,
@@ -181,7 +158,6 @@ export function wizardDataToBookingPayload(data: MotWizardData) {
     mileage: data.vehicle.mileage,
     notes: notesParts.join('\n\n') || undefined,
     booking_meta: {
-      retailer: data.retailer,
       services: data.services,
       deliveryOption: data.dateTime.deliveryOption,
       customer: data.customer,
@@ -193,7 +169,6 @@ export function wizardDataToBookingPayload(data: MotWizardData) {
 export function bookingToWizardData(booking: import('@/src/models/mot/MotBooking').MotBooking): MotWizardData {
   const meta = (booking.booking_meta || {}) as Record<string, unknown>;
   const customerMeta = (meta.customer || {}) as Partial<MotWizardData['customer']>;
-  const retailerMeta = (meta.retailer || {}) as Partial<MotWizardRetailer>;
   const servicesMeta = (meta.services || {}) as Partial<MotWizardData['services']>;
   const vehicleMeta = (meta.vehicle || {}) as Partial<MotWizardVehicle>;
 
@@ -204,17 +179,6 @@ export function bookingToWizardData(booking: import('@/src/models/mot/MotBooking
       make: booking.vehicle_make || vehicleMeta.make || '',
       year: booking.vehicle_year || vehicleMeta.year || '',
       model: booking.vehicle_model || vehicleMeta.model || '',
-    },
-    retailer: {
-      id: booking.retailer_id || retailerMeta.id || '',
-      name: booking.retailer_name || retailerMeta.name || '',
-      addressLine1: retailerMeta.addressLine1 || '',
-      addressLine2: retailerMeta.addressLine2 || '',
-      city: retailerMeta.city || '',
-      county: retailerMeta.county || '',
-      postcode: retailerMeta.postcode || '',
-      phone: retailerMeta.phone || '',
-      email: retailerMeta.email || '',
     },
     services: {
       motInspection: servicesMeta.motInspection ?? true,
@@ -254,43 +218,5 @@ export function bookingToWizardData(booking: import('@/src/models/mot/MotBooking
       privacyAccepted: customerMeta.privacyAccepted ?? false,
       termsAccepted: customerMeta.termsAccepted ?? false,
     },
-  };
-}
-
-export function retailerToWizard(retailer: {
-  id: string;
-  name: string;
-  address_line1: string;
-  address_line2?: string;
-  city: string;
-  county?: string;
-  postcode: string;
-  phone?: string;
-  email?: string;
-}): MotWizardRetailer {
-  return {
-    id: retailer.id,
-    name: retailer.name,
-    addressLine1: retailer.address_line1,
-    addressLine2: retailer.address_line2 || '',
-    city: retailer.city,
-    county: retailer.county || '',
-    postcode: retailer.postcode,
-    phone: retailer.phone || '',
-    email: retailer.email || '',
-  };
-}
-
-export function wizardRetailerToPayload(retailer: MotWizardRetailer, isDefault: boolean) {
-  return {
-    name: retailer.name,
-    address_line1: retailer.addressLine1,
-    address_line2: retailer.addressLine2 || undefined,
-    city: retailer.city,
-    county: retailer.county || undefined,
-    postcode: retailer.postcode,
-    phone: retailer.phone || undefined,
-    email: retailer.email || undefined,
-    is_default: isDefault,
   };
 }

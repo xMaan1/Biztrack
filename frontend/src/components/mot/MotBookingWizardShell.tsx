@@ -5,16 +5,14 @@ import { MotBookingSummaryPanel } from '@/src/components/mot-bookings/wizard/Mot
 import { MotPrivacyConfirmModal } from '@/src/components/mot-bookings/wizard/MotPrivacyConfirmModal';
 import { Step1VehicleDetails } from '@/src/components/mot-bookings/wizard/steps/Step1VehicleDetails';
 import { Step1VehicleModel } from '@/src/components/mot-bookings/wizard/steps/Step1VehicleModel';
-import { Step2Retailer } from '@/src/components/mot-bookings/wizard/steps/Step2Retailer';
-import { Step3Services } from '@/src/components/mot-bookings/wizard/steps/Step3Services';
-import { Step4DateTime } from '@/src/components/mot-bookings/wizard/steps/Step4DateTime';
-import { Step5YourDetails } from '@/src/components/mot-bookings/wizard/steps/Step5YourDetails';
-import { Step6ConfirmSummary } from '@/src/components/mot-bookings/wizard/steps/Step6ConfirmSummary';
+import { Step2Services } from '@/src/components/mot-bookings/wizard/steps/Step2Services';
+import { Step3DateTime } from '@/src/components/mot-bookings/wizard/steps/Step3DateTime';
+import { Step4YourDetails } from '@/src/components/mot-bookings/wizard/steps/Step4YourDetails';
+import { Step5ConfirmSummary } from '@/src/components/mot-bookings/wizard/steps/Step5ConfirmSummary';
 import {
   isCustomerDetailsComplete,
   isVehicleDetailsComplete,
   isVehicleModelComplete,
-  isRetailerComplete,
   isServicesComplete,
   isDateTimeComplete,
 } from '@/src/components/mot-bookings/wizard/wizardUtils';
@@ -22,10 +20,9 @@ import type { MotBookingWizardState } from '@/src/hooks/useMotBookingWizard';
 
 type MotBookingWizardShellProps = {
   wizard: MotBookingWizardState;
-  isPublic?: boolean;
 };
 
-export function MotBookingWizardShell({ wizard, isPublic = false }: MotBookingWizardShellProps) {
+export function MotBookingWizardShell({ wizard }: MotBookingWizardShellProps) {
   const renderStep = () => {
     if (wizard.currentStep === 1 && wizard.vehicleSubStep === 'details') {
       return (
@@ -50,63 +47,47 @@ export function MotBookingWizardShell({ wizard, isPublic = false }: MotBookingWi
     }
     if (wizard.currentStep === 2) {
       return (
-        <Step2Retailer
-          retailer={wizard.data.retailer}
-          savedRetailers={wizard.savedRetailers}
-          onChange={wizard.updateRetailer}
-          onSelectSaved={wizard.selectSavedRetailer}
-          onSave={wizard.saveRetailer}
+        <Step2Services
+          services={wizard.data.services}
+          onChange={wizard.updateServices}
           onBack={() => {
             wizard.setCurrentStep(1);
             wizard.setVehicleSubStep('model');
           }}
           onNext={() => wizard.setCurrentStep(3)}
-          canNext={isRetailerComplete(wizard.data)}
-          saving={wizard.savingRetailer}
-          isPublic={isPublic}
+          canNext={isServicesComplete(wizard.data)}
         />
       );
     }
     if (wizard.currentStep === 3) {
       return (
-        <Step3Services
-          services={wizard.data.services}
-          onChange={wizard.updateServices}
+        <Step3DateTime
+          dateTime={wizard.data.dateTime}
+          onChange={wizard.updateDateTime}
           onBack={() => wizard.setCurrentStep(2)}
           onNext={() => wizard.setCurrentStep(4)}
-          canNext={isServicesComplete(wizard.data)}
+          canNext={isDateTimeComplete(wizard.data)}
         />
       );
     }
     if (wizard.currentStep === 4) {
       return (
-        <Step4DateTime
-          dateTime={wizard.data.dateTime}
-          onChange={wizard.updateDateTime}
-          onBack={() => wizard.setCurrentStep(3)}
-          onNext={() => wizard.setCurrentStep(5)}
-          canNext={isDateTimeComplete(wizard.data)}
-        />
-      );
-    }
-    if (wizard.currentStep === 5) {
-      return (
-        <Step5YourDetails
+        <Step4YourDetails
           customer={wizard.data.customer}
           onChange={wizard.updateCustomer}
           onConsentChange={wizard.updateContactConsent}
-          onBack={() => wizard.setCurrentStep(4)}
+          onBack={() => wizard.setCurrentStep(3)}
           onNext={wizard.openPrivacyModal}
           canNext={isCustomerDetailsComplete(wizard.data)}
         />
       );
     }
-    if (wizard.currentStep === 6) {
+    if (wizard.currentStep === 5) {
       return (
-        <Step6ConfirmSummary
+        <Step5ConfirmSummary
           data={wizard.data}
           onEditStep={wizard.goToStep}
-          onBack={() => wizard.setCurrentStep(5)}
+          onBack={() => wizard.setCurrentStep(4)}
           onConfirm={wizard.submitBooking}
           confirming={wizard.confirming}
         />
@@ -135,7 +116,7 @@ export function MotBookingWizardShell({ wizard, isPublic = false }: MotBookingWi
       <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
         <div className="rounded-3xl border bg-card p-6 shadow-sm sm:p-8">{renderStep()}</div>
 
-        {wizard.currentStep < 6 && (
+        {wizard.currentStep < 5 && (
           <MotBookingSummaryPanel
             data={wizard.data}
             currentStep={wizard.currentStep}
@@ -151,7 +132,7 @@ export function MotBookingWizardShell({ wizard, isPublic = false }: MotBookingWi
       <MotPrivacyConfirmModal
         open={wizard.privacyModalOpen}
         onOpenChange={wizard.setPrivacyModalOpen}
-        onConfirm={wizard.confirmPrivacyAndGoToStep6}
+        onConfirm={wizard.confirmPrivacyAndGoToConfirm}
       />
     </>
   );

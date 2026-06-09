@@ -14,8 +14,6 @@ from .bookings.schemas import (
     MotBookingStats,
 )
 from .bookings import logic as booking_logic
-from .retailers.schemas import MotRetailer, MotRetailerCreate, MotRetailerUpdate, MotRetailersResponse
-from .retailers import logic as retailer_logic
 
 public_router = APIRouter(prefix="/public/mot", tags=["public-mot"])
 admin_router = APIRouter(prefix="/mot", tags=["mot-admin"])
@@ -28,11 +26,6 @@ def require_mot_admin(current_user=Depends(get_current_user)):
             detail="MOT admin access required",
         )
     return current_user
-
-
-@public_router.get("/retailers", response_model=MotRetailersResponse)
-async def list_public_mot_retailers(db: Session = Depends(get_db)):
-    return retailer_logic.list_mot_retailers(db)
 
 
 @public_router.get("/bookings/calendar", response_model=MotBookingsResponse)
@@ -166,48 +159,3 @@ async def delete_mot_booking_admin(
     _=Depends(require_mot_admin),
 ):
     booking_logic.delete_mot_booking_record(booking_id, db)
-
-
-@admin_router.get("/retailers", response_model=MotRetailersResponse)
-async def list_mot_retailers_admin(
-    db: Session = Depends(get_db),
-    _=Depends(require_mot_admin),
-):
-    return retailer_logic.list_mot_retailers(db)
-
-
-@admin_router.post("/retailers", response_model=MotRetailer, status_code=status.HTTP_201_CREATED)
-async def create_mot_retailer_admin(
-    body: MotRetailerCreate,
-    db: Session = Depends(get_db),
-    _=Depends(require_mot_admin),
-):
-    return retailer_logic.create_mot_retailer(body, db)
-
-
-@admin_router.put("/retailers/{retailer_id}", response_model=MotRetailer)
-async def update_mot_retailer_admin(
-    retailer_id: str,
-    body: MotRetailerUpdate,
-    db: Session = Depends(get_db),
-    _=Depends(require_mot_admin),
-):
-    return retailer_logic.update_mot_retailer(retailer_id, body, db)
-
-
-@admin_router.post("/retailers/{retailer_id}/set-default", response_model=MotRetailer)
-async def set_default_mot_retailer_admin(
-    retailer_id: str,
-    db: Session = Depends(get_db),
-    _=Depends(require_mot_admin),
-):
-    return retailer_logic.set_default_mot_retailer(retailer_id, db)
-
-
-@admin_router.delete("/retailers/{retailer_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_mot_retailer_admin(
-    retailer_id: str,
-    db: Session = Depends(get_db),
-    _=Depends(require_mot_admin),
-):
-    retailer_logic.delete_mot_retailer(retailer_id, db)

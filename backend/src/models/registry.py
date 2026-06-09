@@ -89,7 +89,7 @@ def register_all_models():
         Admission,
     )
     from .ngo import Donor, DonorLead, PartnerOrganization
-    from .mot import MotBooking, MotRetailer
+    from .mot import MotBooking
 
     _ = (
         PasswordResetToken,
@@ -194,5 +194,4 @@ def register_all_models():
         DonorLead,
         PartnerOrganization,
         MotBooking,
-        MotRetailer,
     )

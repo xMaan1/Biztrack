@@ -22,16 +22,6 @@ def _get_mot_booking_row(booking_id: str, db: Session) -> Optional[MotBooking]:
     return db.query(MotBooking).filter(MotBooking.id == booking_id).first()
 
 
-def _retailer_name(row: MotBooking) -> Optional[str]:
-    if row.retailer:
-        return row.retailer.name
-    meta = row.booking_meta or {}
-    retailer = meta.get("retailer") if isinstance(meta, dict) else None
-    if isinstance(retailer, dict):
-        return retailer.get("name")
-    return None
-
-
 def _resolve_customer_fields(body):
     if not (body.customer_name and body.customer_name.strip()):
         raise HTTPException(
@@ -113,7 +103,7 @@ def get_mot_bookings_count(
 
 
 def _map_bookings(rows: List[MotBooking]):
-    return [mot_booking_to_schema(row, _retailer_name(row)) for row in rows]
+    return [mot_booking_to_schema(row) for row in rows]
 
 
 def list_mot_bookings(
@@ -163,7 +153,7 @@ def get_mot_booking(booking_id: str, db: Session):
     row = _get_mot_booking_row(booking_id, db)
     if not row:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="MOT booking not found")
-    return mot_booking_to_schema(row, _retailer_name(row))
+    return mot_booking_to_schema(row)
 
 
 def create_mot_booking_record(body: MotBookingCreate, db: Session):
@@ -176,7 +166,7 @@ def create_mot_booking_record(body: MotBookingCreate, db: Session):
     if isinstance(data.get("price"), Decimal):
         data["price"] = float(data["price"])
     row = create_entity(MotBooking, data, db)
-    return mot_booking_to_schema(row, _retailer_name(row))
+    return mot_booking_to_schema(row)
 
 
 def update_mot_booking_record(booking_id: str, body: MotBookingUpdate, db: Session):
@@ -196,7 +186,7 @@ def update_mot_booking_record(booking_id: str, body: MotBookingUpdate, db: Sessi
     row.updated_at = dt.utcnow()
     db.commit()
     db.refresh(row)
-    return mot_booking_to_schema(row, _retailer_name(row))
+    return mot_booking_to_schema(row)
 
 
 def update_mot_booking_status(booking_id: str, body: MotBookingStatusUpdate, db: Session):
@@ -209,7 +199,7 @@ def update_mot_booking_status(booking_id: str, body: MotBookingStatusUpdate, db:
     row.updated_at = dt.utcnow()
     db.commit()
     db.refresh(row)
-    return mot_booking_to_schema(row, _retailer_name(row))
+    return mot_booking_to_schema(row)
 
 
 def delete_mot_booking_record(booking_id: str, db: Session) -> None:

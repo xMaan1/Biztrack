@@ -1,6 +1,6 @@
 export type MotDeliveryOption = 'drop_off' | 'wait_security' | 'wait_on_site';
 
-export type MotWizardStep = 1 | 2 | 3 | 4 | 5 | 6;
+export type MotWizardStep = 1 | 2 | 3 | 4 | 5;
 
 export type MotVehicleSubStep = 'details' | 'model';
 
@@ -10,18 +10,6 @@ export type MotWizardVehicle = {
   make: string;
   year: string;
   model: string;
-};
-
-export type MotWizardRetailer = {
-  id: string;
-  name: string;
-  addressLine1: string;
-  addressLine2: string;
-  city: string;
-  county: string;
-  postcode: string;
-  phone: string;
-  email: string;
 };
 
 export type MotWizardServices = {
@@ -62,7 +50,6 @@ export type MotWizardCustomer = {
 
 export type MotWizardData = {
   vehicle: MotWizardVehicle;
-  retailer: MotWizardRetailer;
   services: MotWizardServices;
   dateTime: MotWizardDateTime;
   customer: MotWizardCustomer;
@@ -72,11 +59,10 @@ export const MOT_TITLE_OPTIONS = ['Mr', 'Mrs', 'Ms', 'Miss', 'Dr', 'Prof'];
 
 export const MOT_WIZARD_STEPS: { step: MotWizardStep; label: string }[] = [
   { step: 1, label: 'Your Vehicle' },
-  { step: 2, label: 'Retailer' },
-  { step: 3, label: 'Services' },
-  { step: 4, label: 'Date & Time' },
-  { step: 5, label: 'Your Details' },
-  { step: 6, label: 'Confirm' },
+  { step: 2, label: 'Services' },
+  { step: 3, label: 'Date & Time' },
+  { step: 4, label: 'Your Details' },
+  { step: 5, label: 'Confirm' },
 ];
 
 export const MOT_DELIVERY_OPTIONS: {
@@ -86,7 +72,7 @@ export const MOT_DELIVERY_OPTIONS: {
 }[] = [
   {
     value: 'drop_off',
-    label: 'I will drop my vehicle to my chosen retailer and make my own onward travel plans',
+    label: 'I will drop my vehicle off and make my own onward travel plans',
   },
   {
     value: 'wait_security',
@@ -113,17 +99,6 @@ export function emptyMotWizardData(): MotWizardData {
       make: '',
       year: '',
       model: '',
-    },
-    retailer: {
-      id: '',
-      name: '',
-      addressLine1: '',
-      addressLine2: '',
-      city: '',
-      county: '',
-      postcode: '',
-      phone: '',
-      email: '',
     },
     services: {
       motInspection: true,
