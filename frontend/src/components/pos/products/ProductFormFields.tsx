@@ -22,7 +22,7 @@ type ProductFormFieldsProps = {
   suppliers: Supplier[];
   onChange: (patch: Partial<ProductFormData>) => void;
   onAddCategoryClick: () => void;
-  onAddVendorClick: () => void;
+  onAddSupplierClick: () => void;
 };
 
 export function ProductFormFields({
@@ -31,7 +31,7 @@ export function ProductFormFields({
   suppliers,
   onChange,
   onAddCategoryClick,
-  onAddVendorClick,
+  onAddSupplierClick,
 }: ProductFormFieldsProps) {
   const categoryOptions = categories.length ? categories : Object.values(ProductCategory);
 
@@ -94,16 +94,16 @@ export function ProductFormFields({
         <div className="space-y-2">
           <div className="flex items-end gap-2">
             <div className="flex-1 space-y-2">
-              <Label htmlFor="supplierId">Vendor</Label>
+              <Label htmlFor="supplierId">Supplier</Label>
               <Select
                 value={formData.supplierId || 'none'}
                 onValueChange={(value) => onChange({ supplierId: value === 'none' ? '' : value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select vendor" />
+                  <SelectValue placeholder="Select supplier" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No vendor</SelectItem>
+                  <SelectItem value="none">No supplier</SelectItem>
                   {suppliers.map((supplier) => (
                     <SelectItem key={supplier.id} value={supplier.id}>
                       {supplier.name}
@@ -112,7 +112,7 @@ export function ProductFormFields({
                 </SelectContent>
               </Select>
             </div>
-            <Button type="button" variant="outline" size="icon" onClick={onAddVendorClick} title="Add vendor">
+            <Button type="button" variant="outline" size="icon" onClick={onAddSupplierClick} title="Add supplier">
               <UserPlus className="h-4 w-4" />
             </Button>
           </div>

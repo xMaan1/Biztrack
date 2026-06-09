@@ -11,7 +11,7 @@ import { ProductFormDialog } from '@/src/components/pos/products/ProductFormDial
 import { ProductViewDialog } from '@/src/components/pos/products/ProductViewDialog';
 import { ProductDeleteDialog } from '@/src/components/pos/products/ProductDeleteDialog';
 import { AddCategoryDialog } from '@/src/components/pos/products/AddCategoryDialog';
-import { AddVendorDialog } from '@/src/components/pos/products/AddVendorDialog';
+import { SupplierFormDialog } from '@/src/components/hrm/suppliers/SupplierFormDialog';
 
 export default function POSProductsPage() {
   const { formatCurrency } = useCurrency();
@@ -53,7 +53,7 @@ export default function POSProductsPage() {
           onFormChange={(patch) => page.setFormData((prev) => ({ ...prev, ...patch }))}
           onSubmit={page.handleSubmit}
           onAddCategoryClick={() => page.setIsAddCategoryOpen(true)}
-          onAddVendorClick={() => page.handleAddVendorDialogOpenChange(true)}
+          onAddSupplierClick={() => page.handleAddSupplierDialogOpenChange(true)}
         />
 
         <ProductViewDialog
@@ -72,15 +72,15 @@ export default function POSProductsPage() {
           onSubmit={page.handleAddCategory}
         />
 
-        <AddVendorDialog
-          open={page.isAddVendorOpen}
-          vendorName={page.newVendorName}
-          vendorCode={page.newVendorCode}
-          loading={page.addVendorLoading}
-          onOpenChange={page.handleAddVendorDialogOpenChange}
-          onVendorNameChange={page.handleVendorNameChange}
-          onVendorCodeChange={page.handleVendorCodeChange}
-          onSubmit={page.handleAddVendor}
+        <SupplierFormDialog
+          open={page.isAddSupplierOpen}
+          editingSupplier={null}
+          formData={page.supplierFormData}
+          submitting={page.addSupplierLoading}
+          onOpenChange={page.handleAddSupplierDialogOpenChange}
+          onFormChange={page.handleSupplierFormChange}
+          onSubmit={page.handleAddSupplier}
+          onCancel={page.closeAddSupplierDialog}
         />
 
         <ProductDeleteDialog

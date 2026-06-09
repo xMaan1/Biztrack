@@ -35,6 +35,15 @@ async def list_public_mot_retailers(db: Session = Depends(get_db)):
     return retailer_logic.list_mot_retailers(db)
 
 
+@public_router.get("/bookings/calendar", response_model=MotBookingsResponse)
+async def list_public_mot_bookings_calendar(
+    date_from: str = Query(..., description="YYYY-MM-DD"),
+    date_to: str = Query(..., description="YYYY-MM-DD"),
+    db: Session = Depends(get_db),
+):
+    return booking_logic.list_mot_bookings_calendar(db, date_from, date_to)
+
+
 @public_router.post("/bookings", response_model=MotBooking, status_code=status.HTTP_201_CREATED)
 async def create_public_mot_booking(body: MotBookingCreate, db: Session = Depends(get_db)):
     return booking_logic.create_mot_booking_record(body, db)

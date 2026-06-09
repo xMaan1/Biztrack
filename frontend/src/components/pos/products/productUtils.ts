@@ -111,16 +111,6 @@ export function formatCategoryLabel(category: string): string {
   return category.charAt(0).toUpperCase() + category.slice(1).replace(/_/g, ' ');
 }
 
-export function vendorCodeFromName(name: string): string {
-  const base = name
-    .trim()
-    .toUpperCase()
-    .replace(/[^A-Z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 24);
-  return base || `VEN-${Date.now().toString(36).toUpperCase()}`;
-}
-
 export function profitMarginPercent(unitPrice: number, costPrice: number): string {
   if (!costPrice) return '0.0';
   return (((unitPrice - costPrice) / costPrice) * 100).toFixed(1);

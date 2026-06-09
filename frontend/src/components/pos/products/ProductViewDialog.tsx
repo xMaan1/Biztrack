@@ -78,7 +78,7 @@ export function ProductViewDialog({
                   <p className="mt-1 text-gray-900">{product.brand || 'Not set'}</p>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-gray-600">Vendor</Label>
+                  <Label className="text-sm font-medium text-gray-600">Supplier</Label>
                   <p className="mt-1 text-gray-900">{product.supplierName || 'Not set'}</p>
                 </div>
                 <div>

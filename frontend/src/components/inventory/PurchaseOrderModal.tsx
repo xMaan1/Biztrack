@@ -398,7 +398,7 @@ export default function PurchaseOrderModal({
                   size="sm"
                   onClick={() => {
                     onClose();
-                    router.push('/hrm/suppliers/new');
+                    router.push('/hrm/suppliers?openAdd=true');
                   }}
                   className="whitespace-nowrap"
                 >

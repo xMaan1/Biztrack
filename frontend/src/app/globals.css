@@ -47,6 +47,19 @@
   background-color: #f3f4f6;
 }
 
+.react-datepicker__day--disabled,
+.react-datepicker__day--disabled:hover {
+  color: #9ca3af;
+  background-color: transparent;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.mot-booking-datepicker .react-datepicker__day--disabled,
+.mot-booking-datepicker .react-datepicker__day--disabled:hover {
+  opacity: 0.45;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

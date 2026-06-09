@@ -2,18 +2,24 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
 import { apiService } from '@/src/services/ApiService';
 import HRMService from '@/src/services/HRMService';
 import type { Product, POSCategoriesResponse } from '@/src/models/pos';
 import type { Supplier } from '@/src/models/hrm/supplier';
 import type { ProductFiltersState, ProductFormData } from '@/src/components/pos/products/types';
+import type { SupplierFormData } from '@/src/components/hrm/suppliers/types';
+import {
+  emptySupplierForm,
+  getSupplierApiError,
+  validateSupplierForm,
+} from '@/src/components/hrm/suppliers/supplierUtils';
 import {
   defaultFilters,
   emptyProductFormData,
   filterProducts,
   formDataToPayload,
   productToFormData,
-  vendorCodeFromName,
 } from '@/src/components/pos/products/productUtils';
 
 export function usePosProductsPage() {
@@ -30,10 +36,9 @@ export function usePosProductsPage() {
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [addCategoryLoading, setAddCategoryLoading] = useState(false);
-  const [isAddVendorOpen, setIsAddVendorOpen] = useState(false);
-  const [newVendorName, setNewVendorName] = useState('');
-  const [newVendorCode, setNewVendorCode] = useState('');
-  const [addVendorLoading, setAddVendorLoading] = useState(false);
+  const [isAddSupplierOpen, setIsAddSupplierOpen] = useState(false);
+  const [supplierFormData, setSupplierFormData] = useState<SupplierFormData>(emptySupplierForm());
+  const [addSupplierLoading, setAddSupplierLoading] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
@@ -160,46 +165,54 @@ export function usePosProductsPage() {
     }
   }, [newCategoryName, fetchCategories]);
 
-  const handleAddVendorDialogOpenChange = useCallback((open: boolean) => {
-    setIsAddVendorOpen(open);
-    if (!open) {
-      setNewVendorName('');
-      setNewVendorCode('');
+  const openAddSupplierDialog = useCallback(() => {
+    setSupplierFormData(emptySupplierForm());
+    setIsAddSupplierOpen(true);
+  }, []);
+
+  const closeAddSupplierDialog = useCallback(() => {
+    setIsAddSupplierOpen(false);
+    setSupplierFormData(emptySupplierForm());
+  }, []);
+
+  const handleAddSupplierDialogOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) closeAddSupplierDialog();
+      else openAddSupplierDialog();
+    },
+    [closeAddSupplierDialog, openAddSupplierDialog],
+  );
+
+  const handleSupplierFormChange = useCallback(
+    (field: keyof SupplierFormData, value: string | number | boolean) => {
+      setSupplierFormData((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
+    },
+    [],
+  );
+
+  const handleAddSupplier = useCallback(async () => {
+    const validationError = validateSupplierForm(supplierFormData);
+    if (validationError) {
+      toast.error(validationError);
+      return;
     }
-  }, []);
 
-  const handleVendorNameChange = useCallback((name: string) => {
-    setNewVendorName(name);
-    setNewVendorCode((prev) => {
-      const autoFromPrev = vendorCodeFromName(newVendorName);
-      if (!prev || prev === autoFromPrev) {
-        return vendorCodeFromName(name);
-      }
-      return prev;
-    });
-  }, [newVendorName]);
-
-  const handleVendorCodeChange = useCallback((code: string) => {
-    setNewVendorCode(code);
-  }, []);
-
-  const handleAddVendor = useCallback(async () => {
-    const name = newVendorName.trim();
-    const code = newVendorCode.trim() || vendorCodeFromName(name);
-    if (!name || !code) return;
-    setAddVendorLoading(true);
+    setAddSupplierLoading(true);
     try {
-      const response = await HRMService.createSupplier({ name, code });
+      const response = await HRMService.createSupplier(supplierFormData);
       await fetchSuppliers();
       setFormData((prev) => ({ ...prev, supplierId: response.supplier.id }));
-      setNewVendorName('');
-      setNewVendorCode('');
-      setIsAddVendorOpen(false);
-    } catch {
+      closeAddSupplierDialog();
+      toast.success('Supplier created successfully');
+    } catch (error) {
+      toast.error(`Save Error: ${getSupplierApiError(error, 'Failed to create supplier')}`);
     } finally {
-      setAddVendorLoading(false);
+      setAddSupplierLoading(false);
     }
-  }, [newVendorName, newVendorCode, fetchSuppliers]);
+  }, [supplierFormData, fetchSuppliers, closeAddSupplierDialog]);
 
   const clearFilters = useCallback(() => {
     setFilters(defaultFilters());
@@ -226,18 +239,16 @@ export function usePosProductsPage() {
     isAddCategoryOpen,
     newCategoryName,
     addCategoryLoading,
-    isAddVendorOpen,
-    newVendorName,
-    newVendorCode,
-    addVendorLoading,
+    isAddSupplierOpen,
+    supplierFormData,
+    addSupplierLoading,
     setFilters,
     setFormData,
     setViewingProduct,
     setIsAddCategoryOpen,
     setNewCategoryName,
-    handleAddVendorDialogOpenChange,
-    handleVendorNameChange,
-    handleVendorCodeChange,
+    handleAddSupplierDialogOpenChange,
+    handleSupplierFormChange,
     openNewProductDialog,
     handleDialogClose,
     handleSubmit,
@@ -246,7 +257,8 @@ export function usePosProductsPage() {
     handleDeleteConfirm,
     handleDeleteCancel,
     handleAddCategory,
-    handleAddVendor,
+    handleAddSupplier,
+    closeAddSupplierDialog,
     clearFilters,
   };
 }

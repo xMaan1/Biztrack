@@ -1,5 +1,7 @@
 'use client';
 
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Label } from '@/src/components/ui/label';
 import { Button } from '@/src/components/ui/button';
 import {
@@ -13,8 +15,16 @@ import { ArrowLeft, Calendar, ChevronDown, Info } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { cn } from '@/src/lib/utils';
+import motBookingService from '@/src/services/MotBookingService';
 import type { MotWizardDateTime } from '../wizardTypes';
 import { MOT_DELIVERY_OPTIONS, MOT_HOURLY_SLOTS } from '../wizardTypes';
+import {
+  formatLocalDate,
+  getBookedDateSet,
+  getCalendarDateRange,
+  isDateAvailable,
+  parseLocalDate,
+} from '../motCalendarUtils';
 
 type Step4DateTimeProps = {
   dateTime: MotWizardDateTime;
@@ -31,9 +41,64 @@ export function Step4DateTime({
   onNext,
   canNext,
 }: Step4DateTimeProps) {
-  const selectedDate = dateTime.bookingDate ? new Date(`${dateTime.bookingDate}T12:00:00`) : null;
-  const minDate = new Date();
-  minDate.setHours(0, 0, 0, 0);
+  const searchParams = useSearchParams();
+  const amendBookingId = searchParams.get('amend');
+
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [bookedDates, setBookedDates] = useState<Set<string>>(new Set());
+  const [loadingBookedDates, setLoadingBookedDates] = useState(true);
+
+  const selectedDate = dateTime.bookingDate ? parseLocalDate(dateTime.bookingDate) : null;
+  const minDate = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadBookedDates = async () => {
+      setLoadingBookedDates(true);
+      try {
+        const { dateFrom, dateTo } = getCalendarDateRange();
+        const response = await motBookingService.getPublicCalendar(dateFrom, dateTo);
+        if (cancelled) return;
+        setBookedDates(getBookedDateSet(response.bookings || [], amendBookingId));
+      } catch {
+        if (!cancelled) setBookedDates(new Set());
+      } finally {
+        if (!cancelled) setLoadingBookedDates(false);
+      }
+    };
+
+    loadBookedDates();
+    return () => {
+      cancelled = true;
+    };
+  }, [amendBookingId]);
+
+  useEffect(() => {
+    if (!dateTime.bookingDate) return;
+    if (!bookedDates.has(dateTime.bookingDate)) return;
+    onChange({ bookingDate: '', bookingTime: '' });
+  }, [bookedDates, dateTime.bookingDate, onChange]);
+
+  const filterAvailableDate = useCallback(
+    (date: Date) => isDateAvailable(date, bookedDates),
+    [bookedDates],
+  );
+
+  const handleDateChange = (date: Date | null) => {
+    if (!date) {
+      onChange({ bookingDate: '', bookingTime: '' });
+      return;
+    }
+    onChange({ bookingDate: formatLocalDate(date) });
+    setCalendarOpen(false);
+  };
+
+  const openCalendar = () => setCalendarOpen(true);
 
   return (
     <div className="space-y-8">
@@ -79,25 +144,35 @@ export function Step4DateTime({
       <div className="grid gap-6 sm:grid-cols-2">
         <div className="space-y-2">
           <Label className="text-sm font-bold">Date</Label>
-          <div className="relative flex h-12 items-center rounded-xl border-2 bg-background px-3">
+          <div className="relative flex h-12 items-center rounded-xl border-2 bg-background px-3 pr-11">
             <DatePicker
               selected={selectedDate}
-              onChange={(date: Date | null) => {
-                if (!date) {
-                  onChange({ bookingDate: '' });
-                  return;
-                }
-                const iso = date.toISOString().slice(0, 10);
-                onChange({ bookingDate: iso });
-              }}
+              onChange={handleDateChange}
+              open={calendarOpen}
+              onInputClick={openCalendar}
+              onClickOutside={() => setCalendarOpen(false)}
               minDate={minDate}
+              filterDate={filterAvailableDate}
               dateFormat="dd/MM/yyyy"
-              placeholderText="Select a Date"
-              className="w-full bg-transparent text-sm outline-none"
+              placeholderText={loadingBookedDates ? 'Loading dates...' : 'Select a Date'}
+              disabled={loadingBookedDates}
+              className="w-full bg-transparent pr-2 text-sm outline-none"
               wrapperClassName="w-full"
+              calendarClassName="mot-booking-datepicker"
             />
-            <Calendar className="pointer-events-none absolute right-3 h-4 w-4 text-muted-foreground" />
+            <button
+              type="button"
+              onClick={openCalendar}
+              disabled={loadingBookedDates}
+              className="absolute right-3 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+              aria-label="Open calendar"
+            >
+              <Calendar className="h-4 w-4" />
+            </button>
           </div>
+          <p className="text-xs text-muted-foreground">
+            Dates with existing MOT bookings are unavailable.
+          </p>
         </div>
 
         <div className="space-y-2">

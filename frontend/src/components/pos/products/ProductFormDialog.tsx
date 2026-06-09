@@ -24,7 +24,7 @@ type ProductFormDialogProps = {
   onFormChange: (patch: Partial<ProductFormData>) => void;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   onAddCategoryClick: () => void;
-  onAddVendorClick: () => void;
+  onAddSupplierClick: () => void;
 };
 
 export function ProductFormDialog({
@@ -37,7 +37,7 @@ export function ProductFormDialog({
   onFormChange,
   onSubmit,
   onAddCategoryClick,
-  onAddVendorClick,
+  onAddSupplierClick,
 }: ProductFormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -58,7 +58,7 @@ export function ProductFormDialog({
             suppliers={suppliers}
             onChange={onFormChange}
             onAddCategoryClick={onAddCategoryClick}
-            onAddVendorClick={onAddVendorClick}
+            onAddSupplierClick={onAddSupplierClick}
           />
 
           <DialogFooter>

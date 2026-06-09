@@ -43,6 +43,12 @@ export class MotBookingService {
     );
   }
 
+  async getPublicCalendar(dateFrom: string, dateTo: string): Promise<MotBookingsResponse> {
+    return apiService.get(
+      `${this.publicBaseUrl}/bookings/calendar?date_from=${dateFrom}&date_to=${dateTo}`,
+    );
+  }
+
   async getBooking(id: string): Promise<MotBooking> {
     return apiService.get(`${this.publicBaseUrl}/bookings/${id}`);
   }

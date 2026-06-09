@@ -744,7 +744,7 @@ function PurchaseOrdersContent() {
                     size="sm"
                     onClick={() => {
                       setIsEditModalOpen(false);
-                      window.open('/hrm/suppliers/new', '_blank');
+                      window.open('/hrm/suppliers?openAdd=true', '_blank');
                     }}
                     className="whitespace-nowrap"
                   >
