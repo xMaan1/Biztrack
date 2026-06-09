@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Label } from '@/src/components/ui/label';
 import { Button } from '@/src/components/ui/button';
@@ -16,13 +16,14 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { cn } from '@/src/lib/utils';
 import motBookingService from '@/src/services/MotBookingService';
+import type { MotBooking } from '@/src/models/mot/MotBooking';
 import type { MotWizardDateTime } from '../wizardTypes';
 import { MOT_DELIVERY_OPTIONS, MOT_HOURLY_SLOTS } from '../wizardTypes';
 import {
   formatLocalDate,
-  getBookedDateSet,
+  getBookedSlotsByDate,
+  getBookedTimesForDate,
   getCalendarDateRange,
-  isDateAvailable,
   parseLocalDate,
 } from '../motCalendarUtils';
 
@@ -45,8 +46,16 @@ export function Step3DateTime({
   const amendBookingId = searchParams.get('amend');
 
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [bookedDates, setBookedDates] = useState<Set<string>>(new Set());
-  const [loadingBookedDates, setLoadingBookedDates] = useState(true);
+  const [bookedSlotsByDate, setBookedSlotsByDate] = useState<Map<string, Set<string>>>(new Map());
+  const [loadingAvailability, setLoadingAvailability] = useState(true);
+
+  const bookedTimesForSelectedDate = useMemo(
+    () =>
+      dateTime.bookingDate
+        ? getBookedTimesForDate(bookedSlotsByDate, dateTime.bookingDate)
+        : new Set<string>(),
+    [bookedSlotsByDate, dateTime.bookingDate],
+  );
 
   const selectedDate = dateTime.bookingDate ? parseLocalDate(dateTime.bookingDate) : null;
   const minDate = useMemo(() => {
@@ -58,43 +67,40 @@ export function Step3DateTime({
   useEffect(() => {
     let cancelled = false;
 
-    const loadBookedDates = async () => {
-      setLoadingBookedDates(true);
+    const loadAvailability = async () => {
+      setLoadingAvailability(true);
       try {
         const { dateFrom, dateTo } = getCalendarDateRange();
         const response = await motBookingService.getPublicCalendar(dateFrom, dateTo);
         if (cancelled) return;
-        setBookedDates(getBookedDateSet(response.bookings || [], amendBookingId));
+        setBookedSlotsByDate(
+          getBookedSlotsByDate((response.bookings || []) as MotBooking[], amendBookingId),
+        );
       } catch {
-        if (!cancelled) setBookedDates(new Set());
+        if (!cancelled) setBookedSlotsByDate(new Map());
       } finally {
-        if (!cancelled) setLoadingBookedDates(false);
+        if (!cancelled) setLoadingAvailability(false);
       }
     };
 
-    loadBookedDates();
+    loadAvailability();
     return () => {
       cancelled = true;
     };
   }, [amendBookingId]);
 
   useEffect(() => {
-    if (!dateTime.bookingDate) return;
-    if (!bookedDates.has(dateTime.bookingDate)) return;
-    onChange({ bookingDate: '', bookingTime: '' });
-  }, [bookedDates, dateTime.bookingDate, onChange]);
-
-  const filterAvailableDate = useCallback(
-    (date: Date) => isDateAvailable(date, bookedDates),
-    [bookedDates],
-  );
+    if (!dateTime.bookingDate || !dateTime.bookingTime) return;
+    if (!bookedTimesForSelectedDate.has(dateTime.bookingTime)) return;
+    onChange({ bookingTime: '' });
+  }, [bookedTimesForSelectedDate, dateTime.bookingDate, dateTime.bookingTime, onChange]);
 
   const handleDateChange = (date: Date | null) => {
     if (!date) {
       onChange({ bookingDate: '', bookingTime: '' });
       return;
     }
-    onChange({ bookingDate: formatLocalDate(date) });
+    onChange({ bookingDate: formatLocalDate(date), bookingTime: '' });
     setCalendarOpen(false);
   };
 
@@ -152,10 +158,9 @@ export function Step3DateTime({
               onInputClick={openCalendar}
               onClickOutside={() => setCalendarOpen(false)}
               minDate={minDate}
-              filterDate={filterAvailableDate}
               dateFormat="dd/MM/yyyy"
-              placeholderText={loadingBookedDates ? 'Loading dates...' : 'Select a Date'}
-              disabled={loadingBookedDates}
+              placeholderText={loadingAvailability ? 'Loading dates...' : 'Select a Date'}
+              disabled={loadingAvailability}
               className="w-full bg-transparent pr-2 text-sm outline-none"
               wrapperClassName="w-full"
               calendarClassName="mot-booking-datepicker"
@@ -163,7 +168,7 @@ export function Step3DateTime({
             <button
               type="button"
               onClick={openCalendar}
-              disabled={loadingBookedDates}
+              disabled={loadingAvailability}
               className="absolute right-3 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
               aria-label="Open calendar"
             >
@@ -171,7 +176,7 @@ export function Step3DateTime({
             </button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Dates with existing MOT bookings are unavailable.
+            Pick any available date. Taken time slots are shown after you select a date.
           </p>
         </div>
 
@@ -180,17 +185,25 @@ export function Step3DateTime({
           <Select
             value={dateTime.bookingTime || ''}
             onValueChange={(value) => onChange({ bookingTime: value })}
+            disabled={!dateTime.bookingDate || loadingAvailability}
           >
             <SelectTrigger className="h-12 rounded-xl border-2">
-              <SelectValue placeholder="Select a Time" />
+              <SelectValue
+                placeholder={
+                  !dateTime.bookingDate ? 'Select a date first' : 'Select a Time'
+                }
+              />
               <ChevronDown className="h-4 w-4 opacity-50" />
             </SelectTrigger>
             <SelectContent>
-              {MOT_HOURLY_SLOTS.map((slot) => (
-                <SelectItem key={slot} value={slot}>
-                  {slot}
-                </SelectItem>
-              ))}
+              {MOT_HOURLY_SLOTS.map((slot) => {
+                const taken = bookedTimesForSelectedDate.has(slot);
+                return (
+                  <SelectItem key={slot} value={slot} disabled={taken}>
+                    {taken ? `${slot} (Taken)` : slot}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>

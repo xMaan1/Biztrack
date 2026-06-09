@@ -31,21 +31,45 @@ export function getCalendarDateRange(monthsAhead = 6): { dateFrom: string; dateT
   };
 }
 
-export function getBookedDateSet(
-  bookings: MotBooking[],
-  excludeBookingId?: string | null,
-): Set<string> {
-  const dates = new Set<string>();
-  for (const booking of bookings) {
-    if (excludeBookingId && booking.id === excludeBookingId) continue;
-    if (!booking.is_active) continue;
-    if (!BOOKED_STATUSES.has(booking.status)) continue;
-    if (!booking.booking_date) continue;
-    dates.add(booking.booking_date.slice(0, 10));
-  }
-  return dates;
+export function normalizeTimeSlot(time?: string): string | null {
+  if (!time) return null;
+  const [hours, minutes] = time.split(':');
+  const hour = parseInt(hours, 10);
+  const minute = parseInt(minutes || '0', 10);
+  if (Number.isNaN(hour)) return null;
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
 }
 
-export function isDateAvailable(date: Date, bookedDates: Set<string>): boolean {
-  return !bookedDates.has(formatLocalDate(date));
+function isActiveBooking(booking: MotBooking, excludeBookingId?: string | null): boolean {
+  if (excludeBookingId && booking.id === excludeBookingId) return false;
+  if (!booking.is_active) return false;
+  if (!BOOKED_STATUSES.has(booking.status)) return false;
+  return true;
+}
+
+export function getBookedSlotsByDate(
+  bookings: MotBooking[],
+  excludeBookingId?: string | null,
+): Map<string, Set<string>> {
+  const map = new Map<string, Set<string>>();
+
+  for (const booking of bookings) {
+    if (!isActiveBooking(booking, excludeBookingId)) continue;
+
+    const date = booking.booking_date?.slice(0, 10);
+    const time = normalizeTimeSlot(booking.start_time);
+    if (!date || !time) continue;
+
+    if (!map.has(date)) map.set(date, new Set());
+    map.get(date)!.add(time);
+  }
+
+  return map;
+}
+
+export function getBookedTimesForDate(
+  bookedSlotsByDate: Map<string, Set<string>>,
+  date: string,
+): Set<string> {
+  return bookedSlotsByDate.get(date) || new Set();
 }

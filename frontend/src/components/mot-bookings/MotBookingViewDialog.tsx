@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import {
   Dialog,
   DialogContent,
@@ -17,6 +18,8 @@ import {
   getMotTestTypeLabel,
   formatMotVehicleLine,
 } from '@/src/models/mot/MotBooking';
+import { getDeliveryOptionLabel } from '@/src/components/mot-bookings/wizard/wizardUtils';
+import type { MotDeliveryOption } from '@/src/components/mot-bookings/wizard/wizardTypes';
 import { formatBookingDateTime } from './motBookingUtils';
 
 type MotBookingViewDialogProps = {
@@ -26,6 +29,15 @@ type MotBookingViewDialogProps = {
   onEdit: (booking: MotBooking) => void;
 };
 
+function DetailSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="font-medium text-muted-foreground">{title}</div>
+      <div className="mt-1 space-y-1">{children}</div>
+    </div>
+  );
+}
+
 export function MotBookingViewDialog({
   booking,
   formatCurrency,
@@ -34,61 +46,110 @@ export function MotBookingViewDialog({
 }: MotBookingViewDialogProps) {
   if (!booking) return null;
 
+  const meta = (booking.booking_meta || {}) as Record<string, unknown>;
+  const customer = (meta.customer || {}) as Record<string, unknown>;
+  const vehicle = (meta.vehicle || {}) as Record<string, unknown>;
+  const services = (meta.services || {}) as Record<string, unknown>;
+  const deliveryOption =
+    booking.delivery_option || (meta.deliveryOption as string | undefined) || '';
+
+  const customerAddress = [
+    [customer.houseNumber, customer.street].filter(Boolean).join(' '),
+    customer.town,
+    customer.county,
+    customer.postcode,
+  ]
+    .filter(Boolean)
+    .join(', ');
+
+  const customerName = [
+    customer.title,
+    customer.firstName,
+    customer.lastName,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
     <Dialog open={!!booking} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
         <DialogHeader>
           <DialogTitle>MOT Booking Details</DialogTitle>
           <DialogDescription>
-            {formatBookingDateTime(booking)}
+            {formatBookingDateTime(booking)} · Ref MOT-{booking.id.slice(0, 8).toUpperCase()}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 text-sm">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Badge className={getMotStatusColor(booking.status)}>
               {getMotStatusLabel(booking.status)}
             </Badge>
             <Badge variant="outline">{getMotTestTypeLabel(booking.test_type)}</Badge>
           </div>
 
-          <div>
-            <div className="font-medium text-muted-foreground">Customer</div>
-            <div>{booking.customer_name}</div>
+          <DetailSection title="Customer">
+            <div>{booking.customer_name || customerName}</div>
             {booking.customer_phone && <div>{booking.customer_phone}</div>}
             {booking.customer_email && <div>{booking.customer_email}</div>}
-          </div>
+            {customerAddress && <div className="text-muted-foreground">{customerAddress}</div>}
+          </DetailSection>
 
-          <div>
-            <div className="font-medium text-muted-foreground">Vehicle</div>
+          <DetailSection title="Vehicle">
             <div>{formatMotVehicleLine(booking)}</div>
-            {booking.mileage && <div>Mileage: {booking.mileage}</div>}
+            {(booking.mileage || vehicle.mileage) && (
+              <div>Mileage: {booking.mileage || vehicle.mileage}</div>
+            )}
             {booking.mot_expiry_date && (
               <div>MOT expires: {booking.mot_expiry_date.slice(0, 10)}</div>
             )}
-          </div>
+          </DetailSection>
 
-          <div>
-            <div className="font-medium text-muted-foreground">Price</div>
+          <DetailSection title="Appointment">
+            <div>
+              {booking.booking_date?.slice(0, 10)} {booking.start_time} – {booking.end_time}
+            </div>
+            {deliveryOption && (
+              <div className="text-muted-foreground">
+                {getDeliveryOptionLabel(deliveryOption as MotDeliveryOption)}
+              </div>
+            )}
+          </DetailSection>
+
+          {(services.motInspection || services.otherServices) && (
+            <DetailSection title="Services">
+              {services.motInspection && <div>Carry Out MOT Inspection</div>}
+              {typeof services.otherServices === 'string' && services.otherServices.trim() && (
+                <div className="whitespace-pre-wrap text-muted-foreground">
+                  {services.otherServices}
+                </div>
+              )}
+            </DetailSection>
+          )}
+
+          <DetailSection title="Price">
             <div>{formatCurrency(Number(booking.price) || 0)}</div>
-          </div>
+          </DetailSection>
 
           {booking.notes && (
-            <div>
-              <div className="font-medium text-muted-foreground">Notes</div>
+            <DetailSection title="Notes">
               <div className="whitespace-pre-wrap">{booking.notes}</div>
-            </div>
+            </DetailSection>
           )}
 
           {booking.result_notes && (
-            <div>
-              <div className="font-medium text-muted-foreground">Result notes</div>
+            <DetailSection title="Result notes">
               <div className="whitespace-pre-wrap">{booking.result_notes}</div>
-            </div>
+            </DetailSection>
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-col gap-2 sm:flex-row">
+          <Button variant="outline" asChild>
+            <Link href={`/mot/bookings/${booking.id}/confirmation`} target="_blank">
+              Open confirmation
+            </Link>
+          </Button>
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>

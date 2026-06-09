@@ -6,10 +6,12 @@ import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft,
   CheckCircle2,
+  Download,
   Edit,
   Printer,
   XCircle,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { MotPublicLayout } from '@/src/components/mot/MotPublicLayout';
 import { Button } from '@/src/components/ui/button';
 import { Badge } from '@/src/components/ui/badge';
@@ -19,6 +21,7 @@ import type { MotBooking } from '@/src/models/mot/MotBooking';
 import { getMotStatusColor, getMotStatusLabel } from '@/src/models/mot/MotBooking';
 import {
   MotBookingPrintSheet,
+  exportMotBookingPdf,
   printMotBooking,
 } from '@/src/components/mot-bookings/wizard/MotBookingPrintSheet';
 import { getVehicleBrandStyle } from '@/src/components/mot-bookings/wizard/motBrandStyle';
@@ -35,6 +38,7 @@ export default function MotConfirmationPage() {
   const [booking, setBooking] = useState<MotBooking | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
 
   useEffect(() => {
     motBookingService
@@ -83,6 +87,19 @@ export default function MotConfirmationPage() {
 
   const brand = getVehicleBrandStyle(booking.vehicle_make || '');
   const isCancelled = booking.status === 'cancelled';
+  const bookingRef = booking.id.slice(0, 8).toUpperCase();
+
+  const handleExportPdf = async () => {
+    setExportingPdf(true);
+    try {
+      await exportMotBookingPdf(bookingRef);
+      toast.success('PDF downloaded');
+    } catch {
+      toast.error('Failed to export PDF');
+    } finally {
+      setExportingPdf(false);
+    }
+  };
 
   return (
     <MotPublicLayout>
@@ -102,7 +119,7 @@ export default function MotConfirmationPage() {
             {isCancelled ? 'Booking Cancelled' : 'MOT Booked Successfully'}
           </h1>
           <p className="mt-2 text-muted-foreground">
-            Reference MOT-{booking.id.slice(0, 8).toUpperCase()}
+            Reference MOT-{bookingRef}
           </p>
           <Badge className={`mt-4 ${getMotStatusColor(booking.status)}`}>
             {getMotStatusLabel(booking.status)}
@@ -166,13 +183,22 @@ export default function MotConfirmationPage() {
           </CardContent>
         </Card>
 
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2">
           <Button
             onClick={printMotBooking}
             className="h-12 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 font-semibold"
           >
             <Printer className="mr-2 h-4 w-4" />
             Print MOT
+          </Button>
+          <Button
+            variant="outline"
+            disabled={exportingPdf}
+            onClick={handleExportPdf}
+            className="h-12 rounded-xl"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            {exportingPdf ? 'Exporting...' : 'Export PDF'}
           </Button>
           <Button
             variant="outline"

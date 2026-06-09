@@ -116,3 +116,44 @@ export function MotBookingPrintSheet({ booking }: MotBookingPrintSheetProps) {
 export function printMotBooking() {
   window.print();
 }
+
+export async function exportMotBookingPdf(bookingRef: string): Promise<void> {
+  const element = document.getElementById('mot-print-sheet');
+  if (!element) {
+    throw new Error('Print sheet not found');
+  }
+
+  const previousClassName = element.className;
+  const previousStyle = element.getAttribute('style') || '';
+
+  element.className = previousClassName.replace(/\bhidden\b/g, '').trim();
+  element.setAttribute(
+    'style',
+    `${previousStyle};position:fixed;left:0;top:0;width:800px;background:#fff;z-index:-9999;`,
+  );
+
+  try {
+    const html2canvas = (await import('html2canvas')).default;
+    const { jsPDF } = await import('jspdf');
+
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      backgroundColor: '#ffffff',
+      logging: false,
+    });
+
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const imgHeight = (canvas.height * pageWidth) / canvas.width;
+    pdf.addImage(imgData, 'JPEG', 0, 0, pageWidth, imgHeight);
+    pdf.save(`mot-booking-${bookingRef}.pdf`);
+  } finally {
+    element.className = previousClassName;
+    if (previousStyle) {
+      element.setAttribute('style', previousStyle);
+    } else {
+      element.removeAttribute('style');
+    }
+  }
+}
