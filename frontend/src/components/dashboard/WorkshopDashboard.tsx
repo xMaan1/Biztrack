@@ -367,7 +367,7 @@ export default function WorkshopDashboard({
               </Button>
 
               <Button
-                onClick={() => onNavigate('/workshop-management/mot-bookings')}
+                onClick={() => onNavigate('/mot/manage/bookings')}
                 variant="outline"
                 className="w-full justify-start h-auto py-3 hover:bg-orange-50 hover:border-orange-300"
               >

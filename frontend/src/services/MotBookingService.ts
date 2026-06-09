@@ -6,13 +6,14 @@ import type {
   MotBookingStatusUpdate,
   MotBookingsResponse,
   MotBookingStats,
-} from '../models/workshop/MotBooking';
+} from '../models/mot/MotBooking';
 
 export class MotBookingService {
-  private baseUrl = '/workshop/mot-bookings';
+  private publicBaseUrl = '/public/mot';
+  private adminBaseUrl = '/mot';
 
   async getStats(): Promise<MotBookingStats> {
-    return apiService.get(`${this.baseUrl}/stats`);
+    return apiService.get(`${this.adminBaseUrl}/bookings/stats`);
   }
 
   async getBookings(params?: {
@@ -33,33 +34,45 @@ export class MotBookingService {
     if (params?.page) query.set('page', String(params.page));
     if (params?.limit) query.set('limit', String(params.limit));
     const qs = query.toString();
-    return apiService.get(qs ? `${this.baseUrl}?${qs}` : this.baseUrl);
+    return apiService.get(qs ? `${this.adminBaseUrl}/bookings?${qs}` : `${this.adminBaseUrl}/bookings`);
   }
 
   async getCalendar(dateFrom: string, dateTo: string): Promise<MotBookingsResponse> {
     return apiService.get(
-      `${this.baseUrl}/calendar?date_from=${dateFrom}&date_to=${dateTo}`,
+      `${this.adminBaseUrl}/bookings/calendar?date_from=${dateFrom}&date_to=${dateTo}`,
     );
   }
 
   async getBooking(id: string): Promise<MotBooking> {
-    return apiService.get(`${this.baseUrl}/${id}`);
+    return apiService.get(`${this.publicBaseUrl}/bookings/${id}`);
   }
 
   async createBooking(data: MotBookingCreate): Promise<MotBooking> {
-    return apiService.post(this.baseUrl, data);
+    return apiService.post(`${this.publicBaseUrl}/bookings`, data);
   }
 
   async updateBooking(id: string, data: MotBookingUpdate): Promise<MotBooking> {
-    return apiService.put(`${this.baseUrl}/${id}`, data);
+    return apiService.put(`${this.publicBaseUrl}/bookings/${id}`, data);
   }
 
   async updateBookingStatus(id: string, data: MotBookingStatusUpdate): Promise<MotBooking> {
-    return apiService.patch(`${this.baseUrl}/${id}/status`, data);
+    return apiService.patch(`${this.publicBaseUrl}/bookings/${id}/status`, data);
+  }
+
+  async adminCreateBooking(data: MotBookingCreate): Promise<MotBooking> {
+    return apiService.post(`${this.adminBaseUrl}/bookings`, data);
+  }
+
+  async adminUpdateBooking(id: string, data: MotBookingUpdate): Promise<MotBooking> {
+    return apiService.put(`${this.adminBaseUrl}/bookings/${id}`, data);
+  }
+
+  async adminUpdateBookingStatus(id: string, data: MotBookingStatusUpdate): Promise<MotBooking> {
+    return apiService.patch(`${this.adminBaseUrl}/bookings/${id}/status`, data);
   }
 
   async deleteBooking(id: string): Promise<void> {
-    return apiService.delete(`${this.baseUrl}/${id}`);
+    return apiService.delete(`${this.adminBaseUrl}/bookings/${id}`);
   }
 }
 

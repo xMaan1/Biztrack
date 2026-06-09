@@ -4,9 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import motRetailerService from '@/src/services/MotRetailerService';
 import motBookingService from '@/src/services/MotBookingService';
-import type { MotRetailer } from '@/src/models/workshop/MotRetailer';
-import type { MotVehicleSubStep, MotWizardData, MotWizardStep } from '@/src/components/workshop/mot-bookings/wizard/wizardTypes';
-import { emptyMotWizardData } from '@/src/components/workshop/mot-bookings/wizard/wizardTypes';
+import type { MotRetailer } from '@/src/models/mot/MotRetailer';
+import type { MotVehicleSubStep, MotWizardData, MotWizardStep } from '@/src/components/mot-bookings/wizard/wizardTypes';
+import { emptyMotWizardData } from '@/src/components/mot-bookings/wizard/wizardTypes';
 import {
   bookingToWizardData,
   clearWizardDraft,
@@ -20,10 +20,47 @@ import {
   retailerToWizard,
   saveWizardDraft,
   wizardDataToBookingPayload,
-  wizardRetailerToPayload,
-} from '@/src/components/workshop/mot-bookings/wizard/wizardUtils';
+} from '@/src/components/mot-bookings/wizard/wizardUtils';
 
-export function useMotBookingWizard() {
+type MotBookingWizardOptions = {
+  confirmationPath?: (bookingId: string) => string;
+};
+
+export type MotBookingWizardState = {
+  loading: boolean;
+  currentStep: MotWizardStep;
+  vehicleSubStep: MotVehicleSubStep;
+  data: MotWizardData;
+  savedRetailers: MotRetailer[];
+  savingRetailer: boolean;
+  confirming: boolean;
+  privacyModalOpen: boolean;
+  setPrivacyModalOpen: (open: boolean) => void;
+  maxAvailableStep: MotWizardStep;
+  canPrimaryNext: boolean;
+  primaryNextLabel: string;
+  showSidebarNext: boolean;
+  updateVehicle: (patch: Partial<MotWizardData['vehicle']>) => void;
+  updateRetailer: (patch: Partial<MotWizardData['retailer']>) => void;
+  updateServices: (patch: Partial<MotWizardData['services']>) => void;
+  updateDateTime: (patch: Partial<MotWizardData['dateTime']>) => void;
+  updateCustomer: (patch: Partial<MotWizardData['customer']>) => void;
+  updateContactConsent: (patch: Partial<MotWizardData['customer']['contactConsent']>) => void;
+  goToStep: (step: MotWizardStep) => void;
+  confirmVehicleDetails: () => void;
+  completeVehicleStep: () => void;
+  selectSavedRetailer: (retailer: MotRetailer) => void;
+  saveRetailer: (setAsDefault: boolean) => Promise<void>;
+  handlePrimaryNext: () => void;
+  openPrivacyModal: () => void;
+  confirmPrivacyAndGoToStep6: () => void;
+  submitBooking: () => Promise<void>;
+  setVehicleSubStep: (subStep: MotVehicleSubStep) => void;
+  setCurrentStep: (step: MotWizardStep) => void;
+};
+
+export function useMotBookingWizard(options: MotBookingWizardOptions = {}): MotBookingWizardState {
+  const { confirmationPath } = options;
   const router = useRouter();
   const searchParams = useSearchParams();
   const amendId = searchParams.get('amend');
@@ -32,13 +69,12 @@ export function useMotBookingWizard() {
   const [vehicleSubStep, setVehicleSubStep] = useState<MotVehicleSubStep>('details');
   const [data, setData] = useState<MotWizardData>(emptyMotWizardData());
   const [savedRetailers, setSavedRetailers] = useState<MotRetailer[]>([]);
-  const [savingRetailer, setSavingRetailer] = useState(false);
   const [loading, setLoading] = useState(true);
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [amendBookingId, setAmendBookingId] = useState<string | null>(null);
 
-  const maxAvailableStep = useMemo(() => {
+  const maxAvailableStep = useMemo((): MotWizardStep => {
     if (!isVehicleModelComplete(data)) return 1;
     if (!isRetailerComplete(data)) return 2;
     if (!isServicesComplete(data)) return 3;
@@ -159,31 +195,6 @@ export function useMotBookingWizard() {
     setData((prev) => ({ ...prev, retailer: retailerToWizard(retailer) }));
   }, []);
 
-  const saveRetailer = useCallback(
-    async (setAsDefault: boolean) => {
-      if (!isRetailerComplete(data)) return;
-      setSavingRetailer(true);
-      try {
-        const payload = wizardRetailerToPayload(data.retailer, setAsDefault);
-        let saved: MotRetailer;
-        if (data.retailer.id) {
-          saved = await motRetailerService.updateRetailer(data.retailer.id, payload);
-        } else {
-          saved = await motRetailerService.createRetailer(payload);
-        }
-        if (setAsDefault && saved.id) {
-          saved = await motRetailerService.setDefaultRetailer(saved.id);
-        }
-        setData((prev) => ({ ...prev, retailer: retailerToWizard(saved) }));
-        await fetchRetailers();
-      } catch {
-      } finally {
-        setSavingRetailer(false);
-      }
-    },
-    [data, fetchRetailers],
-  );
-
   const openPrivacyModal = useCallback(() => {
     if (!isCustomerDetailsComplete(data)) return;
     setPrivacyModalOpen(true);
@@ -205,12 +216,15 @@ export function useMotBookingWizard() {
         booking = await motBookingService.createBooking(payload);
       }
       clearWizardDraft();
-      router.push(`/workshop-management/mot-bookings/${booking.id}/confirmation`);
+      const nextPath = confirmationPath
+        ? confirmationPath(booking.id)
+        : `/mot/bookings/${booking.id}/confirmation`;
+      router.push(nextPath);
     } catch {
     } finally {
       setConfirming(false);
     }
-  }, [amendBookingId, data, router]);
+  }, [amendBookingId, confirmationPath, data, router]);
 
   const handlePrimaryNext = useCallback(() => {
     if (currentStep === 1) {
@@ -270,7 +284,7 @@ export function useMotBookingWizard() {
     vehicleSubStep,
     data,
     savedRetailers,
-    savingRetailer,
+    savingRetailer: false,
     confirming,
     privacyModalOpen,
     setPrivacyModalOpen,
@@ -288,8 +302,9 @@ export function useMotBookingWizard() {
     confirmVehicleDetails,
     completeVehicleStep,
     selectSavedRetailer,
-    saveRetailer,
+    saveRetailer: async () => {},
     handlePrimaryNext,
+    openPrivacyModal,
     confirmPrivacyAndGoToStep6,
     submitBooking,
     setVehicleSubStep,

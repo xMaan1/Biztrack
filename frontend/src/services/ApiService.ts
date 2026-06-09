@@ -25,7 +25,7 @@ export interface PaginatedResponse<T> {
 export class ApiService {
   private client: AxiosInstance;
   private sessionManager: SessionManager;
-  private publicEndpoints = ['/auth/login', '/auth/register', '/auth/reset-password', '/auth/reset-password/confirm', '/public/plans'];
+  private publicEndpoints = ['/auth/login', '/auth/register', '/auth/reset-password', '/auth/reset-password/confirm', '/public/plans', '/public/mot'];
   private currentTenantId: string | null = null;
 
   constructor() {

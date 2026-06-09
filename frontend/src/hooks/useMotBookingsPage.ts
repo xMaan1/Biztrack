@@ -2,28 +2,21 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { apiService } from '@/src/services/ApiService';
 import motBookingService from '@/src/services/MotBookingService';
 import type {
   MotBooking,
   MotBookingStats,
   MotBookingStatus,
-  TenantUserOption,
-  WorkOrderOption,
-} from '@/src/models/workshop/MotBooking';
-import type { Customer } from '@/src/services/CustomerService';
-import type { Vehicle } from '@/src/models/workshop';
-import type { MotBookingFiltersState, MotBookingFormData } from '@/src/components/workshop/mot-bookings/types';
+} from '@/src/models/mot/MotBooking';
+import type { MotBookingFiltersState, MotBookingFormData } from '@/src/components/mot-bookings/types';
 import {
   applyTimeSlot,
   bookingToFormData,
-  customerToFormPatch,
   defaultFilters,
   emptyMotBookingFormData,
   filterBookings,
   formDataToPayload,
-  vehicleToFormPatch,
-} from '@/src/components/workshop/mot-bookings/motBookingUtils';
+} from '@/src/components/mot-bookings/motBookingUtils';
 
 export function useMotBookingsPage() {
   const searchParams = useSearchParams();
@@ -33,8 +26,6 @@ export function useMotBookingsPage() {
   const [stats, setStats] = useState<MotBookingStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [users, setUsers] = useState<TenantUserOption[]>([]);
-  const [workOrders, setWorkOrders] = useState<WorkOrderOption[]>([]);
   const [filters, setFilters] = useState<MotBookingFiltersState>(defaultFilters());
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -42,8 +33,6 @@ export function useMotBookingsPage() {
   const [bookingToDelete, setBookingToDelete] = useState<MotBooking | null>(null);
   const [viewingBooking, setViewingBooking] = useState<MotBooking | null>(null);
   const [formData, setFormData] = useState<MotBookingFormData>(emptyMotBookingFormData());
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
 
   const fetchBookings = useCallback(async () => {
     try {
@@ -63,41 +52,22 @@ export function useMotBookingsPage() {
     }
   }, []);
 
-  const fetchSupportData = useCallback(async () => {
-    try {
-      const [usersRes, workOrdersRes] = await Promise.all([
-        apiService.get('/tenants/current/users'),
-        apiService.get('/work-orders?limit=500'),
-      ]);
-      const userList = usersRes?.data ?? usersRes ?? [];
-      setUsers(Array.isArray(userList) ? userList : []);
-      setWorkOrders(Array.isArray(workOrdersRes) ? workOrdersRes : []);
-    } catch {
-      setUsers([]);
-      setWorkOrders([]);
-    }
-  }, []);
-
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      await Promise.all([fetchBookings(), fetchStats(), fetchSupportData()]);
+      await Promise.all([fetchBookings(), fetchStats()]);
       setLoading(false);
     };
     load();
-  }, [fetchBookings, fetchStats, fetchSupportData]);
+  }, [fetchBookings, fetchStats]);
 
   const filteredBookings = useMemo(
     () => filterBookings(bookings, filters),
     [bookings, filters],
   );
 
-  const displayTotalCount = filteredBookings.length;
-
   const openNewBookingDialog = useCallback(() => {
     setEditingBooking(null);
-    setSelectedCustomer(null);
-    setSelectedVehicle(null);
     setFormData(emptyMotBookingFormData());
     setIsDialogOpen(true);
   }, []);
@@ -108,27 +78,15 @@ export function useMotBookingsPage() {
     const params = new URLSearchParams(searchParams.toString());
     params.delete('openAdd');
     const nextQuery = params.toString();
-    router.replace(nextQuery ? `/workshop-management/mot-bookings?${nextQuery}` : '/workshop-management/mot-bookings');
+    router.replace(nextQuery ? `/mot/manage/bookings?${nextQuery}` : '/mot/manage/bookings');
   }, [searchParams, router, openNewBookingDialog]);
 
   const handleDialogClose = useCallback((open: boolean) => {
     if (!open) {
       setEditingBooking(null);
-      setSelectedCustomer(null);
-      setSelectedVehicle(null);
       setFormData(emptyMotBookingFormData());
     }
     setIsDialogOpen(open);
-  }, []);
-
-  const handleCustomerSelect = useCallback((customer: Customer | null) => {
-    setSelectedCustomer(customer);
-    setFormData((prev) => ({ ...prev, ...customerToFormPatch(customer) }));
-  }, []);
-
-  const handleVehicleSelect = useCallback((vehicle: Vehicle | null) => {
-    setSelectedVehicle(vehicle);
-    setFormData((prev) => ({ ...prev, ...vehicleToFormPatch(vehicle) }));
   }, []);
 
   const handleTimeSlotChange = useCallback((slotKey: string) => {
@@ -138,19 +96,17 @@ export function useMotBookingsPage() {
   const handleSubmit = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      if (!formData.customerId && !formData.customerName.trim()) return;
+      if (!formData.customerName.trim()) return;
       setSaving(true);
       const payload = formDataToPayload(formData);
       try {
         if (editingBooking?.id) {
-          await motBookingService.updateBooking(editingBooking.id, payload);
+          await motBookingService.adminUpdateBooking(editingBooking.id, payload);
         } else {
-          await motBookingService.createBooking(payload);
+          await motBookingService.adminCreateBooking(payload);
         }
         setIsDialogOpen(false);
         setEditingBooking(null);
-        setSelectedCustomer(null);
-        setSelectedVehicle(null);
         setFormData(emptyMotBookingFormData());
         await Promise.all([fetchBookings(), fetchStats()]);
       } catch {
@@ -161,28 +117,10 @@ export function useMotBookingsPage() {
     [editingBooking, formData, fetchBookings, fetchStats],
   );
 
-  const handleEdit = useCallback(async (booking: MotBooking) => {
+  const handleEdit = useCallback((booking: MotBooking) => {
     setViewingBooking(null);
     setEditingBooking(booking);
     setFormData(bookingToFormData(booking));
-    setSelectedCustomer(null);
-    setSelectedVehicle(null);
-    if (booking.customer_id) {
-      try {
-        const customer = await apiService.get(`/invoices/customers/${booking.customer_id}`);
-        setSelectedCustomer(customer);
-      } catch {
-        setSelectedCustomer(null);
-      }
-    }
-    if (booking.vehicle_id) {
-      try {
-        const vehicle = await apiService.get(`/vehicles/${booking.vehicle_id}`);
-        setSelectedVehicle(vehicle);
-      } catch {
-        setSelectedVehicle(null);
-      }
-    }
     setIsDialogOpen(true);
   }, []);
 
@@ -211,7 +149,7 @@ export function useMotBookingsPage() {
   const handleStatusChange = useCallback(
     async (booking: MotBooking, status: MotBookingStatus) => {
       try {
-        await motBookingService.updateBookingStatus(booking.id, { status });
+        await motBookingService.adminUpdateBookingStatus(booking.id, { status });
         await Promise.all([fetchBookings(), fetchStats()]);
       } catch {
       }
@@ -228,10 +166,8 @@ export function useMotBookingsPage() {
     saving,
     bookings,
     filteredBookings,
-    totalCount: displayTotalCount,
+    totalCount: filteredBookings.length,
     stats,
-    users,
-    workOrders,
     filters,
     setFilters,
     isDialogOpen,
@@ -241,12 +177,8 @@ export function useMotBookingsPage() {
     viewingBooking,
     formData,
     setFormData,
-    selectedCustomer,
-    selectedVehicle,
     openNewBookingDialog,
     handleDialogClose,
-    handleCustomerSelect,
-    handleVehicleSelect,
     handleTimeSlotChange,
     handleSubmit,
     handleEdit,

@@ -1,0 +1,249 @@
+from datetime import date, datetime as dt, timedelta
+from typing import List, Optional
+from decimal import Decimal
+
+from fastapi import HTTPException, status
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
+from .....models.mot import MotBooking
+from ...repository import get_by_id, create_entity, delete_by_id
+from .schemas import (
+    MotBookingCreate,
+    MotBookingUpdate,
+    MotBookingStatusUpdate,
+    MotBookingsResponse,
+    MotBookingStats,
+)
+from .shared import mot_booking_to_schema
+
+
+def _get_mot_booking_row(booking_id: str, db: Session) -> Optional[MotBooking]:
+    return db.query(MotBooking).filter(MotBooking.id == booking_id).first()
+
+
+def _retailer_name(row: MotBooking) -> Optional[str]:
+    if row.retailer:
+        return row.retailer.name
+    meta = row.booking_meta or {}
+    retailer = meta.get("retailer") if isinstance(meta, dict) else None
+    if isinstance(retailer, dict):
+        return retailer.get("name")
+    return None
+
+
+def _resolve_customer_fields(body):
+    if not (body.customer_name and body.customer_name.strip()):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="customer_name is required",
+        )
+    return body.customer_name.strip(), body.customer_phone, body.customer_email
+
+
+def get_mot_bookings(
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+    status_filter: Optional[str] = None,
+    test_type: Optional[str] = None,
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
+    search: Optional[str] = None,
+    is_active: Optional[bool] = True,
+) -> List[MotBooking]:
+    query = db.query(MotBooking)
+    if is_active is not None:
+        query = query.filter(MotBooking.is_active == is_active)
+    if status_filter:
+        query = query.filter(MotBooking.status == status_filter)
+    if test_type:
+        query = query.filter(MotBooking.test_type == test_type)
+    if date_from is not None:
+        query = query.filter(MotBooking.booking_date >= date_from)
+    if date_to is not None:
+        query = query.filter(MotBooking.booking_date <= date_to)
+    if search:
+        search_lower = f"%{search.lower()}%"
+        query = query.filter(
+            MotBooking.customer_name.ilike(search_lower)
+            | MotBooking.vehicle_registration.ilike(search_lower)
+            | MotBooking.customer_phone.ilike(search_lower)
+            | MotBooking.vehicle_make.ilike(search_lower)
+            | MotBooking.vehicle_model.ilike(search_lower)
+        )
+    return (
+        query.order_by(MotBooking.booking_date.desc(), MotBooking.start_time.asc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+
+def get_mot_bookings_count(
+    db: Session,
+    status_filter: Optional[str] = None,
+    test_type: Optional[str] = None,
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
+    search: Optional[str] = None,
+    is_active: Optional[bool] = True,
+) -> int:
+    query = db.query(MotBooking)
+    if is_active is not None:
+        query = query.filter(MotBooking.is_active == is_active)
+    if status_filter:
+        query = query.filter(MotBooking.status == status_filter)
+    if test_type:
+        query = query.filter(MotBooking.test_type == test_type)
+    if date_from is not None:
+        query = query.filter(MotBooking.booking_date >= date_from)
+    if date_to is not None:
+        query = query.filter(MotBooking.booking_date <= date_to)
+    if search:
+        search_lower = f"%{search.lower()}%"
+        query = query.filter(
+            MotBooking.customer_name.ilike(search_lower)
+            | MotBooking.vehicle_registration.ilike(search_lower)
+            | MotBooking.customer_phone.ilike(search_lower)
+            | MotBooking.vehicle_make.ilike(search_lower)
+            | MotBooking.vehicle_model.ilike(search_lower)
+        )
+    return query.count()
+
+
+def _map_bookings(rows: List[MotBooking]):
+    return [mot_booking_to_schema(row, _retailer_name(row)) for row in rows]
+
+
+def list_mot_bookings(
+    db: Session,
+    status_filter: Optional[str] = None,
+    test_type: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    search: Optional[str] = None,
+    is_active: Optional[bool] = True,
+    page: int = 1,
+    limit: int = 100,
+) -> MotBookingsResponse:
+    date_from_parsed = dt.strptime(date_from, "%Y-%m-%d").date() if date_from else None
+    date_to_parsed = dt.strptime(date_to, "%Y-%m-%d").date() if date_to else None
+    skip = (page - 1) * limit
+    rows = get_mot_bookings(
+        db, skip=skip, limit=limit,
+        status_filter=status_filter, test_type=test_type,
+        date_from=date_from_parsed, date_to=date_to_parsed,
+        search=search, is_active=is_active,
+    )
+    total = get_mot_bookings_count(
+        db, status_filter=status_filter, test_type=test_type,
+        date_from=date_from_parsed, date_to=date_to_parsed,
+        search=search, is_active=is_active,
+    )
+    return MotBookingsResponse(bookings=_map_bookings(rows), total=total)
+
+
+def list_mot_bookings_calendar(
+    db: Session,
+    date_from: str,
+    date_to: str,
+) -> MotBookingsResponse:
+    date_from_parsed = dt.strptime(date_from, "%Y-%m-%d").date()
+    date_to_parsed = dt.strptime(date_to, "%Y-%m-%d").date()
+    rows = get_mot_bookings(
+        db, skip=0, limit=1000,
+        date_from=date_from_parsed, date_to=date_to_parsed, is_active=True,
+    )
+    bookings = _map_bookings(rows)
+    return MotBookingsResponse(bookings=bookings, total=len(bookings))
+
+
+def get_mot_booking(booking_id: str, db: Session):
+    row = _get_mot_booking_row(booking_id, db)
+    if not row:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="MOT booking not found")
+    return mot_booking_to_schema(row, _retailer_name(row))
+
+
+def create_mot_booking_record(body: MotBookingCreate, db: Session):
+    customer_name, customer_phone, customer_email = _resolve_customer_fields(body)
+    data = body.model_dump(exclude={"customer_name", "customer_phone", "customer_email"})
+    data["customer_name"] = customer_name
+    data["customer_phone"] = customer_phone
+    data["customer_email"] = customer_email
+    data["is_active"] = True
+    if isinstance(data.get("price"), Decimal):
+        data["price"] = float(data["price"])
+    row = create_entity(MotBooking, data, db)
+    return mot_booking_to_schema(row, _retailer_name(row))
+
+
+def update_mot_booking_record(booking_id: str, body: MotBookingUpdate, db: Session):
+    row = _get_mot_booking_row(booking_id, db)
+    if not row:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="MOT booking not found")
+    update_data = body.model_dump(exclude_unset=True)
+    if body.customer_name is not None:
+        if not body.customer_name.strip():
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="customer_name is required")
+        update_data["customer_name"] = body.customer_name.strip()
+    if "price" in update_data and isinstance(update_data["price"], Decimal):
+        update_data["price"] = float(update_data["price"])
+    for key, value in update_data.items():
+        if hasattr(row, key):
+            setattr(row, key, value)
+    row.updated_at = dt.utcnow()
+    db.commit()
+    db.refresh(row)
+    return mot_booking_to_schema(row, _retailer_name(row))
+
+
+def update_mot_booking_status(booking_id: str, body: MotBookingStatusUpdate, db: Session):
+    row = _get_mot_booking_row(booking_id, db)
+    if not row:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="MOT booking not found")
+    row.status = body.status
+    if body.result_notes is not None:
+        row.result_notes = body.result_notes
+    row.updated_at = dt.utcnow()
+    db.commit()
+    db.refresh(row)
+    return mot_booking_to_schema(row, _retailer_name(row))
+
+
+def delete_mot_booking_record(booking_id: str, db: Session) -> None:
+    row = _get_mot_booking_row(booking_id, db)
+    if not row:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="MOT booking not found")
+    delete_by_id(MotBooking, booking_id, db)
+
+
+def get_mot_booking_stats(db: Session) -> MotBookingStats:
+    today = date.today()
+    week_end = today + timedelta(days=7)
+    base = db.query(MotBooking).filter(MotBooking.is_active == True)
+    total = base.count()
+    today_count = base.filter(MotBooking.booking_date == today).count()
+    upcoming = base.filter(
+        MotBooking.booking_date >= today,
+        MotBooking.booking_date <= week_end,
+        MotBooking.status.in_(["scheduled", "confirmed"]),
+    ).count()
+    status_counts = dict(
+        db.query(MotBooking.status, func.count(MotBooking.id))
+        .filter(MotBooking.is_active == True)
+        .group_by(MotBooking.status)
+        .all()
+    )
+    return MotBookingStats(
+        total_bookings=total,
+        today_bookings=today_count,
+        upcoming_week=upcoming,
+        scheduled_count=status_counts.get("scheduled", 0),
+        confirmed_count=status_counts.get("confirmed", 0),
+        in_progress_count=status_counts.get("in_progress", 0),
+        passed_count=status_counts.get("passed", 0),
+        failed_count=status_counts.get("failed", 0),
+        cancelled_count=status_counts.get("cancelled", 0) + status_counts.get("no_show", 0),
+    )

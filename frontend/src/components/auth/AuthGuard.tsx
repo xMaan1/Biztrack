@@ -19,19 +19,30 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
   // List of public routes that don't require authentication
   const publicRoutes = [
-    '/', // Landing page
+    '/',
     '/about',
     '/contact',
-    '/login', // Login page
-    '/signup', // Signup page
-    '/client-portal', // Client portal (if exists)
-    '/api', // API routes
-    '/_next', // Next.js internal routes
-    '/favicon.ico', // Favicon
-    '/manifest.json', // PWA manifest
+    '/login',
+    '/signup',
+    '/client-portal',
+    '/api',
+    '/_next',
+    '/favicon.ico',
+    '/manifest.json',
   ];
 
-  // List of protected routes that require authentication
+  const isMotPublicRoute = useMemo(() => {
+    return (
+      pathname === '/mot' ||
+      pathname === '/mot/book' ||
+      pathname?.startsWith('/mot/bookings/') === true
+    );
+  }, [pathname]);
+
+  const isPublicRoute = useMemo(() => {
+    return isMotPublicRoute || publicRoutes.some((route) => pathname?.startsWith(route));
+  }, [pathname, isMotPublicRoute]);
+
   const protectedRoutes = [
     '/dashboard',
     '/inventory',
@@ -48,14 +59,9 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     '/reports',
     '/hrm',
     '/workshop-management',
+    '/mot/manage',
   ];
 
-  // Check if current route is public
-  const isPublicRoute = useMemo(() => {
-    return publicRoutes.some((route) => pathname?.startsWith(route));
-  }, [pathname]);
-
-  // Check if current route is protected
   const isProtectedRoute = useMemo(() => {
     return protectedRoutes.some((route) => pathname?.startsWith(route));
   }, [pathname]);

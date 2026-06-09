@@ -733,6 +733,29 @@ export const allMenuItems: MenuItem[] = [
   },
   // Workshop-specific modules
   {
+    text: 'MOT',
+    icon: ClipboardCheck,
+    roles: ['*'],
+    planTypes: ['*'],
+    gradient: 'from-blue-500 to-indigo-500',
+    subItems: [
+      {
+        text: 'Book MOT',
+        icon: ClipboardCheck,
+        path: '/mot/book',
+        roles: ['*'],
+        planTypes: ['*'],
+      },
+      {
+        text: 'Manage Bookings',
+        icon: ClipboardList,
+        path: '/mot/manage/bookings',
+        roles: ['*'],
+        planTypes: ['*'],
+      },
+    ],
+  },
+  {
     text: 'Workshop Management',
     icon: Factory,
     roles: ['*'],
@@ -757,13 +780,6 @@ export const allMenuItems: MenuItem[] = [
         text: 'Vehicles',
         icon: Car,
         path: '/workshop-management/vehicles',
-        roles: ['*'],
-        planTypes: ['workshop'],
-      },
-      {
-        text: 'MOT Bookings',
-        icon: ClipboardCheck,
-        path: '/workshop-management/mot-bookings',
         roles: ['*'],
         planTypes: ['workshop'],
       },
