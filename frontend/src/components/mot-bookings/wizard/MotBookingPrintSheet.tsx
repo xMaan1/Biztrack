@@ -1,12 +1,13 @@
 'use client';
 
 import type { MotBooking } from '@/src/models/mot/MotBooking';
-import { getVehicleBrandStyle } from './motBrandStyle';
 import {
   formatBookingDateTime,
   getDeliveryOptionLabel,
 } from './wizardUtils';
 import { MOT_INSPECTION_PRICE } from './wizardTypes';
+
+const MOT_LOGO_SRC = '/mot/saks-auto-world-logo.jpeg';
 
 type MotBookingPrintSheetProps = {
   booking: MotBooking;
@@ -15,24 +16,23 @@ type MotBookingPrintSheetProps = {
 export function MotBookingPrintSheet({ booking }: MotBookingPrintSheetProps) {
   const meta = (booking.booking_meta || {}) as Record<string, unknown>;
   const customer = (meta.customer || {}) as Record<string, string>;
-  const brand = getVehicleBrandStyle(booking.vehicle_make || '');
   const bookingRef = booking.id.slice(0, 8).toUpperCase();
 
   return (
     <div id="mot-print-sheet" className="hidden print:fixed print:inset-0 print:z-[9999] print:block print:bg-white print:p-8">
       <div className="mx-auto max-w-[800px] border-2 border-slate-200 bg-white p-8 font-sans text-slate-900">
-        <div className="flex items-start justify-between">
+        <div className="flex items-start gap-6">
+          <img
+            src={MOT_LOGO_SRC}
+            alt="Saks Auto World"
+            className="h-24 w-auto shrink-0 object-contain"
+          />
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.3em] text-slate-500">
               MOT Test Booking
             </p>
             <h1 className="mt-2 text-3xl font-black tracking-tight">Booking Confirmation</h1>
             <p className="mt-1 text-sm text-slate-600">Reference: MOT-{bookingRef}</p>
-          </div>
-          <div
-            className={`flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${brand.gradient} text-white shadow-lg`}
-          >
-            <span className="text-lg font-black tracking-wider">{brand.initials}</span>
           </div>
         </div>
 
@@ -136,10 +136,26 @@ export async function exportMotBookingPdf(bookingRef: string): Promise<void> {
     const html2canvas = (await import('html2canvas')).default;
     const { jsPDF } = await import('jspdf');
 
+    const images = element.querySelectorAll('img');
+    await Promise.all(
+      Array.from(images).map(
+        (img) =>
+          new Promise<void>((resolve) => {
+            if (img.complete) {
+              resolve();
+              return;
+            }
+            img.onload = () => resolve();
+            img.onerror = () => resolve();
+          }),
+      ),
+    );
+
     const canvas = await html2canvas(element, {
       scale: 2,
       backgroundColor: '#ffffff',
       logging: false,
+      useCORS: true,
     });
 
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
