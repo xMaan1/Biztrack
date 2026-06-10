@@ -97,6 +97,7 @@ export default function InvestmentDetails({ investment, isOpen, onClose }: Inves
     <Dialog open={isOpen && !!investment} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         {!investment ? null : (
+        <>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             Investment Details
@@ -312,6 +313,7 @@ export default function InvestmentDetails({ investment, isOpen, onClose }: Inves
             Close
           </Button>
         </div>
+        </>
         )}
       </DialogContent>
     </Dialog>
