@@ -12,9 +12,66 @@ export type MotWizardVehicle = {
   model: string;
 };
 
+export type MotServiceOption = {
+  id: string;
+  label: string;
+  description: string;
+  price: number;
+};
+
+export const MOT_SERVICE_OPTIONS: MotServiceOption[] = [
+  {
+    id: 'mot-inspection',
+    label: 'Carry Out MOT Inspection',
+    description: 'Standard MOT test including emissions and safety checks',
+    price: 49,
+  },
+  {
+    id: 'oil-filter-change',
+    label: 'Oil & Filter Change',
+    description: 'Engine oil and filter replacement',
+    price: 79,
+  },
+  {
+    id: 'brake-pad-replacement',
+    label: 'Brake Pad Replacement',
+    description: 'Front or rear brake pad replacement',
+    price: 149,
+  },
+  {
+    id: 'full-service',
+    label: 'Full Service',
+    description: 'Comprehensive vehicle service and safety check',
+    price: 199,
+  },
+  {
+    id: 'tyre-rotation',
+    label: 'Tyre Rotation',
+    description: 'Rotate tyres for even wear',
+    price: 39,
+  },
+  {
+    id: 'air-con-regas',
+    label: 'Air Conditioning Regas',
+    description: 'Recharge air conditioning system',
+    price: 89,
+  },
+  {
+    id: 'battery-check',
+    label: 'Battery Check & Replacement',
+    description: 'Battery health test and replacement if required',
+    price: 120,
+  },
+  {
+    id: 'wheel-alignment',
+    label: 'Wheel Alignment',
+    description: 'Four-wheel alignment and tracking adjustment',
+    price: 65,
+  },
+];
+
 export type MotWizardServices = {
-  motInspection: boolean;
-  motPrice: number;
+  selectedServiceIds: string[];
   otherServices: string;
 };
 
@@ -101,8 +158,7 @@ export function emptyMotWizardData(): MotWizardData {
       model: '',
     },
     services: {
-      motInspection: true,
-      motPrice: MOT_INSPECTION_PRICE,
+      selectedServiceIds: ['mot-inspection'],
       otherServices: '',
     },
     dateTime: {

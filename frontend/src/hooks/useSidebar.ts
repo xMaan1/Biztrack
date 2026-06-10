@@ -9,6 +9,7 @@ import { apiService } from '../services/ApiService';
 import { SIDEBAR_PATH_PERMISSIONS } from '@/src/constants/rbacPermissions';
 import {
   allMenuItems,
+  motSuperAdminMenuItem,
   superAdminMenuItems,
 } from '@/src/constants/sidebarMenuItems';
 import type { MenuItem, SubMenuItem } from '@/src/types/sidebar';
@@ -200,7 +201,7 @@ export function useSidebar() {
 
     const currentPlanType = planInfo.planType;
 
-    return allMenuItems.filter((item) => {
+    const tenantItems = allMenuItems.filter((item) => {
       const isAvailableForPlan =
         item.planTypes.includes('*') || item.planTypes.includes(currentPlanType);
 
@@ -240,6 +241,12 @@ export function useSidebar() {
 
       return true;
     });
+
+    if (user?.userRole === 'super_admin') {
+      return [...tenantItems, motSuperAdminMenuItem];
+    }
+
+    return tenantItems;
   }, [
     searchQuery,
     planInfo,

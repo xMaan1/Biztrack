@@ -18,7 +18,10 @@ import {
   getMotTestTypeLabel,
   formatMotVehicleLine,
 } from '@/src/models/mot/MotBooking';
-import { getDeliveryOptionLabel } from '@/src/components/mot-bookings/wizard/wizardUtils';
+import {
+  getDeliveryOptionLabel,
+  getMotServiceById,
+} from '@/src/components/mot-bookings/wizard/wizardUtils';
 import type { MotDeliveryOption } from '@/src/components/mot-bookings/wizard/wizardTypes';
 import { formatBookingDateTime } from './motBookingUtils';
 
@@ -116,9 +119,19 @@ export function MotBookingViewDialog({
             )}
           </DetailSection>
 
-          {(services.motInspection || services.otherServices) && (
+          {(Array.isArray(services.selectedServiceIds) ||
+            services.motInspection ||
+            services.otherServices) && (
             <DetailSection title="Services">
-              {services.motInspection && <div>Carry Out MOT Inspection</div>}
+              {Array.isArray(services.selectedServiceIds) &&
+                services.selectedServiceIds.map((serviceId) => {
+                  const service =
+                    typeof serviceId === 'string' ? getMotServiceById(serviceId) : undefined;
+                  return <div key={String(serviceId)}>{service?.label || String(serviceId)}</div>;
+                })}
+              {!Array.isArray(services.selectedServiceIds) && services.motInspection && (
+                <div>Carry Out MOT Inspection</div>
+              )}
               {typeof services.otherServices === 'string' && services.otherServices.trim() && (
                 <div className="whitespace-pre-wrap text-muted-foreground">
                   {services.otherServices}

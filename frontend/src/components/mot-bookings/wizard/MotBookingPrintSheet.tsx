@@ -4,6 +4,7 @@ import type { MotBooking } from '@/src/models/mot/MotBooking';
 import {
   formatBookingDateTime,
   getDeliveryOptionLabel,
+  getMotServiceById,
 } from './wizardUtils';
 import { MOT_INSPECTION_PRICE } from './wizardTypes';
 
@@ -16,7 +17,18 @@ type MotBookingPrintSheetProps = {
 export function MotBookingPrintSheet({ booking }: MotBookingPrintSheetProps) {
   const meta = (booking.booking_meta || {}) as Record<string, unknown>;
   const customer = (meta.customer || {}) as Record<string, string>;
+  const servicesMeta = (meta.services || {}) as Record<string, unknown>;
   const bookingRef = booking.id.slice(0, 8).toUpperCase();
+  const selectedServices = Array.isArray(servicesMeta.selectedServiceIds)
+    ? servicesMeta.selectedServiceIds
+        .map((id) => (typeof id === 'string' ? getMotServiceById(id) : undefined))
+        .filter((service): service is NonNullable<typeof service> => Boolean(service))
+    : servicesMeta.motInspection
+      ? [getMotServiceById('mot-inspection')].filter(
+          (service): service is NonNullable<typeof service> => Boolean(service),
+        )
+      : [];
+  const bookingTotal = Number(booking.price) || selectedServices.reduce((sum, s) => sum + s.price, 0) || MOT_INSPECTION_PRICE;
 
   return (
     <div id="mot-print-sheet" className="hidden print:fixed print:inset-0 print:z-[9999] print:block print:bg-white print:p-8">
@@ -85,13 +97,20 @@ export function MotBookingPrintSheet({ booking }: MotBookingPrintSheetProps) {
         </div>
 
         <div className="mt-8 rounded-xl bg-slate-50 p-5">
-          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-            <span className="font-medium">Carry Out MOT Inspection</span>
-            <span className="font-bold">£{Number(booking.price || MOT_INSPECTION_PRICE).toFixed(2)}</span>
-          </div>
-          <div className="mt-3 flex items-center justify-between text-lg font-black">
+          {selectedServices.map((service, index) => (
+            <div
+              key={service.id}
+              className={`flex items-center justify-between py-2 ${
+                index < selectedServices.length - 1 ? 'border-b border-slate-200' : ''
+              }`}
+            >
+              <span className="font-medium">{service.label}</span>
+              <span className="font-bold">£{service.price.toFixed(2)}</span>
+            </div>
+          ))}
+          <div className="mt-3 flex items-center justify-between border-t border-slate-200 pt-3 text-lg font-black">
             <span>TOTAL</span>
-            <span>£{Number(booking.price || MOT_INSPECTION_PRICE).toFixed(2)}</span>
+            <span>£{bookingTotal.toFixed(2)}</span>
           </div>
           <p className="mt-2 text-xs text-slate-500">*Payable on day of appointment</p>
         </div>

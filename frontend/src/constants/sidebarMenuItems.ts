@@ -731,30 +731,6 @@ export const allMenuItems: MenuItem[] = [
     planTypes: ['*'], 
     gradient: 'from-indigo-500 to-blue-500',
   },
-  // Workshop-specific modules
-  {
-    text: 'MOT',
-    icon: ClipboardCheck,
-    roles: ['*'],
-    planTypes: ['*'],
-    gradient: 'from-blue-500 to-indigo-500',
-    subItems: [
-      {
-        text: 'Book MOT',
-        icon: ClipboardCheck,
-        path: '/mot/book',
-        roles: ['*'],
-        planTypes: ['*'],
-      },
-      {
-        text: 'Manage Bookings',
-        icon: ClipboardList,
-        path: '/mot/manage/bookings',
-        roles: ['*'],
-        planTypes: ['*'],
-      },
-    ],
-  },
   {
     text: 'Workshop Management',
     icon: Factory,
@@ -944,7 +920,30 @@ export const allMenuItems: MenuItem[] = [
   },
 ];
 
-// Super admin menu items - only show Tenants, Plans, and Subscriptions
+export const motSuperAdminMenuItem: MenuItem = {
+  text: 'MOT',
+  icon: ClipboardCheck,
+  roles: ['super_admin'],
+  planTypes: ['*'],
+  gradient: 'from-blue-500 to-indigo-500',
+  subItems: [
+    {
+      text: 'Book MOT',
+      icon: ClipboardCheck,
+      path: '/mot/book',
+      roles: ['super_admin'],
+      planTypes: ['*'],
+    },
+    {
+      text: 'Manage Bookings',
+      icon: ClipboardList,
+      path: '/mot/manage/bookings',
+      roles: ['super_admin'],
+      planTypes: ['*'],
+    },
+  ],
+};
+
 export const superAdminMenuItems: MenuItem[] = [
   {
     text: 'Tenants',
@@ -970,6 +969,7 @@ export const superAdminMenuItems: MenuItem[] = [
     planTypes: ['*'],
     gradient: 'from-blue-500 to-cyan-500',
   },
+  motSuperAdminMenuItem,
 ];
 
 

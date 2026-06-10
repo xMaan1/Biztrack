@@ -3,7 +3,6 @@
 import { Button } from '@/src/components/ui/button';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import type { MotWizardData, MotWizardStep } from '../wizardTypes';
-import { MOT_INSPECTION_PRICE } from '../wizardTypes';
 import {
   calculateTotalCost,
   formatBookingDateTime,
@@ -11,6 +10,7 @@ import {
   formatCustomerName,
   formatVehicleSummary,
   getDeliveryOptionLabel,
+  getSelectedMotServices,
 } from '../wizardUtils';
 
 type Step5ConfirmSummaryProps = {
@@ -79,12 +79,12 @@ export function Step5ConfirmSummary({
         </SummaryBlock>
 
         <SummaryBlock title="Your Services" step={2} onEdit={onEditStep}>
-          {data.services.motInspection && (
-            <div className="flex justify-between font-medium">
-              <span>Carry Out MOT Inspection</span>
-              <span>£{MOT_INSPECTION_PRICE.toFixed(2)}</span>
+          {getSelectedMotServices(data.services).map((service) => (
+            <div key={service.id} className="flex justify-between font-medium">
+              <span>{service.label}</span>
+              <span>£{service.price.toFixed(2)}</span>
             </div>
-          )}
+          ))}
           {data.services.otherServices.trim() && (
             <p className="text-muted-foreground">{data.services.otherServices}</p>
           )}

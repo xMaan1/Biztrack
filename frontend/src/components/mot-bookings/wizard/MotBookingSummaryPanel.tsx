@@ -8,8 +8,8 @@ import {
   formatBookingDateTime,
   formatVehicleSummary,
   getDeliveryOptionLabel,
+  getSelectedMotServices,
 } from './wizardUtils';
-import { MOT_INSPECTION_PRICE } from './wizardTypes';
 
 type MotBookingSummaryPanelProps = {
   data: MotWizardData;
@@ -109,14 +109,17 @@ export function MotBookingSummaryPanel({
           step={2}
           currentStep={currentStep}
           onEdit={onEditStep}
-          hasContent={data.services.motInspection || Boolean(data.services.otherServices.trim())}
+          hasContent={
+            data.services.selectedServiceIds.length > 0 ||
+            Boolean(data.services.otherServices.trim())
+          }
         >
-          {data.services.motInspection && (
-            <div className="flex items-start justify-between gap-2">
-              <span>Carry Out MOT Inspection</span>
-              <span className="font-bold">£{MOT_INSPECTION_PRICE.toFixed(2)}</span>
+          {getSelectedMotServices(data.services).map((service) => (
+            <div key={service.id} className="flex items-start justify-between gap-2">
+              <span>{service.label}</span>
+              <span className="font-bold">£{service.price.toFixed(2)}</span>
             </div>
-          )}
+          ))}
           {deliveryLabel && currentStep >= 3 && (
             <p className="text-xs text-muted-foreground">{deliveryLabel}</p>
           )}

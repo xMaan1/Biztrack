@@ -3,7 +3,27 @@ import type {
   MotWizardData,
   MotWizardVehicle,
 } from './wizardTypes';
-import { MOT_DELIVERY_OPTIONS, MOT_INSPECTION_PRICE } from './wizardTypes';
+import {
+  MOT_DELIVERY_OPTIONS,
+  MOT_INSPECTION_PRICE,
+  MOT_SERVICE_OPTIONS,
+  type MotServiceOption,
+  type MotWizardServices,
+} from './wizardTypes';
+
+export function getMotServiceById(id: string): MotServiceOption | undefined {
+  return MOT_SERVICE_OPTIONS.find((service) => service.id === id);
+}
+
+export function getSelectedMotServices(services: MotWizardServices): MotServiceOption[] {
+  return services.selectedServiceIds
+    .map((id) => getMotServiceById(id))
+    .filter((service): service is MotServiceOption => Boolean(service));
+}
+
+export function hasMotInspectionSelected(services: MotWizardServices): boolean {
+  return services.selectedServiceIds.includes('mot-inspection');
+}
 
 export const WIZARD_STORAGE_KEY = 'mot_booking_wizard_draft';
 
@@ -61,9 +81,7 @@ export function formatBookingDateTime(date: string, time: string): string {
 }
 
 export function calculateTotalCost(data: MotWizardData): number {
-  let total = 0;
-  if (data.services.motInspection) total += MOT_INSPECTION_PRICE;
-  return total;
+  return getSelectedMotServices(data.services).reduce((total, service) => total + service.price, 0);
 }
 
 export function isVehicleDetailsComplete(data: MotWizardData): boolean {
@@ -81,7 +99,7 @@ export function isVehicleModelComplete(data: MotWizardData): boolean {
 }
 
 export function isServicesComplete(data: MotWizardData): boolean {
-  return data.services.motInspection || data.services.otherServices.trim().length > 0;
+  return data.services.selectedServiceIds.length > 0 || data.services.otherServices.trim().length > 0;
 }
 
 export function isDateTimeComplete(data: MotWizardData): boolean {
@@ -158,7 +176,11 @@ export function wizardDataToBookingPayload(data: MotWizardData) {
     mileage: data.vehicle.mileage,
     notes: notesParts.join('\n\n') || undefined,
     booking_meta: {
-      services: data.services,
+      services: {
+        ...data.services,
+        motInspection: hasMotInspectionSelected(data.services),
+        motPrice: MOT_INSPECTION_PRICE,
+      },
       deliveryOption: data.dateTime.deliveryOption,
       customer: data.customer,
       vehicle: data.vehicle,
@@ -181,8 +203,11 @@ export function bookingToWizardData(booking: import('@/src/models/mot/MotBooking
       model: booking.vehicle_model || vehicleMeta.model || '',
     },
     services: {
-      motInspection: servicesMeta.motInspection ?? true,
-      motPrice: servicesMeta.motPrice ?? MOT_INSPECTION_PRICE,
+      selectedServiceIds: Array.isArray(servicesMeta.selectedServiceIds)
+        ? servicesMeta.selectedServiceIds
+        : servicesMeta.motInspection === false
+          ? []
+          : ['mot-inspection'],
       otherServices: servicesMeta.otherServices || booking.notes || '',
     },
     dateTime: {
