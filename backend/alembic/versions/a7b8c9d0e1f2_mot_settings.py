@@ -10,6 +10,8 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 
+from migration_utils import table_exists
+
 
 revision: str = 'a7b8c9d0e1f2'
 down_revision: Union[str, None] = 'f6a7b8c9d0e1'
@@ -18,6 +20,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    if table_exists('mot_settings'):
+        return
+
     op.create_table(
         'mot_settings',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -31,4 +36,5 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_table('mot_settings')
+    if table_exists('mot_settings'):
+        op.drop_table('mot_settings')

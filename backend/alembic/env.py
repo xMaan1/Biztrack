@@ -8,7 +8,9 @@ from dotenv import load_dotenv
 from sqlalchemy import engine_from_config, pool
 
 backend_dir = Path(__file__).resolve().parents[1]
+alembic_dir = Path(__file__).resolve().parent
 sys.path.insert(0, str(backend_dir))
+sys.path.insert(0, str(alembic_dir))
 
 load_dotenv(backend_dir / ".env")
 
