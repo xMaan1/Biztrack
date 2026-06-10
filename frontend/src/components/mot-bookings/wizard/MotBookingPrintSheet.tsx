@@ -19,12 +19,18 @@ export function MotBookingPrintSheet({ booking }: MotBookingPrintSheetProps) {
   const customer = (meta.customer || {}) as Record<string, string>;
   const servicesMeta = (meta.services || {}) as Record<string, unknown>;
   const bookingRef = booking.id.slice(0, 8).toUpperCase();
+  const storedMotPrice = Number(servicesMeta.motPrice);
+  const motPrice = Number.isFinite(storedMotPrice) && storedMotPrice >= 0
+    ? storedMotPrice
+    : MOT_INSPECTION_PRICE;
   const selectedServices = Array.isArray(servicesMeta.selectedServiceIds)
     ? servicesMeta.selectedServiceIds
-        .map((id) => (typeof id === 'string' ? getMotServiceById(id) : undefined))
+        .map((id) =>
+          typeof id === 'string' ? getMotServiceById(id, motPrice) : undefined,
+        )
         .filter((service): service is NonNullable<typeof service> => Boolean(service))
     : servicesMeta.motInspection
-      ? [getMotServiceById('mot-inspection')].filter(
+      ? [getMotServiceById('mot-inspection', motPrice)].filter(
           (service): service is NonNullable<typeof service> => Boolean(service),
         )
       : [];

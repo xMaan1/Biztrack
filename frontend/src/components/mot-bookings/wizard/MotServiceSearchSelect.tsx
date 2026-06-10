@@ -7,29 +7,43 @@ import { Label } from '@/src/components/ui/label';
 import { Button } from '@/src/components/ui/button';
 import { Badge } from '@/src/components/ui/badge';
 import { Card, CardContent } from '@/src/components/ui/card';
-import { MOT_SERVICE_OPTIONS, type MotServiceOption } from './wizardTypes';
+import { MOT_INSPECTION_PRICE, MOT_SERVICE_OPTIONS, type MotServiceOption } from './wizardTypes';
+import { getMotServiceById } from './wizardUtils';
 
 type MotServiceSearchSelectProps = {
   value: string[];
   onChange: (selectedIds: string[]) => void;
+  inspectionPrice?: number;
 };
 
-export function MotServiceSearchSelect({ value, onChange }: MotServiceSearchSelectProps) {
+export function MotServiceSearchSelect({
+  value,
+  onChange,
+  inspectionPrice = MOT_INSPECTION_PRICE,
+}: MotServiceSearchSelectProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const selectedIds = useMemo(() => new Set(value), [value]);
 
+  const serviceOptions = useMemo(
+    () =>
+      MOT_SERVICE_OPTIONS.map(
+        (service) => getMotServiceById(service.id, inspectionPrice) as MotServiceOption,
+      ),
+    [inspectionPrice],
+  );
+
   const selectedServices = useMemo(
     () =>
       value
-        .map((id) => MOT_SERVICE_OPTIONS.find((service) => service.id === id))
+        .map((id) => getMotServiceById(id, inspectionPrice))
         .filter((service): service is MotServiceOption => Boolean(service)),
-    [value],
+    [value, inspectionPrice],
   );
 
   const filteredServices = useMemo(() => {
-    const available = MOT_SERVICE_OPTIONS.filter((service) => !selectedIds.has(service.id));
+    const available = serviceOptions.filter((service) => !selectedIds.has(service.id));
     if (!searchQuery.trim()) return available;
     const query = searchQuery.toLowerCase().trim();
     return available.filter(
@@ -37,7 +51,7 @@ export function MotServiceSearchSelect({ value, onChange }: MotServiceSearchSele
         service.label.toLowerCase().includes(query) ||
         service.description.toLowerCase().includes(query),
     );
-  }, [searchQuery, selectedIds]);
+  }, [searchQuery, selectedIds, serviceOptions]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

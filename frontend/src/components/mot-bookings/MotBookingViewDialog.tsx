@@ -125,9 +125,19 @@ export function MotBookingViewDialog({
             <DetailSection title="Services">
               {Array.isArray(services.selectedServiceIds) &&
                 services.selectedServiceIds.map((serviceId) => {
+                  const motPrice = Number(services.motPrice);
+                  const inspectionPrice =
+                    Number.isFinite(motPrice) && motPrice >= 0 ? motPrice : undefined;
                   const service =
-                    typeof serviceId === 'string' ? getMotServiceById(serviceId) : undefined;
-                  return <div key={String(serviceId)}>{service?.label || String(serviceId)}</div>;
+                    typeof serviceId === 'string'
+                      ? getMotServiceById(serviceId, inspectionPrice)
+                      : undefined;
+                  return (
+                    <div key={String(serviceId)} className="flex justify-between gap-4">
+                      <span>{service?.label || String(serviceId)}</span>
+                      {service && <span className="font-medium">£{service.price.toFixed(2)}</span>}
+                    </div>
+                  );
                 })}
               {!Array.isArray(services.selectedServiceIds) && services.motInspection && (
                 <div>Carry Out MOT Inspection</div>

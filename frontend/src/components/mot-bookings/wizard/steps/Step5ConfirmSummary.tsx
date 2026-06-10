@@ -15,6 +15,7 @@ import {
 
 type Step5ConfirmSummaryProps = {
   data: MotWizardData;
+  inspectionPrice: number;
   onEditStep: (step: MotWizardStep) => void;
   onBack: () => void;
   onConfirm: () => void;
@@ -53,12 +54,13 @@ function SummaryBlock({
 
 export function Step5ConfirmSummary({
   data,
+  inspectionPrice,
   onEditStep,
   onBack,
   onConfirm,
   confirming,
 }: Step5ConfirmSummaryProps) {
-  const total = calculateTotalCost(data);
+  const total = calculateTotalCost(data, inspectionPrice);
   const customerLines = formatCustomerAddress(data);
 
   return (
@@ -79,7 +81,7 @@ export function Step5ConfirmSummary({
         </SummaryBlock>
 
         <SummaryBlock title="Your Services" step={2} onEdit={onEditStep}>
-          {getSelectedMotServices(data.services).map((service) => (
+          {getSelectedMotServices(data.services, inspectionPrice).map((service) => (
             <div key={service.id} className="flex justify-between font-medium">
               <span>{service.label}</span>
               <span>£{service.price.toFixed(2)}</span>

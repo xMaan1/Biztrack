@@ -7,10 +7,23 @@ import type {
   MotBookingsResponse,
   MotBookingStats,
 } from '../models/mot/MotBooking';
+import type { MotSettings, MotSettingsUpdate } from '../models/mot/MotSettings';
 
 export class MotBookingService {
   private publicBaseUrl = '/public/mot';
   private adminBaseUrl = '/mot';
+
+  async getPublicSettings(): Promise<MotSettings> {
+    return apiService.get(`${this.publicBaseUrl}/settings`);
+  }
+
+  async getSettings(): Promise<MotSettings> {
+    return apiService.get(`${this.adminBaseUrl}/settings`);
+  }
+
+  async updateSettings(data: MotSettingsUpdate): Promise<MotSettings> {
+    return apiService.patch(`${this.adminBaseUrl}/settings`, data);
+  }
 
   async getStats(): Promise<MotBookingStats> {
     return apiService.get(`${this.adminBaseUrl}/bookings/stats`);

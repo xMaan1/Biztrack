@@ -11,13 +11,24 @@ import {
   type MotWizardServices,
 } from './wizardTypes';
 
-export function getMotServiceById(id: string): MotServiceOption | undefined {
-  return MOT_SERVICE_OPTIONS.find((service) => service.id === id);
+export function getMotServiceById(
+  id: string,
+  inspectionPrice: number = MOT_INSPECTION_PRICE,
+): MotServiceOption | undefined {
+  const service = MOT_SERVICE_OPTIONS.find((item) => item.id === id);
+  if (!service) return undefined;
+  if (id === 'mot-inspection') {
+    return { ...service, price: inspectionPrice };
+  }
+  return service;
 }
 
-export function getSelectedMotServices(services: MotWizardServices): MotServiceOption[] {
+export function getSelectedMotServices(
+  services: MotWizardServices,
+  inspectionPrice: number = MOT_INSPECTION_PRICE,
+): MotServiceOption[] {
   return services.selectedServiceIds
-    .map((id) => getMotServiceById(id))
+    .map((id) => getMotServiceById(id, inspectionPrice))
     .filter((service): service is MotServiceOption => Boolean(service));
 }
 
@@ -80,8 +91,14 @@ export function formatBookingDateTime(date: string, time: string): string {
   }) + (time ? ` ${time}` : '');
 }
 
-export function calculateTotalCost(data: MotWizardData): number {
-  return getSelectedMotServices(data.services).reduce((total, service) => total + service.price, 0);
+export function calculateTotalCost(
+  data: MotWizardData,
+  inspectionPrice: number = MOT_INSPECTION_PRICE,
+): number {
+  return getSelectedMotServices(data.services, inspectionPrice).reduce(
+    (total, service) => total + service.price,
+    0,
+  );
 }
 
 export function isVehicleDetailsComplete(data: MotWizardData): boolean {
@@ -151,7 +168,10 @@ export function addOneHour(time: string): string {
   return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
 }
 
-export function wizardDataToBookingPayload(data: MotWizardData) {
+export function wizardDataToBookingPayload(
+  data: MotWizardData,
+  inspectionPrice: number = MOT_INSPECTION_PRICE,
+) {
   const endTime = addOneHour(data.dateTime.bookingTime);
   const notesParts = [
     data.services.otherServices.trim(),
@@ -172,14 +192,14 @@ export function wizardDataToBookingPayload(data: MotWizardData) {
     end_time: endTime,
     test_type: 'standard' as const,
     status: 'confirmed' as const,
-    price: calculateTotalCost(data),
+    price: calculateTotalCost(data, inspectionPrice),
     mileage: data.vehicle.mileage,
     notes: notesParts.join('\n\n') || undefined,
     booking_meta: {
       services: {
         ...data.services,
         motInspection: hasMotInspectionSelected(data.services),
-        motPrice: MOT_INSPECTION_PRICE,
+        motPrice: inspectionPrice,
       },
       deliveryOption: data.dateTime.deliveryOption,
       customer: data.customer,

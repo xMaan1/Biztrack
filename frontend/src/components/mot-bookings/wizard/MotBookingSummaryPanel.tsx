@@ -13,6 +13,7 @@ import {
 
 type MotBookingSummaryPanelProps = {
   data: MotWizardData;
+  inspectionPrice: number;
   currentStep: MotWizardStep;
   onEditStep: (step: MotWizardStep) => void;
   onNext?: () => void;
@@ -63,6 +64,7 @@ function SummarySection({
 
 export function MotBookingSummaryPanel({
   data,
+  inspectionPrice,
   currentStep,
   onEditStep,
   onNext,
@@ -71,7 +73,7 @@ export function MotBookingSummaryPanel({
   showNext = true,
 }: MotBookingSummaryPanelProps) {
   const vehicleSummary = formatVehicleSummary(data);
-  const total = calculateTotalCost(data);
+  const total = calculateTotalCost(data, inspectionPrice);
   const deliveryLabel = getDeliveryOptionLabel(data.dateTime.deliveryOption);
   const dateTimeLabel = formatBookingDateTime(
     data.dateTime.bookingDate,
@@ -114,7 +116,7 @@ export function MotBookingSummaryPanel({
             Boolean(data.services.otherServices.trim())
           }
         >
-          {getSelectedMotServices(data.services).map((service) => (
+          {getSelectedMotServices(data.services, inspectionPrice).map((service) => (
             <div key={service.id} className="flex items-start justify-between gap-2">
               <span>{service.label}</span>
               <span className="font-bold">£{service.price.toFixed(2)}</span>

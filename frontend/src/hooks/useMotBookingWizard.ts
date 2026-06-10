@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import motBookingService from '@/src/services/MotBookingService';
 import type { MotVehicleSubStep, MotWizardData, MotWizardStep } from '@/src/components/mot-bookings/wizard/wizardTypes';
-import { emptyMotWizardData } from '@/src/components/mot-bookings/wizard/wizardTypes';
+import { emptyMotWizardData, MOT_INSPECTION_PRICE } from '@/src/components/mot-bookings/wizard/wizardTypes';
 import {
   bookingToWizardData,
   clearWizardDraft,
@@ -54,6 +54,7 @@ export type MotBookingWizardState = {
   submitBooking: () => Promise<void>;
   setVehicleSubStep: (subStep: MotVehicleSubStep) => void;
   setCurrentStep: (step: MotWizardStep) => void;
+  inspectionPrice: number;
 };
 
 export function useMotBookingWizard(options: MotBookingWizardOptions = {}): MotBookingWizardState {
@@ -69,6 +70,7 @@ export function useMotBookingWizard(options: MotBookingWizardOptions = {}): MotB
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [amendBookingId, setAmendBookingId] = useState<string | null>(null);
+  const [inspectionPrice, setInspectionPrice] = useState(MOT_INSPECTION_PRICE);
 
   const maxAvailableStep = useMemo((): MotWizardStep => {
     if (!isVehicleModelComplete(data)) return 1;
@@ -80,6 +82,15 @@ export function useMotBookingWizard(options: MotBookingWizardOptions = {}): MotB
 
   useEffect(() => {
     const init = async () => {
+      try {
+        const settings = await motBookingService.getPublicSettings();
+        const price = Number(settings.inspection_price);
+        if (Number.isFinite(price) && price >= 0) {
+          setInspectionPrice(price);
+        }
+      } catch {
+      }
+
       if (amendId) {
         try {
           const booking = await motBookingService.getBooking(amendId);
@@ -174,7 +185,7 @@ export function useMotBookingWizard(options: MotBookingWizardOptions = {}): MotB
   const submitBooking = useCallback(async () => {
     setConfirming(true);
     try {
-      const payload = wizardDataToBookingPayload(data);
+      const payload = wizardDataToBookingPayload(data, inspectionPrice);
       let booking;
       if (amendBookingId) {
         booking = await motBookingService.updateBooking(amendBookingId, payload);
@@ -190,7 +201,7 @@ export function useMotBookingWizard(options: MotBookingWizardOptions = {}): MotB
     } finally {
       setConfirming(false);
     }
-  }, [amendBookingId, confirmationPath, data, router]);
+  }, [amendBookingId, confirmationPath, data, inspectionPrice, router]);
 
   const handlePrimaryNext = useCallback(() => {
     if (currentStep === 1) {
@@ -265,5 +276,6 @@ export function useMotBookingWizard(options: MotBookingWizardOptions = {}): MotB
     submitBooking,
     setVehicleSubStep,
     setCurrentStep,
+    inspectionPrice,
   };
 }

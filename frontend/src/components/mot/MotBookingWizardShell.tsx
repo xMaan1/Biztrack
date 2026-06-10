@@ -49,6 +49,7 @@ export function MotBookingWizardShell({ wizard }: MotBookingWizardShellProps) {
       return (
         <Step2Services
           services={wizard.data.services}
+          inspectionPrice={wizard.inspectionPrice}
           onChange={wizard.updateServices}
           onBack={() => {
             wizard.setCurrentStep(1);
@@ -86,6 +87,7 @@ export function MotBookingWizardShell({ wizard }: MotBookingWizardShellProps) {
       return (
         <Step5ConfirmSummary
           data={wizard.data}
+          inspectionPrice={wizard.inspectionPrice}
           onEditStep={wizard.goToStep}
           onBack={() => wizard.setCurrentStep(4)}
           onConfirm={wizard.submitBooking}
@@ -119,6 +121,7 @@ export function MotBookingWizardShell({ wizard }: MotBookingWizardShellProps) {
         {wizard.currentStep < 5 && (
           <MotBookingSummaryPanel
             data={wizard.data}
+            inspectionPrice={wizard.inspectionPrice}
             currentStep={wizard.currentStep}
             onEditStep={wizard.goToStep}
             onNext={wizard.handlePrimaryNext}

@@ -6,6 +6,7 @@ import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { useMotBookingsPage } from '@/src/hooks/useMotBookingsPage';
 import { MotBookingsLoadingState } from '@/src/components/mot-bookings/MotBookingsLoadingState';
 import { MotBookingsPageHeader } from '@/src/components/mot-bookings/MotBookingsPageHeader';
+import { MotSettingsCard } from '@/src/components/mot-bookings/MotSettingsCard';
 import { MotBookingsStatsCard } from '@/src/components/mot-bookings/MotBookingsStatsCard';
 import { MotBookingsFiltersCard } from '@/src/components/mot-bookings/MotBookingsFiltersCard';
 import { MotBookingsListCard } from '@/src/components/mot-bookings/MotBookingsListCard';
@@ -26,6 +27,8 @@ function MotManageBookingsContent() {
     <DashboardLayout>
       <div className="container mx-auto space-y-6 p-6">
         <MotBookingsPageHeader />
+
+        <MotSettingsCard />
 
         <MotBookingsStatsCard stats={page.stats} />
 

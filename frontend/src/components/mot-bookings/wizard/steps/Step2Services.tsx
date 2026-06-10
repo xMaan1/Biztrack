@@ -10,6 +10,7 @@ import { getSelectedMotServices } from '../wizardUtils';
 
 type Step2ServicesProps = {
   services: MotWizardServices;
+  inspectionPrice: number;
   onChange: (patch: Partial<MotWizardServices>) => void;
   onBack: () => void;
   onNext: () => void;
@@ -18,12 +19,13 @@ type Step2ServicesProps = {
 
 export function Step2Services({
   services,
+  inspectionPrice,
   onChange,
   onBack,
   onNext,
   canNext,
 }: Step2ServicesProps) {
-  const selectedServices = getSelectedMotServices(services);
+  const selectedServices = getSelectedMotServices(services, inspectionPrice);
   const servicesTotal = selectedServices.reduce((total, service) => total + service.price, 0);
 
   return (
@@ -39,6 +41,7 @@ export function Step2Services({
       <div className="relative space-y-6">
         <MotServiceSearchSelect
           value={services.selectedServiceIds}
+          inspectionPrice={inspectionPrice}
           onChange={(selectedServiceIds) => onChange({ selectedServiceIds })}
         />
 

@@ -14,6 +14,8 @@ from .bookings.schemas import (
     MotBookingStats,
 )
 from .bookings import logic as booking_logic
+from .settings.schemas import MotSettingsResponse, MotSettingsUpdate
+from .settings import logic as settings_logic
 
 public_router = APIRouter(prefix="/public/mot", tags=["public-mot"])
 admin_router = APIRouter(prefix="/mot", tags=["mot-admin"])
@@ -26,6 +28,11 @@ def require_mot_admin(current_user=Depends(get_current_user)):
             detail="MOT admin access required",
         )
     return current_user
+
+
+@public_router.get("/settings", response_model=MotSettingsResponse)
+async def get_public_mot_settings(db: Session = Depends(get_db)):
+    return settings_logic.get_mot_settings(db)
 
 
 @public_router.get("/bookings/calendar", response_model=MotBookingsResponse)
@@ -68,6 +75,23 @@ async def update_public_mot_booking_status(
             detail="Only cancellation is allowed via public booking",
         )
     return booking_logic.update_mot_booking_status(booking_id, body, db)
+
+
+@admin_router.get("/settings", response_model=MotSettingsResponse)
+async def get_mot_settings_admin(
+    db: Session = Depends(get_db),
+    _=Depends(require_mot_admin),
+):
+    return settings_logic.get_mot_settings(db)
+
+
+@admin_router.patch("/settings", response_model=MotSettingsResponse)
+async def update_mot_settings_admin(
+    body: MotSettingsUpdate,
+    db: Session = Depends(get_db),
+    _=Depends(require_mot_admin),
+):
+    return settings_logic.update_mot_settings(db, body)
 
 
 @admin_router.get("/bookings/stats", response_model=MotBookingStats)
