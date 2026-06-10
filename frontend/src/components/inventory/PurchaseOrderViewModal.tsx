@@ -37,8 +37,6 @@ export default function PurchaseOrderViewModal({
   const { planInfo } = usePlanInfo();
   const isHealthcare = planInfo?.planType === 'healthcare';
 
-  if (!purchaseOrder) return null;
-
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       draft: { variant: 'secondary', label: 'Draft' },
@@ -55,8 +53,9 @@ export default function PurchaseOrderViewModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen && !!purchaseOrder} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
+        {!purchaseOrder ? null : (
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ClipboardList className="h-5 w-5" />
@@ -249,6 +248,7 @@ export default function PurchaseOrderViewModal({
             Close
           </Button>
         </div>
+        )}
       </DialogContent>
     </Dialog>
   );

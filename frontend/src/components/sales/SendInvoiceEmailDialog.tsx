@@ -70,11 +70,11 @@ export function SendInvoiceEmailDialog({
     }
   };
 
-  if (!invoice) return null;
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open && !!invoice} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
+        {invoice && (
+        <>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Mail className="h-5 w-5" />
@@ -156,6 +156,8 @@ export function SendInvoiceEmailDialog({
             </Button>
           </DialogFooter>
         </form>
+        </>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -129,11 +129,11 @@ export function EditUserModal({ open, onOpenChange, user, onSuccess }: EditUserM
     }));
   };
 
-  if (!user) return null;
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open && !!user} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
+        {!user ? null : (
+        <>
         <DialogHeader>
           <DialogTitle>Edit User</DialogTitle>
           <DialogDescription>
@@ -263,6 +263,8 @@ export function EditUserModal({ open, onOpenChange, user, onSuccess }: EditUserM
             </Button>
           </DialogFooter>
         </form>
+        </>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -47,14 +47,12 @@ export function MotBookingViewDialog({
   onClose,
   onEdit,
 }: MotBookingViewDialogProps) {
-  if (!booking) return null;
-
-  const meta = (booking.booking_meta || {}) as Record<string, unknown>;
+  const meta = (booking?.booking_meta || {}) as Record<string, unknown>;
   const customer = (meta.customer || {}) as Record<string, unknown>;
   const vehicle = (meta.vehicle || {}) as Record<string, unknown>;
   const services = (meta.services || {}) as Record<string, unknown>;
   const deliveryOption =
-    booking.delivery_option || (meta.deliveryOption as string | undefined) || '';
+    booking?.delivery_option || (meta.deliveryOption as string | undefined) || '';
 
   const customerAddress = [
     [customer.houseNumber, customer.street].filter(Boolean).join(' '),
@@ -76,6 +74,8 @@ export function MotBookingViewDialog({
   return (
     <Dialog open={!!booking} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
+        {!booking ? null : (
+        <>
         <DialogHeader>
           <DialogTitle>MOT Booking Details</DialogTitle>
           <DialogDescription>
@@ -178,6 +178,8 @@ export function MotBookingViewDialog({
           </Button>
           <Button onClick={() => onEdit(booking)}>Edit</Button>
         </DialogFooter>
+        </>
+        )}
       </DialogContent>
     </Dialog>
   );
