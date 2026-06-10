@@ -81,9 +81,11 @@ export function useSidebar() {
     [planInfo?.planType],
   );
 
+  const isSuperAdmin = user?.userRole === 'super_admin';
+
   const hasPathPermission = useCallback(
     (path?: string) => {
-      if (!path || isOwner()) return true;
+      if (!path || isSuperAdmin || isOwner()) return true;
       if (path === '/sales/invoice-dashboard') {
         return (
           hasPermission('sales:invoices:view') ||
@@ -100,7 +102,7 @@ export function useSidebar() {
       if (!requiredPermission) return true;
       return hasPermission(requiredPermission);
     },
-    [hasPermission, isOwner],
+    [hasPermission, isOwner, isSuperAdmin],
   );
 
   useEffect(() => {
@@ -187,13 +189,16 @@ export function useSidebar() {
 
   const filteredItems = useMemo(() => {
     const currentTenantId = apiService.getTenantId();
-    if (user?.userRole === 'super_admin' && !currentTenantId) {
+    if (isSuperAdmin && !currentTenantId) {
       return superAdminMenuItems.filter((item) => {
-        if (searchQuery.trim()) {
-          const query = searchQuery.toLowerCase();
-          return item.text.toLowerCase().includes(query);
-        }
-        return true;
+        if (!searchQuery.trim()) return true;
+        const query = searchQuery.toLowerCase();
+        if (item.text.toLowerCase().includes(query)) return true;
+        return item.subItems?.some(
+          (subItem) =>
+            subItem.text.toLowerCase().includes(query) ||
+            subItem.path?.toLowerCase().includes(query),
+        );
       });
     }
 
@@ -242,7 +247,7 @@ export function useSidebar() {
       return true;
     });
 
-    if (user?.userRole === 'super_admin') {
+    if (isSuperAdmin) {
       return [...tenantItems, motSuperAdminMenuItem];
     }
 
@@ -251,6 +256,7 @@ export function useSidebar() {
     searchQuery,
     planInfo,
     planLoading,
+    isSuperAdmin,
     user,
     accessibleModules,
     hasModuleAccess,
@@ -326,13 +332,16 @@ export function useSidebar() {
 
   const isSubItemAvailable = useCallback(
     (subItem: SubMenuItem) => {
+      if (isSuperAdmin && subItem.roles?.includes('super_admin')) return true;
       if (subItem.planTypes.includes('*')) return true;
       return planInfo != null && subItem.planTypes.includes(planInfo.planType);
     },
-    [planInfo],
+    [isSuperAdmin, planInfo],
   );
 
   const clearSearch = useCallback(() => setSearchQuery(''), []);
+
+  const sidebarLoading = isSuperAdmin && !apiService.getTenantId() ? false : planLoading;
 
   return {
     searchQuery,
@@ -343,7 +352,7 @@ export function useSidebar() {
     navRef,
     handleNavScroll,
     filteredItems,
-    planLoading,
+    planLoading: sidebarLoading,
     planInfo,
     isActive,
     getPlanDisplayName,

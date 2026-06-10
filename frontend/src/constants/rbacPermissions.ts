@@ -178,8 +178,6 @@ export const SIDEBAR_PATH_PERMISSIONS: Record<string, string> = {
   '/crm': 'crm:dashboard:view',
   '/crm/customers': 'crm:customers:view',
   '/workshop-management/customers': 'crm:customers:view',
-  '/mot/manage/bookings': 'dashboard:view',
-  '/mot/book': 'dashboard:view',
   '/crm/companies': 'crm:companies:view',
   '/crm/contacts': 'crm:contacts:view',
   '/crm/leads': 'crm:leads:view',
