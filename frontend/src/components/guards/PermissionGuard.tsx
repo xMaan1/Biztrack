@@ -24,6 +24,7 @@ export function PermissionGuard({
   redirectTo = undefined,
 }: PermissionGuardProps) {
   const { hasPermission, hasModuleAccess, isOwner, userPermissions, loading, initializing } = usePermissions();
+  const { user } = useAuth();
   const router = useRouter();
 
   const hasAccess = (() => {
@@ -37,6 +38,7 @@ export function PermissionGuard({
     ? getDefaultLandingPath(
         userPermissions?.permissions || [],
         userPermissions?.is_owner || false,
+        user?.userRole,
       )
     : redirectTo;
 

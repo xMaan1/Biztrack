@@ -1,9 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { DashboardLayout } from '../../components/layout';
 import { PermissionGuard } from '../../components/guards/PermissionGuard';
+import { useAuth } from '../../contexts/AuthContext';
 import { usePlanInfo } from '../../hooks/usePlanInfo';
 import HealthcareDashboard from '../../components/dashboard/HealthcareDashboard';
 import NgoDashboard from '../../components/dashboard/NgoDashboard';
@@ -19,7 +21,26 @@ export default function DashboardPage() {
 }
 
 function DashboardGate() {
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const { planInfo, loading: planLoading } = usePlanInfo();
+  const isSuperAdmin = user?.userRole === 'super_admin';
+
+  useEffect(() => {
+    if (!authLoading && isSuperAdmin) {
+      router.replace('/admin/tenants');
+    }
+  }, [authLoading, isSuperAdmin, router]);
+
+  if (authLoading || isSuperAdmin) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   if (planLoading) {
     return (

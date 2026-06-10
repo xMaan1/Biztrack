@@ -5,12 +5,15 @@ import Link from 'next/link';
 import { Button } from '../../components/ui/button';
 import { UserPlus, Home } from 'lucide-react';
 import { AuthForm } from '../../components/auth';
+import { SessionManager } from '@/src/services/SessionManager';
+import { getDefaultLandingPath } from '@/src/utils/getDefaultLandingPath';
 
 export default function LoginPage() {
   const router = useRouter();
 
   const handleLoginSuccess = () => {
-    router.push('/dashboard');
+    const user = new SessionManager().getUser();
+    router.push(getDefaultLandingPath([], false, user?.userRole));
   };
 
   return (

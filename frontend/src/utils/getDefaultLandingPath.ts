@@ -17,7 +17,12 @@ const LANDING_PRIORITY = [
 export function getDefaultLandingPath(
   permissions: string[],
   isOwner: boolean,
+  userRole?: string,
 ): string {
+  if (userRole === 'super_admin') {
+    return '/admin/tenants';
+  }
+
   if (isOwner) {
     return '/dashboard';
   }

@@ -12,7 +12,7 @@ interface AuthGuardProps {
 }
 
 export default function AuthGuard({ children }: AuthGuardProps) {
-  const { loading, isAuthenticated } = useAuth();
+  const { loading, isAuthenticated, user } = useAuth();
   const { userPermissions, initializing: rbacInitializing } = usePermissions();
   const router = useRouter();
   const pathname = usePathname();
@@ -87,15 +87,16 @@ export default function AuthGuard({ children }: AuthGuardProps) {
             getDefaultLandingPath(
               userPermissions.permissions,
               userPermissions.is_owner,
+              user?.userRole,
             ),
           );
         } else if (!rbacInitializing) {
-          router.push('/dashboard');
+          router.push(getDefaultLandingPath([], false, user?.userRole));
         }
         return;
       }
     }
-  }, [isAuthenticated, loading, pathname, router, isProtectedRoute, rbacInitializing, userPermissions]);
+  }, [isAuthenticated, loading, pathname, router, isProtectedRoute, rbacInitializing, userPermissions, user?.userRole]);
 
   // Show loading spinner while checking authentication
   if (loading) {
