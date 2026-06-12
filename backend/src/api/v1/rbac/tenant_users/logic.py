@@ -5,9 +5,12 @@ from uuid import UUID
 
 from fastapi import HTTPException, status
 from sqlalchemy import and_
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from .....config.core_models import project_team_members
 from .....config.database import create_user, get_user_by_email, get_user_by_id
+from .....models.projects import Project
 from .....config.notification_models import Notification, NotificationPreference
 from .....core.auth import get_password_hash
 from .....models.platform import User as UserORM
@@ -199,6 +202,30 @@ def update_rbac_tenant_user(
     return _tenant_user_to_schema(tenant_user)
 
 
+def _get_managed_project_names(db: Session, user_id, tenant_id: str) -> List[str]:
+    rows = db.query(Project.name).filter(
+        Project.tenant_id == tenant_id,
+        Project.projectManagerId == user_id,
+    ).all()
+    return [row[0] for row in rows]
+
+
+def _user_has_global_delete_blockers(db: Session, user_id) -> bool:
+    if db.query(Project.id).filter(Project.projectManagerId == user_id).first():
+        return True
+    return False
+
+
+def _detach_user_from_tenant_projects(db: Session, user_id, tenant_id: str) -> None:
+    tenant_project_ids = db.query(Project.id).filter(Project.tenant_id == tenant_id)
+    db.execute(
+        project_team_members.delete().where(
+            project_team_members.c.user_id == user_id,
+            project_team_members.c.project_id.in_(tenant_project_ids),
+        )
+    )
+
+
 def _remove_tenant_user_record(
     db: Session,
     tenant_user: TenantUserORM,
@@ -208,20 +235,37 @@ def _remove_tenant_user_record(
     if str(tenant_user.userId) == str(current_user_id):
         raise HTTPException(status_code=400, detail="You cannot remove yourself from the tenant")
     user_id_uuid = tenant_user.userId
+    managed_projects = _get_managed_project_names(db, user_id_uuid, tenant_id)
+    if managed_projects:
+        preview = ", ".join(managed_projects[:3])
+        extra = f" and {len(managed_projects) - 3} more" if len(managed_projects) > 3 else ""
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot remove user: they are project manager on {preview}{extra}. Reassign those projects first.",
+        )
     other_tenant_users_count = db.query(TenantUserORM).filter(
         and_(
             TenantUserORM.userId == user_id_uuid,
             TenantUserORM.tenant_id != tenant_id,
         )
     ).count()
+    _detach_user_from_tenant_projects(db, user_id_uuid, tenant_id)
     db.delete(tenant_user)
-    if other_tenant_users_count == 0:
+    if other_tenant_users_count == 0 and not _user_has_global_delete_blockers(db, user_id_uuid):
         user = db.query(UserORM).filter(UserORM.id == user_id_uuid).first()
         if user:
             db.query(Notification).filter(Notification.user_id == user_id_uuid).delete()
             db.query(NotificationPreference).filter(NotificationPreference.user_id == user_id_uuid).delete()
             db.delete(user)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        logger.exception("Failed to remove tenant user due to database constraints")
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot remove user: they are still linked to projects or other records. Reassign or remove those assignments first.",
+        )
     return {"message": "User removed from tenant successfully"}
 
 

@@ -37,6 +37,8 @@ import {
 import { CreateUserModal } from '@/src/components/users/CreateUserModal';
 import { EditUserModal } from '@/src/components/users/EditUserModal';
 import { RoleManagementModal } from '@/src/components/users/RoleManagementModal';
+import { extractErrorMessage } from '@/src/utils/errorUtils';
+import { toast } from 'sonner';
 
 export default function UserManagementPage() {
   const { tenantUsers, roles, loading, removeTenantUser } = useRBAC();
@@ -67,7 +69,9 @@ export default function UserManagementPage() {
       await removeTenantUser(userToDelete.id);
       setShowDeleteModal(false);
       setUserToDelete(null);
+      toast.success('User removed successfully');
     } catch (error) {
+      toast.error(extractErrorMessage(error, 'Failed to remove user'));
     } finally {
       setIsDeleting(false);
     }
