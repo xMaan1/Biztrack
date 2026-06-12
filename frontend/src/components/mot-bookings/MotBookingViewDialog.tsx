@@ -119,12 +119,22 @@ export function MotBookingViewDialog({
             )}
           </DetailSection>
 
-          {(Array.isArray(services.selectedServiceIds) ||
-            services.motInspection ||
+          {(services.motInspection ||
+            (Array.isArray(services.selectedServiceIds) && services.selectedServiceIds.length > 0) ||
             services.otherServices) && (
             <DetailSection title="Services">
+              {services.motInspection && (
+                <div className="flex justify-between gap-4">
+                  <span>Carry Out MOT Inspection</span>
+                  {Number.isFinite(Number(services.motPrice)) && (
+                    <span className="font-medium">£{Number(services.motPrice).toFixed(2)}</span>
+                  )}
+                </div>
+              )}
               {Array.isArray(services.selectedServiceIds) &&
-                services.selectedServiceIds.map((serviceId) => {
+                services.selectedServiceIds
+                  .filter((serviceId) => serviceId !== 'mot-inspection')
+                  .map((serviceId) => {
                   const motPrice = Number(services.motPrice);
                   const inspectionPrice =
                     Number.isFinite(motPrice) && motPrice >= 0 ? motPrice : undefined;
@@ -139,9 +149,6 @@ export function MotBookingViewDialog({
                     </div>
                   );
                 })}
-              {!Array.isArray(services.selectedServiceIds) && services.motInspection && (
-                <div>Carry Out MOT Inspection</div>
-              )}
               {typeof services.otherServices === 'string' && services.otherServices.trim() && (
                 <div className="whitespace-pre-wrap text-muted-foreground">
                   {services.otherServices}

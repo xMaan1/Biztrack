@@ -112,6 +112,7 @@ export function MotBookingSummaryPanel({
           currentStep={currentStep}
           onEdit={onEditStep}
           hasContent={
+            data.services.motInspection ||
             data.services.selectedServiceIds.length > 0 ||
             Boolean(data.services.otherServices.trim())
           }

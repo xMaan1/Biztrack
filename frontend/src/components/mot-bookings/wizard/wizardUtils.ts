@@ -6,6 +6,7 @@ import type {
 import {
   MOT_DELIVERY_OPTIONS,
   MOT_INSPECTION_PRICE,
+  MOT_INSPECTION_SERVICE,
   MOT_SERVICE_OPTIONS,
   type MotServiceOption,
   type MotWizardServices,
@@ -15,25 +16,32 @@ export function getMotServiceById(
   id: string,
   inspectionPrice: number = MOT_INSPECTION_PRICE,
 ): MotServiceOption | undefined {
-  const service = MOT_SERVICE_OPTIONS.find((item) => item.id === id);
-  if (!service) return undefined;
   if (id === 'mot-inspection') {
-    return { ...service, price: inspectionPrice };
+    return { ...MOT_INSPECTION_SERVICE, price: inspectionPrice };
   }
-  return service;
+  return MOT_SERVICE_OPTIONS.find((item) => item.id === id);
 }
 
 export function getSelectedMotServices(
   services: MotWizardServices,
   inspectionPrice: number = MOT_INSPECTION_PRICE,
 ): MotServiceOption[] {
-  return services.selectedServiceIds
-    .map((id) => getMotServiceById(id, inspectionPrice))
-    .filter((service): service is MotServiceOption => Boolean(service));
+  const selected: MotServiceOption[] = [];
+  if (services.motInspection) {
+    const mot = getMotServiceById('mot-inspection', inspectionPrice);
+    if (mot) selected.push(mot);
+  }
+  services.selectedServiceIds
+    .filter((id) => id !== 'mot-inspection')
+    .forEach((id) => {
+      const service = getMotServiceById(id, inspectionPrice);
+      if (service) selected.push(service);
+    });
+  return selected;
 }
 
 export function hasMotInspectionSelected(services: MotWizardServices): boolean {
-  return services.selectedServiceIds.includes('mot-inspection');
+  return services.motInspection;
 }
 
 export const WIZARD_STORAGE_KEY = 'mot_booking_wizard_draft';
@@ -46,6 +54,23 @@ export function saveWizardDraft(data: MotWizardData, step: number, vehicleSubSte
   );
 }
 
+export function normalizeWizardServices(
+  services: Partial<MotWizardServices> | undefined,
+): MotWizardServices {
+  const selectedServiceIds = Array.isArray(services?.selectedServiceIds)
+    ? services.selectedServiceIds
+    : [];
+  const hadMotInIds = selectedServiceIds.includes('mot-inspection');
+  return {
+    motInspection:
+      typeof services?.motInspection === 'boolean'
+        ? services.motInspection
+        : hadMotInIds || selectedServiceIds.length === 0,
+    selectedServiceIds: selectedServiceIds.filter((id) => id !== 'mot-inspection'),
+    otherServices: services?.otherServices || '',
+  };
+}
+
 export function loadWizardDraft():
   | { data: MotWizardData; step: number; vehicleSubStep: string }
   | null {
@@ -55,6 +80,7 @@ export function loadWizardDraft():
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!parsed?.data) return null;
+    parsed.data.services = normalizeWizardServices(parsed.data.services);
     return parsed;
   } catch {
     return null;
@@ -116,7 +142,11 @@ export function isVehicleModelComplete(data: MotWizardData): boolean {
 }
 
 export function isServicesComplete(data: MotWizardData): boolean {
-  return data.services.selectedServiceIds.length > 0 || data.services.otherServices.trim().length > 0;
+  return (
+    data.services.motInspection ||
+    data.services.selectedServiceIds.length > 0 ||
+    data.services.otherServices.trim().length > 0
+  );
 }
 
 export function isDateTimeComplete(data: MotWizardData): boolean {
@@ -197,8 +227,11 @@ export function wizardDataToBookingPayload(
     notes: notesParts.join('\n\n') || undefined,
     booking_meta: {
       services: {
-        ...data.services,
-        motInspection: hasMotInspectionSelected(data.services),
+        motInspection: data.services.motInspection,
+        selectedServiceIds: data.services.selectedServiceIds.filter(
+          (id) => id !== 'mot-inspection',
+        ),
+        otherServices: data.services.otherServices,
         motPrice: inspectionPrice,
       },
       deliveryOption: data.dateTime.deliveryOption,
@@ -223,11 +256,15 @@ export function bookingToWizardData(booking: import('@/src/models/mot/MotBooking
       model: booking.vehicle_model || vehicleMeta.model || '',
     },
     services: {
+      motInspection:
+        typeof servicesMeta.motInspection === 'boolean'
+          ? servicesMeta.motInspection
+          : Array.isArray(servicesMeta.selectedServiceIds)
+            ? servicesMeta.selectedServiceIds.includes('mot-inspection')
+            : true,
       selectedServiceIds: Array.isArray(servicesMeta.selectedServiceIds)
-        ? servicesMeta.selectedServiceIds
-        : servicesMeta.motInspection === false
-          ? []
-          : ['mot-inspection'],
+        ? servicesMeta.selectedServiceIds.filter((id) => id !== 'mot-inspection')
+        : [],
       otherServices: servicesMeta.otherServices || booking.notes || '',
     },
     dateTime: {

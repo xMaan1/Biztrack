@@ -4,7 +4,6 @@ import React, { useEffect, useRef } from 'react';
 import { useNotifications } from '../../contexts/NotificationContext';
 import NotificationItem from './NotificationItem';
 import { Button } from '../ui/button';
-import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import { Check, X, Settings } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -62,10 +61,9 @@ export default function NotificationDropdown({ onClose }: NotificationDropdownPr
   return (
     <div
       ref={dropdownRef}
-      className="absolute right-0 top-full mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50"
+      className="absolute right-0 top-full z-50 mt-2 flex w-96 max-h-[min(32rem,calc(100vh-5rem))] flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg"
     >
-      {/* Header */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="shrink-0 border-b border-gray-200 p-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900">
             Notifications
@@ -107,8 +105,7 @@ export default function NotificationDropdown({ onClose }: NotificationDropdownPr
         </div>
       </div>
 
-      {/* Notifications List */}
-      <ScrollArea className="max-h-96">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         {loading ? (
           <div className="p-4 text-center text-gray-500">
             Loading notifications...
@@ -131,13 +128,12 @@ export default function NotificationDropdown({ onClose }: NotificationDropdownPr
             ))}
           </div>
         )}
-      </ScrollArea>
+      </div>
 
-      {/* Footer */}
       {notifications.length > 0 && (
         <>
-          <Separator />
-          <div className="p-3">
+          <Separator className="shrink-0" />
+          <div className="shrink-0 p-3">
             <Button
               variant="outline"
               size="sm"

@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import { DashboardLayout } from '../../../components/layout';
 import { useCustomOptions } from '../../../hooks/useCustomOptions';
@@ -54,6 +55,9 @@ const CONTACTS_PAGE_SIZE = 20;
 
 function CRMContactsContent() {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const openedContactIdRef = useRef<string | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [listLoading, setListLoading] = useState(false);
@@ -194,6 +198,25 @@ function CRMContactsContent() {
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
+
+  useEffect(() => {
+    const contactId = searchParams.get('contactId')?.trim();
+    if (!contactId || openedContactIdRef.current === contactId) {
+      return;
+    }
+    openedContactIdRef.current = contactId;
+
+    (async () => {
+      try {
+        const contact = await CRMService.getContact(contactId);
+        setViewingContact(contact);
+      } catch {
+        toast.error('Contact not found');
+      } finally {
+        router.replace('/crm/contacts', { scroll: false });
+      }
+    })();
+  }, [searchParams, router]);
 
   const selectedAssignee = useMemo((): UserSearchItem | null => {
     if (!formData.assignedTo) return null;

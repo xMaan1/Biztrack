@@ -23,17 +23,26 @@ export function MotBookingPrintSheet({ booking }: MotBookingPrintSheetProps) {
   const motPrice = Number.isFinite(storedMotPrice) && storedMotPrice >= 0
     ? storedMotPrice
     : MOT_INSPECTION_PRICE;
-  const selectedServices = Array.isArray(servicesMeta.selectedServiceIds)
-    ? servicesMeta.selectedServiceIds
-        .map((id) =>
-          typeof id === 'string' ? getMotServiceById(id, motPrice) : undefined,
-        )
-        .filter((service): service is NonNullable<typeof service> => Boolean(service))
-    : servicesMeta.motInspection
-      ? [getMotServiceById('mot-inspection', motPrice)].filter(
-          (service): service is NonNullable<typeof service> => Boolean(service),
-        )
+  const selectedServices = (() => {
+    const fromIds = Array.isArray(servicesMeta.selectedServiceIds)
+      ? servicesMeta.selectedServiceIds
+          .map((id) => (typeof id === 'string' ? getMotServiceById(id, motPrice) : undefined))
+          .filter((service): service is NonNullable<typeof service> => Boolean(service))
       : [];
+    const hasMot =
+      servicesMeta.motInspection === true ||
+      (servicesMeta.motInspection !== false &&
+        Array.isArray(servicesMeta.selectedServiceIds) &&
+        servicesMeta.selectedServiceIds.includes('mot-inspection')) ||
+      (servicesMeta.motInspection !== false && !Array.isArray(servicesMeta.selectedServiceIds));
+    const motService = hasMot
+      ? getMotServiceById('mot-inspection', motPrice)
+      : undefined;
+    if (motService && !fromIds.some((s) => s.id === 'mot-inspection')) {
+      return [motService, ...fromIds.filter((s) => s.id !== 'mot-inspection')];
+    }
+    return fromIds.filter((s) => s.id !== 'mot-inspection');
+  })();
   const bookingTotal = Number(booking.price) || selectedServices.reduce((sum, s) => sum + s.price, 0) || MOT_INSPECTION_PRICE;
 
   return (

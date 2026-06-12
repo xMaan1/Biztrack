@@ -19,13 +19,14 @@ export type MotServiceOption = {
   price: number;
 };
 
+export const MOT_INSPECTION_SERVICE: MotServiceOption = {
+  id: 'mot-inspection',
+  label: 'Carry Out MOT Inspection',
+  description: 'Standard MOT test including emissions and safety checks',
+  price: 49,
+};
+
 export const MOT_SERVICE_OPTIONS: MotServiceOption[] = [
-  {
-    id: 'mot-inspection',
-    label: 'Carry Out MOT Inspection',
-    description: 'Standard MOT test including emissions and safety checks',
-    price: 49,
-  },
   {
     id: 'oil-filter-change',
     label: 'Oil & Filter Change',
@@ -71,6 +72,7 @@ export const MOT_SERVICE_OPTIONS: MotServiceOption[] = [
 ];
 
 export type MotWizardServices = {
+  motInspection: boolean;
   selectedServiceIds: string[];
   otherServices: string;
 };
@@ -158,7 +160,8 @@ export function emptyMotWizardData(): MotWizardData {
       model: '',
     },
     services: {
-      selectedServiceIds: ['mot-inspection'],
+      motInspection: true,
+      selectedServiceIds: [],
       otherServices: '',
     },
     dateTime: {

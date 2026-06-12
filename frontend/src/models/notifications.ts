@@ -52,6 +52,10 @@ export function resolveNotificationActionPath(actionUrl: string): string {
     return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
   }
   const path = parsed.pathname;
+  const contactDetailMatch = path.match(/^\/crm\/contacts\/([^/]+)\/?$/);
+  if (contactDetailMatch) {
+    return `/crm/contacts?contactId=${encodeURIComponent(contactDetailMatch[1])}${parsed.search}${parsed.hash}`;
+  }
   const routeMap: Array<[RegExp, string]> = [
     [/^\/crm\/customers\/[^/]+\/?$/, '/crm/customers'],
     [/^\/crm\/leads\/[^/]+\/?$/, '/crm/leads'],
@@ -90,6 +94,7 @@ export function getNotificationTargetHref(
   if (str('resource_url')) return str('resource_url');
   if (str('target_url')) return str('target_url');
   if (str('action_url')) return str('action_url');
+  if (d.contact_id) return `/crm/contacts?contactId=${encodeURIComponent(String(d.contact_id))}`;
   if (d.customer_id) return '/crm/customers';
   if (d.lead_id) return '/crm/leads';
   if (d.opportunity_id) return '/crm/opportunities';
