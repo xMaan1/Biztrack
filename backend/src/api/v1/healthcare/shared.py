@@ -26,17 +26,23 @@ HEALTHCARE_PERMISSION_SET = {
 }
 
 
+def _coerce_orm_value(val):
+    if isinstance(val, UUID):
+        return str(val)
+    return val
+
+
 def orm_to_schema(schema_cls: Type[T], orm, **extra) -> T:
-    inst = schema_cls.model_validate(orm, from_attributes=True)
-    updates = {}
-    if hasattr(orm, "id"):
-        updates["id"] = str(orm.id)
-    if hasattr(orm, "tenant_id"):
-        updates["tenant_id"] = str(orm.tenant_id)
-    updates.update(extra)
-    if updates:
-        return inst.model_copy(update=updates)
-    return inst
+    data = {}
+    for field_name in schema_cls.model_fields:
+        if field_name in extra:
+            data[field_name] = _coerce_orm_value(extra[field_name])
+        elif hasattr(orm, field_name):
+            data[field_name] = _coerce_orm_value(getattr(orm, field_name))
+    for key, val in extra.items():
+        if key not in data:
+            data[key] = _coerce_orm_value(val)
+    return schema_cls.model_validate(data)
 
 
 def availability_to_db(availability: List[DoctorAvailabilitySlot]) -> list:
