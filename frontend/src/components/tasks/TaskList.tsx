@@ -22,6 +22,13 @@ import {
   DialogTitle,
 } from '../ui/dialog';
 import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '../ui/sheet';
+import {
   Plus,
   Search,
   RefreshCw,
@@ -85,7 +92,10 @@ export const TaskList: React.FC<TaskListProps> = ({
     mainTasksOnly: false,
   });
 
-  // Pagination
+  const [completedSheetOpen, setCompletedSheetOpen] = useState(false);
+  const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
+  const [completedLoading, setCompletedLoading] = useState(false);
+
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalTasks, setTotalTasks] = useState(0);
@@ -97,6 +107,7 @@ export const TaskList: React.FC<TaskListProps> = ({
 
   useEffect(() => {
     loadTasks();
+    void loadCompletedTasks();
   }, [filters, page]);
 
   useEffect(() => {
@@ -122,6 +133,42 @@ export const TaskList: React.FC<TaskListProps> = ({
     }
   };
 
+  const applySearchFilter = (taskList: Task[]) => {
+    if (!filters.search) return taskList;
+    const searchLower = filters.search.toLowerCase();
+    return taskList.filter(
+      (task: Task) =>
+        (task.title && task.title.toLowerCase().includes(searchLower)) ||
+        (task.description &&
+          task.description.toLowerCase().includes(searchLower)) ||
+        (Array.isArray(task.tags) &&
+          task.tags.some(
+            (tag: string) => tag && tag.toLowerCase().includes(searchLower),
+          )),
+    );
+  };
+
+  const parseTasksResponse = (response: unknown): Task[] => {
+    if (Array.isArray(response)) return response;
+    if (
+      response &&
+      typeof response === 'object' &&
+      'tasks' in response &&
+      Array.isArray((response as { tasks: Task[] }).tasks)
+    ) {
+      return (response as { tasks: Task[] }).tasks;
+    }
+    if (
+      response &&
+      typeof response === 'object' &&
+      'data' in response &&
+      Array.isArray((response as { data: Task[] }).data)
+    ) {
+      return (response as { data: Task[] }).data;
+    }
+    return [];
+  };
+
   const loadTasks = async () => {
     try {
       setLoading(true);
@@ -138,44 +185,44 @@ export const TaskList: React.FC<TaskListProps> = ({
       };
 
       const response = await apiService.getTasks(params);
+      let filteredTasks = parseTasksResponse(response);
 
-      // Handle different response structures
-      let filteredTasks = [];
-      if (Array.isArray(response)) {
-        // If response is directly an array
-        filteredTasks = response;
-      } else if (response.tasks && Array.isArray(response.tasks)) {
-        // If response has tasks property
-        filteredTasks = response.tasks;
-      } else if (response.data && Array.isArray(response.data)) {
-        // If response has data property
-        filteredTasks = response.data;
-      } else {
-        filteredTasks = [];
-      }
-
-      // Apply search filter on frontend
-      if (filters.search) {
-        const searchLower = filters.search.toLowerCase();
+      if (!filters.status) {
         filteredTasks = filteredTasks.filter(
-          (task: Task) =>
-            (task.title && task.title.toLowerCase().includes(searchLower)) ||
-            (task.description &&
-              task.description.toLowerCase().includes(searchLower)) ||
-            (Array.isArray(task.tags) &&
-              task.tags.some(
-                (tag: string) => tag && tag.toLowerCase().includes(searchLower),
-              )),
+          (task) => task.status !== TaskStatus.COMPLETED,
         );
       }
 
+      filteredTasks = applySearchFilter(filteredTasks);
+
       setTasks(filteredTasks);
       setTotalPages(response.pagination?.pages || 1);
-      setTotalTasks(response.pagination?.total || filteredTasks.length);
+      setTotalTasks(filteredTasks.length);
     } catch (err) {
       setError('Failed to load tasks');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCompletedTasks = async () => {
+    try {
+      setCompletedLoading(true);
+      const params = {
+        page: 1,
+        limit: 100,
+        includeSubtasks: true,
+        status: TaskStatus.COMPLETED,
+        mainTasksOnly: filters.mainTasksOnly,
+        ...(filters.project && { project: filters.project }),
+        ...(filters.assignedTo && { assignedTo: filters.assignedTo }),
+      };
+      const response = await apiService.getTasks(params);
+      setCompletedTasks(applySearchFilter(parseTasksResponse(response)));
+    } catch {
+      setCompletedTasks([]);
+    } finally {
+      setCompletedLoading(false);
     }
   };
 
@@ -194,7 +241,7 @@ export const TaskList: React.FC<TaskListProps> = ({
   };
 
   const handleAddSubtask = (parentTaskId: string) => {
-    const parent = tasks.find((t) => t.id === parentTaskId);
+    const parent = [...tasks, ...completedTasks].find((t) => t.id === parentTaskId);
     if (parent) {
       setEditingTask(null);
       setParentTask(parent);
@@ -208,8 +255,9 @@ export const TaskList: React.FC<TaskListProps> = ({
     const taskForEdit: Task = {
       ...subtask,
       project:
-        tasks.find((t) => t.subtasks.some((s) => s.id === subtask.id))
-          ?.project || '',
+        [...tasks, ...completedTasks].find((t) =>
+          t.subtasks.some((s) => s.id === subtask.id),
+        )?.project || '',
       subtasks: [],
       subtaskCount: 0,
       completedSubtaskCount: 0,
@@ -239,6 +287,7 @@ export const TaskList: React.FC<TaskListProps> = ({
       setEditingTask(null);
       setParentTask(null);
       await loadTasks();
+      await loadCompletedTasks();
     } catch (err: any) {
       setDialogError(extractErrorMessage(err, 'Failed to save task'));
     } finally {
@@ -267,6 +316,7 @@ export const TaskList: React.FC<TaskListProps> = ({
       if (taskId) {
         await apiService.deleteTask(taskId);
         await loadTasks();
+        await loadCompletedTasks();
       }
       setDeleteModalOpen(false);
       setTaskToDelete(null);
@@ -288,6 +338,7 @@ export const TaskList: React.FC<TaskListProps> = ({
     try {
       await apiService.updateTask(taskId, { status });
       await loadTasks();
+      await loadCompletedTasks();
     } catch (err) {
       setError('Failed to update task status');
     }
@@ -312,17 +363,46 @@ export const TaskList: React.FC<TaskListProps> = ({
   };
 
   const getTaskStats = () => {
-    const totalTasks = tasks.length;
-    const completedTasks = tasks.filter(
-      (t) => t.status === TaskStatus.COMPLETED,
-    ).length;
+    const totalTasks = tasks.length + completedTasks.length;
+    const completedTasksCount = completedTasks.length;
     const inProgressTasks = tasks.filter(
       (t) => t.status === TaskStatus.IN_PROGRESS,
     ).length;
     const todoTasks = tasks.filter((t) => t.status === TaskStatus.TODO).length;
 
-    return { totalTasks, completedTasks, inProgressTasks, todoTasks };
+    return { totalTasks, completedTasks: completedTasksCount, inProgressTasks, todoTasks };
   };
+
+  const renderTaskCard = (task: Task) => (
+    <TaskCard
+      key={task.id}
+      task={task}
+      onEdit={canUpdateTasks() ? handleEditTask : undefined}
+      onDelete={
+        canDeleteTasks()
+          ? (taskId) => handleDeleteTask(tasks.find((t) => t.id === taskId) || completedTasks.find((t) => t.id === taskId)!)
+          : undefined
+      }
+      onStatusChange={canUpdateTasks() ? handleStatusChange : undefined}
+      onAddSubtask={canCreateTasks() ? handleAddSubtask : undefined}
+      onEditSubtask={canUpdateTasks() ? handleEditSubtask : undefined}
+      onDeleteSubtask={
+        canDeleteTasks()
+          ? (subtaskId) => {
+              const allTasks = [...tasks, ...completedTasks];
+              const subtask = allTasks
+                .flatMap((t) => t.subtasks || [])
+                .find((s) => s.id === subtaskId);
+              if (subtask) handleDeleteSubtask(subtask);
+            }
+          : undefined
+      }
+      onSubtaskStatusChange={canUpdateTasks() ? handleStatusChange : undefined}
+      canCreateTasks={canCreateTasks()}
+      canUpdateTasks={canUpdateTasks()}
+      canDeleteTasks={canDeleteTasks()}
+    />
+  );
 
   const taskStats = getTaskStats();
 
@@ -335,14 +415,30 @@ export const TaskList: React.FC<TaskListProps> = ({
             Tasks
           </h1>
           {totalTasks > 0 && (
-            <p className="text-gray-600 mt-1">{totalTasks} tasks total</p>
+            <p className="text-gray-600 mt-1">{tasks.length} active tasks</p>
           )}
         </div>
         <div className="flex gap-3">
           <Button
+            variant="ghost"
+            onClick={() => setCompletedSheetOpen(true)}
+            className="text-green-700 hover:text-green-800 hover:bg-green-50"
+          >
+            <CheckCircle2 className="h-4 w-4 mr-2" />
+            Completed
+            {completedTasks.length > 0 && (
+              <span className="ml-1.5 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+                {completedTasks.length}
+              </span>
+            )}
+          </Button>
+          <Button
             variant="outline"
             size="icon"
-            onClick={loadTasks}
+            onClick={() => {
+              void loadTasks();
+              void loadCompletedTasks();
+            }}
             disabled={loading}
           >
             <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
@@ -476,9 +572,6 @@ export const TaskList: React.FC<TaskListProps> = ({
                   <SelectItem value={TaskStatus.IN_PROGRESS}>
                     In Progress
                   </SelectItem>
-                  <SelectItem value={TaskStatus.COMPLETED}>
-                    Completed
-                  </SelectItem>
                   <SelectItem value={TaskStatus.CANCELLED}>
                     Cancelled
                   </SelectItem>
@@ -594,42 +687,7 @@ export const TaskList: React.FC<TaskListProps> = ({
             </Card>
           ) : (
             <div className="space-y-4">
-              {tasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  onEdit={canUpdateTasks() ? handleEditTask : undefined}
-                  onDelete={
-                    canDeleteTasks()
-                      ? (taskId) =>
-                          handleDeleteTask(tasks.find((t) => t.id === taskId)!)
-                      : undefined
-                  }
-                  onStatusChange={
-                    canUpdateTasks() ? handleStatusChange : undefined
-                  }
-                  onAddSubtask={canCreateTasks() ? handleAddSubtask : undefined}
-                  onEditSubtask={
-                    canUpdateTasks() ? handleEditSubtask : undefined
-                  }
-                  onDeleteSubtask={
-                    canDeleteTasks()
-                      ? (subtaskId) => {
-                          const subtask = tasks
-                            .flatMap((t) => t.subtasks || [])
-                            .find((s) => s.id === subtaskId);
-                          if (subtask) handleDeleteSubtask(subtask);
-                        }
-                      : undefined
-                  }
-                  onSubtaskStatusChange={
-                    canUpdateTasks() ? handleStatusChange : undefined
-                  }
-                  canCreateTasks={canCreateTasks()}
-                  canUpdateTasks={canUpdateTasks()}
-                  canDeleteTasks={canDeleteTasks()}
-                />
-              ))}
+              {tasks.map((task) => renderTaskCard(task))}
 
               {/* Pagination */}
               {totalPages > 1 && (
@@ -732,6 +790,39 @@ export const TaskList: React.FC<TaskListProps> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Sheet open={completedSheetOpen} onOpenChange={setCompletedSheetOpen}>
+        <SheetContent side="right" className="flex w-full flex-col sm:max-w-xl">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              Completed Tasks
+            </SheetTitle>
+            <SheetDescription>
+              All completed tasks across your workspace
+            </SheetDescription>
+          </SheetHeader>
+          <div className="mt-4 flex-1 overflow-y-auto pr-1">
+            {completedLoading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+              </div>
+            ) : completedTasks.length === 0 ? (
+              <div className="py-12 text-center text-gray-500">
+                <CheckCircle2 className="mx-auto mb-3 h-12 w-12 text-gray-300" />
+                <p className="font-medium text-gray-700">No completed tasks</p>
+                <p className="mt-1 text-sm">
+                  Tasks marked as completed will appear here.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {completedTasks.map((task) => renderTaskCard(task))}
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
