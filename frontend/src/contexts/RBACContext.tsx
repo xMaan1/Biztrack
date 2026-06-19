@@ -122,6 +122,7 @@ interface RBACContextType {
   createTenantUser: (userData: CreateTenantUserData) => Promise<TenantUser>;
   updateTenantUser: (userId: string, userData: UpdateTenantUserData) => Promise<TenantUser>;
   removeTenantUser: (userId: string) => Promise<void>;
+  forceDeleteTenantUser: (userId: string) => Promise<void>;
 
   // Permission checking
   fetchUserPermissions: () => Promise<void>;
@@ -354,6 +355,20 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const forceDeleteTenantUser = async (userId: string): Promise<void> => {
+    try {
+      const response = await apiService.delete(`/rbac/force-delete-user/${userId}`);
+      if (response.success || response.message) {
+        setTenantUsers(prev => prev.filter(user => user.id !== userId));
+      } else {
+        throw new Error(response.message || 'Failed to force delete user');
+      }
+    } catch (error: any) {
+      const errorMessage = extractErrorMessage(error, 'Failed to force delete user');
+      throw new Error(errorMessage);
+    }
+  };
+
   const fetchUserPermissions = async () => {
     try {
       setLoading(true);
@@ -438,6 +453,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     createTenantUser,
     updateTenantUser,
     removeTenantUser,
+    forceDeleteTenantUser,
     fetchUserPermissions,
     refreshPermissions,
     hasPermission,

@@ -17,6 +17,7 @@ from .....models.platform import User as UserORM
 from .....models.rbac import Role as RoleORM, TenantUser as TenantUserORM
 from .....models.user_models import User, UserCreate
 from .....services.rbac_service import RBACService
+from .....services.user_delete_service import force_delete_user as force_delete_user_service
 from ..shared import (
     ensure_owner_role_assignment,
     get_tenant_role,
@@ -295,6 +296,28 @@ def remove_user_by_id(
     if not tenant_user:
         raise HTTPException(status_code=404, detail="User not found in this tenant")
     return _remove_tenant_user_record(db, tenant_user, tenant_id, current_user_id)
+
+
+def force_delete_user_by_id(
+    db: Session,
+    tenant_id: str,
+    user_id: str,
+    current_user_id: str,
+) -> dict:
+    tenant_user = db.query(TenantUserORM).filter(
+        and_(TenantUserORM.userId == user_id, TenantUserORM.tenant_id == tenant_id)
+    ).first()
+    if not tenant_user:
+        raise HTTPException(status_code=404, detail="User not found in this tenant")
+    try:
+        return force_delete_user_service(
+            db,
+            UUID(user_id),
+            UUID(tenant_id),
+            UUID(current_user_id),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 def create_user_for_tenant(

@@ -18,7 +18,8 @@ import {
   Edit,
   Trash2,
   UserCheck,
-  Loader2
+  Loader2,
+  AlertTriangle
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -41,15 +42,17 @@ import { extractErrorMessage } from '@/src/utils/errorUtils';
 import { toast } from 'sonner';
 
 export default function UserManagementPage() {
-  const { tenantUsers, roles, loading, removeTenantUser } = useRBAC();
+  const { tenantUsers, roles, loading, removeTenantUser, forceDeleteTenantUser } = useRBAC();
   const { canManageUsers, hasPermission, isOwner } = usePermissions();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showForceDeleteModal, setShowForceDeleteModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [userToDelete, setUserToDelete] = useState<any>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isForceDeleting, setIsForceDeleting] = useState(false);
 
   const handleEditUser = (user: any) => {
     setSelectedUser(user);
@@ -59,6 +62,11 @@ export default function UserManagementPage() {
   const handleRemoveUser = (user: any) => {
     setUserToDelete(user);
     setShowDeleteModal(true);
+  };
+
+  const handleForceDeleteUser = (user: any) => {
+    setUserToDelete(user);
+    setShowForceDeleteModal(true);
   };
 
   const confirmDeleteUser = async () => {
@@ -74,6 +82,22 @@ export default function UserManagementPage() {
       toast.error(extractErrorMessage(error, 'Failed to remove user'));
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const confirmForceDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    setIsForceDeleting(true);
+    try {
+      await forceDeleteTenantUser(userToDelete.id);
+      setShowForceDeleteModal(false);
+      setUserToDelete(null);
+      toast.success('User and associated records deleted successfully');
+    } catch (error) {
+      toast.error(extractErrorMessage(error, 'Failed to force delete user'));
+    } finally {
+      setIsForceDeleting(false);
     }
   };
 
@@ -238,6 +262,15 @@ export default function UserManagementPage() {
                               <Trash2 className="h-4 w-4 mr-2" />
                               Remove User
                             </DropdownMenuItem>
+                            {(isOwner() || hasPermission('users:delete')) && (
+                              <DropdownMenuItem
+                                onClick={() => handleForceDeleteUser(user)}
+                                className="text-destructive"
+                              >
+                                <AlertTriangle className="h-4 w-4 mr-2" />
+                                Force Delete
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       )}
@@ -336,6 +369,72 @@ export default function UserManagementPage() {
                   <>
                     <Trash2 className="h-4 w-4 mr-2" />
                     Remove User
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={showForceDeleteModal} onOpenChange={setShowForceDeleteModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+                Force Delete User
+              </DialogTitle>
+              <DialogDescription>
+                This will permanently delete{' '}
+                <strong>
+                  {userToDelete?.firstName && userToDelete?.lastName
+                    ? `${userToDelete.firstName} ${userToDelete.lastName}`
+                    : userToDelete?.userName}
+                </strong>{' '}
+                and remove all records associated with them in this organization. This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            {userToDelete && (
+              <div className="py-4">
+                <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-lg">
+                  <p className="font-medium text-destructive">Warning: Destructive action</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    All tasks, assignments, notifications, and other data linked to this user within your organization will be deleted or cleared.
+                  </p>
+                  <p className="font-medium mt-3">{userToDelete.userName}</p>
+                  <p className="text-sm text-muted-foreground">{userToDelete.email}</p>
+                  {userToDelete.role && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Role: {getRoleDisplayName(userToDelete.role.name)}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowForceDeleteModal(false);
+                  setUserToDelete(null);
+                }}
+                disabled={isForceDeleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmForceDeleteUser}
+                disabled={isForceDeleting}
+              >
+                {isForceDeleting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Force Deleting...
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="h-4 w-4 mr-2" />
+                    Force Delete
                   </>
                 )}
               </Button>

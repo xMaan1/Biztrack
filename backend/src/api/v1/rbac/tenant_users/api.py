@@ -73,6 +73,19 @@ async def remove_user_from_tenant(
     )
 
 
+@router.delete("/force-delete-user/{user_id}")
+async def force_delete_user_from_tenant(
+    user_id: str,
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+    current_user=Depends(get_current_user),
+    _: dict = Depends(require_permission(ModulePermission.USERS_DELETE.value)),
+):
+    return logic.force_delete_user_by_id(
+        db, tenant_context["tenant_id"], user_id, str(current_user.id)
+    )
+
+
 @router.post("/create-user", response_model=User)
 async def create_user_for_tenant(
     user_data: UserCreate,
