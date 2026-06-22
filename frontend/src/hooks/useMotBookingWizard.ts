@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import motBookingService from '@/src/services/MotBookingService';
+import { getTenantMotBookingUrl } from '@/src/models/mot/MotSettings';
 import type { MotVehicleSubStep, MotWizardData, MotWizardStep } from '@/src/components/mot-bookings/wizard/wizardTypes';
 import { emptyMotWizardData, MOT_INSPECTION_PRICE } from '@/src/components/mot-bookings/wizard/wizardTypes';
 import {
@@ -19,6 +20,7 @@ import {
 } from '@/src/components/mot-bookings/wizard/wizardUtils';
 
 type MotBookingWizardOptions = {
+  tenantDomain: string;
   confirmationPath?: (bookingId: string) => string;
 };
 
@@ -29,6 +31,8 @@ function normalizeWizardStep(step: number): MotWizardStep {
 }
 
 export type MotBookingWizardState = {
+  tenantDomain: string;
+  tenantName: string;
   loading: boolean;
   currentStep: MotWizardStep;
   vehicleSubStep: MotVehicleSubStep;
@@ -57,8 +61,8 @@ export type MotBookingWizardState = {
   inspectionPrice: number;
 };
 
-export function useMotBookingWizard(options: MotBookingWizardOptions = {}): MotBookingWizardState {
-  const { confirmationPath } = options;
+export function useMotBookingWizard(options: MotBookingWizardOptions): MotBookingWizardState {
+  const { tenantDomain, confirmationPath } = options;
   const router = useRouter();
   const searchParams = useSearchParams();
   const amendId = searchParams.get('amend');
@@ -71,6 +75,7 @@ export function useMotBookingWizard(options: MotBookingWizardOptions = {}): MotB
   const [confirming, setConfirming] = useState(false);
   const [amendBookingId, setAmendBookingId] = useState<string | null>(null);
   const [inspectionPrice, setInspectionPrice] = useState(MOT_INSPECTION_PRICE);
+  const [tenantName, setTenantName] = useState('');
 
   const maxAvailableStep = useMemo((): MotWizardStep => {
     if (!isVehicleModelComplete(data)) return 1;
@@ -83,17 +88,18 @@ export function useMotBookingWizard(options: MotBookingWizardOptions = {}): MotB
   useEffect(() => {
     const init = async () => {
       try {
-        const settings = await motBookingService.getPublicSettings();
+        const settings = await motBookingService.getPublicSettings(tenantDomain);
         const price = Number(settings.inspection_price);
         if (Number.isFinite(price) && price >= 0) {
           setInspectionPrice(price);
         }
+        setTenantName(settings.tenant_name);
       } catch {
       }
 
       if (amendId) {
         try {
-          const booking = await motBookingService.getBooking(amendId);
+          const booking = await motBookingService.getPublicBooking(tenantDomain, amendId);
           setData(bookingToWizardData(booking));
           setAmendBookingId(amendId);
           setCurrentStep(5);
@@ -105,7 +111,7 @@ export function useMotBookingWizard(options: MotBookingWizardOptions = {}): MotB
         return;
       }
 
-      const draft = loadWizardDraft();
+      const draft = loadWizardDraft(tenantDomain);
       if (draft) {
         setData(draft.data);
         setCurrentStep(normalizeWizardStep(draft.step));
@@ -114,13 +120,13 @@ export function useMotBookingWizard(options: MotBookingWizardOptions = {}): MotB
       setLoading(false);
     };
     init();
-  }, [amendId]);
+  }, [amendId, tenantDomain]);
 
   useEffect(() => {
     if (!loading) {
-      saveWizardDraft(data, currentStep, vehicleSubStep);
+      saveWizardDraft(tenantDomain, data, currentStep, vehicleSubStep);
     }
-  }, [data, currentStep, vehicleSubStep, loading]);
+  }, [data, currentStep, vehicleSubStep, loading, tenantDomain]);
 
   const updateVehicle = useCallback((patch: Partial<MotWizardData['vehicle']>) => {
     setData((prev) => ({ ...prev, vehicle: { ...prev.vehicle, ...patch } }));
@@ -188,20 +194,20 @@ export function useMotBookingWizard(options: MotBookingWizardOptions = {}): MotB
       const payload = wizardDataToBookingPayload(data, inspectionPrice);
       let booking;
       if (amendBookingId) {
-        booking = await motBookingService.updateBooking(amendBookingId, payload);
+        booking = await motBookingService.updatePublicBooking(tenantDomain, amendBookingId, payload);
       } else {
-        booking = await motBookingService.createBooking(payload);
+        booking = await motBookingService.createPublicBooking(tenantDomain, payload);
       }
-      clearWizardDraft();
+      clearWizardDraft(tenantDomain);
       const nextPath = confirmationPath
         ? confirmationPath(booking.id)
-        : `/mot/bookings/${booking.id}/confirmation`;
+        : `/${tenantDomain}/mot/bookings/${booking.id}/confirmation`;
       router.push(nextPath);
     } catch {
     } finally {
       setConfirming(false);
     }
-  }, [amendBookingId, confirmationPath, data, inspectionPrice, router]);
+  }, [amendBookingId, confirmationPath, data, inspectionPrice, router, tenantDomain]);
 
   const handlePrimaryNext = useCallback(() => {
     if (currentStep === 1) {
@@ -251,6 +257,8 @@ export function useMotBookingWizard(options: MotBookingWizardOptions = {}): MotB
   const showSidebarNext = currentStep >= 1 && currentStep <= 4;
 
   return {
+    tenantDomain,
+    tenantName,
     loading,
     currentStep,
     vehicleSubStep,
@@ -278,4 +286,12 @@ export function useMotBookingWizard(options: MotBookingWizardOptions = {}): MotB
     setCurrentStep,
     inspectionPrice,
   };
+}
+
+export function getDefaultMotConfirmationPath(tenantDomain: string) {
+  return (bookingId: string) => `/${tenantDomain}/mot/bookings/${bookingId}/confirmation`;
+}
+
+export function getDefaultMotBookPath(tenantDomain: string) {
+  return getTenantMotBookingUrl(tenantDomain);
 }

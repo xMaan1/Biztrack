@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { usePermissions } from '@/src/hooks/usePermissions';
 import { getDefaultLandingPath } from '@/src/utils/getDefaultLandingPath';
+import { isTenantMotPublicRoute } from '@/src/constants/tenantPublicRoutes';
 import { isTauriApp } from '@/src/lib/isTauriApp';
 
 interface AuthGuardProps {
@@ -31,13 +32,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     '/manifest.json',
   ];
 
-  const isMotPublicRoute = useMemo(() => {
-    return (
-      pathname === '/mot' ||
-      pathname === '/mot/book' ||
-      pathname?.startsWith('/mot/bookings/') === true
-    );
-  }, [pathname]);
+  const isMotPublicRoute = useMemo(() => isTenantMotPublicRoute(pathname), [pathname]);
 
   const isPublicRoute = useMemo(() => {
     return isMotPublicRoute || publicRoutes.some((route) => pathname?.startsWith(route));
@@ -59,7 +54,6 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     '/reports',
     '/hrm',
     '/workshop-management',
-    '/mot/manage',
   ];
 
   const isProtectedRoute = useMemo(() => {

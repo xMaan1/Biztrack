@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useAuth } from '@/src/contexts/AuthContext';
 import {
   Dialog,
   DialogContent,
@@ -47,6 +48,11 @@ export function MotBookingViewDialog({
   onClose,
   onEdit,
 }: MotBookingViewDialogProps) {
+  const { currentTenant } = useAuth();
+  const confirmationPath =
+    booking && currentTenant?.domain
+      ? `/${currentTenant.domain}/mot/bookings/${booking.id}/confirmation`
+      : null;
   const meta = (booking?.booking_meta || {}) as Record<string, unknown>;
   const customer = (meta.customer || {}) as Record<string, unknown>;
   const vehicle = (meta.vehicle || {}) as Record<string, unknown>;
@@ -175,11 +181,13 @@ export function MotBookingViewDialog({
         </div>
 
         <DialogFooter className="flex-col gap-2 sm:flex-row">
-          <Button variant="outline" asChild>
-            <Link href={`/mot/bookings/${booking.id}/confirmation`} target="_blank">
-              Open confirmation
-            </Link>
-          </Button>
+          {confirmationPath && (
+            <Button variant="outline" asChild>
+              <Link href={confirmationPath} target="_blank">
+                Open confirmation
+              </Link>
+            </Button>
+          )}
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>

@@ -7,7 +7,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from .....models.mot import MotBooking
-from ...repository import get_by_id, create_entity, delete_by_id
+from ...repository import create_entity, delete_by_id
 from .schemas import (
     MotBookingCreate,
     MotBookingUpdate,
@@ -18,8 +18,15 @@ from .schemas import (
 from .shared import mot_booking_to_schema
 
 
-def _get_mot_booking_row(booking_id: str, db: Session) -> Optional[MotBooking]:
-    return db.query(MotBooking).filter(MotBooking.id == booking_id).first()
+def _get_mot_booking_row(
+    booking_id: str,
+    db: Session,
+    tenant_id: Optional[str] = None,
+) -> Optional[MotBooking]:
+    query = db.query(MotBooking).filter(MotBooking.id == booking_id)
+    if tenant_id is not None:
+        query = query.filter(MotBooking.tenant_id == tenant_id)
+    return query.first()
 
 
 def _resolve_customer_fields(body):
@@ -31,18 +38,18 @@ def _resolve_customer_fields(body):
     return body.customer_name.strip(), body.customer_phone, body.customer_email
 
 
-def get_mot_bookings(
-    db: Session,
-    skip: int = 0,
-    limit: int = 100,
+def _apply_booking_filters(
+    query,
+    *,
+    tenant_id: str,
     status_filter: Optional[str] = None,
     test_type: Optional[str] = None,
     date_from: Optional[date] = None,
     date_to: Optional[date] = None,
     search: Optional[str] = None,
     is_active: Optional[bool] = True,
-) -> List[MotBooking]:
-    query = db.query(MotBooking)
+):
+    query = query.filter(MotBooking.tenant_id == tenant_id)
     if is_active is not None:
         query = query.filter(MotBooking.is_active == is_active)
     if status_filter:
@@ -62,6 +69,31 @@ def get_mot_bookings(
             | MotBooking.vehicle_make.ilike(search_lower)
             | MotBooking.vehicle_model.ilike(search_lower)
         )
+    return query
+
+
+def get_mot_bookings(
+    db: Session,
+    tenant_id: str,
+    skip: int = 0,
+    limit: int = 100,
+    status_filter: Optional[str] = None,
+    test_type: Optional[str] = None,
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
+    search: Optional[str] = None,
+    is_active: Optional[bool] = True,
+) -> List[MotBooking]:
+    query = _apply_booking_filters(
+        db.query(MotBooking),
+        tenant_id=tenant_id,
+        status_filter=status_filter,
+        test_type=test_type,
+        date_from=date_from,
+        date_to=date_to,
+        search=search,
+        is_active=is_active,
+    )
     return (
         query.order_by(MotBooking.booking_date.desc(), MotBooking.start_time.asc())
         .offset(skip)
@@ -72,6 +104,7 @@ def get_mot_bookings(
 
 def get_mot_bookings_count(
     db: Session,
+    tenant_id: str,
     status_filter: Optional[str] = None,
     test_type: Optional[str] = None,
     date_from: Optional[date] = None,
@@ -79,26 +112,16 @@ def get_mot_bookings_count(
     search: Optional[str] = None,
     is_active: Optional[bool] = True,
 ) -> int:
-    query = db.query(MotBooking)
-    if is_active is not None:
-        query = query.filter(MotBooking.is_active == is_active)
-    if status_filter:
-        query = query.filter(MotBooking.status == status_filter)
-    if test_type:
-        query = query.filter(MotBooking.test_type == test_type)
-    if date_from is not None:
-        query = query.filter(MotBooking.booking_date >= date_from)
-    if date_to is not None:
-        query = query.filter(MotBooking.booking_date <= date_to)
-    if search:
-        search_lower = f"%{search.lower()}%"
-        query = query.filter(
-            MotBooking.customer_name.ilike(search_lower)
-            | MotBooking.vehicle_registration.ilike(search_lower)
-            | MotBooking.customer_phone.ilike(search_lower)
-            | MotBooking.vehicle_make.ilike(search_lower)
-            | MotBooking.vehicle_model.ilike(search_lower)
-        )
+    query = _apply_booking_filters(
+        db.query(MotBooking),
+        tenant_id=tenant_id,
+        status_filter=status_filter,
+        test_type=test_type,
+        date_from=date_from,
+        date_to=date_to,
+        search=search,
+        is_active=is_active,
+    )
     return query.count()
 
 
@@ -108,6 +131,7 @@ def _map_bookings(rows: List[MotBooking]):
 
 def list_mot_bookings(
     db: Session,
+    tenant_id: str,
     status_filter: Optional[str] = None,
     test_type: Optional[str] = None,
     date_from: Optional[str] = None,
@@ -121,47 +145,65 @@ def list_mot_bookings(
     date_to_parsed = dt.strptime(date_to, "%Y-%m-%d").date() if date_to else None
     skip = (page - 1) * limit
     rows = get_mot_bookings(
-        db, skip=skip, limit=limit,
-        status_filter=status_filter, test_type=test_type,
-        date_from=date_from_parsed, date_to=date_to_parsed,
-        search=search, is_active=is_active,
+        db,
+        tenant_id,
+        skip=skip,
+        limit=limit,
+        status_filter=status_filter,
+        test_type=test_type,
+        date_from=date_from_parsed,
+        date_to=date_to_parsed,
+        search=search,
+        is_active=is_active,
     )
     total = get_mot_bookings_count(
-        db, status_filter=status_filter, test_type=test_type,
-        date_from=date_from_parsed, date_to=date_to_parsed,
-        search=search, is_active=is_active,
+        db,
+        tenant_id,
+        status_filter=status_filter,
+        test_type=test_type,
+        date_from=date_from_parsed,
+        date_to=date_to_parsed,
+        search=search,
+        is_active=is_active,
     )
     return MotBookingsResponse(bookings=_map_bookings(rows), total=total)
 
 
 def list_mot_bookings_calendar(
     db: Session,
+    tenant_id: str,
     date_from: str,
     date_to: str,
 ) -> MotBookingsResponse:
     date_from_parsed = dt.strptime(date_from, "%Y-%m-%d").date()
     date_to_parsed = dt.strptime(date_to, "%Y-%m-%d").date()
     rows = get_mot_bookings(
-        db, skip=0, limit=1000,
-        date_from=date_from_parsed, date_to=date_to_parsed, is_active=True,
+        db,
+        tenant_id,
+        skip=0,
+        limit=1000,
+        date_from=date_from_parsed,
+        date_to=date_to_parsed,
+        is_active=True,
     )
     bookings = _map_bookings(rows)
     return MotBookingsResponse(bookings=bookings, total=len(bookings))
 
 
-def get_mot_booking(booking_id: str, db: Session):
-    row = _get_mot_booking_row(booking_id, db)
+def get_mot_booking(booking_id: str, db: Session, tenant_id: str):
+    row = _get_mot_booking_row(booking_id, db, tenant_id)
     if not row:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="MOT booking not found")
     return mot_booking_to_schema(row)
 
 
-def create_mot_booking_record(body: MotBookingCreate, db: Session):
+def create_mot_booking_record(body: MotBookingCreate, db: Session, tenant_id: str):
     customer_name, customer_phone, customer_email = _resolve_customer_fields(body)
     data = body.model_dump(exclude={"customer_name", "customer_phone", "customer_email"})
     data["customer_name"] = customer_name
     data["customer_phone"] = customer_phone
     data["customer_email"] = customer_email
+    data["tenant_id"] = tenant_id
     data["is_active"] = True
     if isinstance(data.get("price"), Decimal):
         data["price"] = float(data["price"])
@@ -169,8 +211,8 @@ def create_mot_booking_record(body: MotBookingCreate, db: Session):
     return mot_booking_to_schema(row)
 
 
-def update_mot_booking_record(booking_id: str, body: MotBookingUpdate, db: Session):
-    row = _get_mot_booking_row(booking_id, db)
+def update_mot_booking_record(booking_id: str, body: MotBookingUpdate, db: Session, tenant_id: str):
+    row = _get_mot_booking_row(booking_id, db, tenant_id)
     if not row:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="MOT booking not found")
     update_data = body.model_dump(exclude_unset=True)
@@ -189,8 +231,8 @@ def update_mot_booking_record(booking_id: str, body: MotBookingUpdate, db: Sessi
     return mot_booking_to_schema(row)
 
 
-def update_mot_booking_status(booking_id: str, body: MotBookingStatusUpdate, db: Session):
-    row = _get_mot_booking_row(booking_id, db)
+def update_mot_booking_status(booking_id: str, body: MotBookingStatusUpdate, db: Session, tenant_id: str):
+    row = _get_mot_booking_row(booking_id, db, tenant_id)
     if not row:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="MOT booking not found")
     row.status = body.status
@@ -202,17 +244,20 @@ def update_mot_booking_status(booking_id: str, body: MotBookingStatusUpdate, db:
     return mot_booking_to_schema(row)
 
 
-def delete_mot_booking_record(booking_id: str, db: Session) -> None:
-    row = _get_mot_booking_row(booking_id, db)
+def delete_mot_booking_record(booking_id: str, db: Session, tenant_id: str) -> None:
+    row = _get_mot_booking_row(booking_id, db, tenant_id)
     if not row:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="MOT booking not found")
     delete_by_id(MotBooking, booking_id, db)
 
 
-def get_mot_booking_stats(db: Session) -> MotBookingStats:
+def get_mot_booking_stats(db: Session, tenant_id: str) -> MotBookingStats:
     today = date.today()
     week_end = today + timedelta(days=7)
-    base = db.query(MotBooking).filter(MotBooking.is_active == True)
+    base = db.query(MotBooking).filter(
+        MotBooking.is_active == True,
+        MotBooking.tenant_id == tenant_id,
+    )
     total = base.count()
     today_count = base.filter(MotBooking.booking_date == today).count()
     upcoming = base.filter(
@@ -222,7 +267,7 @@ def get_mot_booking_stats(db: Session) -> MotBookingStats:
     ).count()
     status_counts = dict(
         db.query(MotBooking.status, func.count(MotBooking.id))
-        .filter(MotBooking.is_active == True)
+        .filter(MotBooking.is_active == True, MotBooking.tenant_id == tenant_id)
         .group_by(MotBooking.status)
         .all()
     )

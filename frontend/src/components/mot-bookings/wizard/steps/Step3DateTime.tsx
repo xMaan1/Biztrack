@@ -28,6 +28,7 @@ import {
 } from '../motCalendarUtils';
 
 type Step3DateTimeProps = {
+  tenantDomain: string;
   dateTime: MotWizardDateTime;
   onChange: (patch: Partial<MotWizardDateTime>) => void;
   onBack: () => void;
@@ -36,6 +37,7 @@ type Step3DateTimeProps = {
 };
 
 export function Step3DateTime({
+  tenantDomain,
   dateTime,
   onChange,
   onBack,
@@ -71,7 +73,7 @@ export function Step3DateTime({
       setLoadingAvailability(true);
       try {
         const { dateFrom, dateTo } = getCalendarDateRange();
-        const response = await motBookingService.getPublicCalendar(dateFrom, dateTo);
+        const response = await motBookingService.getPublicCalendar(tenantDomain, dateFrom, dateTo);
         if (cancelled) return;
         setBookedSlotsByDate(
           getBookedSlotsByDate((response.bookings || []) as MotBooking[], amendBookingId),
@@ -87,7 +89,7 @@ export function Step3DateTime({
     return () => {
       cancelled = true;
     };
-  }, [amendBookingId]);
+  }, [amendBookingId, tenantDomain]);
 
   useEffect(() => {
     if (!dateTime.bookingDate || !dateTime.bookingTime) return;

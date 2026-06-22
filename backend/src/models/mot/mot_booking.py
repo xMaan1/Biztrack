@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Boolean, DateTime, Date, Text, Index, Numeric
+from sqlalchemy import Column, String, Boolean, DateTime, Date, Text, Index, Numeric, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from ...config.database_config import Base
 
@@ -9,6 +9,7 @@ class MotBooking(Base):
     __tablename__ = "mot_bookings"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
     customer_name = Column(String(255), nullable=False)
     customer_phone = Column(String(50))
     customer_email = Column(String(255))
@@ -35,4 +36,6 @@ class MotBooking(Base):
     __table_args__ = (
         Index("ix_mot_bookings_booking_date", "booking_date"),
         Index("ix_mot_bookings_status", "status"),
+        Index("ix_mot_bookings_tenant_date", "tenant_id", "booking_date"),
+        Index("ix_mot_bookings_tenant_status", "tenant_id", "status"),
     )

@@ -44,12 +44,19 @@ export function hasMotInspectionSelected(services: MotWizardServices): boolean {
   return services.motInspection;
 }
 
-export const WIZARD_STORAGE_KEY = 'mot_booking_wizard_draft';
+export function getWizardStorageKey(tenantDomain: string) {
+  return `mot_booking_wizard_draft:${tenantDomain}`;
+}
 
-export function saveWizardDraft(data: MotWizardData, step: number, vehicleSubStep: string) {
+export function saveWizardDraft(
+  tenantDomain: string,
+  data: MotWizardData,
+  step: number,
+  vehicleSubStep: string,
+) {
   if (typeof window === 'undefined') return;
   localStorage.setItem(
-    WIZARD_STORAGE_KEY,
+    getWizardStorageKey(tenantDomain),
     JSON.stringify({ data, step, vehicleSubStep, savedAt: Date.now() }),
   );
 }
@@ -71,12 +78,14 @@ export function normalizeWizardServices(
   };
 }
 
-export function loadWizardDraft():
+export function loadWizardDraft(
+  tenantDomain: string,
+):
   | { data: MotWizardData; step: number; vehicleSubStep: string }
   | null {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = localStorage.getItem(WIZARD_STORAGE_KEY);
+    const raw = localStorage.getItem(getWizardStorageKey(tenantDomain));
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!parsed?.data) return null;
@@ -87,9 +96,9 @@ export function loadWizardDraft():
   }
 }
 
-export function clearWizardDraft() {
+export function clearWizardDraft(tenantDomain: string) {
   if (typeof window === 'undefined') return;
-  localStorage.removeItem(WIZARD_STORAGE_KEY);
+  localStorage.removeItem(getWizardStorageKey(tenantDomain));
 }
 
 export function formatVehicleSummary(data: MotWizardData): string {

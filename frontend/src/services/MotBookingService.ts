@@ -10,11 +10,14 @@ import type {
 import type { MotSettings, MotSettingsUpdate } from '../models/mot/MotSettings';
 
 export class MotBookingService {
-  private publicBaseUrl = '/public/mot';
   private adminBaseUrl = '/mot';
 
-  async getPublicSettings(): Promise<MotSettings> {
-    return apiService.get(`${this.publicBaseUrl}/settings`);
+  private publicBaseUrl(tenantDomain: string): string {
+    return `/public/mot/${encodeURIComponent(tenantDomain)}`;
+  }
+
+  async getPublicSettings(tenantDomain: string): Promise<MotSettings> {
+    return apiService.get(`${this.publicBaseUrl(tenantDomain)}/settings`);
   }
 
   async getSettings(): Promise<MotSettings> {
@@ -56,26 +59,38 @@ export class MotBookingService {
     );
   }
 
-  async getPublicCalendar(dateFrom: string, dateTo: string): Promise<MotBookingsResponse> {
+  async getPublicCalendar(
+    tenantDomain: string,
+    dateFrom: string,
+    dateTo: string,
+  ): Promise<MotBookingsResponse> {
     return apiService.get(
-      `${this.publicBaseUrl}/bookings/calendar?date_from=${dateFrom}&date_to=${dateTo}`,
+      `${this.publicBaseUrl(tenantDomain)}/bookings/calendar?date_from=${dateFrom}&date_to=${dateTo}`,
     );
   }
 
-  async getBooking(id: string): Promise<MotBooking> {
-    return apiService.get(`${this.publicBaseUrl}/bookings/${id}`);
+  async getPublicBooking(tenantDomain: string, id: string): Promise<MotBooking> {
+    return apiService.get(`${this.publicBaseUrl(tenantDomain)}/bookings/${id}`);
   }
 
-  async createBooking(data: MotBookingCreate): Promise<MotBooking> {
-    return apiService.post(`${this.publicBaseUrl}/bookings`, data);
+  async createPublicBooking(tenantDomain: string, data: MotBookingCreate): Promise<MotBooking> {
+    return apiService.post(`${this.publicBaseUrl(tenantDomain)}/bookings`, data);
   }
 
-  async updateBooking(id: string, data: MotBookingUpdate): Promise<MotBooking> {
-    return apiService.put(`${this.publicBaseUrl}/bookings/${id}`, data);
+  async updatePublicBooking(
+    tenantDomain: string,
+    id: string,
+    data: MotBookingUpdate,
+  ): Promise<MotBooking> {
+    return apiService.put(`${this.publicBaseUrl(tenantDomain)}/bookings/${id}`, data);
   }
 
-  async updateBookingStatus(id: string, data: MotBookingStatusUpdate): Promise<MotBooking> {
-    return apiService.patch(`${this.publicBaseUrl}/bookings/${id}/status`, data);
+  async updatePublicBookingStatus(
+    tenantDomain: string,
+    id: string,
+    data: MotBookingStatusUpdate,
+  ): Promise<MotBooking> {
+    return apiService.patch(`${this.publicBaseUrl(tenantDomain)}/bookings/${id}/status`, data);
   }
 
   async adminCreateBooking(data: MotBookingCreate): Promise<MotBooking> {

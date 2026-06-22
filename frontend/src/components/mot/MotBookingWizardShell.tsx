@@ -63,6 +63,7 @@ export function MotBookingWizardShell({ wizard }: MotBookingWizardShellProps) {
     if (wizard.currentStep === 3) {
       return (
         <Step3DateTime
+          tenantDomain={wizard.tenantDomain}
           dateTime={wizard.data.dateTime}
           onChange={wizard.updateDateTime}
           onBack={() => wizard.setCurrentStep(2)}

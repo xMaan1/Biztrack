@@ -9,10 +9,30 @@ import { apiService } from '../services/ApiService';
 import { SIDEBAR_PATH_PERMISSIONS } from '@/src/constants/rbacPermissions';
 import {
   allMenuItems,
-  motSuperAdminMenuItem,
   superAdminMenuItems,
 } from '@/src/constants/sidebarMenuItems';
 import type { MenuItem, SubMenuItem } from '@/src/types/sidebar';
+
+const TENANT_MOT_BOOK_PATH = '__tenant_mot_book__';
+
+function resolveTenantMotMenuPaths(items: MenuItem[], tenantDomain?: string | null): MenuItem[] {
+  return items.map((item) => {
+    if (!item.subItems) return item;
+
+    const subItems = item.subItems
+      .filter((subItem) => {
+        if (subItem.path === TENANT_MOT_BOOK_PATH) return Boolean(tenantDomain);
+        return true;
+      })
+      .map((subItem) =>
+        subItem.path === TENANT_MOT_BOOK_PATH
+          ? { ...subItem, path: `/${tenantDomain}/mot/book` }
+          : subItem,
+      );
+
+    return { ...item, subItems };
+  });
+}
 
 const SIDEBAR_STORAGE_SEARCH = 'biztrack:sidebar:search';
 const SIDEBAR_STORAGE_EXPANDED = 'biztrack:sidebar:expanded';
@@ -206,7 +226,8 @@ export function useSidebar() {
 
     const currentPlanType = planInfo.planType;
 
-    const tenantItems = allMenuItems.filter((item) => {
+    const tenantItems = resolveTenantMotMenuPaths(
+      allMenuItems.filter((item) => {
       const isAvailableForPlan =
         item.planTypes.includes('*') || item.planTypes.includes(currentPlanType);
 
@@ -245,11 +266,9 @@ export function useSidebar() {
       }
 
       return true;
-    });
-
-    if (isSuperAdmin) {
-      return [...tenantItems, motSuperAdminMenuItem];
-    }
+    }),
+      apiService.getCurrentTenant()?.domain,
+    );
 
     return tenantItems;
   }, [

@@ -780,6 +780,20 @@ export const allMenuItems: MenuItem[] = [
         roles: ['*'],
         planTypes: ['workshop'],
       },
+      {
+        text: 'Book MOT',
+        icon: ClipboardCheck,
+        path: '__tenant_mot_book__',
+        roles: ['*'],
+        planTypes: ['workshop'],
+      },
+      {
+        text: 'Manage MOT Bookings',
+        icon: ClipboardList,
+        path: '/workshop-management/mot/bookings',
+        roles: ['*'],
+        planTypes: ['workshop'],
+      },
     ],
   },
   // Banking - Available for all plan types
@@ -920,30 +934,6 @@ export const allMenuItems: MenuItem[] = [
   },
 ];
 
-export const motSuperAdminMenuItem: MenuItem = {
-  text: 'MOT',
-  icon: ClipboardCheck,
-  roles: ['super_admin'],
-  planTypes: ['*'],
-  gradient: 'from-blue-500 to-indigo-500',
-  subItems: [
-    {
-      text: 'Book MOT',
-      icon: ClipboardCheck,
-      path: '/mot/book',
-      roles: ['super_admin'],
-      planTypes: ['*'],
-    },
-    {
-      text: 'Manage Bookings',
-      icon: ClipboardList,
-      path: '/mot/manage/bookings',
-      roles: ['super_admin'],
-      planTypes: ['*'],
-    },
-  ],
-};
-
 export const superAdminMenuItems: MenuItem[] = [
   {
     text: 'Tenants',
@@ -969,7 +959,6 @@ export const superAdminMenuItems: MenuItem[] = [
     planTypes: ['*'],
     gradient: 'from-blue-500 to-cyan-500',
   },
-  motSuperAdminMenuItem,
 ];
 
 

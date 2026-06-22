@@ -1,21 +1,30 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { PoundSterling, Save } from 'lucide-react';
+import { ClipboardCheck, Copy, ExternalLink, Globe, PoundSterling, Save } from 'lucide-react';
 import { toast } from 'sonner';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
 import { Button } from '@/src/components/ui/button';
 import { Input } from '@/src/components/ui/input';
 import { Label } from '@/src/components/ui/label';
+import { Switch } from '@/src/components/ui/switch';
 import motBookingService from '@/src/services/MotBookingService';
+import {
+  getTenantMotBookingUrl,
+  getTenantMotPublicUrl,
+} from '@/src/models/mot/MotSettings';
 import { MOT_INSPECTION_PRICE } from '@/src/components/mot-bookings/wizard/wizardTypes';
 
 type MotSettingsCardProps = {
-  onSaved?: (price: number) => void;
+  onSaved?: (settings: { price: number; enabled: boolean }) => void;
 };
 
 export function MotSettingsCard({ onSaved }: MotSettingsCardProps) {
   const [price, setPrice] = useState(String(MOT_INSPECTION_PRICE));
+  const [enabled, setEnabled] = useState(false);
+  const [tenantDomain, setTenantDomain] = useState('');
+  const [tenantName, setTenantName] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -24,12 +33,37 @@ export function MotSettingsCard({ onSaved }: MotSettingsCardProps) {
       .getSettings()
       .then((settings) => {
         setPrice(String(Number(settings.inspection_price)));
+        setEnabled(Boolean(settings.public_booking_enabled));
+        setTenantDomain(settings.tenant_domain);
+        setTenantName(settings.tenant_name);
       })
       .catch(() => {
         setPrice(String(MOT_INSPECTION_PRICE));
       })
       .finally(() => setLoading(false));
   }, []);
+
+  const publicUrl =
+    typeof window !== 'undefined' && tenantDomain
+      ? `${window.location.origin}${getTenantMotPublicUrl(tenantDomain)}`
+      : tenantDomain
+        ? getTenantMotPublicUrl(tenantDomain)
+        : '';
+  const bookingUrl =
+    typeof window !== 'undefined' && tenantDomain
+      ? `${window.location.origin}${getTenantMotBookingUrl(tenantDomain)}`
+      : tenantDomain
+        ? getTenantMotBookingUrl(tenantDomain)
+        : '';
+
+  const handleCopy = async (value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.success('Link copied');
+    } catch {
+      toast.error('Failed to copy link');
+    }
+  };
 
   const handleSave = async () => {
     const parsed = Number(price);
@@ -40,13 +74,19 @@ export function MotSettingsCard({ onSaved }: MotSettingsCardProps) {
 
     setSaving(true);
     try {
-      const settings = await motBookingService.updateSettings({ inspection_price: parsed });
+      const settings = await motBookingService.updateSettings({
+        inspection_price: parsed,
+        public_booking_enabled: enabled,
+      });
       const savedPrice = Number(settings.inspection_price);
       setPrice(String(savedPrice));
-      onSaved?.(savedPrice);
-      toast.success('MOT inspection price updated');
+      setEnabled(Boolean(settings.public_booking_enabled));
+      setTenantDomain(settings.tenant_domain);
+      setTenantName(settings.tenant_name);
+      onSaved?.({ price: savedPrice, enabled: Boolean(settings.public_booking_enabled) });
+      toast.success('MOT settings updated');
     } catch {
-      toast.error('Failed to update MOT price');
+      toast.error('Failed to update MOT settings');
     } finally {
       setSaving(false);
     }
@@ -56,14 +96,84 @@ export function MotSettingsCard({ onSaved }: MotSettingsCardProps) {
     <Card className="border-primary/20 shadow-sm">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
-          <PoundSterling className="h-5 w-5 text-primary" />
-          MOT Inspection Price
+          <ClipboardCheck className="h-5 w-5 text-primary" />
+          MOT Service
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-6">
+        <div className="flex items-center justify-between gap-4 rounded-xl border p-4">
+          <div>
+            <Label htmlFor="mot-service-enabled" className="text-base">
+              Enable public MOT booking
+            </Label>
+            <p className="text-sm text-muted-foreground">
+              Customers can book MOT tests on your workshop booking page
+            </p>
+          </div>
+          <Switch
+            id="mot-service-enabled"
+            checked={enabled}
+            disabled={loading || saving}
+            onCheckedChange={setEnabled}
+          />
+        </div>
+
+        {tenantDomain && (
+          <div className="space-y-3 rounded-xl border bg-muted/30 p-4">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Globe className="h-4 w-4 text-primary" />
+              {tenantName || tenantDomain} booking URLs
+            </div>
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Workshop page
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <code className="flex-1 rounded-lg bg-background px-3 py-2 text-sm">{publicUrl}</code>
+                <Button variant="outline" size="icon" onClick={() => handleCopy(publicUrl)}>
+                  <Copy className="h-4 w-4" />
+                </Button>
+                {enabled && (
+                  <Button variant="outline" size="icon" asChild>
+                    <Link href={getTenantMotPublicUrl(tenantDomain)} target="_blank">
+                      <ExternalLink className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                )}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Direct booking page
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <code className="flex-1 rounded-lg bg-background px-3 py-2 text-sm">{bookingUrl}</code>
+                <Button variant="outline" size="icon" onClick={() => handleCopy(bookingUrl)}>
+                  <Copy className="h-4 w-4" />
+                </Button>
+                {enabled && (
+                  <Button variant="outline" size="icon" asChild>
+                    <Link href={getTenantMotBookingUrl(tenantDomain)} target="_blank">
+                      <ExternalLink className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                )}
+              </div>
+            </div>
+            {!enabled && (
+              <p className="text-sm text-muted-foreground">
+                Enable MOT service to activate these public booking links.
+              </p>
+            )}
+          </div>
+        )}
+
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
           <div className="flex-1 space-y-2">
-            <Label htmlFor="mot-inspection-price">Price shown on public booking</Label>
+            <Label htmlFor="mot-inspection-price" className="flex items-center gap-2">
+              <PoundSterling className="h-4 w-4" />
+              Inspection price
+            </Label>
             <div className="relative max-w-xs">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                 £
@@ -82,7 +192,7 @@ export function MotSettingsCard({ onSaved }: MotSettingsCardProps) {
           </div>
           <Button onClick={handleSave} disabled={loading || saving} className="sm:mb-0.5">
             <Save className="mr-2 h-4 w-4" />
-            {saving ? 'Saving...' : 'Save Price'}
+            {saving ? 'Saving...' : 'Save Settings'}
           </Button>
         </div>
       </CardContent>

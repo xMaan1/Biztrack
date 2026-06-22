@@ -83,7 +83,6 @@ class TenantMiddleware:
             "/inventory/health",
             "/subscriptions/webhook",
             "/public/",
-            "/mot/",
             "/"  # Root landing page
         ]
         

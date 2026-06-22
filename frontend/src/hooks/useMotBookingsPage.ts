@@ -78,7 +78,11 @@ export function useMotBookingsPage() {
     const params = new URLSearchParams(searchParams.toString());
     params.delete('openAdd');
     const nextQuery = params.toString();
-    router.replace(nextQuery ? `/mot/manage/bookings?${nextQuery}` : '/mot/manage/bookings');
+    router.replace(
+      nextQuery
+        ? `/workshop-management/mot/bookings?${nextQuery}`
+        : '/workshop-management/mot/bookings',
+    );
   }, [searchParams, router, openNewBookingDialog]);
 
   const handleDialogClose = useCallback((open: boolean) => {

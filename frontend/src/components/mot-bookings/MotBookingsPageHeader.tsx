@@ -3,9 +3,17 @@
 import Link from 'next/link';
 import { ClipboardCheck, ExternalLink, Plus } from 'lucide-react';
 import { Button } from '@/src/components/ui/button';
+import { useAuth } from '@/src/contexts/AuthContext';
+import {
+  getTenantMotBookingUrl,
+  getTenantMotPublicUrl,
+} from '@/src/models/mot/MotSettings';
 
 export function MotBookingsPageHeader() {
-  const publicBookingUrl = '/mot/book';
+  const { currentTenant } = useAuth();
+  const tenantDomain = currentTenant?.domain;
+  const publicBookingUrl = tenantDomain ? getTenantMotPublicUrl(tenantDomain) : '';
+  const directBookingUrl = tenantDomain ? getTenantMotBookingUrl(tenantDomain) : '';
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
@@ -15,28 +23,36 @@ export function MotBookingsPageHeader() {
           MOT Bookings
         </h1>
         <p className="text-muted-foreground">
-          Manage standalone MOT test appointments
+          Manage MOT test appointments for your workshop
         </p>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Public booking URL:{' '}
-          <Link href={publicBookingUrl} target="_blank" className="font-medium text-primary hover:underline">
-            {typeof window !== 'undefined' ? `${window.location.origin}${publicBookingUrl}` : publicBookingUrl}
-          </Link>
-        </p>
+        {tenantDomain && (
+          <p className="mt-2 text-sm text-muted-foreground">
+            Public booking URL:{' '}
+            <Link href={publicBookingUrl} target="_blank" className="font-medium text-primary hover:underline">
+              {typeof window !== 'undefined'
+                ? `${window.location.origin}${publicBookingUrl}`
+                : publicBookingUrl}
+            </Link>
+          </p>
+        )}
       </div>
       <div className="flex flex-wrap gap-2">
-        <Button variant="outline" asChild>
-          <Link href={publicBookingUrl} target="_blank">
-            <ExternalLink className="mr-2 h-4 w-4" />
-            Open Public Booking
-          </Link>
-        </Button>
-        <Button asChild>
-          <Link href={publicBookingUrl}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Booking
-          </Link>
-        </Button>
+        {tenantDomain && (
+          <>
+            <Button variant="outline" asChild>
+              <Link href={publicBookingUrl} target="_blank">
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Open Public Page
+              </Link>
+            </Button>
+            <Button asChild>
+              <Link href={directBookingUrl} target="_blank">
+                <Plus className="mr-2 h-4 w-4" />
+                New Booking
+              </Link>
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );

@@ -522,6 +522,13 @@ export const allMenuItems: MenuItemDef[] = [
         roles: ['*'],
         planTypes: ['workshop'],
       },
+      {
+        text: 'Manage MOT Bookings',
+        icon: 'list-outline' as const,
+        path: '/workshop-management/mot/bookings',
+        roles: ['*'],
+        planTypes: ['workshop'],
+      },
     ],
   },
   // Banking - Available for all plan types
