@@ -14,7 +14,3 @@ export interface MotSettingsUpdate {
 export function getTenantMotBookingUrl(domain: string): string {
   return `/${domain}/mot/book`;
 }
-
-export function getTenantMotPublicUrl(domain: string): string {
-  return `/${domain}`;
-}

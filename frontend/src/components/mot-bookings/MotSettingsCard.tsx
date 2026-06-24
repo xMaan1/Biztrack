@@ -10,10 +10,7 @@ import { Input } from '@/src/components/ui/input';
 import { Label } from '@/src/components/ui/label';
 import { Switch } from '@/src/components/ui/switch';
 import motBookingService from '@/src/services/MotBookingService';
-import {
-  getTenantMotBookingUrl,
-  getTenantMotPublicUrl,
-} from '@/src/models/mot/MotSettings';
+import { getTenantMotBookingUrl } from '@/src/models/mot/MotSettings';
 import { MOT_INSPECTION_PRICE } from '@/src/components/mot-bookings/wizard/wizardTypes';
 
 type MotSettingsCardProps = {
@@ -43,12 +40,6 @@ export function MotSettingsCard({ onSaved }: MotSettingsCardProps) {
       .finally(() => setLoading(false));
   }, []);
 
-  const publicUrl =
-    typeof window !== 'undefined' && tenantDomain
-      ? `${window.location.origin}${getTenantMotPublicUrl(tenantDomain)}`
-      : tenantDomain
-        ? getTenantMotPublicUrl(tenantDomain)
-        : '';
   const bookingUrl =
     typeof window !== 'undefined' && tenantDomain
       ? `${window.location.origin}${getTenantMotBookingUrl(tenantDomain)}`
@@ -107,7 +98,7 @@ export function MotSettingsCard({ onSaved }: MotSettingsCardProps) {
               Enable public MOT booking
             </Label>
             <p className="text-sm text-muted-foreground">
-              Customers can book MOT tests on your workshop booking page
+              Customers can book MOT tests on your public booking page
             </p>
           </div>
           <Switch
@@ -122,47 +113,24 @@ export function MotSettingsCard({ onSaved }: MotSettingsCardProps) {
           <div className="space-y-3 rounded-xl border bg-muted/30 p-4">
             <div className="flex items-center gap-2 text-sm font-medium">
               <Globe className="h-4 w-4 text-primary" />
-              {tenantName || tenantDomain} booking URLs
+              {tenantName || tenantDomain} public booking URL
             </div>
-            <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Workshop page
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <code className="flex-1 rounded-lg bg-background px-3 py-2 text-sm">{publicUrl}</code>
-                <Button variant="outline" size="icon" onClick={() => handleCopy(publicUrl)}>
-                  <Copy className="h-4 w-4" />
+            <div className="flex flex-wrap gap-2">
+              <code className="flex-1 rounded-lg bg-background px-3 py-2 text-sm">{bookingUrl}</code>
+              <Button variant="outline" size="icon" onClick={() => handleCopy(bookingUrl)}>
+                <Copy className="h-4 w-4" />
+              </Button>
+              {enabled && (
+                <Button variant="outline" size="icon" asChild>
+                  <Link href={getTenantMotBookingUrl(tenantDomain)} target="_blank">
+                    <ExternalLink className="h-4 w-4" />
+                  </Link>
                 </Button>
-                {enabled && (
-                  <Button variant="outline" size="icon" asChild>
-                    <Link href={getTenantMotPublicUrl(tenantDomain)} target="_blank">
-                      <ExternalLink className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                )}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Direct booking page
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <code className="flex-1 rounded-lg bg-background px-3 py-2 text-sm">{bookingUrl}</code>
-                <Button variant="outline" size="icon" onClick={() => handleCopy(bookingUrl)}>
-                  <Copy className="h-4 w-4" />
-                </Button>
-                {enabled && (
-                  <Button variant="outline" size="icon" asChild>
-                    <Link href={getTenantMotBookingUrl(tenantDomain)} target="_blank">
-                      <ExternalLink className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                )}
-              </div>
+              )}
             </div>
             {!enabled && (
               <p className="text-sm text-muted-foreground">
-                Enable MOT service to activate these public booking links.
+                Enable MOT service to activate this public booking link.
               </p>
             )}
           </div>

@@ -4,16 +4,12 @@ import Link from 'next/link';
 import { ClipboardCheck, ExternalLink, Plus } from 'lucide-react';
 import { Button } from '@/src/components/ui/button';
 import { useAuth } from '@/src/contexts/AuthContext';
-import {
-  getTenantMotBookingUrl,
-  getTenantMotPublicUrl,
-} from '@/src/models/mot/MotSettings';
+import { getTenantMotBookingUrl } from '@/src/models/mot/MotSettings';
 
 export function MotBookingsPageHeader() {
   const { currentTenant } = useAuth();
   const tenantDomain = currentTenant?.domain;
-  const publicBookingUrl = tenantDomain ? getTenantMotPublicUrl(tenantDomain) : '';
-  const directBookingUrl = tenantDomain ? getTenantMotBookingUrl(tenantDomain) : '';
+  const bookingUrl = tenantDomain ? getTenantMotBookingUrl(tenantDomain) : '';
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
@@ -28,10 +24,10 @@ export function MotBookingsPageHeader() {
         {tenantDomain && (
           <p className="mt-2 text-sm text-muted-foreground">
             Public booking URL:{' '}
-            <Link href={publicBookingUrl} target="_blank" className="font-medium text-primary hover:underline">
+            <Link href={bookingUrl} target="_blank" className="font-medium text-primary hover:underline">
               {typeof window !== 'undefined'
-                ? `${window.location.origin}${publicBookingUrl}`
-                : publicBookingUrl}
+                ? `${window.location.origin}${bookingUrl}`
+                : bookingUrl}
             </Link>
           </p>
         )}
@@ -40,13 +36,13 @@ export function MotBookingsPageHeader() {
         {tenantDomain && (
           <>
             <Button variant="outline" asChild>
-              <Link href={publicBookingUrl} target="_blank">
+              <Link href={bookingUrl} target="_blank">
                 <ExternalLink className="mr-2 h-4 w-4" />
-                Open Public Page
+                Open booking page
               </Link>
             </Button>
             <Button asChild>
-              <Link href={directBookingUrl} target="_blank">
+              <Link href={bookingUrl} target="_blank">
                 <Plus className="mr-2 h-4 w-4" />
                 New Booking
               </Link>
