@@ -21,6 +21,11 @@ import {
   formDataToPayload,
   productToFormData,
 } from '@/src/components/pos/products/productUtils';
+import {
+  mergeLookupIntoFormData,
+  type ProductCodeLookupResult,
+  type ProductEntryMode,
+} from '@/src/components/pos/products/productCodeUtils';
 
 export function usePosProductsPage() {
   const searchParams = useSearchParams();
@@ -43,6 +48,8 @@ export function usePosProductsPage() {
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState<ProductFormData>(emptyProductFormData());
+  const [entryMode, setEntryMode] = useState<ProductEntryMode>('manual');
+  const [codeLookupLoading, setCodeLookupLoading] = useState(false);
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -82,6 +89,7 @@ export function usePosProductsPage() {
   const openNewProductDialog = useCallback(() => {
     setEditingProduct(null);
     setFormData(emptyProductFormData());
+    setEntryMode('manual');
     setIsDialogOpen(true);
   }, []);
 
@@ -98,6 +106,8 @@ export function usePosProductsPage() {
     if (!open) {
       setEditingProduct(null);
       setFormData(emptyProductFormData());
+      setEntryMode('manual');
+      setCodeLookupLoading(false);
     }
     setIsDialogOpen(open);
   }, []);
@@ -125,8 +135,34 @@ export function usePosProductsPage() {
   const handleEdit = useCallback((product: Product) => {
     setEditingProduct(product);
     setFormData(productToFormData(product));
+    setEntryMode('manual');
     setIsDialogOpen(true);
   }, []);
+
+  const handleCodeScan = useCallback(
+    async (code: string) => {
+      const trimmed = code.trim();
+      if (!trimmed) return;
+      setCodeLookupLoading(true);
+      try {
+        const response = (await apiService.get(
+          `/pos/products/lookup?code=${encodeURIComponent(trimmed)}`,
+        )) as ProductCodeLookupResult;
+        setFormData((prev) => mergeLookupIntoFormData(prev, response.suggested));
+        setEntryMode('manual');
+        if (response.existsInCatalog) {
+          toast.warning(response.message);
+        } else {
+          toast.success(response.message);
+        }
+      } catch {
+        toast.error('Could not load product details from scanned code.');
+      } finally {
+        setCodeLookupLoading(false);
+      }
+    },
+    [],
+  );
 
   const handleDeleteClick = useCallback((product: Product) => {
     setProductToDelete(product);
@@ -231,6 +267,8 @@ export function usePosProductsPage() {
     filters,
     filteredProducts,
     formData,
+    entryMode,
+    codeLookupLoading,
     editingProduct,
     viewingProduct,
     productToDelete,
@@ -244,6 +282,7 @@ export function usePosProductsPage() {
     addSupplierLoading,
     setFilters,
     setFormData,
+    setEntryMode,
     setViewingProduct,
     setIsAddCategoryOpen,
     setNewCategoryName,
@@ -252,6 +291,7 @@ export function usePosProductsPage() {
     openNewProductDialog,
     handleDialogClose,
     handleSubmit,
+    handleCodeScan,
     handleEdit,
     handleDeleteClick,
     handleDeleteConfirm,

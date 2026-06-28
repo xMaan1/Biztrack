@@ -47,10 +47,14 @@ export default function POSProductsPage() {
           open={page.isDialogOpen}
           editingProduct={page.editingProduct}
           formData={page.formData}
+          entryMode={page.entryMode}
+          codeLookupLoading={page.codeLookupLoading}
           categories={page.categories}
           suppliers={page.suppliers}
           onOpenChange={page.handleDialogClose}
+          onEntryModeChange={page.setEntryMode}
           onFormChange={(patch) => page.setFormData((prev) => ({ ...prev, ...patch }))}
+          onCodeScan={(code) => void page.handleCodeScan(code)}
           onSubmit={page.handleSubmit}
           onAddCategoryClick={() => page.setIsAddCategoryOpen(true)}
           onAddSupplierClick={() => page.handleAddSupplierDialogOpenChange(true)}

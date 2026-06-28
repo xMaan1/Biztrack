@@ -261,7 +261,7 @@ from ..api.v1.healthcare.admissions.logic import (
 
 from .inventory_crud import (
     # Product functions
-    get_product_by_id, get_product_by_sku, get_all_products, get_products, get_products_by_category, get_low_stock_products,
+    get_product_by_id, get_product_by_sku, get_product_by_barcode, get_all_products, get_products, get_products_by_category, get_low_stock_products,
     create_product, update_product, delete_product,
     
     # Warehouse functions

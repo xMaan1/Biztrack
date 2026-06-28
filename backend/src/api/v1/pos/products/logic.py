@@ -22,6 +22,7 @@ from .....config.database import (
 )
 from ..categories.logic import get_pos_categories
 from .schemas import default_category_values
+from .code_lookup import lookup_product_code as resolve_product_code
 
 
 def convert_db_product_to_pydantic(db_product, supplier_name: Optional[str] = None):
@@ -211,6 +212,17 @@ def search_pos_products(db: Session, tenant_context: dict, q: str):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error searching products: {str(e)}")
+
+
+def lookup_product_code(db: Session, tenant_context: dict, code: str):
+    if not tenant_context:
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    try:
+        return resolve_product_code(db, tenant_context["tenant_id"], code)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error looking up product code: {str(e)}")
 
 
 def get_pos_product(db: Session, tenant_context: dict, product_id: str):

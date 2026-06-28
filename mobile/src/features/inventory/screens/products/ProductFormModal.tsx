@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { UnitOfMeasure } from '../../../../models/pos';
 import { PRODUCT_CATEGORIES, PRODUCT_UNITS } from './helpers';
 import type { ProductFormState } from './types';
+import type { ProductEntryMode } from './productCodeHelpers';
 import { ProductChipSelect } from './ProductChipSelect';
 import { ProductFieldRow } from './ProductFieldRow';
 import { AppModal } from '../../../../components/layout/AppModal';
@@ -12,19 +13,33 @@ type Props = {
   visible: boolean;
   editMode: boolean;
   saving: boolean;
+  lookupLoading: boolean;
+  entryMode: ProductEntryMode;
   form: ProductFormState;
   onClose: () => void;
   onSave: () => void;
+  onEntryModeChange: (mode: ProductEntryMode) => void;
+  onOpenScanner: (mode: Exclude<ProductEntryMode, 'manual'>) => void;
   onFieldChange: <K extends keyof ProductFormState>(key: K, value: ProductFormState[K]) => void;
 };
+
+const ENTRY_MODES: { id: ProductEntryMode; label: string }[] = [
+  { id: 'manual', label: 'Manual' },
+  { id: 'qr', label: 'QR Scan' },
+  { id: 'barcode', label: 'Barcode' },
+];
 
 export function ProductFormModal({
   visible,
   editMode,
   saving,
+  lookupLoading,
+  entryMode,
   form,
   onClose,
   onSave,
+  onEntryModeChange,
+  onOpenScanner,
   onFieldChange,
 }: Props) {
   return (
@@ -44,9 +59,9 @@ export function ProductFormModal({
             </Text>
             <Pressable
               onPress={onSave}
-              disabled={saving}
+              disabled={saving || lookupLoading}
               style={{
-                backgroundColor: saving ? '#93c5fd' : '#2563eb',
+                backgroundColor: saving || lookupLoading ? '#93c5fd' : '#2563eb',
                 borderRadius: 8,
                 paddingHorizontal: 16,
                 paddingVertical: 8,
@@ -65,6 +80,66 @@ export function ProductFormModal({
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ paddingBottom: 40 }}
           >
+            {!editMode && (
+              <>
+                <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
+                  {ENTRY_MODES.map((mode) => {
+                    const active = entryMode === mode.id;
+                    return (
+                      <Pressable
+                        key={mode.id}
+                        onPress={() => onEntryModeChange(mode.id)}
+                        style={{
+                          flex: 1,
+                          borderRadius: 10,
+                          paddingVertical: 10,
+                          alignItems: 'center',
+                          backgroundColor: active ? '#2563eb' : '#f1f5f9',
+                        }}
+                      >
+                        <Text style={{ color: active ? '#fff' : '#475569', fontWeight: '700', fontSize: 13 }}>
+                          {mode.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+
+                {entryMode !== 'manual' && (
+                  <Pressable
+                    onPress={() => onOpenScanner(entryMode)}
+                    disabled={lookupLoading}
+                    style={{
+                      marginBottom: 16,
+                      borderRadius: 12,
+                      borderWidth: 1,
+                      borderColor: '#bfdbfe',
+                      backgroundColor: '#eff6ff',
+                      padding: 14,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 10,
+                    }}
+                  >
+                    <Ionicons name={entryMode === 'qr' ? 'qr-code-outline' : 'barcode-outline'} size={22} color="#2563eb" />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: '#1d4ed8', fontWeight: '700' }}>
+                        {entryMode === 'qr' ? 'Open QR Scanner' : 'Open Barcode Scanner'}
+                      </Text>
+                      <Text style={{ color: '#64748b', fontSize: 12, marginTop: 2 }}>
+                        Scan to auto-fill product details, then review before saving.
+                      </Text>
+                    </View>
+                    {lookupLoading ? (
+                      <ActivityIndicator size="small" color="#2563eb" />
+                    ) : (
+                      <Ionicons name="chevron-forward" size={18} color="#2563eb" />
+                    )}
+                  </Pressable>
+                )}
+              </>
+            )}
+
             <Text style={{ fontSize: 13, fontWeight: '700', color: '#2563eb', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>
               Basic Info
             </Text>

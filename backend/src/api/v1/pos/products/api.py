@@ -7,6 +7,7 @@ from .....api.dependencies import get_current_user, get_tenant_context, require_
 from .....models.common import ModulePermission
 from .....models.inventory_models import ProductCreate, ProductUpdate, ProductsResponse, ProductResponse
 from . import logic
+from .schemas import ProductCodeLookupResponse
 
 router = APIRouter()
 
@@ -38,6 +39,17 @@ async def search_products(
     _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value)),
 ):
     return logic.search_pos_products(db, tenant_context, q)
+
+
+@router.get("/products/lookup", response_model=ProductCodeLookupResponse)
+async def lookup_product_code(
+    code: str = Query(..., description="Scanned QR or barcode value"),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value)),
+):
+    return logic.lookup_product_code(db, tenant_context, code)
 
 
 @router.get("/products/{product_id}", response_model=ProductResponse)

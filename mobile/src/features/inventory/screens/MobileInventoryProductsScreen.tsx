@@ -9,13 +9,19 @@ import {
   createProduct,
   deleteProduct,
   fetchPosProducts,
+  lookupProductCode,
   updateProduct,
 } from '../../../services/inventory/inventoryMobileApi';
 import { extractErrorMessage } from '../../../utils/errorUtils';
 import { ProductDetailSheet } from './products/ProductDetailSheet';
 import { ProductFormModal } from './products/ProductFormModal';
+import { ProductCodeScannerModal } from './products/ProductCodeScannerModal';
 import { ProductListItem } from './products/ProductListItem';
 import { BLANK_PRODUCT_FORM, productToForm, type ProductFormState } from './products/types';
+import {
+  mergeLookupIntoForm,
+  type ProductEntryMode,
+} from './products/productCodeHelpers';
 
 type Props = {
   sidebarPathWhenNotDashboard?: string;
@@ -45,6 +51,10 @@ export function MobileInventoryProductsScreen({
   const [editTarget, setEditTarget] = useState<Product | null>(null);
   const [form, setForm] = useState<ProductFormState>(BLANK_PRODUCT_FORM);
   const [saving, setSaving] = useState(false);
+  const [entryMode, setEntryMode] = useState<ProductEntryMode>('manual');
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [scannerMode, setScannerMode] = useState<'qr' | 'barcode'>('qr');
+  const [lookupLoading, setLookupLoading] = useState(false);
 
   const canEdit =
     manageScope === 'pos'
@@ -95,13 +105,43 @@ export function MobileInventoryProductsScreen({
   const openCreate = () => {
     setEditTarget(null);
     setForm(BLANK_PRODUCT_FORM);
+    setEntryMode('manual');
+    setScannerOpen(false);
     setFormOpen(true);
   };
   const openEdit = (p: Product) => {
     setDetailOpen(false);
     setEditTarget(p);
     setForm(productToForm(p));
+    setEntryMode('manual');
+    setScannerOpen(false);
     setFormOpen(true);
+  };
+
+  const handleCodeScan = async (code: string) => {
+    const trimmed = code.trim();
+    if (!trimmed) return;
+    setLookupLoading(true);
+    try {
+      const response = await lookupProductCode(trimmed);
+      setForm((prev) => mergeLookupIntoForm(prev, response.suggested));
+      setEntryMode('manual');
+      setScannerOpen(false);
+      if (response.existsInCatalog) {
+        Alert.alert('Products', response.message);
+      } else {
+        Alert.alert('Products', response.message);
+      }
+    } catch (e) {
+      Alert.alert('Products', extractErrorMessage(e, 'Could not load product details from scanned code.'));
+    } finally {
+      setLookupLoading(false);
+    }
+  };
+
+  const openScanner = (mode: 'qr' | 'barcode') => {
+    setScannerMode(mode);
+    setScannerOpen(true);
   };
 
   const handleSave = async () => {
@@ -295,10 +335,21 @@ export function MobileInventoryProductsScreen({
         visible={formOpen}
         editMode={Boolean(editTarget)}
         saving={saving}
+        lookupLoading={lookupLoading}
+        entryMode={entryMode}
         form={form}
         onClose={() => setFormOpen(false)}
         onSave={() => void handleSave()}
+        onEntryModeChange={setEntryMode}
+        onOpenScanner={openScanner}
         onFieldChange={setField}
+      />
+      <ProductCodeScannerModal
+        visible={scannerOpen}
+        mode={scannerMode}
+        loading={lookupLoading}
+        onClose={() => setScannerOpen(false)}
+        onScan={(code) => void handleCodeScan(code)}
       />
     </View>
   );

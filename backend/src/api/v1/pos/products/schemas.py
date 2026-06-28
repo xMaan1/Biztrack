@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from .....models.inventory_models import ProductCategory
 
@@ -13,6 +13,15 @@ class ProductFilters(BaseModel):
 
 class CategoryCreate(BaseModel):
     name: str
+
+
+class ProductCodeLookupResponse(BaseModel):
+    source: str
+    codeType: str
+    existsInCatalog: bool
+    existingProductId: Optional[str] = None
+    suggested: Dict[str, Any]
+    message: str
 
 
 def default_category_values():

@@ -300,3 +300,18 @@ export async function updateProduct(id: string, data: ProductUpdate): Promise<Pr
 export async function deleteProduct(id: string): Promise<void> {
   await apiService.delete(`/pos/products/${id}`);
 }
+
+export type ProductCodeLookupResult = {
+  source: string;
+  codeType: string;
+  existsInCatalog: boolean;
+  existingProductId?: string | null;
+  suggested: Record<string, string | number | null | undefined>;
+  message: string;
+};
+
+export async function lookupProductCode(code: string): Promise<ProductCodeLookupResult> {
+  return apiService.get<ProductCodeLookupResult>(
+    `/pos/products/lookup?code=${encodeURIComponent(code)}`,
+  );
+}

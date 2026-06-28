@@ -19,6 +19,12 @@ def get_product_by_sku(sku: str, db: Session, tenant_id: str = None) -> Optional
         query = query.filter(Product.tenant_id == tenant_id)
     return query.first()
 
+def get_product_by_barcode(barcode: str, db: Session, tenant_id: str = None) -> Optional[Product]:
+    query = db.query(Product).filter(Product.barcode == barcode)
+    if tenant_id:
+        query = query.filter(Product.tenant_id == tenant_id)
+    return query.first()
+
 def get_all_products(db: Session, tenant_id: str = None, skip: int = 0, limit: int = 100) -> List[Product]:
     query = db.query(Product)
     if tenant_id:
