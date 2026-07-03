@@ -270,6 +270,17 @@ class RBACService:
         return bool(role and role.name == TenantRole.OWNER.value)
 
     @staticmethod
+    def get_owner_user_ids(db: Session, tenant_id: str) -> List[str]:
+        rows = db.query(TenantUser.userId).join(Role).filter(
+            and_(
+                TenantUser.tenant_id == tenant_id,
+                TenantUser.isActive == True,
+                Role.name == TenantRole.OWNER.value,
+            )
+        ).all()
+        return [str(row[0]) for row in rows]
+
+    @staticmethod
     def can_manage_users(db: Session, user_id: str, tenant_id: str) -> bool:
         if RBACService.is_owner(db, user_id, tenant_id):
             return True

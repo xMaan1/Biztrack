@@ -22,7 +22,7 @@ import {
 
 export function useProjectsPage() {
   const { user } = useAuth();
-  const { canManageProjects, canUpdateProjects } = usePermissions();
+  const { canManageProjects, canUpdateProjects, canDeleteProjects, isOwner } = usePermissions();
   const router = useRouter();
 
   const [mounted, setMounted] = useState(false);
@@ -96,10 +96,43 @@ export function useProjectsPage() {
   }, [canManageProjects, user]);
 
   const canEditProject = useCallback(
-    () => {
-      return canUpdateProjects() || user?.userRole === 'super_admin';
+    (project?: Project) => {
+      if (user?.userRole === 'super_admin' || isOwner()) return true;
+      if (!canUpdateProjects() || !project) return false;
+      const uid = user?.id;
+      return project.projectManager?.id === uid || project.createdById === uid;
     },
-    [canUpdateProjects, user],
+    [canUpdateProjects, isOwner, user],
+  );
+
+  const getDeleteMode = useCallback(
+    (project: Project): 'direct' | 'approved' | 'pending' | 'request' | 'none' => {
+      if (user?.userRole === 'super_admin' || isOwner()) return 'direct';
+      const uid = user?.id;
+      const isRequester =
+        project.projectManager?.id === uid || project.createdById === uid;
+      if (!canDeleteProjects() || !isRequester) return 'none';
+      if (project.deletionStatus === 'approved') return 'approved';
+      if (project.deletionStatus === 'pending') return 'pending';
+      return 'request';
+    },
+    [canDeleteProjects, isOwner, user],
+  );
+
+  const handleRequestDeletion = useCallback(
+    async (project: Project) => {
+      try {
+        await apiService.requestProjectDeletion(project.id);
+        toast.success('Deletion request sent to the owner for approval');
+        void fetchProjects({ silent: true });
+      } catch (err: unknown) {
+        const error = err as { response?: { data?: { detail?: string } }; message?: string };
+        toast.error(
+          error?.response?.data?.detail || error?.message || 'Failed to request deletion',
+        );
+      }
+    },
+    [fetchProjects],
   );
 
   const handleCreateProject = useCallback(() => {
@@ -231,6 +264,8 @@ export function useProjectsPage() {
     selectedTeamMembers,
     canCreateProject,
     canEditProject,
+    getDeleteMode,
+    handleRequestDeletion,
     setDialogOpen,
     setFormData,
     setDeleteDialogOpen,

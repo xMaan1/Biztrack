@@ -11,7 +11,7 @@ from ...tasks.items.schemas import TasksResponse, SubTask
 from .....models.user_models import TeamMember
 from .....config.database import get_db, get_user_by_id, User, TenantUser
 from .....models.projects import Project as DBProject, Task as DBTask
-from .....api.dependencies import get_current_user, get_tenant_context, require_permission, can_see_all_tasks
+from .....api.dependencies import get_current_user, get_tenant_context, require_permission, can_see_all_tasks, can_edit_project
 from .....models.common import ModulePermission
 from . import logic as project_logic
 from ...tasks.items import logic as task_logic
@@ -48,6 +48,9 @@ def transform_project_to_response(project: DBProject) -> Project:
         createdById=str(project.createdById) if project.createdById else None,
         projectManager=transform_user_to_team_member(project.projectManager),
         teamMembers=[transform_user_to_team_member(member) for member in project.teamMembers],
+        deletionStatus=project.deletionStatus or "none",
+        deletionRequestedById=str(project.deletionRequestedById) if project.deletionRequestedById else None,
+        deletionRequestedAt=project.deletionRequestedAt,
         createdAt=project.createdAt,
         updatedAt=project.updatedAt,
         activities=[]  # TODO: Implement activities
@@ -278,6 +281,8 @@ async def update_existing_project(
     project = project_logic.get_project_by_id(project_id, db, tenant_id=tenant_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
+    if not can_edit_project(tenant_context or {}, project, str(current_user.id)):
+        raise HTTPException(status_code=403, detail="You do not have permission to edit this project")
     
     update_dict = project_data.model_dump(exclude_unset=True)
     updated_team_members = None
@@ -301,17 +306,18 @@ async def update_existing_project(
     # Update other fields
     updated_project = project_logic.update_project(project_id, update_dict, db, tenant_id=tenant_id)
     try:
-        from .....services.notification_service import create_project_notification_for_all_tenant_users, send_assignment_notification
+        from .....services.notification_service import notify_project_members, send_assignment_notification
         from .....config.notification_models import NotificationType, NotificationCategory
         user_name = f"{current_user.firstName} {current_user.lastName}".strip() if hasattr(current_user, 'firstName') else current_user.userName if hasattr(current_user, 'userName') else "A user"
-        create_project_notification_for_all_tenant_users(
+        notify_project_members(
             db,
             str(tenant_id),
+            updated_project,
             "Project Updated",
             f"{user_name} updated the project: {updated_project.name}",
-            NotificationType.INFO,
-            f"/projects/{project_id}",
-            {"project_id": project_id, "updated_by": str(current_user.id)}
+            action_url=f"/projects/{project_id}",
+            exclude_user_id=str(current_user.id),
+            notification_data={"project_id": project_id, "updated_by": str(current_user.id)}
         )
         if tenant_id and 'projectManagerId' in update_dict and update_dict.get('projectManagerId'):
             new_pm = get_user_by_id(update_dict['projectManagerId'], db)
@@ -344,13 +350,176 @@ async def delete_existing_project(
     tenant_context: Optional[dict] = Depends(get_tenant_context),
     _: dict = Depends(require_permission(ModulePermission.PROJECTS_DELETE.value))
 ):
-    """Delete a project"""
+    """Delete a project. Owner can delete directly; PM/creator require owner approval first."""
     tenant_id = tenant_context["tenant_id"] if tenant_context else None
+    project = project_logic.get_project_by_id(project_id, db, tenant_id=tenant_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    is_owner = bool(tenant_context and tenant_context.get("is_owner"))
+    if not is_owner:
+        uid = str(current_user.id)
+        is_requester = (
+            (project.projectManagerId and str(project.projectManagerId) == uid)
+            or (project.createdById and str(project.createdById) == uid)
+        )
+        if not is_requester:
+            raise HTTPException(status_code=403, detail="You do not have permission to delete this project")
+        if project.deletionStatus != "approved":
+            raise HTTPException(status_code=403, detail="Project deletion requires owner approval. Please request deletion first.")
+
     success = project_logic.delete_project(project_id, db, tenant_id=tenant_id)
     if not success:
         raise HTTPException(status_code=404, detail="Project not found")
     
     return {"message": "Project deleted successfully"}
+
+
+@router.post("/{project_id}/request-deletion", response_model=Project)
+async def request_project_deletion(
+    project_id: str,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.PROJECTS_DELETE.value))
+):
+    """Request deletion of a project (assigned PM or creator). Notifies owners for approval."""
+    tenant_id = tenant_context["tenant_id"] if tenant_context else None
+    project = project_logic.get_project_by_id(project_id, db, tenant_id=tenant_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    if tenant_context and tenant_context.get("is_owner"):
+        raise HTTPException(status_code=400, detail="Owners can delete projects directly without approval")
+
+    uid = str(current_user.id)
+    is_requester = (
+        (project.projectManagerId and str(project.projectManagerId) == uid)
+        or (project.createdById and str(project.createdById) == uid)
+    )
+    if not is_requester:
+        raise HTTPException(status_code=403, detail="Only the project manager or creator can request deletion")
+    if project.deletionStatus == "pending":
+        raise HTTPException(status_code=400, detail="A deletion request is already pending for this project")
+    if project.deletionStatus == "approved":
+        raise HTTPException(status_code=400, detail="Deletion is already approved for this project")
+
+    project.deletionStatus = "pending"
+    project.deletionRequestedById = current_user.id
+    project.deletionRequestedAt = datetime.utcnow()
+    db.commit()
+    db.refresh(project)
+
+    try:
+        from .....services.rbac_service import RBACService
+        from .....services.notification_service import NotificationService
+        from .....config.notification_models import NotificationType, NotificationCategory
+        user_name = f"{current_user.firstName} {current_user.lastName}".strip() if hasattr(current_user, 'firstName') else getattr(current_user, 'userName', 'A user')
+        owner_ids = RBACService.get_owner_user_ids(db, str(tenant_id))
+        owner_ids = [oid for oid in owner_ids if oid != uid]
+        if owner_ids:
+            NotificationService(db).create_bulk_notifications(
+                str(tenant_id), owner_ids,
+                "Project Deletion Requested",
+                f"{user_name} requested approval to delete the project: {project.name}",
+                NotificationCategory.PROJECTS,
+                NotificationType.WARNING,
+                f"/projects/{project_id}",
+                {"project_id": project_id, "requested_by": uid, "action": "deletion_request"}
+            )
+    except Exception as notification_error:
+        import logging
+        logging.getLogger(__name__).error(f"Failed to notify owners of deletion request: {notification_error}", exc_info=True)
+
+    return transform_project_to_response(project)
+
+
+@router.post("/{project_id}/approve-deletion", response_model=Project)
+async def approve_project_deletion(
+    project_id: str,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+):
+    """Approve a pending project deletion request (owner only)."""
+    if not (tenant_context and tenant_context.get("is_owner")):
+        raise HTTPException(status_code=403, detail="Only the owner can approve project deletion")
+    tenant_id = tenant_context["tenant_id"]
+    project = project_logic.get_project_by_id(project_id, db, tenant_id=tenant_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if project.deletionStatus != "pending":
+        raise HTTPException(status_code=400, detail="There is no pending deletion request for this project")
+
+    requester_id = str(project.deletionRequestedById) if project.deletionRequestedById else None
+    project.deletionStatus = "approved"
+    db.commit()
+    db.refresh(project)
+
+    try:
+        from .....services.notification_service import NotificationService
+        from .....config.notification_models import NotificationType, NotificationCategory
+        if requester_id:
+            NotificationService(db).create_notification(
+                tenant_id=str(tenant_id),
+                user_id=requester_id,
+                title="Project Deletion Approved",
+                message=f"Your request to delete the project '{project.name}' was approved. You can now delete it.",
+                category=NotificationCategory.PROJECTS,
+                type=NotificationType.SUCCESS,
+                action_url=f"/projects/{project_id}",
+                notification_data={"project_id": project_id, "action": "deletion_approved"}
+            )
+    except Exception as notification_error:
+        import logging
+        logging.getLogger(__name__).error(f"Failed to notify requester of approval: {notification_error}", exc_info=True)
+
+    return transform_project_to_response(project)
+
+
+@router.post("/{project_id}/reject-deletion", response_model=Project)
+async def reject_project_deletion(
+    project_id: str,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+):
+    """Reject a pending project deletion request (owner only)."""
+    if not (tenant_context and tenant_context.get("is_owner")):
+        raise HTTPException(status_code=403, detail="Only the owner can reject project deletion")
+    tenant_id = tenant_context["tenant_id"]
+    project = project_logic.get_project_by_id(project_id, db, tenant_id=tenant_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if project.deletionStatus != "pending":
+        raise HTTPException(status_code=400, detail="There is no pending deletion request for this project")
+
+    requester_id = str(project.deletionRequestedById) if project.deletionRequestedById else None
+    project.deletionStatus = "none"
+    project.deletionRequestedById = None
+    project.deletionRequestedAt = None
+    db.commit()
+    db.refresh(project)
+
+    try:
+        from .....services.notification_service import NotificationService
+        from .....config.notification_models import NotificationType, NotificationCategory
+        if requester_id:
+            NotificationService(db).create_notification(
+                tenant_id=str(tenant_id),
+                user_id=requester_id,
+                title="Project Deletion Rejected",
+                message=f"Your request to delete the project '{project.name}' was rejected by the owner.",
+                category=NotificationCategory.PROJECTS,
+                type=NotificationType.INFO,
+                action_url=f"/projects/{project_id}",
+                notification_data={"project_id": project_id, "action": "deletion_rejected"}
+            )
+    except Exception as notification_error:
+        import logging
+        logging.getLogger(__name__).error(f"Failed to notify requester of rejection: {notification_error}", exc_info=True)
+
+    return transform_project_to_response(project)
 
 def transform_task_to_response(task: DBTask):
     return SubTask(

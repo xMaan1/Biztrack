@@ -389,12 +389,30 @@ def update_task_and_notify(task_id: str, task_data: TaskUpdate, current_user, te
         update_dict['completedAt'] = datetime.utcnow()
 
     updated_task = update_task(task_id, update_dict, db, tenant_id=tenant_id)
+    project_for_task = project_logic.get_project_by_id(updated_task.projectId, db, tenant_id=tenant_id)
     if assignee_for_notification:
-        project_for_task = project_logic.get_project_by_id(updated_task.projectId, db, tenant_id=tenant_id)
         _send_task_assignment_notification(
             db, tenant_context, assignee_for_notification, current_user, "Task", updated_task,
             project_name=project_for_task.name if project_for_task else None
         )
+    if project_for_task:
+        try:
+            from .....services.notification_service import notify_project_members
+            user_name = f"{getattr(current_user, 'firstName', '') or ''} {getattr(current_user, 'lastName', '') or ''}".strip() or getattr(current_user, 'userName', 'A user')
+            assignee_id = str(updated_task.assignedToId) if updated_task.assignedToId else None
+            notify_project_members(
+                db,
+                str(tenant_id),
+                project_for_task,
+                "Task Updated",
+                f"{user_name} updated the task: {updated_task.title}",
+                action_url=f"/projects/{updated_task.projectId}",
+                exclude_user_id=str(current_user.id),
+                notification_data={"project_id": str(updated_task.projectId), "task_id": str(updated_task.id), "updated_by": str(current_user.id)},
+                extra_user_ids=[assignee_id] if assignee_id else None,
+            )
+        except Exception:
+            pass
     return transform_task_to_response(updated_task, db)
 
 

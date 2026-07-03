@@ -665,6 +665,18 @@ export class ApiService {
     return this.delete(`/projects/${id}`);
   }
 
+  async requestProjectDeletion(id: string) {
+    return this.post(`/projects/${id}/request-deletion`, {});
+  }
+
+  async approveProjectDeletion(id: string) {
+    return this.post(`/projects/${id}/approve-deletion`, {});
+  }
+
+  async rejectProjectDeletion(id: string) {
+    return this.post(`/projects/${id}/reject-deletion`, {});
+  }
+
   async getProjectTeamMembers() {
     return this.get('/projects/team-members');
   }

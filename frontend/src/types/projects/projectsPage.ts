@@ -16,15 +16,19 @@ export interface ProjectFormData {
   teamMemberIds: string[];
 }
 
+export type ProjectDeleteMode = 'direct' | 'approved' | 'pending' | 'request' | 'none';
+
 export interface ProjectCardProps {
   project: Project;
   isStarred: boolean;
   onToggleStarred: (projectId: string) => void;
   onEditProject: (project: Project) => void;
   onDeleteProject: (project: Project) => void;
+  onRequestDeletion: (project: Project) => void;
   onViewProject: (projectId: string) => void;
   onViewTasks: (projectId: string) => void;
   canEdit: boolean;
+  deleteMode: ProjectDeleteMode;
 }
 
 export interface ProjectsToolbarProps {

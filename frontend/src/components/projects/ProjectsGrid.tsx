@@ -1,15 +1,18 @@
 'use client';
 
 import type { Project } from '@/src/models';
+import type { ProjectDeleteMode } from '@/src/types/projects';
 import { ProjectCard } from './ProjectCard';
 
 interface ProjectsGridProps {
   projects: Project[];
   starredProjects: string[];
-  canEditProject: () => boolean;
+  canEditProject: (project: Project) => boolean;
+  getDeleteMode: (project: Project) => ProjectDeleteMode;
   onToggleStarred: (projectId: string) => void;
   onEditProject: (project: Project) => void;
   onDeleteProject: (project: Project) => void;
+  onRequestDeletion: (project: Project) => void;
   onViewProject: (projectId: string) => void;
   onViewTasks: (projectId: string) => void;
 }
@@ -18,9 +21,11 @@ export function ProjectsGrid({
   projects,
   starredProjects,
   canEditProject,
+  getDeleteMode,
   onToggleStarred,
   onEditProject,
   onDeleteProject,
+  onRequestDeletion,
   onViewProject,
   onViewTasks,
 }: ProjectsGridProps) {
@@ -34,9 +39,11 @@ export function ProjectsGrid({
           onToggleStarred={onToggleStarred}
           onEditProject={onEditProject}
           onDeleteProject={onDeleteProject}
+          onRequestDeletion={onRequestDeletion}
           onViewProject={onViewProject}
           onViewTasks={onViewTasks}
-          canEdit={canEditProject()}
+          canEdit={canEditProject(project)}
+          deleteMode={getDeleteMode(project)}
         />
       ))}
     </div>

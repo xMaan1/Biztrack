@@ -36,6 +36,8 @@ export default function ProjectsPage() {
     selectedTeamMembers,
     canCreateProject,
     canEditProject,
+    getDeleteMode,
+    handleRequestDeletion,
     setDialogOpen,
     setFormData,
     setDeleteDialogOpen,
@@ -84,9 +86,11 @@ export default function ProjectsPage() {
             projects={filteredProjects}
             starredProjects={starredProjects}
             canEditProject={canEditProject}
+            getDeleteMode={getDeleteMode}
             onToggleStarred={toggleStarred}
             onEditProject={handleEditProject}
             onDeleteProject={handleDeleteProject}
+            onRequestDeletion={handleRequestDeletion}
             onViewProject={handleViewProject}
             onViewTasks={handleViewTasks}
           />

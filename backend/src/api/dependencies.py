@@ -425,6 +425,16 @@ def can_see_all_tasks(tenant_context: dict) -> bool:
     role_name = getattr(role, "name", None) if role else None
     return bool(role_name and (role_name == "owner" or role_name.endswith("_manager")))
 
+def can_edit_project(tenant_context: dict, project, user_id: str) -> bool:
+    if tenant_context and tenant_context.get("is_owner"):
+        return True
+    uid = str(user_id)
+    if project.projectManagerId and str(project.projectManagerId) == uid:
+        return True
+    if project.createdById and str(project.createdById) == uid:
+        return True
+    return False
+
 def require_permission(permission: str):
     """Dependency to require specific permission"""
     def permission_checker(

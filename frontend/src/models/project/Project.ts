@@ -46,6 +46,9 @@ export interface Project {
   createdById?: string;
   projectManager: TeamMember;
   teamMembers: TeamMember[];
+  deletionStatus?: 'none' | 'pending' | 'approved';
+  deletionRequestedById?: string | null;
+  deletionRequestedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   activities?: ProjectActivity[];

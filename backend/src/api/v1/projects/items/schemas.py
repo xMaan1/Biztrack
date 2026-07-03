@@ -110,6 +110,9 @@ class Project(BaseModel):
     createdById: Optional[str] = None
     projectManager: TeamMember
     teamMembers: List[TeamMember] = []
+    deletionStatus: str = "none"
+    deletionRequestedById: Optional[str] = None
+    deletionRequestedAt: Optional[datetime] = None
     createdAt: datetime
     updatedAt: datetime
     activities: List[Dict[str, Any]] = []

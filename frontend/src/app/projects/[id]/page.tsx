@@ -36,6 +36,7 @@ import {
   BreadcrumbSeparator,
 } from '../../../components/ui/breadcrumb';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
+import { toast } from 'sonner';
 import {
   Edit,
   Trash2,
@@ -71,7 +72,7 @@ export default function ProjectDetailsPage() {
   const router = useRouter();
   const confirm = useConfirm();
   const { user } = useAuth();
-  const { canUpdateProjects } = usePermissions();
+  const { canUpdateProjects, canDeleteProjects, isOwner } = usePermissions();
   const { getCurrencySymbol } = useCurrency();
   const projectId = params.id as string;
 
@@ -138,9 +139,56 @@ export default function ProjectDetailsPage() {
       await apiService.deleteProject(projectId);
       router.push('/projects');
     } catch (err) {
-      setError('Failed to delete project');
+      toast.error(extractErrorMessage(err, 'Failed to delete project'));
     }
   };
+
+  const handleRequestDeletion = async () => {
+    const ok = await confirm({
+      description:
+        'This will send a deletion request to the owner for approval. Continue?',
+      confirmLabel: 'Request Deletion',
+    });
+    if (!ok) return;
+    try {
+      const updated = await apiService.requestProjectDeletion(projectId);
+      setProject(updated);
+      toast.success('Deletion request sent to the owner for approval');
+    } catch (err) {
+      toast.error(extractErrorMessage(err, 'Failed to request deletion'));
+    }
+  };
+
+  const handleApproveDeletion = async () => {
+    try {
+      const updated = await apiService.approveProjectDeletion(projectId);
+      setProject(updated);
+      toast.success('Deletion approved. The project manager can now delete it.');
+    } catch (err) {
+      toast.error(extractErrorMessage(err, 'Failed to approve deletion'));
+    }
+  };
+
+  const handleRejectDeletion = async () => {
+    try {
+      const updated = await apiService.rejectProjectDeletion(projectId);
+      setProject(updated);
+      toast.success('Deletion request rejected');
+    } catch (err) {
+      toast.error(extractErrorMessage(err, 'Failed to reject deletion'));
+    }
+  };
+
+  const isDeleteRequester = () => {
+    const uid = user?.id;
+    return project?.projectManager?.id === uid || project?.createdById === uid;
+  };
+
+  const canDeleteDirectly = () =>
+    user?.userRole === 'super_admin' || isOwner();
+
+  const canActOnDeletion = () =>
+    canDeleteDirectly() || (canDeleteProjects() && isDeleteRequester());
 
   const handleProjectSave = (savedProject: Project) => {
     setProject(savedProject);
@@ -210,7 +258,10 @@ export default function ProjectDetailsPage() {
   };
 
   const canEditProject = () => {
-    return canUpdateProjects() || user?.userRole === 'super_admin';
+    if (user?.userRole === 'super_admin' || isOwner()) return true;
+    if (!canUpdateProjects() || !project) return false;
+    const uid = user?.id;
+    return project.projectManager?.id === uid || project.createdById === uid;
   };
 
   const getTaskStats = () => {
@@ -295,7 +346,7 @@ export default function ProjectDetailsPage() {
                 </div>
               </div>
 
-              {canEditProject() && (
+              {(canEditProject() || canActOnDeletion()) && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm">
@@ -303,22 +354,71 @@ export default function ProjectDetailsPage() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={handleEditProject}>
-                      <Edit className="mr-2 h-4 w-4" />
-                      Edit Project
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={handleDeleteProject}
-                      className="text-red-600"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete Project
-                    </DropdownMenuItem>
+                    {canEditProject() && (
+                      <DropdownMenuItem onClick={handleEditProject}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit Project
+                      </DropdownMenuItem>
+                    )}
+                    {canActOnDeletion() && (
+                      <>
+                        {(canEditProject()) && <DropdownMenuSeparator />}
+                        {canDeleteDirectly() || project.deletionStatus === 'approved' ? (
+                          <DropdownMenuItem
+                            onClick={handleDeleteProject}
+                            className="text-red-600"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete Project
+                          </DropdownMenuItem>
+                        ) : project.deletionStatus === 'pending' ? (
+                          <DropdownMenuItem disabled>
+                            <Clock className="mr-2 h-4 w-4" />
+                            Deletion Pending Approval
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem
+                            onClick={handleRequestDeletion}
+                            className="text-red-600"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Request Deletion
+                          </DropdownMenuItem>
+                        )}
+                      </>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
             </div>
+
+            {isOwner() && project.deletionStatus === 'pending' && (
+              <Alert className="mb-6 border-amber-200 bg-amber-50">
+                <AlertCircle className="h-4 w-4 text-amber-600" />
+                <AlertDescription className="flex flex-col gap-3 text-amber-800 md:flex-row md:items-center md:justify-between">
+                  <span>
+                    A deletion request is pending for this project. Approve to allow
+                    the project manager to delete it, or reject to keep it.
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleRejectDeletion}
+                    >
+                      Reject
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                      onClick={handleApproveDeletion}
+                    >
+                      Approve Deletion
+                    </Button>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
 
             {/* Project Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

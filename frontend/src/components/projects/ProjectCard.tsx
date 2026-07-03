@@ -20,6 +20,7 @@ import {
   Eye,
   Edit,
   Trash2,
+  Clock,
   FolderOpen,
   CheckSquare,
 } from 'lucide-react';
@@ -32,9 +33,11 @@ export const ProjectCard = React.memo(function ProjectCard({
   onToggleStarred,
   onEditProject,
   onDeleteProject,
+  onRequestDeletion,
   onViewProject,
   onViewTasks,
   canEdit,
+  deleteMode,
 }: ProjectCardProps) {
   const handleStarClick = useCallback(() => {
     onToggleStarred(project.id);
@@ -47,6 +50,10 @@ export const ProjectCard = React.memo(function ProjectCard({
   const handleDeleteClick = useCallback(() => {
     onDeleteProject(project);
   }, [project, onDeleteProject]);
+
+  const handleRequestDeletionClick = useCallback(() => {
+    onRequestDeletion(project);
+  }, [project, onRequestDeletion]);
 
   const handleViewClick = useCallback(() => {
     onViewProject(project.id);
@@ -93,13 +100,30 @@ export const ProjectCard = React.memo(function ProjectCard({
                     <Edit className="h-3 w-3 mr-2" />
                     Edit
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={handleDeleteClick}
-                    className="text-red-600 focus:text-red-600 focus:bg-red-50"
-                  >
-                    <Trash2 className="h-3 w-3 mr-2" />
-                    Delete
-                  </DropdownMenuItem>
+                  {(deleteMode === 'direct' || deleteMode === 'approved') && (
+                    <DropdownMenuItem
+                      onClick={handleDeleteClick}
+                      className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                    >
+                      <Trash2 className="h-3 w-3 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  )}
+                  {deleteMode === 'pending' && (
+                    <DropdownMenuItem disabled>
+                      <Clock className="h-3 w-3 mr-2" />
+                      Deletion Pending
+                    </DropdownMenuItem>
+                  )}
+                  {deleteMode === 'request' && (
+                    <DropdownMenuItem
+                      onClick={handleRequestDeletionClick}
+                      className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                    >
+                      <Trash2 className="h-3 w-3 mr-2" />
+                      Request Deletion
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             )}

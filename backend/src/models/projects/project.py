@@ -28,6 +28,9 @@ class Project(Base):
     createdById = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     notes = Column(Text)
     clientEmail = Column(String)
+    deletionStatus = Column(String, nullable=False, default="none")
+    deletionRequestedById = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    deletionRequestedAt = Column(DateTime, nullable=True)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

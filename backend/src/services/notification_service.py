@@ -357,6 +357,46 @@ def create_event_notification_for_all_tenant_users(
     )
 
 
+def notify_project_members(
+    db: Session,
+    tenant_id: str,
+    project: Any,
+    title: str,
+    message: str,
+    action_url: Optional[str] = None,
+    exclude_user_id: Optional[str] = None,
+    notification_data: Optional[Dict[str, Any]] = None,
+    extra_user_ids: Optional[List[str]] = None,
+) -> int:
+    """Notify a project's team members, project manager, and task assignees."""
+    from ..models.projects import Task
+
+    user_ids = set()
+    if getattr(project, "projectManagerId", None):
+        user_ids.add(str(project.projectManagerId))
+    for member in (getattr(project, "teamMembers", None) or []):
+        user_ids.add(str(member.id))
+    assignee_rows = db.query(Task.assignedToId).filter(
+        Task.projectId == project.id,
+        Task.assignedToId.isnot(None),
+    ).distinct().all()
+    for (assignee_id,) in assignee_rows:
+        if assignee_id:
+            user_ids.add(str(assignee_id))
+    for uid in (extra_user_ids or []):
+        if uid:
+            user_ids.add(str(uid))
+    if exclude_user_id:
+        user_ids.discard(str(exclude_user_id))
+    if not user_ids:
+        return 0
+    service = NotificationService(db)
+    return service.create_bulk_notifications(
+        tenant_id, list(user_ids), title, message,
+        NotificationCategory.PROJECTS, NotificationType.INFO, action_url, notification_data
+    )
+
+
 def send_assignment_notification(
     db: Session,
     tenant_id: str,
