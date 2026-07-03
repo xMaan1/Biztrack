@@ -425,6 +425,9 @@ def can_see_all_tasks(tenant_context: dict) -> bool:
     role_name = getattr(role, "name", None) if role else None
     return bool(role_name and (role_name == "owner" or role_name.endswith("_manager")))
 
+def can_see_all_projects(tenant_context: dict) -> bool:
+    return bool(tenant_context and tenant_context.get("is_owner"))
+
 def can_edit_project(tenant_context: dict, project, user_id: str) -> bool:
     if tenant_context and tenant_context.get("is_owner"):
         return True

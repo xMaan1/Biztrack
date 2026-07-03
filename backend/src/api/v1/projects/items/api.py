@@ -11,7 +11,7 @@ from ...tasks.items.schemas import TasksResponse, SubTask
 from .....models.user_models import TeamMember
 from .....config.database import get_db, get_user_by_id, User, TenantUser
 from .....models.projects import Project as DBProject, Task as DBTask
-from .....api.dependencies import get_current_user, get_tenant_context, require_permission, can_see_all_tasks, can_edit_project
+from .....api.dependencies import get_current_user, get_tenant_context, require_permission, can_see_all_tasks, can_see_all_projects, can_edit_project
 from .....models.common import ModulePermission
 from . import logic as project_logic
 from ...tasks.items import logic as task_logic
@@ -68,13 +68,13 @@ async def get_projects(
     tenant_context: Optional[dict] = Depends(get_tenant_context),
     _: dict = Depends(require_permission(ModulePermission.PROJECTS_VIEW.value))
 ):
-    """Get all projects with optional filtering (tenant-scoped). Team members only see projects that have tasks assigned to them."""
+    """Get all projects with optional filtering (tenant-scoped). Only the owner sees all projects; everyone else sees only projects they manage, created, are a team member of, or have a task assigned to them."""
     skip = (page - 1) * limit
     tenant_id = tenant_context["tenant_id"] if tenant_context else None
 
     query = db.query(DBProject).filter(DBProject.tenant_id == tenant_id)
 
-    if not can_see_all_tasks(tenant_context or {}):
+    if not can_see_all_projects(tenant_context or {}):
         allowed_project_ids = project_logic.get_project_ids_with_tasks_assigned_to(str(current_user.id), db, tenant_id)
         query = query.filter(DBProject.id.in_(allowed_project_ids))
 
@@ -140,7 +140,7 @@ async def get_project(
     tenant_context: Optional[dict] = Depends(get_tenant_context),
     _: dict = Depends(require_permission(ModulePermission.PROJECTS_VIEW.value))
 ):
-    """Get a specific project. Team members only see projects that have tasks assigned to them."""
+    """Get a specific project. Only the owner sees all projects; everyone else sees only projects they manage, created, are a team member of, or have a task assigned to them."""
     import uuid
     tenant_id = tenant_context["tenant_id"] if tenant_context else None
     try:
@@ -150,7 +150,7 @@ async def get_project(
     project = project_logic.get_project_by_id(project_id, db, tenant_id=tenant_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-    if not can_see_all_tasks(tenant_context or {}):
+    if not can_see_all_projects(tenant_context or {}):
         allowed_project_ids = project_logic.get_project_ids_with_tasks_assigned_to(str(current_user.id), db, tenant_id)
         if project.id not in allowed_project_ids:
             raise HTTPException(status_code=404, detail="Project not found")
@@ -567,7 +567,7 @@ async def get_project_tasks(
     project = project_logic.get_project_by_id(project_id, db, tenant_id=tenant_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-    if not can_see_all_tasks(tenant_context or {}):
+    if not can_see_all_projects(tenant_context or {}):
         allowed_project_ids = project_logic.get_project_ids_with_tasks_assigned_to(str(current_user.id), db, tenant_id)
         if project.id not in allowed_project_ids:
             raise HTTPException(status_code=404, detail="Project not found")
