@@ -18,8 +18,19 @@ export function InvoiceDialog({
   invoice,
   error,
   inline = false,
+  initialData,
+  initialCustomer,
 }: InvoiceDialogProps) {
-  const form = useInvoiceForm({ open, inline, mode, invoice, onSubmit, onOpenChange });
+  const form = useInvoiceForm({
+    open,
+    inline,
+    mode,
+    invoice,
+    initialData,
+    initialCustomer,
+    onSubmit,
+    onOpenChange,
+  });
 
   const contentClassName = getInvoiceDialogContentClassName(
     form.useCommerceInvoiceLayout,

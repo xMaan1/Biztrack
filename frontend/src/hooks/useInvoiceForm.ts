@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Invoice, InvoiceCreate, InvoiceItemCreate } from '@/src/models/sales';
 import type { Product } from '@/src/models/pos';
 import type { Vehicle } from '@/src/models/workshop';
@@ -32,6 +32,8 @@ type UseInvoiceFormOptions = {
   inline?: boolean;
   mode: InvoiceFormMode;
   invoice?: Invoice | null;
+  initialData?: Partial<InvoiceCreate> | null;
+  initialCustomer?: Customer | null;
   onSubmit: (
     data: InvoiceCreate,
     options?: { installmentPlan?: InstallmentPlanCreateOption },
@@ -46,6 +48,8 @@ export function useInvoiceForm({
   inline = false,
   mode,
   invoice,
+  initialData,
+  initialCustomer,
   onSubmit,
   onOpenChange,
 }: UseInvoiceFormOptions) {
@@ -71,6 +75,11 @@ export function useInvoiceForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showCreateCustomerDialog, setShowCreateCustomerDialog] = useState(false);
   const [commerceFormKey, setCommerceFormKey] = useState(0);
+
+  const initialDataRef = useRef(initialData);
+  const initialCustomerRef = useRef(initialCustomer);
+  initialDataRef.current = initialData;
+  initialCustomerRef.current = initialCustomer;
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -114,11 +123,26 @@ export function useInvoiceForm({
       }
       setSelectedVehicle(null);
     } else if (isActive) {
-      setFormData(emptyInvoiceForm(currency));
-      setItems([]);
-      setSelectedCustomer(null);
+      const seed = initialDataRef.current;
+      const seedCustomer = initialCustomerRef.current;
+      const base = emptyInvoiceForm(currency);
+      let seededForm: InvoiceCreate = seed
+        ? { ...base, ...seed, currency }
+        : base;
+      if (seedCustomer) {
+        seededForm = {
+          ...seededForm,
+          customerId: seedCustomer.id,
+          customerName: getCustomerDisplayName(seedCustomer),
+          customerEmail: seedCustomer.email ?? '',
+          customerPhone: resolveCustomerPhone(seedCustomer),
+        };
+      }
+      setFormData(seededForm);
+      setItems(seed?.items ?? []);
+      setSelectedCustomer(seedCustomer ?? null);
       setSelectedVehicle(null);
-      if (mode === 'create' && useCommerceInvoiceLayout) {
+      if (mode === 'create' && useCommerceInvoiceLayout && !seededForm.orderNumber) {
         InvoiceService.getNextOrderNumber()
           .then((orderNumber) => {
             setFormData((prev) => ({ ...prev, orderNumber }));

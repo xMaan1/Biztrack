@@ -64,8 +64,8 @@ from .ledger_models import (
     FinancialPeriod, Budget, BudgetItem, AccountReceivable
 )
 
-from .banking_models import (
-    BankAccount, BankTransaction, CashPosition
+from ..models.banking import (
+    BankAccount, BankTransaction, CashPosition, Till, TillTransaction
 )
 
 from .investment_models import (

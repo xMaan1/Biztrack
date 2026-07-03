@@ -21,6 +21,8 @@ import {
 import { Alert, AlertDescription } from '../ui/alert';
 import { CustomerSearch } from '../ui/customer-search';
 import { VehicleSearch } from '../ui/vehicle-search';
+import { CreateCustomerDialog } from '../crm/CreateCustomerDialog';
+import { Plus } from 'lucide-react';
 import { apiService } from '../../services/ApiService';
 import { Customer } from '../../services/CustomerService';
 import { JobCard, JobCardCreate, JobCardUpdate, Vehicle } from '../../models/workshop';
@@ -46,6 +48,7 @@ export default function JobCardDialog({
   const [users, setUsers] = useState<{ id: string; name?: string; username?: string }[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [showCreateCustomer, setShowCreateCustomer] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -248,12 +251,25 @@ export default function JobCardDialog({
               </Select>
             </div>
             <div className="md:col-span-2">
-              <CustomerSearch
-                label="Customer"
-                value={selectedCustomer}
-                onSelect={setSelectedCustomer}
-                placeholder="Search by name, email, phone..."
-              />
+              <div className="flex items-end gap-2">
+                <div className="flex-1">
+                  <CustomerSearch
+                    label="Customer"
+                    value={selectedCustomer}
+                    onSelect={setSelectedCustomer}
+                    placeholder="Search by name, email, phone..."
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowCreateCustomer(true)}
+                  className="shrink-0"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  New
+                </Button>
+              </div>
             </div>
             <div className="md:col-span-2">
               <VehicleSearch
@@ -352,6 +368,12 @@ export default function JobCardDialog({
           </div>
         </form>
       </DialogContent>
+
+      <CreateCustomerDialog
+        open={showCreateCustomer}
+        onOpenChange={setShowCreateCustomer}
+        onCreated={(customer) => setSelectedCustomer(customer)}
+      />
     </Dialog>
   );
 }

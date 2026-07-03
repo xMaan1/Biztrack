@@ -71,7 +71,7 @@ export default function ProjectDetailsPage() {
   const router = useRouter();
   const confirm = useConfirm();
   const { user } = useAuth();
-  const { canManageProjects } = usePermissions();
+  const { canUpdateProjects } = usePermissions();
   const { getCurrencySymbol } = useCurrency();
   const projectId = params.id as string;
 
@@ -210,11 +210,7 @@ export default function ProjectDetailsPage() {
   };
 
   const canEditProject = () => {
-    return (
-      canManageProjects() ||
-      user?.userRole === 'super_admin' ||
-      (project?.projectManager.id === user?.userId)
-    );
+    return canUpdateProjects() || user?.userRole === 'super_admin';
   };
 
   const getTaskStats = () => {

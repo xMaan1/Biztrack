@@ -6,7 +6,7 @@ import { ProjectCard } from './ProjectCard';
 interface ProjectsGridProps {
   projects: Project[];
   starredProjects: string[];
-  canEditProject: (project: Project) => boolean;
+  canEditProject: () => boolean;
   onToggleStarred: (projectId: string) => void;
   onEditProject: (project: Project) => void;
   onDeleteProject: (project: Project) => void;
@@ -36,7 +36,7 @@ export function ProjectsGrid({
           onDeleteProject={onDeleteProject}
           onViewProject={onViewProject}
           onViewTasks={onViewTasks}
-          canEdit={canEditProject(project)}
+          canEdit={canEditProject()}
         />
       ))}
     </div>

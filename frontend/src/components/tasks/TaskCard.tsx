@@ -122,9 +122,9 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   onEditSubtask,
   onDeleteSubtask,
   onSubtaskStatusChange,
-  canCreateTasks = true,
-  canUpdateTasks = true,
-  canDeleteTasks = true,
+  canCreateTasks = false,
+  canUpdateTasks = false,
+  canDeleteTasks = false,
 }) => {
   const [showSubtasks, setShowSubtasks] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);

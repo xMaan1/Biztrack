@@ -1,47 +1,23 @@
 """
-Banking Pydantic Models for API
+Banking Pydantic Schemas for API
 """
 
 import math
+import uuid
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field, field_validator
-from enum import Enum
-import uuid
 
-from ..config.bank_account_types import BankAccountType, bank_account_type_slug
+from ....models.banking.enums import (
+    TransactionType,
+    TransactionStatus,
+    PaymentMethod,
+    TillTransactionType,
+    bank_account_type_slug,
+)
 
-class TransactionType(str, Enum):
-    DEPOSIT = "deposit"
-    WITHDRAWAL = "withdrawal"
-    TRANSFER_IN = "transfer_in"
-    TRANSFER_OUT = "transfer_out"
-    PAYMENT = "payment"
-    REFUND = "refund"
-    FEE = "fee"
-    INTEREST = "interest"
-    ADJUSTMENT = "adjustment"
 
-class TransactionStatus(str, Enum):
-    PENDING = "pending"
-    PROCESSING = "processing"
-    COMPLETED = "completed"
-    FAILED = "failed"
-    CANCELLED = "cancelled"
-    REVERSED = "reversed"
-
-class PaymentMethod(str, Enum):
-    ONLINE_TRANSFER = "online_transfer"
-    DIRECT_DEBIT = "direct_debit"
-    WIRE_TRANSFER = "wire_transfer"
-    ACH = "ach"
-    CHECK = "check"
-    CASH = "cash"
-    CARD_PAYMENT = "card_payment"
-    MOBILE_PAYMENT = "mobile_payment"
-    CRYPTOCURRENCY = "cryptocurrency"
-
-# Bank Account Models
+# Bank Account Schemas
 class BankAccountBase(BaseModel):
     account_name: str = Field(alias="accountName")
     account_number: str = Field(alias="accountNumber")
@@ -74,8 +50,10 @@ class BankAccountBase(BaseModel):
     class Config:
         populate_by_name = True
 
+
 class BankAccountCreate(BankAccountBase):
     pass
+
 
 class BankAccountUpdate(BaseModel):
     account_name: Optional[str] = Field(alias="accountName", default=None)
@@ -100,6 +78,7 @@ class BankAccountUpdate(BaseModel):
     class Config:
         populate_by_name = True
 
+
 class BankAccount(BankAccountBase):
     id: str
     tenant_id: str = Field(alias="tenantId")
@@ -118,7 +97,8 @@ class BankAccount(BankAccountBase):
         from_attributes = True
         populate_by_name = True
 
-# Bank Transaction Models
+
+# Bank Transaction Schemas
 class BankTransactionBase(BaseModel):
     bank_account_id: str = Field(alias="bankAccountId")
     transaction_date: datetime = Field(alias="transactionDate")
@@ -151,6 +131,7 @@ class BankTransactionBase(BaseModel):
 
     class Config:
         populate_by_name = True
+
 
 class BankTransactionCreate(BaseModel):
     bank_account_id: str = Field(alias="bankAccountId")
@@ -185,6 +166,7 @@ class BankTransactionCreate(BaseModel):
     class Config:
         populate_by_name = True
 
+
 class BankTransactionUpdate(BaseModel):
     transaction_date: Optional[datetime] = Field(alias="transactionDate", default=None)
     value_date: Optional[datetime] = Field(alias="valueDate", default=None)
@@ -217,6 +199,7 @@ class BankTransactionUpdate(BaseModel):
     class Config:
         populate_by_name = True
 
+
 class BankTransaction(BankTransactionBase):
     id: str = Field(alias="id")
     tenant_id: str = Field(alias="tenantId")
@@ -240,7 +223,8 @@ class BankTransaction(BankTransactionBase):
         from_attributes = True
         populate_by_name = True
 
-# Cash Position Models
+
+# Cash Position Schemas
 class CashPositionBase(BaseModel):
     position_date: datetime
     total_bank_balance: float = 0.0
@@ -254,8 +238,10 @@ class CashPositionBase(BaseModel):
     outstanding_receivables: float = 0.0
     outstanding_payables: float = 0.0
 
+
 class CashPositionCreate(CashPositionBase):
     pass
+
 
 class CashPositionUpdate(BaseModel):
     position_date: Optional[datetime] = None
@@ -269,6 +255,7 @@ class CashPositionUpdate(BaseModel):
     net_cash_flow: Optional[float] = None
     outstanding_receivables: Optional[float] = None
     outstanding_payables: Optional[float] = None
+
 
 class CashPosition(CashPositionBase):
     id: str
@@ -286,12 +273,14 @@ class CashPosition(CashPositionBase):
     class Config:
         from_attributes = True
 
-# Response Models
+
+# Response Schemas
 class BankAccountResponse(BaseModel):
     bank_account: BankAccount = Field(alias="bankAccount")
 
     class Config:
         populate_by_name = True
+
 
 class BankAccountsResponse(BaseModel):
     bank_accounts: List[BankAccount] = Field(alias="bankAccounts")
@@ -300,11 +289,13 @@ class BankAccountsResponse(BaseModel):
     class Config:
         populate_by_name = True
 
+
 class BankTransactionResponse(BaseModel):
     bank_transaction: BankTransaction = Field(alias="bankTransaction")
 
     class Config:
         populate_by_name = True
+
 
 class BankTransactionsResponse(BaseModel):
     bank_transactions: List[BankTransaction] = Field(alias="bankTransactions")
@@ -313,11 +304,13 @@ class BankTransactionsResponse(BaseModel):
     class Config:
         populate_by_name = True
 
+
 class CashPositionResponse(BaseModel):
     cash_position: CashPosition = Field(alias="cashPosition")
 
     class Config:
         populate_by_name = True
+
 
 class CashPositionsResponse(BaseModel):
     cash_positions: List[CashPosition] = Field(alias="cashPositions")
@@ -326,7 +319,8 @@ class CashPositionsResponse(BaseModel):
     class Config:
         populate_by_name = True
 
-# Dashboard Models
+
+# Dashboard Schemas
 class BankingDashboard(BaseModel):
     total_bank_balance: float = Field(alias="totalBankBalance")
     total_available_balance: float = Field(alias="totalAvailableBalance")
@@ -343,13 +337,15 @@ class BankingDashboard(BaseModel):
     class Config:
         populate_by_name = True
 
-# Reconciliation Models
+
+# Reconciliation Schemas
 class ReconciliationSummary(BaseModel):
     total_transactions: int
     reconciled_transactions: int
     unreconciled_transactions: int
     reconciliation_percentage: float
     last_reconciliation_date: Optional[datetime]
+
 
 class TransactionReconciliation(BaseModel):
     bank_transaction_id: Optional[str] = None
@@ -358,12 +354,8 @@ class TransactionReconciliation(BaseModel):
     reconciled_by: Optional[str] = None
     notes: Optional[str] = None
 
-# Till Models
-class TillTransactionType(str, Enum):
-    DEPOSIT = "deposit"
-    WITHDRAWAL = "withdrawal"
-    ADJUSTMENT = "adjustment"
 
+# Till Schemas
 class TillBase(BaseModel):
     name: str
     location: Optional[str] = None
@@ -373,6 +365,7 @@ class TillBase(BaseModel):
 
     class Config:
         populate_by_name = True
+
 
 class TillCreate(BaseModel):
     name: str = Field(..., max_length=200)
@@ -424,6 +417,7 @@ class TillCreate(BaseModel):
     class Config:
         populate_by_name = True
 
+
 class TillUpdate(BaseModel):
     name: Optional[str] = Field(default=None, max_length=200)
     location: Optional[str] = Field(default=None, max_length=500)
@@ -466,6 +460,7 @@ class TillUpdate(BaseModel):
     class Config:
         populate_by_name = True
 
+
 class Till(TillBase):
     id: str
     tenant_id: str = Field(alias="tenantId")
@@ -486,7 +481,8 @@ class Till(TillBase):
         from_attributes = True
         populate_by_name = True
 
-# Till Transaction Models
+
+# Till Transaction Schemas
 class TillTransactionBase(BaseModel):
     till_id: str = Field(alias="tillId")
     bank_account_id: Optional[str] = Field(alias="bankAccountId", default=None)
@@ -502,8 +498,10 @@ class TillTransactionBase(BaseModel):
     class Config:
         populate_by_name = True
 
+
 class TillTransactionCreate(TillTransactionBase):
     pass
+
 
 class TillTransactionUpdate(BaseModel):
     bank_account_id: Optional[str] = Field(alias="bankAccountId", default=None)
@@ -517,6 +515,7 @@ class TillTransactionUpdate(BaseModel):
 
     class Config:
         populate_by_name = True
+
 
 class TillTransaction(TillTransactionBase):
     id: str
@@ -540,12 +539,14 @@ class TillTransaction(TillTransactionBase):
         from_attributes = True
         populate_by_name = True
 
-# Till Response Models
+
+# Till Response Schemas
 class TillResponse(BaseModel):
     till: Till = Field(alias="till")
 
     class Config:
         populate_by_name = True
+
 
 class TillsResponse(BaseModel):
     tills: List[Till] = Field(alias="tills")
@@ -554,11 +555,13 @@ class TillsResponse(BaseModel):
     class Config:
         populate_by_name = True
 
+
 class TillTransactionResponse(BaseModel):
     till_transaction: TillTransaction = Field(alias="tillTransaction")
 
     class Config:
         populate_by_name = True
+
 
 class TillTransactionsResponse(BaseModel):
     till_transactions: List[TillTransaction] = Field(alias="tillTransactions")

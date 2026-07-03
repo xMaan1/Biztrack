@@ -50,7 +50,7 @@ def register_all_models():
         BudgetItem,
         AccountReceivable,
     )
-    from ..config.banking_models import BankAccount, BankTransaction, CashPosition
+    from ..models.banking import BankAccount, BankTransaction, CashPosition, Till, TillTransaction
     from ..config.investment_models import Investment, EquipmentInvestment, InvestmentTransaction
     from ..models.pos import POSShift, POSTransaction, PosProductCategory
     from ..config.custom_options_models import (
@@ -155,6 +155,8 @@ def register_all_models():
         BankAccount,
         BankTransaction,
         CashPosition,
+        Till,
+        TillTransaction,
         Investment,
         EquipmentInvestment,
         InvestmentTransaction,

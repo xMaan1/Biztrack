@@ -12,11 +12,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../../components/ui/select';
-import { Plus, Edit, Trash2, ClipboardList, FileDown } from 'lucide-react';
+import { Plus, Edit, Trash2, ClipboardList, FileDown, FileText } from 'lucide-react';
+import { toast } from 'sonner';
 import { apiService } from '../../../services/ApiService';
 import { DashboardLayout } from '../../../components/layout';
 import { JobCard } from '../../../models/workshop';
 import JobCardDialog from '../../../components/workshop/JobCardDialog';
+import { InvoiceDialog } from '../../../components/sales/InvoiceDialog';
+import type { InstallmentPlanCreateOption } from '../../../components/sales/InvoiceDialog';
+import InvoiceService from '../../../services/InvoiceService';
+import type { Customer } from '../../../services/CustomerService';
+import type { InvoiceCreate, InvoiceItemCreate } from '../../../models/sales';
+import { extractErrorMessage } from '../../../utils/errorUtils';
 
 function JobCardsContent() {
   const [jobCards, setJobCards] = useState<JobCard[]>([]);
@@ -29,6 +36,102 @@ function JobCardsContent() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [jobCardToDelete, setJobCardToDelete] = useState<JobCard | null>(null);
   const [downloadingPdfId, setDownloadingPdfId] = useState<string | null>(null);
+  const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
+  const [invoicePrefill, setInvoicePrefill] = useState<Partial<InvoiceCreate> | null>(null);
+  const [invoiceCustomer, setInvoiceCustomer] = useState<Customer | null>(null);
+  const [invoiceError, setInvoiceError] = useState<string | null>(null);
+  const [preparingInvoiceId, setPreparingInvoiceId] = useState<string | null>(null);
+
+  const buildInvoicePrefill = useCallback((jc: JobCard): Partial<InvoiceCreate> => {
+    const vi = (jc.vehicle_info || {}) as Record<string, unknown>;
+    const str = (v: unknown) => (v === null || v === undefined ? '' : String(v));
+    const num = (v: unknown) => {
+      const n = typeof v === 'number' ? v : parseFloat(String(v));
+      return Number.isFinite(n) ? n : 0;
+    };
+
+    const rawItems = Array.isArray(jc.items) ? jc.items : [];
+    const mapped: InvoiceItemCreate[] = rawItems
+      .map((it) => {
+        const r = it as Record<string, unknown>;
+        const description = str(r.description ?? r.part_description ?? r.part_no ?? r.partNo);
+        const quantity = num(r.qty ?? r.quantity ?? 1) || 1;
+        const unitPrice = num(r.unit_price ?? r.unitPrice ?? 0);
+        if (!description && !unitPrice) return null;
+        return { description: description || 'Item', quantity, unitPrice, discount: 0, taxRate: 0, unit: 'piece' };
+      })
+      .filter((it): it is InvoiceItemCreate => it !== null);
+
+    const items: InvoiceItemCreate[] = [...mapped];
+    if (items.length === 0) {
+      if (jc.parts_estimate) {
+        items.push({ description: 'Parts', quantity: 1, unitPrice: jc.parts_estimate, discount: 0, taxRate: 0, unit: 'piece' });
+      }
+      if (jc.labor_estimate) {
+        items.push({ description: 'Labour', quantity: 1, unitPrice: jc.labor_estimate, discount: 0, taxRate: 0, unit: 'hour' });
+      }
+    }
+
+    return {
+      customerId: jc.customer_id || '',
+      customerName: jc.customer_name || '',
+      customerPhone: jc.customer_phone || '',
+      taxRate: (jc.vat_rate ?? 0.15) * 100,
+      notes: jc.notes || '',
+      jobDescription: jc.description || '',
+      documentNo: jc.job_card_number || '',
+      vehicleMake: str(vi.make),
+      vehicleModel: str(vi.model),
+      vehicleYear: str(vi.year),
+      vehicleColor: str(vi.color),
+      vehicleVin: str(vi.vin),
+      vehicleReg: str(vi.registration_number),
+      vehicleMileage: str(vi.mileage),
+      items,
+    };
+  }, []);
+
+  const openCreateInvoice = useCallback(async (jc: JobCard) => {
+    setPreparingInvoiceId(jc.id);
+    try {
+      let customer: Customer | null = null;
+      if (jc.customer_id) {
+        try {
+          customer = await InvoiceService.getCustomerById(jc.customer_id);
+        } catch {
+          customer = null;
+        }
+      }
+      setInvoicePrefill(buildInvoicePrefill(jc));
+      setInvoiceCustomer(customer);
+      setInvoiceError(null);
+      setInvoiceDialogOpen(true);
+    } finally {
+      setPreparingInvoiceId(null);
+    }
+  }, [buildInvoicePrefill]);
+
+  const handleCreateInvoice = useCallback(async (
+    invoiceData: InvoiceCreate,
+    options?: { installmentPlan?: InstallmentPlanCreateOption },
+  ) => {
+    try {
+      const created = await InvoiceService.createInvoice(invoiceData);
+      if (options?.installmentPlan) {
+        await InvoiceService.createInstallmentPlan({
+          ...options.installmentPlan,
+          invoice_id: created.id,
+        });
+      }
+      setInvoiceError(null);
+      setInvoiceDialogOpen(false);
+      toast.success(`Invoice ${created.invoiceNumber || ''} created successfully`.trim());
+    } catch (err) {
+      const message = extractErrorMessage(err, 'Failed to create invoice');
+      setInvoiceError(message);
+      toast.error(message);
+    }
+  }, []);
 
   const handleDownloadPdf = useCallback(async (jc: JobCard) => {
     setDownloadingPdfId(jc.id);
@@ -203,6 +306,10 @@ function JobCardsContent() {
                         <td className="py-2">{jc.assigned_to_name || '–'}</td>
                         <td className="py-2">{formatDate(jc.planned_date)}</td>
                         <td className="py-2 text-right">
+                          <Button variant="ghost" size="sm" onClick={() => openCreateInvoice(jc)} disabled={preparingInvoiceId === jc.id}>
+                            <FileText className="h-4 w-4 mr-1" />
+                            {preparingInvoiceId === jc.id ? 'Preparing...' : 'Create Invoice'}
+                          </Button>
                           <Button variant="ghost" size="sm" onClick={() => handleDownloadPdf(jc)} disabled={downloadingPdfId === jc.id}>
                             <FileDown className="h-4 w-4 mr-1" />
                             {downloadingPdfId === jc.id ? 'Downloading...' : 'Download PDF'}
@@ -232,6 +339,17 @@ function JobCardsContent() {
           jobCard={selectedJobCard}
           onSuccess={fetchJobCards}
         />
+        {invoiceDialogOpen && (
+          <InvoiceDialog
+            open={invoiceDialogOpen}
+            onOpenChange={setInvoiceDialogOpen}
+            mode="create"
+            onSubmit={handleCreateInvoice}
+            error={invoiceError}
+            initialData={invoicePrefill}
+            initialCustomer={invoiceCustomer}
+          />
+        )}
         {deleteDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">

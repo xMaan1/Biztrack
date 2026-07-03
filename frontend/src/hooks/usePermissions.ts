@@ -46,6 +46,14 @@ export function usePermissions() {
     canManageFinance: () => hasPermission('finance:create') || isOwner(),
     canViewProjects: () => hasModuleAccess('projects'),
     canManageProjects: () => hasPermission('projects:create') || isOwner(),
+    canUpdateProjects: () =>
+      hasPermission('projects:update') ||
+      hasPermission('projects:projects:update') ||
+      isOwner(),
+    canDeleteProjects: () =>
+      hasPermission('projects:delete') ||
+      hasPermission('projects:projects:delete') ||
+      isOwner(),
     canViewProduction: () => hasModuleAccess('production'),
     canManageProduction: () => hasPermission('production:create') || isOwner(),
     canViewQuality: () => hasModuleAccess('quality'),

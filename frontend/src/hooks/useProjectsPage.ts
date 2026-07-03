@@ -22,7 +22,7 @@ import {
 
 export function useProjectsPage() {
   const { user } = useAuth();
-  const { canManageProjects } = usePermissions();
+  const { canManageProjects, canUpdateProjects } = usePermissions();
   const router = useRouter();
 
   const [mounted, setMounted] = useState(false);
@@ -96,14 +96,10 @@ export function useProjectsPage() {
   }, [canManageProjects, user]);
 
   const canEditProject = useCallback(
-    (project: Project) => {
-      return (
-        canManageProjects() ||
-        user?.userRole === 'super_admin' ||
-        project.projectManager.id === user?.id
-      );
+    () => {
+      return canUpdateProjects() || user?.userRole === 'super_admin';
     },
-    [canManageProjects, user],
+    [canUpdateProjects, user],
   );
 
   const handleCreateProject = useCallback(() => {

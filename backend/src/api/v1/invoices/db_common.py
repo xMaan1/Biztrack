@@ -95,7 +95,7 @@ def delete_invoice_dependencies(
     payment_query.delete(synchronize_session=False)
 
     try:
-        from ....config.banking_models import BankTransaction
+        from ....models.banking import BankTransaction
 
         bank_query = db.query(BankTransaction).filter(
             BankTransaction.related_invoice_id == invoice_uuid

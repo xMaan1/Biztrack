@@ -1,100 +1,14 @@
-from fastapi import APIRouter, HTTPException, status, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.orm import Session
 from typing import Optional, List
-import json
-from datetime import datetime
 
 from .schemas import TaskCreate, TaskUpdate, TasksResponse, SubTask
-from .....config.database import get_db, get_user_by_id, TenantUser
-from .....models.projects import Task as DBTask
-from .....api.dependencies import get_current_user, get_tenant_context, can_see_all_tasks
-from .....services.task_time_service import (
-    build_task_time_fields,
-    normalize_task_duration_fields,
-    process_task_time_reminders_for_tasks,
-    sync_task_actual_hours,
-    check_and_send_task_time_reminder,
-)
+from .....config.database import get_db
+from .....api.dependencies import get_current_user, get_tenant_context, require_permission
 from . import logic as task_logic
-from ...projects.items import logic as project_logic
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
-def transform_subtask_to_response(task: DBTask, db: Session) -> SubTask:
-    time_fields = build_task_time_fields(db, task)
-    return SubTask(
-        id=str(task.id),
-        tenant_id=str(task.tenant_id),
-        title=task.title,
-        description=task.description,
-        status=task.status,
-        priority=task.priority,
-        projectId=str(task.projectId),
-        assignedToId=str(task.assignedToId) if task.assignedToId else None,
-        createdById=str(task.createdById),
-        parentTaskId=str(task.parentTaskId) if task.parentTaskId else None,
-        assignedTo={
-            "id": str(task.assignedTo.id),
-            "name": f"{task.assignedTo.firstName or ''} {task.assignedTo.lastName or ''}".strip() or task.assignedTo.userName,
-            "email": task.assignedTo.email
-        } if task.assignedTo else None,
-        dueDate=task.dueDate,
-        actualHours=task.actualHours,
-        tags=json.loads(task.tags) if task.tags else [],
-        createdBy={
-            "id": str(task.createdBy.id),
-            "name": f"{task.createdBy.firstName or ''} {task.createdBy.lastName or ''}".strip() or task.createdBy.userName,
-            "email": task.createdBy.email
-        },
-        completedAt=task.completedAt,
-        createdAt=task.createdAt,
-        updatedAt=task.updatedAt,
-        **time_fields,
-    )
-
-def transform_task_to_response(task: DBTask, db: Session, include_subtasks: bool = True) -> SubTask:
-    subtasks = []
-    subtask_count = 0
-    completed_subtask_count = 0
-    
-    if include_subtasks and hasattr(task, 'subtasks') and task.subtasks:
-        subtasks = [transform_subtask_to_response(subtask, db) for subtask in task.subtasks]
-        subtask_count = len(subtasks)
-        completed_subtask_count = len([s for s in subtasks if getattr(s.status, 'value', s.status) == 'completed' or s.status == 'completed'])
-    
-    time_fields = build_task_time_fields(db, task)
-    return SubTask(
-        id=str(task.id),
-        tenant_id=str(task.tenant_id),
-        title=task.title,
-        description=task.description,
-        status=task.status,
-        priority=task.priority,
-        projectId=str(task.projectId),
-        assignedToId=str(task.assignedToId) if task.assignedToId else None,
-        createdById=str(task.createdById),
-        parentTaskId=str(task.parentTaskId) if task.parentTaskId else None,
-        assignedTo={
-            "id": str(task.assignedTo.id),
-            "name": f"{task.assignedTo.firstName or ''} {task.assignedTo.lastName or ''}".strip() or task.assignedTo.userName,
-            "email": task.assignedTo.email
-        } if task.assignedTo else None,
-        dueDate=task.dueDate,
-        actualHours=task.actualHours,
-        tags=json.loads(task.tags) if task.tags else [],
-        createdBy={
-            "id": str(task.createdBy.id),
-            "name": f"{task.createdBy.firstName or ''} {task.createdBy.lastName or ''}".strip() or task.createdBy.userName,
-            "email": task.createdBy.email
-        },
-        completedAt=task.completedAt,
-        createdAt=task.createdAt,
-        updatedAt=task.updatedAt,
-        subtasks=subtasks,
-        subtaskCount=subtask_count,
-        completedSubtaskCount=completed_subtask_count,
-        **time_fields,
-    )
 
 @router.get("", response_model=TasksResponse)
 async def get_tasks(
@@ -109,238 +23,63 @@ async def get_tasks(
     current_user = Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context)
 ):
-    skip = (page - 1) * limit
-    tenant_id = tenant_context["tenant_id"] if tenant_context else None
-    
-    if project:
-        if main_tasks_only:
-            tasks = task_logic.get_main_tasks_by_project(project, db, tenant_id=tenant_id)
-        else:
-            tasks = task_logic.get_tasks_by_project(project, db, tenant_id=tenant_id)
-    else:
-        tasks = task_logic.get_all_tasks(db, tenant_id=tenant_id, skip=skip, limit=limit)
-        if main_tasks_only:
-            tasks = [t for t in tasks if not t.parentTaskId]
-    
-    if not can_see_all_tasks(tenant_context or {}):
-        uid = str(current_user.id)
-        tasks = [
-            t for t in tasks
-            if (t.assignedToId and str(t.assignedToId) == uid) or str(t.createdById) == uid
-        ]
-    
-    if status:
-        tasks = [t for t in tasks if t.status == status]
-    if assignedTo:
-        tasks = [t for t in tasks if str(t.assignedToId) == assignedTo]
-    
-    if include_subtasks:
-        for task in tasks:
-            if not task.parentTaskId:
-                task.subtasks = task_logic.get_subtasks_by_parent(str(task.id), db, tenant_id)
-
-    process_task_time_reminders_for_tasks(db, tasks)
-    
-    task_list = [transform_task_to_response(task, db, include_subtasks) for task in tasks]
-    
-    return TasksResponse(
-        tasks=task_list,
-        pagination={
-            "page": page,
-            "limit": limit,
-            "total": len(task_list),
-            "pages": (len(task_list) + limit - 1) // limit
-        }
+    return task_logic.list_tasks_response(
+        db, tenant_context, current_user,
+        project, status, assignedTo, include_subtasks, main_tasks_only, page, limit
     )
+
 
 @router.get("/{task_id}", response_model=SubTask)
 async def get_task(
-    task_id: str, 
+    task_id: str,
     include_subtasks: bool = Query(True),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context)
 ):
-    tenant_id = tenant_context["tenant_id"] if tenant_context else None
-    
-    if include_subtasks:
-        task = task_logic.get_task_with_subtasks(task_id, db, tenant_id=tenant_id)
-    else:
-        task = task_logic.get_task_by_id(task_id, db, tenant_id=tenant_id)
-    
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
-    
-    if not can_see_all_tasks(tenant_context or {}):
-        uid = str(current_user.id)
-        if (not task.assignedToId or str(task.assignedToId) != uid) and str(task.createdById) != uid:
-            raise HTTPException(status_code=404, detail="Task not found")
-    
-    return transform_task_to_response(task, db, include_subtasks)
+    return task_logic.get_task_response(task_id, db, tenant_context, current_user, include_subtasks)
+
 
 @router.post("", response_model=SubTask)
 async def create_new_task(
-    task_data: TaskCreate, 
+    task_data: TaskCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission("projects:tasks:create"))
 ):
     """Create a new task or subtask"""
     if not tenant_context:
         raise HTTPException(status_code=400, detail="Tenant context required")
-    tenant_id = tenant_context["tenant_id"]
-    
-    project = project_logic.get_project_by_id(task_data.projectId, db, tenant_id=tenant_id)
-    if not project:
-        raise HTTPException(status_code=400, detail="Project not found")
-    
-    if task_data.parentTaskId:
-        parent_task = task_logic.get_task_by_id(task_data.parentTaskId, db, tenant_id=tenant_id)
-        if not parent_task:
-            raise HTTPException(status_code=400, detail="Parent task not found")
-        if parent_task.parentTaskId:
-            raise HTTPException(status_code=400, detail="Cannot create subtask of a subtask")
-    
-    if task_data.assignedToId:
-        assignee = get_user_by_id(task_data.assignedToId, db)
-        if not assignee:
-            raise HTTPException(status_code=400, detail="Assignee not found")
-        if tenant_context:
-            tenant_user = db.query(TenantUser).filter(
-                TenantUser.userId == assignee.id,
-                TenantUser.tenant_id == tenant_context["tenant_id"]
-            ).first()
-            if not tenant_user:
-                raise HTTPException(status_code=400, detail="Assignee not in tenant")
-    
-    task_dict = normalize_task_duration_fields(task_data.model_dump())
-    task_dict['createdById'] = current_user.id
-    task_dict['tags'] = json.dumps(task_dict.get('tags', []))
-    
-    if 'parentTaskId' in task_dict and task_dict['parentTaskId']:
-        pass
-    
-    if tenant_context:
-        task_dict['tenant_id'] = tenant_context["tenant_id"]
-    
-    try:
-        db_task = task_logic.create_task(task_dict, db)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error creating task: {str(e)}")
-    if task_data.assignedToId and tenant_context:
-        try:
-            from .....services.notification_service import send_assignment_notification
-            from .....config.notification_models import NotificationCategory
-            assignee = get_user_by_id(task_data.assignedToId, db)
-            assigner_name = f"{getattr(current_user, 'firstName', '') or ''} {getattr(current_user, 'lastName', '') or ''}".strip() or getattr(current_user, 'userName', 'A user')
-            if assignee:
-                extra = {}
-                extra["Project"] = project.name
-                if db_task.description:
-                    desc = (db_task.description or "").replace("\r\n", " ").replace("\n", " ").strip()
-                    extra["Description"] = desc[:400] + ("..." if len(desc) > 400 else "")
-                if db_task.dueDate:
-                    extra["Due date"] = str(db_task.dueDate)
-                extra["Priority"] = getattr(db_task.priority, "value", str(db_task.priority))
-                extra["Status"] = getattr(db_task.status, "value", str(db_task.status))
-                send_assignment_notification(
-                    db, str(tenant_context["tenant_id"]), assignee, assigner_name,
-                    "Task", db_task.title,
-                    action_url=f"/projects/{db_task.projectId}",
-                    category=NotificationCategory.PROJECTS,
-                    extra_details=extra
-                )
-        except Exception:
-            pass
-    return transform_task_to_response(db_task, db, include_subtasks=False)
+    return task_logic.create_task_and_notify(task_data, current_user, tenant_context, db)
+
 
 @router.put("/{task_id}", response_model=SubTask)
 async def update_existing_task(
-    task_id: str, 
-    task_data: TaskUpdate, 
+    task_id: str,
+    task_data: TaskUpdate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission("projects:tasks:update"))
 ):
     if not tenant_context:
         raise HTTPException(status_code=400, detail="Tenant context required")
-    tenant_id = tenant_context["tenant_id"]
-    task = task_logic.get_task_by_id(task_id, db, tenant_id=tenant_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
-    
-    update_dict = normalize_task_duration_fields(task_data.dict(exclude_unset=True))
-    
-    assignee_for_notification = None
-    if 'assignedTo' in update_dict:
-        assignee_id = update_dict.pop('assignedTo')
-        if assignee_id:
-            assignee = get_user_by_id(assignee_id, db)
-            if not assignee:
-                raise HTTPException(status_code=400, detail="Assignee not found")
-            if tenant_context and str(assignee.tenant_id) != tenant_context["tenant_id"]:
-                raise HTTPException(status_code=400, detail="Assignee not in tenant")
-            assignee_for_notification = assignee
-        update_dict['assignedToId'] = assignee_id
+    return task_logic.update_task_and_notify(task_id, task_data, current_user, tenant_context, db)
 
-    if 'tags' in update_dict:
-        update_dict['tags'] = json.dumps(update_dict['tags'])
-    
-    if 'parentTaskId' in update_dict:
-        parent_id = update_dict['parentTaskId']
-        if parent_id:
-            parent_task = task_logic.get_task_by_id(parent_id, db, tenant_id=tenant_id)
-            if not parent_task:
-                raise HTTPException(status_code=400, detail="Parent task not found")
-            if parent_task.parentTaskId:
-                raise HTTPException(status_code=400, detail="Cannot make subtask of a subtask")
-    
-    if update_dict.get('status') == 'completed' and task.status != 'completed':
-        update_dict['completedAt'] = datetime.utcnow()
-    
-    updated_task = task_logic.update_task(task_id, update_dict, db, tenant_id=tenant_id)
-    if assignee_for_notification and tenant_context:
-        try:
-            from .....services.notification_service import send_assignment_notification
-            from .....config.notification_models import NotificationCategory
-            assigner_name = f"{getattr(current_user, 'firstName', '') or ''} {getattr(current_user, 'lastName', '') or ''}".strip() or getattr(current_user, 'userName', 'A user')
-            project_for_task = project_logic.get_project_by_id(updated_task.projectId, db, tenant_id=tenant_id)
-            extra = {}
-            if project_for_task:
-                extra["Project"] = project_for_task.name
-            if updated_task.description:
-                desc = (updated_task.description or "").replace("\r\n", " ").replace("\n", " ").strip()
-                extra["Description"] = desc[:400] + ("..." if len(desc) > 400 else "")
-            if updated_task.dueDate:
-                extra["Due date"] = str(updated_task.dueDate)
-            extra["Priority"] = getattr(updated_task.priority, "value", str(updated_task.priority))
-            extra["Status"] = getattr(updated_task.status, "value", str(updated_task.status))
-            send_assignment_notification(
-                db, str(tenant_context["tenant_id"]), assignee_for_notification, assigner_name,
-                "Task", updated_task.title,
-                action_url=f"/projects/{updated_task.projectId}",
-                category=NotificationCategory.PROJECTS,
-                extra_details=extra
-            )
-        except Exception:
-            pass
-    return transform_task_to_response(updated_task, db)
 
 @router.delete("/{task_id}")
 async def delete_existing_task(
-    task_id: str, 
+    task_id: str,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission("projects:tasks:delete"))
 ):
     if not tenant_context:
         raise HTTPException(status_code=400, detail="Tenant context required")
-    tenant_id = tenant_context["tenant_id"]
-    success = task_logic.delete_task(task_id, db, tenant_id=tenant_id)
-    if not success:
-        raise HTTPException(status_code=404, detail="Task not found")
-    
-    return {"message": "Task deleted successfully"}
+    return task_logic.remove_task(task_id, db, tenant_context)
+
 
 @router.get("/{task_id}/subtasks", response_model=List[SubTask])
 async def get_subtasks(
@@ -348,14 +87,8 @@ async def get_subtasks(
     db: Session = Depends(get_db),
     tenant_context: Optional[dict] = Depends(get_tenant_context)
 ):
-    tenant_id = tenant_context["tenant_id"] if tenant_context else None
-    
-    parent_task = task_logic.get_task_by_id(task_id, db, tenant_id=tenant_id)
-    if not parent_task:
-        raise HTTPException(status_code=404, detail="Parent task not found")
-    
-    subtasks = task_logic.get_subtasks_by_parent(task_id, db, tenant_id=tenant_id)
-    return [transform_subtask_to_response(subtask, db) for subtask in subtasks]
+    return task_logic.list_subtasks_response(task_id, db, tenant_context)
+
 
 @router.post("/{task_id}/subtasks", response_model=SubTask)
 async def create_subtask(
@@ -363,49 +96,9 @@ async def create_subtask(
     subtask_data: TaskCreate,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
-    tenant_context: Optional[dict] = Depends(get_tenant_context)
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission("projects:tasks:create"))
 ):
     if not tenant_context:
         raise HTTPException(status_code=400, detail="Tenant context required")
-    tenant_id = tenant_context["tenant_id"]
-    
-    parent_task = task_logic.get_task_by_id(task_id, db, tenant_id=tenant_id)
-    if not parent_task:
-        raise HTTPException(status_code=404, detail="Parent task not found")
-    
-    if parent_task.parentTaskId:
-        raise HTTPException(status_code=400, detail="Cannot create subtask of a subtask")
-    
-    if subtask_data.assignedToId:
-        assignee = get_user_by_id(subtask_data.assignedToId, db)
-        if not assignee:
-            raise HTTPException(status_code=400, detail="Assignee not found")
-        if tenant_context and str(assignee.tenant_id) != tenant_context["tenant_id"]:
-            raise HTTPException(status_code=400, detail="Assignee not in tenant")
-    
-    task_dict = normalize_task_duration_fields(subtask_data.model_dump())
-    task_dict['assignedToId'] = task_dict.pop('assignedToId', None)
-    task_dict['createdById'] = current_user.id
-    task_dict['parentTaskId'] = task_id
-    task_dict['tags'] = json.dumps(task_dict.get('tags', []))
-    
-    if tenant_context:
-        task_dict['tenant_id'] = tenant_context["tenant_id"]
-    
-    db_subtask = task_logic.create_task(task_dict, db)
-    if subtask_data.assignedToId and tenant_context:
-        try:
-            from .....services.notification_service import send_assignment_notification
-            from .....config.notification_models import NotificationCategory
-            assignee = get_user_by_id(subtask_data.assignedToId, db)
-            assigner_name = f"{getattr(current_user, 'firstName', '') or ''} {getattr(current_user, 'lastName', '') or ''}".strip() or getattr(current_user, 'userName', 'A user')
-            if assignee:
-                send_assignment_notification(
-                    db, str(tenant_context["tenant_id"]), assignee, assigner_name,
-                    "Subtask", db_subtask.title,
-                    action_url=f"/projects/{db_subtask.projectId}",
-                    category=NotificationCategory.PROJECTS
-                )
-        except Exception:
-            pass
-    return transform_subtask_to_response(db_subtask, db)
+    return task_logic.create_subtask_and_notify(task_id, subtask_data, current_user, tenant_context, db)
