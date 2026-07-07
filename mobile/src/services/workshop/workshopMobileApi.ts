@@ -87,9 +87,22 @@ export async function getTenantUsers(): Promise<
   { id: string; name?: string; username?: string; email?: string }[]
 > {
   try {
-    const res = await apiService.get<any>('/tenants/current/users');
-    const list = res?.data ?? res ?? [];
-    return Array.isArray(list) ? list : [];
+    const tenantId = apiService.getTenantId();
+    if (!tenantId) return [];
+    const res = await apiService.getTenantUsers(tenantId);
+    const list = res?.users ?? res ?? [];
+    return (Array.isArray(list) ? list : [])
+      .filter((u: any) => u.isActive !== false)
+      .map((u: any) => ({
+        id: u.id || u.userId,
+        name:
+          `${u.firstName || ''} ${u.lastName || ''}`.trim() ||
+          u.userName ||
+          u.email,
+        username: u.userName,
+        email: u.email,
+      }))
+      .filter((u) => u.id);
   } catch {
     return [];
   }

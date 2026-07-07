@@ -142,7 +142,6 @@ def _info_table(jc: Any, styles: Dict) -> Table:
         ["Model", vi("model"), "Engine No.", vi("engine_number") or vi("engine_no")],
         ["VIN", vi("vin"), "", ""],
         ["Date/Time In", (format_date(getattr(jc, "created_at", None)) or "")[:16], "Date/Time Out", (format_date(getattr(jc, "completed_at", None)) or "")[:16]],
-        ["Customer", safe_str(getattr(jc, "customer_name", None)), "Contact", safe_str(getattr(jc, "customer_phone", None))],
     ]
     t = Table(data, colWidths=[1.0 * inch, 2.0 * inch, 1.0 * inch, 2.0 * inch])
     t.setStyle(TableStyle([

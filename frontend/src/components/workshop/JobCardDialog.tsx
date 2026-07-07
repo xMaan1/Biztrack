@@ -77,10 +77,26 @@ export default function JobCardDialog({
       apiService.get('/work-orders?limit=500').then((data: any) => {
         setWorkOrders(Array.isArray(data) ? data : []);
       }).catch(() => setWorkOrders([]));
-      apiService.get('/tenants/current/users').then((res: any) => {
-        const list = res?.data ?? res ?? [];
-        setUsers(Array.isArray(list) ? list : []);
-      }).catch(() => setUsers([]));
+      const tenantId = apiService.getTenantId();
+      if (!tenantId) {
+        setUsers([]);
+      } else {
+        apiService.getTenantUsers(tenantId).then((res: any) => {
+          const list = res?.users ?? res ?? [];
+          const normalized = (Array.isArray(list) ? list : [])
+            .filter((u: any) => u.isActive !== false)
+            .map((u: any) => ({
+              id: u.id || u.userId,
+              name:
+                `${u.firstName || ''} ${u.lastName || ''}`.trim() ||
+                u.userName ||
+                u.email,
+              username: u.userName,
+            }))
+            .filter((u: { id?: string }) => u.id);
+          setUsers(normalized);
+        }).catch(() => setUsers([]));
+      }
       if (mode === 'edit' && jobCard?.customer_id) {
         apiService.get(`/invoices/customers/${jobCard.customer_id}`).then((c: Customer) => setSelectedCustomer(c)).catch(() => setSelectedCustomer(null));
       } else {
