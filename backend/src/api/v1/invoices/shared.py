@@ -120,13 +120,21 @@ def generate_order_number(tenant_id: str, db: Session) -> str:
     return f"{prefix}-{timestamp:04d}"
 
 
-def calculate_invoice_totals(items: List, tax_rate: float, discount: float) -> dict:
+def calculate_invoice_totals(
+    items: List,
+    tax_rate: float,
+    discount: float,
+    labour_total: float = 0.0,
+    parts_total: float = 0.0,
+) -> dict:
     subtotal = 0
     for item in items:
         if isinstance(item, dict):
             subtotal += item.get("quantity", 0) * item.get("unitPrice", 0)
         else:
             subtotal += item.quantity * item.unitPrice
+
+    subtotal += float(labour_total or 0) + float(parts_total or 0)
 
     discount_amount = subtotal * (discount / 100) if discount > 0 else 0
     taxable_amount = subtotal - discount_amount

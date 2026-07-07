@@ -157,10 +157,12 @@ export function calculateInvoiceTotals(
   formData: InvoiceCreate,
   items: InvoiceItemCreate[],
 ): InvoiceFormTotals {
-  const subtotal = items.reduce(
+  const itemsSubtotal = items.reduce(
     (sum, item) => sum + item.quantity * item.unitPrice * (1 - item.discount / 100),
     0,
   );
+  const workshopExtras = (formData.labourTotal || 0) + (formData.partsTotal || 0);
+  const subtotal = itemsSubtotal + workshopExtras;
   const discountAmount = subtotal * (formData.discount / 100);
   const taxableAmount = subtotal - discountAmount;
   const taxAmount = taxableAmount * (formData.taxRate / 100);

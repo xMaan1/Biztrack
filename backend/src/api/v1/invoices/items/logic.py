@@ -164,7 +164,13 @@ def create_invoice_endpoint(
             order_number = provided_order_number
         else:
             order_number = generate_order_number(tenant_id, db)
-        totals = calculate_invoice_totals(invoice_data.items, invoice_data.taxRate, invoice_data.discount)
+        totals = calculate_invoice_totals(
+            invoice_data.items,
+            invoice_data.taxRate,
+            invoice_data.discount,
+            labour_total=invoice_data.labourTotal or 0.0,
+            parts_total=invoice_data.partsTotal or 0.0,
+        )
 
         db_invoice = Invoice(
             id=str(uuid.uuid4()),
@@ -543,7 +549,13 @@ def update_invoice_endpoint(
                     })
 
                 invoice.items = converted_items
-                totals = calculate_invoice_totals(value, invoice.taxRate, invoice.discount)
+                totals = calculate_invoice_totals(
+                    value,
+                    invoice.taxRate,
+                    invoice.discount,
+                    labour_total=invoice.labourTotal or 0.0,
+                    parts_total=invoice.partsTotal or 0.0,
+                )
                 invoice.subtotal = totals["subtotal"]
                 invoice.discountAmount = totals["discountAmount"]
                 invoice.taxAmount = totals["taxAmount"]
@@ -565,6 +577,19 @@ def update_invoice_endpoint(
                     invoice.customerPhone = resolved
             except Exception:
                 pass
+
+        if any(k in update_data for k in ("items", "labourTotal", "partsTotal", "taxRate", "discount")):
+            totals = calculate_invoice_totals(
+                invoice.items or [],
+                invoice.taxRate or 0,
+                invoice.discount or 0,
+                labour_total=invoice.labourTotal or 0.0,
+                parts_total=invoice.partsTotal or 0.0,
+            )
+            invoice.subtotal = totals["subtotal"]
+            invoice.discountAmount = totals["discountAmount"]
+            invoice.taxAmount = totals["taxAmount"]
+            invoice.total = totals["total"]
 
         invoice.updatedAt = datetime.utcnow()
         db.commit()
