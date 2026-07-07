@@ -388,10 +388,7 @@ class InvoiceService {
     query: string,
     limit: number = 20,
   ): Promise<Customer[]> {
-    const response = await apiService.get(
-      `/invoices/customers/search?q=${encodeURIComponent(query)}&limit=${limit}`,
-    );
-    return response;
+    return CustomerService.searchCustomers(query, limit);
   }
 }
 

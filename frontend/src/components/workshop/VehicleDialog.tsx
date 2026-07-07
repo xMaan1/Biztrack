@@ -49,7 +49,7 @@ export default function VehicleDialog({
 
   useEffect(() => {
     if (open && mode === 'edit' && vehicle?.customer_id) {
-      apiService.get(`/invoices/customers/${vehicle.customer_id}`).then((c: Customer) => setSelectedCustomer(c)).catch(() => setSelectedCustomer(null));
+      apiService.get(`/crm/customers/${vehicle.customer_id}`).then((c: Customer) => setSelectedCustomer(c)).catch(() => setSelectedCustomer(null));
     } else if (open && mode === 'create') {
       setSelectedCustomer(null);
     }

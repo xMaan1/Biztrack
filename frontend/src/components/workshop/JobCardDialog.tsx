@@ -98,7 +98,7 @@ export default function JobCardDialog({
         }).catch(() => setUsers([]));
       }
       if (mode === 'edit' && jobCard?.customer_id) {
-        apiService.get(`/invoices/customers/${jobCard.customer_id}`).then((c: Customer) => setSelectedCustomer(c)).catch(() => setSelectedCustomer(null));
+        apiService.get(`/crm/customers/${jobCard.customer_id}`).then((c: Customer) => setSelectedCustomer(c)).catch(() => setSelectedCustomer(null));
       } else {
         setSelectedCustomer(null);
       }
