@@ -26,6 +26,7 @@ import type {
   InstallmentPlanCreateOption,
   InvoiceFormMode,
 } from '@/src/types/sales/invoiceForm';
+import type { WorkshopDocumentLinksValue } from '@/src/components/workshop/WorkshopDocumentLinks';
 
 type UseInvoiceFormOptions = {
   open: boolean;
@@ -74,6 +75,7 @@ export function useInvoiceForm({
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showCreateCustomerDialog, setShowCreateCustomerDialog] = useState(false);
+  const [documentLinks, setDocumentLinks] = useState<WorkshopDocumentLinksValue>({});
   const [commerceFormKey, setCommerceFormKey] = useState(0);
 
   const initialDataRef = useRef(initialData);
@@ -114,6 +116,10 @@ export function useInvoiceForm({
     if (invoice && (mode === 'edit' || mode === 'view')) {
       setFormData(invoiceFormDataFromInvoice(invoice));
       setItems(invoiceItemsFromInvoice(invoice));
+      setDocumentLinks({
+        purchaseOrderId: invoice.purchaseOrderId,
+        jobCardId: invoice.jobCardId,
+      });
       if (invoice.customerId) {
         InvoiceService.getCustomerById(invoice.customerId)
           .then(setSelectedCustomer)
@@ -142,6 +148,7 @@ export function useInvoiceForm({
       setItems(seed?.items ?? []);
       setSelectedCustomer(seedCustomer ?? null);
       setSelectedVehicle(null);
+      setDocumentLinks({});
       if (mode === 'create' && useCommerceInvoiceLayout && !seededForm.orderNumber) {
         InvoiceService.getNextOrderNumber()
           .then((orderNumber) => {
@@ -290,6 +297,7 @@ export function useInvoiceForm({
     setSelectedCustomer(null);
     setSelectedVehicle(null);
     resetNewItem();
+    setDocumentLinks({});
     setCreateInstallmentPlan(false);
     setInstallmentCount(3);
     setInstallmentFrequency('monthly');
@@ -340,7 +348,12 @@ export function useInvoiceForm({
 
     setLoading(true);
     try {
-      const submitData: InvoiceCreate = { ...formData, items };
+      const submitData: InvoiceCreate = {
+        ...formData,
+        items,
+        purchaseOrderId: documentLinks.purchaseOrderId,
+        jobCardId: documentLinks.jobCardId,
+      };
       const options =
         createInstallmentPlan && totals.total > 0
           ? {
@@ -386,6 +399,8 @@ export function useInvoiceForm({
     commerceFormKey,
     showCreateCustomerDialog,
     setShowCreateCustomerDialog,
+    documentLinks,
+    setDocumentLinks,
     totals,
     handleInputChange,
     handleCustomerSelect,

@@ -17,6 +17,8 @@ class JobCard(Base):
     status = Column(String, default="draft")
     priority = Column(String, default="medium")
     work_order_id = Column(UUID(as_uuid=True), ForeignKey("work_orders.id"), nullable=True)
+    purchase_order_id = Column(UUID(as_uuid=True), ForeignKey("purchase_orders.id"), nullable=True)
+    invoice_id = Column(UUID(as_uuid=True), ForeignKey("invoices.id"), nullable=True)
     customer_id = Column(UUID(as_uuid=True), ForeignKey("customers.id"), nullable=True)
     customer_name = Column(String)
     customer_phone = Column(String)

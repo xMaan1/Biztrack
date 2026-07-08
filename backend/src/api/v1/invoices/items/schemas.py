@@ -86,6 +86,8 @@ class InvoiceBase(BaseModel):
     vehicleReg: Optional[str] = None
     vehicleMileage: Optional[str] = None
     documentNo: Optional[str] = None
+    purchaseOrderId: Optional[str] = None
+    jobCardId: Optional[str] = None
     jobDescription: Optional[str] = None
     partsDescription: Optional[str] = None
     labourTotal: Optional[float] = 0.0
@@ -121,6 +123,8 @@ class InvoiceCreate(BaseModel):
     vehicleReg: Optional[str] = None
     vehicleMileage: Optional[str] = None
     documentNo: Optional[str] = None
+    purchaseOrderId: Optional[str] = None
+    jobCardId: Optional[str] = None
     jobDescription: Optional[str] = None
     partsDescription: Optional[str] = None
     labourTotal: Optional[float] = 0.0
@@ -153,6 +157,8 @@ class InvoiceUpdate(BaseModel):
     vehicleReg: Optional[str] = None
     vehicleMileage: Optional[str] = None
     documentNo: Optional[str] = None
+    purchaseOrderId: Optional[str] = None
+    jobCardId: Optional[str] = None
     jobDescription: Optional[str] = None
     partsDescription: Optional[str] = None
     labourTotal: Optional[float] = None

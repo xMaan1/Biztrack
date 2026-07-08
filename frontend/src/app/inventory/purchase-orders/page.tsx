@@ -61,6 +61,9 @@ import { toast } from 'sonner';
 import PurchaseOrderModal from '../../../components/inventory/PurchaseOrderModal';
 import PurchaseOrderViewModal from '../../../components/inventory/PurchaseOrderViewModal';
 import { usePlanInfo } from '../../../hooks/usePlanInfo';
+import { VehicleSearch } from '../../../components/ui/vehicle-search';
+import { Vehicle } from '../../../models/workshop';
+import { WorkshopDocumentLinks, WorkshopDocumentLinksValue } from '../../../components/workshop/WorkshopDocumentLinks';
 
 export default function PurchaseOrdersPage() {
   return (
@@ -74,6 +77,7 @@ function PurchaseOrdersContent() {
   const { } = useAuth();
   const { planInfo } = usePlanInfo();
   const isHealthcare = planInfo?.planType === 'healthcare';
+  const isWorkshop = planInfo?.planType === 'workshop';
   const { formatCurrency } = useCurrency();
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -129,10 +133,17 @@ function PurchaseOrdersContent() {
     orderDate: '',
     expectedDeliveryDate: '',
     notes: '',
+    vehicleReg: '',
+    purchaseForType: undefined,
+    vehicleId: undefined,
+    jobCardId: undefined,
+    invoiceId: undefined,
     department: '',
     deliveryLocation: '',
     requisitionNumber: '',
   });
+  const [editDocumentLinks, setEditDocumentLinks] = useState<WorkshopDocumentLinksValue>({});
+  const [editSelectedVehicle, setEditSelectedVehicle] = useState<Vehicle | null>(null);
 
 
 
@@ -219,10 +230,20 @@ function PurchaseOrdersContent() {
       expectedDeliveryDate: order.expectedDeliveryDate ? order.expectedDeliveryDate.split('T')[0] : '',
       vatRate: order.vatRate || 0,
       notes: order.notes || '',
+      vehicleReg: order.vehicleReg || '',
+      purchaseForType: order.purchaseForType,
+      vehicleId: order.vehicleId,
+      jobCardId: order.jobCardId,
+      invoiceId: order.invoiceId,
       department: order.department || '',
       deliveryLocation: order.deliveryLocation || '',
       requisitionNumber: order.requisitionNumber || '',
     });
+    setEditDocumentLinks({
+      jobCardId: order.jobCardId,
+      invoiceId: order.invoiceId,
+    });
+    setEditSelectedVehicle(null);
     setIsEditModalOpen(true);
   };
 
@@ -246,8 +267,20 @@ function PurchaseOrdersContent() {
         delete updatePayload.department;
         delete updatePayload.deliveryLocation;
         delete updatePayload.requisitionNumber;
+        if (isWorkshop) {
+          updatePayload.jobCardId = editDocumentLinks.jobCardId ?? null;
+          updatePayload.invoiceId = editDocumentLinks.invoiceId ?? null;
+        }
+        updatePayload.vehicleId = editOrder.purchaseForType === 'vehicle' ? editOrder.vehicleId : null;
+        if (editOrder.purchaseForType !== 'vehicle') {
+          updatePayload.vehicleReg = null;
+        }
       } else {
         delete updatePayload.vehicleReg;
+        delete updatePayload.purchaseForType;
+        delete updatePayload.vehicleId;
+        delete updatePayload.jobCardId;
+        delete updatePayload.invoiceId;
       }
       await inventoryService.updatePurchaseOrder(selectedOrder.id, updatePayload);
       toast.success('Purchase order updated successfully');
@@ -678,7 +711,7 @@ function PurchaseOrdersContent() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-warehouseId">Warehouse * ({warehouses.length} available)</Label>
+                <Label htmlFor="edit-warehouseId">{isWorkshop ? 'Garage / Warehouse *' : 'Warehouse *'} ({warehouses.length} available)</Label>
                 <Select
                   value={editOrder.warehouseId}
                   onValueChange={(value) => {
@@ -796,6 +829,82 @@ function PurchaseOrdersContent() {
                     />
                   </div>
                 </div>
+              )}
+
+              {!isHealthcare && (
+                <>
+                  <div className="space-y-2">
+                    <Label>Purchase for</Label>
+                    <Select
+                      value={editOrder.purchaseForType || 'none'}
+                      onValueChange={(v) => {
+                        const purchaseForType = v === 'none' ? undefined : (v as 'vehicle' | 'garage');
+                        setEditOrder((prev) => ({
+                          ...prev,
+                          purchaseForType,
+                          vehicleId: purchaseForType === 'vehicle' ? prev.vehicleId : undefined,
+                          vehicleReg: purchaseForType === 'vehicle' ? prev.vehicleReg : '',
+                        }));
+                        if (v !== 'vehicle') {
+                          setEditSelectedVehicle(null);
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select destination" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Not specified</SelectItem>
+                        <SelectItem value="vehicle">Existing vehicle</SelectItem>
+                        <SelectItem value="garage">Garage</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {editOrder.purchaseForType === 'vehicle' && (
+                    <>
+                      <div className="space-y-2">
+                        <VehicleSearch
+                          label="Vehicle"
+                          value={editSelectedVehicle}
+                          onSelect={(v) => {
+                            setEditSelectedVehicle(v);
+                            if (v) {
+                              setEditOrder((prev) => ({
+                                ...prev,
+                                vehicleId: v.id,
+                                vehicleReg: v.registration_number ?? '',
+                              }));
+                            }
+                          }}
+                          placeholder="Search by reg, VIN, make, model..."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-vehicleReg">Vehicle Registration</Label>
+                        <Input
+                          id="edit-vehicleReg"
+                          value={editOrder.vehicleReg ?? ''}
+                          onChange={(e) =>
+                            setEditOrder((prev) => ({ ...prev, vehicleReg: e.target.value }))
+                          }
+                        />
+                      </div>
+                    </>
+                  )}
+                  {editOrder.purchaseForType === 'garage' && (
+                    <p className="text-sm text-muted-foreground">
+                      Parts will be delivered to the selected garage/warehouse above.
+                    </p>
+                  )}
+                </>
+              )}
+
+              {isWorkshop && (
+                <WorkshopDocumentLinks
+                  excludeType="purchase_order"
+                  value={editDocumentLinks}
+                  onChange={setEditDocumentLinks}
+                />
               )}
 
               <div className="space-y-2">

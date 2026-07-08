@@ -35,6 +35,8 @@ def _job_card_to_response(jc) -> JobCardResponse:
         status=jc.status,
         priority=jc.priority,
         work_order_id=str(jc.work_order_id) if jc.work_order_id else None,
+        purchase_order_id=str(jc.purchase_order_id) if getattr(jc, "purchase_order_id", None) else None,
+        invoice_id=str(jc.invoice_id) if getattr(jc, "invoice_id", None) else None,
         customer_id=str(jc.customer_id) if jc.customer_id else None,
         customer_name=jc.customer_name,
         customer_phone=jc.customer_phone,
@@ -140,9 +142,23 @@ def create_job_card_endpoint(
     data["job_card_number"] = job_card_number
     data["attachments"] = data.get("attachments") or []
     data["items"] = data.get("items") or []
+    if "purchase_order_id" in data:
+        data["purchase_order_id"] = data["purchase_order_id"] or None
+    if "invoice_id" in data:
+        data["invoice_id"] = data["invoice_id"] or None
     if "vat_rate" not in data:
         data["vat_rate"] = 0.15
     jc = create_job_card(data, db, tenant_id)
+    from ...config.workshop_document_links import sync_workshop_document_links
+    sync_workshop_document_links(
+        db,
+        tenant_id,
+        purchase_order_id=str(jc.purchase_order_id) if jc.purchase_order_id else None,
+        job_card_id=str(jc.id),
+        invoice_id=str(jc.invoice_id) if jc.invoice_id else None,
+    )
+    db.commit()
+    db.refresh(jc)
     if data.get("assigned_to_id"):
         try:
             from ...services.notification_service import send_assignment_notification
@@ -178,9 +194,24 @@ def update_job_card_endpoint(
         data["planned_date"] = datetime.fromisoformat(data["planned_date"].replace("Z", "+00:00"))
     if data.get("completed_at") and isinstance(data["completed_at"], str):
         data["completed_at"] = datetime.fromisoformat(data["completed_at"].replace("Z", "+00:00"))
+    if "purchase_order_id" in data:
+        data["purchase_order_id"] = data["purchase_order_id"] or None
+    if "invoice_id" in data:
+        data["invoice_id"] = data["invoice_id"] or None
     update_data = {k: v for k, v in data.items() if hasattr(jc, k)}
     update_job_card(job_card_id, update_data, db, tenant_id)
     jc = get_job_card_by_id(job_card_id, db, tenant_id)
+    if jc and any(k in data for k in ("purchase_order_id", "invoice_id")):
+        from ...config.workshop_document_links import sync_workshop_document_links
+        sync_workshop_document_links(
+            db,
+            tenant_id,
+            purchase_order_id=str(jc.purchase_order_id) if jc.purchase_order_id else None,
+            job_card_id=str(jc.id),
+            invoice_id=str(jc.invoice_id) if jc.invoice_id else None,
+        )
+        db.commit()
+        jc = get_job_card_by_id(job_card_id, db, tenant_id)
     if "assigned_to_id" in data and data.get("assigned_to_id") and jc:
         try:
             from ...services.notification_service import send_assignment_notification

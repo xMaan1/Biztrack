@@ -230,6 +230,8 @@ def transform_invoice_to_pydantic(db_invoice: Invoice):
         vehicleReg=db_invoice.vehicleReg,
         vehicleMileage=db_invoice.vehicleMileage,
         documentNo=db_invoice.documentNo,
+        purchaseOrderId=str(db_invoice.purchaseOrderId) if getattr(db_invoice, "purchaseOrderId", None) else None,
+        jobCardId=str(db_invoice.jobCardId) if getattr(db_invoice, "jobCardId", None) else None,
         jobDescription=db_invoice.jobDescription,
         partsDescription=db_invoice.partsDescription,
         labourTotal=db_invoice.labourTotal,

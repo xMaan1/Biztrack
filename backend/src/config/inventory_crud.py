@@ -222,8 +222,12 @@ def create_purchase_order(po_data: dict, db: Session) -> PurchaseOrder:
 def update_purchase_order(po_id: str, update_data: dict, db: Session, tenant_id: str = None) -> Optional[PurchaseOrder]:
     po = get_purchase_order_by_id(po_id, db, tenant_id)
     if po:
+        nullable_fields = {
+            "jobCardId", "invoiceId", "vehicleId", "purchaseForType", "vehicleReg",
+            "department", "deliveryLocation", "requisitionNumber", "batchNumber", "notes",
+        }
         for key, value in update_data.items():
-            if hasattr(po, key) and value is not None:
+            if hasattr(po, key) and (key in nullable_fields or value is not None):
                 setattr(po, key, value)
         po.updatedAt = datetime.utcnow()
         db.commit()

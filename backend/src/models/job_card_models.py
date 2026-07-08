@@ -9,6 +9,8 @@ class JobCardCreate(BaseModel):
     status: str = "draft"
     priority: str = "medium"
     work_order_id: Optional[str] = None
+    purchase_order_id: Optional[str] = None
+    invoice_id: Optional[str] = None
     customer_id: Optional[str] = None
     customer_name: Optional[str] = None
     customer_phone: Optional[str] = None
@@ -30,6 +32,8 @@ class JobCardUpdate(BaseModel):
     status: Optional[str] = None
     priority: Optional[str] = None
     work_order_id: Optional[str] = None
+    purchase_order_id: Optional[str] = None
+    invoice_id: Optional[str] = None
     customer_id: Optional[str] = None
     customer_name: Optional[str] = None
     customer_phone: Optional[str] = None
@@ -54,6 +58,8 @@ class JobCardResponse(BaseModel):
     status: str
     priority: str
     work_order_id: Optional[str] = None
+    purchase_order_id: Optional[str] = None
+    invoice_id: Optional[str] = None
     customer_id: Optional[str] = None
     customer_name: Optional[str] = None
     customer_phone: Optional[str] = None

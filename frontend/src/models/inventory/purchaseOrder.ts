@@ -63,6 +63,10 @@ export interface PurchaseOrder {
   totalAmount: number;
   notes?: string;
   vehicleReg?: string;
+  purchaseForType?: 'vehicle' | 'garage';
+  vehicleId?: string;
+  jobCardId?: string | null;
+  invoiceId?: string | null;
   department?: string;
   deliveryLocation?: string;
   requisitionNumber?: string;
@@ -82,6 +86,10 @@ export interface PurchaseOrderCreate {
   vatRate?: number;
   notes?: string;
   vehicleReg?: string;
+  purchaseForType?: 'vehicle' | 'garage';
+  vehicleId?: string;
+  jobCardId?: string | null;
+  invoiceId?: string | null;
   department?: string;
   deliveryLocation?: string;
   requisitionNumber?: string;
@@ -103,6 +111,10 @@ export interface PurchaseOrderUpdate {
   totalAmount?: number;
   notes?: string;
   vehicleReg?: string;
+  purchaseForType?: 'vehicle' | 'garage';
+  vehicleId?: string;
+  jobCardId?: string | null;
+  invoiceId?: string | null;
   department?: string;
   deliveryLocation?: string;
   requisitionNumber?: string;

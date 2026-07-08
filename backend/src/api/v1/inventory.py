@@ -52,6 +52,27 @@ def get_supplier_name_map(db: Session, tenant_id: str, supplier_ids: List[str]) 
     return {str(supplier_id): name for supplier_id, name in supplier_rows}
 
 
+def _normalize_link_id(value: Optional[str]) -> Optional[str]:
+    if not value:
+        return None
+    return str(value)
+
+
+def _apply_purchase_for_fields(order_data: dict) -> None:
+    purchase_for_type = order_data.get("purchaseForType")
+    if purchase_for_type == "garage":
+        order_data["vehicleId"] = None
+        order_data["vehicleReg"] = None
+    elif purchase_for_type == "vehicle":
+        vehicle_id = _normalize_link_id(order_data.get("vehicleId"))
+        order_data["vehicleId"] = vehicle_id
+        if not vehicle_id:
+            order_data["vehicleReg"] = None
+    else:
+        order_data["purchaseForType"] = None
+        order_data["vehicleId"] = None
+
+
 def _purchase_order_api_payload(order: PurchaseOrderDB, supplier_name: str) -> dict:
     supplier_id = str(order.supplierId)
     return {
@@ -72,6 +93,10 @@ def _purchase_order_api_payload(order: PurchaseOrderDB, supplier_name: str) -> d
         "notes": order.notes,
         "items": order.items if order.items else [],
         "vehicleReg": order.vehicleReg if hasattr(order, "vehicleReg") else None,
+        "purchaseForType": getattr(order, "purchaseForType", None),
+        "vehicleId": str(order.vehicleId) if getattr(order, "vehicleId", None) else None,
+        "jobCardId": str(order.jobCardId) if getattr(order, "jobCardId", None) else None,
+        "invoiceId": str(order.invoiceId) if getattr(order, "invoiceId", None) else None,
         "department": getattr(order, "department", None),
         "deliveryLocation": getattr(order, "deliveryLocation", None),
         "requisitionNumber": getattr(order, "requisitionNumber", None),
@@ -685,10 +710,11 @@ def create_purchase_order_endpoint(
     
     order_data = order.dict()
     order_data["poNumber"] = order_number
-    # Remove fields that don't exist in SQLAlchemy model
     order_data.pop("supplierName", None)
     order_data.pop("orderNumber", None)
-    # Keep items - they are stored as JSON in the database
+    order_data["jobCardId"] = _normalize_link_id(order_data.get("jobCardId"))
+    order_data["invoiceId"] = _normalize_link_id(order_data.get("invoiceId"))
+    _apply_purchase_for_fields(order_data)
     
     # Convert date strings to date objects
     if order_data.get("orderDate"):
@@ -709,6 +735,17 @@ def create_purchase_order_endpoint(
     })
     
     db_order = create_purchase_order(order_data, db)
+
+    from ...config.workshop_document_links import sync_workshop_document_links
+    sync_workshop_document_links(
+        db,
+        str(tenant_context["tenant_id"]),
+        purchase_order_id=str(db_order.id),
+        job_card_id=order_data.get("jobCardId"),
+        invoice_id=order_data.get("invoiceId"),
+    )
+    db.commit()
+    db.refresh(db_order)
     
     supplier_name_map = get_supplier_name_map(
         db,
@@ -742,8 +779,21 @@ def update_purchase_order_endpoint(
     
     # Remove fields that don't exist in SQLAlchemy model
     order_update.pop("supplierName", None)
-    
-    # If VAT rate is being updated, recalculate totals
+    if "jobCardId" in order_update:
+        order_update["jobCardId"] = _normalize_link_id(order_update.get("jobCardId"))
+    if "invoiceId" in order_update:
+        order_update["invoiceId"] = _normalize_link_id(order_update.get("invoiceId"))
+    if "purchaseForType" in order_update or "vehicleId" in order_update:
+        merged = {
+            "purchaseForType": order_update.get("purchaseForType", getattr(existing_order, "purchaseForType", None)),
+            "vehicleId": order_update.get("vehicleId", getattr(existing_order, "vehicleId", None)),
+            "vehicleReg": order_update.get("vehicleReg", getattr(existing_order, "vehicleReg", None)),
+        }
+        _apply_purchase_for_fields(merged)
+        order_update["purchaseForType"] = merged["purchaseForType"]
+        order_update["vehicleId"] = merged["vehicleId"]
+        if "vehicleReg" not in order.dict(exclude_unset=True):
+            order_update["vehicleReg"] = merged["vehicleReg"]
     if "vatRate" in order_update:
         vat_rate = order_update["vatRate"]
         items = existing_order.items if existing_order.items else []
@@ -763,6 +813,18 @@ def update_purchase_order_endpoint(
     order_update["updatedAt"] = datetime.utcnow()
     
     db_order = update_purchase_order(order_id, order_update, db, str(tenant_context["tenant_id"]))
+
+    if db_order and any(k in order_update for k in ("jobCardId", "invoiceId")):
+        from ...config.workshop_document_links import sync_workshop_document_links
+        sync_workshop_document_links(
+            db,
+            str(tenant_context["tenant_id"]),
+            purchase_order_id=str(db_order.id),
+            job_card_id=str(db_order.jobCardId) if db_order.jobCardId else None,
+            invoice_id=str(db_order.invoiceId) if db_order.invoiceId else None,
+        )
+        db.commit()
+        db.refresh(db_order)
     
     supplier_name_map = get_supplier_name_map(
         db,

@@ -362,6 +362,10 @@ class PurchaseOrderBase(BaseModel):
     totalAmount: float
     notes: Optional[str] = None
     vehicleReg: Optional[str] = None
+    purchaseForType: Optional[str] = None
+    vehicleId: Optional[str] = None
+    jobCardId: Optional[str] = None
+    invoiceId: Optional[str] = None
     department: Optional[str] = None
     deliveryLocation: Optional[str] = None
     requisitionNumber: Optional[str] = None
@@ -369,6 +373,10 @@ class PurchaseOrderBase(BaseModel):
 
 class PurchaseOrderCreate(BaseModel):
     vehicleReg: Optional[str] = None
+    purchaseForType: Optional[str] = None
+    vehicleId: Optional[str] = None
+    jobCardId: Optional[str] = None
+    invoiceId: Optional[str] = None
     orderNumber: Optional[str] = None
     batchNumber: Optional[str] = None
     supplierId: str
@@ -398,6 +406,10 @@ class PurchaseOrderUpdate(BaseModel):
     totalAmount: Optional[float] = None
     notes: Optional[str] = None
     vehicleReg: Optional[str] = None
+    purchaseForType: Optional[str] = None
+    vehicleId: Optional[str] = None
+    jobCardId: Optional[str] = None
+    invoiceId: Optional[str] = None
     department: Optional[str] = None
     deliveryLocation: Optional[str] = None
     requisitionNumber: Optional[str] = None

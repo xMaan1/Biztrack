@@ -203,6 +203,9 @@ def create_invoice_endpoint(
             vehicleVin=invoice_data.vehicleVin,
             vehicleReg=invoice_data.vehicleReg,
             vehicleMileage=invoice_data.vehicleMileage,
+            documentNo=invoice_data.documentNo,
+            purchaseOrderId=invoice_data.purchaseOrderId or None,
+            jobCardId=invoice_data.jobCardId or None,
             jobDescription=invoice_data.jobDescription,
             partsDescription=invoice_data.partsDescription,
             labourTotal=invoice_data.labourTotal or 0.0,
@@ -292,6 +295,18 @@ def create_invoice_endpoint(
         db.add(db_invoice)
         db.commit()
         db.refresh(db_invoice)
+
+        if invoice_data.purchaseOrderId or invoice_data.jobCardId:
+            from .....config.workshop_document_links import sync_workshop_document_links
+            sync_workshop_document_links(
+                db,
+                str(tenant_id),
+                purchase_order_id=invoice_data.purchaseOrderId or None,
+                job_card_id=invoice_data.jobCardId or None,
+                invoice_id=str(db_invoice.id),
+            )
+            db.commit()
+            db.refresh(db_invoice)
 
         if db_invoice.status != InvoiceStatus.DRAFT and db_invoice.balance > 0:
             try:
@@ -566,6 +581,8 @@ def update_invoice_endpoint(
                 setattr(invoice, field, float(value))
             elif field in ["issueDate", "dueDate"] and value:
                 setattr(invoice, field, datetime.fromisoformat(value))
+            elif field in ["purchaseOrderId", "jobCardId"]:
+                setattr(invoice, field, value or None)
             else:
                 setattr(invoice, field, value)
 
@@ -594,6 +611,18 @@ def update_invoice_endpoint(
         invoice.updatedAt = datetime.utcnow()
         db.commit()
         db.refresh(invoice)
+
+        if any(k in update_data for k in ("purchaseOrderId", "jobCardId")):
+            from .....config.workshop_document_links import sync_workshop_document_links
+            sync_workshop_document_links(
+                db,
+                str(tenant_id),
+                purchase_order_id=str(invoice.purchaseOrderId) if invoice.purchaseOrderId else None,
+                job_card_id=str(invoice.jobCardId) if invoice.jobCardId else None,
+                invoice_id=str(invoice.id),
+            )
+            db.commit()
+            db.refresh(invoice)
 
         try:
             pydantic_invoice = transform_invoice_to_pydantic(invoice)

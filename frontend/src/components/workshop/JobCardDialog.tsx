@@ -26,6 +26,8 @@ import { Plus } from 'lucide-react';
 import { apiService } from '../../services/ApiService';
 import { Customer } from '../../services/CustomerService';
 import { JobCard, JobCardCreate, JobCardUpdate, Vehicle } from '../../models/workshop';
+import { WorkshopDocumentLinks, WorkshopDocumentLinksValue } from './WorkshopDocumentLinks';
+import { usePlanInfo } from '../../hooks/usePlanInfo';
 
 interface JobCardDialogProps {
   open: boolean;
@@ -42,6 +44,8 @@ export default function JobCardDialog({
   jobCard,
   onSuccess,
 }: JobCardDialogProps) {
+  const { planInfo } = usePlanInfo();
+  const isWorkshop = planInfo?.planType === 'workshop';
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [workOrders, setWorkOrders] = useState<{ id: string; work_order_number: string; title: string }[]>([]);
@@ -49,6 +53,7 @@ export default function JobCardDialog({
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [showCreateCustomer, setShowCreateCustomer] = useState(false);
+  const [documentLinks, setDocumentLinks] = useState<WorkshopDocumentLinksValue>({});
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -133,6 +138,10 @@ export default function JobCardDialog({
         notes: jobCard.notes || '',
       });
       setSelectedVehicle(null);
+      setDocumentLinks({
+        purchaseOrderId: jobCard.purchase_order_id,
+        invoiceId: jobCard.invoice_id,
+      });
     } else if (mode === 'create') {
       setFormData({
         title: '',
@@ -157,6 +166,7 @@ export default function JobCardDialog({
         notes: '',
       });
       setSelectedVehicle(null);
+      setDocumentLinks({});
     }
     setErrorMessage('');
   }, [jobCard, mode]);
@@ -194,6 +204,8 @@ export default function JobCardDialog({
         parts_estimate: formData.parts_estimate,
         vat_rate: formData.vat_rate / 100,
         notes: formData.notes || undefined,
+        purchase_order_id: documentLinks.purchaseOrderId,
+        invoice_id: documentLinks.invoiceId,
       };
       if (mode === 'create') {
         await apiService.post('/job-cards', payload);
@@ -374,6 +386,13 @@ export default function JobCardDialog({
             <Label>Description</Label>
             <Textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={2} />
           </div>
+          {isWorkshop && (
+            <WorkshopDocumentLinks
+              excludeType="job_card"
+              value={documentLinks}
+              onChange={setDocumentLinks}
+            />
+          )}
           <div>
             <Label>Notes</Label>
             <Textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} rows={2} />

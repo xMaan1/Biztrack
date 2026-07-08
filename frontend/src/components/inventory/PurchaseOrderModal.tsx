@@ -36,6 +36,7 @@ import { apiService } from '../../services/ApiService';
 import { VehicleSearch } from '../ui/vehicle-search';
 import { Vehicle } from '../../models/workshop';
 import { usePlanInfo } from '../../hooks/usePlanInfo';
+import { WorkshopDocumentLinks, WorkshopDocumentLinksValue } from '../workshop/WorkshopDocumentLinks';
 
 interface PurchaseOrderModalProps {
   isOpen: boolean;
@@ -63,6 +64,7 @@ export default function PurchaseOrderModal({
   const { formatCurrency } = useCurrency();
   const { planInfo } = usePlanInfo();
   const isHealthcare = planInfo?.planType === 'healthcare';
+  const isWorkshop = planInfo?.planType === 'workshop';
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -70,6 +72,7 @@ export default function PurchaseOrderModal({
   const [products, setProducts] = useState<Product[]>([]);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [documentLinks, setDocumentLinks] = useState<WorkshopDocumentLinksValue>({});
   const [newOrder, setNewOrder] = useState<PurchaseOrderCreate>({
     orderNumber: '',
     batchNumber: '',
@@ -79,6 +82,10 @@ export default function PurchaseOrderModal({
     orderDate: new Date().toISOString().split('T')[0],
     expectedDeliveryDate: '',
     vehicleReg: '',
+    purchaseForType: undefined,
+    vehicleId: undefined,
+    jobCardId: undefined,
+    invoiceId: undefined,
     department: '',
     deliveryLocation: '',
     requisitionNumber: '',
@@ -221,12 +228,20 @@ export default function PurchaseOrderModal({
         ? {
             ...newOrder,
             vehicleReg: undefined,
+            purchaseForType: undefined,
+            vehicleId: undefined,
+            jobCardId: undefined,
+            invoiceId: undefined,
           }
         : {
             ...newOrder,
             department: undefined,
             deliveryLocation: undefined,
             requisitionNumber: undefined,
+            jobCardId: documentLinks.jobCardId,
+            invoiceId: documentLinks.invoiceId,
+            vehicleId: newOrder.purchaseForType === 'vehicle' ? newOrder.vehicleId : undefined,
+            purchaseForType: newOrder.purchaseForType,
           };
       await inventoryService.createPurchaseOrder(payload);
       
@@ -251,6 +266,7 @@ export default function PurchaseOrderModal({
 
   const resetForm = () => {
     setSelectedVehicle(null);
+    setDocumentLinks({});
     setNewOrder({
       orderNumber: '',
       batchNumber: '',
@@ -260,6 +276,10 @@ export default function PurchaseOrderModal({
       orderDate: new Date().toISOString().split('T')[0],
       expectedDeliveryDate: '',
       vehicleReg: initialData?.vehicleReg || '',
+      purchaseForType: initialData?.purchaseForType,
+      vehicleId: initialData?.vehicleId,
+      jobCardId: initialData?.jobCardId,
+      invoiceId: initialData?.invoiceId,
       department: initialData?.department || '',
       deliveryLocation: initialData?.deliveryLocation || '',
       requisitionNumber: initialData?.requisitionNumber || '',
@@ -410,7 +430,7 @@ export default function PurchaseOrderModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="warehouseId">Warehouse *</Label>
+            <Label htmlFor="warehouseId">{isWorkshop ? 'Garage / Warehouse *' : 'Warehouse *'}</Label>
             <Select
               value={newOrder.warehouseId}
               onValueChange={(value) => {
@@ -487,36 +507,81 @@ export default function PurchaseOrderModal({
           ) : (
             <>
               <div className="space-y-2">
-                <VehicleSearch
-                  label="Vehicle"
-                  value={selectedVehicle}
-                  onSelect={(v) => {
-                    setSelectedVehicle(v);
-                    if (v) {
-                      setNewOrder((prev) => ({
-                        ...prev,
-                        vehicleReg: v.registration_number ?? '',
-                      }));
-                    }
-                  }}
-                  placeholder="Search by reg, VIN, make, model..."
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="vehicleReg">Vehicle Registration</Label>
-                <Input
-                  id="vehicleReg"
-                  value={newOrder.vehicleReg}
-                  onChange={(e) =>
+                <Label>Purchase for</Label>
+                <Select
+                  value={newOrder.purchaseForType || 'none'}
+                  onValueChange={(v) => {
+                    const purchaseForType = v === 'none' ? undefined : (v as 'vehicle' | 'garage');
                     setNewOrder((prev) => ({
                       ...prev,
-                      vehicleReg: e.target.value,
-                    }))
-                  }
-                  placeholder="Enter vehicle registration or driver info"
-                />
+                      purchaseForType,
+                      vehicleId: purchaseForType === 'vehicle' ? prev.vehicleId : undefined,
+                      vehicleReg: purchaseForType === 'vehicle' ? prev.vehicleReg : '',
+                    }));
+                    if (v !== 'vehicle') {
+                      setSelectedVehicle(null);
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select destination" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Not specified</SelectItem>
+                    <SelectItem value="vehicle">Existing vehicle</SelectItem>
+                    <SelectItem value="garage">Garage</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+              {newOrder.purchaseForType === 'vehicle' && (
+                <>
+                  <div className="space-y-2">
+                    <VehicleSearch
+                      label="Vehicle"
+                      value={selectedVehicle}
+                      onSelect={(v) => {
+                        setSelectedVehicle(v);
+                        if (v) {
+                          setNewOrder((prev) => ({
+                            ...prev,
+                            vehicleId: v.id,
+                            vehicleReg: v.registration_number ?? '',
+                          }));
+                        }
+                      }}
+                      placeholder="Search by reg, VIN, make, model..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="vehicleReg">Vehicle Registration</Label>
+                    <Input
+                      id="vehicleReg"
+                      value={newOrder.vehicleReg}
+                      onChange={(e) =>
+                        setNewOrder((prev) => ({
+                          ...prev,
+                          vehicleReg: e.target.value,
+                        }))
+                      }
+                      placeholder="Vehicle registration"
+                    />
+                  </div>
+                </>
+              )}
+              {newOrder.purchaseForType === 'garage' && (
+                <p className="text-sm text-muted-foreground">
+                  Parts will be delivered to the selected garage/warehouse above.
+                </p>
+              )}
             </>
+          )}
+
+          {isWorkshop && (
+            <WorkshopDocumentLinks
+              excludeType="purchase_order"
+              value={documentLinks}
+              onChange={setDocumentLinks}
+            />
           )}
 
           <div className="space-y-2">

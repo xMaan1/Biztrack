@@ -56,6 +56,8 @@ class Invoice(Base):
     vehicleReg = Column(String, nullable=True)
     vehicleMileage = Column(String, nullable=True)
     documentNo = Column(String, nullable=True)
+    purchaseOrderId = Column(UUID(as_uuid=True), ForeignKey("purchase_orders.id"), nullable=True)
+    jobCardId = Column(UUID(as_uuid=True), ForeignKey("job_cards.id"), nullable=True)
     jobDescription = Column(Text, nullable=True)
     partsDescription = Column(Text, nullable=True)
     labourTotal = Column(Float, default=0.0)

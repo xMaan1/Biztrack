@@ -95,6 +95,8 @@ export interface Invoice {
   vehicleReg?: string;
   vehicleMileage?: string;
   documentNo?: string;
+  purchaseOrderId?: string;
+  jobCardId?: string;
 
   // Workshop specific fields
   jobDescription?: string;
@@ -133,6 +135,8 @@ export interface InvoiceCreate {
   vehicleReg?: string;
   vehicleMileage?: string;
   documentNo?: string;
+  purchaseOrderId?: string;
+  jobCardId?: string;
 
   // Workshop specific fields
   jobDescription?: string;
@@ -168,6 +172,8 @@ export interface InvoiceUpdate {
   vehicleReg?: string;
   vehicleMileage?: string;
   documentNo?: string;
+  purchaseOrderId?: string;
+  jobCardId?: string;
 
   // Workshop specific fields
   jobDescription?: string;
