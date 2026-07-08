@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Label } from './label';
+import { Label } from '../ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from './select';
+} from '../ui/select';
 import { apiService } from '../../services/ApiService';
 import { inventoryService } from '../../services/InventoryService';
 import InvoiceService from '../../services/InvoiceService';
