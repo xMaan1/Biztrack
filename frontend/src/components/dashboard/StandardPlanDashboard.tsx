@@ -6,9 +6,11 @@ import { Loader2 } from 'lucide-react';
 import { DashboardLayout } from '../layout';
 import PlanAwareDashboard from './PlanAwareDashboard';
 import type { PlanInfo } from '../../hooks/usePlanInfo';
-import { useDashboard } from '../../hooks/useDashboard';
+import { useDashboard, type DashboardData } from '../../hooks/useDashboard';
 
-interface DashboardStats {
+import type { AgencyStats } from './AgencyDashboard';
+
+interface DashboardStats extends Partial<AgencyStats> {
   totalProjects: number;
   activeProjects: number;
   completedProjects: number;
@@ -20,34 +22,70 @@ interface DashboardStats {
   productionEfficiency?: number;
 }
 
+function getTeamMembersFromDashboard(usersData: DashboardData['users'] | undefined) {
+  const raw = usersData as { users?: AgencyStats['teamMembers']; recent?: AgencyStats['teamMembers'] };
+  if (Array.isArray(raw?.users)) return raw.users;
+  if (Array.isArray(raw?.recent)) return raw.recent;
+  return [];
+}
+
 export default function StandardPlanDashboard({ planInfo }: { planInfo: PlanInfo }) {
   const router = useRouter();
   const { data: dashboardData, loading: dashboardLoading, error: dashboardError } = useDashboard();
 
-  const stats: DashboardStats = dashboardData ? {
-    totalProjects: dashboardData.projects.stats.total,
-    activeProjects: dashboardData.projects.stats.active,
-    completedProjects: dashboardData.projects.stats.completed,
-    totalTeamMembers: dashboardData.users.total,
-    averageProgress: dashboardData.projects.recent.length > 0
-      ? Math.round(
-          dashboardData.projects.recent.reduce(
-            (sum, p) => sum + p.completionPercent, 0
-          ) / dashboardData.projects.recent.length
-        )
-      : 0,
-    workOrders: dashboardData.workOrders.stats.total,
-    equipmentMaintenance: dashboardData.workOrders.stats.draft,
-    qualityIssues: dashboardData.workOrders.stats.in_progress,
-    productionEfficiency: dashboardData.workOrders.stats.total > 0
-      ? Math.round((dashboardData.workOrders.stats.completed / dashboardData.workOrders.stats.total) * 100)
-      : 0,
-  } : {
+  const stats: DashboardStats = dashboardData ? (() => {
+    const teamMembers = getTeamMembersFromDashboard(dashboardData.users);
+    const projectStats = dashboardData.projects.stats as DashboardData['projects']['stats'] & {
+      on_hold?: number;
+    };
+    const averageProgress =
+      dashboardData.projects.recent.length > 0
+        ? Math.round(
+            dashboardData.projects.recent.reduce(
+              (sum, p) => sum + p.completionPercent,
+              0,
+            ) / dashboardData.projects.recent.length,
+          )
+        : 0;
+
+    return {
+      totalProjects: projectStats.total,
+      activeProjects: projectStats.active,
+      completedProjects: projectStats.completed,
+      onHoldProjects: projectStats.on_hold ?? 0,
+      totalTeamMembers: dashboardData.users.total,
+      activeTeamMembers: teamMembers.filter((member) => member.isActive !== false).length,
+      averageProgress,
+      recentProjects: dashboardData.projects.recent.map((project) => ({
+        id: project.id,
+        name: project.name,
+        status: project.status,
+        completionPercent: project.completionPercent,
+        dueDate: project.dueDate,
+      })),
+      teamMembers,
+      workOrders: dashboardData.workOrders.stats.total,
+      equipmentMaintenance: dashboardData.workOrders.stats.draft,
+      qualityIssues: dashboardData.workOrders.stats.in_progress,
+      productionEfficiency:
+        dashboardData.workOrders.stats.total > 0
+          ? Math.round(
+              (dashboardData.workOrders.stats.completed /
+                dashboardData.workOrders.stats.total) *
+                100,
+            )
+          : 0,
+    };
+  })() : {
     totalProjects: 0,
     activeProjects: 0,
     completedProjects: 0,
+    onHoldProjects: 0,
     totalTeamMembers: 0,
+    activeTeamMembers: 0,
     averageProgress: 0,
+    recentProjects: [],
+    teamMembers: [],
   };
 
   const handleNavigate = (path: string) => {

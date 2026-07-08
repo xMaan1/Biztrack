@@ -12,7 +12,7 @@ import {
   MobileCommerceDashboard,
   type CommerceStats,
 } from '../components/dashboard/MobileCommerceDashboard';
-import { MobileAgencyDashboard } from '../components/dashboard/MobileAgencyDashboard';
+import { MobileAgencyDashboard, type AgencyStats } from '../components/dashboard/MobileAgencyDashboard';
 import { isRetailPlan } from '../utils/planTypes';
 import { NonCommerceScreen } from './NonCommerceScreen';
 import { MobileCrmDashboardScreen } from './MobileCrmDashboardScreen';
@@ -57,6 +57,60 @@ import {
   WorkshopRouter,
   isWorkshopWorkspacePath,
 } from '../features/workshop';
+
+function getTeamMembersFromDashboard(usersData: DashboardData['users'] | undefined) {
+  const raw = usersData as { users?: AgencyStats['teamMembers']; recent?: AgencyStats['teamMembers'] };
+  if (Array.isArray(raw?.users)) return raw.users;
+  if (Array.isArray(raw?.recent)) return raw.recent;
+  return [];
+}
+
+function buildAgencyStats(data: DashboardData | null): AgencyStats {
+  if (!data) {
+    return {
+      totalProjects: 0,
+      activeProjects: 0,
+      completedProjects: 0,
+      onHoldProjects: 0,
+      totalTeamMembers: 0,
+      activeTeamMembers: 0,
+      averageProgress: 0,
+      recentProjects: [],
+      teamMembers: [],
+    };
+  }
+
+  const teamMembers = getTeamMembersFromDashboard(data.users);
+  const projectStats = data.projects.stats as DashboardData['projects']['stats'] & {
+    on_hold?: number;
+  };
+  const averageProgress =
+    data.projects.recent.length > 0
+      ? Math.round(
+          data.projects.recent.reduce(
+            (sum, p) => sum + p.completionPercent,
+            0,
+          ) / data.projects.recent.length,
+        )
+      : 0;
+
+  return {
+    totalProjects: projectStats.total,
+    activeProjects: projectStats.active,
+    completedProjects: projectStats.completed,
+    onHoldProjects: projectStats.on_hold ?? 0,
+    totalTeamMembers: data.users.total,
+    activeTeamMembers: teamMembers.filter((member) => member.isActive !== false).length,
+    averageProgress,
+    recentProjects: data.projects.recent.map((project) => ({
+      id: project.id,
+      name: project.name,
+      status: project.status,
+      completionPercent: project.completionPercent,
+    })),
+    teamMembers,
+  };
+}
 
 function buildCommerceStats(data: DashboardData | null): CommerceStats {
   if (!data) {
@@ -144,8 +198,13 @@ export function CommerceDashboardScreen() {
     refetch,
   } = useDashboard();
 
-  const stats = useMemo(
+  const commerceStats = useMemo(
     () => buildCommerceStats(dashboardData),
+    [dashboardData],
+  );
+
+  const agencyStats = useMemo(
+    () => buildAgencyStats(dashboardData),
     [dashboardData],
   );
 
@@ -494,25 +553,35 @@ export function CommerceDashboardScreen() {
     ? `${[user?.firstName, user?.lastName].filter(Boolean).join(' ')} · ${user?.email ?? ''}`
     : user?.email ?? '';
 
-  const DashboardComponent =
-    planInfo.planType === 'agency'
-      ? MobileAgencyDashboard
-      : MobileCommerceDashboard;
-
   return (
     <View className="flex-1 bg-slate-50">
-      <DashboardComponent
-        stats={stats}
-        onLogout={logout}
-        userLabel={
-          currentTenant
-            ? `${currentTenant.name}${userLabel ? ` · ${userLabel}` : ''}`
-            : userLabel
-        }
-        refreshing={planLoading || dashboardLoading}
-        onRefresh={() => void onRefresh()}
-        onNavigatePath={navigateMenuPath}
-      />
+      {planInfo.planType === 'agency' ? (
+        <MobileAgencyDashboard
+          stats={agencyStats}
+          onLogout={logout}
+          userLabel={
+            currentTenant
+              ? `${currentTenant.name}${userLabel ? ` · ${userLabel}` : ''}`
+              : userLabel
+          }
+          refreshing={planLoading || dashboardLoading}
+          onRefresh={() => void onRefresh()}
+          onNavigatePath={navigateMenuPath}
+        />
+      ) : (
+        <MobileCommerceDashboard
+          stats={commerceStats}
+          onLogout={logout}
+          userLabel={
+            currentTenant
+              ? `${currentTenant.name}${userLabel ? ` · ${userLabel}` : ''}`
+              : userLabel
+          }
+          refreshing={planLoading || dashboardLoading}
+          onRefresh={() => void onRefresh()}
+          onNavigatePath={navigateMenuPath}
+        />
+      )}
     </View>
   );
 }

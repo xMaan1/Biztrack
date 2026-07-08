@@ -1,10 +1,37 @@
 import { View, Text, Pressable, ScrollView, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MenuHeaderButton } from '../layout/MenuHeaderButton';
-import type { CommerceStats } from './MobileCommerceDashboard';
+
+export interface AgencyProjectSummary {
+  id: string;
+  name: string;
+  status: string;
+  completionPercent: number;
+  priority?: string;
+}
+
+export interface AgencyTeamMember {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  isActive?: boolean;
+}
+
+export interface AgencyStats {
+  totalProjects: number;
+  activeProjects: number;
+  completedProjects: number;
+  onHoldProjects: number;
+  totalTeamMembers: number;
+  activeTeamMembers: number;
+  averageProgress: number;
+  recentProjects: AgencyProjectSummary[];
+  teamMembers: AgencyTeamMember[];
+}
 
 interface MobileAgencyDashboardProps {
-  stats: CommerceStats;
+  stats: AgencyStats;
   onLogout: () => void;
   userLabel?: string;
   refreshing?: boolean;
@@ -12,21 +39,12 @@ interface MobileAgencyDashboardProps {
   onNavigatePath?: (path: string) => void | Promise<void>;
 }
 
-function formatUsd(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0,
-  }).format(amount);
+function isRunningProject(status: string): boolean {
+  return status === 'in_progress' || status === 'planning';
 }
 
-function formatUsdDecimal(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
+function formatStatus(status: string): string {
+  return status.replace(/_/g, ' ');
 }
 
 export function MobileAgencyDashboard({
@@ -37,6 +55,20 @@ export function MobileAgencyDashboard({
   onRefresh,
   onNavigatePath,
 }: MobileAgencyDashboardProps) {
+  const completionRate =
+    stats.totalProjects > 0
+      ? Math.round((stats.completedProjects / stats.totalProjects) * 100)
+      : 0;
+
+  const runningProjects = stats.recentProjects.filter((p) =>
+    isRunningProject(p.status),
+  );
+
+  const displayedProjects =
+    runningProjects.length > 0 ? runningProjects : stats.recentProjects.slice(0, 5);
+
+  const activeMembers = stats.teamMembers.filter((m) => m.isActive !== false);
+
   return (
     <ScrollView
       className="flex-1 bg-slate-50"
@@ -49,14 +81,14 @@ export function MobileAgencyDashboard({
     >
       <View className="border-b border-slate-200 bg-white px-4 pb-4 pt-2">
         <View className="flex-row items-start justify-between">
-          <View className="flex-row flex-1 items-start gap-2 pr-2">
+          <View className="min-w-0 flex-1 flex-row items-start gap-2 pr-2">
             <MenuHeaderButton />
             <View className="min-w-0 flex-1">
               <Text className="text-2xl font-bold text-indigo-700">
                 Agency Dashboard
               </Text>
               <Text className="mt-1 text-sm text-slate-600">
-                Agency &amp; client operations overview
+                Projects, team, and delivery overview
               </Text>
               {userLabel ? (
                 <Text className="mt-1 text-xs text-slate-500">{userLabel}</Text>
@@ -83,11 +115,11 @@ export function MobileAgencyDashboard({
           </Pressable>
           <Pressable
             className="flex-row items-center rounded-lg border border-indigo-600 px-3 py-2 active:bg-indigo-50"
-            onPress={() => void onNavigatePath?.('/sales/invoices')}
+            onPress={() => void onNavigatePath?.('/users')}
           >
-            <Ionicons name="document-text-outline" size={18} color="#4f46e5" />
+            <Ionicons name="person-add-outline" size={18} color="#4f46e5" />
             <Text className="ml-1 text-sm font-semibold text-indigo-700">
-              Create invoice
+              Add member
             </Text>
           </Pressable>
         </View>
@@ -96,94 +128,169 @@ export function MobileAgencyDashboard({
       <View className="mt-4 flex-row flex-wrap gap-3 px-4">
         <View className="min-w-[45%] flex-1 rounded-xl border-l-4 border-l-indigo-500 bg-white p-4 shadow-sm">
           <View className="flex-row items-center justify-between">
-            <Text className="text-xs font-medium text-slate-600">Total sales</Text>
-            <Ionicons name="trending-up" size={16} color="#4f46e5" />
+            <Text className="text-xs font-medium text-slate-600">Projects</Text>
+            <Ionicons name="folder-open-outline" size={16} color="#4f46e5" />
           </View>
           <Text className="mt-2 text-xl font-bold text-indigo-700">
-            {formatUsd(stats.totalSales ?? 0)}
+            {stats.totalProjects}
           </Text>
-          <Text className="text-xs text-slate-500">From overview</Text>
+          <Text className="text-xs text-slate-500">Total engagements</Text>
         </View>
 
         <View className="min-w-[45%] flex-1 rounded-xl border-l-4 border-l-violet-500 bg-white p-4 shadow-sm">
           <View className="flex-row items-center justify-between">
-            <Text className="text-xs font-medium text-slate-600">Orders</Text>
-            <Ionicons name="bag-handle-outline" size={16} color="#7c3aed" />
+            <Text className="text-xs font-medium text-slate-600">Running</Text>
+            <Ionicons name="pulse-outline" size={16} color="#7c3aed" />
           </View>
           <Text className="mt-2 text-xl font-bold text-violet-600">
-            {stats.totalOrders ?? 0}
+            {stats.activeProjects}
           </Text>
-          <Text className="text-xs text-slate-500">Work orders total</Text>
+          <Text className="text-xs text-slate-500">Active projects</Text>
+        </View>
+
+        <View className="min-w-[45%] flex-1 rounded-xl border-l-4 border-l-emerald-500 bg-white p-4 shadow-sm">
+          <View className="flex-row items-center justify-between">
+            <Text className="text-xs font-medium text-slate-600">Completed</Text>
+            <Ionicons name="checkmark-circle-outline" size={16} color="#059669" />
+          </View>
+          <Text className="mt-2 text-xl font-bold text-emerald-600">
+            {stats.completedProjects}
+          </Text>
+          <Text className="text-xs text-slate-500">{completionRate}% done</Text>
         </View>
 
         <View className="min-w-[45%] flex-1 rounded-xl border-l-4 border-l-purple-500 bg-white p-4 shadow-sm">
           <View className="flex-row items-center justify-between">
-            <Text className="text-xs font-medium text-slate-600">Avg order</Text>
-            <Ionicons name="card-outline" size={16} color="#9333ea" />
+            <Text className="text-xs font-medium text-slate-600">Team</Text>
+            <Ionicons name="people-outline" size={16} color="#9333ea" />
           </View>
           <Text className="mt-2 text-xl font-bold text-purple-600">
-            {formatUsdDecimal(stats.averageOrderValue ?? 0)}
+            {stats.activeTeamMembers || stats.totalTeamMembers}
           </Text>
-          <Text className="text-xs text-slate-500">Derived</Text>
-        </View>
-
-        <View className="min-w-[45%] flex-1 rounded-xl border-l-4 border-l-fuchsia-500 bg-white p-4 shadow-sm">
-          <View className="flex-row items-center justify-between">
-            <Text className="text-xs font-medium text-slate-600">Team</Text>
-            <Ionicons name="people-outline" size={16} color="#c026d3" />
-          </View>
-          <Text className="mt-2 text-xl font-bold text-fuchsia-600">
-            {stats.totalTeamMembers ?? 0}
-          </Text>
-          <Text className="text-xs text-slate-500">Members</Text>
+          <Text className="text-xs text-slate-500">Active members</Text>
         </View>
       </View>
 
       <View className="mt-4 gap-4 px-4">
         <View className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <View className="flex-row items-center gap-2">
-            <Ionicons name="stats-chart" size={20} color="#4f46e5" />
-            <Text className="text-base font-semibold text-slate-900">
-              Sales overview
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center gap-2">
+              <Ionicons name="briefcase-outline" size={20} color="#4f46e5" />
+              <Text className="text-base font-semibold text-slate-900">
+                Running projects
+              </Text>
+            </View>
+            <Pressable onPress={() => void onNavigatePath?.('/projects')}>
+              <Text className="text-sm font-semibold text-indigo-600">View all</Text>
+            </Pressable>
+          </View>
+
+          {displayedProjects.length === 0 ? (
+            <Text className="mt-4 text-center text-sm text-slate-500">
+              No projects yet. Create one to get started.
             </Text>
+          ) : (
+            displayedProjects.map((project) => (
+              <View
+                key={project.id}
+                className="mt-3 rounded-lg border border-slate-100 bg-slate-50 p-3"
+              >
+                <Text className="font-medium text-slate-900">{project.name}</Text>
+                <View className="mt-2 flex-row items-center justify-between">
+                  <Text className="text-xs capitalize text-slate-500">
+                    {formatStatus(project.status)}
+                  </Text>
+                  <Text className="text-sm font-semibold text-indigo-600">
+                    {project.completionPercent ?? 0}%
+                  </Text>
+                </View>
+                <View className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200">
+                  <View
+                    className="h-2 rounded-full bg-indigo-500"
+                    style={{
+                      width: `${Math.min(100, Math.max(0, project.completionPercent ?? 0))}%`,
+                    }}
+                  />
+                </View>
+              </View>
+            ))
+          )}
+
+          <View className="mt-4 flex-row gap-2">
+            <View className="flex-1 rounded-lg bg-indigo-50 p-3">
+              <Text className="text-center text-sm font-bold text-indigo-700">
+                {stats.averageProgress}%
+              </Text>
+              <Text className="text-center text-xs text-slate-600">Avg progress</Text>
+            </View>
+            <View className="flex-1 rounded-lg bg-amber-50 p-3">
+              <Text className="text-center text-sm font-bold text-amber-700">
+                {stats.onHoldProjects}
+              </Text>
+              <Text className="text-center text-xs text-slate-600">On hold</Text>
+            </View>
           </View>
-          <View className="mt-3 flex-row justify-between">
-            <Text className="text-sm text-slate-600">Progress (avg)</Text>
-            <Text className="text-sm font-medium text-indigo-600">
-              {stats.averageProgress ?? 0}%
+        </View>
+
+        <View className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center gap-2">
+              <Ionicons name="people-outline" size={20} color="#7c3aed" />
+              <Text className="text-base font-semibold text-slate-900">Team</Text>
+            </View>
+            <Pressable onPress={() => void onNavigatePath?.('/users')}>
+              <Text className="text-sm font-semibold text-violet-600">Manage</Text>
+            </Pressable>
+          </View>
+
+          {activeMembers.length === 0 ? (
+            <Text className="mt-4 text-center text-sm text-slate-500">
+              No team members yet.
             </Text>
-          </View>
-          <View className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
-            <View
-              className="h-2 rounded-full bg-indigo-500"
-              style={{
-                width: `${Math.min(100, Math.max(0, stats.averageProgress ?? 0))}%`,
-              }}
-            />
-          </View>
+          ) : (
+            activeMembers.slice(0, 6).map((member) => (
+              <View
+                key={member.id}
+                className="mt-3 flex-row items-center justify-between border-b border-slate-100 pb-3"
+              >
+                <View className="min-w-0 flex-1 pr-2">
+                  <Text className="font-medium text-slate-900">{member.name}</Text>
+                  <Text className="text-xs text-slate-500">{member.role}</Text>
+                </View>
+                <Text className="text-xs font-medium text-emerald-600">Active</Text>
+              </View>
+            ))
+          )}
+
           <Pressable
-            className="mt-4 items-center rounded-lg border border-indigo-600 py-2.5 active:bg-indigo-50"
-            onPress={() => void onNavigatePath?.('/sales/analytics')}
+            className="mt-4 items-center rounded-lg border border-violet-600 py-2.5 active:bg-violet-50"
+            onPress={() => void onNavigatePath?.('/hrm/employees')}
           >
-            <Text className="font-semibold text-indigo-700">
-              View sales analytics
-            </Text>
+            <Text className="font-semibold text-violet-700">View employees</Text>
           </Pressable>
         </View>
 
         <View className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <View className="flex-row items-center gap-2">
-            <Ionicons name="storefront-outline" size={20} color="#7c3aed" />
-            <Text className="text-base font-semibold text-slate-900">
-              Inventory
-            </Text>
+          <Text className="text-base font-semibold text-slate-900">Quick actions</Text>
+          <View className="mt-3 flex-row flex-wrap gap-2">
+            {[
+              { path: '/projects', label: 'Projects', icon: 'folder-open-outline' as const },
+              { path: '/tasks', label: 'Tasks', icon: 'checkbox-outline' as const },
+              { path: '/team', label: 'Team', icon: 'people-outline' as const },
+              { path: '/hrm/employees', label: 'Employees', icon: 'id-card-outline' as const },
+            ].map((action) => (
+              <Pressable
+                key={action.path}
+                className="min-w-[45%] flex-1 items-center rounded-lg border border-slate-200 bg-slate-50 py-4 active:bg-slate-100"
+                onPress={() => void onNavigatePath?.(action.path)}
+              >
+                <Ionicons name={action.icon} size={22} color="#4f46e5" />
+                <Text className="mt-2 text-sm font-medium text-slate-700">
+                  {action.label}
+                </Text>
+              </Pressable>
+            ))}
           </View>
-          <Pressable
-            className="mt-4 items-center rounded-lg border border-violet-600 py-2.5 active:bg-violet-50"
-            onPress={() => void onNavigatePath?.('/inventory')}
-          >
-            <Text className="font-semibold text-violet-700">Manage inventory</Text>
-          </Pressable>
         </View>
       </View>
     </ScrollView>

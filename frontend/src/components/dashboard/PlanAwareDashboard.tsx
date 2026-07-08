@@ -3,7 +3,7 @@
 import React from 'react';
 import WorkshopDashboard from './WorkshopDashboard';
 import CommerceDashboard from './CommerceDashboard';
-import AgencyDashboard from './AgencyDashboard';
+import AgencyDashboard, { type AgencyStats } from './AgencyDashboard';
 
 interface PlanAwareDashboardProps {
   planType: string;
@@ -34,7 +34,7 @@ export default function PlanAwareDashboard({
 
     case 'agency':
       return (
-        <AgencyDashboard stats={enhancedStats} onNavigate={onNavigate} />
+        <AgencyDashboard stats={enhancedStats as AgencyStats} onNavigate={onNavigate} />
       );
 
     default:
