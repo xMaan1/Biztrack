@@ -290,6 +290,47 @@ Best regards,
             logger.error(f"Failed to send assignment email to {to_email}: {str(e)}")
             return False
 
+    def send_mot_booking_confirmation_email(
+        self,
+        to_email: str,
+        customer_name: str,
+        tenant_name: str,
+        subject: str,
+        html_body: str,
+        plain_body: str,
+        reply_to: Optional[str] = None,
+    ) -> bool:
+        try:
+            if not to_email:
+                logger.error("Recipient email address is required")
+                return False
+            if not self.smtp_username or not self.smtp_password:
+                logger.warning("SMTP credentials not configured. MOT booking email not sent.")
+                return False
+
+            sender_name = tenant_name or self.from_name
+            msg = MIMEMultipart("alternative")
+            msg["From"] = f"{sender_name} <{self.from_email}>"
+            msg["To"] = to_email
+            msg["Subject"] = subject
+            if reply_to:
+                msg["Reply-To"] = reply_to
+
+            msg.attach(MIMEText(plain_body, "plain"))
+            msg.attach(MIMEText(html_body, "html"))
+
+            server = smtplib.SMTP(self.smtp_server, self.smtp_port)
+            server.starttls()
+            server.login(self.smtp_username, self.smtp_password)
+            server.sendmail(self.from_email, to_email, msg.as_string())
+            server.quit()
+
+            logger.info("MOT booking confirmation email sent to %s for %s", to_email, customer_name)
+            return True
+        except Exception as e:
+            logger.error("Failed to send MOT booking confirmation to %s: %s", to_email, str(e))
+            return False
+
     def send_task_time_reminder_email(
         self,
         to_email: str,

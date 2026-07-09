@@ -1,3 +1,4 @@
+import logging
 from datetime import date, datetime as dt, timedelta
 from typing import List, Optional
 from decimal import Decimal
@@ -16,6 +17,9 @@ from .schemas import (
     MotBookingStats,
 )
 from .shared import mot_booking_to_schema
+from .notifications import notify_mot_booking_confirmation
+
+logger = logging.getLogger(__name__)
 
 
 def _get_mot_booking_row(
@@ -208,6 +212,10 @@ def create_mot_booking_record(body: MotBookingCreate, db: Session, tenant_id: st
     if isinstance(data.get("price"), Decimal):
         data["price"] = float(data["price"])
     row = create_entity(MotBooking, data, db)
+    try:
+        notify_mot_booking_confirmation(db, row, tenant_id)
+    except Exception as exc:
+        logger.warning("MOT booking confirmation email failed for %s: %s", row.id, exc)
     return mot_booking_to_schema(row)
 
 
