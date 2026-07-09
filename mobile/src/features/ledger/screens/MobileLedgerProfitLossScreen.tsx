@@ -1,11 +1,20 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, ScrollView, RefreshControl, ActivityIndicator, Pressable, Alert } from 'react-native';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { View, Text, ScrollView, RefreshControl } from 'react-native';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { OptionSheet, type OptionItem } from '../../../components/crm/OptionSheet';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { appError } from '../../../utils/appDialog';
 import { getProfitLossDashboard } from '../../../services/ledger/ledgerMobileApi';
 import { formatMoney } from '../ledgerFormat';
+import {
+  WorkshopChrome,
+  WorkshopLoading,
+  WorkshopPickerField,
+  WorkshopStatCard,
+  WorkshopCard,
+  WorkshopDetailRow,
+  WS,
+} from '../../workshop/components/WorkshopChrome';
 
 const PERIODS: OptionItem<string>[] = [
   { value: 'day', label: 'Day' },
@@ -36,16 +45,14 @@ export function MobileLedgerProfitLossScreen() {
       const d = await getProfitLossDashboard({ period });
       setData(d);
     } catch (e) {
-      Alert.alert('Profit & loss', extractErrorMessage(e, 'Failed to load'));
+      appError('Profit & loss', extractErrorMessage(e, 'Failed to load'));
     } finally {
       setLoading(false);
     }
   }, [period]);
 
   useEffect(() => {
-    setSidebarActivePath(
-      workspacePath === '/dashboard' ? '/dashboard' : '/ledger/profit-loss',
-    );
+    setSidebarActivePath(workspacePath === '/dashboard' ? '/dashboard' : '/ledger/profit-loss');
   }, [setSidebarActivePath, workspacePath]);
 
   useEffect(() => {
@@ -65,129 +72,127 @@ export function MobileLedgerProfitLossScreen() {
   const qc = section(data?.quotes_contracts);
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Profit & loss
-        </Text>
-        <View className="w-9" />
-      </View>
-
-      <Pressable
-        className="flex-row items-center justify-between border-b border-slate-200 bg-white px-3 py-2"
+    <WorkshopChrome title="Profit & loss" subtitle="Revenue, costs & margins" scroll={false}>
+      <WorkshopPickerField
+        label="Period"
+        value={PERIODS.find((p) => p.value === period)?.label ?? period}
         onPress={() => setPeriodOpen(true)}
-      >
-        <Text className="text-sm text-slate-600">Period</Text>
-        <Text className="font-medium text-slate-900">
-          {PERIODS.find((p) => p.value === period)?.label}
-        </Text>
-      </Pressable>
+      />
 
       {loading && !data ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563eb" />
-        </View>
+        <WorkshopLoading />
       ) : (
         <ScrollView
-          className="flex-1 px-3 py-3"
+          style={{ flex: 1 }}
+          showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={WS.primary} />
           }
+          contentContainerStyle={{ paddingBottom: 24 }}
         >
-          <Text className="mb-1 text-xs text-slate-500">
-            {data?.start_date && data?.end_date
-              ? `${String(data.start_date)} → ${String(data.end_date)}`
-              : ''}
-          </Text>
+          {data?.start_date && data?.end_date ? (
+            <Text style={{ fontSize: 12, color: WS.textMuted, marginBottom: 12 }}>
+              {String(data.start_date)} → {String(data.end_date)}
+            </Text>
+          ) : null}
 
-          <Text className="mb-2 text-base font-semibold text-slate-900">
-            Summary
-          </Text>
-          <View className="mb-3 flex-row flex-wrap gap-2">
-            <Metric
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
+            <WorkshopStatCard
               label="Total sales"
               value={formatMoney(num(summary?.total_sales))}
+              icon="trending-up"
+              accent="#059669"
+              accentBg="#ecfdf5"
             />
-            <Metric
+            <WorkshopStatCard
               label="Total purchases"
               value={formatMoney(num(summary?.total_purchases))}
+              icon="trending-down"
+              accent="#ef4444"
+              accentBg="#fef2f2"
             />
-            <Metric
+            <WorkshopStatCard
               label="Gross profit"
               value={formatMoney(num(summary?.gross_profit))}
+              icon="bar-chart"
+              accent="#4f46e5"
+              accentBg="#eef2ff"
             />
-            <Metric
+            <WorkshopStatCard
               label="Net profit"
               value={formatMoney(num(summary?.net_profit))}
+              icon="wallet"
+              accent="#2563eb"
+              accentBg="#eff6ff"
             />
-            <Metric
+            <WorkshopStatCard
               label="Payments received"
               value={formatMoney(num(summary?.total_payments_received))}
+              icon="cash"
+              accent="#0891b2"
+              accentBg="#ecfeff"
             />
-            <Metric
+            <WorkshopStatCard
               label="Inventory value"
               value={formatMoney(num(summary?.inventory_value))}
+              icon="cube"
+              accent="#7c3aed"
+              accentBg="#f5f3ff"
             />
-            <Metric
+            <WorkshopStatCard
               label="Investments"
               value={formatMoney(num(summary?.total_investments))}
+              icon="briefcase"
+              accent="#d97706"
+              accentBg="#fffbeb"
             />
-            <Metric
+            <WorkshopStatCard
               label="Profit after investment"
               value={formatMoney(num(summary?.profit_after_investment))}
+              icon="analytics"
+              accent="#4f46e5"
+              accentBg="#eef2ff"
             />
           </View>
 
-          <Text className="mb-2 text-base font-semibold text-slate-900">
-            Sales
-          </Text>
-          <View className="mb-3 rounded-xl border border-slate-200 bg-white p-3">
-            <Row k="Invoices" v={String(num(sales?.total_invoices))} />
-            <Row k="Paid" v={String(num(sales?.paid_invoices))} />
-            <Row k="Pending" v={String(num(sales?.pending_invoices))} />
-            <Row k="Overdue" v={String(num(sales?.overdue_invoices))} />
-            <Row
-              k="Total sales"
-              v={formatMoney(num(sales?.total_sales))}
-            />
-          </View>
+          <Text style={{ fontSize: 16, fontWeight: '700', color: WS.text, marginBottom: 10 }}>Sales</Text>
+          <WorkshopCard>
+            <WorkshopDetailRow label="Invoices" value={String(num(sales?.total_invoices))} />
+            <WorkshopDetailRow label="Paid" value={String(num(sales?.paid_invoices))} />
+            <WorkshopDetailRow label="Pending" value={String(num(sales?.pending_invoices))} />
+            <WorkshopDetailRow label="Overdue" value={String(num(sales?.overdue_invoices))} />
+            <WorkshopDetailRow label="Total sales" value={formatMoney(num(sales?.total_sales))} />
+          </WorkshopCard>
 
-          <Text className="mb-2 text-base font-semibold text-slate-900">
+          <Text style={{ fontSize: 16, fontWeight: '700', color: WS.text, marginBottom: 10, marginTop: 8 }}>
             Purchases
           </Text>
-          <View className="mb-3 rounded-xl border border-slate-200 bg-white p-3">
-            <Row k="PO count" v={String(num(purchases?.total_purchase_orders))} />
-            <Row k="Completed" v={String(num(purchases?.completed_purchases))} />
-            <Row k="Pending" v={String(num(purchases?.pending_purchases))} />
-            <Row
-              k="Total"
-              v={formatMoney(num(purchases?.total_purchases))}
-            />
-          </View>
+          <WorkshopCard>
+            <WorkshopDetailRow label="PO count" value={String(num(purchases?.total_purchase_orders))} />
+            <WorkshopDetailRow label="Completed" value={String(num(purchases?.completed_purchases))} />
+            <WorkshopDetailRow label="Pending" value={String(num(purchases?.pending_purchases))} />
+            <WorkshopDetailRow label="Total" value={formatMoney(num(purchases?.total_purchases))} />
+          </WorkshopCard>
 
-          <Text className="mb-2 text-base font-semibold text-slate-900">
+          <Text style={{ fontSize: 16, fontWeight: '700', color: WS.text, marginBottom: 10, marginTop: 8 }}>
             Inventory
           </Text>
-          <View className="mb-3 rounded-xl border border-slate-200 bg-white p-3">
-            <Row k="Products" v={String(num(inventory?.total_products))} />
-            <Row
-              k="Value"
-              v={formatMoney(num(inventory?.total_inventory_value))}
-            />
-            <Row k="Inbound mvmt" v={String(num(inventory?.inbound_movements))} />
-            <Row k="Outbound mvmt" v={String(num(inventory?.outbound_movements))} />
-          </View>
+          <WorkshopCard>
+            <WorkshopDetailRow label="Products" value={String(num(inventory?.total_products))} />
+            <WorkshopDetailRow label="Value" value={formatMoney(num(inventory?.total_inventory_value))} />
+            <WorkshopDetailRow label="Inbound mvmt" value={String(num(inventory?.inbound_movements))} />
+            <WorkshopDetailRow label="Outbound mvmt" value={String(num(inventory?.outbound_movements))} />
+          </WorkshopCard>
 
-          <Text className="mb-2 text-base font-semibold text-slate-900">
+          <Text style={{ fontSize: 16, fontWeight: '700', color: WS.text, marginBottom: 10, marginTop: 8 }}>
             Quotes & contracts
           </Text>
-          <View className="mb-6 rounded-xl border border-slate-200 bg-white p-3">
-            <Row k="Quotes" v={String(num(qc?.total_quotes))} />
-            <Row k="Quotes value" v={formatMoney(num(qc?.quotes_value))} />
-            <Row k="Contracts" v={String(num(qc?.total_contracts))} />
-            <Row k="Contracts value" v={formatMoney(num(qc?.contracts_value))} />
-          </View>
+          <WorkshopCard>
+            <WorkshopDetailRow label="Quotes" value={String(num(qc?.total_quotes))} />
+            <WorkshopDetailRow label="Quotes value" value={formatMoney(num(qc?.quotes_value))} />
+            <WorkshopDetailRow label="Contracts" value={String(num(qc?.total_contracts))} />
+            <WorkshopDetailRow label="Contracts value" value={formatMoney(num(qc?.contracts_value))} />
+          </WorkshopCard>
         </ScrollView>
       )}
 
@@ -201,24 +206,6 @@ export function MobileLedgerProfitLossScreen() {
         }}
         onClose={() => setPeriodOpen(false)}
       />
-    </View>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <View className="min-w-[47%] flex-1 rounded-xl border border-slate-200 bg-white p-3">
-      <Text className="text-xs text-slate-500">{label}</Text>
-      <Text className="text-base font-bold text-slate-900">{value}</Text>
-    </View>
-  );
-}
-
-function Row({ k, v }: { k: string; v: string }) {
-  return (
-    <View className="mb-1 flex-row justify-between border-b border-slate-100 py-1">
-      <Text className="text-sm text-slate-600">{k}</Text>
-      <Text className="text-sm font-medium text-slate-900">{v}</Text>
-    </View>
+    </WorkshopChrome>
   );
 }

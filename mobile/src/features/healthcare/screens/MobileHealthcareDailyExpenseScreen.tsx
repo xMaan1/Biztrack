@@ -26,6 +26,7 @@ import {
   HealthcareFieldLabel,
   HealthcarePrimaryButton,
 } from '../components/HealthcareChrome';
+import { WorkshopDatePickerField } from '../../workshop/components/WorkshopChrome';
 import { PickerModal } from '../components/PickerModal';
 import { AppModal } from '../../../components/layout/AppModal';
 
@@ -298,18 +299,12 @@ export function MobileHealthcareDailyExpenseScreen() {
       {tab === 'expenses' ? (
         <>
           <View className="mb-2 flex-row gap-2">
-            <TextInput
-              className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs"
-              placeholder="From YYYY-MM-DD"
-              value={dateFrom}
-              onChangeText={setDateFrom}
-            />
-            <TextInput
-              className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs"
-              placeholder="To YYYY-MM-DD"
-              value={dateTo}
-              onChangeText={setDateTo}
-            />
+            <View style={{ flex: 1 }}>
+              <WorkshopDatePickerField label="From" value={dateFrom} onChange={setDateFrom} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <WorkshopDatePickerField label="To" value={dateTo} onChange={setDateTo} />
+            </View>
           </View>
           <Pressable
             onPress={() => setFilterCatPick(true)}
@@ -480,12 +475,7 @@ export function MobileHealthcareDailyExpenseScreen() {
                     'Select'}
                 </Text>
               </Pressable>
-              <HealthcareFieldLabel>Date *</HealthcareFieldLabel>
-              <TextInput
-                className="mb-3 rounded-lg border border-slate-200 px-3 py-2"
-                value={expDate}
-                onChangeText={setExpDate}
-              />
+              <WorkshopDatePickerField label="Date *" value={expDate} onChange={setExpDate} />
               <HealthcareFieldLabel>Amount *</HealthcareFieldLabel>
               <TextInput
                 className="mb-3 rounded-lg border border-slate-200 px-3 py-2"

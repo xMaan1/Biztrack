@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, FlatList, Pressable, RefreshControl } from 'react-native';
+import { appAlert, appConfirm, appError } from '../../../utils/appDialog';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import {
   InspectionType,
@@ -20,15 +20,24 @@ import {
   getTenantUsers,
 } from '../../../services/workshop/workshopMobileApi';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { PickerModal } from '../../healthcare/components/PickerModal';
 import {
   WorkshopChrome,
-  WorkshopCard,
+  WorkshopChipSelect,
+  WorkshopFilterBar,
+  countActiveFilters,
+  WorkshopListCard,
+  WorkshopEmptyState,
+  WorkshopHeaderButton,
+  WorkshopLoading,
+  WorkshopFormSheet,
   WorkshopFieldLabel,
+  WorkshopTextInput,
+  WorkshopDatePickerField,
+  WorkshopPickerField,
   WorkshopPrimaryButton,
+  WS,
 } from '../components/WorkshopChrome';
-import { PickerModal } from '../../healthcare/components/PickerModal';
-import { AppModal } from '../../../components/layout/AppModal';
-import { ProductChipSelect } from '../../inventory/screens/products/ProductChipSelect';
 
 const INSP_TYPES = Object.values(InspectionType);
 const Q_PRIOS = Object.values(QualityPriority);
@@ -94,7 +103,7 @@ export function MobileWorkshopQualityScreen() {
         else setLoading(true);
         await Promise.all([loadRefs(), load()]);
       } catch (e) {
-        Alert.alert('Quality', extractErrorMessage(e, 'Failed to load'));
+        appError('Quality', extractErrorMessage(e, 'Failed to load'));
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -159,7 +168,7 @@ export function MobileWorkshopQualityScreen() {
 
   const submit = async () => {
     if (!form.title.trim()) {
-      Alert.alert('Quality', 'Title is required');
+      appAlert('Quality', 'Title is required');
       return;
     }
     try {
@@ -206,28 +215,27 @@ export function MobileWorkshopQualityScreen() {
       setModalOpen(false);
       await run(false);
     } catch (e) {
-      Alert.alert('Quality', extractErrorMessage(e, 'Save failed'));
+      appError('Quality', extractErrorMessage(e, 'Save failed'));
     } finally {
       setSaving(false);
     }
   };
 
   const remove = (q: QualityCheckResponse) => {
-    Alert.alert('Delete', q.title, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteQualityCheck(q.id);
-            await run(false);
-          } catch (e) {
-            Alert.alert('Quality', extractErrorMessage(e, 'Delete failed'));
-          }
-        },
+    appConfirm({
+      title: 'Delete',
+      message: q.title,
+      confirmLabel: 'Delete',
+      destructive: true,
+      onConfirm: async () => {
+        try {
+          await deleteQualityCheck(q.id);
+          await run(false);
+        } catch (e) {
+          appError('Quality', extractErrorMessage(e, 'Delete failed'));
+        }
       },
-    ]);
+    });
   };
 
   const woItems = workOrders.map((w) => ({
@@ -243,212 +251,96 @@ export function MobileWorkshopQualityScreen() {
     <WorkshopChrome
       title="Quality control"
       subtitle="Inspections & checks"
-      right={
-        <Pressable onPress={openCreate} className="p-2">
-          <Ionicons name="add-circle" size={26} color="#4f46e5" />
-        </Pressable>
-      }
+      right={<WorkshopHeaderButton onPress={openCreate} />}
       scroll={false}
     >
-      <TextInput
-        className="mb-2 rounded-xl border border-slate-200 bg-white px-3 py-2"
-        placeholder="Search…"
-        placeholderTextColor="#94a3b8"
-        value={search}
-        onChangeText={setSearch}
-      />
-      <View className="mb-2 rounded-xl border border-slate-200 bg-white px-3 py-3">
-        <ProductChipSelect
-          label="Status"
-          options={['all', ...Q_STATUSES]}
-          value={statusF}
-          onChange={setStatusF}
-        />
-      </View>
+      <WorkshopFilterBar
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search inspections…"
+        resultCount={filtered.length}
+        activeFilterCount={countActiveFilters([statusF])}
+        onResetFilters={() => setStatusF('all')}
+      >
+        <WorkshopChipSelect label="Status" options={['all', ...Q_STATUSES]} value={statusF} onChange={setStatusF} />
+      </WorkshopFilterBar>
 
       {loading && !refreshing ? (
-        <View className="py-12 items-center">
-          <ActivityIndicator color="#4f46e5" />
-        </View>
+        <WorkshopLoading />
       ) : (
         <FlatList
-          className="flex-1"
+          style={{ flex: 1 }}
           data={filtered}
           keyExtractor={(x) => x.id}
+          contentContainerStyle={{ paddingBottom: 20 }}
           refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={() => void run(true)}
-              tintColor="#4f46e5"
+            <RefreshControl refreshing={refreshing} onRefresh={() => void run(true)} tintColor={WS.primary} />
+          }
+          ListEmptyComponent={
+            <WorkshopEmptyState
+              icon="shield-checkmark-outline"
+              title="No quality checks"
+              subtitle="Schedule inspections and track compliance."
+              actionLabel="Create check"
+              onAction={openCreate}
             />
           }
           renderItem={({ item: q }) => (
-            <WorkshopCard>
-              <Text className="font-semibold text-slate-900">{q.title}</Text>
-              <Text className="text-xs text-slate-500 capitalize">
-                {String(q.status).replace(/_/g, ' ')} ·{' '}
-                {String(q.inspection_type).replace(/_/g, ' ')}
-              </Text>
-              <Text className="mt-1 text-xs text-slate-400">
-                {q.completion_percentage ?? 0}% complete
-              </Text>
-              <View className="mt-2 flex-row gap-2">
-                <Pressable
-                  onPress={() => openEdit(q)}
-                  className="rounded-lg bg-indigo-100 px-2 py-1"
-                >
-                  <Text className="text-xs font-medium text-indigo-900">Edit</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => remove(q)}
-                  className="rounded-lg bg-red-50 px-2 py-1"
-                >
-                  <Text className="text-xs text-red-700">Delete</Text>
-                </Pressable>
-              </View>
-            </WorkshopCard>
+            <WorkshopListCard
+              kind="quality"
+              icon="shield-checkmark"
+              iconColor="#059669"
+              iconBg="#ecfdf5"
+              kicker={q.scheduled_date ? q.scheduled_date.split('T')[0] : 'Unscheduled'}
+              title={q.title}
+              subtitle={String(q.inspection_type).replace(/_/g, ' ')}
+              meta={String(q.quality_standard).replace(/_/g, ' ')}
+              badges={[
+                { label: String(q.status), tone: 'status' },
+                { label: String(q.priority), tone: 'priority' },
+              ]}
+              progress={q.completion_percentage ?? 0}
+              onPress={() => openEdit(q)}
+              actions={[
+                { icon: 'create-outline', onPress: () => openEdit(q) },
+                { icon: 'trash-outline', onPress: () => remove(q), danger: true },
+              ]}
+            />
           )}
         />
       )}
 
-      <PickerModal
-        visible={woPick}
-        title="Work order"
-        items={woItems}
-        onSelect={(x) => setForm((f) => ({ ...f, work_order_id: x.id }))}
-        onClose={() => setWoPick(false)}
-      />
-      <PickerModal
-        visible={userPick}
-        title="Assign to"
-        items={[{ id: '', label: 'None' }, ...userItems]}
-        onSelect={(x) =>
-          setForm((f) => ({ ...f, assigned_to_id: x.id }))
-        }
-        onClose={() => setUserPick(false)}
-      />
+      <PickerModal visible={woPick} title="Work order" items={woItems} onSelect={(x) => setForm((f) => ({ ...f, work_order_id: x.id }))} onClose={() => setWoPick(false)} />
+      <PickerModal visible={userPick} title="Assign to" items={[{ id: '', label: 'None' }, ...userItems]} onSelect={(x) => setForm((f) => ({ ...f, assigned_to_id: x.id }))} onClose={() => setUserPick(false)} />
 
-      <AppModal
+      <WorkshopFormSheet
         visible={modalOpen}
-        animationType="slide"
-        transparent
+        title={editing ? 'Edit check' : 'New check'}
         onClose={() => setModalOpen(false)}
-      >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[94%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
-            <Text className="mb-3 text-lg font-semibold">
-              {editing ? 'Edit check' : 'New check'}
-            </Text>
-            <ScrollView keyboardShouldPersistTaps="handled">
-              <WorkshopFieldLabel>Title *</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                value={form.title}
-                onChangeText={(v) => setForm((f) => ({ ...f, title: v }))}
-              />
-              <WorkshopFieldLabel>Description</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                value={form.description}
-                onChangeText={(v) =>
-                  setForm((f) => ({ ...f, description: v }))
-                }
-                multiline
-              />
-              <ProductChipSelect
-                label="Inspection type"
-                options={[...INSP_TYPES]}
-                value={form.inspection_type}
-                onChange={(s) =>
-                  setForm((f) => ({
-                    ...f,
-                    inspection_type: s as InspectionType,
-                  }))
-                }
-              />
-              <ProductChipSelect
-                label="Priority"
-                options={[...Q_PRIOS]}
-                value={form.priority}
-                onChange={(s) =>
-                  setForm((f) => ({
-                    ...f,
-                    priority: s as QualityPriority,
-                  }))
-                }
-              />
-              <ProductChipSelect
-                label="Standard"
-                options={[...Q_STDS]}
-                value={form.quality_standard}
-                onChange={(s) =>
-                  setForm((f) => ({
-                    ...f,
-                    quality_standard: s as QualityStandard,
-                  }))
-                }
-              />
-              <WorkshopFieldLabel>Criteria (comma-separated)</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                value={form.criteriaText}
-                onChangeText={(v) =>
-                  setForm((f) => ({ ...f, criteriaText: v }))
-                }
-              />
-              <WorkshopFieldLabel>Duration (minutes)</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                keyboardType="number-pad"
-                value={form.estimated_duration_minutes}
-                onChangeText={(v) =>
-                  setForm((f) => ({ ...f, estimated_duration_minutes: v }))
-                }
-              />
-              <WorkshopFieldLabel>Scheduled date</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                placeholder="YYYY-MM-DD"
-                value={form.scheduled_date}
-                onChangeText={(v) =>
-                  setForm((f) => ({ ...f, scheduled_date: v }))
-                }
-              />
-              <WorkshopFieldLabel>Work order</WorkshopFieldLabel>
-              <Pressable
-                onPress={() => setWoPick(true)}
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-              >
-                <Text>
-                  {form.work_order_id
-                    ? woItems.find((x) => x.id === form.work_order_id)?.label
-                    : 'Optional'}
-                </Text>
-              </Pressable>
-              <WorkshopFieldLabel>Assign to</WorkshopFieldLabel>
-              <Pressable
-                onPress={() => setUserPick(true)}
-                className="mb-4 rounded-lg border border-slate-200 px-3 py-2"
-              >
-                <Text>
-                  {form.assigned_to_id
-                    ? userItems.find((x) => x.id === form.assigned_to_id)
-                        ?.label
-                    : 'Optional'}
-                </Text>
-              </Pressable>
-            </ScrollView>
-            <WorkshopPrimaryButton
-              label={saving ? 'Saving…' : 'Save'}
-              onPress={() => void submit()}
-              disabled={saving}
-            />
-            <Pressable className="mt-2 items-center py-2" onPress={() => setModalOpen(false)}>
-              <Text className="text-slate-600">Cancel</Text>
+        footer={
+          <>
+            <WorkshopPrimaryButton label={saving ? 'Saving…' : 'Save check'} onPress={() => void submit()} disabled={saving} />
+            <Pressable onPress={() => setModalOpen(false)} style={{ marginTop: 12, alignItems: 'center', paddingVertical: 10 }}>
+              <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Cancel</Text>
             </Pressable>
-          </View>
-        </View>
-      </AppModal>
+          </>
+        }
+      >
+        <WorkshopFieldLabel>Title *</WorkshopFieldLabel>
+        <WorkshopTextInput value={form.title} onChangeText={(v) => setForm((f) => ({ ...f, title: v }))} />
+        <WorkshopFieldLabel>Description</WorkshopFieldLabel>
+        <WorkshopTextInput value={form.description} onChangeText={(v) => setForm((f) => ({ ...f, description: v }))} multiline />
+        <WorkshopChipSelect label="Inspection type" options={[...INSP_TYPES]} value={form.inspection_type} onChange={(s) => setForm((f) => ({ ...f, inspection_type: s as InspectionType }))} />
+        <WorkshopChipSelect label="Priority" options={[...Q_PRIOS]} value={form.priority} onChange={(s) => setForm((f) => ({ ...f, priority: s as QualityPriority }))} />
+        <WorkshopChipSelect label="Standard" options={[...Q_STDS]} value={form.quality_standard} onChange={(s) => setForm((f) => ({ ...f, quality_standard: s as QualityStandard }))} />
+        <WorkshopFieldLabel>Criteria (comma-separated)</WorkshopFieldLabel>
+        <WorkshopTextInput value={form.criteriaText} onChangeText={(v) => setForm((f) => ({ ...f, criteriaText: v }))} />
+        <WorkshopFieldLabel>Duration (minutes)</WorkshopFieldLabel>
+        <WorkshopTextInput keyboardType="number-pad" value={form.estimated_duration_minutes} onChangeText={(v) => setForm((f) => ({ ...f, estimated_duration_minutes: v }))} />
+        <WorkshopDatePickerField label="Scheduled date" value={form.scheduled_date} onChange={(v) => setForm((f) => ({ ...f, scheduled_date: v }))} />
+        <WorkshopPickerField label="Work order" value={form.work_order_id ? woItems.find((x) => x.id === form.work_order_id)?.label ?? '' : ''} placeholder="Optional" onPress={() => setWoPick(true)} />
+        <WorkshopPickerField label="Assign to" value={form.assigned_to_id ? userItems.find((x) => x.id === form.assigned_to_id)?.label ?? '' : ''} placeholder="Optional" onPress={() => setUserPick(true)} />
+      </WorkshopFormSheet>
     </WorkshopChrome>
   );
 }

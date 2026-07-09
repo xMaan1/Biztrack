@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
+import { View, Text, FlatList, Pressable, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { OptionSheet } from '../../../components/crm/OptionSheet';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { appAlert, appConfirm, appError } from '../../../utils/appDialog';
 import {
   BankAccountType,
   getAccountTypeLabel,
@@ -19,7 +19,20 @@ import {
   updateBankAccount,
 } from '../../../services/banking/bankingMobileApi';
 import { formatMoney } from '../bankingFormat';
-import { AppModal } from '../../../components/layout/AppModal';
+import {
+  WorkshopChrome,
+  WorkshopSearchBar,
+  WorkshopListCard,
+  WorkshopEmptyState,
+  WorkshopHeaderButton,
+  WorkshopLoading,
+  WorkshopFormSheet,
+  WorkshopFieldLabel,
+  WorkshopTextInput,
+  WorkshopPickerField,
+  WorkshopPrimaryButton,
+  WS,
+} from '../../workshop/components/WorkshopChrome';
 
 const ACCOUNT_TYPES = Object.values(BankAccountType).map((v) => ({
   value: v,
@@ -65,16 +78,14 @@ export function MobileBankAccountsScreen() {
       const list = await getBankAccounts(true);
       setItems(list ?? []);
     } catch (e) {
-      Alert.alert('Accounts', extractErrorMessage(e, 'Failed to load'));
+      appError('Accounts', extractErrorMessage(e, 'Failed to load'));
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    setSidebarActivePath(
-      workspacePath === '/dashboard' ? '/dashboard' : '/banking/accounts',
-    );
+    setSidebarActivePath(workspacePath === '/dashboard' ? '/dashboard' : '/banking/accounts');
   }, [setSidebarActivePath, workspacePath]);
 
   useEffect(() => {
@@ -98,8 +109,8 @@ export function MobileBankAccountsScreen() {
     );
   }, [items, search]);
 
-  const openCreate = useCallback(() => {
-    setForm({
+  const emptyForm = useCallback(
+    (): BankAccountCreate => ({
       accountName: '',
       accountNumber: '',
       routingNumber: '',
@@ -115,9 +126,14 @@ export function MobileBankAccountsScreen() {
       supportsOnlineBanking: false,
       description: '',
       tags: [],
-    });
+    }),
+    [],
+  );
+
+  const openCreate = useCallback(() => {
+    setForm(emptyForm());
     setCreateOpen(true);
-  }, []);
+  }, [emptyForm]);
 
   const openEdit = useCallback((a: BankAccount) => {
     setSelected(a);
@@ -143,7 +159,7 @@ export function MobileBankAccountsScreen() {
 
   const submitCreate = useCallback(async () => {
     if (!form.accountName.trim() || !form.accountNumber.trim() || !form.bankName.trim()) {
-      Alert.alert('Accounts', 'Name, number, and bank are required.');
+      appAlert('Accounts', 'Name, number, and bank are required.');
       return;
     }
     try {
@@ -152,7 +168,7 @@ export function MobileBankAccountsScreen() {
       setCreateOpen(false);
       await load();
     } catch (e) {
-      Alert.alert('Accounts', extractErrorMessage(e, 'Create failed'));
+      appError('Accounts', extractErrorMessage(e, 'Create failed'));
     } finally {
       setBusy(false);
     }
@@ -180,7 +196,7 @@ export function MobileBankAccountsScreen() {
       setSelected(null);
       await load();
     } catch (e) {
-      Alert.alert('Accounts', extractErrorMessage(e, 'Update failed'));
+      appError('Accounts', extractErrorMessage(e, 'Update failed'));
     } finally {
       setBusy(false);
     }
@@ -188,232 +204,156 @@ export function MobileBankAccountsScreen() {
 
   const confirmDelete = useCallback(
     (a: BankAccount) => {
-      Alert.alert('Delete account', `Remove "${a.accountName}"?`, [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            void (async () => {
-              try {
-                await deleteBankAccount(a.id);
-                await load();
-              } catch (e) {
-                Alert.alert('Accounts', extractErrorMessage(e, 'Delete failed'));
-              }
-            })();
-          },
+      appConfirm({
+        title: 'Delete account',
+        message: `Remove "${a.accountName}"?`,
+        confirmLabel: 'Delete',
+        destructive: true,
+        onConfirm: async () => {
+          try {
+            await deleteBankAccount(a.id);
+            await load();
+          } catch (e) {
+            appError('Accounts', extractErrorMessage(e, 'Delete failed'));
+          }
         },
-      ]);
+      });
     },
     [load],
   );
 
   const formBody = (
     <>
-      <Text className="mb-1 text-xs font-medium text-slate-500">Account name</Text>
-      <TextInput
-        className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-        value={form.accountName}
-        onChangeText={(t) => setForm((f) => ({ ...f, accountName: t }))}
-      />
-      <Text className="mb-1 text-xs font-medium text-slate-500">Account number</Text>
-      <TextInput
-        className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-        value={form.accountNumber}
-        onChangeText={(t) => setForm((f) => ({ ...f, accountNumber: t }))}
-      />
-      <Text className="mb-1 text-xs font-medium text-slate-500">Bank name</Text>
-      <TextInput
-        className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-        value={form.bankName}
-        onChangeText={(t) => setForm((f) => ({ ...f, bankName: t }))}
-      />
-      <Text className="mb-1 text-xs font-medium text-slate-500">Routing</Text>
-      <TextInput
-        className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-        value={form.routingNumber ?? ''}
-        onChangeText={(t) => setForm((f) => ({ ...f, routingNumber: t }))}
-      />
-      <Text className="mb-1 text-xs font-medium text-slate-500">Account type</Text>
-      <Pressable
-        className="mb-2 flex-row items-center justify-between rounded-lg border border-slate-200 px-3 py-2"
+      <WorkshopFieldLabel>Account name</WorkshopFieldLabel>
+      <WorkshopTextInput value={form.accountName} onChangeText={(t) => setForm((f) => ({ ...f, accountName: t }))} />
+      <WorkshopFieldLabel>Account number</WorkshopFieldLabel>
+      <WorkshopTextInput value={form.accountNumber} onChangeText={(t) => setForm((f) => ({ ...f, accountNumber: t }))} />
+      <WorkshopFieldLabel>Bank name</WorkshopFieldLabel>
+      <WorkshopTextInput value={form.bankName} onChangeText={(t) => setForm((f) => ({ ...f, bankName: t }))} />
+      <WorkshopFieldLabel>Routing</WorkshopFieldLabel>
+      <WorkshopTextInput value={form.routingNumber ?? ''} onChangeText={(t) => setForm((f) => ({ ...f, routingNumber: t }))} />
+      <WorkshopPickerField
+        label="Account type"
+        value={getAccountTypeLabel(form.accountType)}
         onPress={() => setTypeOpen(true)}
-      >
-        <Text className="text-slate-900">{getAccountTypeLabel(form.accountType)}</Text>
-        <Ionicons name="chevron-down" size={18} color="#64748b" />
-      </Pressable>
-      <Text className="mb-1 text-xs font-medium text-slate-500">Description</Text>
-      <TextInput
-        className="mb-2 min-h-[64px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
+      />
+      <WorkshopFieldLabel>Description</WorkshopFieldLabel>
+      <WorkshopTextInput
         value={form.description ?? ''}
         onChangeText={(t) => setForm((f) => ({ ...f, description: t }))}
         multiline
+        style={{ minHeight: 72 }}
       />
-      <Pressable
-        className="mb-2 flex-row items-center"
-        onPress={() => setForm((f) => ({ ...f, isActive: !f.isActive }))}
-      >
-        <Ionicons
-          name={form.isActive ? 'checkbox' : 'square-outline'}
-          size={22}
-          color="#2563eb"
-        />
-        <Text className="ml-2 text-slate-800">Active</Text>
+      <Pressable style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }} onPress={() => setForm((f) => ({ ...f, isActive: !f.isActive }))}>
+        <Ionicons name={form.isActive ? 'checkbox' : 'square-outline'} size={22} color={WS.primary} />
+        <Text style={{ marginLeft: 8, color: WS.text, fontWeight: '600' }}>Active</Text>
+      </Pressable>
+      <Pressable style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }} onPress={() => setForm((f) => ({ ...f, isPrimary: !f.isPrimary }))}>
+        <Ionicons name={form.isPrimary ? 'checkbox' : 'square-outline'} size={22} color={WS.primary} />
+        <Text style={{ marginLeft: 8, color: WS.text, fontWeight: '600' }}>Primary</Text>
       </Pressable>
       <Pressable
-        className="mb-2 flex-row items-center"
-        onPress={() => setForm((f) => ({ ...f, isPrimary: !f.isPrimary }))}
+        style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}
+        onPress={() => setForm((f) => ({ ...f, supportsOnlineBanking: !f.supportsOnlineBanking }))}
       >
-        <Ionicons
-          name={form.isPrimary ? 'checkbox' : 'square-outline'}
-          size={22}
-          color="#2563eb"
-        />
-        <Text className="ml-2 text-slate-800">Primary</Text>
+        <Ionicons name={form.supportsOnlineBanking ? 'checkbox' : 'square-outline'} size={22} color={WS.primary} />
+        <Text style={{ marginLeft: 8, color: WS.text, fontWeight: '600' }}>Online banking</Text>
       </Pressable>
-      <Pressable
-        className="mb-2 flex-row items-center"
-        onPress={() =>
-          setForm((f) => ({ ...f, supportsOnlineBanking: !f.supportsOnlineBanking }))
-        }
-      >
-        <Ionicons
-          name={form.supportsOnlineBanking ? 'checkbox' : 'square-outline'}
-          size={22}
-          color="#2563eb"
-        />
-        <Text className="ml-2 text-slate-800">Online banking</Text>
+    </>
+  );
+
+  const sheetFooter = (saveLabel: string, onSave: () => void, onCancel: () => void) => (
+    <>
+      <WorkshopPrimaryButton label={busy ? 'Saving…' : saveLabel} onPress={onSave} disabled={busy} />
+      <Pressable onPress={onCancel} style={{ marginTop: 12, alignItems: 'center', paddingVertical: 10 }}>
+        <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Cancel</Text>
       </Pressable>
     </>
   );
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Bank accounts
-        </Text>
-        {canManageBanking() ? (
-          <Pressable className="px-2 py-1" onPress={openCreate}>
-            <Ionicons name="add-circle" size={28} color="#2563eb" />
-          </Pressable>
-        ) : (
-          <View className="w-9" />
-        )}
-      </View>
-
-      <View className="border-b border-slate-200 bg-white px-3 py-2">
-        <View className="flex-row items-center rounded-lg border border-slate-200 bg-slate-50 px-2">
-          <Ionicons name="search" size={18} color="#64748b" />
-          <TextInput
-            className="flex-1 py-2 pl-2 text-slate-900"
-            placeholder="Search"
-            value={search}
-            onChangeText={setSearch}
-          />
-        </View>
-      </View>
+    <WorkshopChrome
+      title="Bank accounts"
+      subtitle="Manage linked accounts"
+      right={canManageBanking() ? <WorkshopHeaderButton onPress={openCreate} /> : undefined}
+      scroll={false}
+    >
+      <WorkshopSearchBar value={search} onChangeText={setSearch} placeholder="Search name, bank, number…" />
 
       {loading && items.length === 0 ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563eb" />
-        </View>
+        <WorkshopLoading />
       ) : (
         <FlatList
+          style={{ flex: 1 }}
           data={filtered}
           keyExtractor={(x) => x.id}
+          contentContainerStyle={{ paddingBottom: 20 }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={WS.primary} />
+          }
+          ListEmptyComponent={
+            <WorkshopEmptyState
+              icon="card-outline"
+              title="No accounts"
+              subtitle="Add bank accounts to track balances and transactions."
+              actionLabel={canManageBanking() ? 'Add account' : undefined}
+              onAction={canManageBanking() ? openCreate : undefined}
+            />
           }
           renderItem={({ item }) => (
-            <View className="border-b border-slate-100 bg-white px-4 py-3">
-              <Text className="text-base font-semibold text-slate-900">
-                {item.accountName}
-              </Text>
-              <Text className="text-sm text-slate-600">{item.bankName}</Text>
-              <Text className="mt-1 text-xs text-slate-500">
-                {getAccountTypeLabel(item.accountType)} · {item.accountNumber}
-              </Text>
-              <Text className="mt-2 font-medium text-slate-800">
-                {formatMoney(item.currentBalance, item.currency)}
-              </Text>
-              {canManageBanking() ? (
-                <View className="mt-2 flex-row gap-3">
-                  <Pressable onPress={() => openEdit(item)}>
-                    <Text className="font-medium text-blue-600">Edit</Text>
-                  </Pressable>
-                  <Pressable onPress={() => confirmDelete(item)}>
-                    <Text className="font-medium text-red-600">Delete</Text>
-                  </Pressable>
-                </View>
-              ) : null}
-            </View>
+            <WorkshopListCard
+              icon="card"
+              iconColor="#4f46e5"
+              iconBg="#eef2ff"
+              title={item.accountName}
+              subtitle={item.bankName}
+              meta={`${getAccountTypeLabel(item.accountType)} · ${item.accountNumber}`}
+              badges={[
+                { label: formatMoney(item.currentBalance, item.currency) },
+                ...(item.isPrimary ? [{ label: 'Primary' }] : []),
+                ...(!item.isActive ? [{ label: 'Inactive' }] : []),
+              ]}
+              onPress={canManageBanking() ? () => openEdit(item) : undefined}
+              actions={
+                canManageBanking()
+                  ? [
+                      { icon: 'create-outline', onPress: () => openEdit(item) },
+                      { icon: 'trash-outline', onPress: () => confirmDelete(item), danger: true },
+                    ]
+                  : undefined
+              }
+            />
           )}
-          ListEmptyComponent={
-            <Text className="py-8 text-center text-slate-500">No accounts</Text>
-          }
         />
       )}
 
-      <AppModal
+      <WorkshopFormSheet
         visible={createOpen}
-        animationType="slide"
-        transparent
+        title="New account"
         onClose={() => setCreateOpen(false)}
+        footer={sheetFooter('Create account', () => void submitCreate(), () => setCreateOpen(false))}
       >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
-            <Text className="text-lg font-semibold text-slate-900">New account</Text>
-            <ScrollView className="mt-3" keyboardShouldPersistTaps="handled">
-              {formBody}
-            </ScrollView>
-            <Pressable
-              className="items-center rounded-lg bg-blue-600 py-3"
-              disabled={busy}
-              onPress={() => void submitCreate()}
-            >
-              <Text className="font-semibold text-white">Create</Text>
-            </Pressable>
-            <Pressable className="mt-2 py-2" onPress={() => setCreateOpen(false)}>
-              <Text className="text-center text-slate-600">Cancel</Text>
-            </Pressable>
-          </View>
-        </View>
-      </AppModal>
+        {formBody}
+      </WorkshopFormSheet>
 
-      <AppModal
+      <WorkshopFormSheet
         visible={editOpen}
-        animationType="slide"
-        transparent
-        onClose={() => setEditOpen(false)}
+        title="Edit account"
+        onClose={() => {
+          setEditOpen(false);
+          setSelected(null);
+        }}
+        footer={sheetFooter(
+          'Save changes',
+          () => void submitEdit(),
+          () => {
+            setEditOpen(false);
+            setSelected(null);
+          },
+        )}
       >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
-            <Text className="text-lg font-semibold text-slate-900">Edit account</Text>
-            <ScrollView className="mt-3" keyboardShouldPersistTaps="handled">
-              {formBody}
-            </ScrollView>
-            <Pressable
-              className="items-center rounded-lg bg-blue-600 py-3"
-              disabled={busy}
-              onPress={() => void submitEdit()}
-            >
-              <Text className="font-semibold text-white">Save</Text>
-            </Pressable>
-            <Pressable
-              className="mt-2 py-2"
-              onPress={() => {
-                setEditOpen(false);
-                setSelected(null);
-              }}
-            >
-              <Text className="text-center text-slate-600">Cancel</Text>
-            </Pressable>
-          </View>
-        </View>
-      </AppModal>
+        {formBody}
+      </WorkshopFormSheet>
 
       <OptionSheet
         visible={typeOpen}
@@ -425,6 +365,6 @@ export function MobileBankAccountsScreen() {
         }}
         onClose={() => setTypeOpen(false)}
       />
-    </View>
+    </WorkshopChrome>
   );
 }

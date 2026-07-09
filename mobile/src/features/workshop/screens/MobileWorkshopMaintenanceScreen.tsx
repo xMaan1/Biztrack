@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, FlatList, Pressable, ScrollView, RefreshControl } from 'react-native';
+import { appAlert, appConfirm, appError } from '../../../utils/appDialog';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import {
   MaintenanceType,
@@ -28,15 +28,25 @@ import {
   getTenantUsers,
 } from '../../../services/workshop/workshopMobileApi';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { PickerModal } from '../../healthcare/components/PickerModal';
 import {
   WorkshopChrome,
-  WorkshopCard,
+  WorkshopSearchBar,
+  WorkshopChipSelect,
+  WorkshopListCard,
+  WorkshopEmptyState,
+  WorkshopHeaderButton,
+  WorkshopLoading,
+  WorkshopSegmentTabs,
+  WorkshopStatCard,
+  WorkshopFormSheet,
   WorkshopFieldLabel,
+  WorkshopTextInput,
+  WorkshopDatePickerField,
+  WorkshopPickerField,
   WorkshopPrimaryButton,
+  WS,
 } from '../components/WorkshopChrome';
-import { PickerModal } from '../../healthcare/components/PickerModal';
-import { AppModal } from '../../../components/layout/AppModal';
-import { ProductChipSelect } from '../../inventory/screens/products/ProductChipSelect';
 
 const M_TYPES = Object.values(MaintenanceType);
 const M_PRIOS = Object.values(MaintenancePriority);
@@ -134,7 +144,7 @@ export function MobileWorkshopMaintenanceScreen() {
         else setLoading(true);
         await load();
       } catch (e) {
-        Alert.alert('Maintenance', extractErrorMessage(e, 'Failed to load'));
+        appError('Maintenance', extractErrorMessage(e, 'Failed to load'));
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -196,11 +206,11 @@ export function MobileWorkshopMaintenanceScreen() {
 
   const submitSch = async () => {
     if (!schForm.title.trim()) {
-      Alert.alert('Schedule', 'Title is required');
+      appAlert('Schedule', 'Title is required');
       return;
     }
     if (!schForm.equipment_id) {
-      Alert.alert('Schedule', 'Select equipment');
+      appAlert('Schedule', 'Select equipment');
       return;
     }
     const scheduled = schForm.scheduled_date
@@ -251,28 +261,27 @@ export function MobileWorkshopMaintenanceScreen() {
       setSchModal(false);
       await run(false);
     } catch (e) {
-      Alert.alert('Schedule', extractErrorMessage(e, 'Save failed'));
+      appError('Schedule', extractErrorMessage(e, 'Save failed'));
     } finally {
       setSaving(false);
     }
   };
 
   const removeSch = (s: MaintenanceScheduleResponse) => {
-    Alert.alert('Delete', s.title, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteMaintenanceSchedule(s.id);
-            await run(false);
-          } catch (e) {
-            Alert.alert('Schedule', extractErrorMessage(e, 'Delete failed'));
-          }
-        },
+    appConfirm({
+      title: 'Delete',
+      message: s.title,
+      confirmLabel: 'Delete',
+      destructive: true,
+      onConfirm: async () => {
+        try {
+          await deleteMaintenanceSchedule(s.id);
+          await run(false);
+        } catch (e) {
+          appError('Schedule', extractErrorMessage(e, 'Delete failed'));
+        }
       },
-    ]);
+    });
   };
 
   const openEqCreate = () => {
@@ -324,7 +333,7 @@ export function MobileWorkshopMaintenanceScreen() {
 
   const submitEq = async () => {
     if (!eqForm.name.trim()) {
-      Alert.alert('Equipment', 'Name is required');
+      appAlert('Equipment', 'Name is required');
       return;
     }
     try {
@@ -373,31 +382,27 @@ export function MobileWorkshopMaintenanceScreen() {
       setEqModal(false);
       await run(false);
     } catch (e) {
-      Alert.alert('Equipment', extractErrorMessage(e, 'Save failed'));
+      appError('Equipment', extractErrorMessage(e, 'Save failed'));
     } finally {
       setSaving(false);
     }
   };
 
   const removeEq = (e: EquipmentResponse) => {
-    Alert.alert('Delete', e.name, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteEquipment(e.id);
-            await run(false);
-          } catch (err) {
-            Alert.alert(
-              'Equipment',
-              extractErrorMessage(err, 'Delete failed'),
-            );
-          }
-        },
+    appConfirm({
+      title: 'Delete',
+      message: e.name,
+      confirmLabel: 'Delete',
+      destructive: true,
+      onConfirm: async () => {
+        try {
+          await deleteEquipment(e.id);
+          await run(false);
+        } catch (err) {
+          appError('Equipment', extractErrorMessage(err, 'Delete failed'));
+        }
       },
-    ]);
+    });
   };
 
   const schFiltered = schedules.filter((s) => {
@@ -418,169 +423,163 @@ export function MobileWorkshopMaintenanceScreen() {
     );
   });
 
-  const tabRow = (
-    <View className="mb-3 flex-row rounded-xl bg-slate-100 p-1">
-      {(
-        [
-          ['overview', 'Overview'],
-          ['schedules', 'Schedules'],
-          ['equipment', 'Equipment'],
-        ] as const
-      ).map(([k, label]) => (
-        <Pressable
-          key={k}
-          onPress={() => setTab(k)}
-          className={`flex-1 rounded-lg py-2 ${tab === k ? 'bg-white shadow-sm' : ''}`}
-        >
-          <Text
-            className={`text-center text-xs font-semibold ${tab === k ? 'text-indigo-900' : 'text-slate-600'}`}
-          >
-            {label}
-          </Text>
-        </Pressable>
-      ))}
-    </View>
-  );
+  const overviewStats = [
+    { label: 'Equipment', value: dash.total_equipment, sub: 'Total assets', icon: 'cube' as const, accent: '#4f46e5', accentBg: '#eef2ff' },
+    { label: 'Operational', value: dash.operational_equipment, sub: 'Running', icon: 'checkmark-circle' as const, accent: '#10b981', accentBg: '#ecfdf5' },
+    { label: 'In maintenance', value: dash.maintenance_equipment, sub: 'Active work', icon: 'build' as const, accent: '#f59e0b', accentBg: '#fffbeb' },
+    { label: 'Overdue', value: dash.overdue_maintenance, sub: 'Needs attention', icon: 'warning' as const, accent: '#ef4444', accentBg: '#fef2f2' },
+    { label: 'Scheduled', value: dash.scheduled_maintenance, sub: 'Upcoming', icon: 'calendar' as const, accent: '#2563eb', accentBg: '#eff6ff' },
+    { label: 'Uptime', value: `${Math.round(dash.uptime_percentage ?? 0)}%`, sub: 'Fleet health', icon: 'pulse' as const, accent: '#0891b2', accentBg: '#ecfeff' },
+  ];
 
   return (
     <WorkshopChrome
       title="Maintenance"
       subtitle="Equipment & schedules"
+      right={
+        tab === 'schedules' ? (
+          <WorkshopHeaderButton onPress={openSchCreate} />
+        ) : tab === 'equipment' ? (
+          <WorkshopHeaderButton onPress={openEqCreate} />
+        ) : (
+          <View style={{ width: 72 }} />
+        )
+      }
       scroll={false}
     >
-      {tabRow}
+      <WorkshopSegmentTabs
+        tabs={[
+          { key: 'overview', label: 'Overview', icon: 'grid' },
+          { key: 'schedules', label: 'Schedules', icon: 'calendar' },
+          { key: 'equipment', label: 'Equipment', icon: 'construct' },
+        ]}
+        active={tab}
+        onChange={setTab}
+      />
 
       {loading && !refreshing ? (
-        <View className="flex-1 items-center justify-center py-12">
-          <ActivityIndicator color="#4f46e5" />
-        </View>
+        <WorkshopLoading />
       ) : tab === 'overview' ? (
         <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 24 }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => void run(true)}
-              tintColor="#4f46e5"
+              tintColor={WS.primary}
             />
           }
         >
-          {[
-            ['Equipment', dash.total_equipment],
-            ['Operational', dash.operational_equipment],
-            ['In maintenance', dash.maintenance_equipment],
-            ['Overdue', dash.overdue_maintenance],
-            ['Scheduled', dash.scheduled_maintenance],
-            ['Completed', dash.completed_maintenance],
-            ['Uptime %', Math.round(dash.uptime_percentage ?? 0)],
-            ['Efficiency', Math.round(dash.efficiency_score ?? 0)],
-          ].map(([label, val]) => (
-            <WorkshopCard key={String(label)}>
-              <Text className="text-xs font-medium text-slate-500">
-                {label}
-              </Text>
-              <Text className="text-2xl font-bold text-slate-900">{val}</Text>
-            </WorkshopCard>
-          ))}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+            {overviewStats.map((s) => (
+              <WorkshopStatCard key={s.label} {...s} />
+            ))}
+          </View>
+          <Pressable
+            onPress={() => setTab('schedules')}
+            style={{
+              marginTop: 16,
+              borderRadius: 14,
+              backgroundColor: WS.primary,
+              paddingVertical: 14,
+              alignItems: 'center',
+            }}
+          >
+            <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>View schedules</Text>
+          </Pressable>
         </ScrollView>
       ) : tab === 'schedules' ? (
-        <View className="flex-1">
-          <View className="mb-2 flex-row items-center gap-2">
-            <TextInput
-              className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2"
-              placeholder="Search schedules…"
-              placeholderTextColor="#94a3b8"
-              value={schSearch}
-              onChangeText={setSchSearch}
-            />
-            <Pressable onPress={openSchCreate} className="p-2">
-              <Ionicons name="add-circle" size={28} color="#4f46e5" />
-            </Pressable>
-          </View>
+        <View style={{ flex: 1 }}>
+          <WorkshopSearchBar
+            value={schSearch}
+            onChangeText={setSchSearch}
+            placeholder="Search schedules…"
+          />
           <FlatList
             data={schFiltered}
             keyExtractor={(x) => x.id}
+            contentContainerStyle={{ paddingBottom: 20 }}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={() => void run(true)}
-                tintColor="#4f46e5"
+                tintColor={WS.primary}
+              />
+            }
+            ListEmptyComponent={
+              <WorkshopEmptyState
+                icon="calendar-outline"
+                title="No schedules"
+                subtitle="Plan preventive and corrective maintenance."
+                actionLabel="Create schedule"
+                onAction={openSchCreate}
               />
             }
             renderItem={({ item: s }) => (
-              <WorkshopCard>
-                <Text className="font-semibold text-slate-900">{s.title}</Text>
-                <Text className="text-xs text-slate-500 capitalize">
-                  {s.maintenance_type.replace(/_/g, ' ')} ·{' '}
-                  {s.scheduled_date?.split('T')[0] || '—'}
-                </Text>
-                <View className="mt-2 flex-row gap-2">
-                  <Pressable
-                    onPress={() => openSchEdit(s)}
-                    className="rounded-lg bg-indigo-100 px-2 py-1"
-                  >
-                    <Text className="text-xs font-medium text-indigo-900">
-                      Edit
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={() => removeSch(s)}
-                    className="rounded-lg bg-red-50 px-2 py-1"
-                  >
-                    <Text className="text-xs text-red-700">Delete</Text>
-                  </Pressable>
-                </View>
-              </WorkshopCard>
+              <WorkshopListCard
+                kind="maintenance"
+                icon="calendar"
+                iconColor="#d97706"
+                iconBg="#fffbeb"
+                kicker={s.scheduled_date?.split('T')[0] || 'Unscheduled'}
+                title={s.title}
+                subtitle={s.maintenance_type.replace(/_/g, ' ')}
+                meta={s.category ? `Category · ${s.category}` : undefined}
+                badges={[{ label: s.priority, tone: 'priority' }]}
+                onPress={() => openSchEdit(s)}
+                actions={[
+                  { icon: 'create-outline', onPress: () => openSchEdit(s) },
+                  { icon: 'trash-outline', onPress: () => removeSch(s), danger: true },
+                ]}
+              />
             )}
           />
         </View>
       ) : (
-        <View className="flex-1">
-          <View className="mb-2 flex-row items-center gap-2">
-            <TextInput
-              className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2"
-              placeholder="Search equipment…"
-              placeholderTextColor="#94a3b8"
-              value={eqSearch}
-              onChangeText={setEqSearch}
-            />
-            <Pressable onPress={openEqCreate} className="p-2">
-              <Ionicons name="add-circle" size={28} color="#4f46e5" />
-            </Pressable>
-          </View>
+        <View style={{ flex: 1 }}>
+          <WorkshopSearchBar
+            value={eqSearch}
+            onChangeText={setEqSearch}
+            placeholder="Search equipment…"
+          />
           <FlatList
             data={eqFiltered}
             keyExtractor={(x) => x.id}
+            contentContainerStyle={{ paddingBottom: 20 }}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={() => void run(true)}
-                tintColor="#4f46e5"
+                tintColor={WS.primary}
+              />
+            }
+            ListEmptyComponent={
+              <WorkshopEmptyState
+                icon="construct-outline"
+                title="No equipment"
+                subtitle="Register workshop equipment and track status."
+                actionLabel="Add equipment"
+                onAction={openEqCreate}
               />
             }
             renderItem={({ item: e }) => (
-              <WorkshopCard>
-                <Text className="font-semibold text-slate-900">{e.name}</Text>
-                <Text className="text-xs text-slate-500 capitalize">
-                  {e.status.replace(/_/g, ' ')}
-                  {e.location ? ` · ${e.location}` : ''}
-                </Text>
-                <View className="mt-2 flex-row gap-2">
-                  <Pressable
-                    onPress={() => openEqEdit(e)}
-                    className="rounded-lg bg-indigo-100 px-2 py-1"
-                  >
-                    <Text className="text-xs font-medium text-indigo-900">
-                      Edit
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={() => removeEq(e)}
-                    className="rounded-lg bg-red-50 px-2 py-1"
-                  >
-                    <Text className="text-xs text-red-700">Delete</Text>
-                  </Pressable>
-                </View>
-              </WorkshopCard>
+              <WorkshopListCard
+                kind="maintenance"
+                icon="construct"
+                iconColor="#64748b"
+                iconBg="#f1f5f9"
+                kicker={e.serial_number || String(e.category).replace(/_/g, ' ')}
+                title={e.name}
+                subtitle={[e.manufacturer, e.model].filter(Boolean).join(' · ') || undefined}
+                meta={e.location || undefined}
+                badges={[{ label: e.status, tone: 'status' }]}
+                onPress={() => openEqEdit(e)}
+                actions={[
+                  { icon: 'create-outline', onPress: () => openEqEdit(e) },
+                  { icon: 'trash-outline', onPress: () => removeEq(e), danger: true },
+                ]}
+              />
             )}
           />
         </View>
@@ -603,272 +602,87 @@ export function MobileWorkshopMaintenanceScreen() {
         onClose={() => setTechPick(false)}
       />
 
-      <AppModal
+      <WorkshopFormSheet
         visible={schModal}
-        animationType="slide"
-        transparent
+        title={editingSch ? 'Edit schedule' : 'New schedule'}
         onClose={() => setSchModal(false)}
-      >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
-            <Text className="mb-3 text-lg font-semibold">
-              {editingSch ? 'Edit schedule' : 'New schedule'}
-            </Text>
-            <ScrollView keyboardShouldPersistTaps="handled">
-              <WorkshopFieldLabel>Title *</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                value={schForm.title}
-                onChangeText={(v) => setSchForm((f) => ({ ...f, title: v }))}
-              />
-              <WorkshopFieldLabel>Description</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                value={schForm.description}
-                onChangeText={(v) =>
-                  setSchForm((f) => ({ ...f, description: v }))
-                }
-                multiline
-              />
-              <WorkshopFieldLabel>Equipment *</WorkshopFieldLabel>
-              <Pressable
-                onPress={() => setEqPick(true)}
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-              >
-                <Text>
-                  {schForm.equipment_id
-                    ? eqItems.find((x) => x.id === schForm.equipment_id)
-                        ?.label
-                    : 'Select'}
-                </Text>
-              </Pressable>
-              <ProductChipSelect
-                label="Maintenance type"
-                options={[...M_TYPES]}
-                value={schForm.maintenance_type}
-                onChange={(t) =>
-                  setSchForm((f) => ({
-                    ...f,
-                    maintenance_type: t as MaintenanceType,
-                  }))
-                }
-              />
-              <ProductChipSelect
-                label="Priority"
-                options={[...M_PRIOS]}
-                value={schForm.priority}
-                onChange={(p) =>
-                  setSchForm((f) => ({
-                    ...f,
-                    priority: p as MaintenancePriority,
-                  }))
-                }
-              />
-              <ProductChipSelect
-                label="Category"
-                options={[...M_CATS]}
-                value={schForm.category}
-                onChange={(c) =>
-                  setSchForm((f) => ({
-                    ...f,
-                    category: c as MaintenanceCategory,
-                  }))
-                }
-              />
-              <WorkshopFieldLabel>Scheduled date</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                placeholder="YYYY-MM-DD"
-                value={schForm.scheduled_date}
-                onChangeText={(v) =>
-                  setSchForm((f) => ({ ...f, scheduled_date: v }))
-                }
-              />
-              <WorkshopFieldLabel>Duration (hours) / Est. cost</WorkshopFieldLabel>
-              <View className="mb-2 flex-row gap-2">
-                <TextInput
-                  className="flex-1 rounded-lg border border-slate-200 px-2 py-2"
-                  keyboardType="decimal-pad"
-                  value={schForm.estimated_duration_hours}
-                  onChangeText={(v) =>
-                    setSchForm((f) => ({ ...f, estimated_duration_hours: v }))
-                  }
-                />
-                <TextInput
-                  className="flex-1 rounded-lg border border-slate-200 px-2 py-2"
-                  keyboardType="decimal-pad"
-                  value={schForm.estimated_cost}
-                  onChangeText={(v) =>
-                    setSchForm((f) => ({ ...f, estimated_cost: v }))
-                  }
-                />
-              </View>
-              <WorkshopFieldLabel>Location</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                value={schForm.location}
-                onChangeText={(v) =>
-                  setSchForm((f) => ({ ...f, location: v }))
-                }
-              />
-              <WorkshopFieldLabel>Technician</WorkshopFieldLabel>
-              <Pressable
-                onPress={() => setTechPick(true)}
-                className="mb-4 rounded-lg border border-slate-200 px-3 py-2"
-              >
-                <Text>
-                  {schForm.assigned_technician_id
-                    ? userItems.find(
-                        (x) => x.id === schForm.assigned_technician_id,
-                      )?.label
-                    : 'Optional'}
-                </Text>
-              </Pressable>
-            </ScrollView>
-            <WorkshopPrimaryButton
-              label={saving ? 'Saving…' : 'Save'}
-              onPress={() => void submitSch()}
-              disabled={saving}
-            />
-            <Pressable className="mt-2 items-center py-2" onPress={() => setSchModal(false)}>
-              <Text className="text-slate-600">Cancel</Text>
+        footer={
+          <>
+            <WorkshopPrimaryButton label={saving ? 'Saving…' : 'Save schedule'} onPress={() => void submitSch()} disabled={saving} />
+            <Pressable onPress={() => setSchModal(false)} style={{ marginTop: 12, alignItems: 'center', paddingVertical: 10 }}>
+              <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Cancel</Text>
             </Pressable>
-          </View>
+          </>
+        }
+      >
+        <WorkshopFieldLabel>Title *</WorkshopFieldLabel>
+        <WorkshopTextInput value={schForm.title} onChangeText={(v) => setSchForm((f) => ({ ...f, title: v }))} />
+        <WorkshopFieldLabel>Description</WorkshopFieldLabel>
+        <WorkshopTextInput value={schForm.description} onChangeText={(v) => setSchForm((f) => ({ ...f, description: v }))} multiline />
+        <WorkshopPickerField
+          label="Equipment *"
+          value={schForm.equipment_id ? eqItems.find((x) => x.id === schForm.equipment_id)?.label ?? '' : ''}
+          placeholder="Select"
+          onPress={() => setEqPick(true)}
+        />
+        <WorkshopChipSelect label="Maintenance type" options={[...M_TYPES]} value={schForm.maintenance_type} onChange={(t) => setSchForm((f) => ({ ...f, maintenance_type: t as MaintenanceType }))} />
+        <WorkshopChipSelect label="Priority" options={[...M_PRIOS]} value={schForm.priority} onChange={(p) => setSchForm((f) => ({ ...f, priority: p as MaintenancePriority }))} />
+        <WorkshopChipSelect label="Category" options={[...M_CATS]} value={schForm.category} onChange={(c) => setSchForm((f) => ({ ...f, category: c as MaintenanceCategory }))} />
+        <WorkshopDatePickerField label="Scheduled date" value={schForm.scheduled_date} onChange={(v) => setSchForm((f) => ({ ...f, scheduled_date: v }))} />
+        <WorkshopFieldLabel>Duration (hours) / Est. cost</WorkshopFieldLabel>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flex: 1 }}><WorkshopTextInput keyboardType="decimal-pad" value={schForm.estimated_duration_hours} onChangeText={(v) => setSchForm((f) => ({ ...f, estimated_duration_hours: v }))} /></View>
+          <View style={{ flex: 1 }}><WorkshopTextInput keyboardType="decimal-pad" value={schForm.estimated_cost} onChangeText={(v) => setSchForm((f) => ({ ...f, estimated_cost: v }))} /></View>
         </View>
-      </AppModal>
+        <WorkshopFieldLabel>Location</WorkshopFieldLabel>
+        <WorkshopTextInput value={schForm.location} onChangeText={(v) => setSchForm((f) => ({ ...f, location: v }))} />
+        <WorkshopPickerField
+          label="Technician"
+          value={schForm.assigned_technician_id ? userItems.find((x) => x.id === schForm.assigned_technician_id)?.label ?? '' : ''}
+          placeholder="Optional"
+          onPress={() => setTechPick(true)}
+        />
+      </WorkshopFormSheet>
 
-      <AppModal
+      <WorkshopFormSheet
         visible={eqModal}
-        animationType="slide"
-        transparent
+        title={editingEq ? 'Edit equipment' : 'New equipment'}
         onClose={() => setEqModal(false)}
-      >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
-            <Text className="mb-3 text-lg font-semibold">
-              {editingEq ? 'Edit equipment' : 'New equipment'}
-            </Text>
-            <ScrollView keyboardShouldPersistTaps="handled">
-              <WorkshopFieldLabel>Name *</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                value={eqForm.name}
-                onChangeText={(v) => setEqForm((f) => ({ ...f, name: v }))}
-              />
-              <View className="mb-2 flex-row gap-2">
-                <View className="flex-1">
-                  <WorkshopFieldLabel>Model</WorkshopFieldLabel>
-                  <TextInput
-                    className="rounded-lg border border-slate-200 px-2 py-2"
-                    value={eqForm.model}
-                    onChangeText={(v) =>
-                      setEqForm((f) => ({ ...f, model: v }))
-                    }
-                  />
-                </View>
-                <View className="flex-1">
-                  <WorkshopFieldLabel>Serial</WorkshopFieldLabel>
-                  <TextInput
-                    className="rounded-lg border border-slate-200 px-2 py-2"
-                    value={eqForm.serial_number}
-                    onChangeText={(v) =>
-                      setEqForm((f) => ({ ...f, serial_number: v }))
-                    }
-                  />
-                </View>
-              </View>
-              <WorkshopFieldLabel>Manufacturer / Location</WorkshopFieldLabel>
-              <TextInput
-                className="mb-1 rounded-lg border border-slate-200 px-3 py-2"
-                value={eqForm.manufacturer}
-                onChangeText={(v) =>
-                  setEqForm((f) => ({ ...f, manufacturer: v }))
-                }
-              />
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                value={eqForm.location}
-                onChangeText={(v) =>
-                  setEqForm((f) => ({ ...f, location: v }))
-                }
-              />
-              <ProductChipSelect
-                label="Category"
-                options={[...M_CATS]}
-                value={eqForm.category}
-                onChange={(c) =>
-                  setEqForm((f) => ({
-                    ...f,
-                    category: c as MaintenanceCategory,
-                  }))
-                }
-              />
-              <ProductChipSelect
-                label="Status"
-                options={[...EQ_STATUSES]}
-                value={eqForm.status}
-                onChange={(s) =>
-                  setEqForm((f) => ({
-                    ...f,
-                    status: s as EquipmentStatus,
-                  }))
-                }
-              />
-              <WorkshopFieldLabel>Operating hours</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                keyboardType="decimal-pad"
-                value={eqForm.operating_hours}
-                onChangeText={(v) =>
-                  setEqForm((f) => ({ ...f, operating_hours: v }))
-                }
-              />
-              <WorkshopFieldLabel>Install / warranty / next service</WorkshopFieldLabel>
-              <TextInput
-                className="mb-1 rounded-lg border border-slate-200 px-3 py-2"
-                placeholder="Install YYYY-MM-DD"
-                value={eqForm.installation_date}
-                onChangeText={(v) =>
-                  setEqForm((f) => ({ ...f, installation_date: v }))
-                }
-              />
-              <TextInput
-                className="mb-1 rounded-lg border border-slate-200 px-3 py-2"
-                placeholder="Warranty YYYY-MM-DD"
-                value={eqForm.warranty_expiry}
-                onChangeText={(v) =>
-                  setEqForm((f) => ({ ...f, warranty_expiry: v }))
-                }
-              />
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                placeholder="Next maintenance YYYY-MM-DD"
-                value={eqForm.next_maintenance_date}
-                onChangeText={(v) =>
-                  setEqForm((f) => ({ ...f, next_maintenance_date: v }))
-                }
-              />
-              <WorkshopFieldLabel>Operating instructions</WorkshopFieldLabel>
-              <TextInput
-                className="mb-4 rounded-lg border border-slate-200 px-3 py-2"
-                value={eqForm.operating_instructions}
-                onChangeText={(v) =>
-                  setEqForm((f) => ({ ...f, operating_instructions: v }))
-                }
-                multiline
-              />
-            </ScrollView>
-            <WorkshopPrimaryButton
-              label={saving ? 'Saving…' : 'Save'}
-              onPress={() => void submitEq()}
-              disabled={saving}
-            />
-            <Pressable className="mt-2 items-center py-2" onPress={() => setEqModal(false)}>
-              <Text className="text-slate-600">Cancel</Text>
+        footer={
+          <>
+            <WorkshopPrimaryButton label={saving ? 'Saving…' : 'Save equipment'} onPress={() => void submitEq()} disabled={saving} />
+            <Pressable onPress={() => setEqModal(false)} style={{ marginTop: 12, alignItems: 'center', paddingVertical: 10 }}>
+              <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Cancel</Text>
             </Pressable>
+          </>
+        }
+      >
+        <WorkshopFieldLabel>Name *</WorkshopFieldLabel>
+        <WorkshopTextInput value={eqForm.name} onChangeText={(v) => setEqForm((f) => ({ ...f, name: v }))} />
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flex: 1 }}>
+            <WorkshopFieldLabel>Model</WorkshopFieldLabel>
+            <WorkshopTextInput value={eqForm.model} onChangeText={(v) => setEqForm((f) => ({ ...f, model: v }))} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <WorkshopFieldLabel>Serial</WorkshopFieldLabel>
+            <WorkshopTextInput value={eqForm.serial_number} onChangeText={(v) => setEqForm((f) => ({ ...f, serial_number: v }))} />
           </View>
         </View>
-      </AppModal>
+        <WorkshopFieldLabel>Manufacturer</WorkshopFieldLabel>
+        <WorkshopTextInput value={eqForm.manufacturer} onChangeText={(v) => setEqForm((f) => ({ ...f, manufacturer: v }))} />
+        <WorkshopFieldLabel>Location</WorkshopFieldLabel>
+        <WorkshopTextInput value={eqForm.location} onChangeText={(v) => setEqForm((f) => ({ ...f, location: v }))} />
+        <WorkshopChipSelect label="Category" options={[...M_CATS]} value={eqForm.category} onChange={(c) => setEqForm((f) => ({ ...f, category: c as MaintenanceCategory }))} />
+        <WorkshopChipSelect label="Status" options={[...EQ_STATUSES]} value={eqForm.status} onChange={(s) => setEqForm((f) => ({ ...f, status: s as EquipmentStatus }))} />
+        <WorkshopFieldLabel>Operating hours</WorkshopFieldLabel>
+        <WorkshopTextInput keyboardType="decimal-pad" value={eqForm.operating_hours} onChangeText={(v) => setEqForm((f) => ({ ...f, operating_hours: v }))} />
+        <WorkshopDatePickerField label="Install date" value={eqForm.installation_date} onChange={(v) => setEqForm((f) => ({ ...f, installation_date: v }))} />
+        <WorkshopDatePickerField label="Warranty expiry" value={eqForm.warranty_expiry} onChange={(v) => setEqForm((f) => ({ ...f, warranty_expiry: v }))} />
+        <WorkshopDatePickerField label="Next maintenance" value={eqForm.next_maintenance_date} onChange={(v) => setEqForm((f) => ({ ...f, next_maintenance_date: v }))} />
+        <WorkshopFieldLabel>Operating instructions</WorkshopFieldLabel>
+        <WorkshopTextInput value={eqForm.operating_instructions} onChangeText={(v) => setEqForm((f) => ({ ...f, operating_instructions: v }))} multiline />
+      </WorkshopFormSheet>
     </WorkshopChrome>
   );
 }

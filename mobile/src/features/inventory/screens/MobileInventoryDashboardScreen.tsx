@@ -1,22 +1,23 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { Alert, View, Text } from 'react-native';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { formatUsd } from '../../../services/crm/CrmMobileService';
 import { getInventoryDashboard } from '../../../services/inventory/inventoryMobileApi';
 import type { InventoryDashboardStats } from '../../../models/inventory';
+import { ModuleHubScreen, type HubLink, type HubStat } from '../../../components/layout/ModuleHubScreen';
+import { WS } from '../../workshop/components/workshopTheme';
 
-const LINKS: { path: string; label: string }[] = [
-  { path: '/inventory/warehouses', label: 'Warehouses' },
-  { path: '/inventory/storage-locations', label: 'Storage locations' },
-  { path: '/inventory/stock-movements', label: 'Stock movements' },
-  { path: '/inventory/purchase-orders', label: 'Purchase orders' },
-  { path: '/inventory/receiving', label: 'Receiving' },
-  { path: '/inventory/products', label: 'Products' },
-  { path: '/inventory/alerts', label: 'Alerts' },
-  { path: '/inventory/dumps', label: 'Dumps' },
-  { path: '/inventory/customer-returns', label: 'Customer returns' },
-  { path: '/inventory/supplier-returns', label: 'Supplier returns' },
+const LINKS: HubLink[] = [
+  { path: '/inventory/warehouses', label: 'Warehouses', icon: 'business', color: '#4f46e5', bg: '#eef2ff' },
+  { path: '/inventory/storage-locations', label: 'Storage', icon: 'location', color: '#2563eb', bg: '#eff6ff' },
+  { path: '/inventory/stock-movements', label: 'Movements', icon: 'swap-horizontal', color: '#0891b2', bg: '#ecfeff' },
+  { path: '/inventory/purchase-orders', label: 'Purchase orders', icon: 'clipboard', color: '#7c3aed', bg: '#f5f3ff' },
+  { path: '/inventory/receiving', label: 'Receiving', icon: 'checkmark-done', color: '#059669', bg: '#ecfdf5' },
+  { path: '/inventory/products', label: 'Products', icon: 'cube', color: '#d97706', bg: '#fffbeb' },
+  { path: '/inventory/alerts', label: 'Alerts', icon: 'warning', color: '#ef4444', bg: '#fef2f2' },
+  { path: '/inventory/dumps', label: 'Dumps', icon: 'trash', color: '#64748b', bg: '#f1f5f9' },
+  { path: '/inventory/customer-returns', label: 'Customer returns', icon: 'return-down-back', color: '#4f46e5', bg: '#eef2ff' },
+  { path: '/inventory/supplier-returns', label: 'Supplier returns', icon: 'return-up-forward', color: '#2563eb', bg: '#eff6ff' },
 ];
 
 export function MobileInventoryDashboardScreen() {
@@ -53,66 +54,45 @@ export function MobileInventoryDashboardScreen() {
     setRefreshing(false);
   }, [load]);
 
+  const hubStats: HubStat[] = stats
+    ? [
+        { label: 'Products', value: stats.totalProducts, sub: `${stats.lowStockProducts} low stock`, icon: 'cube', accent: '#4f46e5', accentBg: '#eef2ff' },
+        { label: 'Out of stock', value: stats.outOfStockProducts, sub: 'Needs reorder', icon: 'alert-circle', accent: '#ef4444', accentBg: '#fef2f2' },
+        { label: 'Warehouses', value: stats.totalWarehouses, sub: `${stats.totalSuppliers} suppliers`, icon: 'business', accent: '#2563eb', accentBg: '#eff6ff' },
+        { label: 'Stock value', value: formatUsd(stats.totalStockValue), sub: 'Total valuation', icon: 'cash', accent: '#059669', accentBg: '#ecfdf5' },
+      ]
+    : [];
+
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Inventory
-        </Text>
-        <View className="w-10" />
-      </View>
-
-      {loading && !refreshing ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563eb" />
-        </View>
-      ) : (
-        <ScrollView
-          className="flex-1 px-3 py-3"
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
+    <ModuleHubScreen
+      title="Inventory"
+      subtitle="Stock, warehouses & products"
+      accent={WS.primary}
+      loading={loading}
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+      stats={hubStats}
+      links={LINKS}
+      onNavigate={(path) => void navigateMenuPath(path)}
+      linksTitle="Inventory modules"
+    >
+      {stats ? (
+        <View
+          style={{
+            marginTop: 16,
+            backgroundColor: WS.card,
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: WS.border,
+            padding: 16,
+          }}
         >
-          {stats ? (
-            <View className="mb-4 rounded-xl border border-slate-200 bg-white p-4">
-              <Text className="text-lg font-semibold text-slate-900">
-                Overview
-              </Text>
-              <Text className="mt-2 text-slate-700">
-                Products {stats.totalProducts} · Low stock{' '}
-                {stats.lowStockProducts} · Out {stats.outOfStockProducts}
-              </Text>
-              <Text className="mt-1 text-slate-700">
-                Warehouses {stats.totalWarehouses} · Suppliers{' '}
-                {stats.totalSuppliers}
-              </Text>
-              <Text className="mt-1 text-slate-700">
-                Pending PO {stats.pendingPurchaseOrders} · Receivings{' '}
-                {stats.pendingReceivings}
-              </Text>
-              <Text className="mt-2 font-semibold text-slate-900">
-                Stock value {formatUsd(stats.totalStockValue)}
-              </Text>
-            </View>
-          ) : null}
-
-          <Text className="mb-2 font-semibold text-slate-800">Shortcuts</Text>
-          <View className="flex-row flex-wrap gap-2">
-            {LINKS.map((l) => (
-              <Pressable
-                key={l.path}
-                onPress={() => void navigateMenuPath(l.path)}
-                className="min-w-[46%] flex-1 rounded-xl border border-slate-200 bg-white px-3 py-4 active:bg-slate-50"
-              >
-                <Text className="text-center font-medium text-slate-800">
-                  {l.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        </ScrollView>
-      )}
-    </View>
+          <Text style={{ fontSize: 15, fontWeight: '700', color: WS.text }}>Operations</Text>
+          <Text style={{ marginTop: 8, fontSize: 14, color: WS.textMuted, lineHeight: 22 }}>
+            Pending PO {stats.pendingPurchaseOrders} · Receivings {stats.pendingReceivings}
+          </Text>
+        </View>
+      ) : null}
+    </ModuleHubScreen>
   );
 }

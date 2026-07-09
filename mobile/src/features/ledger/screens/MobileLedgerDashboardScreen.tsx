@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, ScrollView, RefreshControl, ActivityIndicator, Pressable, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { View, Text, Alert } from 'react-native';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { formatMoney } from '../ledgerFormat';
 import type {
   BudgetResponse,
   IncomeStatementResponse,
@@ -17,7 +16,17 @@ import {
   getLedgerTransactions,
   getTrialBalance,
 } from '../../../services/ledger/ledgerMobileApi';
-import { formatMoney } from '../ledgerFormat';
+import { ModuleHubScreen, type HubLink, type HubStat } from '../../../components/layout/ModuleHubScreen';
+import { WS } from '../../workshop/components/workshopTheme';
+import { WorkshopListCard } from '../../workshop/components/WorkshopChrome';
+
+const LINKS: HubLink[] = [
+  { path: '/ledger/profit-loss', label: 'Profit & loss', icon: 'trending-up', color: '#4f46e5', bg: '#eef2ff' },
+  { path: '/ledger/investments', label: 'Investments', icon: 'briefcase', color: '#2563eb', bg: '#eff6ff' },
+  { path: '/ledger/transactions', label: 'Transactions', icon: 'swap-horizontal', color: '#0891b2', bg: '#ecfeff' },
+  { path: '/ledger/account-receivables', label: 'Credit book', icon: 'book', color: '#7c3aed', bg: '#f5f3ff' },
+  { path: '/ledger/reports', label: 'Reports', icon: 'document-text', color: '#059669', bg: '#ecfdf5' },
+];
 
 export function MobileLedgerDashboardScreen() {
   const { workspacePath, setSidebarActivePath, setWorkspacePath } =
@@ -65,131 +74,61 @@ export function MobileLedgerDashboardScreen() {
     setRefreshing(false);
   }, [load]);
 
-  const tbDebit =
-    trial?.accounts?.reduce((s, a) => s + (a.debit_balance ?? 0), 0) ?? 0;
-  const tbCredit =
-    trial?.accounts?.reduce((s, a) => s + (a.credit_balance ?? 0), 0) ?? 0;
+  const hubStats: HubStat[] = [
+    { label: 'Revenue', value: formatMoney(income?.revenue ?? 0), icon: 'trending-up', accent: '#059669', accentBg: '#ecfdf5' },
+    { label: 'Expenses', value: formatMoney(income?.expenses ?? 0), icon: 'trending-down', accent: '#ef4444', accentBg: '#fef2f2' },
+    { label: 'Net income', value: formatMoney(income?.net_income ?? 0), icon: 'wallet', accent: '#4f46e5', accentBg: '#eef2ff' },
+    { label: 'Budgets', value: budgets.length, sub: 'Active', icon: 'pie-chart', accent: '#2563eb', accentBg: '#eff6ff' },
+  ];
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Ledger
-        </Text>
-        <View className="w-9" />
-      </View>
-
-      {loading && !trial && !income ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563eb" />
-        </View>
-      ) : (
-        <ScrollView
-          className="flex-1 px-3 py-3"
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
+    <ModuleHubScreen
+      title="Ledger"
+      subtitle="Accounts, P&L & transactions"
+      accent={WS.primary}
+      loading={loading && !trial && !income}
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+      stats={hubStats}
+      links={LINKS}
+      onNavigate={(path) => setWorkspacePath(path)}
+    >
+      {trial ? (
+        <View
+          style={{
+            marginTop: 16,
+            backgroundColor: WS.card,
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: WS.border,
+            padding: 16,
+          }}
         >
-          <Text className="mb-2 text-base font-semibold text-slate-900">
-            Overview
+          <Text style={{ fontSize: 15, fontWeight: '700', color: WS.text }}>Trial balance</Text>
+          <Text style={{ marginTop: 6, fontSize: 13, color: WS.textMuted }}>
+            {trial.accounts?.length ?? 0} accounts · As of{' '}
+            {trial.as_of_date ? new Date(trial.as_of_date).toLocaleDateString() : '—'}
           </Text>
-          <View className="mb-3 flex-row flex-wrap gap-2">
-            <View className="min-w-[47%] flex-1 rounded-xl border border-slate-200 bg-white p-3">
-              <Text className="text-xs text-slate-500">Revenue</Text>
-              <Text className="text-lg font-bold text-emerald-700">
-                {formatMoney(income?.revenue ?? 0)}
-              </Text>
-            </View>
-            <View className="min-w-[47%] flex-1 rounded-xl border border-slate-200 bg-white p-3">
-              <Text className="text-xs text-slate-500">Expenses</Text>
-              <Text className="text-lg font-bold text-red-700">
-                {formatMoney(income?.expenses ?? 0)}
-              </Text>
-            </View>
-            <View className="min-w-[47%] flex-1 rounded-xl border border-slate-200 bg-white p-3">
-              <Text className="text-xs text-slate-500">Net income</Text>
-              <Text className="text-lg font-bold text-slate-900">
-                {formatMoney(income?.net_income ?? 0)}
-              </Text>
-            </View>
-            <View className="min-w-[47%] flex-1 rounded-xl border border-slate-200 bg-white p-3">
-              <Text className="text-xs text-slate-500">Active budgets</Text>
-              <Text className="text-lg font-bold text-slate-900">
-                {budgets.length}
-              </Text>
-            </View>
-          </View>
+        </View>
+      ) : null}
 
-          <View className="mb-3 rounded-xl border border-slate-200 bg-white p-3">
-            <Text className="text-sm font-semibold text-slate-900">
-              Trial balance
-            </Text>
-            <Text className="mt-1 text-xs text-slate-500">
-              As of {trial?.as_of_date ? new Date(trial.as_of_date).toLocaleDateString() : '—'}
-            </Text>
-            <Text className="mt-2 text-sm text-slate-700">
-              Total debits {formatMoney(tbDebit)}
-            </Text>
-            <Text className="text-sm text-slate-700">
-              Total credits {formatMoney(tbCredit)}
-            </Text>
-            <Text className="mt-1 text-xs text-slate-500">
-              {trial?.accounts?.length ?? 0} accounts
-            </Text>
-          </View>
-
-          <Text className="mb-2 text-base font-semibold text-slate-900">
-            Quick links
-          </Text>
-          <View className="mb-3 gap-2">
-            {(
-              [
-                ['Profit & loss', '/ledger/profit-loss', 'trending-up-outline'],
-                ['Investments', '/ledger/investments', 'briefcase-outline'],
-                ['Transactions', '/ledger/transactions', 'swap-horizontal-outline'],
-                ['Credit book', '/ledger/account-receivables', 'book-outline'],
-                ['Reports', '/ledger/reports', 'document-text-outline'],
-              ] as const
-            ).map(([label, path, icon]) => (
-              <Pressable
-                key={path}
-                className="flex-row items-center rounded-xl border border-slate-200 bg-white px-3 py-3"
-                onPress={() => setWorkspacePath(path)}
-              >
-                <Ionicons name={icon as never} size={22} color="#2563eb" />
-                <Text className="ml-3 flex-1 font-medium text-slate-900">
-                  {label}
-                </Text>
-                <Ionicons name="chevron-forward" size={20} color="#94a3b8" />
-              </Pressable>
-            ))}
-          </View>
-
-          <Text className="mb-2 text-base font-semibold text-slate-900">
+      {recent.length > 0 ? (
+        <View style={{ marginTop: 20 }}>
+          <Text style={{ fontSize: 16, fontWeight: '700', color: WS.text, marginBottom: 10 }}>
             Recent transactions
           </Text>
-          {(recent ?? []).length === 0 ? (
-            <Text className="text-sm text-slate-500">No transactions yet.</Text>
-          ) : (
-            recent.map((t) => (
-              <View
-                key={t.id}
-                className="mb-2 rounded-lg border border-slate-200 bg-white p-3"
-              >
-                <Text className="font-medium text-slate-900">{t.description}</Text>
-                <Text className="text-xs text-slate-500">
-                  {t.transaction_number} ·{' '}
-                  {getTransactionTypeLabel(t.transaction_type)}
-                </Text>
-                <Text className="mt-1 text-sm font-semibold text-slate-800">
-                  {formatMoney(t.amount)}
-                </Text>
-              </View>
-            ))
-          )}
-        </ScrollView>
-      )}
-    </View>
+          {recent.map((t) => (
+            <WorkshopListCard
+              key={t.id}
+              icon="swap-horizontal"
+              title={t.description}
+              subtitle={t.transaction_number}
+              meta={getTransactionTypeLabel(t.transaction_type)}
+              badges={[{ label: formatMoney(t.amount) }]}
+            />
+          ))}
+        </View>
+      ) : null}
+    </ModuleHubScreen>
   );
 }

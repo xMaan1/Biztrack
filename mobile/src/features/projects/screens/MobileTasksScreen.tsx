@@ -1,13 +1,29 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { View, Text, FlatList, Pressable, RefreshControl } from 'react-native';
+import { MobileFormSheet } from '../../../components/layout/MobileForm';
+import {
+  WorkshopChrome,
+  WorkshopListCard,
+  WorkshopEmptyState,
+  WorkshopHeaderButton,
+  WorkshopLoading,
+  WorkshopFormSheet,
+  WorkshopFieldLabel,
+  WorkshopTextInput,
+  WorkshopDatePickerField,
+  WorkshopPickerField,
+  WorkshopFilterBar,
+  countActiveFilters,
+  WorkshopPrimaryButton,
+  WorkshopDetailRow,
+  WS,
+} from '../../workshop/components/WorkshopChrome';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { OptionSheet } from '../../../components/crm/OptionSheet';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { appAlert, appConfirm, appError } from '../../../utils/appDialog';
 import { usePermissions } from '../../../hooks/usePermissions';
 import type { ProjectRecord, SubTaskRecord } from '../../../models/project';
-import { AppModal } from '../../../components/layout/AppModal';
 import {
   createTaskApi,
   deleteTaskApi,
@@ -81,7 +97,7 @@ export function MobileTasksScreen() {
       });
       setTasks(res.tasks ?? []);
     } catch (e) {
-      Alert.alert('Tasks', extractErrorMessage(e, 'Failed to load'));
+      appError('Tasks', extractErrorMessage(e, 'Failed to load'));
     } finally {
       setLoading(false);
     }
@@ -133,7 +149,7 @@ export function MobileTasksScreen() {
 
   const submitCreate = useCallback(async () => {
     if (!title.trim() || !projectId) {
-      Alert.alert('Tasks', 'Title and project are required.');
+      appAlert('Tasks', 'Title and project are required.');
       return;
     }
     try {
@@ -149,7 +165,7 @@ export function MobileTasksScreen() {
       setCreateOpen(false);
       await loadTasks();
     } catch (e) {
-      Alert.alert('Tasks', extractErrorMessage(e, 'Could not create'));
+      appError('Tasks', extractErrorMessage(e, 'Could not create'));
     }
   }, [title, description, projectId, assignId, due, statusPick, priorityPick, loadTasks]);
 
@@ -168,30 +184,27 @@ export function MobileTasksScreen() {
       setSelected(null);
       await loadTasks();
     } catch (e) {
-      Alert.alert('Tasks', extractErrorMessage(e, 'Could not update'));
+      appError('Tasks', extractErrorMessage(e, 'Could not update'));
     }
   }, [selected, title, description, assignId, due, statusPick, priorityPick, loadTasks]);
 
   const confirmDelete = useCallback(
     (t: SubTaskRecord) => {
-      Alert.alert('Delete task', `Remove "${t.title}"?`, [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            void (async () => {
-              try {
-                await deleteTaskApi(t.id);
-                setDetailOpen(false);
-                await loadTasks();
-              } catch (e) {
-                Alert.alert('Tasks', extractErrorMessage(e, 'Could not delete'));
-              }
-            })();
-          },
+      appConfirm({
+        title: 'Delete task',
+        message: `Remove "${t.title}"?`,
+        confirmLabel: 'Delete',
+        destructive: true,
+        onConfirm: async () => {
+          try {
+            await deleteTaskApi(t.id);
+            setDetailOpen(false);
+            await loadTasks();
+          } catch (e) {
+            appError('Tasks', extractErrorMessage(e, 'Could not delete'));
+          }
         },
-      ]);
+      });
     },
     [loadTasks],
   );
@@ -214,266 +227,212 @@ export function MobileTasksScreen() {
     [team],
   );
 
-  const renderItem = useCallback(
-    ({ item }: { item: SubTaskRecord }) => (
-      <Pressable
-        className="border-b border-slate-100 bg-white px-4 py-3 active:bg-slate-50"
-        onPress={() => {
-          setSelected(item);
-          setDetailOpen(true);
-        }}
-      >
-        <Text className="text-base font-semibold text-slate-900">{item.title}</Text>
-        <Text className="mt-1 text-sm text-slate-600">
-          {label(item.status)} · {label(item.priority)}
-          {item.assignedTo?.name ? ` · ${item.assignedTo.name}` : ''}
-        </Text>
-      </Pressable>
-    ),
-    [],
-  );
-
   const formBody = (
     <>
-      <Text className="mb-1 text-xs font-medium text-slate-500">Title</Text>
-      <TextInput
-        className="mb-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-        value={title}
-        onChangeText={setTitle}
-      />
-      <Text className="mb-1 text-xs font-medium text-slate-500">Description</Text>
-      <TextInput
-        className="mb-3 min-h-[64px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
+      <WorkshopFieldLabel>Title</WorkshopFieldLabel>
+      <WorkshopTextInput value={title} onChangeText={setTitle} placeholder="Task title" />
+      <WorkshopFieldLabel>Description</WorkshopFieldLabel>
+      <WorkshopTextInput
         value={description}
         onChangeText={setDescription}
         multiline
+        style={{ minHeight: 72 }}
       />
       {createOpen ? (
-        <>
-          <Text className="mb-1 text-xs font-medium text-slate-500">Project</Text>
-          <Pressable
-            className="mb-3 flex-row items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2"
-            onPress={() => setProjectPickOpen(true)}
-          >
-            <Text className="text-slate-900">
-              {projects.find((p) => p.id === projectId)?.name ?? 'Select'}
-            </Text>
-            <Ionicons name="chevron-down" size={18} color="#64748b" />
-          </Pressable>
-        </>
+        <WorkshopPickerField
+          label="Project"
+          value={projects.find((p) => p.id === projectId)?.name ?? ''}
+          placeholder="Select project"
+          onPress={() => setProjectPickOpen(true)}
+        />
       ) : null}
-      <Text className="mb-1 text-xs font-medium text-slate-500">Assignee</Text>
-      <Pressable
-        className="mb-3 flex-row items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2"
+      <WorkshopPickerField
+        label="Assignee"
+        value={
+          assignId
+            ? team.find((x) => x.id === assignId)?.name ?? ''
+            : 'Unassigned'
+        }
         onPress={() => setAssignOpen(true)}
-      >
-        <Text className="text-slate-900">
-          {assignId
-            ? team.find((x) => x.id === assignId)?.name ?? '—'
-            : 'Unassigned'}
-        </Text>
-        <Ionicons name="chevron-down" size={18} color="#64748b" />
-      </Pressable>
-      <Text className="mb-1 text-xs font-medium text-slate-500">Due date</Text>
-      <TextInput
-        className="mb-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-        value={due}
-        onChangeText={setDue}
-        placeholder="YYYY-MM-DD"
       />
-      <Text className="mb-1 text-xs font-medium text-slate-500">Status</Text>
-      <Pressable
-        className="mb-3 flex-row items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2"
+      <WorkshopDatePickerField label="Due date" value={due} onChange={setDue} />
+      <WorkshopPickerField
+        label="Status"
+        value={label(statusPick)}
         onPress={() => setStatusPickOpen(true)}
-      >
-        <Text className="text-slate-900">{label(statusPick)}</Text>
-        <Ionicons name="chevron-down" size={18} color="#64748b" />
-      </Pressable>
-      <Text className="mb-1 text-xs font-medium text-slate-500">Priority</Text>
-      <Pressable
-        className="mb-3 flex-row items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2"
+      />
+      <WorkshopPickerField
+        label="Priority"
+        value={label(priorityPick)}
         onPress={() => setPriorityPickOpen(true)}
-      >
-        <Text className="text-slate-900">{label(priorityPick)}</Text>
-        <Ionicons name="chevron-down" size={18} color="#64748b" />
-      </Pressable>
+      />
     </>
   );
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Tasks
-        </Text>
-        {canCreateTasks() ? (
-          <Pressable className="px-2 py-1" onPress={openCreate}>
-            <Ionicons name="add-circle" size={28} color="#2563eb" />
-          </Pressable>
-        ) : (
-          <View className="w-9" />
-        )}
-      </View>
-
-      <View className="flex-row gap-2 border-b border-slate-200 bg-white px-3 py-2">
-        <Pressable
-          className="flex-1 flex-row items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-2 py-2"
-          onPress={() => setProjectSheetOpen(true)}
-        >
-          <Text className="flex-1 text-sm text-slate-900" numberOfLines={1}>
-            {projectOptions.find((o) => o.value === projectFilter)?.label}
-          </Text>
-          <Ionicons name="chevron-down" size={16} color="#64748b" />
-        </Pressable>
-        <Pressable
-          className="flex-1 flex-row items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-2 py-2"
-          onPress={() => setStatusSheetOpen(true)}
-        >
-          <Text className="flex-1 text-sm text-slate-900" numberOfLines={1}>
-            {statusFilter === 'all' ? 'All statuses' : label(statusFilter)}
-          </Text>
-          <Ionicons name="chevron-down" size={16} color="#64748b" />
-        </Pressable>
-      </View>
-
-      {loading && tasks.length === 0 ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563eb" />
-        </View>
-      ) : (
-        <FlatList
-          data={tasks}
-          keyExtractor={(x) => x.id}
-          renderItem={renderItem}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-          ListEmptyComponent={
-            <Text className="py-8 text-center text-slate-500">No tasks</Text>
-          }
-        />
-      )}
-
-      <AppModal
-        visible={detailOpen}
-        animationType="slide"
-        transparent
-        onClose={() => setDetailOpen(false)}
+    <>
+      <WorkshopChrome
+        title="Tasks"
+        subtitle="Track work across projects"
+        right={
+          canCreateTasks() ? (
+            <WorkshopHeaderButton onPress={openCreate} />
+          ) : (
+            <View style={{ width: 72 }} />
+          )
+        }
+        scroll={false}
       >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[85%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
-            <Text className="text-lg font-semibold text-slate-900">Task</Text>
-            <ScrollView className="mt-3">
-              {selected ? (
-                <>
-                  <Text className="text-xl font-bold text-slate-900">
-                    {selected.title}
-                  </Text>
-                  <Text className="mt-2 text-slate-600">
-                    {selected.description || '—'}
-                  </Text>
-                  <Text className="mt-3 text-sm text-slate-700">
-                    {label(selected.status)} · {label(selected.priority)}
-                  </Text>
-                  <Text className="mt-1 text-sm text-slate-700">
-                    Assignee: {selected.assignedTo?.name ?? '—'}
-                  </Text>
-                  <Text className="mt-1 text-sm text-slate-700">
-                    Due: {selected.dueDate ?? '—'}
-                  </Text>
-                </>
-              ) : null}
-            </ScrollView>
-            <View className="mt-4 flex-row gap-2">
+        <WorkshopFilterBar
+          resultCount={tasks.length}
+          activeFilterCount={countActiveFilters([projectFilter, statusFilter])}
+          onResetFilters={() => {
+            setProjectFilter('all');
+            setStatusFilter('all');
+          }}
+        >
+          <WorkshopPickerField
+            label="Project"
+            value={projectOptions.find((o) => o.value === projectFilter)?.label ?? 'All projects'}
+            onPress={() => setProjectSheetOpen(true)}
+          />
+          <WorkshopPickerField
+            label="Status"
+            value={statusFilter === 'all' ? 'All statuses' : label(statusFilter)}
+            onPress={() => setStatusSheetOpen(true)}
+          />
+        </WorkshopFilterBar>
+
+        {loading && tasks.length === 0 ? (
+          <WorkshopLoading />
+        ) : (
+          <FlatList
+            data={tasks}
+            keyExtractor={(x) => x.id}
+            contentContainerStyle={{ paddingBottom: 20 }}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={WS.primary}
+              />
+            }
+            renderItem={({ item }) => (
+              <WorkshopListCard
+                icon="checkbox-outline"
+                iconColor="#4f46e5"
+                iconBg="#eef2ff"
+                title={item.title}
+                subtitle={item.assignedTo?.name ?? 'Unassigned'}
+                meta={`${label(item.status)} · ${label(item.priority)}`}
+                badges={[{ label: item.status, tone: 'status' }]}
+                onPress={() => {
+                  setSelected(item);
+                  setDetailOpen(true);
+                }}
+                actions={
+                  canUpdateTasks()
+                    ? [{ icon: 'create-outline', onPress: () => openEdit(item) }]
+                    : undefined
+                }
+              />
+            )}
+            ListEmptyComponent={
+              <WorkshopEmptyState
+                icon="checkbox-outline"
+                title="No tasks"
+                subtitle="Create a task to track project work."
+                actionLabel={canCreateTasks() ? 'New task' : undefined}
+                onAction={canCreateTasks() ? openCreate : undefined}
+              />
+            }
+          />
+        )}
+      </WorkshopChrome>
+
+      <WorkshopFormSheet
+        visible={detailOpen}
+        title="Task"
+        onClose={() => setDetailOpen(false)}
+        footer={
+          <View style={{ gap: 8 }}>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
               {canUpdateTasks() && selected ? (
-                <Pressable
-                  className="flex-1 items-center rounded-lg border border-slate-200 py-3"
-                  onPress={() => {
-                    setDetailOpen(false);
-                    openEdit(selected);
-                  }}
-                >
-                  <Text className="font-semibold text-slate-800">Edit</Text>
-                </Pressable>
+                <View style={{ flex: 1 }}>
+                  <WorkshopPrimaryButton
+                    label="Edit"
+                    onPress={() => {
+                      setDetailOpen(false);
+                      openEdit(selected);
+                    }}
+                  />
+                </View>
               ) : null}
               {canDeleteTasks() && selected ? (
-                <Pressable
-                  className="flex-1 items-center rounded-lg bg-red-600 py-3"
-                  onPress={() => selected && confirmDelete(selected)}
-                >
-                  <Text className="font-semibold text-white">Delete</Text>
-                </Pressable>
+                <View style={{ flex: 1 }}>
+                  <Pressable
+                    onPress={() => selected && confirmDelete(selected)}
+                    style={{
+                      alignItems: 'center',
+                      borderRadius: 14,
+                      paddingVertical: 15,
+                      backgroundColor: WS.danger,
+                    }}
+                  >
+                    <Text style={{ fontWeight: '700', fontSize: 16, color: '#fff' }}>Delete</Text>
+                  </Pressable>
+                </View>
               ) : null}
-              <Pressable
-                className="flex-1 items-center rounded-lg bg-slate-200 py-3"
-                onPress={() => setDetailOpen(false)}
-              >
-                <Text className="font-semibold text-slate-800">Close</Text>
-              </Pressable>
             </View>
+            <Pressable
+              onPress={() => setDetailOpen(false)}
+              style={{ alignItems: 'center', paddingVertical: 10 }}
+            >
+              <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Close</Text>
+            </Pressable>
           </View>
-        </View>
-      </AppModal>
+        }
+      >
+        {selected ? (
+          <>
+            <Text style={{ fontSize: 20, fontWeight: '800', color: WS.text, marginBottom: 12 }}>
+              {selected.title}
+            </Text>
+            <Text style={{ fontSize: 14, color: WS.textMuted, marginBottom: 16 }}>
+              {selected.description || '—'}
+            </Text>
+            <WorkshopDetailRow label="Status" value={selected.status} />
+            <WorkshopDetailRow label="Priority" value={selected.priority} />
+            <WorkshopDetailRow
+              label="Assignee"
+              value={selected.assignedTo?.name ?? '—'}
+            />
+            <WorkshopDetailRow label="Due" value={selected.dueDate ?? '—'} />
+          </>
+        ) : null}
+      </WorkshopFormSheet>
 
-      <AppModal
+      <MobileFormSheet
         visible={createOpen}
-        animationType="slide"
-        transparent
-        onClose={() => setCreateOpen(false)}
+        title="New task"
+        onCancel={() => setCreateOpen(false)}
+        onSave={() => void submitCreate()}
+        saveLabel="Create"
       >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
-            <Text className="text-lg font-semibold text-slate-900">New task</Text>
-            <ScrollView className="mt-3" keyboardShouldPersistTaps="handled">
-              {formBody}
-            </ScrollView>
-            <Pressable
-              className="mt-3 items-center rounded-lg bg-blue-600 py-3"
-              onPress={() => void submitCreate()}
-            >
-              <Text className="font-semibold text-white">Create</Text>
-            </Pressable>
-            <Pressable
-              className="mt-2 items-center py-2"
-              onPress={() => setCreateOpen(false)}
-            >
-              <Text className="text-slate-600">Cancel</Text>
-            </Pressable>
-          </View>
-        </View>
-      </AppModal>
+        {formBody}
+      </MobileFormSheet>
 
-      <AppModal
+      <MobileFormSheet
         visible={editOpen}
-        animationType="slide"
-        transparent
-        onClose={() => setEditOpen(false)}
+        title="Edit task"
+        onCancel={() => {
+          setEditOpen(false);
+          setSelected(null);
+        }}
+        onSave={() => void submitEdit()}
       >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
-            <Text className="text-lg font-semibold text-slate-900">Edit task</Text>
-            <ScrollView className="mt-3" keyboardShouldPersistTaps="handled">
-              {formBody}
-            </ScrollView>
-            <Pressable
-              className="mt-3 items-center rounded-lg bg-blue-600 py-3"
-              onPress={() => void submitEdit()}
-            >
-              <Text className="font-semibold text-white">Save</Text>
-            </Pressable>
-            <Pressable
-              className="mt-2 items-center py-2"
-              onPress={() => {
-                setEditOpen(false);
-                setSelected(null);
-              }}
-            >
-              <Text className="text-slate-600">Cancel</Text>
-            </Pressable>
-          </View>
-        </View>
-      </AppModal>
+        {formBody}
+      </MobileFormSheet>
 
       <OptionSheet
         visible={projectSheetOpen}
@@ -538,6 +497,6 @@ export function MobileTasksScreen() {
         }}
         onClose={() => setProjectPickOpen(false)}
       />
-    </View>
+    </>
   );
 }

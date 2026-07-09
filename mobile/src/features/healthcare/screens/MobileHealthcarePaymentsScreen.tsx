@@ -13,6 +13,7 @@ import {
   HealthcarePrimaryButton,
   HealthcareOutlineButton,
 } from '../components/HealthcareChrome';
+import { WorkshopDatePickerField } from '../../workshop/components/WorkshopChrome';
 
 const PAYMENT_METHODS = [
   { value: 'cash', label: 'Cash' },
@@ -210,12 +211,7 @@ export function MobileHealthcarePaymentsScreen() {
                 value={amount}
                 onChangeText={setAmount}
               />
-              <HealthcareFieldLabel>Date</HealthcareFieldLabel>
-              <TextInput
-                className="mb-3 rounded-lg border border-slate-200 px-3 py-2"
-                value={payDate}
-                onChangeText={setPayDate}
-              />
+              <WorkshopDatePickerField label="Date" value={payDate} onChange={setPayDate} />
               <HealthcareFieldLabel>Method</HealthcareFieldLabel>
               <View className="mb-3 flex-row flex-wrap gap-2">
                 {PAYMENT_METHODS.map((m) => (

@@ -1,14 +1,30 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, FlatList, ScrollView, Pressable, ActivityIndicator, RefreshControl, Alert, TextInput } from 'react-native';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { View, Text, FlatList, Pressable, RefreshControl } from 'react-native';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { appAlert, appConfirm, appError } from '../../../utils/appDialog';
 import { formatUsd } from '../../../services/crm/CrmMobileService';
 import { getPayrollRecords, createPayrollRecord, updatePayrollRecord, deletePayrollRecord, getEmployees } from '../../../services/hrm/hrmMobileApi';
 import type { Payroll, Employee, PayrollCreate, PayrollUpdate } from '../../../models/hrm';
 import { PayrollStatus } from '../../../models/hrm';
-import { AppModal } from '../../../components/layout/AppModal';
+import {
+  WorkshopChrome,
+  WorkshopListCard,
+  WorkshopEmptyState,
+  WorkshopHeaderButton,
+  WorkshopLoading,
+  WorkshopFormSheet,
+  WorkshopFieldLabel,
+  WorkshopTextInput,
+  WorkshopDatePickerField,
+  WorkshopPickerField,
+  WorkshopChipSelect,
+  WorkshopPrimaryButton,
+  WorkshopOutlineButton,
+  WorkshopDetailRow,
+  WS,
+} from '../../workshop/components/WorkshopChrome';
 
 const PAYROLL_STATUSES = Object.values(PayrollStatus);
 
@@ -53,7 +69,7 @@ export function MobileHrmPayrollScreen() {
       setEmployees(list);
       setForm((prev) => ({ ...prev, employeeId: prev.employeeId || list[0]?.id || '' }));
     } catch (e) {
-      Alert.alert('HRM', extractErrorMessage(e, 'Failed to load'));
+      appError('HRM', extractErrorMessage(e, 'Failed to load'));
     } finally {
       setLoading(false);
     }
@@ -78,13 +94,6 @@ export function MobileHrmPayrollScreen() {
   const employeeName = (id: string) => {
     const employee = employees.find((e) => e.id === id);
     return employee ? `${employee.firstName} ${employee.lastName}` : 'Select employee';
-  };
-
-  const cycleStatus = () => {
-    setForm((prev) => {
-      const index = PAYROLL_STATUSES.indexOf(prev.status);
-      return { ...prev, status: PAYROLL_STATUSES[(index + 1) % PAYROLL_STATUSES.length] as PayrollStatus };
-    });
   };
 
   const cycleEmployee = () => {
@@ -143,11 +152,11 @@ export function MobileHrmPayrollScreen() {
 
   const validateForm = () => {
     if (!form.employeeId || !form.payPeriod.trim() || !form.startDate.trim() || !form.endDate.trim()) {
-      Alert.alert('HRM', 'Employee, pay period, start date, and end date are required.');
+      appAlert('HRM', 'Employee, pay period, start date, and end date are required.');
       return false;
     }
     if (parseNumber(form.basicSalary) <= 0) {
-      Alert.alert('HRM', 'Basic salary must be greater than zero.');
+      appAlert('HRM', 'Basic salary must be greater than zero.');
       return false;
     }
     return true;
@@ -186,7 +195,7 @@ export function MobileHrmPayrollScreen() {
       setCreateOpen(false);
       await load();
     } catch (e) {
-      Alert.alert('HRM', extractErrorMessage(e, 'Failed to create'));
+      appError('HRM', extractErrorMessage(e, 'Failed to create'));
     } finally {
       setSaving(false);
     }
@@ -216,203 +225,175 @@ export function MobileHrmPayrollScreen() {
       setSelected(null);
       await load();
     } catch (e) {
-      Alert.alert('HRM', extractErrorMessage(e, 'Failed to update'));
+      appError('HRM', extractErrorMessage(e, 'Failed to update'));
     } finally {
       setSaving(false);
     }
   };
 
   const remove = (row: Payroll) => {
-    Alert.alert('Delete payroll record', row.payPeriod, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () =>
-          void (async () => {
-            try {
-              await deletePayrollRecord(row.id);
-              setDetail(null);
-              await load();
-            } catch (err) {
-              Alert.alert('HRM', extractErrorMessage(err, 'Failed to delete'));
-            }
-          })(),
+    appConfirm({
+      title: 'Delete payroll record',
+      message: row.payPeriod,
+      confirmLabel: 'Delete',
+      destructive: true,
+      onConfirm: async () => {
+        try {
+          await deletePayrollRecord(row.id);
+          setDetail(null);
+          await load();
+        } catch (err) {
+          appError('HRM', extractErrorMessage(err, 'Failed to delete'));
+        }
       },
-    ]);
+    });
   };
 
-  return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Payroll
-        </Text>
-        {canManageHRM() ? (
-          <Pressable onPress={openCreate} className="px-2 py-1">
-            <Text className="font-semibold text-blue-600">New</Text>
-          </Pressable>
-        ) : (
-          <View className="w-10" />
-        )}
-      </View>
-
-      {loading && !refreshing ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563eb" />
+  const renderForm = () => (
+    <>
+      <WorkshopPickerField label="Employee" value={employeeName(form.employeeId)} onPress={cycleEmployee} />
+      <WorkshopFieldLabel>Pay period *</WorkshopFieldLabel>
+      <WorkshopTextInput value={form.payPeriod} onChangeText={(v) => setForm((p) => ({ ...p, payPeriod: v }))} />
+      <View style={{ flexDirection: 'row', gap: 8 }}>
+        <View style={{ flex: 1 }}>
+          <WorkshopDatePickerField label="Start date *" value={form.startDate} onChange={(v) => setForm((p) => ({ ...p, startDate: v }))} />
         </View>
+        <View style={{ flex: 1 }}>
+          <WorkshopDatePickerField label="End date *" value={form.endDate} onChange={(v) => setForm((p) => ({ ...p, endDate: v }))} />
+        </View>
+      </View>
+      <WorkshopFieldLabel>Basic salary *</WorkshopFieldLabel>
+      <WorkshopTextInput value={form.basicSalary} onChangeText={(v) => setForm((p) => ({ ...p, basicSalary: v }))} keyboardType="decimal-pad" />
+      <WorkshopFieldLabel>Allowances</WorkshopFieldLabel>
+      <WorkshopTextInput value={form.allowances} onChangeText={(v) => setForm((p) => ({ ...p, allowances: v }))} keyboardType="decimal-pad" />
+      <WorkshopFieldLabel>Deductions</WorkshopFieldLabel>
+      <WorkshopTextInput value={form.deductions} onChangeText={(v) => setForm((p) => ({ ...p, deductions: v }))} keyboardType="decimal-pad" />
+      <WorkshopFieldLabel>Overtime pay</WorkshopFieldLabel>
+      <WorkshopTextInput value={form.overtimePay} onChangeText={(v) => setForm((p) => ({ ...p, overtimePay: v }))} keyboardType="decimal-pad" />
+      <WorkshopFieldLabel>Bonus</WorkshopFieldLabel>
+      <WorkshopTextInput value={form.bonus} onChangeText={(v) => setForm((p) => ({ ...p, bonus: v }))} keyboardType="decimal-pad" />
+      <WorkshopFieldLabel>Net pay (optional)</WorkshopFieldLabel>
+      <WorkshopTextInput value={form.netPay} onChangeText={(v) => setForm((p) => ({ ...p, netPay: v }))} keyboardType="decimal-pad" />
+      <WorkshopChipSelect label="Status" options={[...PAYROLL_STATUSES]} value={form.status} onChange={(v) => setForm((p) => ({ ...p, status: v as PayrollStatus }))} />
+      <WorkshopDatePickerField label="Payment date" value={form.paymentDate} onChange={(v) => setForm((p) => ({ ...p, paymentDate: v }))} />
+      <WorkshopFieldLabel>Notes</WorkshopFieldLabel>
+      <WorkshopTextInput value={form.notes} onChangeText={(v) => setForm((p) => ({ ...p, notes: v }))} multiline />
+    </>
+  );
+
+  const formFooter = (onSave: () => void, saveLabel: string, onCancel: () => void) => (
+    <>
+      <WorkshopPrimaryButton label={saving ? 'Saving…' : saveLabel} onPress={onSave} disabled={saving} />
+      <Pressable onPress={onCancel} style={{ marginTop: 12, alignItems: 'center', paddingVertical: 10 }}>
+        <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Cancel</Text>
+      </Pressable>
+    </>
+  );
+
+  return (
+    <WorkshopChrome
+      title="Payroll"
+      subtitle="Pay periods & compensation"
+      right={canManageHRM() ? <WorkshopHeaderButton onPress={openCreate} /> : undefined}
+      scroll={false}
+    >
+      {loading && !refreshing ? (
+        <WorkshopLoading />
       ) : (
         <FlatList
+          style={{ flex: 1 }}
           data={rows}
           keyExtractor={(item) => item.id}
+          contentContainerStyle={{ paddingBottom: 20 }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={WS.primary} />
           }
-          contentContainerStyle={{ padding: 12, paddingBottom: 32 }}
           ListEmptyComponent={
-            <Text className="py-8 text-center text-slate-500">No payroll records</Text>
+            <WorkshopEmptyState
+              icon="wallet-outline"
+              title="No payroll records"
+              subtitle="Create payroll records for your team."
+              actionLabel={canManageHRM() ? 'New record' : undefined}
+              onAction={canManageHRM() ? openCreate : undefined}
+            />
           }
           renderItem={({ item }) => (
-            <Pressable
+            <WorkshopListCard
+              icon="wallet"
+              iconColor="#d97706"
+              iconBg="#fffbeb"
+              title={item.payPeriod}
+              subtitle={`Net ${formatUsd(item.netPay)}`}
+              meta={`${item.startDate} → ${item.endDate}`}
+              badges={[{ label: String(item.status), tone: 'status' }]}
               onPress={() => setDetail(item)}
-              className="mb-3 rounded-xl border border-slate-200 bg-white p-3"
-            >
-              <Text className="font-semibold text-slate-900">{item.payPeriod}</Text>
-              <Text className="text-xs text-slate-500">{String(item.status)}</Text>
-              <Text className="mt-1 text-sm text-slate-800">
-                Net {formatUsd(item.netPay)}
-              </Text>
-            </Pressable>
+              actions={
+                canManageHRM()
+                  ? [
+                      { icon: 'create-outline', onPress: () => openEdit(item) },
+                      { icon: 'trash-outline', onPress: () => remove(item), danger: true },
+                    ]
+                  : undefined
+              }
+            />
           )}
         />
       )}
 
-      <AppModal
+      <WorkshopFormSheet
         visible={detail != null}
-        animationType="slide"
-        transparent
+        title="Payroll"
         onClose={() => setDetail(null)}
-      >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[88%] rounded-t-2xl bg-white p-4">
-            <Text className="text-lg font-semibold text-slate-900">Payroll</Text>
-            {detail ? (
-              <ScrollView className="mt-3">
-                <Text className="text-slate-800">{detail.payPeriod}</Text>
-                <Text className="mt-2 text-slate-700">
-                  Basic {formatUsd(detail.basicSalary)} · Net {formatUsd(detail.netPay)}
-                </Text>
-                <Text className="mt-2 text-sm text-slate-600">
-                  {detail.startDate} → {detail.endDate}
-                </Text>
-              </ScrollView>
+        footer={
+          <>
+            {detail && canManageHRM() ? (
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <WorkshopPrimaryButton label="Edit" onPress={() => { setDetail(null); openEdit(detail); }} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Pressable
+                    onPress={() => remove(detail)}
+                    style={{ alignItems: 'center', borderRadius: 14, paddingVertical: 15, backgroundColor: WS.dangerBg }}
+                  >
+                    <Text style={{ fontWeight: '700', fontSize: 16, color: WS.danger }}>Delete</Text>
+                  </Pressable>
+                </View>
+              </View>
             ) : null}
-            <View className="mt-4 flex-row gap-2">
-              {detail && canManageHRM() ? (
-                <Pressable onPress={() => openEdit(detail)} className="flex-1 items-center rounded-lg bg-blue-600 py-3">
-                  <Text className="font-semibold text-white">Edit</Text>
-                </Pressable>
-              ) : null}
-              {detail && canManageHRM() ? (
-                <Pressable onPress={() => remove(detail)} className="flex-1 items-center rounded-lg bg-red-600 py-3">
-                  <Text className="font-semibold text-white">Delete</Text>
-                </Pressable>
-              ) : null}
-              <Pressable
-                onPress={() => setDetail(null)}
-                className="flex-1 items-center rounded-lg bg-slate-100 py-3"
-              >
-                <Text className="font-semibold text-slate-800">Close</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </AppModal>
+            <WorkshopOutlineButton label="Close" onPress={() => setDetail(null)} />
+          </>
+        }
+      >
+        {detail ? (
+          <>
+            <WorkshopDetailRow label="Pay period" value={detail.payPeriod} />
+            <WorkshopDetailRow label="Employee" value={employeeName(detail.employeeId)} />
+            <WorkshopDetailRow label="Basic" value={formatUsd(detail.basicSalary)} />
+            <WorkshopDetailRow label="Net pay" value={formatUsd(detail.netPay)} />
+            <WorkshopDetailRow label="Status" value={String(detail.status)} />
+            <WorkshopDetailRow label="Dates" value={`${detail.startDate} → ${detail.endDate}`} />
+          </>
+        ) : null}
+      </WorkshopFormSheet>
 
-      <AppModal
+      <WorkshopFormSheet
         visible={createOpen}
-        animationType="slide"
-        transparent
+        title="New payroll record"
         onClose={() => setCreateOpen(false)}
+        footer={formFooter(() => void submitCreate(), 'Create record', () => setCreateOpen(false))}
       >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-2 pt-4">
-            <Text className="text-lg font-semibold text-slate-900">New payroll record</Text>
-            <ScrollView keyboardShouldPersistTaps="handled" className="mt-3 max-h-[76%]">
-              <View className="gap-3">
-                <Pressable onPress={cycleEmployee} className="rounded-lg border border-slate-200 px-3 py-2">
-                  <Text className="text-slate-900">Employee: {employeeName(form.employeeId)}</Text>
-                </Pressable>
-                <TextInput value={form.payPeriod} onChangeText={(v) => setForm((p) => ({ ...p, payPeriod: v }))} placeholder="Pay period" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.startDate} onChangeText={(v) => setForm((p) => ({ ...p, startDate: v }))} placeholder="Start date (YYYY-MM-DD)" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.endDate} onChangeText={(v) => setForm((p) => ({ ...p, endDate: v }))} placeholder="End date (YYYY-MM-DD)" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.basicSalary} onChangeText={(v) => setForm((p) => ({ ...p, basicSalary: v }))} placeholder="Basic salary" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.allowances} onChangeText={(v) => setForm((p) => ({ ...p, allowances: v }))} placeholder="Allowances" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.deductions} onChangeText={(v) => setForm((p) => ({ ...p, deductions: v }))} placeholder="Deductions" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.overtimePay} onChangeText={(v) => setForm((p) => ({ ...p, overtimePay: v }))} placeholder="Overtime pay" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.bonus} onChangeText={(v) => setForm((p) => ({ ...p, bonus: v }))} placeholder="Bonus" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.netPay} onChangeText={(v) => setForm((p) => ({ ...p, netPay: v }))} placeholder="Net pay (optional)" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <Pressable onPress={cycleStatus} className="rounded-lg border border-slate-200 px-3 py-2">
-                  <Text className="text-slate-900">Status: {form.status}</Text>
-                </Pressable>
-                <TextInput value={form.paymentDate} onChangeText={(v) => setForm((p) => ({ ...p, paymentDate: v }))} placeholder="Payment date (YYYY-MM-DD)" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.notes} onChangeText={(v) => setForm((p) => ({ ...p, notes: v }))} placeholder="Notes" placeholderTextColor="#475569" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
-              </View>
-            </ScrollView>
-            <View className="mt-4 flex-row gap-2">
-              <Pressable onPress={() => setCreateOpen(false)} className="flex-1 items-center rounded-lg border border-slate-300 py-3">
-                <Text className="font-semibold text-slate-700">Cancel</Text>
-              </Pressable>
-              <Pressable onPress={() => void submitCreate()} disabled={saving} className="flex-1 items-center rounded-lg bg-blue-600 py-3">
-                <Text className="font-semibold text-white">{saving ? 'Saving...' : 'Create'}</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </AppModal>
+        {renderForm()}
+      </WorkshopFormSheet>
 
-      <AppModal
+      <WorkshopFormSheet
         visible={editOpen}
-        animationType="slide"
-        transparent
-        onClose={() => setEditOpen(false)}
+        title="Edit payroll record"
+        onClose={() => { setEditOpen(false); setSelected(null); }}
+        footer={formFooter(() => void submitEdit(), 'Save record', () => { setEditOpen(false); setSelected(null); })}
       >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-2 pt-4">
-            <Text className="text-lg font-semibold text-slate-900">Edit payroll record</Text>
-            <ScrollView keyboardShouldPersistTaps="handled" className="mt-3 max-h-[76%]">
-              <View className="gap-3">
-                <Pressable onPress={cycleEmployee} className="rounded-lg border border-slate-200 px-3 py-2">
-                  <Text className="text-slate-900">Employee: {employeeName(form.employeeId)}</Text>
-                </Pressable>
-                <TextInput value={form.payPeriod} onChangeText={(v) => setForm((p) => ({ ...p, payPeriod: v }))} placeholder="Pay period" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.startDate} onChangeText={(v) => setForm((p) => ({ ...p, startDate: v }))} placeholder="Start date (YYYY-MM-DD)" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.endDate} onChangeText={(v) => setForm((p) => ({ ...p, endDate: v }))} placeholder="End date (YYYY-MM-DD)" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.basicSalary} onChangeText={(v) => setForm((p) => ({ ...p, basicSalary: v }))} placeholder="Basic salary" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.allowances} onChangeText={(v) => setForm((p) => ({ ...p, allowances: v }))} placeholder="Allowances" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.deductions} onChangeText={(v) => setForm((p) => ({ ...p, deductions: v }))} placeholder="Deductions" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.overtimePay} onChangeText={(v) => setForm((p) => ({ ...p, overtimePay: v }))} placeholder="Overtime pay" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.bonus} onChangeText={(v) => setForm((p) => ({ ...p, bonus: v }))} placeholder="Bonus" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.netPay} onChangeText={(v) => setForm((p) => ({ ...p, netPay: v }))} placeholder="Net pay (optional)" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <Pressable onPress={cycleStatus} className="rounded-lg border border-slate-200 px-3 py-2">
-                  <Text className="text-slate-900">Status: {form.status}</Text>
-                </Pressable>
-                <TextInput value={form.paymentDate} onChangeText={(v) => setForm((p) => ({ ...p, paymentDate: v }))} placeholder="Payment date (YYYY-MM-DD)" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.notes} onChangeText={(v) => setForm((p) => ({ ...p, notes: v }))} placeholder="Notes" placeholderTextColor="#475569" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
-              </View>
-            </ScrollView>
-            <View className="mt-4 flex-row gap-2">
-              <Pressable onPress={() => { setEditOpen(false); setSelected(null); }} className="flex-1 items-center rounded-lg border border-slate-300 py-3">
-                <Text className="font-semibold text-slate-700">Cancel</Text>
-              </Pressable>
-              <Pressable onPress={() => void submitEdit()} disabled={saving} className="flex-1 items-center rounded-lg bg-blue-600 py-3">
-                <Text className="font-semibold text-white">{saving ? 'Saving...' : 'Save'}</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </AppModal>
-    </View>
+        {renderForm()}
+      </WorkshopFormSheet>
+    </WorkshopChrome>
   );
 }

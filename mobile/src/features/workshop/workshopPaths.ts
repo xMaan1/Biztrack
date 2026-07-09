@@ -5,6 +5,7 @@ export const WORKSHOP_NATIVE_PATHS = [
   '/workshop-management/production',
   '/workshop-management/quality-control',
   '/workshop-management/maintenance',
+  '/workshop-management/mot/bookings',
 ] as const;
 
 export function isWorkshopNativePath(path: string): boolean {

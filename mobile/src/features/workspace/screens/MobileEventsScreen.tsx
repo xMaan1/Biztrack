@@ -1,13 +1,28 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert, Linking, AppState } from 'react-native';
+import { View, Text, FlatList, Pressable, RefreshControl, Linking, AppState } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { MobileFormSheet } from '../../../components/layout/MobileForm';
+import {
+  WorkshopChrome,
+  WorkshopChipSelect,
+  WorkshopFilterBar,
+  countActiveFilters,
+  WorkshopListCard,
+  WorkshopEmptyState,
+  WorkshopHeaderButton,
+  WorkshopLoading,
+  WorkshopFieldLabel,
+  WorkshopTextInput,
+  WorkshopDatePickerField,
+  WorkshopPickerField,
+  WS,
+} from '../../workshop/components/WorkshopChrome';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { OptionSheet } from '../../../components/crm/OptionSheet';
 import { apiService } from '../../../services/ApiService';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { appAlert, appConfirm, appError } from '../../../utils/appDialog';
 import { usePermissions } from '../../../hooks/usePermissions';
-import { AppModal } from '../../../components/layout/AppModal';
 
 interface CalendarEvent {
   id: string;
@@ -54,8 +69,6 @@ export function MobileEventsScreen() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
-  const [statusOpen, setStatusOpen] = useState(false);
-  const [typeOpen, setTypeOpen] = useState(false);
 
   const [googleOk, setGoogleOk] = useState(false);
   const [authBusy, setAuthBusy] = useState(false);
@@ -90,7 +103,7 @@ export function MobileEventsScreen() {
       const list = (res as { events?: CalendarEvent[] }).events ?? [];
       setEvents(list);
     } catch (e) {
-      Alert.alert('Events', extractErrorMessage(e, 'Failed to load'));
+      appError('Events', extractErrorMessage(e, 'Failed to load'));
     } finally {
       setLoading(false);
     }
@@ -126,17 +139,17 @@ export function MobileEventsScreen() {
       const res = await apiService.getGoogleAuthUrl();
       const url = (res as { authorization_url?: string }).authorization_url;
       if (!url) {
-        Alert.alert('Events', 'No authorization URL returned.');
+        appAlert('Events', 'No authorization URL returned.');
         return;
       }
       const supported = await Linking.canOpenURL(url);
       if (!supported) {
-        Alert.alert('Events', 'Cannot open browser for Google Calendar.');
+        appAlert('Events', 'Cannot open browser for Google Calendar.');
         return;
       }
       await Linking.openURL(url);
     } catch (e) {
-      Alert.alert('Events', extractErrorMessage(e, 'Connect failed'));
+      appError('Events', extractErrorMessage(e, 'Connect failed'));
     } finally {
       setAuthBusy(false);
     }
@@ -157,7 +170,7 @@ export function MobileEventsScreen() {
 
   const submitCreate = useCallback(async () => {
     if (!title.trim() || !startDate || !endDate) {
-      Alert.alert('Events', 'Title, start date, and end date are required.');
+      appAlert('Events', 'Title, start date, and end date are required.');
       return;
     }
     try {
@@ -185,7 +198,7 @@ export function MobileEventsScreen() {
       setDescription('');
       await loadEvents();
     } catch (e) {
-      Alert.alert('Events', extractErrorMessage(e, 'Create failed'));
+      appError('Events', extractErrorMessage(e, 'Create failed'));
     } finally {
       setCreateBusy(false);
     }
@@ -215,7 +228,7 @@ export function MobileEventsScreen() {
         if (link) await Linking.openURL(link);
         await loadEvents();
       } catch (e) {
-        Alert.alert('Events', extractErrorMessage(e, 'Join failed'));
+        appError('Events', extractErrorMessage(e, 'Join failed'));
       }
     },
     [loadEvents],
@@ -227,7 +240,7 @@ export function MobileEventsScreen() {
         await apiService.leaveEvent(id);
         await loadEvents();
       } catch (e) {
-        Alert.alert('Events', extractErrorMessage(e, 'Leave failed'));
+        appError('Events', extractErrorMessage(e, 'Leave failed'));
       }
     },
     [loadEvents],
@@ -235,280 +248,211 @@ export function MobileEventsScreen() {
 
   const onDelete = useCallback(
     (ev: CalendarEvent) => {
-      Alert.alert('Delete event', `Remove "${ev.title}"?`, [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            void (async () => {
-              try {
-                await apiService.deleteEvent(ev.id);
-                await loadEvents();
-              } catch (e) {
-                Alert.alert('Events', extractErrorMessage(e, 'Delete failed'));
-              }
-            })();
-          },
+      appConfirm({
+        title: 'Delete event',
+        message: `Remove "${ev.title}"?`,
+        confirmLabel: 'Delete',
+        destructive: true,
+        onConfirm: async () => {
+          try {
+            await apiService.deleteEvent(ev.id);
+            await loadEvents();
+          } catch (e) {
+            appError('Events', extractErrorMessage(e, 'Delete failed'));
+          }
         },
-      ]);
+      });
     },
     [loadEvents],
   );
 
   const typeFormOptions = TYPE_OPTS.filter((o) => o.value !== 'all');
 
+  const openCreate = () => {
+    setTitle('');
+    setDescription('');
+    setEventType('meeting');
+    setStartDate('');
+    setEndDate('');
+    setStartTime('09:00');
+    setEndTime('10:00');
+    setLocation('');
+    setIsOnline(true);
+    setParticipants('');
+    setCreateOpen(true);
+  };
+
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Events
-        </Text>
-        {canManageEvents() ? (
-          <Pressable
-            className="px-2 py-1"
-            onPress={() => {
-              setTitle('');
-              setDescription('');
-              setEventType('meeting');
-              setStartDate('');
-              setEndDate('');
-              setStartTime('09:00');
-              setEndTime('10:00');
-              setLocation('');
-              setIsOnline(true);
-              setParticipants('');
-              setCreateOpen(true);
+    <>
+      <WorkshopChrome
+        title="Events"
+        subtitle="Calendar & meetings"
+        right={
+          canManageEvents() ? (
+            <WorkshopHeaderButton onPress={openCreate} />
+          ) : (
+            <View style={{ width: 72 }} />
+          )
+        }
+        scroll={false}
+      >
+        {!googleOk ? (
+          <View
+            style={{
+              marginBottom: 12,
+              borderRadius: 14,
+              borderWidth: 1,
+              borderColor: '#fcd34d',
+              backgroundColor: WS.warningBg,
+              padding: 14,
             }}
           >
-            <Ionicons name="add-circle" size={28} color="#2563eb" />
-          </Pressable>
-        ) : (
-          <View className="w-9" />
-        )}
-      </View>
-
-      {!googleOk ? (
-        <View className="border-b border-amber-200 bg-amber-50 px-3 py-2">
-          <Text className="text-sm text-amber-900">
-            Connect Google Calendar for Meet links and sync.
-          </Text>
-          <Pressable
-            className="mt-2 items-center rounded-lg border border-amber-300 bg-white py-2"
-            disabled={authBusy}
-            onPress={() => void connectGoogle()}
-          >
-            <Text className="font-semibold text-amber-900">
-              {authBusy ? 'Opening…' : 'Connect Google Calendar'}
+            <Text style={{ fontSize: 13, color: '#92400e' }}>
+              Connect Google Calendar for Meet links and sync.
             </Text>
-          </Pressable>
-        </View>
-      ) : null}
-
-      <View className="border-b border-slate-200 bg-white px-3 py-2">
-        <View className="mb-2 flex-row items-center rounded-lg border border-slate-200 bg-slate-50 px-2">
-          <Ionicons name="search" size={18} color="#64748b" />
-          <TextInput
-            className="flex-1 py-2 pl-2 text-slate-900"
-            placeholder="Search"
-            value={search}
-            onChangeText={setSearch}
-          />
-        </View>
-        <View className="flex-row gap-2">
-          <Pressable
-            className="flex-1 flex-row items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-2 py-2"
-            onPress={() => setStatusOpen(true)}
-          >
-            <Text className="text-sm text-slate-900" numberOfLines={1}>
-              {STATUS_OPTS.find((o) => o.value === statusFilter)?.label}
-            </Text>
-            <Ionicons name="chevron-down" size={16} color="#64748b" />
-          </Pressable>
-          <Pressable
-            className="flex-1 flex-row items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-2 py-2"
-            onPress={() => setTypeOpen(true)}
-          >
-            <Text className="text-sm text-slate-900" numberOfLines={1}>
-              {TYPE_OPTS.find((o) => o.value === typeFilter)?.label}
-            </Text>
-            <Ionicons name="chevron-down" size={16} color="#64748b" />
-          </Pressable>
-        </View>
-      </View>
-
-      {loading && events.length === 0 ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563eb" />
-        </View>
-      ) : (
-        <FlatList
-          data={filtered}
-          keyExtractor={(x) => x.id}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-          renderItem={({ item }) => (
-            <View className="border-b border-slate-100 bg-white px-4 py-3">
-              <Text className="text-base font-semibold text-slate-900">
-                {item.title}
-              </Text>
-              <Text className="mt-1 text-xs text-slate-500">
-                {label(item.status)} · {label(item.eventType)}
-              </Text>
-              <Text className="mt-1 text-sm text-slate-600">
-                {item.startDate ? new Date(item.startDate).toLocaleString() : ''}
-              </Text>
-              <View className="mt-2 flex-row flex-wrap gap-2">
-                <Pressable
-                  className="rounded-lg bg-blue-50 px-3 py-1.5"
-                  onPress={() => void onJoin(item)}
-                >
-                  <Text className="text-sm font-medium text-blue-800">Join</Text>
-                </Pressable>
-                <Pressable
-                  className="rounded-lg bg-slate-100 px-3 py-1.5"
-                  onPress={() => void onLeave(item.id)}
-                >
-                  <Text className="text-sm font-medium text-slate-800">Leave</Text>
-                </Pressable>
-                {canManageEvents() ? (
-                  <Pressable
-                    className="rounded-lg bg-red-50 px-3 py-1.5"
-                    onPress={() => onDelete(item)}
-                  >
-                    <Text className="text-sm font-medium text-red-700">Delete</Text>
-                  </Pressable>
-                ) : null}
-              </View>
-            </View>
-          )}
-          ListEmptyComponent={
-            <Text className="py-8 text-center text-slate-500">No events</Text>
-          }
-        />
-      )}
-
-      <AppModal
-        visible={createOpen}
-        animationType="slide"
-        transparent
-        onClose={() => setCreateOpen(false)}
-      >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
-            <Text className="text-lg font-semibold text-slate-900">New event</Text>
-            <ScrollView className="mt-3" keyboardShouldPersistTaps="handled">
-              <Text className="mb-1 text-xs font-medium text-slate-500">Title</Text>
-              <TextInput
-                className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-                value={title}
-                onChangeText={setTitle}
-              />
-              <Text className="mb-1 text-xs font-medium text-slate-500">Description</Text>
-              <TextInput
-                className="mb-3 min-h-[64px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-                value={description}
-                onChangeText={setDescription}
-                multiline
-              />
-              <Text className="mb-1 text-xs font-medium text-slate-500">Type</Text>
-              <Pressable
-                className="mb-3 flex-row items-center justify-between rounded-lg border border-slate-200 px-3 py-2"
-                onPress={() => setTypePickOpen(true)}
-              >
-                <Text className="text-slate-900">{label(eventType)}</Text>
-                <Ionicons name="chevron-down" size={18} color="#64748b" />
-              </Pressable>
-              <Text className="mb-1 text-xs font-medium text-slate-500">Start date</Text>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-                placeholder="YYYY-MM-DD"
-                value={startDate}
-                onChangeText={setStartDate}
-              />
-              <Text className="mb-1 text-xs font-medium text-slate-500">Start time</Text>
-              <TextInput
-                className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-                placeholder="HH:MM"
-                value={startTime}
-                onChangeText={setStartTime}
-              />
-              <Text className="mb-1 text-xs font-medium text-slate-500">End date</Text>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-                placeholder="YYYY-MM-DD"
-                value={endDate}
-                onChangeText={setEndDate}
-              />
-              <Text className="mb-1 text-xs font-medium text-slate-500">End time</Text>
-              <TextInput
-                className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-                placeholder="HH:MM"
-                value={endTime}
-                onChangeText={setEndTime}
-              />
-              <Text className="mb-1 text-xs font-medium text-slate-500">Location</Text>
-              <TextInput
-                className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-                value={location}
-                onChangeText={setLocation}
-              />
-              <Text className="mb-1 text-xs font-medium text-slate-500">Participants (emails, comma)</Text>
-              <TextInput
-                className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-                value={participants}
-                onChangeText={setParticipants}
-              />
-              <Pressable
-                className="mb-4 flex-row items-center"
-                onPress={() => setIsOnline((v) => !v)}
-              >
-                <Ionicons
-                  name={isOnline ? 'checkbox' : 'square-outline'}
-                  size={24}
-                  color={isOnline ? '#2563eb' : '#94a3b8'}
-                />
-                <Text className="ml-2 text-slate-800">Online meeting</Text>
-              </Pressable>
-            </ScrollView>
             <Pressable
-              className="items-center rounded-lg bg-blue-600 py-3"
-              disabled={createBusy}
-              onPress={() => void submitCreate()}
+              onPress={() => void connectGoogle()}
+              disabled={authBusy}
+              style={{
+                marginTop: 10,
+                alignItems: 'center',
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: '#fcd34d',
+                backgroundColor: WS.card,
+                paddingVertical: 10,
+              }}
             >
-              <Text className="font-semibold text-white">
-                {createBusy ? 'Creating…' : 'Create'}
+              <Text style={{ fontWeight: '700', color: '#92400e' }}>
+                {authBusy ? 'Opening…' : 'Connect Google Calendar'}
               </Text>
-            </Pressable>
-            <Pressable className="mt-2 py-2" onPress={() => setCreateOpen(false)}>
-              <Text className="text-center text-slate-600">Cancel</Text>
             </Pressable>
           </View>
-        </View>
-      </AppModal>
+        ) : null}
 
-      <OptionSheet
-        visible={statusOpen}
-        title="Status"
-        options={[...STATUS_OPTS]}
-        onSelect={(v) => {
-          setStatusFilter(v);
-          setStatusOpen(false);
-        }}
-        onClose={() => setStatusOpen(false)}
-      />
-      <OptionSheet
-        visible={typeOpen}
-        title="Type"
-        options={[...TYPE_OPTS]}
-        onSelect={(v) => {
-          setTypeFilter(v);
-          setTypeOpen(false);
-        }}
-        onClose={() => setTypeOpen(false)}
-      />
+        <WorkshopFilterBar
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search events…"
+          resultCount={filtered.length}
+          activeFilterCount={countActiveFilters([statusFilter, typeFilter])}
+          onResetFilters={() => {
+            setStatusFilter('all');
+            setTypeFilter('all');
+          }}
+        >
+          <WorkshopChipSelect
+            label="Status"
+            options={STATUS_OPTS.map((o) => o.value)}
+            value={statusFilter}
+            onChange={setStatusFilter}
+          />
+          <WorkshopChipSelect
+            label="Type"
+            options={TYPE_OPTS.map((o) => o.value)}
+            value={typeFilter}
+            onChange={setTypeFilter}
+          />
+        </WorkshopFilterBar>
+
+        {loading && events.length === 0 ? (
+          <WorkshopLoading />
+        ) : (
+          <FlatList
+            data={filtered}
+            keyExtractor={(x) => x.id}
+            contentContainerStyle={{ paddingBottom: 20 }}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={WS.primary}
+              />
+            }
+            renderItem={({ item }) => (
+              <WorkshopListCard
+                icon="calendar"
+                iconColor="#4f46e5"
+                iconBg="#eef2ff"
+                title={item.title}
+                subtitle={item.startDate ? new Date(item.startDate).toLocaleString() : ''}
+                meta={`${label(item.status)} · ${label(item.eventType)}`}
+                badges={[{ label: item.status, tone: 'status' }]}
+                actions={[
+                  { icon: 'videocam-outline', onPress: () => void onJoin(item) },
+                  { icon: 'exit-outline', onPress: () => void onLeave(item.id) },
+                  ...(canManageEvents()
+                    ? [{ icon: 'trash-outline' as const, onPress: () => onDelete(item), danger: true }]
+                    : []),
+                ]}
+              />
+            )}
+            ListEmptyComponent={
+              <WorkshopEmptyState
+                icon="calendar-outline"
+                title="No events"
+                subtitle="Schedule meetings and deadlines."
+                actionLabel={canManageEvents() ? 'New event' : undefined}
+                onAction={canManageEvents() ? openCreate : undefined}
+              />
+            }
+          />
+        )}
+      </WorkshopChrome>
+
+      <MobileFormSheet
+        visible={createOpen}
+        title="New event"
+        onCancel={() => setCreateOpen(false)}
+        onSave={() => void submitCreate()}
+        saveLabel={createBusy ? 'Creating…' : 'Create'}
+        saveLoading={createBusy}
+      >
+        <WorkshopFieldLabel>Title</WorkshopFieldLabel>
+        <WorkshopTextInput value={title} onChangeText={setTitle} />
+        <WorkshopFieldLabel>Description</WorkshopFieldLabel>
+        <WorkshopTextInput
+          value={description}
+          onChangeText={setDescription}
+          multiline
+          style={{ minHeight: 64 }}
+        />
+        <WorkshopPickerField
+          label="Type"
+          value={label(eventType)}
+          onPress={() => setTypePickOpen(true)}
+        />
+        <WorkshopDatePickerField label="Start date" value={startDate} onChange={setStartDate} />
+        <WorkshopFieldLabel>Start time</WorkshopFieldLabel>
+        <WorkshopTextInput
+          value={startTime}
+          onChangeText={setStartTime}
+          placeholder="HH:MM"
+        />
+        <WorkshopDatePickerField label="End date" value={endDate} onChange={setEndDate} />
+        <WorkshopFieldLabel>End time</WorkshopFieldLabel>
+        <WorkshopTextInput
+          value={endTime}
+          onChangeText={setEndTime}
+          placeholder="HH:MM"
+        />
+        <WorkshopFieldLabel>Location</WorkshopFieldLabel>
+        <WorkshopTextInput value={location} onChangeText={setLocation} />
+        <WorkshopFieldLabel>Participants (emails, comma)</WorkshopFieldLabel>
+        <WorkshopTextInput value={participants} onChangeText={setParticipants} />
+        <Pressable
+          onPress={() => setIsOnline((v) => !v)}
+          style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}
+        >
+          <Ionicons
+            name={isOnline ? 'checkbox' : 'square-outline'}
+            size={24}
+            color={isOnline ? WS.primary : WS.textLight}
+          />
+          <Text style={{ marginLeft: 10, color: WS.text }}>Online meeting</Text>
+        </Pressable>
+      </MobileFormSheet>
+
       <OptionSheet
         visible={typePickOpen}
         title="Event type"
@@ -522,6 +466,6 @@ export function MobileEventsScreen() {
         }}
         onClose={() => setTypePickOpen(false)}
       />
-    </View>
+    </>
   );
 }

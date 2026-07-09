@@ -26,6 +26,7 @@ import {
   HealthcarePrimaryButton,
   HealthcareOutlineButton,
 } from '../components/HealthcareChrome';
+import { WorkshopDatePickerField } from '../../workshop/components/WorkshopChrome';
 import { PickerModal } from '../components/PickerModal';
 import { AppModal } from '../../../components/layout/AppModal';
 
@@ -292,18 +293,12 @@ export function MobileHealthcareAdmittedPatientsScreen() {
         placeholderTextColor="#94a3b8"
       />
       <View className="mb-2 flex-row gap-2">
-        <TextInput
-          className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
-          placeholder="From"
-          value={dateFrom}
-          onChangeText={setDateFrom}
-        />
-        <TextInput
-          className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
-          placeholder="To"
-          value={dateTo}
-          onChangeText={setDateTo}
-        />
+        <View style={{ flex: 1 }}>
+          <WorkshopDatePickerField label="From" value={dateFrom} onChange={setDateFrom} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <WorkshopDatePickerField label="To" value={dateTo} onChange={setDateTo} />
+        </View>
       </View>
       <View className="mb-2 flex-row flex-wrap gap-2">
         <Pressable
@@ -469,20 +464,22 @@ export function MobileHealthcareAdmittedPatientsScreen() {
                   })()}
                 </Text>
               </Pressable>
-              <HealthcareFieldLabel>Admit date *</HealthcareFieldLabel>
-              <TextInput
-                className="mb-3 rounded-lg border border-slate-200 px-3 py-2"
-                value={form.admit_date}
-                onChangeText={(v) => setForm((f) => ({ ...f, admit_date: v }))}
-              />
-              <HealthcareFieldLabel>Discharge date</HealthcareFieldLabel>
-              <TextInput
-                className="mb-3 rounded-lg border border-slate-200 px-3 py-2"
-                value={form.discharge_date ?? ''}
-                onChangeText={(v) =>
-                  setForm((f) => ({ ...f, discharge_date: v }))
-                }
-              />
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <WorkshopDatePickerField
+                    label="Admit date *"
+                    value={form.admit_date}
+                    onChange={(v) => setForm((f) => ({ ...f, admit_date: v }))}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <WorkshopDatePickerField
+                    label="Discharge date"
+                    value={form.discharge_date ?? ''}
+                    onChange={(v) => setForm((f) => ({ ...f, discharge_date: v }))}
+                  />
+                </View>
+              </View>
               <HealthcareFieldLabel>Ward *</HealthcareFieldLabel>
               <TextInput
                 className="mb-3 rounded-lg border border-slate-200 px-3 py-2"

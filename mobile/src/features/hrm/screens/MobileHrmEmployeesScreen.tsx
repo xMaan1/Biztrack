@@ -1,14 +1,30 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, FlatList, TextInput, ScrollView, Pressable, ActivityIndicator, RefreshControl, Alert } from 'react-native';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { View, Text, FlatList, Pressable, RefreshControl } from 'react-native';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { appAlert, appConfirm, appError } from '../../../utils/appDialog';
 import { formatUsd } from '../../../services/crm/CrmMobileService';
 import { getEmployees, deleteEmployee, createEmployee, updateEmployee } from '../../../services/hrm/hrmMobileApi';
 import type { Employee, EmployeeCreate, EmployeeUpdate } from '../../../models/hrm';
 import { Department, EmployeeType, EmploymentStatus } from '../../../models/hrm';
-import { AppModal } from '../../../components/layout/AppModal';
+import {
+  WorkshopChrome,
+  WorkshopSearchBar,
+  WorkshopListCard,
+  WorkshopEmptyState,
+  WorkshopHeaderButton,
+  WorkshopLoading,
+  WorkshopFormSheet,
+  WorkshopFieldLabel,
+  WorkshopTextInput,
+  WorkshopDatePickerField,
+  WorkshopChipSelect,
+  WorkshopPrimaryButton,
+  WorkshopOutlineButton,
+  WorkshopDetailRow,
+  WS,
+} from '../../workshop/components/WorkshopChrome';
 
 const DEPARTMENTS = Object.values(Department);
 const EMPLOYEE_TYPES = Object.values(EmployeeType);
@@ -55,7 +71,7 @@ export function MobileHrmEmployeesScreen() {
       const res = await getEmployees(1, 100, q.trim() ? { search: q.trim() } : undefined);
       setRows(res.employees ?? []);
     } catch (e) {
-      Alert.alert('HRM', extractErrorMessage(e, 'Failed to load'));
+      appError('HRM', extractErrorMessage(e, 'Failed to load'));
     } finally {
       setLoading(false);
     }
@@ -79,23 +95,21 @@ export function MobileHrmEmployeesScreen() {
   }, [load]);
 
   const remove = (e: Employee) => {
-    Alert.alert('Delete employee', `${e.firstName} ${e.lastName}`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () =>
-          void (async () => {
-            try {
-              await deleteEmployee(e.id);
-              setDetail(null);
-              await load();
-            } catch (err) {
-              Alert.alert('HRM', extractErrorMessage(err, 'Failed to delete'));
-            }
-          })(),
+    appConfirm({
+      title: 'Delete employee',
+      message: `${e.firstName} ${e.lastName}`,
+      confirmLabel: 'Delete',
+      destructive: true,
+      onConfirm: async () => {
+        try {
+          await deleteEmployee(e.id);
+          setDetail(null);
+          await load();
+        } catch (err) {
+          appError('HRM', extractErrorMessage(err, 'Failed to delete'));
+        }
       },
-    ]);
+    });
   };
 
   const openCreate = () => {
@@ -124,11 +138,11 @@ export function MobileHrmEmployeesScreen() {
 
   const validateForm = () => {
     if (!form.firstName.trim() || !form.lastName.trim() || !form.email.trim()) {
-      Alert.alert('HRM', 'First name, last name, and email are required.');
+      appAlert('HRM', 'First name, last name, and email are required.');
       return false;
     }
     if (!form.employeeId.trim() || !form.position.trim() || !form.hireDate.trim()) {
-      Alert.alert('HRM', 'Employee ID, position, and hire date are required.');
+      appAlert('HRM', 'Employee ID, position, and hire date are required.');
       return false;
     }
     return true;
@@ -157,7 +171,7 @@ export function MobileHrmEmployeesScreen() {
       setCreateOpen(false);
       await load();
     } catch (e) {
-      Alert.alert('HRM', extractErrorMessage(e, 'Failed to create'));
+      appError('HRM', extractErrorMessage(e, 'Failed to create'));
     } finally {
       setSaving(false);
     }
@@ -187,204 +201,168 @@ export function MobileHrmEmployeesScreen() {
       setSelected(null);
       await load();
     } catch (e) {
-      Alert.alert('HRM', extractErrorMessage(e, 'Failed to update'));
+      appError('HRM', extractErrorMessage(e, 'Failed to update'));
     } finally {
       setSaving(false);
     }
   };
 
-  const cycleOption = <T extends string>(list: readonly T[], current: T): T => {
-    const index = list.indexOf(current);
-    if (index < 0) return list[0] as T;
-    return list[(index + 1) % list.length] as T;
-  };
-
   const renderForm = () => (
-    <ScrollView keyboardShouldPersistTaps="handled" className="mt-3 max-h-[75%]">
-      <View className="gap-3">
-        <TextInput value={form.firstName} onChangeText={(v) => setForm((p) => ({ ...p, firstName: v }))} placeholder="First name" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-        <TextInput value={form.lastName} onChangeText={(v) => setForm((p) => ({ ...p, lastName: v }))} placeholder="Last name" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-        <TextInput value={form.email} onChangeText={(v) => setForm((p) => ({ ...p, email: v }))} placeholder="Email" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" keyboardType="email-address" autoCapitalize="none" />
-        <TextInput value={form.phone} onChangeText={(v) => setForm((p) => ({ ...p, phone: v }))} placeholder="Phone" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-        <TextInput value={form.employeeId} onChangeText={(v) => setForm((p) => ({ ...p, employeeId: v }))} placeholder="Employee ID" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-        <TextInput value={form.position} onChangeText={(v) => setForm((p) => ({ ...p, position: v }))} placeholder="Position" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-        <TextInput value={form.hireDate} onChangeText={(v) => setForm((p) => ({ ...p, hireDate: v }))} placeholder="Hire date (YYYY-MM-DD)" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-        <TextInput value={form.salary} onChangeText={(v) => setForm((p) => ({ ...p, salary: v }))} placeholder="Salary" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-        <Pressable onPress={() => setForm((p) => ({ ...p, department: cycleOption(DEPARTMENTS, p.department) }))} className="rounded-lg border border-slate-200 px-3 py-2">
-          <Text className="text-slate-900">Department: {form.department}</Text>
-        </Pressable>
-        <Pressable onPress={() => setForm((p) => ({ ...p, employeeType: cycleOption(EMPLOYEE_TYPES, p.employeeType) }))} className="rounded-lg border border-slate-200 px-3 py-2">
-          <Text className="text-slate-900">Type: {form.employeeType}</Text>
-        </Pressable>
-        <Pressable onPress={() => setForm((p) => ({ ...p, employmentStatus: cycleOption(EMPLOYMENT_STATUSES, p.employmentStatus) }))} className="rounded-lg border border-slate-200 px-3 py-2">
-          <Text className="text-slate-900">Status: {form.employmentStatus}</Text>
-        </Pressable>
-        <TextInput value={form.notes} onChangeText={(v) => setForm((p) => ({ ...p, notes: v }))} placeholder="Notes" placeholderTextColor="#475569" multiline className="min-h-[86px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
-      </View>
-    </ScrollView>
+    <>
+      <WorkshopFieldLabel>First name *</WorkshopFieldLabel>
+      <WorkshopTextInput value={form.firstName} onChangeText={(v) => setForm((p) => ({ ...p, firstName: v }))} />
+      <WorkshopFieldLabel>Last name *</WorkshopFieldLabel>
+      <WorkshopTextInput value={form.lastName} onChangeText={(v) => setForm((p) => ({ ...p, lastName: v }))} />
+      <WorkshopFieldLabel>Email *</WorkshopFieldLabel>
+      <WorkshopTextInput value={form.email} onChangeText={(v) => setForm((p) => ({ ...p, email: v }))} keyboardType="email-address" autoCapitalize="none" />
+      <WorkshopFieldLabel>Phone</WorkshopFieldLabel>
+      <WorkshopTextInput value={form.phone} onChangeText={(v) => setForm((p) => ({ ...p, phone: v }))} />
+      <WorkshopFieldLabel>Employee ID *</WorkshopFieldLabel>
+      <WorkshopTextInput value={form.employeeId} onChangeText={(v) => setForm((p) => ({ ...p, employeeId: v }))} />
+      <WorkshopFieldLabel>Position *</WorkshopFieldLabel>
+      <WorkshopTextInput value={form.position} onChangeText={(v) => setForm((p) => ({ ...p, position: v }))} />
+      <WorkshopDatePickerField label="Hire date *" value={form.hireDate} onChange={(v) => setForm((p) => ({ ...p, hireDate: v }))} />
+      <WorkshopFieldLabel>Salary</WorkshopFieldLabel>
+      <WorkshopTextInput value={form.salary} onChangeText={(v) => setForm((p) => ({ ...p, salary: v }))} keyboardType="decimal-pad" />
+      <WorkshopChipSelect label="Department" options={[...DEPARTMENTS]} value={form.department} onChange={(v) => setForm((p) => ({ ...p, department: v as Department }))} />
+      <WorkshopChipSelect label="Type" options={[...EMPLOYEE_TYPES]} value={form.employeeType} onChange={(v) => setForm((p) => ({ ...p, employeeType: v as EmployeeType }))} />
+      <WorkshopChipSelect label="Status" options={[...EMPLOYMENT_STATUSES]} value={form.employmentStatus} onChange={(v) => setForm((p) => ({ ...p, employmentStatus: v as EmploymentStatus }))} />
+      <WorkshopFieldLabel>Notes</WorkshopFieldLabel>
+      <WorkshopTextInput value={form.notes} onChangeText={(v) => setForm((p) => ({ ...p, notes: v }))} multiline />
+    </>
+  );
+
+  const formFooter = (onSave: () => void, saveLabel: string, onCancel: () => void) => (
+    <>
+      <WorkshopPrimaryButton label={saving ? 'Saving…' : saveLabel} onPress={onSave} disabled={saving} />
+      <Pressable onPress={onCancel} style={{ marginTop: 12, alignItems: 'center', paddingVertical: 10 }}>
+        <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Cancel</Text>
+      </Pressable>
+    </>
   );
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Employees
-        </Text>
-        {canManageHRM() ? (
-          <Pressable onPress={openCreate} className="px-2 py-1">
-            <Text className="font-semibold text-blue-600">New</Text>
-          </Pressable>
-        ) : (
-          <View className="w-10" />
-        )}
-      </View>
-      <View className="border-b border-slate-200 bg-white px-3 py-2">
-        <TextInput
-          value={q}
-          onChangeText={setQ}
-          placeholder="Search name, email, position…"
-          placeholderTextColor="#475569"
-          className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-        />
-      </View>
+    <WorkshopChrome
+      title="Employees"
+      subtitle="Team directory & profiles"
+      right={canManageHRM() ? <WorkshopHeaderButton onPress={openCreate} /> : undefined}
+      scroll={false}
+    >
+      <WorkshopSearchBar
+        value={q}
+        onChangeText={setQ}
+        placeholder="Search name, email, position…"
+      />
 
       {loading && !refreshing ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563eb" />
-        </View>
+        <WorkshopLoading />
       ) : (
         <FlatList
+          style={{ flex: 1 }}
           data={rows}
           keyExtractor={(item) => item.id}
+          contentContainerStyle={{ paddingBottom: 20 }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={WS.primary} />
           }
-          contentContainerStyle={{ padding: 12, paddingBottom: 32 }}
           ListEmptyComponent={
-            <Text className="py-8 text-center text-slate-500">No employees</Text>
+            <WorkshopEmptyState
+              icon="people-outline"
+              title="No employees"
+              subtitle="Add team members to your organization."
+              actionLabel={canManageHRM() ? 'Add employee' : undefined}
+              onAction={canManageHRM() ? openCreate : undefined}
+            />
           }
           renderItem={({ item }) => (
-            <Pressable
+            <WorkshopListCard
+              icon="person"
+              iconColor="#4f46e5"
+              iconBg="#eef2ff"
+              title={`${item.firstName} ${item.lastName}`}
+              subtitle={item.email}
+              meta={`${String(item.department)} · ${item.position}`}
+              badges={[{ label: String(item.employmentStatus), tone: 'status' }]}
               onPress={() => setDetail(item)}
-              className="mb-3 rounded-xl border border-slate-200 bg-white p-3"
-            >
-              <Text className="font-semibold text-slate-900">
-                {item.firstName} {item.lastName}
-              </Text>
-              <Text className="text-sm text-slate-600">{item.email}</Text>
-              <Text className="mt-1 text-xs text-slate-500">
-                {String(item.department)} · {item.position}
-              </Text>
-            </Pressable>
+              actions={
+                canManageHRM()
+                  ? [
+                      { icon: 'create-outline', onPress: () => openEdit(item) },
+                      { icon: 'trash-outline', onPress: () => remove(item), danger: true },
+                    ]
+                  : undefined
+              }
+            />
           )}
         />
       )}
 
-      <AppModal
+      <WorkshopFormSheet
         visible={detail != null}
-        animationType="slide"
-        transparent
+        title="Employee"
         onClose={() => setDetail(null)}
-      >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[88%] rounded-t-2xl bg-white p-4">
-            <Text className="text-lg font-semibold text-slate-900">Employee</Text>
-            {detail ? (
-              <ScrollView className="mt-3">
-                <Text className="text-xl font-bold text-slate-900">
-                  {detail.firstName} {detail.lastName}
-                </Text>
-                <Text className="mt-1 text-slate-600">{detail.email}</Text>
-                <Text className="mt-2 text-slate-800">
-                  {detail.employeeId} · {String(detail.department)}
-                </Text>
-                <Text className="mt-1 text-slate-700">{detail.position}</Text>
-                <Text className="mt-2 text-slate-600">
-                  Status {String(detail.employmentStatus)} ·{' '}
-                  {String(detail.employeeType)}
-                </Text>
-                {detail.salary != null ? (
-                  <Text className="mt-2 text-slate-800">
-                    Salary {formatUsd(detail.salary)}
-                  </Text>
-                ) : null}
-                {detail.hireDate ? (
-                  <Text className="mt-2 text-slate-600">Hired {detail.hireDate}</Text>
-                ) : null}
-                {detail.notes ? (
-                  <Text className="mt-3 text-slate-700">{detail.notes}</Text>
-                ) : null}
-              </ScrollView>
+        footer={
+          <>
+            {detail && canManageHRM() ? (
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <WorkshopPrimaryButton label="Edit" onPress={() => { setDetail(null); openEdit(detail); }} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Pressable
+                    onPress={() => remove(detail)}
+                    style={{ alignItems: 'center', borderRadius: 14, paddingVertical: 15, backgroundColor: WS.dangerBg }}
+                  >
+                    <Text style={{ fontWeight: '700', fontSize: 16, color: WS.danger }}>Delete</Text>
+                  </Pressable>
+                </View>
+              </View>
             ) : null}
-            <View className="mt-4 flex-row gap-2">
-              {detail && canManageHRM() ? (
-                <Pressable onPress={() => openEdit(detail)} className="flex-1 items-center rounded-lg bg-blue-600 py-3">
-                  <Text className="font-semibold text-white">Edit</Text>
-                </Pressable>
-              ) : null}
-              {detail && canManageHRM() ? (
-                <Pressable
-                  onPress={() => remove(detail)}
-                  className="flex-1 items-center rounded-lg bg-red-600 py-3"
-                >
-                  <Text className="font-semibold text-white">Delete</Text>
-                </Pressable>
-              ) : null}
-              <Pressable
-                onPress={() => setDetail(null)}
-                className="flex-1 items-center rounded-lg bg-slate-100 py-3"
-              >
-                <Text className="font-semibold text-slate-800">Close</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </AppModal>
+            <WorkshopOutlineButton label="Close" onPress={() => setDetail(null)} />
+          </>
+        }
+      >
+        {detail ? (
+          <>
+            <Text style={{ fontSize: 22, fontWeight: '800', color: WS.text, marginBottom: 12 }}>
+              {detail.firstName} {detail.lastName}
+            </Text>
+            <WorkshopDetailRow label="Email" value={detail.email} />
+            <WorkshopDetailRow label="Employee ID" value={detail.employeeId} />
+            <WorkshopDetailRow label="Department" value={String(detail.department)} />
+            <WorkshopDetailRow label="Position" value={detail.position} />
+            <WorkshopDetailRow label="Status" value={String(detail.employmentStatus)} />
+            <WorkshopDetailRow label="Type" value={String(detail.employeeType)} />
+            {detail.salary != null ? (
+              <WorkshopDetailRow label="Salary" value={formatUsd(detail.salary)} />
+            ) : null}
+            {detail.hireDate ? (
+              <WorkshopDetailRow label="Hired" value={detail.hireDate} />
+            ) : null}
+            {detail.notes ? (
+              <Text style={{ fontSize: 14, color: WS.textMuted, marginTop: 12, lineHeight: 20 }}>{detail.notes}</Text>
+            ) : null}
+          </>
+        ) : null}
+      </WorkshopFormSheet>
 
-      <AppModal
+      <WorkshopFormSheet
         visible={createOpen}
-        animationType="slide"
-        transparent
+        title="New employee"
         onClose={() => setCreateOpen(false)}
+        footer={formFooter(() => void submitCreate(), 'Create employee', () => setCreateOpen(false))}
       >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-2 pt-4">
-            <Text className="text-lg font-semibold text-slate-900">New employee</Text>
-            {renderForm()}
-            <View className="mt-4 flex-row gap-2">
-              <Pressable onPress={() => setCreateOpen(false)} className="flex-1 items-center rounded-lg border border-slate-300 py-3">
-                <Text className="font-semibold text-slate-700">Cancel</Text>
-              </Pressable>
-              <Pressable onPress={() => void submitCreate()} disabled={saving} className="flex-1 items-center rounded-lg bg-blue-600 py-3">
-                <Text className="font-semibold text-white">{saving ? 'Saving...' : 'Create'}</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </AppModal>
+        {renderForm()}
+      </WorkshopFormSheet>
 
-      <AppModal
+      <WorkshopFormSheet
         visible={editOpen}
-        animationType="slide"
-        transparent
-        onClose={() => setEditOpen(false)}
+        title="Edit employee"
+        onClose={() => { setEditOpen(false); setSelected(null); }}
+        footer={formFooter(() => void submitEdit(), 'Save employee', () => { setEditOpen(false); setSelected(null); })}
       >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-2 pt-4">
-            <Text className="text-lg font-semibold text-slate-900">Edit employee</Text>
-            {renderForm()}
-            <View className="mt-4 flex-row gap-2">
-              <Pressable onPress={() => { setEditOpen(false); setSelected(null); }} className="flex-1 items-center rounded-lg border border-slate-300 py-3">
-                <Text className="font-semibold text-slate-700">Cancel</Text>
-              </Pressable>
-              <Pressable onPress={() => void submitEdit()} disabled={saving} className="flex-1 items-center rounded-lg bg-blue-600 py-3">
-                <Text className="font-semibold text-white">{saving ? 'Saving...' : 'Save'}</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </AppModal>
-    </View>
+        {renderForm()}
+      </WorkshopFormSheet>
+    </WorkshopChrome>
   );
 }

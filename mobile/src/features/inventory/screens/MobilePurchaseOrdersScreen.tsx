@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
-import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { View, Text, FlatList, Pressable, RefreshControl, ScrollView } from 'react-native';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { appAlert, appConfirm, appError } from '../../../utils/appDialog';
 import { formatUsd } from '../../../services/crm/CrmMobileService';
 import {
   getPurchaseOrders,
@@ -21,12 +21,79 @@ import type {
 } from '../../../models/inventory';
 import type { Product } from '../../../models/pos';
 import type { Supplier } from '../../../models/hrm/supplier';
-import { AppModal } from '../../../components/layout/AppModal';
+import {
+  WorkshopChrome,
+  WorkshopListCard,
+  WorkshopEmptyState,
+  WorkshopHeaderButton,
+  WorkshopLoading,
+  WorkshopFormSheet,
+  WorkshopFieldLabel,
+  WorkshopTextInput,
+  WorkshopDatePickerField,
+  WorkshopPrimaryButton,
+  WorkshopPickerField,
+  WorkshopSearchBar,
+  WS,
+} from '../../workshop/components/WorkshopChrome';
 
 function defaultExpectedDate(): string {
   const d = new Date();
   d.setDate(d.getDate() + 7);
   return d.toISOString().slice(0, 10);
+}
+
+function OptionChips(props: {
+  label: string;
+  options: { id: string; label: string }[];
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  return (
+    <View style={{ marginBottom: 10 }}>
+      <Text
+        style={{
+          fontSize: 11,
+          fontWeight: '700',
+          color: WS.textMuted,
+          textTransform: 'uppercase',
+          letterSpacing: 0.6,
+          marginBottom: 8,
+        }}
+      >
+        {props.label}
+      </Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <View style={{ flexDirection: 'row', gap: 8, paddingBottom: 2 }}>
+          {props.options.map((opt) => {
+            const active = props.value === opt.id;
+            return (
+              <Pressable
+                key={opt.id}
+                onPress={() => props.onChange(opt.id)}
+                style={{
+                  paddingHorizontal: 14,
+                  paddingVertical: 8,
+                  borderRadius: 12,
+                  backgroundColor: active ? WS.primaryLight : '#fafafa',
+                  borderWidth: 1,
+                  borderColor: active ? WS.primary : WS.border,
+                  maxWidth: 200,
+                }}
+              >
+                <Text
+                  style={{ fontSize: 13, fontWeight: '600', color: active ? WS.primaryDark : WS.text }}
+                  numberOfLines={1}
+                >
+                  {opt.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </ScrollView>
+    </View>
+  );
 }
 
 export function MobilePurchaseOrdersScreen() {
@@ -39,14 +106,11 @@ export function MobilePurchaseOrdersScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [supplierId, setSupplierId] = useState('');
   const [warehouseId, setWarehouseId] = useState('');
-  const [orderDate, setOrderDate] = useState(
-    () => new Date().toISOString().slice(0, 10),
-  );
-  const [expectedDeliveryDate, setExpectedDeliveryDate] = useState(
-    defaultExpectedDate,
-  );
+  const [orderDate, setOrderDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [expectedDeliveryDate, setExpectedDeliveryDate] = useState(defaultExpectedDate);
   const [vatRate, setVatRate] = useState('0');
   const [notes, setNotes] = useState('');
   const [items, setItems] = useState<PurchaseOrderItemCreate[]>([]);
@@ -57,80 +121,72 @@ export function MobilePurchaseOrdersScreen() {
   const [lineProduct, setLineProduct] = useState<Product | null>(null);
 
   const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await getPurchaseOrders();
-      setRows(res.purchaseOrders ?? []);
-    } catch (e) {
-      Alert.alert(
-        'Purchase orders',
-        extractErrorMessage(e, 'Failed to load'),
-      );
-    } finally {
-      setLoading(false);
-    }
+    const res = await getPurchaseOrders();
+    setRows(res.purchaseOrders ?? []);
   }, []);
 
   const loadMeta = useCallback(async () => {
-    try {
-      const [whRes, supRes, prRes] = await Promise.all([
-        getWarehouses(),
-        fetchSuppliers(),
-        fetchPosProducts(),
-      ]);
-      setWarehouses(whRes.warehouses ?? []);
-      setSuppliers(supRes.suppliers ?? []);
-      setProducts(prRes.products ?? []);
-      setSupplierId((prev) => prev || supRes.suppliers?.[0]?.id || '');
-      setWarehouseId((prev) => prev || whRes.warehouses?.[0]?.id || '');
-    } catch (e) {
-      Alert.alert(
-        'Purchase orders',
-        extractErrorMessage(e, 'Failed to load'),
-      );
-    }
+    const [whRes, supRes, prRes] = await Promise.all([
+      getWarehouses(),
+      fetchSuppliers(),
+      fetchPosProducts(),
+    ]);
+    setWarehouses(whRes.warehouses ?? []);
+    setSuppliers(supRes.suppliers ?? []);
+    setProducts(prRes.products ?? []);
+    setSupplierId((prev) => prev || supRes.suppliers?.[0]?.id || '');
+    setWarehouseId((prev) => prev || whRes.warehouses?.[0]?.id || '');
   }, []);
+
+  const run = useCallback(
+    async (ref: boolean) => {
+      try {
+        if (ref) setRefreshing(true);
+        else setLoading(true);
+        await load();
+      } catch (e) {
+        appError('Purchase orders', extractErrorMessage(e, 'Failed to load'));
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [load],
+  );
 
   useEffect(() => {
     setSidebarActivePath(
-      workspacePath === '/dashboard'
-        ? '/dashboard'
-        : '/inventory/purchase-orders',
+      workspacePath === '/dashboard' ? '/dashboard' : '/inventory/purchase-orders',
     );
   }, [setSidebarActivePath, workspacePath]);
 
   useEffect(() => {
-    void loadMeta();
+    void loadMeta().catch((e) =>
+      appError('Purchase orders', extractErrorMessage(e, 'Failed to load')),
+    );
   }, [loadMeta]);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    void run(false);
+  }, [run]);
 
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await load();
-    setRefreshing(false);
-  }, [load]);
-
-  const filteredProducts = (() => {
+  const filteredProducts = useMemo(() => {
     const t = productQ.trim().toLowerCase();
     if (!t) return products;
     return products.filter(
-      (p) =>
-        p.name.toLowerCase().includes(t) || p.sku.toLowerCase().includes(t),
+      (p) => p.name.toLowerCase().includes(t) || p.sku.toLowerCase().includes(t),
     );
-  })();
+  }, [products, productQ]);
 
   const addLine = () => {
     if (!lineProduct) {
-      Alert.alert('Purchase orders', 'Select a product.');
+      appAlert('Purchase orders', 'Select a product.');
       return;
     }
     const q = parseFloat(lineQty);
     const c = parseFloat(lineCost);
     if (!Number.isFinite(q) || q <= 0 || !Number.isFinite(c) || c < 0) {
-      Alert.alert('Purchase orders', 'Enter quantity and unit cost.');
+      appAlert('Purchase orders', 'Enter quantity and unit cost.');
       return;
     }
     const line: PurchaseOrderItemCreate = {
@@ -155,14 +211,11 @@ export function MobilePurchaseOrdersScreen() {
   const submit = async () => {
     const sup = suppliers.find((s) => s.id === supplierId);
     if (!sup || !warehouseId || !expectedDeliveryDate.trim()) {
-      Alert.alert(
-        'Purchase orders',
-        'Supplier, warehouse, and expected delivery are required.',
-      );
+      appAlert('Purchase orders', 'Supplier, warehouse, and expected delivery are required.');
       return;
     }
     if (items.length === 0) {
-      Alert.alert('Purchase orders', 'Add at least one line item.');
+      appAlert('Purchase orders', 'Add at least one line item.');
       return;
     }
     const vr = parseFloat(vatRate);
@@ -177,283 +230,225 @@ export function MobilePurchaseOrdersScreen() {
       items,
     };
     try {
+      setSaving(true);
       await createPurchaseOrder(payload);
       setOpen(false);
       setItems([]);
       setNotes('');
       setOrderDate(new Date().toISOString().slice(0, 10));
       setExpectedDeliveryDate(defaultExpectedDate());
-      await load();
+      await run(false);
     } catch (e) {
-      Alert.alert(
-        'Purchase orders',
-        extractErrorMessage(e, 'Failed to save'),
-      );
+      appError('Purchase orders', extractErrorMessage(e, 'Failed to save'));
+    } finally {
+      setSaving(false);
     }
   };
 
   const removePo = (po: PurchaseOrder) => {
-    Alert.alert('Delete purchase order', po.orderNumber, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () =>
-          void (async () => {
-            try {
-              await deletePurchaseOrder(po.id);
-              await load();
-            } catch (e) {
-              Alert.alert(
-                'Purchase orders',
-                extractErrorMessage(e, 'Failed to delete'),
-              );
-            }
-          })(),
+    appConfirm({
+      title: 'Delete purchase order',
+      message: po.orderNumber,
+      confirmLabel: 'Delete',
+      destructive: true,
+      onConfirm: async () => {
+        try {
+          await deletePurchaseOrder(po.id);
+          await run(false);
+        } catch (e) {
+          appError('Purchase orders', extractErrorMessage(e, 'Failed to delete'));
+        }
       },
-    ]);
+    });
   };
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Purchase orders
-        </Text>
-        {canManageInventory() ? (
-          <Pressable onPress={() => setOpen(true)} className="px-2 py-1">
-            <Text className="font-semibold text-blue-600">New</Text>
-          </Pressable>
-        ) : (
-          <View className="w-10" />
-        )}
-      </View>
-
+    <WorkshopChrome
+      title="Purchase orders"
+      subtitle="Supplier orders & procurement"
+      right={canManageInventory() ? <WorkshopHeaderButton onPress={() => setOpen(true)} /> : <View style={{ width: 72 }} />}
+      scroll={false}
+    >
       {loading && !refreshing ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563eb" />
-        </View>
+        <WorkshopLoading />
       ) : (
         <FlatList
+          style={{ flex: 1 }}
           data={rows}
           keyExtractor={(item) => item.id}
+          contentContainerStyle={{ paddingBottom: 20 }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => void run(true)}
+              tintColor={WS.primary}
+            />
           }
-          contentContainerStyle={{ padding: 12, paddingBottom: 32 }}
           ListEmptyComponent={
-            <Text className="py-8 text-center text-slate-500">
-              No purchase orders
-            </Text>
+            <WorkshopEmptyState
+              icon="clipboard-outline"
+              title="No purchase orders"
+              subtitle="Create purchase orders to restock from suppliers."
+              actionLabel={canManageInventory() ? 'New order' : undefined}
+              onAction={canManageInventory() ? () => setOpen(true) : undefined}
+            />
           }
           renderItem={({ item }) => (
-            <Pressable
-              onLongPress={() =>
-                canManageInventory() ? removePo(item) : undefined
+            <WorkshopListCard
+              icon="clipboard"
+              iconColor="#7c3aed"
+              iconBg="#f5f3ff"
+              title={item.orderNumber}
+              subtitle={item.supplierName}
+              meta={formatUsd(item.totalAmount)}
+              badges={[{ label: item.status, tone: 'status' }]}
+              actions={
+                canManageInventory()
+                  ? [{ icon: 'trash-outline', onPress: () => removePo(item), danger: true }]
+                  : undefined
               }
-              className="mb-3 rounded-xl border border-slate-200 bg-white p-3"
-            >
-              <Text className="font-semibold text-slate-900">
-                {item.orderNumber}
-              </Text>
-              <Text className="text-sm text-slate-600">{item.supplierName}</Text>
-              <Text className="mt-1 text-slate-700">
-                {item.status} · {formatUsd(item.totalAmount)}
-              </Text>
-              {canManageInventory() ? (
-                <Text className="mt-1 text-xs text-slate-400">
-                  Long-press to delete
-                </Text>
-              ) : null}
-            </Pressable>
+            />
           )}
         />
       )}
 
-      <AppModal
+      <WorkshopFormSheet
         visible={open}
-        animationType="slide"
-        transparent
+        title="New purchase order"
         onClose={() => setOpen(false)}
-      >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-6 pt-3">
-            <Text className="mb-3 text-lg font-semibold text-slate-900">
-              New purchase order
-            </Text>
-            <ScrollView keyboardShouldPersistTaps="handled">
-              <Text className="mb-1 text-sm text-slate-600">Supplier</Text>
-              <ScrollView horizontal className="mb-3">
-                {suppliers.map((s) => (
-                  <Pressable
-                    key={s.id}
-                    onPress={() => setSupplierId(s.id)}
-                    className={`mr-2 max-w-[200px] rounded-lg border px-3 py-2 ${supplierId === s.id ? 'border-blue-600 bg-blue-50' : 'border-slate-200'}`}
-                  >
-                    <Text className="text-slate-800" numberOfLines={1}>
-                      {s.name}
-                    </Text>
-                  </Pressable>
-                ))}
-              </ScrollView>
-
-              <Text className="mb-1 text-sm text-slate-600">Warehouse</Text>
-              <ScrollView horizontal className="mb-3">
-                {warehouses.map((w) => (
-                  <Pressable
-                    key={w.id}
-                    onPress={() => setWarehouseId(w.id)}
-                    className={`mr-2 rounded-lg border px-3 py-2 ${warehouseId === w.id ? 'border-blue-600 bg-blue-50' : 'border-slate-200'}`}
-                  >
-                    <Text className="text-slate-800">{w.name}</Text>
-                  </Pressable>
-                ))}
-              </ScrollView>
-
-              <Text className="mb-1 text-sm text-slate-600">Order date</Text>
-              <TextInput
-                value={orderDate}
-                onChangeText={setOrderDate}
-                placeholder="YYYY-MM-DD"
-                className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-              />
-              <Text className="mb-1 text-sm text-slate-600">
-                Expected delivery
-              </Text>
-              <TextInput
-                value={expectedDeliveryDate}
-                onChangeText={setExpectedDeliveryDate}
-                placeholder="YYYY-MM-DD"
-                className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-              />
-              <Text className="mb-1 text-sm text-slate-600">VAT %</Text>
-              <TextInput
-                value={vatRate}
-                onChangeText={setVatRate}
-                keyboardType="decimal-pad"
-                className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-              />
-              <Text className="mb-1 text-sm text-slate-600">Notes</Text>
-              <TextInput
-                value={notes}
-                onChangeText={setNotes}
-                multiline
-                className="mb-3 min-h-[64px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-              />
-
-              <Text className="mb-2 font-medium text-slate-800">Lines</Text>
-              {items.map((it, idx) => (
-                <View
-                  key={`${it.productId}-${idx}`}
-                  className="mb-2 flex-row items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-2 py-2"
-                >
-                  <View className="flex-1 pr-2">
-                    <Text className="font-medium text-slate-900" numberOfLines={1}>
-                      {it.productName}
-                    </Text>
-                    <Text className="text-xs text-slate-600">
-                      {it.quantity} × {formatUsd(it.unitCost)}
-                    </Text>
-                  </View>
-                  <Pressable onPress={() => removeLine(idx)}>
-                    <Text className="text-red-600">Remove</Text>
-                  </Pressable>
-                </View>
-              ))}
-
-              <Pressable
-                onPress={() => setProductPicker(true)}
-                className="mb-2 rounded-lg border border-dashed border-slate-300 px-3 py-3"
-              >
-                <Text className="text-slate-600">Product for new line</Text>
-                <Text className="text-slate-900">
-                  {lineProduct
-                    ? `${lineProduct.name} (${lineProduct.sku})`
-                    : 'Tap to select'}
-                </Text>
-              </Pressable>
-              <Text className="mb-1 text-sm text-slate-600">Qty</Text>
-              <TextInput
-                value={lineQty}
-                onChangeText={setLineQty}
-                keyboardType="decimal-pad"
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-              />
-              <Text className="mb-1 text-sm text-slate-600">Unit cost</Text>
-              <TextInput
-                value={lineCost}
-                onChangeText={setLineCost}
-                keyboardType="decimal-pad"
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-              />
-              <Pressable
-                onPress={addLine}
-                className="mb-4 items-center rounded-lg bg-slate-200 py-2"
-              >
-                <Text className="font-medium text-slate-900">Add line</Text>
-              </Pressable>
-
-              <View className="flex-row gap-2">
-                <Pressable
-                  onPress={() => setOpen(false)}
-                  className="flex-1 items-center rounded-lg border border-slate-200 py-3"
-                >
-                  <Text className="font-medium text-slate-800">Cancel</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => void submit()}
-                  className="flex-1 items-center rounded-lg bg-blue-600 py-3"
-                >
-                  <Text className="font-semibold text-white">Create</Text>
-                </Pressable>
-              </View>
-            </ScrollView>
-          </View>
-        </View>
-      </AppModal>
-
-      <AppModal
-        visible={productPicker}
-        animationType="slide"
-        transparent
-        onClose={() => setProductPicker(false)}
-      >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[85%] rounded-t-2xl bg-white px-3 pb-6 pt-3">
-            <TextInput
-              value={productQ}
-              onChangeText={setProductQ}
-              placeholder="Search…"
-              className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <FlatList
-              data={filteredProducts}
-              keyExtractor={(p) => p.id}
-              keyboardShouldPersistTaps="handled"
-              renderItem={({ item }) => (
-                <Pressable
-                  onPress={() => {
-                    setLineProduct(item);
-                    setProductPicker(false);
-                    setProductQ('');
-                  }}
-                  className="border-b border-slate-100 py-3"
-                >
-                  <Text className="font-medium text-slate-900">{item.name}</Text>
-                  <Text className="text-sm text-slate-600">{item.sku}</Text>
-                </Pressable>
-              )}
+        footer={
+          <>
+            <WorkshopPrimaryButton
+              label={saving ? 'Creating…' : 'Create order'}
+              onPress={() => void submit()}
+              disabled={saving}
             />
             <Pressable
-              onPress={() => setProductPicker(false)}
-              className="mt-2 items-center py-2"
+              onPress={() => setOpen(false)}
+              style={{ marginTop: 12, alignItems: 'center', paddingVertical: 10 }}
             >
-              <Text className="text-blue-600">Close</Text>
+              <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Cancel</Text>
             </Pressable>
+          </>
+        }
+      >
+        <OptionChips
+          label="Supplier"
+          options={suppliers.map((s) => ({ id: s.id, label: s.name }))}
+          value={supplierId}
+          onChange={setSupplierId}
+        />
+        <OptionChips
+          label="Warehouse"
+          options={warehouses.map((w) => ({ id: w.id, label: w.name }))}
+          value={warehouseId}
+          onChange={setWarehouseId}
+        />
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flex: 1 }}>
+            <WorkshopDatePickerField label="Order date" value={orderDate} onChange={setOrderDate} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <WorkshopDatePickerField label="Expected delivery" value={expectedDeliveryDate} onChange={setExpectedDeliveryDate} />
           </View>
         </View>
-      </AppModal>
-    </View>
+        <WorkshopFieldLabel>VAT %</WorkshopFieldLabel>
+        <WorkshopTextInput value={vatRate} onChangeText={setVatRate} keyboardType="decimal-pad" />
+        <WorkshopFieldLabel>Notes</WorkshopFieldLabel>
+        <WorkshopTextInput value={notes} onChangeText={setNotes} multiline style={{ minHeight: 64 }} />
+
+        <Text style={{ fontSize: 14, fontWeight: '700', color: WS.text, marginTop: 8, marginBottom: 8 }}>
+          Line items
+        </Text>
+        {items.map((it, idx) => (
+          <View
+            key={`${it.productId}-${idx}`}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 8,
+              padding: 10,
+              borderRadius: 12,
+              backgroundColor: '#f8fafc',
+              borderWidth: 1,
+              borderColor: WS.border,
+            }}
+          >
+            <View style={{ flex: 1, paddingRight: 8 }}>
+              <Text style={{ fontWeight: '600', color: WS.text }} numberOfLines={1}>
+                {it.productName}
+              </Text>
+              <Text style={{ fontSize: 12, color: WS.textMuted, marginTop: 2 }}>
+                {it.quantity} × {formatUsd(it.unitCost)}
+              </Text>
+            </View>
+            <Pressable onPress={() => removeLine(idx)}>
+              <Text style={{ color: WS.danger, fontWeight: '600' }}>Remove</Text>
+            </Pressable>
+          </View>
+        ))}
+
+        <WorkshopPickerField
+          label="Product for new line"
+          value={lineProduct ? `${lineProduct.name} (${lineProduct.sku})` : ''}
+          placeholder="Tap to select"
+          onPress={() => setProductPicker(true)}
+        />
+        <WorkshopFieldLabel>Quantity</WorkshopFieldLabel>
+        <WorkshopTextInput value={lineQty} onChangeText={setLineQty} keyboardType="decimal-pad" />
+        <WorkshopFieldLabel>Unit cost</WorkshopFieldLabel>
+        <WorkshopTextInput value={lineCost} onChangeText={setLineCost} keyboardType="decimal-pad" />
+        <Pressable
+          onPress={addLine}
+          style={{
+            alignItems: 'center',
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: WS.border,
+            backgroundColor: '#f1f5f9',
+            paddingVertical: 12,
+            marginBottom: 8,
+          }}
+        >
+          <Text style={{ fontWeight: '700', color: WS.text }}>Add line</Text>
+        </Pressable>
+      </WorkshopFormSheet>
+
+      <WorkshopFormSheet
+        visible={productPicker}
+        title="Select product"
+        onClose={() => setProductPicker(false)}
+        footer={
+          <Pressable
+            onPress={() => setProductPicker(false)}
+            style={{ alignItems: 'center', paddingVertical: 10 }}
+          >
+            <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Close</Text>
+          </Pressable>
+        }
+      >
+        <WorkshopSearchBar value={productQ} onChangeText={setProductQ} placeholder="Search products…" />
+        <FlatList
+          data={filteredProducts}
+          keyExtractor={(p) => p.id}
+          keyboardShouldPersistTaps="handled"
+          style={{ maxHeight: 320 }}
+          renderItem={({ item }) => (
+            <Pressable
+              onPress={() => {
+                setLineProduct(item);
+                setProductPicker(false);
+                setProductQ('');
+              }}
+              style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' }}
+            >
+              <Text style={{ fontWeight: '600', color: WS.text }}>{item.name}</Text>
+              <Text style={{ fontSize: 13, color: WS.textMuted, marginTop: 2 }}>{item.sku}</Text>
+            </Pressable>
+          )}
+        />
+      </WorkshopFormSheet>
+    </WorkshopChrome>
   );
 }

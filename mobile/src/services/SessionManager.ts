@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User } from '../models/auth/User';
+import { getApiBaseUrl } from '../config/apiConfig';
 
 export interface SessionData {
   token: string;
@@ -119,8 +120,7 @@ class SessionManager {
     try {
       const refreshToken = await this.getRefreshToken();
       if (!refreshToken) return false;
-      const baseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
-      const apiUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+      const apiUrl = getApiBaseUrl();
       const response = await fetch(`${apiUrl}/auth/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

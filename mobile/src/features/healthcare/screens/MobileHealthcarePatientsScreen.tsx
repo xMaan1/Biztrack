@@ -18,6 +18,7 @@ import {
   HealthcarePrimaryButton,
   HealthcareOutlineButton,
 } from '../components/HealthcareChrome';
+import { WorkshopDatePickerField } from '../../workshop/components/WorkshopChrome';
 
 const PAGE_SIZE = 20;
 
@@ -275,14 +276,10 @@ export function MobileHealthcarePatientsScreen() {
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
-              <HealthcareFieldLabel>Date of birth</HealthcareFieldLabel>
-              <TextInput
-                className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-                placeholder="YYYY-MM-DD"
-                value={form.date_of_birth}
-                onChangeText={(v) =>
-                  setForm((f) => ({ ...f, date_of_birth: v }))
-                }
+              <WorkshopDatePickerField
+                label="Date of birth"
+                value={form.date_of_birth ?? ''}
+                onChange={(v) => setForm((f) => ({ ...f, date_of_birth: v }))}
               />
               <HealthcareFieldLabel>Address</HealthcareFieldLabel>
               <TextInput

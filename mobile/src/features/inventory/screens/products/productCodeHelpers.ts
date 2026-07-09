@@ -1,5 +1,5 @@
-import type { UnitOfMeasure } from '../../../models/pos';
-import { UnitOfMeasure as UnitOfMeasureEnum } from '../../../models/pos';
+import type { UnitOfMeasure } from '../../../../models/pos';
+import { UnitOfMeasure as UnitOfMeasureEnum } from '../../../../models/pos';
 import { BLANK_PRODUCT_FORM, type ProductFormState } from './types';
 
 export type ProductEntryMode = 'manual' | 'qr' | 'barcode';

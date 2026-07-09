@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { AppModal } from '../../../components/layout/AppModal';
+import { WorkshopDetailRow, WorkshopBadge, WS } from './WorkshopUI';
 
 export type WorkOrderDetail = {
   id: string;
@@ -48,123 +49,185 @@ export function WorkOrderDetailSheet({
       transparent
       onClose={onClose}
     >
-      <View className="flex-1 justify-end bg-black/45">
-        <View className="max-h-[88%] rounded-t-3xl bg-white">
-          <View className="items-center pt-3">
-            <View className="h-1 w-9 rounded-full bg-slate-200" />
+      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(15,23,42,0.55)' }}>
+        <View
+          style={{
+            maxHeight: '88%',
+            borderTopLeftRadius: 28,
+            borderTopRightRadius: 28,
+            backgroundColor: WS.card,
+          }}
+        >
+          <View style={{ alignItems: 'center', paddingTop: 12 }}>
+            <View
+              style={{
+                width: 40,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: '#e2e8f0',
+              }}
+            />
           </View>
           {w ? (
             <ScrollView
-              className="px-5 pt-4"
-              contentContainerStyle={{ paddingBottom: 28 }}
+              style={{ paddingHorizontal: 20, paddingTop: 16 }}
+              contentContainerStyle={{ paddingBottom: 32 }}
               keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
             >
-              <Text className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                {w.work_order_number}
-              </Text>
-              <Text className="mt-1 text-xl font-extrabold text-slate-900">
-                {w.title}
-              </Text>
-              {w.description ? (
-                <Text className="mt-3 leading-5 text-slate-600">{w.description}</Text>
-              ) : null}
-
-              <View className="mt-4 rounded-2xl bg-slate-50 p-3.5">
-                {[
-                  { label: 'Type', value: w.work_order_type ?? '—' },
-                  { label: 'Status', value: (w.status ?? '—').replace(/_/g, ' ') },
-                  { label: 'Priority', value: w.priority ?? '—' },
-                  { label: 'Planned start', value: fmtDate(w.planned_start_date) },
-                  { label: 'Planned end', value: fmtDate(w.planned_end_date) },
-                  {
-                    label: 'Est. hours',
-                    value:
-                      w.estimated_hours != null && w.estimated_hours > 0
-                        ? String(w.estimated_hours)
-                        : '—',
-                  },
-                  ...(w.location
-                    ? [{ label: 'Location', value: w.location }]
-                    : []),
-                  ...(w.estimated_cost != null && w.estimated_cost > 0
-                    ? [{ label: 'Est. cost', value: String(w.estimated_cost) }]
-                    : []),
-                ].map(({ label, value }) => (
-                  <View
-                    key={label}
-                    className="flex-row justify-between border-b border-slate-200/80 py-2.5 last:border-b-0"
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+                <View
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 14,
+                    backgroundColor: WS.primaryLight,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Ionicons name="hammer" size={24} color={WS.primary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      fontWeight: '700',
+                      color: WS.primary,
+                      letterSpacing: 0.5,
+                    }}
                   >
-                    <Text className="text-sm text-slate-500">{label}</Text>
-                    <Text className="max-w-[58%] text-right text-sm font-semibold capitalize text-slate-900">
-                      {String(value).replace(/_/g, ' ')}
-                    </Text>
-                  </View>
-                ))}
-                {w.instructions ? (
-                  <View className="mt-2 border-t border-slate-200/80 pt-3">
-                    <Text className="text-xs font-semibold uppercase text-slate-500">
-                      Instructions
-                    </Text>
-                    <Text className="mt-1 text-sm leading-5 text-slate-700">
-                      {w.instructions}
-                    </Text>
-                  </View>
+                    {w.work_order_number}
+                  </Text>
+                  <Text style={{ fontSize: 20, fontWeight: '800', color: WS.text, marginTop: 2 }}>
+                    {w.title}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
+                {w.status ? (
+                  <WorkshopBadge label={w.status} tone="status" />
                 ) : null}
-                {w.safety_notes ? (
-                  <View className="mt-3 border-t border-slate-200/80 pt-3">
-                    <Text className="text-xs font-semibold uppercase text-slate-500">
-                      Safety
-                    </Text>
-                    <Text className="mt-1 text-sm leading-5 text-slate-700">
-                      {w.safety_notes}
-                    </Text>
-                  </View>
+                {w.priority ? (
+                  <WorkshopBadge label={w.priority} tone="priority" />
                 ) : null}
-                {w.quality_requirements ? (
-                  <View className="mt-3 border-t border-slate-200/80 pt-3">
-                    <Text className="text-xs font-semibold uppercase text-slate-500">
-                      Quality
-                    </Text>
-                    <Text className="mt-1 text-sm leading-5 text-slate-700">
-                      {w.quality_requirements}
-                    </Text>
-                  </View>
-                ) : null}
-                {(w.materials_required?.length ?? 0) > 0 ? (
-                  <View className="mt-3 border-t border-slate-200/80 pt-3">
-                    <Text className="text-xs font-semibold uppercase text-slate-500">
-                      Materials
-                    </Text>
-                    <Text className="mt-1 text-sm text-slate-700">
-                      {(w.materials_required ?? []).join(', ')}
-                    </Text>
-                  </View>
-                ) : null}
-                {(w.tags?.length ?? 0) > 0 ? (
-                  <View className="mt-3 border-t border-slate-200/80 pt-3">
-                    <Text className="text-xs font-semibold uppercase text-slate-500">
-                      Tags
-                    </Text>
-                    <Text className="mt-1 text-sm text-slate-700">
-                      {(w.tags ?? []).join(', ')}
-                    </Text>
-                  </View>
+                {w.work_order_type ? (
+                  <WorkshopBadge label={w.work_order_type} />
                 ) : null}
               </View>
 
+              {w.description ? (
+                <Text
+                  style={{
+                    marginTop: 16,
+                    fontSize: 15,
+                    lineHeight: 22,
+                    color: WS.textMuted,
+                  }}
+                >
+                  {w.description}
+                </Text>
+              ) : null}
+
+              <View
+                style={{
+                  marginTop: 20,
+                  borderRadius: 16,
+                  backgroundColor: WS.bg,
+                  paddingHorizontal: 16,
+                  paddingVertical: 4,
+                  borderWidth: 1,
+                  borderColor: WS.border,
+                }}
+              >
+                <WorkshopDetailRow label="Planned start" value={fmtDate(w.planned_start_date)} />
+                <WorkshopDetailRow label="Planned end" value={fmtDate(w.planned_end_date)} />
+                <WorkshopDetailRow
+                  label="Est. hours"
+                  value={
+                    w.estimated_hours != null && w.estimated_hours > 0
+                      ? String(w.estimated_hours)
+                      : '—'
+                  }
+                />
+                {w.location ? (
+                  <WorkshopDetailRow label="Location" value={w.location} />
+                ) : null}
+                {w.estimated_cost != null && w.estimated_cost > 0 ? (
+                  <WorkshopDetailRow label="Est. cost" value={String(w.estimated_cost)} />
+                ) : null}
+              </View>
+
+              {w.instructions ? (
+                <View style={{ marginTop: 16 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: WS.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    Instructions
+                  </Text>
+                  <Text style={{ marginTop: 6, fontSize: 14, lineHeight: 21, color: WS.text }}>
+                    {w.instructions}
+                  </Text>
+                </View>
+              ) : null}
+              {w.safety_notes ? (
+                <View style={{ marginTop: 14 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: WS.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    Safety
+                  </Text>
+                  <Text style={{ marginTop: 6, fontSize: 14, lineHeight: 21, color: WS.text }}>
+                    {w.safety_notes}
+                  </Text>
+                </View>
+              ) : null}
+              {w.quality_requirements ? (
+                <View style={{ marginTop: 14 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: WS.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    Quality
+                  </Text>
+                  <Text style={{ marginTop: 6, fontSize: 14, lineHeight: 21, color: WS.text }}>
+                    {w.quality_requirements}
+                  </Text>
+                </View>
+              ) : null}
+              {(w.materials_required?.length ?? 0) > 0 ? (
+                <View style={{ marginTop: 14 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: WS.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    Materials
+                  </Text>
+                  <Text style={{ marginTop: 6, fontSize: 14, color: WS.text }}>
+                    {(w.materials_required ?? []).join(', ')}
+                  </Text>
+                </View>
+              ) : null}
+
               <Pressable
                 onPress={() => onEdit(w)}
-                className="mt-4 flex-row items-center justify-center gap-2 rounded-xl bg-blue-600 py-3.5"
+                style={{
+                  marginTop: 24,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  borderRadius: 14,
+                  backgroundColor: WS.primary,
+                  paddingVertical: 15,
+                }}
               >
-                <Ionicons name="pencil" size={17} color="#fff" />
-                <Text className="text-base font-bold text-white">Edit</Text>
+                <Ionicons name="pencil" size={18} color="#fff" />
+                <Text style={{ fontSize: 16, fontWeight: '700', color: '#fff' }}>Edit work order</Text>
               </Pressable>
 
               <Pressable
                 onPress={onClose}
-                className="mt-3 items-center rounded-xl bg-slate-100 py-3.5"
+                style={{
+                  marginTop: 10,
+                  alignItems: 'center',
+                  borderRadius: 14,
+                  backgroundColor: '#f1f5f9',
+                  paddingVertical: 15,
+                }}
               >
-                <Text className="text-base font-semibold text-slate-700">Close</Text>
+                <Text style={{ fontSize: 16, fontWeight: '600', color: WS.textMuted }}>Close</Text>
               </Pressable>
             </ScrollView>
           ) : null}

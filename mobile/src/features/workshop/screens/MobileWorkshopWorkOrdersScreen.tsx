@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, FlatList, Pressable, RefreshControl } from 'react-native';
+import { appAlert, appConfirm, appError } from '../../../utils/appDialog';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import {
   getWorkOrders,
@@ -9,15 +9,23 @@ import {
   deleteWorkOrder,
 } from '../../../services/workshop/workshopMobileApi';
 import { extractErrorMessage } from '../../../utils/errorUtils';
-import { AppModal } from '../../../components/layout/AppModal';
 import {
   WorkshopChrome,
-  WorkshopCard,
+  WorkshopChipSelect,
+  WorkshopFilterBar,
+  countActiveFilters,
+  WorkshopListCard,
+  WorkshopEmptyState,
+  WorkshopHeaderButton,
+  WorkshopLoading,
+  WorkshopFormSheet,
   WorkshopFieldLabel,
+  WorkshopTextInput,
+  WorkshopDatePickerField,
   WorkshopPrimaryButton,
+  WS,
 } from '../components/WorkshopChrome';
 import { WorkOrderDetailSheet } from '../components/WorkOrderDetailSheet';
-import { ProductChipSelect } from '../../inventory/screens/products/ProductChipSelect';
 
 type WO = {
   id: string;
@@ -114,7 +122,7 @@ export function MobileWorkshopWorkOrdersScreen() {
         else setLoading(true);
         await load();
       } catch (e) {
-        Alert.alert('Work orders', extractErrorMessage(e, 'Failed to load'));
+        appError('Work orders', extractErrorMessage(e, 'Failed to load'));
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -187,16 +195,16 @@ export function MobileWorkshopWorkOrdersScreen() {
 
   const submit = async () => {
     if (!form.title.trim() || !form.description.trim()) {
-      Alert.alert('Work order', 'Title and description are required');
+      appAlert('Work order', 'Title and description are required');
       return;
     }
     if (!form.planned_start_date || !form.planned_end_date) {
-      Alert.alert('Work order', 'Planned start and end dates are required');
+      appAlert('Work order', 'Planned start and end dates are required');
       return;
     }
     const hrs = parseFloat(form.estimated_hours);
     if (isNaN(hrs) || hrs <= 0) {
-      Alert.alert('Work order', 'Estimated hours must be greater than 0');
+      appAlert('Work order', 'Estimated hours must be greater than 0');
       return;
     }
     const materials = form.materialsText
@@ -234,120 +242,113 @@ export function MobileWorkshopWorkOrdersScreen() {
       setModalOpen(false);
       await run(false);
     } catch (e) {
-      Alert.alert('Work order', extractErrorMessage(e, 'Save failed'));
+      appError('Work order', extractErrorMessage(e, 'Save failed'));
     } finally {
       setSaving(false);
     }
   };
 
   const remove = (w: WO) => {
-    Alert.alert('Delete', `Remove ${w.work_order_number}?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteWorkOrder(w.id);
-            await run(false);
-          } catch (e) {
-            Alert.alert(
-              'Work order',
-              extractErrorMessage(e, 'Delete failed'),
-            );
-          }
-        },
+    appConfirm({
+      title: 'Delete',
+      message: `Remove ${w.work_order_number}?`,
+      confirmLabel: 'Delete',
+      destructive: true,
+      onConfirm: async () => {
+        try {
+          await deleteWorkOrder(w.id);
+          await run(false);
+        } catch (e) {
+          appError('Work order', extractErrorMessage(e, 'Delete failed'));
+        }
       },
-    ]);
+    });
   };
 
   return (
     <WorkshopChrome
       title="Work orders"
       subtitle="Production work queue"
-      right={
-        <Pressable onPress={openCreate} className="p-2">
-          <Ionicons name="add-circle" size={26} color="#4f46e5" />
-        </Pressable>
-      }
+      right={<WorkshopHeaderButton onPress={openCreate} />}
       scroll={false}
     >
-      <TextInput
-        className="mb-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900"
-        placeholder="Search…"
-        placeholderTextColor="#94a3b8"
-        value={search}
-        onChangeText={setSearch}
-      />
-      <View className="mb-2 rounded-xl border border-slate-200 bg-white px-3 py-3">
-        <ProductChipSelect
+      <WorkshopFilterBar
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search work orders…"
+        resultCount={filtered.length}
+        activeFilterCount={countActiveFilters([statusF, priorityF, typeF])}
+        onResetFilters={() => {
+          setStatusF('all');
+          setPriorityF('all');
+          setTypeF('all');
+        }}
+      >
+        <WorkshopChipSelect
           label="Status"
           options={STATUS_OPTIONS}
           value={statusF}
           onChange={setStatusF}
         />
-        <ProductChipSelect
+        <WorkshopChipSelect
           label="Priority"
           options={PRIORITY_OPTIONS}
           value={priorityF}
           onChange={setPriorityF}
         />
-        <ProductChipSelect
+        <WorkshopChipSelect
           label="Type"
           options={TYPE_OPTIONS}
           value={typeF}
           onChange={setTypeF}
         />
-      </View>
+      </WorkshopFilterBar>
 
       {loading && !refreshing ? (
-        <View className="py-12 items-center">
-          <ActivityIndicator color="#4f46e5" />
-        </View>
+        <WorkshopLoading />
       ) : (
         <FlatList
-          className="flex-1"
+          style={{ flex: 1 }}
           data={filtered}
           keyExtractor={(x) => x.id}
+          contentContainerStyle={{ paddingBottom: 20 }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => void run(true)}
-              tintColor="#4f46e5"
+              tintColor={WS.primary}
             />
           }
           ListEmptyComponent={
-            <Text className="py-8 text-center text-slate-500">No work orders.</Text>
+            <WorkshopEmptyState
+              icon="hammer-outline"
+              title="No work orders"
+              subtitle="Create your first work order to start tracking production."
+              actionLabel="Create work order"
+              onAction={openCreate}
+            />
           }
           renderItem={({ item: w }) => (
-            <WorkshopCard>
-              <Text className="font-semibold text-slate-900">
-                {w.work_order_number} · {w.title}
-              </Text>
-              <Text className="text-xs capitalize text-slate-500">
-                {w.status?.replace('_', ' ')} · {w.priority} · {w.work_order_type}
-              </Text>
-              <View className="mt-2 flex-row flex-wrap gap-2">
-                <Pressable
-                  onPress={() => setViewWorkOrder(w)}
-                  className="rounded-lg border border-slate-200 bg-white px-2 py-1"
-                >
-                  <Text className="text-xs font-semibold text-slate-800">View</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => openEditModal(w)}
-                  className="rounded-lg border border-blue-200 bg-blue-50 px-2 py-1"
-                >
-                  <Text className="text-xs font-semibold text-blue-900">Edit</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => remove(w)}
-                  className="rounded-lg bg-red-50 px-2 py-1"
-                >
-                  <Text className="text-xs text-red-700">Delete</Text>
-                </Pressable>
-              </View>
-            </WorkshopCard>
+            <WorkshopListCard
+              kind="work-order"
+              icon="hammer"
+              iconColor="#ea580c"
+              iconBg="#fff7ed"
+              kicker={w.work_order_number}
+              title={w.title}
+              subtitle={w.work_order_type?.replace(/_/g, ' ')}
+              meta={`${w.estimated_hours}h estimated · ${w.planned_start_date?.split('T')[0] ?? 'No start date'}`}
+              badges={[
+                { label: w.status, tone: 'status' },
+                { label: w.priority, tone: 'priority' },
+              ]}
+              onPress={() => setViewWorkOrder(w)}
+              actions={[
+                { icon: 'eye-outline', onPress: () => setViewWorkOrder(w) },
+                { icon: 'create-outline', onPress: () => openEditModal(w) },
+                { icon: 'trash-outline', onPress: () => remove(w), danger: true },
+              ]}
+            />
           )}
         />
       )}
@@ -362,126 +363,90 @@ export function MobileWorkshopWorkOrdersScreen() {
         }}
       />
 
-      <AppModal
+      <WorkshopFormSheet
         visible={modalOpen}
-        animationType="slide"
-        transparent
+        title={mode === 'create' ? 'New work order' : 'Edit work order'}
         onClose={() => setModalOpen(false)}
-      >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
-            <View className="mb-2 items-center">
-              <View className="h-1 w-9 rounded-full bg-slate-200" />
-            </View>
-            <Text className="mb-3 text-lg font-semibold text-slate-900">
-              {mode === 'create' ? 'New work order' : 'Edit work order'}
-            </Text>
-            <ScrollView keyboardShouldPersistTaps="handled">
-              <WorkshopFieldLabel>Title *</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-                value={form.title}
-                onChangeText={(v) => setForm((f) => ({ ...f, title: v }))}
-              />
-              <WorkshopFieldLabel>Description *</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-                value={form.description}
-                onChangeText={(v) => setForm((f) => ({ ...f, description: v }))}
-                multiline
-              />
-              <ProductChipSelect
-                label="Type"
-                options={FORM_TYPES}
-                value={form.work_order_type}
-                onChange={(v) => setForm((f) => ({ ...f, work_order_type: v }))}
-              />
-              <ProductChipSelect
-                label="Status"
-                options={FORM_STATUSES}
-                value={form.status}
-                onChange={(v) => setForm((f) => ({ ...f, status: v }))}
-              />
-              <ProductChipSelect
-                label="Priority"
-                options={FORM_PRIORITIES}
-                value={form.priority}
-                onChange={(v) => setForm((f) => ({ ...f, priority: v }))}
-              />
-              <WorkshopFieldLabel>Planned start *</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                placeholder="YYYY-MM-DD"
-                value={form.planned_start_date}
-                onChangeText={(v) =>
-                  setForm((f) => ({ ...f, planned_start_date: v }))
-                }
-              />
-              <WorkshopFieldLabel>Planned end *</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                placeholder="YYYY-MM-DD"
-                value={form.planned_end_date}
-                onChangeText={(v) =>
-                  setForm((f) => ({ ...f, planned_end_date: v }))
-                }
-              />
-              <WorkshopFieldLabel>Estimated hours *</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                keyboardType="decimal-pad"
-                value={form.estimated_hours}
-                onChangeText={(v) =>
-                  setForm((f) => ({ ...f, estimated_hours: v }))
-                }
-              />
-              <WorkshopFieldLabel>Location</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                value={form.location}
-                onChangeText={(v) => setForm((f) => ({ ...f, location: v }))}
-              />
-              <WorkshopFieldLabel>Instructions</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                value={form.instructions}
-                onChangeText={(v) =>
-                  setForm((f) => ({ ...f, instructions: v }))
-                }
-                multiline
-              />
-              <WorkshopFieldLabel>Materials (comma-separated)</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                value={form.materialsText}
-                onChangeText={(v) =>
-                  setForm((f) => ({ ...f, materialsText: v }))
-                }
-              />
-              <WorkshopFieldLabel>Estimated cost</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                keyboardType="decimal-pad"
-                value={form.estimated_cost}
-                onChangeText={(v) =>
-                  setForm((f) => ({ ...f, estimated_cost: v }))
-                }
-              />
-            </ScrollView>
+        footer={
+          <>
             <WorkshopPrimaryButton
-              label={saving ? 'Saving…' : 'Save'}
+              label={saving ? 'Saving…' : 'Save work order'}
               onPress={() => void submit()}
               disabled={saving}
             />
-            <Pressable
-              className="mt-3 items-center py-2"
-              onPress={() => setModalOpen(false)}
-            >
-              <Text className="text-slate-600">Close</Text>
+            <Pressable onPress={() => setModalOpen(false)} style={{ marginTop: 12, alignItems: 'center', paddingVertical: 10 }}>
+              <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Cancel</Text>
             </Pressable>
+          </>
+        }
+      >
+        <WorkshopFieldLabel>Title *</WorkshopFieldLabel>
+        <WorkshopTextInput
+          value={form.title}
+          onChangeText={(v) => setForm((f) => ({ ...f, title: v }))}
+        />
+        <WorkshopFieldLabel>Description *</WorkshopFieldLabel>
+        <WorkshopTextInput
+          value={form.description}
+          onChangeText={(v) => setForm((f) => ({ ...f, description: v }))}
+          multiline
+          style={{ minHeight: 80, textAlignVertical: 'top' }}
+        />
+        <WorkshopChipSelect
+          label="Type"
+          options={FORM_TYPES}
+          value={form.work_order_type}
+          onChange={(v) => setForm((f) => ({ ...f, work_order_type: v }))}
+        />
+        <WorkshopChipSelect
+          label="Status"
+          options={FORM_STATUSES}
+          value={form.status}
+          onChange={(v) => setForm((f) => ({ ...f, status: v }))}
+        />
+        <WorkshopChipSelect
+          label="Priority"
+          options={FORM_PRIORITIES}
+          value={form.priority}
+          onChange={(v) => setForm((f) => ({ ...f, priority: v }))}
+        />
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flex: 1 }}>
+            <WorkshopDatePickerField label="Start date *" value={form.planned_start_date} onChange={(v) => setForm((f) => ({ ...f, planned_start_date: v }))} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <WorkshopDatePickerField label="End date *" value={form.planned_end_date} onChange={(v) => setForm((f) => ({ ...f, planned_end_date: v }))} />
           </View>
         </View>
-      </AppModal>
+        <WorkshopFieldLabel>Estimated hours *</WorkshopFieldLabel>
+        <WorkshopTextInput
+          keyboardType="decimal-pad"
+          value={form.estimated_hours}
+          onChangeText={(v) => setForm((f) => ({ ...f, estimated_hours: v }))}
+        />
+        <WorkshopFieldLabel>Location</WorkshopFieldLabel>
+        <WorkshopTextInput
+          value={form.location}
+          onChangeText={(v) => setForm((f) => ({ ...f, location: v }))}
+        />
+        <WorkshopFieldLabel>Instructions</WorkshopFieldLabel>
+        <WorkshopTextInput
+          value={form.instructions}
+          onChangeText={(v) => setForm((f) => ({ ...f, instructions: v }))}
+          multiline
+        />
+        <WorkshopFieldLabel>Materials (comma-separated)</WorkshopFieldLabel>
+        <WorkshopTextInput
+          value={form.materialsText}
+          onChangeText={(v) => setForm((f) => ({ ...f, materialsText: v }))}
+        />
+        <WorkshopFieldLabel>Estimated cost</WorkshopFieldLabel>
+        <WorkshopTextInput
+          keyboardType="decimal-pad"
+          value={form.estimated_cost}
+          onChangeText={(v) => setForm((f) => ({ ...f, estimated_cost: v }))}
+        />
+      </WorkshopFormSheet>
     </WorkshopChrome>
   );
 }

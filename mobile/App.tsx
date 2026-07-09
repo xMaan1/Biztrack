@@ -10,6 +10,8 @@ import { SidebarDrawerProvider } from './src/contexts/SidebarDrawerContext';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { BizTrackLogo } from './src/components/brand/BizTrackLogo';
 import { CommerceDashboardScreen } from './src/screens/CommerceDashboardScreen';
+import { AppDialogProvider } from './src/contexts/AppDialogContext';
+import { AppDialogRegistrar } from './src/components/layout/AppDialogRegistrar';
 
 function RootBody() {
   const { isAuthenticated, loading } = useAuth();
@@ -18,7 +20,7 @@ function RootBody() {
     return (
       <View className="flex-1 items-center justify-center bg-slate-50 px-6">
         <BizTrackLogo size="hero" />
-        <ActivityIndicator size="large" color="#2563eb" className="mt-8" />
+        <ActivityIndicator size="large" color="#4f46e5" className="mt-8" />
         <Text className="mt-3 text-slate-600">Loading…</Text>
       </View>
     );
@@ -29,11 +31,14 @@ function RootBody() {
   }
 
   return (
-    <RBACProvider>
-      <SidebarDrawerProvider>
-        <CommerceDashboardScreen />
-      </SidebarDrawerProvider>
-    </RBACProvider>
+    <AppDialogProvider>
+      <AppDialogRegistrar />
+      <RBACProvider>
+        <SidebarDrawerProvider>
+          <CommerceDashboardScreen />
+        </SidebarDrawerProvider>
+      </RBACProvider>
+    </AppDialogProvider>
   );
 }
 
@@ -58,7 +63,7 @@ export default function App() {
         {!hydrated ? (
           <View className="flex-1 items-center justify-center bg-slate-50 px-6">
             <BizTrackLogo size="hero" />
-            <ActivityIndicator size="large" color="#2563eb" className="mt-8" />
+            <ActivityIndicator size="large" color="#4f46e5" className="mt-8" />
             <Text className="mt-3 text-slate-600">Starting…</Text>
           </View>
         ) : (

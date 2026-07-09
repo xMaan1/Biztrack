@@ -1,15 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert, Linking } from 'react-native';
+import { View, Text, FlatList, Pressable, ScrollView, RefreshControl, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { AppModal } from '../../../components/layout/AppModal';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { appAlert, appConfirm, appError } from '../../../utils/appDialog';
 import { formatUsd } from '../../../services/crm/CrmMobileService';
 import {
   InvoiceStatus,
-  PaymentMethod,
   type Invoice,
   type InvoiceCreate,
   type InvoiceItemCreate,
@@ -22,7 +19,6 @@ import {
   getInvoice,
   createInvoice,
   createInstallmentPlan as createInstallmentPlanApi,
-  updateInvoice,
   deleteInvoice,
   getInvoiceDashboard,
   searchInvoiceCustomers,
@@ -35,6 +31,28 @@ import { sharePdfFromAuthenticatedPath } from '../../../utils/salesPdfShare';
 import { OptionSheet } from '../../../components/crm/OptionSheet';
 import { usePermissions } from '../../../hooks/usePermissions';
 import type { Product } from '../../../models/pos';
+import {
+  WorkshopChrome,
+  WorkshopChipSelect,
+  WorkshopFilterBar,
+  countActiveFilters,
+  WorkshopListCard,
+  WorkshopEmptyState,
+  WorkshopHeaderButton,
+  WorkshopLoading,
+  WorkshopSegmentTabs,
+  WorkshopStatCard,
+  WorkshopFormSheet,
+  WorkshopFieldLabel,
+  WorkshopTextInput,
+  WorkshopDatePickerField,
+  WorkshopPickerField,
+  WorkshopDetailRow,
+  WorkshopBadge,
+  WorkshopPrimaryButton,
+  WorkshopOutlineButton,
+  WS,
+} from '../../workshop/components/WorkshopChrome';
 
 const PAGE_SIZE = 15;
 const STATUS_OPTS: { value: string; label: string }[] = [
@@ -63,23 +81,25 @@ function buildItemsPayload(rows: InvoiceItemCreate[]): InvoiceItemCreate[] {
     }));
 }
 
-const getStatusBadge = (status: string) => {
+function invoiceStatusIcon(status: string): 'checkmark-circle' | 'warning' | 'paper-plane' | 'pie-chart' | 'document' | 'help-circle' {
   const s = String(status).toLowerCase();
-  switch (s) {
-    case 'paid':
-      return { bg: 'bg-emerald-100', text: 'text-emerald-700', color: '#059669', label: 'Paid', icon: 'checkmark-circle' };
-    case 'overdue':
-      return { bg: 'bg-rose-100', text: 'text-rose-700', color: '#e11d48', label: 'Overdue', icon: 'warning' };
-    case 'sent':
-      return { bg: 'bg-blue-100', text: 'text-blue-700', color: '#2563eb', label: 'Sent', icon: 'paper-plane' };
-    case 'partially_paid':
-      return { bg: 'bg-amber-100', text: 'text-amber-700', color: '#d97706', label: 'Partial', icon: 'pie-chart' };
-    case 'draft':
-      return { bg: 'bg-slate-100', text: 'text-slate-600', color: '#475569', label: 'Draft', icon: 'document' };
-    default:
-      return { bg: 'bg-slate-100', text: 'text-slate-600', color: '#475569', label: status, icon: 'help-circle' };
-  }
-};
+  if (s === 'paid') return 'checkmark-circle';
+  if (s === 'overdue') return 'warning';
+  if (s === 'sent') return 'paper-plane';
+  if (s === 'partially_paid') return 'pie-chart';
+  if (s === 'draft') return 'document';
+  return 'help-circle';
+}
+
+function invoiceStatusColor(status: string): { icon: string; bg: string } {
+  const s = String(status).toLowerCase();
+  if (s === 'paid') return { icon: '#059669', bg: '#ecfdf5' };
+  if (s === 'overdue') return { icon: '#e11d48', bg: '#fef2f2' };
+  if (s === 'sent') return { icon: '#2563eb', bg: '#eff6ff' };
+  if (s === 'partially_paid') return { icon: '#d97706', bg: '#fffbeb' };
+  if (s === 'draft') return { icon: '#475569', bg: '#f1f5f9' };
+  return { icon: '#475569', bg: '#f1f5f9' };
+}
 
 export function MobileInvoicesScreen() {
   const { workspacePath, setSidebarActivePath, setWorkspacePath } = useSidebarDrawer();
@@ -94,7 +114,6 @@ export function MobileInvoicesScreen() {
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [statusOpen, setStatusOpen] = useState(false);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -102,6 +121,7 @@ export function MobileInvoicesScreen() {
   const [emailOpen, setEmailOpen] = useState(false);
   const [emailTo, setEmailTo] = useState('');
   const [emailBody, setEmailBody] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const [custQuery, setCustQuery] = useState('');
   const [custHits, setCustHits] = useState<InvoiceCustomerOption[]>([]);
@@ -155,7 +175,7 @@ export function MobileInvoicesScreen() {
         setProducts(productRows);
       }
     } catch (e) {
-      Alert.alert('Invoices', extractErrorMessage(e, 'Failed to load'));
+      appError('Invoices', extractErrorMessage(e, 'Failed to load'));
     } finally {
       setLoading(false);
     }
@@ -223,11 +243,11 @@ export function MobileInvoicesScreen() {
   const submitCreate = async () => {
     const items = buildItemsPayload(lineRows);
     if (!customerId || !customerName.trim() || !customerEmail.trim()) {
-      Alert.alert('Invoices', 'Select a customer with name and email.');
+      appAlert('Invoices', 'Select a customer with name and email.');
       return;
     }
     if (items.length === 0) {
-      Alert.alert('Invoices', 'Add at least one line item.');
+      appAlert('Invoices', 'Add at least one line item.');
       return;
     }
     const tr = parseFloat(taxRate) || 0;
@@ -251,6 +271,7 @@ export function MobileInvoicesScreen() {
       items,
     };
     try {
+      setSaving(true);
       const created = await createInvoice(payload);
       const subtotalAmount = items.reduce(
         (sum, item) => sum + item.quantity * item.unitPrice * (1 - item.discount / 100),
@@ -276,7 +297,9 @@ export function MobileInvoicesScreen() {
       resetCreate();
       await loadAll();
     } catch (e) {
-      Alert.alert('Invoices', extractErrorMessage(e, 'Failed to create'));
+      appError('Invoices', extractErrorMessage(e, 'Failed to create'));
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -286,7 +309,7 @@ export function MobileInvoicesScreen() {
       setSelected(full);
       setDetailOpen(true);
     } catch (e) {
-      Alert.alert('Invoices', extractErrorMessage(e, 'Failed to open'));
+      appError('Invoices', extractErrorMessage(e, 'Failed to open'));
     }
   };
 
@@ -298,7 +321,7 @@ export function MobileInvoicesScreen() {
       setSelected(full);
       await loadAll();
     } catch (e) {
-      Alert.alert('Invoices', extractErrorMessage(e, 'Failed'));
+      appError('Invoices', extractErrorMessage(e, 'Failed'));
     }
   };
 
@@ -311,9 +334,9 @@ export function MobileInvoicesScreen() {
         emailBody.trim() || undefined,
       );
       setEmailOpen(false);
-      Alert.alert('Invoices', 'Email sent.');
+      appAlert('Invoices', 'Email sent.');
     } catch (e) {
-      Alert.alert('Invoices', extractErrorMessage(e, 'Failed to send'));
+      appError('Invoices', extractErrorMessage(e, 'Failed to send'));
     }
   };
 
@@ -325,7 +348,7 @@ export function MobileInvoicesScreen() {
         await Linking.openURL(res.whatsapp_url);
       }
     } catch (e) {
-      Alert.alert('Invoices', extractErrorMessage(e, 'Failed'));
+      appError('Invoices', extractErrorMessage(e, 'Failed'));
     }
   };
 
@@ -337,19 +360,18 @@ export function MobileInvoicesScreen() {
         `invoice-${selected.invoiceNumber}.pdf`,
       );
     } catch (e) {
-      Alert.alert('Invoices', extractErrorMessage(e, 'Could not share PDF'));
+      appError('Invoices', extractErrorMessage(e, 'Could not share PDF'));
     }
   };
 
   const handleDelete = (inv: Invoice) => {
-    Alert.alert('Delete invoice', inv.invoiceNumber, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => void doDelete(inv.id),
-      },
-    ]);
+    appConfirm({
+      title: 'Delete invoice',
+      message: inv.invoiceNumber,
+      confirmLabel: 'Delete',
+      destructive: true,
+      onConfirm: () => void doDelete(inv.id),
+    });
   };
 
   const doDelete = async (id: string) => {
@@ -359,7 +381,7 @@ export function MobileInvoicesScreen() {
       setSelected(null);
       await loadAll();
     } catch (e) {
-      Alert.alert('Invoices', extractErrorMessage(e, 'Failed to delete'));
+      appError('Invoices', extractErrorMessage(e, 'Failed to delete'));
     }
   };
 
@@ -381,564 +403,452 @@ export function MobileInvoicesScreen() {
   const invoiceTaxAmount = taxableAmount * (invoiceTaxPct / 100);
   const invoiceTotal = taxableAmount + invoiceTaxAmount;
 
-  return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center justify-between border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Invoices
-        </Text>
-        <View className="flex-row items-center gap-2">
-          <Pressable
-            onPress={() => setWorkspacePath('/settings/invoice')}
-            className="h-10 w-10 items-center justify-center rounded-full active:bg-slate-100"
-          >
-            <Ionicons name="settings-outline" size={22} color="#475569" />
-          </Pressable>
-          {canEdit ? (
-            <Pressable
-              onPress={() => {
-                resetCreate();
-                setCreateOpen(true);
-              }}
-              className="rounded-xl bg-blue-600 px-4 py-2 active:bg-blue-700 shadow-sm shadow-blue-200"
-            >
-              <Text className="font-bold text-white">New</Text>
-            </Pressable>
-          ) : (
-            <View className="w-4" />
-          )}
-        </View>
-      </View>
+  const statusChipOptions = STATUS_OPTS.map((o) => o.value);
 
-      <View className="flex-row bg-white p-2">
-        <Pressable
-          onPress={() => setTab('list')}
-          className={`mr-2 flex-1 flex-row items-center justify-center rounded-xl py-2.5 ${
-            tab === 'list' ? 'bg-blue-600 shadow-sm shadow-blue-200' : 'bg-slate-50'
-          }`}
-        >
-          <Ionicons
-            name="list"
-            size={18}
-            color={tab === 'list' ? 'white' : '#64748b'}
-            style={{ marginRight: 6 }}
-          />
-          <Text
-            className={`text-sm font-bold ${
-              tab === 'list' ? 'text-white' : 'text-slate-500'
-            }`}
-          >
-            Invoices
-          </Text>
-        </Pressable>
-        <Pressable
-          onPress={() => setTab('dashboard')}
-          className={`flex-1 flex-row items-center justify-center rounded-xl py-2.5 ${
-            tab === 'dashboard' ? 'bg-blue-600 shadow-sm shadow-blue-200' : 'bg-slate-50'
-          }`}
-        >
-          <Ionicons
-            name="stats-chart"
-            size={18}
-            color={tab === 'dashboard' ? 'white' : '#64748b'}
-            style={{ marginRight: 6 }}
-          />
-          <Text
-            className={`text-sm font-bold ${
-              tab === 'dashboard' ? 'text-white' : 'text-slate-500'
-            }`}
-          >
-            Dashboard
-          </Text>
-        </Pressable>
-      </View>
-
-      {tab === 'list' ? (
-        <>
-          <View className="border-b border-slate-200 bg-white px-3 py-2">
-            <TextInput
-              value={search}
-              onChangeText={setSearch}
-              placeholder="Search invoices…"
-              className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <Pressable
-              onPress={() => setStatusOpen(true)}
-              className="flex-row items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"
-            >
-              <Text className="text-slate-700">
-                {STATUS_OPTS.find((x) => x.value === statusFilter)?.label}
-              </Text>
-              <Ionicons name="chevron-down" size={18} color="#64748b" />
-            </Pressable>
-          </View>
-
-          {loading && !refreshing ? (
-            <View className="flex-1 items-center justify-center">
-              <ActivityIndicator size="large" color="#2563eb" />
-            </View>
-          ) : (
-            <FlatList
-              data={invoices}
-              keyExtractor={(item) => item.id}
-              refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-              }
-              contentContainerStyle={{ padding: 12, paddingBottom: 32 }}
-              ListEmptyComponent={
-                <Text className="py-8 text-center text-slate-500">
-                  No invoices
-                </Text>
-              }
-              renderItem={({ item }) => {
-                const badge = getStatusBadge(item.status);
-                return (
-                  <View className="mb-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                    <Pressable
-                      onPress={() => void openDetail(item)}
-                      android_ripple={{ color: '#f8fafc' }}
-                      className="p-4"
-                    >
-                      <View className="flex-row items-center justify-between">
-                        <View className="flex-1 flex-row items-center">
-                          <View
-                            className={`mr-3 h-10 w-10 items-center justify-center rounded-full ${badge.bg}`}
-                          >
-                            <Ionicons name={badge.icon as any} size={20} color={badge.color} />
-                          </View>
-                          <View className="flex-1">
-                            <Text className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                              {item.invoiceNumber}
-                            </Text>
-                            <Text className="text-base font-bold text-slate-900" numberOfLines={1}>
-                              {item.customerName}
-                            </Text>
-                          </View>
-                        </View>
-                        <View className={`rounded-full px-2.5 py-1 ${badge.bg}`}>
-                          <Text className={`text-[10px] font-black uppercase tracking-wider ${badge.text}`}>
-                            {badge.label}
-                          </Text>
-                        </View>
-                      </View>
-
-                      <View className="mt-4 flex-row items-center justify-between border-t border-slate-50 pt-3">
-                        <View>
-                          <Text className="text-[10px] uppercase tracking-tighter text-slate-400">Amount Due</Text>
-                          <Text className="text-lg font-black text-slate-900">
-                            {formatUsd(item.total)}
-                          </Text>
-                        </View>
-                        <Pressable
-                          onPress={() => void openDetail(item)}
-                          className="flex-row items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 active:bg-black"
-                        >
-                          <Text className="text-xs font-bold text-white">Details</Text>
-                          <Ionicons name="chevron-forward" size={14} color="white" />
-                        </Pressable>
-                      </View>
-                    </Pressable>
-                  </View>
-                );
-              }}
-            />
-          )}
-
-          <View className="flex-row items-center justify-center border-t border-slate-200 bg-white py-2">
-            <Pressable
-              disabled={page <= 1}
-              onPress={() => setPage((p) => Math.max(1, p - 1))}
-              className="px-4 py-2 opacity-100 disabled:opacity-40"
-            >
-              <Text className="font-medium text-blue-600">Prev</Text>
-            </Pressable>
-            <Text className="text-slate-600">
-              {page} / {totalPages}
-            </Text>
-            <Pressable
-              disabled={page >= totalPages}
-              onPress={() => setPage((p) => p + 1)}
-              className="px-4 py-2 opacity-100 disabled:opacity-40"
-            >
-              <Text className="font-medium text-blue-600">Next</Text>
-            </Pressable>
-          </View>
-        </>
-      ) : (
-        <ScrollView
-          className="flex-1 px-3 py-3"
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        >
-          {dashboard ? (
-            <View>
-              <View className="flex-row flex-wrap justify-between gap-3">
-                <View className="w-[47%] rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
-                  <View className="h-8 w-8 items-center justify-center rounded-full bg-blue-100">
-                    <Ionicons name="receipt" size={16} color="#2563eb" />
-                  </View>
-                  <Text className="mt-2 text-2xl font-black text-slate-900">
-                    {dashboard.metrics.totalInvoices}
-                  </Text>
-                  <Text className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Invoices</Text>
-                </View>
-
-                <View className="w-[47%] rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
-                  <View className="h-8 w-8 items-center justify-center rounded-full bg-emerald-100">
-                    <Ionicons name="checkmark-done" size={16} color="#059669" />
-                  </View>
-                  <Text className="mt-2 text-2xl font-black text-slate-900">
-                    {dashboard.metrics.paidInvoices}
-                  </Text>
-                  <Text className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Paid</Text>
-                </View>
-
-                <View className="w-[47%] rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
-                  <View className="h-8 w-8 items-center justify-center rounded-full bg-rose-100">
-                    <Ionicons name="time" size={16} color="#e11d48" />
-                  </View>
-                  <Text className="mt-2 text-2xl font-black text-rose-600">
-                    {dashboard.metrics.overdueInvoices}
-                  </Text>
-                  <Text className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Overdue</Text>
-                </View>
-
-                <View className="w-[47%] rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
-                  <View className="h-8 w-8 items-center justify-center rounded-full bg-indigo-100">
-                    <Ionicons name="cash" size={16} color="#4f46e5" />
-                  </View>
-                  <Text className="mt-2 text-xl font-black text-slate-900">
-                    {formatUsd(dashboard.metrics.totalRevenue)}
-                  </Text>
-                  <Text className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Revenue</Text>
-                </View>
-
-                <View className="w-full rounded-2xl bg-slate-900 p-4 shadow-md">
-                   <Text className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Total Outstanding</Text>
-                   <Text className="mt-1 text-3xl font-black text-white">
-                     {formatUsd(dashboard.metrics.outstandingAmount)}
-                   </Text>
-                </View>
-              </View>
-
-              <View className="mt-6 rounded-3xl bg-white p-5 border border-slate-100 shadow-sm">
-                <Text className="text-lg font-black text-slate-900 mb-4">Recent Activity</Text>
-                {(dashboard.recentInvoices ?? []).slice(0, 5).map((inv) => {
-                  const badge = getStatusBadge(inv.status);
-                  return (
-                    <Pressable
-                      key={inv.id}
-                      onPress={() => void openDetail(inv)}
-                      className="flex-row items-center border-b border-slate-50 py-4 active:bg-slate-50"
-                    >
-                      <View className={`mr-3 h-10 w-10 items-center justify-center rounded-xl ${badge.bg}`}>
-                        <Ionicons name={badge.icon as any} size={18} color={badge.color} />
-                      </View>
-                      <View className="flex-1">
-                        <Text className="font-bold text-slate-900">{inv.invoiceNumber}</Text>
-                        <Text className="text-xs text-slate-500">{inv.customerName}</Text>
-                      </View>
-                      <View className="items-end">
-                        <Text className="font-black text-slate-900">{formatUsd(inv.total)}</Text>
-                        <Text className={`text-[9px] font-bold uppercase ${badge.text}`}>{badge.label}</Text>
-                      </View>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </View>
-          ) : (
-            <Text className="py-6 text-center text-slate-500">No data</Text>
-          )}
-        </ScrollView>
-      )}
-
-      <OptionSheet
-        visible={statusOpen}
-        title="Status"
-        options={STATUS_OPTS}
-        onSelect={(v) => {
-          setStatusFilter(v);
-          setStatusOpen(false);
+  const listContent = (
+    <>
+      <WorkshopFilterBar
+        searchValue={search}
+        onSearchChange={(v) => {
+          setSearch(v);
           setPage(1);
         }}
-        onClose={() => setStatusOpen(false)}
-      />
-
-      <AppModal
-        visible={createOpen}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onClose={() => setCreateOpen(false)}
+        searchPlaceholder="Search invoices…"
+        resultCount={invoices.length}
+        activeFilterCount={countActiveFilters([statusFilter])}
+        onResetFilters={() => {
+          setStatusFilter('all');
+          setPage(1);
+        }}
       >
-        <SafeAreaView className="flex-1 bg-slate-50" edges={['top', 'bottom']}>
-          <View className="flex-row items-center justify-between bg-white border-b border-slate-200 px-4 py-4">
-            <Pressable onPress={() => setCreateOpen(false)} className="px-2 py-1">
-              <Text className="font-bold text-slate-500">Cancel</Text>
-            </Pressable>
-            <Text className="text-lg font-black text-slate-900">New Invoice</Text>
-            <Pressable onPress={() => void submitCreate()} className="rounded-xl bg-blue-600 px-5 py-2 active:bg-blue-700 shadow-sm shadow-blue-200">
-              <Text className="font-bold text-white">Save</Text>
-            </Pressable>
+        <WorkshopChipSelect
+          label="Status"
+          options={statusChipOptions}
+          value={statusFilter}
+          onChange={(v) => {
+            setStatusFilter(v);
+            setPage(1);
+          }}
+        />
+      </WorkshopFilterBar>
+
+      {loading && !refreshing ? (
+        <WorkshopLoading />
+      ) : (
+        <FlatList
+          style={{ flex: 1 }}
+          data={invoices}
+          keyExtractor={(item) => item.id}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={WS.primary} />
+          }
+          contentContainerStyle={{ paddingBottom: 20 }}
+          ListEmptyComponent={
+            <WorkshopEmptyState
+              icon="receipt-outline"
+              title="No invoices"
+              subtitle="Create your first invoice to get started."
+              actionLabel={canEdit ? 'New invoice' : undefined}
+              onAction={canEdit ? () => { resetCreate(); setCreateOpen(true); } : undefined}
+            />
+          }
+          renderItem={({ item }) => {
+            const sc = invoiceStatusColor(item.status);
+            return (
+              <WorkshopListCard
+                icon={invoiceStatusIcon(item.status)}
+                iconColor={sc.icon}
+                iconBg={sc.bg}
+                title={item.customerName}
+                subtitle={item.invoiceNumber}
+                meta={`Due ${new Date(item.dueDate).toLocaleDateString()} · ${formatUsd(item.total)}`}
+                badges={[{ label: item.status, tone: 'status' }]}
+                onPress={() => void openDetail(item)}
+                actions={
+                  canEdit
+                    ? [
+                        { icon: 'eye-outline', onPress: () => void openDetail(item) },
+                        { icon: 'trash-outline', onPress: () => handleDelete(item), danger: true },
+                      ]
+                    : [{ icon: 'eye-outline', onPress: () => void openDetail(item) }]
+                }
+              />
+            );
+          }}
+        />
+      )}
+
+      {totalPages > 1 ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16, paddingVertical: 12, borderTopWidth: 1, borderTopColor: WS.border }}>
+          <Pressable disabled={page <= 1} onPress={() => setPage((p) => Math.max(1, p - 1))} style={{ opacity: page <= 1 ? 0.4 : 1 }}>
+            <Text style={{ fontWeight: '700', color: WS.primary }}>Prev</Text>
+          </Pressable>
+          <Text style={{ color: WS.textMuted }}>{page} / {totalPages}</Text>
+          <Pressable disabled={page >= totalPages} onPress={() => setPage((p) => p + 1)} style={{ opacity: page >= totalPages ? 0.4 : 1 }}>
+            <Text style={{ fontWeight: '700', color: WS.primary }}>Next</Text>
+          </Pressable>
+        </View>
+      ) : null}
+    </>
+  );
+
+  const dashboardContent = (
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={WS.primary} />
+      }
+      contentContainerStyle={{ paddingBottom: 24 }}
+    >
+      {dashboard ? (
+        <>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
+            <WorkshopStatCard
+              label="Total invoices"
+              value={dashboard.metrics.totalInvoices}
+              icon="receipt-outline"
+              accent="#2563eb"
+              accentBg="#eff6ff"
+            />
+            <WorkshopStatCard
+              label="Paid"
+              value={dashboard.metrics.paidInvoices}
+              icon="checkmark-done-outline"
+              accent="#059669"
+              accentBg="#ecfdf5"
+            />
+            <WorkshopStatCard
+              label="Overdue"
+              value={dashboard.metrics.overdueInvoices}
+              icon="time-outline"
+              accent="#e11d48"
+              accentBg="#fef2f2"
+            />
+            <WorkshopStatCard
+              label="Revenue"
+              value={formatUsd(dashboard.metrics.totalRevenue)}
+              icon="cash-outline"
+              accent="#4f46e5"
+              accentBg="#eef2ff"
+            />
           </View>
-          <ScrollView
-            className="flex-1 px-4 py-6"
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ paddingBottom: 48 }}
+
+          <View
+            style={{
+              backgroundColor: '#0f172a',
+              borderRadius: 16,
+              padding: 20,
+              marginBottom: 16,
+            }}
           >
-            <Text className="mb-1 text-sm font-medium text-slate-700">
-              Find customer
+            <Text style={{ fontSize: 11, fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 }}>
+              Total outstanding
             </Text>
-            <TextInput
-              value={custQuery}
-              onChangeText={setCustQuery}
-              className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-              placeholder="Type name, email, phone…"
-              placeholderTextColor="#94a3b8"
-            />
-            {custHits.length > 0 ? (
-              <View className="mb-3 max-h-40 rounded-lg border border-slate-200">
-                <FlatList
-                  data={custHits}
-                  keyExtractor={(c) => c.id}
-                  keyboardShouldPersistTaps="handled"
-                  renderItem={({ item }) => (
-                    <Pressable
-                      onPress={() => {
-                        setCustomerId(String(item.id));
-                        setCustomerName(customerLabel(item));
-                        setCustomerEmail(String(item.email ?? ''));
-                        setCustHits([]);
-                        setCustQuery('');
-                      }}
-                      className="border-b border-slate-100 px-3 py-2"
-                    >
-                      <Text className="font-medium text-slate-900">
-                        {customerLabel(item)}
-                      </Text>
-                      {item.email ? (
-                        <Text className="text-sm text-slate-600">{item.email}</Text>
-                      ) : null}
-                    </Pressable>
-                  )}
-                />
-              </View>
-            ) : null}
-            <Text className="mb-1 text-sm font-medium text-slate-700">Customer name</Text>
-            <TextInput
-              value={customerName}
-              onChangeText={setCustomerName}
-              className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <Text className="mb-1 text-sm font-medium text-slate-700">Email</Text>
-            <TextInput
-              value={customerEmail}
-              onChangeText={setCustomerEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <Text className="mb-1 text-sm font-medium text-slate-700">Issue / due</Text>
-            <View className="mb-2 flex-row gap-2">
-              <TextInput
-                value={issueDate}
-                onChangeText={setIssueDate}
-                className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-                placeholder="YYYY-MM-DD"
+            <Text style={{ marginTop: 6, fontSize: 28, fontWeight: '800', color: '#fff' }}>
+              {formatUsd(dashboard.metrics.outstandingAmount)}
+            </Text>
+          </View>
+
+          <Text style={{ fontSize: 16, fontWeight: '800', color: WS.text, marginBottom: 12 }}>
+            Recent activity
+          </Text>
+          {(dashboard.recentInvoices ?? []).slice(0, 5).map((inv) => {
+            const sc = invoiceStatusColor(inv.status);
+            return (
+              <WorkshopListCard
+                key={inv.id}
+                icon={invoiceStatusIcon(inv.status)}
+                iconColor={sc.icon}
+                iconBg={sc.bg}
+                title={inv.invoiceNumber}
+                subtitle={inv.customerName}
+                meta={formatUsd(inv.total)}
+                badges={[{ label: inv.status, tone: 'status' }]}
+                onPress={() => void openDetail(inv)}
               />
-              <TextInput
-                value={dueDate}
-                onChangeText={setDueDate}
-                className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-                placeholder="YYYY-MM-DD"
+            );
+          })}
+        </>
+      ) : (
+        <WorkshopEmptyState icon="stats-chart-outline" title="No data" subtitle="Dashboard metrics are not available yet." />
+      )}
+    </ScrollView>
+  );
+
+  return (
+    <>
+      <WorkshopChrome
+        title="Invoices"
+        subtitle="Billing & payments"
+        right={
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Pressable
+              onPress={() => setWorkspacePath('/settings/invoice')}
+              hitSlop={8}
+              style={{ padding: 4 }}
+            >
+              <Ionicons name="settings-outline" size={24} color={WS.textMuted} />
+            </Pressable>
+            {canEdit ? (
+              <WorkshopHeaderButton
+                onPress={() => {
+                  resetCreate();
+                  setCreateOpen(true);
+                }}
               />
-            </View>
-            <Text className="mb-1 text-sm font-medium text-slate-700">Currency</Text>
-            <TextInput
-              value={currency}
-              onChangeText={setCurrency}
-              className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
+            ) : (
+              <View style={{ width: 72 }} />
+            )}
+          </View>
+        }
+        scroll={false}
+      >
+        <WorkshopSegmentTabs
+          tabs={[
+            { key: 'list' as const, label: 'Invoices', icon: 'list' },
+            { key: 'dashboard' as const, label: 'Dashboard', icon: 'stats-chart' },
+          ]}
+          active={tab}
+          onChange={setTab}
+        />
+        {tab === 'list' ? listContent : dashboardContent}
+      </WorkshopChrome>
+
+      <WorkshopFormSheet
+        visible={createOpen}
+        title="New invoice"
+        onClose={() => setCreateOpen(false)}
+        footer={
+          <>
+            <WorkshopPrimaryButton
+              label={saving ? 'Saving…' : 'Save invoice'}
+              onPress={() => void submitCreate()}
+              disabled={saving}
             />
-            <View className="mb-2 flex-row gap-2">
-              <View className="flex-1">
-                <Text className="mb-1 text-sm font-medium text-slate-700">Tax %</Text>
-                <TextInput
-                  value={taxRate}
-                  onChangeText={setTaxRate}
-                  keyboardType="decimal-pad"
-                  className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-                />
-              </View>
-              <View className="flex-1">
-                <Text className="mb-1 text-sm font-medium text-slate-700">Discount %</Text>
-                <TextInput
-                  value={discount}
-                  onChangeText={setDiscount}
-                  keyboardType="decimal-pad"
-                  className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-                />
-              </View>
-            </View>
-            <Text className="mb-1 text-sm font-medium text-slate-700">Payment terms</Text>
-            <TextInput
-              value={paymentTerms}
-              onChangeText={setPaymentTerms}
-              className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <Text className="mb-2 font-semibold text-slate-900">Line items</Text>
-            {lineRows.map((row, idx) => (
-              <View key={idx} className="mb-3 rounded-lg border border-slate-200 p-2">
+            <Pressable onPress={() => setCreateOpen(false)} style={{ marginTop: 12, alignItems: 'center', paddingVertical: 10 }}>
+              <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Cancel</Text>
+            </Pressable>
+          </>
+        }
+      >
+        <WorkshopFieldLabel>Find customer</WorkshopFieldLabel>
+        <WorkshopTextInput
+          value={custQuery}
+          onChangeText={setCustQuery}
+          placeholder="Type name, email, phone…"
+        />
+        {custHits.length > 0 ? (
+          <View style={{ maxHeight: 160, borderWidth: 1, borderColor: WS.border, borderRadius: 12, marginBottom: 10 }}>
+            <FlatList
+              data={custHits}
+              keyExtractor={(c) => c.id}
+              keyboardShouldPersistTaps="handled"
+              renderItem={({ item }) => (
                 <Pressable
                   onPress={() => {
-                    setActiveLineIndex(idx);
-                    setProductSheetOpen(true);
+                    setCustomerId(String(item.id));
+                    setCustomerName(customerLabel(item));
+                    setCustomerEmail(String(item.email ?? ''));
+                    setCustHits([]);
+                    setCustQuery('');
                   }}
-                  className="mb-2 flex-row items-center justify-between rounded border border-slate-100 px-2 py-2"
+                  style={{ borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingHorizontal: 12, paddingVertical: 10 }}
                 >
-                  <View className="flex-1 pr-2">
-                    <Text className="text-xs text-slate-500">Product</Text>
-                    <Text className="text-sm font-medium text-slate-800" numberOfLines={1}>
-                      {row.productId
-                        ? products.find((p) => p.id === row.productId)?.name || 'Selected product'
-                        : 'Select product'}
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-down" size={18} color="#64748b" />
+                  <Text style={{ fontWeight: '600', color: WS.text }}>{customerLabel(item)}</Text>
+                  {item.email ? (
+                    <Text style={{ fontSize: 13, color: WS.textMuted }}>{item.email}</Text>
+                  ) : null}
                 </Pressable>
-                <TextInput
-                  value={row.description}
+              )}
+            />
+          </View>
+        ) : null}
+
+        <WorkshopFieldLabel>Customer name</WorkshopFieldLabel>
+        <WorkshopTextInput value={customerName} onChangeText={setCustomerName} />
+        <WorkshopFieldLabel>Email</WorkshopFieldLabel>
+        <WorkshopTextInput
+          value={customerEmail}
+          onChangeText={setCustomerEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flex: 1 }}>
+            <WorkshopDatePickerField label="Issue date" value={issueDate} onChange={setIssueDate} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <WorkshopDatePickerField label="Due date" value={dueDate} onChange={setDueDate} />
+          </View>
+        </View>
+
+        <WorkshopFieldLabel>Currency</WorkshopFieldLabel>
+        <WorkshopTextInput value={currency} onChangeText={setCurrency} />
+
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flex: 1 }}>
+            <WorkshopFieldLabel>Tax %</WorkshopFieldLabel>
+            <WorkshopTextInput value={taxRate} onChangeText={setTaxRate} keyboardType="decimal-pad" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <WorkshopFieldLabel>Discount %</WorkshopFieldLabel>
+            <WorkshopTextInput value={discount} onChangeText={setDiscount} keyboardType="decimal-pad" />
+          </View>
+        </View>
+
+        <WorkshopFieldLabel>Payment terms</WorkshopFieldLabel>
+        <WorkshopTextInput value={paymentTerms} onChangeText={setPaymentTerms} />
+
+        <Text style={{ fontSize: 15, fontWeight: '700', color: WS.text, marginTop: 8, marginBottom: 10 }}>
+          Line items
+        </Text>
+        {lineRows.map((row, idx) => (
+          <View
+            key={idx}
+            style={{
+              borderWidth: 1,
+              borderColor: WS.border,
+              borderRadius: 12,
+              padding: 12,
+              marginBottom: 10,
+            }}
+          >
+            <WorkshopPickerField
+              label="Product"
+              value={
+                row.productId
+                  ? products.find((p) => p.id === row.productId)?.name || 'Selected product'
+                  : ''
+              }
+              placeholder="Select product"
+              onPress={() => {
+                setActiveLineIndex(idx);
+                setProductSheetOpen(true);
+              }}
+            />
+            <WorkshopFieldLabel>Description</WorkshopFieldLabel>
+            <WorkshopTextInput
+              value={row.description}
+              onChangeText={(t) => {
+                const next = [...lineRows];
+                next[idx] = { ...row, description: t };
+                setLineRows(next);
+              }}
+              placeholder="Description"
+            />
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <View style={{ width: 72 }}>
+                <WorkshopFieldLabel>Qty</WorkshopFieldLabel>
+                <WorkshopTextInput
+                  value={String(row.quantity)}
                   onChangeText={(t) => {
                     const next = [...lineRows];
-                    next[idx] = { ...row, description: t };
+                    next[idx] = { ...row, quantity: parseInt(t, 10) || 1 };
                     setLineRows(next);
                   }}
-                  placeholder="Description"
-                  className="mb-2 rounded border border-slate-100 px-2 py-1 text-slate-900"
+                  keyboardType="number-pad"
                 />
-                <View className="flex-row gap-2">
-                  <TextInput
-                    value={String(row.quantity)}
-                    onChangeText={(t) => {
-                      const next = [...lineRows];
-                      next[idx] = { ...row, quantity: parseInt(t, 10) || 1 };
-                      setLineRows(next);
-                    }}
-                    keyboardType="number-pad"
-                    className="w-16 rounded border border-slate-100 px-2 py-1 text-slate-900"
-                  />
-                  <TextInput
-                    value={String(row.unitPrice)}
-                    onChangeText={(t) => {
-                      const next = [...lineRows];
-                      next[idx] = { ...row, unitPrice: parseFloat(t) || 0 };
-                      setLineRows(next);
-                    }}
-                    keyboardType="decimal-pad"
-                    placeholder="Price"
-                    className="flex-1 rounded border border-slate-100 px-2 py-1 text-slate-900"
-                  />
-                </View>
-                <View className="mt-2 flex-row items-center justify-between border-t border-slate-100 pt-2">
-                  <Text className="text-xs text-slate-500">Line total</Text>
-                  <Text className="text-sm font-semibold text-slate-900">
-                    {formatUsd(
-                      Math.max(1, Number(row.quantity) || 1) *
-                        (Number(row.unitPrice) || 0) *
-                        (1 - (Number(row.discount) || 0) / 100),
-                    )}
-                  </Text>
-                </View>
               </View>
-            ))}
-            <Pressable
-              onPress={() =>
-                setLineRows((r) => [
-                  ...r,
-                  { description: '', quantity: 1, unitPrice: 0, discount: 0, taxRate: 0 },
-                ])
-              }
-              className="mb-4 items-center rounded-lg bg-slate-100 py-2"
+              <View style={{ flex: 1 }}>
+                <WorkshopFieldLabel>Unit price</WorkshopFieldLabel>
+                <WorkshopTextInput
+                  value={String(row.unitPrice)}
+                  onChangeText={(t) => {
+                    const next = [...lineRows];
+                    next[idx] = { ...row, unitPrice: parseFloat(t) || 0 };
+                    setLineRows(next);
+                  }}
+                  keyboardType="decimal-pad"
+                  placeholder="Price"
+                />
+              </View>
+            </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#f1f5f9' }}>
+              <Text style={{ fontSize: 12, color: WS.textMuted }}>Line total</Text>
+              <Text style={{ fontSize: 14, fontWeight: '700', color: WS.text }}>
+                {formatUsd(
+                  Math.max(1, Number(row.quantity) || 1) *
+                    (Number(row.unitPrice) || 0) *
+                    (1 - (Number(row.discount) || 0) / 100),
+                )}
+              </Text>
+            </View>
+          </View>
+        ))}
+
+        <WorkshopOutlineButton
+          label="Add line"
+          onPress={() =>
+            setLineRows((r) => [
+              ...r,
+              { description: '', quantity: 1, unitPrice: 0, discount: 0, taxRate: 0 },
+            ])
+          }
+        />
+
+        <View style={{ borderWidth: 1, borderColor: WS.border, borderRadius: 14, padding: 14, marginTop: 12, marginBottom: 12 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <Text style={{ color: WS.textMuted }}>Subtotal</Text>
+            <Text style={{ fontWeight: '700', color: WS.text }}>{formatUsd(lineSubtotal)}</Text>
+          </View>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
+            <Text style={{ color: WS.textMuted }}>Discount ({invoiceDiscountPct}%)</Text>
+            <Text style={{ fontWeight: '700', color: WS.text }}>-{formatUsd(invoiceDiscountAmount)}</Text>
+          </View>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
+            <Text style={{ color: WS.textMuted }}>Tax ({invoiceTaxPct}%)</Text>
+            <Text style={{ fontWeight: '700', color: WS.text }}>{formatUsd(invoiceTaxAmount)}</Text>
+          </View>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#f1f5f9' }}>
+            <Text style={{ fontSize: 16, fontWeight: '800', color: WS.text }}>Total</Text>
+            <Text style={{ fontSize: 16, fontWeight: '800', color: WS.primary }}>{formatUsd(invoiceTotal)}</Text>
+          </View>
+        </View>
+
+        <View style={{ borderWidth: 1, borderColor: WS.border, borderRadius: 14, padding: 14 }}>
+          <Pressable
+            onPress={() => setCreateInstallmentPlan((prev) => !prev)}
+            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+          >
+            <Text style={{ fontSize: 14, fontWeight: '700', color: WS.text }}>Create installment plan</Text>
+            <View
+              style={{
+                width: 44,
+                height: 26,
+                borderRadius: 13,
+                backgroundColor: createInstallmentPlan ? WS.primary : '#cbd5e1',
+                padding: 2,
+                justifyContent: 'center',
+              }}
             >
-              <Text className="font-medium text-slate-800">Add line</Text>
-            </Pressable>
-            <View className="mb-3 rounded-xl border border-slate-200 bg-white p-3">
-              <View className="flex-row items-center justify-between">
-                <Text className="text-slate-600">Subtotal</Text>
-                <Text className="font-semibold text-slate-900">{formatUsd(lineSubtotal)}</Text>
-              </View>
-              <View className="mt-1 flex-row items-center justify-between">
-                <Text className="text-slate-600">Discount ({invoiceDiscountPct}%)</Text>
-                <Text className="font-semibold text-slate-900">-{formatUsd(invoiceDiscountAmount)}</Text>
-              </View>
-              <View className="mt-1 flex-row items-center justify-between">
-                <Text className="text-slate-600">Tax ({invoiceTaxPct}%)</Text>
-                <Text className="font-semibold text-slate-900">{formatUsd(invoiceTaxAmount)}</Text>
-              </View>
-              <View className="mt-2 flex-row items-center justify-between border-t border-slate-100 pt-2">
-                <Text className="text-base font-bold text-slate-900">Total</Text>
-                <Text className="text-base font-bold text-blue-600">{formatUsd(invoiceTotal)}</Text>
-              </View>
+              <View
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: 11,
+                  backgroundColor: '#fff',
+                  alignSelf: createInstallmentPlan ? 'flex-end' : 'flex-start',
+                }}
+              />
             </View>
-            <View className="mb-3 rounded-xl border border-slate-200 bg-white p-3">
-              <Pressable
-                onPress={() => setCreateInstallmentPlan((prev) => !prev)}
-                className="flex-row items-center justify-between"
-              >
-                <Text className="text-sm font-semibold text-slate-900">
-                  Create installment plan
-                </Text>
-                <View
-                  className={`h-6 w-10 rounded-full px-0.5 ${
-                    createInstallmentPlan ? 'bg-blue-600' : 'bg-slate-300'
-                  }`}
-                >
-                  <View
-                    className={`h-5 w-5 rounded-full bg-white mt-0.5 ${
-                      createInstallmentPlan ? 'ml-4' : 'ml-0'
-                    }`}
-                  />
-                </View>
-              </Pressable>
-              {createInstallmentPlan ? (
-                <View className="mt-3">
-                  <Text className="mb-1 text-sm font-medium text-slate-700">Number of installments</Text>
-                  <TextInput
-                    value={installmentCount}
-                    onChangeText={setInstallmentCount}
-                    keyboardType="number-pad"
-                    className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-                  />
-                  <Text className="mb-1 text-sm font-medium text-slate-700">Frequency</Text>
-                  <Pressable
-                    onPress={() =>
-                      setInstallmentFrequency((prev) =>
-                        prev === 'weekly'
-                          ? 'monthly'
-                          : prev === 'monthly'
-                            ? 'quarterly'
-                            : 'weekly',
-                      )
-                    }
-                    className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                  >
-                    <Text className="text-slate-900 capitalize">{installmentFrequency}</Text>
-                  </Pressable>
-                  <Text className="mb-1 text-sm font-medium text-slate-700">First due date</Text>
-                  <TextInput
-                    value={installmentFirstDueDate}
-                    onChangeText={setInstallmentFirstDueDate}
-                    placeholder="YYYY-MM-DD"
-                    placeholderTextColor="#94a3b8"
-                    className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-                  />
-                </View>
-              ) : null}
+          </Pressable>
+          {createInstallmentPlan ? (
+            <View style={{ marginTop: 12 }}>
+              <WorkshopFieldLabel>Number of installments</WorkshopFieldLabel>
+              <WorkshopTextInput value={installmentCount} onChangeText={setInstallmentCount} keyboardType="number-pad" />
+              <WorkshopChipSelect
+                label="Frequency"
+                options={['weekly', 'monthly', 'quarterly']}
+                value={installmentFrequency}
+                onChange={setInstallmentFrequency}
+              />
+              <WorkshopDatePickerField label="First due date" value={installmentFirstDueDate} onChange={setInstallmentFirstDueDate} />
             </View>
-          </ScrollView>
-        </SafeAreaView>
-      </AppModal>
+          ) : null}
+        </View>
+      </WorkshopFormSheet>
+
       <OptionSheet
         visible={productSheetOpen}
         title="Select Product"
@@ -973,193 +883,141 @@ export function MobileInvoicesScreen() {
         onClose={() => setProductSheetOpen(false)}
       />
 
-      <AppModal
+      <WorkshopFormSheet
         visible={detailOpen}
-        animationType="slide"
-        onClose={() => setDetailOpen(false)}
-      >
-        <View className="flex-1 bg-slate-50">
-          <View className="flex-row items-center justify-between bg-white border-b border-slate-200 px-4 py-4">
-            <Pressable onPress={() => setDetailOpen(false)} className="h-10 w-10 items-center justify-center rounded-full bg-slate-100">
-              <Ionicons name="close" size={24} color="#1e293b" />
-            </Pressable>
-            <Text className="text-lg font-black text-slate-900">Invoice Details</Text>
-            <View className="w-10" />
-          </View>
-          
-          <ScrollView className="flex-1">
-            {selected ? (
-              <View className="p-4">
-                <View className="rounded-3xl bg-white p-6 shadow-sm border border-slate-100">
-                  <View className="flex-row items-center justify-between mb-4">
-                    <View>
-                      <Text className="text-xs font-bold uppercase tracking-widest text-slate-400">Invoice Number</Text>
-                      <Text className="text-2xl font-black text-slate-900">{selected.invoiceNumber}</Text>
-                    </View>
-                    <View className={`rounded-full px-3 py-1 ${getStatusBadge(selected.status).bg}`}>
-                      <Text className={`text-xs font-black uppercase tracking-wider ${getStatusBadge(selected.status).text}`}>
-                        {getStatusBadge(selected.status).label}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View className="mb-4 border-t border-slate-50 pt-4">
-                    <Text className="text-xs font-bold uppercase tracking-widest text-slate-400">Customer</Text>
-                    <Text className="text-lg font-bold text-slate-900">{selected.customerName}</Text>
-                    <Text className="text-slate-600">{selected.customerEmail}</Text>
-                  </View>
-
-                  <View className="flex-row justify-between mb-4 border-t border-slate-50 pt-4">
-                    <View>
-                      <Text className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Issue Date</Text>
-                      <Text className="font-bold text-slate-900">{new Date(selected.issueDate).toLocaleDateString()}</Text>
-                    </View>
-                    <View className="items-end">
-                      <Text className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Due Date</Text>
-                      <Text className="font-bold text-rose-600">{new Date(selected.dueDate).toLocaleDateString()}</Text>
-                    </View>
-                  </View>
-
-                  <View className="mt-2 rounded-2xl bg-slate-900 p-5">
-                    <Text className="text-xs font-bold uppercase tracking-widest text-slate-400">Total Balance</Text>
-                    <Text className="mt-1 text-3xl font-black text-white">{formatUsd(selected.total)}</Text>
-                  </View>
+        title={selected?.invoiceNumber ?? 'Invoice details'}
+        onClose={() => {
+          setDetailOpen(false);
+          setSelected(null);
+        }}
+        footer={
+          selected && canEdit ? (
+            <View style={{ gap: 8 }}>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <WorkshopOutlineButton label="Mark paid" onPress={() => void handleMarkPaid()} />
                 </View>
-
-                <View className="mt-6 rounded-3xl bg-white p-6 shadow-sm border border-slate-100">
-                  <Text className="text-lg font-black text-slate-900 mb-4">Line Items</Text>
-                  {(selected.items ?? []).map((item, idx) => (
-                    <View key={idx} className="mb-4 flex-row justify-between border-b border-slate-50 pb-4">
-                      <View className="flex-1 pr-4">
-                        <Text className="font-bold text-slate-900">{item.description}</Text>
-                        <Text className="text-xs text-slate-500">Qty: {item.quantity} × {formatUsd(item.unitPrice)}</Text>
-                      </View>
-                      <View className="items-end">
-                        <Text className="font-black text-slate-900">{formatUsd(item.total)}</Text>
-                      </View>
-                    </View>
-                  ))}
-                  
-                  <View className="mt-2 space-y-2">
-                    <View className="flex-row justify-between">
-                      <Text className="text-slate-500">Subtotal</Text>
-                      <Text className="font-bold text-slate-900">{formatUsd(selected.subtotal)}</Text>
-                    </View>
-                    {selected.taxAmount > 0 && (
-                      <View className="flex-row justify-between">
-                        <Text className="text-slate-500">Tax ({selected.taxRate}%)</Text>
-                        <Text className="font-bold text-slate-900">{formatUsd(selected.taxAmount)}</Text>
-                      </View>
-                    )}
-                    {selected.discount > 0 && (
-                      <View className="flex-row justify-between">
-                        <Text className="text-rose-500">Discount</Text>
-                        <Text className="font-bold text-rose-500">-{formatUsd(selected.discount)}</Text>
-                      </View>
-                    )}
-                    <View className="mt-3 flex-row justify-between border-t border-slate-100 pt-3">
-                      <Text className="text-lg font-black text-slate-900">Total</Text>
-                      <Text className="text-lg font-black text-blue-600">{formatUsd(selected.total)}</Text>
-                    </View>
-                  </View>
-                </View>
-
-                <View className="mt-6 mb-8">
-                  <Text className="text-lg font-black text-slate-900 mb-4 px-2">Actions</Text>
-                  <View className="flex-row flex-wrap gap-3 p-2">
-                    {canEdit ? (
-                      <>
-                        <Pressable
-                          onPress={handleMarkPaid}
-                          className="flex-1 min-w-[140px] flex-row items-center justify-center rounded-2xl bg-emerald-600 py-4 shadow-sm active:bg-emerald-700"
-                        >
-                          <Ionicons name="checkmark-circle" size={20} color="white" />
-                          <Text className="ml-2 font-black text-white">Mark Paid</Text>
-                        </Pressable>
-                        <Pressable
-                          onPress={() => {
-                            setEmailTo(selected.customerEmail);
-                            setEmailBody('');
-                            setEmailOpen(true);
-                          }}
-                          className="flex-1 min-w-[140px] flex-row items-center justify-center rounded-2xl bg-slate-900 py-4 shadow-sm active:bg-black"
-                        >
-                          <Ionicons name="mail" size={20} color="white" />
-                          <Text className="ml-2 font-black text-white">Email</Text>
-                        </Pressable>
-                        <Pressable
-                          onPress={() => void handleWhatsApp()}
-                          className="flex-1 min-w-[140px] flex-row items-center justify-center rounded-2xl bg-emerald-500 py-4 shadow-sm active:bg-emerald-600"
-                        >
-                          <Ionicons name="logo-whatsapp" size={20} color="white" />
-                          <Text className="ml-2 font-black text-white">WhatsApp</Text>
-                        </Pressable>
-                        <Pressable
-                          onPress={() => void handlePdf()}
-                          className="flex-1 min-w-[140px] flex-row items-center justify-center rounded-2xl bg-indigo-600 py-4 shadow-sm active:bg-indigo-700"
-                        >
-                          <Ionicons name="document" size={20} color="white" />
-                          <Text className="ml-2 font-black text-white">PDF</Text>
-                        </Pressable>
-                        <Pressable
-                          onPress={() => handleDelete(selected)}
-                          className="w-full flex-row items-center justify-center rounded-2xl bg-rose-50 py-4 active:bg-rose-100 border border-rose-100"
-                        >
-                          <Ionicons name="trash" size={20} color="#e11d48" />
-                          <Text className="ml-2 font-black text-rose-600">Delete Invoice</Text>
-                        </Pressable>
-                      </>
-                    ) : (
-                      <Text className="text-slate-500 italic px-2">View-only permissions</Text>
-                    )}
-                  </View>
+                <View style={{ flex: 1 }}>
+                  <WorkshopPrimaryButton
+                    label="Email"
+                    onPress={() => {
+                      setEmailTo(selected.customerEmail);
+                      setEmailBody('');
+                      setEmailOpen(true);
+                    }}
+                  />
                 </View>
               </View>
-            ) : (
-              <View className="flex-1 items-center justify-center py-20">
-                <ActivityIndicator color="#2563eb" />
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <WorkshopOutlineButton label="WhatsApp" onPress={() => void handleWhatsApp()} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <WorkshopOutlineButton label="PDF" onPress={() => void handlePdf()} />
+                </View>
               </View>
-            )}
-          </ScrollView>
-        </View>
-      </AppModal>
-
-      <AppModal
-        visible={emailOpen}
-        animationType="fade"
-        transparent
-        onClose={() => setEmailOpen(false)}
-      >
-        <View className="flex-1 justify-center bg-black/40 px-4">
-          <View className="rounded-2xl bg-white p-4">
-            <Text className="text-lg font-semibold text-slate-900">Send email</Text>
-            <TextInput
-              value={emailTo}
-              onChangeText={setEmailTo}
-              placeholder="To"
-              className="mt-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <TextInput
-              value={emailBody}
-              onChangeText={setEmailBody}
-              placeholder="Message"
-              multiline
-              className="mt-2 min-h-[80px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <View className="mt-4 flex-row justify-end gap-2">
-              <Pressable onPress={() => setEmailOpen(false)} className="px-3 py-2">
-                <Text className="text-slate-600">Cancel</Text>
-              </Pressable>
               <Pressable
-                onPress={() => void handleSendEmail()}
-                className="rounded-lg bg-blue-600 px-4 py-2"
+                onPress={() => handleDelete(selected)}
+                style={{
+                  alignItems: 'center',
+                  borderRadius: 14,
+                  borderWidth: 1,
+                  borderColor: WS.danger,
+                  paddingVertical: 14,
+                  marginTop: 4,
+                }}
               >
-                <Text className="font-semibold text-white">Send</Text>
+                <Text style={{ fontWeight: '700', color: WS.danger }}>Delete invoice</Text>
               </Pressable>
             </View>
-          </View>
-        </View>
-      </AppModal>
-    </View>
+          ) : (
+            <Pressable onPress={() => setDetailOpen(false)} style={{ alignItems: 'center', paddingVertical: 10 }}>
+              <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Close</Text>
+            </Pressable>
+          )
+        }
+      >
+        {selected ? (
+          <>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <WorkshopBadge label={selected.status} tone="status" />
+              <Text style={{ fontSize: 22, fontWeight: '800', color: WS.primary }}>{formatUsd(selected.total)}</Text>
+            </View>
+            <WorkshopDetailRow label="Customer" value={selected.customerName} />
+            <WorkshopDetailRow label="Email" value={selected.customerEmail || '—'} />
+            <WorkshopDetailRow label="Issue date" value={new Date(selected.issueDate).toLocaleDateString()} />
+            <WorkshopDetailRow label="Due date" value={new Date(selected.dueDate).toLocaleDateString()} />
+            <WorkshopDetailRow label="Payment terms" value={selected.paymentTerms || '—'} />
+            <WorkshopDetailRow label="Currency" value={selected.currency || '—'} />
+
+            <Text style={{ fontSize: 15, fontWeight: '700', color: WS.text, marginTop: 16, marginBottom: 8 }}>
+              Line items
+            </Text>
+            {(selected.items ?? []).map((item, idx) => (
+              <View
+                key={idx}
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  paddingVertical: 10,
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#f1f5f9',
+                }}
+              >
+                <View style={{ flex: 1, paddingRight: 12 }}>
+                  <Text style={{ fontWeight: '700', color: WS.text }}>{item.description}</Text>
+                  <Text style={{ fontSize: 12, color: WS.textMuted }}>
+                    Qty {item.quantity} × {formatUsd(item.unitPrice)}
+                  </Text>
+                </View>
+                <Text style={{ fontWeight: '800', color: WS.text }}>{formatUsd(item.total)}</Text>
+              </View>
+            ))}
+
+            <WorkshopDetailRow label="Subtotal" value={formatUsd(selected.subtotal)} />
+            {selected.taxAmount > 0 ? (
+              <WorkshopDetailRow label={`Tax (${selected.taxRate}%)`} value={formatUsd(selected.taxAmount)} />
+            ) : null}
+            {selected.discount > 0 ? (
+              <WorkshopDetailRow label="Discount" value={`-${formatUsd(selected.discount)}`} />
+            ) : null}
+            <WorkshopDetailRow label="Total" value={formatUsd(selected.total)} />
+
+            {!canEdit ? (
+              <Text style={{ marginTop: 12, fontSize: 13, color: WS.textMuted, fontStyle: 'italic' }}>
+                View-only permissions
+              </Text>
+            ) : null}
+          </>
+        ) : (
+          <WorkshopLoading />
+        )}
+      </WorkshopFormSheet>
+
+      <WorkshopFormSheet
+        visible={emailOpen}
+        title="Send email"
+        onClose={() => setEmailOpen(false)}
+        footer={
+          <>
+            <WorkshopPrimaryButton label="Send" onPress={() => void handleSendEmail()} />
+            <Pressable onPress={() => setEmailOpen(false)} style={{ marginTop: 12, alignItems: 'center', paddingVertical: 10 }}>
+              <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Cancel</Text>
+            </Pressable>
+          </>
+        }
+      >
+        <WorkshopFieldLabel>To</WorkshopFieldLabel>
+        <WorkshopTextInput value={emailTo} onChangeText={setEmailTo} placeholder="To" keyboardType="email-address" autoCapitalize="none" />
+        <WorkshopFieldLabel>Message</WorkshopFieldLabel>
+        <WorkshopTextInput
+          value={emailBody}
+          onChangeText={setEmailBody}
+          placeholder="Message"
+          multiline
+          style={{ minHeight: 88, textAlignVertical: 'top' }}
+        />
+      </WorkshopFormSheet>
+    </>
   );
 }

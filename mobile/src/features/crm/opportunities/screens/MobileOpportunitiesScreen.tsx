@@ -39,6 +39,7 @@ import {
   FormSelect,
   MobileFormSheet,
 } from '../../../../components/layout/MobileForm';
+import { WorkshopDatePickerField } from '../../../workshop/components/WorkshopChrome';
 
 const ITEMS_PER_PAGE = 10;
 const FILTER_ANY = 'all';
@@ -481,20 +482,11 @@ export function MobileOpportunitiesScreen() {
             />
           </View>
         </View>
-        <View>
-          <Text className="mb-1 text-xs font-medium text-slate-600">
-            Expected close (YYYY-MM-DD)
-          </Text>
-          <TextInput
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-            value={form.expectedCloseDate || ''}
-            onChangeText={(t) =>
-              setForm((p) => ({ ...p, expectedCloseDate: t }))
-            }
-            placeholder="2026-12-31"
-            autoCapitalize="none"
-          />
-        </View>
+        <WorkshopDatePickerField
+          label="Expected close"
+          value={form.expectedCloseDate || ''}
+          onChange={(t) => setForm((p) => ({ ...p, expectedCloseDate: t }))}
+        />
         <View>
           <Text className="mb-1 text-xs font-medium text-slate-600">Company</Text>
           <Pressable
@@ -920,13 +912,10 @@ export function MobileOpportunitiesScreen() {
                 onChangeText={(t) => setForm(p => ({ ...p, probability: Math.min(100, Math.max(0, parseInt(t.replace(/[^0-9]/g, ''), 10) || 0)) }))}
                 keyboardType="number-pad"
               />
-              <FormInput
+              <WorkshopDatePickerField
                 label="Expected Close Date"
-                icon="calendar-outline"
                 value={form.expectedCloseDate || ''}
-                onChangeText={(t) => setForm(p => ({ ...p, expectedCloseDate: t }))}
-                placeholder="YYYY-MM-DD"
-                last
+                onChange={(t) => setForm((p) => ({ ...p, expectedCloseDate: t }))}
               />
             </FormSection>
 
@@ -1025,12 +1014,10 @@ export function MobileOpportunitiesScreen() {
                 onChangeText={(t) => setForm(p => ({ ...p, probability: Math.min(100, Math.max(0, parseInt(t.replace(/[^0-9]/g, ''), 10) || 0)) }))}
                 keyboardType="number-pad"
               />
-              <FormInput
+              <WorkshopDatePickerField
                 label="Expected Close Date"
-                icon="calendar-outline"
                 value={form.expectedCloseDate || ''}
-                onChangeText={(t) => setForm(p => ({ ...p, expectedCloseDate: t }))}
-                last
+                onChange={(t) => setForm((p) => ({ ...p, expectedCloseDate: t }))}
               />
             </FormSection>
 

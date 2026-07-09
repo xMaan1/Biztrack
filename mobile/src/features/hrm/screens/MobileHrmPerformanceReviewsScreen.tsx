@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, FlatList, ScrollView, Pressable, ActivityIndicator, RefreshControl, Alert, TextInput } from 'react-native';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { View, Text, FlatList, Pressable, RefreshControl } from 'react-native';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { appAlert, appConfirm, appError } from '../../../utils/appDialog';
 import {
   getPerformanceReviews,
   createPerformanceReview,
@@ -13,7 +13,23 @@ import {
 } from '../../../services/hrm/hrmMobileApi';
 import type { PerformanceReview, Employee, PerformanceReviewCreate, PerformanceReviewUpdate } from '../../../models/hrm';
 import { ReviewStatus, ReviewType } from '../../../models/hrm';
-import { AppModal } from '../../../components/layout/AppModal';
+import {
+  WorkshopChrome,
+  WorkshopListCard,
+  WorkshopEmptyState,
+  WorkshopHeaderButton,
+  WorkshopLoading,
+  WorkshopFormSheet,
+  WorkshopFieldLabel,
+  WorkshopTextInput,
+  WorkshopDatePickerField,
+  WorkshopPickerField,
+  WorkshopChipSelect,
+  WorkshopPrimaryButton,
+  WorkshopOutlineButton,
+  WorkshopDetailRow,
+  WS,
+} from '../../workshop/components/WorkshopChrome';
 
 const REVIEW_TYPES = Object.values(ReviewType);
 const REVIEW_STATUSES = Object.values(ReviewStatus);
@@ -58,7 +74,7 @@ export function MobileHrmPerformanceReviewsScreen() {
         reviewerId: prev.reviewerId || list[0]?.id || '',
       }));
     } catch (e) {
-      Alert.alert('HRM', extractErrorMessage(e, 'Failed to load'));
+      appError('HRM', extractErrorMessage(e, 'Failed to load'));
     } finally {
       setLoading(false);
     }
@@ -83,29 +99,21 @@ export function MobileHrmPerformanceReviewsScreen() {
   }, [load]);
 
   const remove = (r: PerformanceReview) => {
-    Alert.alert('Delete review', r.reviewPeriod, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () =>
-          void (async () => {
-            try {
-              await deletePerformanceReview(r.id);
-              setDetail(null);
-              await load();
-            } catch (err) {
-              Alert.alert('HRM', extractErrorMessage(err, 'Failed to delete'));
-            }
-          })(),
+    appConfirm({
+      title: 'Delete review',
+      message: r.reviewPeriod,
+      confirmLabel: 'Delete',
+      destructive: true,
+      onConfirm: async () => {
+        try {
+          await deletePerformanceReview(r.id);
+          setDetail(null);
+          await load();
+        } catch (err) {
+          appError('HRM', extractErrorMessage(err, 'Failed to delete'));
+        }
       },
-    ]);
-  };
-
-  const cycleOption = <T extends string>(list: readonly T[], current: T): T => {
-    const index = list.indexOf(current);
-    if (index < 0) return list[0] as T;
-    return list[(index + 1) % list.length] as T;
+    });
   };
 
   const cycleEmployee = (field: 'employeeId' | 'reviewerId') => {
@@ -156,7 +164,7 @@ export function MobileHrmPerformanceReviewsScreen() {
 
   const validateForm = () => {
     if (!form.employeeId || !form.reviewerId || !form.reviewDate.trim()) {
-      Alert.alert('HRM', 'Employee, reviewer, and review date are required.');
+      appAlert('HRM', 'Employee, reviewer, and review date are required.');
       return false;
     }
     return true;
@@ -184,7 +192,7 @@ export function MobileHrmPerformanceReviewsScreen() {
       setCreateOpen(false);
       await load();
     } catch (e) {
-      Alert.alert('HRM', extractErrorMessage(e, 'Failed to create'));
+      appError('HRM', extractErrorMessage(e, 'Failed to create'));
     } finally {
       setSaving(false);
     }
@@ -209,184 +217,154 @@ export function MobileHrmPerformanceReviewsScreen() {
       setSelected(null);
       await load();
     } catch (e) {
-      Alert.alert('HRM', extractErrorMessage(e, 'Failed to update'));
+      appError('HRM', extractErrorMessage(e, 'Failed to update'));
     } finally {
       setSaving(false);
     }
   };
 
-  return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Performance reviews
-        </Text>
-        {canManageHRM() ? (
-          <Pressable onPress={openCreate} className="px-2 py-1">
-            <Text className="font-semibold text-blue-600">New</Text>
-          </Pressable>
-        ) : (
-          <View className="w-10" />
-        )}
-      </View>
+  const renderForm = () => (
+    <>
+      <WorkshopPickerField
+        label="Employee"
+        value={employeeName(form.employeeId)}
+        onPress={() => cycleEmployee('employeeId')}
+      />
+      <WorkshopPickerField
+        label="Reviewer"
+        value={employeeName(form.reviewerId)}
+        onPress={() => cycleEmployee('reviewerId')}
+      />
+      <WorkshopChipSelect label="Type" options={[...REVIEW_TYPES]} value={form.reviewType} onChange={(v) => setForm((p) => ({ ...p, reviewType: v as ReviewType }))} />
+      <WorkshopChipSelect label="Status" options={[...REVIEW_STATUSES]} value={form.status} onChange={(v) => setForm((p) => ({ ...p, status: v as ReviewStatus }))} />
+      <WorkshopFieldLabel>Review period</WorkshopFieldLabel>
+      <WorkshopTextInput value={form.reviewPeriod} onChangeText={(v) => setForm((p) => ({ ...p, reviewPeriod: v }))} />
+      <WorkshopDatePickerField label="Review date *" value={form.reviewDate} onChange={(v) => setForm((p) => ({ ...p, reviewDate: v }))} />
+      <WorkshopFieldLabel>Overall rating (0-5)</WorkshopFieldLabel>
+      <WorkshopTextInput value={form.overallRating} onChangeText={(v) => setForm((p) => ({ ...p, overallRating: v }))} keyboardType="decimal-pad" />
+      <WorkshopFieldLabel>Comments</WorkshopFieldLabel>
+      <WorkshopTextInput value={form.comments} onChangeText={(v) => setForm((p) => ({ ...p, comments: v }))} multiline />
+    </>
+  );
 
+  const formFooter = (onSave: () => void, saveLabel: string, onCancel: () => void) => (
+    <>
+      <WorkshopPrimaryButton label={saving ? 'Saving…' : saveLabel} onPress={onSave} disabled={saving} />
+      <Pressable onPress={onCancel} style={{ marginTop: 12, alignItems: 'center', paddingVertical: 10 }}>
+        <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Cancel</Text>
+      </Pressable>
+    </>
+  );
+
+  return (
+    <WorkshopChrome
+      title="Performance reviews"
+      subtitle="Goals, ratings & feedback"
+      right={canManageHRM() ? <WorkshopHeaderButton onPress={openCreate} /> : undefined}
+      scroll={false}
+    >
       {loading && !refreshing ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563eb" />
-        </View>
+        <WorkshopLoading />
       ) : (
         <FlatList
+          style={{ flex: 1 }}
           data={rows}
           keyExtractor={(item) => item.id}
+          contentContainerStyle={{ paddingBottom: 20 }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={WS.primary} />
           }
-          contentContainerStyle={{ padding: 12, paddingBottom: 32 }}
           ListEmptyComponent={
-            <Text className="py-8 text-center text-slate-500">No reviews</Text>
+            <WorkshopEmptyState
+              icon="ribbon-outline"
+              title="No reviews"
+              subtitle="Schedule performance reviews for your team."
+              actionLabel={canManageHRM() ? 'New review' : undefined}
+              onAction={canManageHRM() ? openCreate : undefined}
+            />
           }
           renderItem={({ item }) => (
-            <Pressable
+            <WorkshopListCard
+              icon="ribbon"
+              iconColor="#7c3aed"
+              iconBg="#f5f3ff"
+              title={item.reviewPeriod || 'Performance review'}
+              subtitle={item.reviewDate}
+              meta={String(item.reviewType)}
+              badges={[
+                { label: String(item.status), tone: 'status' },
+                ...(item.overallRating != null ? [{ label: `Rating ${item.overallRating}` }] : []),
+              ]}
               onPress={() => setDetail(item)}
-              className="mb-3 rounded-xl border border-slate-200 bg-white p-3"
-            >
-              <Text className="font-semibold text-slate-900">{item.reviewPeriod}</Text>
-              <Text className="text-xs text-slate-500">
-                {String(item.reviewType)} · {String(item.status)}
-              </Text>
-              <Text className="mt-1 text-sm text-slate-600">{item.reviewDate}</Text>
-            </Pressable>
+              actions={
+                canManageHRM()
+                  ? [
+                      { icon: 'create-outline', onPress: () => openEdit(item) },
+                      { icon: 'trash-outline', onPress: () => remove(item), danger: true },
+                    ]
+                  : undefined
+              }
+            />
           )}
         />
       )}
 
-      <AppModal
+      <WorkshopFormSheet
         visible={detail != null}
-        animationType="slide"
-        transparent
+        title="Review"
         onClose={() => setDetail(null)}
-      >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[88%] rounded-t-2xl bg-white p-4">
-            <Text className="text-lg font-semibold text-slate-900">Review</Text>
-            {detail ? (
-              <ScrollView className="mt-3">
-                <Text className="text-slate-800">{detail.reviewPeriod}</Text>
-                <Text className="mt-2 text-slate-600">
-                  Rating {detail.overallRating ?? '—'}
-                </Text>
-                {detail.comments ? (
-                  <Text className="mt-3 text-slate-700">{detail.comments}</Text>
-                ) : null}
-              </ScrollView>
+        footer={
+          <>
+            {detail && canManageHRM() ? (
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <WorkshopPrimaryButton label="Edit" onPress={() => { setDetail(null); openEdit(detail); }} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Pressable
+                    onPress={() => remove(detail)}
+                    style={{ alignItems: 'center', borderRadius: 14, paddingVertical: 15, backgroundColor: WS.dangerBg }}
+                  >
+                    <Text style={{ fontWeight: '700', fontSize: 16, color: WS.danger }}>Delete</Text>
+                  </Pressable>
+                </View>
+              </View>
             ) : null}
-            <View className="mt-4 flex-row gap-2">
-              {detail && canManageHRM() ? (
-                <Pressable onPress={() => openEdit(detail)} className="flex-1 items-center rounded-lg bg-blue-600 py-3">
-                  <Text className="font-semibold text-white">Edit</Text>
-                </Pressable>
-              ) : null}
-              {detail && canManageHRM() ? (
-                <Pressable
-                  onPress={() => remove(detail)}
-                  className="flex-1 items-center rounded-lg bg-red-600 py-3"
-                >
-                  <Text className="font-semibold text-white">Delete</Text>
-                </Pressable>
-              ) : null}
-              <Pressable
-                onPress={() => setDetail(null)}
-                className="flex-1 items-center rounded-lg bg-slate-100 py-3"
-              >
-                <Text className="font-semibold text-slate-800">Close</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </AppModal>
+            <WorkshopOutlineButton label="Close" onPress={() => setDetail(null)} />
+          </>
+        }
+      >
+        {detail ? (
+          <>
+            <WorkshopDetailRow label="Period" value={detail.reviewPeriod || '—'} />
+            <WorkshopDetailRow label="Type" value={String(detail.reviewType)} />
+            <WorkshopDetailRow label="Status" value={String(detail.status)} />
+            <WorkshopDetailRow label="Date" value={detail.reviewDate} />
+            <WorkshopDetailRow label="Rating" value={detail.overallRating != null ? String(detail.overallRating) : '—'} />
+            {detail.comments ? (
+              <Text style={{ fontSize: 14, color: WS.textMuted, marginTop: 12, lineHeight: 20 }}>{detail.comments}</Text>
+            ) : null}
+          </>
+        ) : null}
+      </WorkshopFormSheet>
 
-      <AppModal
+      <WorkshopFormSheet
         visible={createOpen}
-        animationType="slide"
-        transparent
+        title="New review"
         onClose={() => setCreateOpen(false)}
+        footer={formFooter(() => void submitCreate(), 'Create review', () => setCreateOpen(false))}
       >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-2 pt-4">
-            <Text className="text-lg font-semibold text-slate-900">New review</Text>
-            <ScrollView keyboardShouldPersistTaps="handled" className="mt-3 max-h-[76%]">
-              <View className="gap-3">
-                <Pressable onPress={() => cycleEmployee('employeeId')} className="rounded-lg border border-slate-200 px-3 py-2">
-                  <Text className="text-slate-900">Employee: {employeeName(form.employeeId)}</Text>
-                </Pressable>
-                <Pressable onPress={() => cycleEmployee('reviewerId')} className="rounded-lg border border-slate-200 px-3 py-2">
-                  <Text className="text-slate-900">Reviewer: {employeeName(form.reviewerId)}</Text>
-                </Pressable>
-                <Pressable onPress={() => setForm((p) => ({ ...p, reviewType: cycleOption(REVIEW_TYPES, p.reviewType) }))} className="rounded-lg border border-slate-200 px-3 py-2">
-                  <Text className="text-slate-900">Type: {form.reviewType}</Text>
-                </Pressable>
-                <Pressable onPress={() => setForm((p) => ({ ...p, status: cycleOption(REVIEW_STATUSES, p.status) }))} className="rounded-lg border border-slate-200 px-3 py-2">
-                  <Text className="text-slate-900">Status: {form.status}</Text>
-                </Pressable>
-                <TextInput value={form.reviewPeriod} onChangeText={(v) => setForm((p) => ({ ...p, reviewPeriod: v }))} placeholder="Review period" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.reviewDate} onChangeText={(v) => setForm((p) => ({ ...p, reviewDate: v }))} placeholder="Review date (YYYY-MM-DD)" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.overallRating} onChangeText={(v) => setForm((p) => ({ ...p, overallRating: v }))} placeholder="Overall rating (0-5)" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.comments} onChangeText={(v) => setForm((p) => ({ ...p, comments: v }))} placeholder="Comments" placeholderTextColor="#475569" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
-              </View>
-            </ScrollView>
-            <View className="mt-4 flex-row gap-2">
-              <Pressable onPress={() => setCreateOpen(false)} className="flex-1 items-center rounded-lg border border-slate-300 py-3">
-                <Text className="font-semibold text-slate-700">Cancel</Text>
-              </Pressable>
-              <Pressable onPress={() => void submitCreate()} disabled={saving} className="flex-1 items-center rounded-lg bg-blue-600 py-3">
-                <Text className="font-semibold text-white">{saving ? 'Saving...' : 'Create'}</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </AppModal>
+        {renderForm()}
+      </WorkshopFormSheet>
 
-      <AppModal
+      <WorkshopFormSheet
         visible={editOpen}
-        animationType="slide"
-        transparent
-        onClose={() => setEditOpen(false)}
+        title="Edit review"
+        onClose={() => { setEditOpen(false); setSelected(null); }}
+        footer={formFooter(() => void submitEdit(), 'Save review', () => { setEditOpen(false); setSelected(null); })}
       >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-2 pt-4">
-            <Text className="text-lg font-semibold text-slate-900">Edit review</Text>
-            <ScrollView keyboardShouldPersistTaps="handled" className="mt-3 max-h-[76%]">
-              <View className="gap-3">
-                <Pressable onPress={() => cycleEmployee('employeeId')} className="rounded-lg border border-slate-200 px-3 py-2">
-                  <Text className="text-slate-900">Employee: {employeeName(form.employeeId)}</Text>
-                </Pressable>
-                <Pressable onPress={() => cycleEmployee('reviewerId')} className="rounded-lg border border-slate-200 px-3 py-2">
-                  <Text className="text-slate-900">Reviewer: {employeeName(form.reviewerId)}</Text>
-                </Pressable>
-                <Pressable onPress={() => setForm((p) => ({ ...p, reviewType: cycleOption(REVIEW_TYPES, p.reviewType) }))} className="rounded-lg border border-slate-200 px-3 py-2">
-                  <Text className="text-slate-900">Type: {form.reviewType}</Text>
-                </Pressable>
-                <Pressable onPress={() => setForm((p) => ({ ...p, status: cycleOption(REVIEW_STATUSES, p.status) }))} className="rounded-lg border border-slate-200 px-3 py-2">
-                  <Text className="text-slate-900">Status: {form.status}</Text>
-                </Pressable>
-                <TextInput value={form.reviewPeriod} onChangeText={(v) => setForm((p) => ({ ...p, reviewPeriod: v }))} placeholder="Review period" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.reviewDate} onChangeText={(v) => setForm((p) => ({ ...p, reviewDate: v }))} placeholder="Review date (YYYY-MM-DD)" placeholderTextColor="#475569" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.overallRating} onChangeText={(v) => setForm((p) => ({ ...p, overallRating: v }))} placeholder="Overall rating (0-5)" placeholderTextColor="#475569" keyboardType="decimal-pad" className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900" />
-                <TextInput value={form.comments} onChangeText={(v) => setForm((p) => ({ ...p, comments: v }))} placeholder="Comments" placeholderTextColor="#475569" multiline className="min-h-[88px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900" textAlignVertical="top" />
-              </View>
-            </ScrollView>
-            <View className="mt-4 flex-row gap-2">
-              <Pressable onPress={() => { setEditOpen(false); setSelected(null); }} className="flex-1 items-center rounded-lg border border-slate-300 py-3">
-                <Text className="font-semibold text-slate-700">Cancel</Text>
-              </Pressable>
-              <Pressable onPress={() => void submitEdit()} disabled={saving} className="flex-1 items-center rounded-lg bg-blue-600 py-3">
-                <Text className="font-semibold text-white">{saving ? 'Saving...' : 'Save'}</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </AppModal>
-    </View>
+        {renderForm()}
+      </WorkshopFormSheet>
+    </WorkshopChrome>
   );
 }

@@ -59,6 +59,7 @@ import {
   FormSelect,
   MobileFormSheet,
 } from '../../../../components/layout/MobileForm';
+import { WorkshopDatePickerField } from '../../../workshop/components/WorkshopChrome';
 
 const ITEMS_PER_PAGE = 10;
 const FILTER_ANY = 'all';
@@ -1034,13 +1035,10 @@ export function MobileContactsScreen() {
                 onChangeText={(t) => setForm(p => ({ ...p, initials: t }))}
                 placeholder="JD"
               />
-              <FormInput
+              <WorkshopDatePickerField
                 label="Birthday"
-                icon="calendar-outline"
                 value={form.birthday || ''}
-                onChangeText={(t) => setForm(p => ({ ...p, birthday: t }))}
-                placeholder="YYYY-MM-DD"
-                last
+                onChange={(t) => setForm((p) => ({ ...p, birthday: t }))}
               />
             </FormSection>
 

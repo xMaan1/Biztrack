@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable, RefreshControl, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MenuHeaderButton } from '../components/layout/MenuHeaderButton';
@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useSidebarDrawer } from '../contexts/SidebarDrawerContext';
 import { useDashboard, type DashboardData } from '../hooks/useDashboard';
 import { usePlanInfo } from '../hooks/usePlanInfo';
+import { WS, cardShadow } from '../features/workshop/components/workshopTheme';
 
 export interface WorkshopDashStats {
   totalProjects: number;
@@ -58,15 +59,22 @@ function buildWorkshopStats(data: DashboardData | null): WorkshopDashStats {
   };
 }
 
-const quickLinks: { path: string; label: string }[] = [
-  { path: '/workshop-management/work-orders', label: 'Work orders' },
-  { path: '/workshop-management/job-cards', label: 'Job cards' },
-  { path: '/workshop-management/vehicles', label: 'Vehicles' },
-  { path: '/workshop-management/production', label: 'Production' },
-  { path: '/workshop-management/quality-control', label: 'Quality' },
-  { path: '/workshop-management/maintenance', label: 'Maintenance' },
-  { path: '/projects', label: 'Projects' },
-  { path: '/crm/customers', label: 'Customers' },
+const quickLinks: {
+  path: string;
+  label: string;
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  color: string;
+  bg: string;
+}[] = [
+  { path: '/workshop-management/work-orders', label: 'Work orders', icon: 'hammer', color: '#4f46e5', bg: '#eef2ff' },
+  { path: '/workshop-management/job-cards', label: 'Job cards', icon: 'clipboard', color: '#4f46e5', bg: '#eef2ff' },
+  { path: '/workshop-management/vehicles', label: 'Vehicles', icon: 'car', color: '#7c3aed', bg: '#f5f3ff' },
+  { path: '/workshop-management/production', label: 'Production', icon: 'cog', color: '#0891b2', bg: '#ecfeff' },
+  { path: '/workshop-management/quality-control', label: 'Quality', icon: 'shield-checkmark', color: '#059669', bg: '#ecfdf5' },
+  { path: '/workshop-management/maintenance', label: 'Maintenance', icon: 'build', color: '#d97706', bg: '#fffbeb' },
+  { path: '/workshop-management/mot/bookings', label: 'MOT bookings', icon: 'car-sport', color: '#0d9488', bg: '#ccfbf1' },
+  { path: '/projects', label: 'Projects', icon: 'folder-open', color: '#64748b', bg: '#f1f5f9' },
+  { path: '/crm/customers', label: 'Customers', icon: 'people', color: '#64748b', bg: '#f1f5f9' },
 ];
 
 export function MobileWorkshopDashboardScreen() {
@@ -99,18 +107,18 @@ export function MobileWorkshopDashboardScreen() {
   }, [refreshPlanInfo, refetch]);
 
   const userLabel = [user?.firstName, user?.lastName].filter(Boolean).join(' ')
-    ? `${[user?.firstName, user?.lastName].filter(Boolean).join(' ')} · ${user?.email ?? ''}`
+    ? `${[user?.firstName, user?.lastName].filter(Boolean).join(' ')}`
     : user?.email ?? '';
 
   if (dashboardLoading && !dashboardData) {
     return (
-      <View className="flex-1 bg-slate-50">
-        <View className="flex-row border-b border-indigo-100 bg-white px-3 py-2">
+      <View style={{ flex: 1, backgroundColor: WS.bg }}>
+        <View style={{ flexDirection: 'row', paddingHorizontal: 12, paddingVertical: 10, backgroundColor: WS.card }}>
           <MenuHeaderButton />
         </View>
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#4f46e5" />
-          <Text className="mt-3 text-slate-600">Loading…</Text>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color={WS.primary} />
+          <Text style={{ marginTop: 12, color: WS.textMuted }}>Loading workshop…</Text>
         </View>
       </View>
     );
@@ -118,177 +126,176 @@ export function MobileWorkshopDashboardScreen() {
 
   if (dashboardError) {
     return (
-      <View className="flex-1 bg-slate-50">
-        <View className="flex-row border-b border-indigo-100 bg-white px-3 py-2">
+      <View style={{ flex: 1, backgroundColor: WS.bg }}>
+        <View style={{ flexDirection: 'row', paddingHorizontal: 12, paddingVertical: 10, backgroundColor: WS.card }}>
           <MenuHeaderButton />
         </View>
-        <View className="flex-1 justify-center px-6">
-          <Text className="text-center text-lg font-semibold text-slate-900">
+        <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 24 }}>
+          <Text style={{ textAlign: 'center', fontSize: 18, fontWeight: '700', color: WS.text }}>
             Dashboard error
           </Text>
-          <Text className="mt-2 text-center text-slate-600">
-            {dashboardError}
-          </Text>
+          <Text style={{ marginTop: 8, textAlign: 'center', color: WS.textMuted }}>{dashboardError}</Text>
           <Pressable
-            className="mt-6 items-center rounded-lg bg-indigo-600 py-3"
             onPress={() => void onRefresh()}
+            style={{ marginTop: 24, alignItems: 'center', borderRadius: 14, backgroundColor: WS.primary, paddingVertical: 14 }}
           >
-            <Text className="font-semibold text-white">Try again</Text>
+            <Text style={{ fontWeight: '700', color: '#fff' }}>Try again</Text>
           </Pressable>
         </View>
       </View>
     );
   }
 
+  const statTiles = [
+    { label: 'Active projects', value: stats.activeProjects, sub: `${stats.totalProjects} total · ${completionRate}% done`, icon: 'pulse' as const, accent: '#4f46e5', accentBg: '#eef2ff' },
+    { label: 'Work orders', value: stats.workOrders, sub: 'In queue', icon: 'hammer' as const, accent: '#4f46e5', accentBg: '#eef2ff' },
+    { label: 'Efficiency', value: `${stats.productionEfficiency}%`, sub: 'Completed / total', icon: 'flash' as const, accent: '#10b981', accentBg: '#ecfdf5' },
+    { label: 'Team', value: stats.totalTeamMembers, sub: 'Members', icon: 'people' as const, accent: '#7c3aed', accentBg: '#f5f3ff' },
+  ];
+
   return (
     <ScrollView
-      className="flex-1 bg-slate-50"
-      contentContainerClassName="pb-12"
+      style={{ flex: 1, backgroundColor: WS.bg }}
+      contentContainerStyle={{ paddingBottom: 32 }}
       refreshControl={
         <RefreshControl
           refreshing={dashboardLoading}
           onRefresh={() => void onRefresh()}
-          tintColor="#4f46e5"
+          tintColor={WS.primary}
         />
       }
+      showsVerticalScrollIndicator={false}
     >
-      <View className="border-b border-indigo-100 bg-white px-4 pb-4 pt-2">
-        <View className="flex-row items-start justify-between">
-          <View className="flex-row flex-1 items-start gap-2 pr-2">
+      <View style={{ backgroundColor: WS.primary, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 28, borderBottomLeftRadius: 28, borderBottomRightRadius: 28 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', flex: 1, gap: 8 }}>
             <MenuHeaderButton />
-            <View className="min-w-0 flex-1">
-              <View className="flex-row items-center gap-2">
-                <View className="rounded-lg bg-indigo-600 p-2">
-                  <Ionicons name="construct" size={22} color="#fff" />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-xl font-bold text-indigo-950">
-                    Workshop
-                  </Text>
-                  <Text className="text-xs text-slate-500">
-                    Operations overview
-                  </Text>
-                </View>
-              </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 24, fontWeight: '800', color: '#fff' }}>Workshop</Text>
+              <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', marginTop: 2 }}>
+                Operations overview
+              </Text>
               {currentTenant ? (
-                <Text className="mt-2 text-xs text-slate-500">
-                  {currentTenant.name}
-                  {userLabel ? ` · ${userLabel}` : ''}
+                <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 8 }}>
+                  {currentTenant.name}{userLabel ? ` · ${userLabel}` : ''}
                 </Text>
               ) : null}
             </View>
           </View>
           <Pressable
-            className="rounded-lg border border-slate-200 px-3 py-2 active:bg-slate-100"
             onPress={() => void logout()}
+            style={{ borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)', paddingHorizontal: 12, paddingVertical: 8 }}
           >
-            <Text className="text-sm font-medium text-slate-700">Sign out</Text>
+            <Text style={{ fontSize: 13, fontWeight: '600', color: '#fff' }}>Sign out</Text>
           </Pressable>
         </View>
-        <View className="mt-3 flex-row gap-2">
+
+        <View style={{ flexDirection: 'row', gap: 10, marginTop: 20 }}>
           <Pressable
-            className="flex-1 items-center rounded-lg bg-indigo-600 py-2.5 active:bg-indigo-700"
             onPress={() => void navigateMenuPath('/projects')}
+            style={{ flex: 1, alignItems: 'center', borderRadius: 14, backgroundColor: '#fff', paddingVertical: 13 }}
           >
-            <Text className="font-semibold text-white">New project</Text>
+            <Text style={{ fontWeight: '700', color: WS.primary }}>New project</Text>
           </Pressable>
           <Pressable
-            className="flex-1 items-center rounded-lg border border-indigo-300 bg-white py-2.5 active:bg-indigo-50"
-            onPress={() =>
-              void navigateMenuPath('/workshop-management/work-orders')
-            }
+            onPress={() => void navigateMenuPath('/workshop-management/work-orders')}
+            style={{ flex: 1, alignItems: 'center', borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.15)', paddingVertical: 13, borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)' }}
           >
-            <Text className="font-semibold text-indigo-800">Work order</Text>
+            <Text style={{ fontWeight: '700', color: '#fff' }}>Work order</Text>
           </Pressable>
         </View>
       </View>
 
-      <View className="mt-4 flex-row flex-wrap gap-2 px-4">
-        {[
-          {
-            label: 'Active projects',
-            value: stats.activeProjects,
-            sub: `${stats.totalProjects} total · ${completionRate}% done`,
-            icon: 'pulse' as const,
-            border: 'border-l-indigo-500',
-          },
-          {
-            label: 'Work orders',
-            value: stats.workOrders,
-            sub: 'In queue',
-            icon: 'hammer' as const,
-            border: 'border-l-blue-500',
-          },
-          {
-            label: 'Efficiency',
-            value: `${stats.productionEfficiency}%`,
-            sub: 'Completed / total WO',
-            icon: 'flash' as const,
-            border: 'border-l-emerald-500',
-          },
-          {
-            label: 'Team',
-            value: stats.totalTeamMembers,
-            sub: 'Members',
-            icon: 'people' as const,
-            border: 'border-l-violet-500',
-          },
-        ].map((t) => (
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: 16, marginTop: -18 }}>
+        {statTiles.map((t) => (
           <View
             key={t.label}
-            className={`min-w-[45%] flex-1 rounded-xl border border-slate-200 border-l-4 ${t.border} bg-white p-3`}
+            style={{
+              flex: 1,
+              minWidth: '46%',
+              backgroundColor: WS.card,
+              borderRadius: 16,
+              padding: 14,
+              borderWidth: 1,
+              borderColor: WS.border,
+              ...cardShadow,
+            }}
           >
-            <View className="flex-row items-center justify-between">
-              <Text className="text-xs font-medium text-slate-500">
-                {t.label}
-              </Text>
-              <Ionicons name={t.icon} size={16} color="#64748b" />
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={{ fontSize: 12, fontWeight: '600', color: WS.textMuted }}>{t.label}</Text>
+              <View style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: t.accentBg, alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name={t.icon} size={16} color={t.accent} />
+              </View>
             </View>
-            <Text className="mt-1 text-2xl font-bold text-slate-900">
-              {t.value}
-            </Text>
-            <Text className="text-xs text-slate-400">{t.sub}</Text>
+            <Text style={{ fontSize: 28, fontWeight: '800', color: WS.text, marginTop: 8 }}>{t.value}</Text>
+            <Text style={{ fontSize: 11, color: WS.textLight, marginTop: 2 }}>{t.sub}</Text>
           </View>
         ))}
       </View>
 
-      <View className="mt-4 px-4">
-        <Text className="mb-2 text-sm font-semibold text-slate-700">
+      <View style={{ paddingHorizontal: 16, marginTop: 24 }}>
+        <Text style={{ fontSize: 16, fontWeight: '700', color: WS.text, marginBottom: 12 }}>
           Workshop management
         </Text>
-        <View className="flex-row flex-wrap gap-2">
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
           {quickLinks.map((q) => (
             <Pressable
               key={q.path}
               onPress={() => void navigateMenuPath(q.path)}
-              className="rounded-lg bg-indigo-50 px-3 py-2 active:bg-indigo-100"
+              style={{
+                width: '47%',
+                backgroundColor: WS.card,
+                borderRadius: 16,
+                padding: 14,
+                borderWidth: 1,
+                borderColor: WS.border,
+                ...cardShadow,
+              }}
             >
-              <Text className="text-sm font-medium text-indigo-900">
-                {q.label}
-              </Text>
+              <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: q.bg, alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
+                <Ionicons name={q.icon} size={20} color={q.color} />
+              </View>
+              <Text style={{ fontSize: 14, fontWeight: '700', color: WS.text }}>{q.label}</Text>
             </Pressable>
           ))}
         </View>
       </View>
 
-      <View className="mt-6 px-4">
-        <Text className="mb-2 text-sm font-semibold text-slate-700">
+      <View style={{ paddingHorizontal: 16, marginTop: 24 }}>
+        <Text style={{ fontSize: 16, fontWeight: '700', color: WS.text, marginBottom: 12 }}>
           Recent projects
         </Text>
         {dashboardData?.projects.recent?.length ? (
           dashboardData.projects.recent.slice(0, 6).map((p) => (
             <View
               key={p.id}
-              className="mb-2 rounded-lg border border-slate-200 bg-white px-3 py-2"
+              style={{
+                marginBottom: 10,
+                borderRadius: 14,
+                backgroundColor: WS.card,
+                borderWidth: 1,
+                borderColor: WS.border,
+                padding: 14,
+                ...cardShadow,
+              }}
             >
-              <Text className="font-medium text-slate-900">{p.name}</Text>
-              <Text className="text-xs text-slate-500">
-                {p.completionPercent}% · {p.status}
-              </Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ fontWeight: '700', fontSize: 15, color: WS.text, flex: 1 }} numberOfLines={1}>
+                  {p.name}
+                </Text>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: WS.primary }}>{p.completionPercent}%</Text>
+              </View>
+              <View style={{ height: 5, borderRadius: 3, backgroundColor: '#e2e8f0', marginTop: 10, overflow: 'hidden' }}>
+                <View style={{ height: 5, borderRadius: 3, width: `${Math.min(100, p.completionPercent)}%`, backgroundColor: WS.primary }} />
+              </View>
+              <Text style={{ fontSize: 12, color: WS.textMuted, marginTop: 8, textTransform: 'capitalize' }}>{p.status}</Text>
             </View>
           ))
         ) : (
-          <Text className="text-sm text-slate-500">No recent projects.</Text>
+          <View style={{ alignItems: 'center', paddingVertical: 24, backgroundColor: WS.card, borderRadius: 16, borderWidth: 1, borderColor: WS.border }}>
+            <Ionicons name="folder-open-outline" size={32} color={WS.textLight} />
+            <Text style={{ marginTop: 8, color: WS.textMuted }}>No recent projects</Text>
+          </View>
         )}
       </View>
     </ScrollView>

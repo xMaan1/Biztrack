@@ -1,9 +1,20 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
-import { AppModal } from '../../../components/layout/AppModal';
+import { View, Text, FlatList, Pressable, RefreshControl } from 'react-native';
+import {
+  WorkshopChrome,
+  WorkshopListCard,
+  WorkshopEmptyState,
+  WorkshopLoading,
+  WorkshopFormSheet,
+  WorkshopFieldLabel,
+  WorkshopTextInput,
+  WorkshopDatePickerField,
+  WorkshopPrimaryButton,
+  WS,
+} from '../../workshop/components/WorkshopChrome';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { appAlert, appError } from '../../../utils/appDialog';
 import { formatUsd } from '../../../services/crm/CrmMobileService';
 import type { Installment, InstallmentPlan } from '../../../models/sales';
 import { PaymentMethod } from '../../../models/sales';
@@ -38,7 +49,7 @@ export function MobileInstallmentsScreen() {
       const data = await getAllInstallmentPlans(0, 200);
       setPlans(Array.isArray(data) ? data : []);
     } catch (e) {
-      Alert.alert('Installments', extractErrorMessage(e, 'Failed to load'));
+      appError('Installments', extractErrorMessage(e, 'Failed to load'));
     } finally {
       setLoading(false);
     }
@@ -66,7 +77,7 @@ export function MobileInstallmentsScreen() {
       setSelected(full);
       setDetailOpen(true);
     } catch (e) {
-      Alert.alert('Installments', extractErrorMessage(e, 'Failed to open'));
+      appError('Installments', extractErrorMessage(e, 'Failed to open'));
     }
   };
 
@@ -83,7 +94,7 @@ export function MobileInstallmentsScreen() {
     if (!selected || !payInst) return;
     const amount = parseFloat(payAmount);
     if (Number.isNaN(amount) || amount <= 0) {
-      Alert.alert('Installments', 'Enter a valid amount');
+      appAlert('Installments', 'Enter a valid amount');
       return;
     }
     try {
@@ -103,7 +114,7 @@ export function MobileInstallmentsScreen() {
       setSelected(updated);
       await load();
     } catch (e) {
-      Alert.alert('Installments', extractErrorMessage(e, 'Payment failed'));
+      appError('Installments', extractErrorMessage(e, 'Payment failed'));
     }
   };
 
@@ -115,7 +126,7 @@ export function MobileInstallmentsScreen() {
         `installment-${selected.id}.pdf`,
       );
     } catch (e) {
-      Alert.alert('Installments', extractErrorMessage(e, 'PDF failed'));
+      appError('Installments', extractErrorMessage(e, 'PDF failed'));
     }
   };
 
@@ -128,145 +139,130 @@ export function MobileInstallmentsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Installments
-        </Text>
-        <View className="w-10" />
-      </View>
+    <>
+      <WorkshopChrome title="Installments" subtitle="Payment plans" scroll={false}>
+        {loading && !refreshing ? (
+          <WorkshopLoading />
+        ) : (
+          <FlatList
+            data={plans}
+            keyExtractor={(item) => item.id}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={WS.primary} />
+            }
+            contentContainerStyle={{ paddingBottom: 24 }}
+            ListEmptyComponent={
+              <WorkshopEmptyState
+                icon="calendar-outline"
+                title="No plans"
+                subtitle="Installment plans appear when created from invoices."
+              />
+            }
+            renderItem={({ item }) => (
+              <WorkshopListCard
+                icon="calendar"
+                iconColor="#d97706"
+                iconBg="#fffbeb"
+                title={`${item.number_of_installments} × ${item.frequency}`}
+                subtitle={`Invoice ${item.invoice_id.slice(0, 8)}…`}
+                meta={`${formatUsd(item.total_amount)} ${item.currency}`}
+                badges={[{ label: item.status, tone: 'status' }]}
+                onPress={() => void openDetail(item)}
+              />
+            )}
+          />
+        )}
+      </WorkshopChrome>
 
-      {loading && !refreshing ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563eb" />
-        </View>
-      ) : (
-        <FlatList
-          data={plans}
-          keyExtractor={(item) => item.id}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-          contentContainerStyle={{ padding: 12, paddingBottom: 32 }}
-          ListEmptyComponent={
-            <Text className="py-8 text-center text-slate-500">No plans</Text>
-          }
-          renderItem={({ item }) => (
-            <Pressable
-              onPress={() => void openDetail(item)}
-              className="mb-3 rounded-xl border border-slate-200 bg-white p-4"
-            >
-              <Text className="font-semibold text-slate-900">
-                Plan · {item.number_of_installments} × {item.frequency}
-              </Text>
-              <Text className="mt-1 text-slate-600">
-                Invoice {item.invoice_id.slice(0, 8)}…
-              </Text>
-              <Text className="mt-2 font-medium text-slate-900">
-                {formatUsd(item.total_amount)} {item.currency}
-              </Text>
-              <Text className="mt-1 text-xs text-slate-500">{item.status}</Text>
-            </Pressable>
-          )}
-        />
-      )}
-
-      <AppModal
+      <WorkshopFormSheet
         visible={detailOpen}
-        animationType="slide"
+        title="Plan"
         onClose={() => setDetailOpen(false)}
-      >
-        <View className="flex-1 bg-white">
-          <View className="flex-row items-center justify-between border-b border-slate-200 px-3 py-3">
-            <Pressable onPress={() => setDetailOpen(false)}>
-              <Text className="text-blue-600">Close</Text>
-            </Pressable>
-            <Text className="text-lg font-semibold">Plan</Text>
-            <Pressable onPress={() => void pdfPlan()}>
-              <Text className="font-semibold text-indigo-600">PDF</Text>
+        footer={
+          <View style={{ gap: 8 }}>
+            <WorkshopPrimaryButton label="Download PDF" onPress={() => void pdfPlan()} />
+            <Pressable onPress={() => setDetailOpen(false)} style={{ alignItems: 'center', paddingVertical: 10 }}>
+              <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Close</Text>
             </Pressable>
           </View>
-          <ScrollView className="flex-1 px-4 py-3">
-            {selected ? (
-              <>
-                <Text className="text-slate-800">
-                  {formatUsd(selected.total_amount)} · {selected.currency}
-                </Text>
-                <Text className="mt-1 text-slate-600">
-                  {selected.number_of_installments} payments · {selected.frequency}
-                </Text>
-                <Text className="mt-3 font-semibold text-slate-900">Schedule</Text>
-                {(selected.installments ?? []).map((inst) => (
-                  <View
-                    key={inst.id}
-                    className="border-b border-slate-100 py-3"
-                  >
-                    <Text className="font-medium text-slate-900">
-                      #{inst.sequence_number} · {fmtDate(inst.due_date)}
-                    </Text>
-                    <Text className="text-slate-700">
-                      {formatUsd(inst.amount)} · {inst.status}
-                      {inst.paid_amount ? ` · paid ${formatUsd(inst.paid_amount)}` : ''}
-                    </Text>
-                    {canManageSales() && inst.status !== 'paid' ? (
-                      <Pressable
-                        onPress={() => openPay(inst)}
-                        className="mt-2 self-start rounded-lg bg-blue-600 px-3 py-1.5"
-                      >
-                        <Text className="font-semibold text-white">Pay</Text>
-                      </Pressable>
-                    ) : null}
-                  </View>
-                ))}
-              </>
-            ) : null}
-          </ScrollView>
-        </View>
-      </AppModal>
-
-      <AppModal
-        visible={payOpen}
-        animationType="fade"
-        transparent
-        onClose={() => setPayOpen(false)}
+        }
       >
-        <View className="flex-1 justify-center bg-black/40 px-4">
-          <View className="rounded-2xl bg-white p-4">
-            <Text className="text-lg font-semibold text-slate-900">Record payment</Text>
-            <TextInput
-              value={payAmount}
-              onChangeText={setPayAmount}
-              keyboardType="decimal-pad"
-              placeholder="Amount"
-              className="mt-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <TextInput
-              value={payMethod}
-              onChangeText={setPayMethod}
-              placeholder="cash, bank_transfer…"
-              className="mt-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <TextInput
-              value={payDate}
-              onChangeText={setPayDate}
-              placeholder="YYYY-MM-DD"
-              className="mt-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <View className="mt-4 flex-row justify-end gap-2">
-              <Pressable onPress={() => setPayOpen(false)} className="px-3 py-2">
-                <Text className="text-slate-600">Cancel</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => void submitPay()}
-                className="rounded-lg bg-blue-600 px-4 py-2"
+        {selected ? (
+          <>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: WS.text, marginBottom: 4 }}>
+              {formatUsd(selected.total_amount)} · {selected.currency}
+            </Text>
+            <Text style={{ fontSize: 14, color: WS.textMuted, marginBottom: 16 }}>
+              {selected.number_of_installments} payments · {selected.frequency}
+            </Text>
+            <Text style={{ fontSize: 13, fontWeight: '700', color: WS.textMuted, marginBottom: 8, textTransform: 'uppercase' }}>
+              Schedule
+            </Text>
+            {(selected.installments ?? []).map((inst) => (
+              <View
+                key={inst.id}
+                style={{
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#f1f5f9',
+                  paddingVertical: 12,
+                }}
               >
-                <Text className="font-semibold text-white">Save</Text>
-              </Pressable>
-            </View>
+                <Text style={{ fontWeight: '600', color: WS.text }}>
+                  #{inst.sequence_number} · {fmtDate(inst.due_date)}
+                </Text>
+                <Text style={{ fontSize: 14, color: WS.textMuted, marginTop: 4 }}>
+                  {formatUsd(inst.amount)} · {inst.status}
+                  {inst.paid_amount ? ` · paid ${formatUsd(inst.paid_amount)}` : ''}
+                </Text>
+                {canManageSales() && inst.status !== 'paid' ? (
+                  <Pressable
+                    onPress={() => openPay(inst)}
+                    style={{
+                      marginTop: 8,
+                      alignSelf: 'flex-start',
+                      borderRadius: 10,
+                      paddingHorizontal: 14,
+                      paddingVertical: 8,
+                      backgroundColor: WS.primary,
+                    }}
+                  >
+                    <Text style={{ fontWeight: '700', fontSize: 13, color: '#fff' }}>Pay</Text>
+                  </Pressable>
+                ) : null}
+              </View>
+            ))}
+          </>
+        ) : null}
+      </WorkshopFormSheet>
+
+      <WorkshopFormSheet
+        visible={payOpen}
+        title="Record payment"
+        onClose={() => setPayOpen(false)}
+        footer={
+          <View style={{ gap: 8 }}>
+            <WorkshopPrimaryButton label="Save" onPress={() => void submitPay()} />
+            <Pressable onPress={() => setPayOpen(false)} style={{ alignItems: 'center', paddingVertical: 10 }}>
+              <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Cancel</Text>
+            </Pressable>
           </View>
-        </View>
-      </AppModal>
-    </View>
+        }
+      >
+        <WorkshopFieldLabel>Amount</WorkshopFieldLabel>
+        <WorkshopTextInput
+          value={payAmount}
+          onChangeText={setPayAmount}
+          keyboardType="decimal-pad"
+          placeholder="Amount"
+        />
+        <WorkshopFieldLabel>Payment method</WorkshopFieldLabel>
+        <WorkshopTextInput
+          value={payMethod}
+          onChangeText={setPayMethod}
+          placeholder="cash, bank_transfer…"
+        />
+        <WorkshopDatePickerField label="Payment date" value={payDate} onChange={setPayDate} />
+      </WorkshopFormSheet>
+    </>
   );
 }

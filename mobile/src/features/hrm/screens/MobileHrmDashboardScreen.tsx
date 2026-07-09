@@ -1,20 +1,21 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl, Alert } from 'react-native';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { Alert } from 'react-native';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { extractErrorMessage } from '../../../utils/errorUtils';
 import { formatUsd } from '../../../services/crm/CrmMobileService';
 import { getHrmDashboard } from '../../../services/hrm/hrmMobileApi';
 import type { HRMDashboard } from '../../../models/hrm';
+import { ModuleHubScreen, type HubLink, type HubStat } from '../../../components/layout/ModuleHubScreen';
+import { WS } from '../../workshop/components/workshopTheme';
 
-const LINKS: { path: string; label: string }[] = [
-  { path: '/hrm/employees', label: 'Employees' },
-  { path: '/hrm/job-postings', label: 'Job postings' },
-  { path: '/hrm/performance-reviews', label: 'Performance reviews' },
-  { path: '/hrm/leave-management', label: 'Leave' },
-  { path: '/hrm/training', label: 'Training' },
-  { path: '/hrm/payroll', label: 'Payroll' },
-  { path: '/hrm/suppliers', label: 'Suppliers' },
+const LINKS: HubLink[] = [
+  { path: '/hrm/employees', label: 'Employees', icon: 'people', color: '#4f46e5', bg: '#eef2ff' },
+  { path: '/hrm/job-postings', label: 'Job postings', icon: 'briefcase', color: '#2563eb', bg: '#eff6ff' },
+  { path: '/hrm/performance-reviews', label: 'Reviews', icon: 'ribbon', color: '#7c3aed', bg: '#f5f3ff' },
+  { path: '/hrm/leave-management', label: 'Leave', icon: 'calendar', color: '#0891b2', bg: '#ecfeff' },
+  { path: '/hrm/training', label: 'Training', icon: 'school', color: '#059669', bg: '#ecfdf5' },
+  { path: '/hrm/payroll', label: 'Payroll', icon: 'wallet', color: '#d97706', bg: '#fffbeb' },
+  { path: '/hrm/suppliers', label: 'Suppliers', icon: 'business', color: '#64748b', bg: '#f1f5f9' },
 ];
 
 export function MobileHrmDashboardScreen() {
@@ -53,70 +54,27 @@ export function MobileHrmDashboardScreen() {
   }, [load]);
 
   const m = data?.metrics;
+  const hubStats: HubStat[] = m
+    ? [
+        { label: 'Employees', value: m.totalEmployees, sub: `${m.activeEmployees} active`, icon: 'people', accent: '#4f46e5', accentBg: '#eef2ff' },
+        { label: 'New hires', value: m.newHires, sub: 'Last 30 days', icon: 'person-add', accent: '#2563eb', accentBg: '#eff6ff' },
+        { label: 'Open roles', value: m.openPositions, sub: `${m.pendingApplications} applicants`, icon: 'briefcase', accent: '#7c3aed', accentBg: '#f5f3ff' },
+        { label: 'Training', value: `${m.trainingCompletionRate}%`, sub: 'Completion rate', icon: 'school', accent: '#059669', accentBg: '#ecfdf5' },
+      ]
+    : [];
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          HRM
-        </Text>
-        <View className="w-10" />
-      </View>
-
-      {loading && !refreshing ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563eb" />
-        </View>
-      ) : (
-        <ScrollView
-          className="flex-1 px-3 py-3"
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        >
-          {m ? (
-            <View className="mb-4 rounded-xl border border-slate-200 bg-white p-4">
-              <Text className="text-lg font-semibold text-slate-900">Overview</Text>
-              <Text className="mt-2 text-slate-700">
-                Employees {m.totalEmployees} · Active {m.activeEmployees}
-              </Text>
-              <Text className="mt-1 text-slate-700">
-                New hires (30d) {m.newHires} · Turnover {m.turnoverRate}%
-              </Text>
-              <Text className="mt-1 text-slate-700">
-                Avg salary {formatUsd(m.averageSalary)}
-              </Text>
-              <Text className="mt-1 text-slate-700">
-                Open jobs {m.openPositions} · Pending applications{' '}
-                {m.pendingApplications}
-              </Text>
-              <Text className="mt-1 text-slate-700">
-                Upcoming reviews {m.upcomingReviews} · Pending leave{' '}
-                {m.pendingLeaveRequests}
-              </Text>
-              <Text className="mt-1 text-slate-700">
-                Training completion {m.trainingCompletionRate}%
-              </Text>
-            </View>
-          ) : null}
-
-          <Text className="mb-2 font-semibold text-slate-800">Shortcuts</Text>
-          <View className="flex-row flex-wrap gap-2">
-            {LINKS.map((l) => (
-              <Pressable
-                key={l.path}
-                onPress={() => void navigateMenuPath(l.path)}
-                className="min-w-[46%] flex-1 rounded-xl border border-slate-200 bg-white px-3 py-4 active:bg-slate-50"
-              >
-                <Text className="text-center font-medium text-slate-800">
-                  {l.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        </ScrollView>
-      )}
-    </View>
+    <ModuleHubScreen
+      title="HRM"
+      subtitle="People, payroll & performance"
+      accent={WS.primary}
+      loading={loading}
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+      stats={hubStats}
+      links={LINKS}
+      onNavigate={(path) => void navigateMenuPath(path)}
+      linksTitle="HR modules"
+    />
   );
 }

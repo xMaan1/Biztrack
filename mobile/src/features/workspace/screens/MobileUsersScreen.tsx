@@ -1,21 +1,24 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, TextInput, Pressable, ActivityIndicator, RefreshControl, Alert } from 'react-native';
+import { View, Text, ScrollView, Pressable, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { MobileFormSheet } from '../../../components/layout/MobileForm';
+import {
+  WorkshopChrome,
+  WorkshopListCard,
+  WorkshopStatCard,
+  WorkshopLoading,
+  WorkshopFormSheet,
+  WorkshopFieldLabel,
+  WorkshopTextInput,
+  WorkshopPickerField,
+  WS,
+} from '../../workshop/components/WorkshopChrome';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { useRBAC, type CreateUserData, type UserWithPermissions } from '../../../contexts/RBACContext';
 import { OptionSheet } from '../../../components/crm/OptionSheet';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { appAlert, appError } from '../../../utils/appDialog';
 import { usePermissions } from '../../../hooks/usePermissions';
-import { AppModal } from '../../../components/layout/AppModal';
-
-function initials(u: UserWithPermissions): string {
-  if (u.firstName && u.lastName) {
-    return `${u.firstName[0]}${u.lastName[0]}`.toUpperCase();
-  }
-  if (u.userName) return u.userName.substring(0, 2).toUpperCase();
-  return 'U';
-}
 
 function roleLabel(name?: string): string {
   if (!name) return '';
@@ -92,11 +95,11 @@ export function MobileUsersScreen() {
 
   const submitCreate = useCallback(async () => {
     if (!roleId) {
-      Alert.alert('Users', 'Select a role.');
+      appAlert('Users', 'Select a role.');
       return;
     }
     if (!form.email.trim() || !form.userName.trim() || !form.password) {
-      Alert.alert('Users', 'Username, email, and password are required.');
+      appAlert('Users', 'Username, email, and password are required.');
       return;
     }
     try {
@@ -122,7 +125,7 @@ export function MobileUsersScreen() {
       setRoleId('');
       await load();
     } catch (e) {
-      Alert.alert('Users', extractErrorMessage(e, 'Could not create user'));
+      appError('Users', extractErrorMessage(e, 'Could not create user'));
     } finally {
       setBusy(false);
     }
@@ -137,7 +140,7 @@ export function MobileUsersScreen() {
 
   const submitEdit = useCallback(async () => {
     if (!selected || !editRoleId) {
-      Alert.alert('Users', 'Select a role.');
+      appAlert('Users', 'Select a role.');
       return;
     }
     const tenantUserId =
@@ -154,7 +157,7 @@ export function MobileUsersScreen() {
       setSelected(null);
       await load();
     } catch (e) {
-      Alert.alert('Users', extractErrorMessage(e, 'Could not update'));
+      appError('Users', extractErrorMessage(e, 'Could not update'));
     } finally {
       setBusy(false);
     }
@@ -177,7 +180,7 @@ export function MobileUsersScreen() {
       setSelected(null);
       await load();
     } catch (e) {
-      Alert.alert('Users', extractErrorMessage(e, 'Could not remove'));
+      appError('Users', extractErrorMessage(e, 'Could not remove'));
     } finally {
       setBusy(false);
     }
@@ -185,276 +188,251 @@ export function MobileUsersScreen() {
 
   if (!isOwner()) {
     return (
-      <View className="flex-1 bg-slate-50">
-        <View className="flex-row border-b border-slate-200 bg-white px-3 py-2">
-          <MenuHeaderButton />
-        </View>
-        <View className="flex-1 justify-center px-6">
-          <Text className="text-center text-lg font-semibold text-slate-900">
+      <WorkshopChrome title="Users" subtitle="Workspace members" scroll={false}>
+        <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 24 }}>
+          <Text style={{ textAlign: 'center', fontSize: 17, fontWeight: '800', color: WS.text }}>
             User management
           </Text>
-          <Text className="mt-2 text-center text-slate-600">
+          <Text style={{ marginTop: 10, textAlign: 'center', color: WS.textMuted, lineHeight: 22 }}>
             Only the workspace owner can manage users. Use the web app for full
             role administration.
           </Text>
         </View>
-      </View>
+      </WorkshopChrome>
     );
   }
 
-  return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Users
-        </Text>
-        {canManageUsers() ? (
-          <Pressable
-            className="px-2 py-1"
-            onPress={() => {
-              setForm({
-                userName: '',
-                email: '',
-                firstName: '',
-                lastName: '',
-                password: '',
-              });
-              setRoleId(roles[0]?.id ?? '');
-              setCreateOpen(true);
-            }}
-          >
-            <Ionicons name="person-add-outline" size={26} color="#2563eb" />
-          </Pressable>
-        ) : (
-          <View className="w-8" />
-        )}
-      </View>
+  const openCreate = () => {
+    setForm({
+      userName: '',
+      email: '',
+      firstName: '',
+      lastName: '',
+      password: '',
+    });
+    setRoleId(roles[0]?.id ?? '');
+    setCreateOpen(true);
+  };
 
-      <ScrollView
-        className="flex-1 px-3 pt-3"
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+  return (
+    <>
+      <WorkshopChrome
+        title="Users"
+        subtitle="Manage workspace members"
+        right={
+          canManageUsers() ? (
+            <Pressable onPress={openCreate} style={{ paddingHorizontal: 4 }}>
+              <Ionicons name="person-add-outline" size={26} color={WS.primary} />
+            </Pressable>
+          ) : (
+            <View style={{ width: 72 }} />
+          )
+        }
+        scroll={false}
+      >
+        <ScrollView
+          style={{ flex: 1 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={WS.primary} />
+          }
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 24 }}
+        >
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
+            <WorkshopStatCard
+              label="Total"
+              value={stats.total}
+              icon="people-outline"
+              accent="#4f46e5"
+              accentBg="#eef2ff"
+            />
+            <WorkshopStatCard
+              label="Active"
+              value={stats.active}
+              icon="checkmark-circle-outline"
+              accent="#059669"
+              accentBg="#ecfdf5"
+            />
+            <WorkshopStatCard
+              label="Roles"
+              value={stats.roleCount}
+              icon="shield-outline"
+              accent="#7c3aed"
+              accentBg="#f5f3ff"
+            />
+            <WorkshopStatCard
+              label="Owners"
+              value={stats.owners}
+              icon="star-outline"
+              accent="#d97706"
+              accentBg="#fffbeb"
+            />
+          </View>
+
+          <Text style={{ fontSize: 15, fontWeight: '700', color: WS.text, marginBottom: 10 }}>
+            Members
+          </Text>
+
+          {loading && tenantUsers.length === 0 ? (
+            <WorkshopLoading />
+          ) : (
+            tenantUsers.map((u) => (
+              <WorkshopListCard
+                key={u.id}
+                icon="person"
+                iconColor="#4f46e5"
+                iconBg="#eef2ff"
+                title={
+                  u.firstName && u.lastName
+                    ? `${u.firstName} ${u.lastName}`
+                    : u.userName
+                }
+                subtitle={u.email}
+                meta={`${u.isActive ? 'Active' : 'Inactive'}${u.role ? ` · ${roleLabel(u.role.name)}` : ''}`}
+                actions={
+                  canManageUsers()
+                    ? [
+                        { icon: 'pencil', onPress: () => openEdit(u) },
+                        { icon: 'trash-outline', onPress: () => confirmRemove(u), danger: true },
+                      ]
+                    : undefined
+                }
+              />
+            ))
+          )}
+
+          {!loading && tenantUsers.length === 0 ? (
+            <Text style={{ paddingVertical: 24, textAlign: 'center', color: WS.textMuted }}>
+              No users
+            </Text>
+          ) : null}
+
+          <Text style={{ marginTop: 16, fontSize: 11, color: WS.textLight }}>
+            Advanced role and permission editing is available on the web app.
+          </Text>
+        </ScrollView>
+      </WorkshopChrome>
+
+      <MobileFormSheet
+        visible={createOpen}
+        title="Add user"
+        onCancel={() => setCreateOpen(false)}
+        onSave={() => void submitCreate()}
+        saveLabel="Create"
+        saveLoading={busy}
+      >
+        <WorkshopFieldLabel>Username</WorkshopFieldLabel>
+        <WorkshopTextInput
+          autoCapitalize="none"
+          value={form.userName}
+          onChangeText={(t) => setForm((f) => ({ ...f, userName: t }))}
+        />
+        <WorkshopFieldLabel>Email</WorkshopFieldLabel>
+        <WorkshopTextInput
+          autoCapitalize="none"
+          keyboardType="email-address"
+          value={form.email}
+          onChangeText={(t) => setForm((f) => ({ ...f, email: t }))}
+        />
+        <WorkshopFieldLabel>First name</WorkshopFieldLabel>
+        <WorkshopTextInput
+          value={form.firstName}
+          onChangeText={(t) => setForm((f) => ({ ...f, firstName: t }))}
+        />
+        <WorkshopFieldLabel>Last name</WorkshopFieldLabel>
+        <WorkshopTextInput
+          value={form.lastName}
+          onChangeText={(t) => setForm((f) => ({ ...f, lastName: t }))}
+        />
+        <WorkshopFieldLabel>Password</WorkshopFieldLabel>
+        <WorkshopTextInput
+          secureTextEntry
+          value={form.password}
+          onChangeText={(t) => setForm((f) => ({ ...f, password: t }))}
+        />
+        <WorkshopPickerField
+          label="Role"
+          value={
+            roles.find((r) => r.id === roleId)?.display_name ||
+            roles.find((r) => r.id === roleId)?.name ||
+            'Select'
+          }
+          onPress={() => setRoleOpen(true)}
+        />
+      </MobileFormSheet>
+
+      <MobileFormSheet
+        visible={editOpen}
+        title="Edit user"
+        onCancel={() => {
+          setEditOpen(false);
+          setSelected(null);
+        }}
+        onSave={() => void submitEdit()}
+        saveLoading={busy}
+      >
+        <WorkshopPickerField
+          label="Role"
+          value={roles.find((r) => r.id === editRoleId)?.display_name || '—'}
+          onPress={() => setEditRolePickOpen(true)}
+        />
+        <Pressable
+          onPress={() => setEditActive((v) => !v)}
+          style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}
+        >
+          <Ionicons
+            name={editActive ? 'checkbox' : 'square-outline'}
+            size={24}
+            color={editActive ? WS.primary : WS.textLight}
+          />
+          <Text style={{ marginLeft: 10, color: WS.text }}>Active</Text>
+        </Pressable>
+      </MobileFormSheet>
+
+      <WorkshopFormSheet
+        visible={deleteOpen}
+        title="Remove user"
+        onClose={() => setDeleteOpen(false)}
+        footer={
+          <View style={{ gap: 8 }}>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <View style={{ flex: 1 }}>
+                <Pressable
+                  onPress={() => setDeleteOpen(false)}
+                  style={{
+                    alignItems: 'center',
+                    borderRadius: 14,
+                    borderWidth: 1,
+                    borderColor: WS.border,
+                    paddingVertical: 15,
+                  }}
+                >
+                  <Text style={{ fontWeight: '700', color: WS.textMuted }}>Cancel</Text>
+                </Pressable>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Pressable
+                  onPress={() => void doRemove()}
+                  disabled={busy}
+                  style={{
+                    alignItems: 'center',
+                    borderRadius: 14,
+                    paddingVertical: 15,
+                    backgroundColor: WS.danger,
+                    opacity: busy ? 0.7 : 1,
+                  }}
+                >
+                  <Text style={{ fontWeight: '700', fontSize: 16, color: '#fff' }}>Remove</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
         }
       >
-        <View className="mb-4 flex-row flex-wrap gap-2">
-          <View className="min-w-[45%] flex-1 rounded-xl border border-slate-200 bg-white p-3">
-            <Text className="text-xs text-slate-500">Total</Text>
-            <Text className="text-xl font-bold text-slate-900">{stats.total}</Text>
-          </View>
-          <View className="min-w-[45%] flex-1 rounded-xl border border-slate-200 bg-white p-3">
-            <Text className="text-xs text-slate-500">Active</Text>
-            <Text className="text-xl font-bold text-slate-900">{stats.active}</Text>
-          </View>
-          <View className="min-w-[45%] flex-1 rounded-xl border border-slate-200 bg-white p-3">
-            <Text className="text-xs text-slate-500">Roles</Text>
-            <Text className="text-xl font-bold text-slate-900">{stats.roleCount}</Text>
-          </View>
-          <View className="min-w-[45%] flex-1 rounded-xl border border-slate-200 bg-white p-3">
-            <Text className="text-xs text-slate-500">Owners</Text>
-            <Text className="text-xl font-bold text-slate-900">{stats.owners}</Text>
-          </View>
-        </View>
-
-        <Text className="mb-2 text-base font-semibold text-slate-900">Members</Text>
-
-        {loading && tenantUsers.length === 0 ? (
-          <ActivityIndicator className="py-8" color="#2563eb" />
-        ) : (
-          tenantUsers.map((u) => (
-            <View
-              key={u.id}
-              className="mb-2 flex-row items-center justify-between rounded-xl border border-slate-200 bg-white p-3"
-            >
-              <View className="flex-row items-center flex-1">
-                <View className="h-10 w-10 items-center justify-center rounded-full bg-slate-200">
-                  <Text className="font-semibold text-slate-700">
-                    {initials(u)}
-                  </Text>
-                </View>
-                <View className="ml-3 flex-1">
-                  <Text className="font-medium text-slate-900">
-                    {u.firstName && u.lastName
-                      ? `${u.firstName} ${u.lastName}`
-                      : u.userName}
-                  </Text>
-                  <Text className="text-xs text-slate-500">{u.email}</Text>
-                  <Text className="mt-1 text-xs text-slate-600">
-                    {u.isActive ? 'Active' : 'Inactive'}
-                    {u.role ? ` · ${roleLabel(u.role.name)}` : ''}
-                  </Text>
-                </View>
-              </View>
-              {canManageUsers() ? (
-                <View className="flex-row gap-1">
-                  <Pressable className="p-2" onPress={() => openEdit(u)}>
-                    <Ionicons name="pencil" size={20} color="#2563eb" />
-                  </Pressable>
-                  <Pressable className="p-2" onPress={() => confirmRemove(u)}>
-                    <Ionicons name="trash-outline" size={20} color="#dc2626" />
-                  </Pressable>
-                </View>
-              ) : null}
-            </View>
-          ))
-        )}
-
-        {!loading && tenantUsers.length === 0 ? (
-          <Text className="py-6 text-center text-slate-500">No users</Text>
-        ) : null}
-
-        <Text className="mt-4 text-xs text-slate-500">
-          Advanced role and permission editing is available on the web app.
+        <Text style={{ fontSize: 15, color: WS.textMuted, lineHeight: 22 }}>
+          Remove {selected?.userName ?? ''} from this workspace?
         </Text>
-        <View className="h-8" />
-      </ScrollView>
-
-      <AppModal
-        visible={createOpen}
-        animationType="slide"
-        transparent
-        onClose={() => setCreateOpen(false)}
-      >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="rounded-t-2xl bg-white px-4 pb-8 pt-4">
-            <Text className="text-lg font-semibold text-slate-900">Add user</Text>
-            <Text className="mb-1 mt-3 text-xs font-medium text-slate-500">Username</Text>
-            <TextInput
-              className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-              autoCapitalize="none"
-              value={form.userName}
-              onChangeText={(t) => setForm((f) => ({ ...f, userName: t }))}
-            />
-            <Text className="mb-1 text-xs font-medium text-slate-500">Email</Text>
-            <TextInput
-              className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-              autoCapitalize="none"
-              keyboardType="email-address"
-              value={form.email}
-              onChangeText={(t) => setForm((f) => ({ ...f, email: t }))}
-            />
-            <Text className="mb-1 text-xs font-medium text-slate-500">First name</Text>
-            <TextInput
-              className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-              value={form.firstName}
-              onChangeText={(t) => setForm((f) => ({ ...f, firstName: t }))}
-            />
-            <Text className="mb-1 text-xs font-medium text-slate-500">Last name</Text>
-            <TextInput
-              className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-              value={form.lastName}
-              onChangeText={(t) => setForm((f) => ({ ...f, lastName: t }))}
-            />
-            <Text className="mb-1 text-xs font-medium text-slate-500">Password</Text>
-            <TextInput
-              className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-              secureTextEntry
-              value={form.password}
-              onChangeText={(t) => setForm((f) => ({ ...f, password: t }))}
-            />
-            <Text className="mb-1 text-xs font-medium text-slate-500">Role</Text>
-            <Pressable
-              className="mb-4 flex-row items-center justify-between rounded-lg border border-slate-200 px-3 py-2"
-              onPress={() => setRoleOpen(true)}
-            >
-              <Text className="text-slate-900">
-                {roles.find((r) => r.id === roleId)?.display_name ||
-                  roles.find((r) => r.id === roleId)?.name ||
-                  'Select'}
-              </Text>
-              <Ionicons name="chevron-down" size={18} color="#64748b" />
-            </Pressable>
-            <Pressable
-              className="items-center rounded-lg bg-blue-600 py-3"
-              disabled={busy}
-              onPress={() => void submitCreate()}
-            >
-              <Text className="font-semibold text-white">Create</Text>
-            </Pressable>
-            <Pressable className="mt-2 py-2" onPress={() => setCreateOpen(false)}>
-              <Text className="text-center text-slate-600">Cancel</Text>
-            </Pressable>
-          </View>
-        </View>
-      </AppModal>
-
-      <AppModal
-        visible={editOpen}
-        animationType="slide"
-        transparent
-        onClose={() => setEditOpen(false)}
-      >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="rounded-t-2xl bg-white px-4 pb-8 pt-4">
-            <Text className="text-lg font-semibold text-slate-900">Edit user</Text>
-            <Text className="mb-1 mt-3 text-xs font-medium text-slate-500">Role</Text>
-            <Pressable
-              className="mb-3 flex-row items-center justify-between rounded-lg border border-slate-200 px-3 py-2"
-              onPress={() => setEditRolePickOpen(true)}
-            >
-              <Text className="text-slate-900">
-                {roles.find((r) => r.id === editRoleId)?.display_name || '—'}
-              </Text>
-              <Ionicons name="chevron-down" size={18} color="#64748b" />
-            </Pressable>
-            <Pressable
-              className="mb-4 flex-row items-center"
-              onPress={() => setEditActive((v) => !v)}
-            >
-              <Ionicons
-                name={editActive ? 'checkbox' : 'square-outline'}
-                size={24}
-                color={editActive ? '#2563eb' : '#94a3b8'}
-              />
-              <Text className="ml-2 text-slate-800">Active</Text>
-            </Pressable>
-            <Pressable
-              className="items-center rounded-lg bg-blue-600 py-3"
-              disabled={busy}
-              onPress={() => void submitEdit()}
-            >
-              <Text className="font-semibold text-white">Save</Text>
-            </Pressable>
-            <Pressable
-              className="mt-2 py-2"
-              onPress={() => {
-                setEditOpen(false);
-                setSelected(null);
-              }}
-            >
-              <Text className="text-center text-slate-600">Cancel</Text>
-            </Pressable>
-          </View>
-        </View>
-      </AppModal>
-
-      <AppModal
-        visible={deleteOpen}
-        animationType="fade"
-        transparent
-        onClose={() => setDeleteOpen(false)}
-      >
-        <View className="flex-1 justify-center bg-black/40 px-4">
-          <View className="rounded-2xl bg-white p-4">
-            <Text className="text-lg font-semibold text-slate-900">Remove user</Text>
-            <Text className="mt-2 text-slate-600">
-              Remove {selected?.userName ?? ''} from this workspace?
-            </Text>
-            <View className="mt-4 flex-row justify-end gap-2">
-              <Pressable className="px-4 py-2" onPress={() => setDeleteOpen(false)}>
-                <Text>Cancel</Text>
-              </Pressable>
-              <Pressable
-                className="rounded-lg bg-red-600 px-4 py-2"
-                disabled={busy}
-                onPress={() => void doRemove()}
-              >
-                <Text className="font-semibold text-white">Remove</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </AppModal>
+      </WorkshopFormSheet>
 
       <OptionSheet
         visible={roleOpen}
@@ -476,6 +454,6 @@ export function MobileUsersScreen() {
         }}
         onClose={() => setEditRolePickOpen(false)}
       />
-    </View>
+    </>
   );
 }

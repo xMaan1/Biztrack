@@ -1,14 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { View, Text, FlatList, Pressable, RefreshControl } from 'react-native';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
-import {
-  OptionSheet,
-  type OptionItem,
-} from '../../../components/crm/OptionSheet';
+import { OptionSheet, type OptionItem } from '../../../components/crm/OptionSheet';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { appAlert, appConfirm, appError } from '../../../utils/appDialog';
 import {
   PaymentMethod,
   TransactionStatus,
@@ -27,7 +23,22 @@ import {
   updateBankTransaction,
 } from '../../../services/banking/bankingMobileApi';
 import { formatMoney } from '../bankingFormat';
-import { AppModal } from '../../../components/layout/AppModal';
+import {
+  WorkshopChrome,
+  WorkshopListCard,
+  WorkshopEmptyState,
+  WorkshopHeaderButton,
+  WorkshopLoading,
+  WorkshopFormSheet,
+  WorkshopFieldLabel,
+  WorkshopTextInput,
+  WorkshopDatePickerField,
+  WorkshopPickerField,
+  WorkshopPrimaryButton,
+  WorkshopFilterBar,
+  countActiveFilters,
+  WS,
+} from '../../workshop/components/WorkshopChrome';
 
 const TX_TYPES = Object.values(TransactionType).map((v) => ({
   value: v,
@@ -101,28 +112,23 @@ export function MobileBankTransactionsScreen() {
       const [tx, acc] = await Promise.all([
         getBankTransactions({
           limit: 200,
-          accountId:
-            accountFilter === 'all' ? undefined : accountFilter,
-          transactionType:
-            typeFilter === 'all' ? undefined : (typeFilter as TransactionType),
-          status:
-            statusFilter === 'all' ? undefined : (statusFilter as TransactionStatus),
+          accountId: accountFilter === 'all' ? undefined : accountFilter,
+          transactionType: typeFilter === 'all' ? undefined : (typeFilter as TransactionType),
+          status: statusFilter === 'all' ? undefined : (statusFilter as TransactionStatus),
         }),
         getBankAccounts(true),
       ]);
       setTransactions(tx ?? []);
       setAccounts(acc ?? []);
     } catch (e) {
-      Alert.alert('Transactions', extractErrorMessage(e, 'Failed to load'));
+      appError('Transactions', extractErrorMessage(e, 'Failed to load'));
     } finally {
       setLoading(false);
     }
   }, [accountFilter, typeFilter, statusFilter]);
 
   useEffect(() => {
-    setSidebarActivePath(
-      workspacePath === '/dashboard' ? '/dashboard' : '/banking/transactions',
-    );
+    setSidebarActivePath(workspacePath === '/dashboard' ? '/dashboard' : '/banking/transactions');
   }, [setSidebarActivePath, workspacePath]);
 
   useEffect(() => {
@@ -157,7 +163,7 @@ export function MobileBankTransactionsScreen() {
 
   const openCreate = useCallback(() => {
     if (!accounts.length) {
-      Alert.alert('Transactions', 'Create a bank account first.');
+      appAlert('Transactions', 'Create a bank account first.');
       return;
     }
     const d = new Date();
@@ -210,22 +216,12 @@ export function MobileBankTransactionsScreen() {
       referenceNumber: reference.trim() || undefined,
       description: description.trim(),
     };
-  }, [
-    bankAccountId,
-    txDate,
-    txType,
-    txStatus,
-    amountStr,
-    currency,
-    paymentMethod,
-    reference,
-    description,
-  ]);
+  }, [bankAccountId, txDate, txType, txStatus, amountStr, currency, paymentMethod, reference, description]);
 
   const submitCreate = useCallback(async () => {
     const p = buildPayload();
     if (!p) {
-      Alert.alert('Transactions', 'Account, valid date (YYYY-MM-DD), description, and amount are required.');
+      appAlert('Transactions', 'Account, valid date (YYYY-MM-DD), description, and amount are required.');
       return;
     }
     try {
@@ -234,7 +230,7 @@ export function MobileBankTransactionsScreen() {
       setCreateOpen(false);
       await load();
     } catch (e) {
-      Alert.alert('Transactions', extractErrorMessage(e, 'Create failed'));
+      appError('Transactions', extractErrorMessage(e, 'Create failed'));
     } finally {
       setBusy(false);
     }
@@ -244,7 +240,7 @@ export function MobileBankTransactionsScreen() {
     if (!editing) return;
     const p = buildPayload();
     if (!p) {
-      Alert.alert('Transactions', 'Check required fields and date format YYYY-MM-DD.');
+      appAlert('Transactions', 'Check required fields and date format YYYY-MM-DD.');
       return;
     }
     try {
@@ -265,7 +261,7 @@ export function MobileBankTransactionsScreen() {
       setEditing(null);
       await load();
     } catch (e) {
-      Alert.alert('Transactions', extractErrorMessage(e, 'Update failed'));
+      appError('Transactions', extractErrorMessage(e, 'Update failed'));
     } finally {
       setBusy(false);
     }
@@ -273,248 +269,184 @@ export function MobileBankTransactionsScreen() {
 
   const confirmDelete = useCallback(
     (t: BankTransaction) => {
-      Alert.alert('Delete', `Remove transaction ${t.transactionNumber}?`, [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            void (async () => {
-              try {
-                await deleteBankTransaction(t.id);
-                await load();
-              } catch (e) {
-                Alert.alert('Transactions', extractErrorMessage(e, 'Delete failed'));
-              }
-            })();
-          },
+      appConfirm({
+        title: 'Delete',
+        message: `Remove transaction ${t.transactionNumber}?`,
+        confirmLabel: 'Delete',
+        destructive: true,
+        onConfirm: async () => {
+          try {
+            await deleteBankTransaction(t.id);
+            await load();
+          } catch (e) {
+            appError('Transactions', extractErrorMessage(e, 'Delete failed'));
+          }
         },
-      ]);
+      });
     },
     [load],
   );
 
   const formFields = (
     <>
-      <Text className="mb-1 text-xs font-medium text-slate-500">Account</Text>
-      <Pressable
-        className="mb-2 flex-row items-center justify-between rounded-lg border border-slate-200 px-3 py-2"
+      <WorkshopPickerField
+        label="Account"
+        value={accounts.find((a) => a.id === bankAccountId)?.accountName ?? ''}
+        placeholder="Select account"
         onPress={() => setFormAccountOpen(true)}
-      >
-        <Text className="text-slate-900">
-          {accounts.find((a) => a.id === bankAccountId)?.accountName ?? 'Select'}
-        </Text>
-        <Ionicons name="chevron-down" size={18} color="#64748b" />
-      </Pressable>
-      <Text className="mb-1 text-xs font-medium text-slate-500">Date</Text>
-      <TextInput
-        className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-        placeholder="YYYY-MM-DD"
-        value={txDate}
-        onChangeText={setTxDate}
       />
-      <Text className="mb-1 text-xs font-medium text-slate-500">Type</Text>
-      <Pressable
-        className="mb-2 flex-row items-center justify-between rounded-lg border border-slate-200 px-3 py-2"
+      <WorkshopDatePickerField label="Date" value={txDate} onChange={setTxDate} />
+      <WorkshopPickerField
+        label="Type"
+        value={getTransactionTypeLabel(txType)}
         onPress={() => setTypePickOpen(true)}
-      >
-        <Text className="text-slate-900">{getTransactionTypeLabel(txType)}</Text>
-        <Ionicons name="chevron-down" size={18} color="#64748b" />
-      </Pressable>
-      <Text className="mb-1 text-xs font-medium text-slate-500">Status</Text>
-      <Pressable
-        className="mb-2 flex-row items-center justify-between rounded-lg border border-slate-200 px-3 py-2"
+      />
+      <WorkshopPickerField
+        label="Status"
+        value={getTransactionStatusLabel(txStatus)}
         onPress={() => setStatusPickOpen(true)}
-      >
-        <Text className="text-slate-900">{getTransactionStatusLabel(txStatus)}</Text>
-        <Ionicons name="chevron-down" size={18} color="#64748b" />
-      </Pressable>
-      <Text className="mb-1 text-xs font-medium text-slate-500">Amount</Text>
-      <TextInput
-        className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-        keyboardType="decimal-pad"
-        value={amountStr}
-        onChangeText={setAmountStr}
       />
-      <Text className="mb-1 text-xs font-medium text-slate-500">Currency</Text>
-      <TextInput
-        className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-        value={currency}
-        onChangeText={setCurrency}
-      />
-      <Text className="mb-1 text-xs font-medium text-slate-500">Payment method</Text>
-      <Pressable
-        className="mb-2 flex-row items-center justify-between rounded-lg border border-slate-200 px-3 py-2"
+      <WorkshopFieldLabel>Amount</WorkshopFieldLabel>
+      <WorkshopTextInput keyboardType="decimal-pad" value={amountStr} onChangeText={setAmountStr} />
+      <WorkshopFieldLabel>Currency</WorkshopFieldLabel>
+      <WorkshopTextInput value={currency} onChangeText={setCurrency} />
+      <WorkshopPickerField
+        label="Payment method"
+        value={getPaymentMethodLabel(paymentMethod)}
         onPress={() => setPayOpen(true)}
-      >
-        <Text className="text-slate-900">{getPaymentMethodLabel(paymentMethod)}</Text>
-        <Ionicons name="chevron-down" size={18} color="#64748b" />
+      />
+      <WorkshopFieldLabel>Reference</WorkshopFieldLabel>
+      <WorkshopTextInput value={reference} onChangeText={setReference} />
+      <WorkshopFieldLabel>Description</WorkshopFieldLabel>
+      <WorkshopTextInput value={description} onChangeText={setDescription} multiline style={{ minHeight: 72 }} />
+    </>
+  );
+
+  const sheetFooter = (label: string, onSave: () => void, onCancel: () => void) => (
+    <>
+      <WorkshopPrimaryButton label={busy ? 'Saving…' : label} onPress={onSave} disabled={busy} />
+      <Pressable onPress={onCancel} style={{ marginTop: 12, alignItems: 'center', paddingVertical: 10 }}>
+        <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Cancel</Text>
       </Pressable>
-      <Text className="mb-1 text-xs font-medium text-slate-500">Reference</Text>
-      <TextInput
-        className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-        value={reference}
-        onChangeText={setReference}
-      />
-      <Text className="mb-1 text-xs font-medium text-slate-500">Description</Text>
-      <TextInput
-        className="mb-2 min-h-[72px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-        value={description}
-        onChangeText={setDescription}
-        multiline
-      />
     </>
   );
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Transactions
-        </Text>
-        {canManageBanking() ? (
-          <Pressable className="px-2 py-1" onPress={openCreate}>
-            <Ionicons name="add-circle" size={28} color="#2563eb" />
-          </Pressable>
-        ) : (
-          <View className="w-9" />
-        )}
-      </View>
-
-      <View className="gap-2 border-b border-slate-200 bg-white px-2 py-2">
-        <Pressable
-          className="flex-row items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-2 py-2"
+    <WorkshopChrome
+      title="Transactions"
+      subtitle="Bank account activity"
+      right={canManageBanking() ? <WorkshopHeaderButton onPress={openCreate} /> : undefined}
+      scroll={false}
+    >
+      <WorkshopFilterBar
+        resultCount={transactions.length}
+        activeFilterCount={countActiveFilters([accountFilter, typeFilter, statusFilter])}
+        onResetFilters={() => {
+          setAccountFilter('all');
+          setTypeFilter('all');
+          setStatusFilter('all');
+        }}
+      >
+        <WorkshopPickerField
+          label="Account"
+          value={filterAccountOptions.find((o) => o.value === accountFilter)?.label ?? 'All accounts'}
           onPress={() => setFilterAccountOpen(true)}
-        >
-          <Text className="flex-1 text-sm text-slate-900" numberOfLines={1}>
-            {filterAccountOptions.find((o) => o.value === accountFilter)?.label}
-          </Text>
-          <Ionicons name="chevron-down" size={16} color="#64748b" />
-        </Pressable>
-        <View className="flex-row gap-2">
-          <Pressable
-            className="flex-1 flex-row items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-2 py-2"
-            onPress={() => setTypeOpen(true)}
-          >
-            <Text className="text-xs text-slate-900" numberOfLines={1}>
-              {typeFilter === 'all' ? 'All types' : getTransactionTypeLabel(typeFilter as TransactionType)}
-            </Text>
-            <Ionicons name="chevron-down" size={14} color="#64748b" />
-          </Pressable>
-          <Pressable
-            className="flex-1 flex-row items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-2 py-2"
-            onPress={() => setStatusOpen(true)}
-          >
-            <Text className="text-xs text-slate-900" numberOfLines={1}>
-              {statusFilter === 'all'
-                ? 'All statuses'
-                : getTransactionStatusLabel(statusFilter as TransactionStatus)}
-            </Text>
-            <Ionicons name="chevron-down" size={14} color="#64748b" />
-          </Pressable>
+        />
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flex: 1 }}>
+            <WorkshopPickerField
+              label="Type"
+              value={typeFilter === 'all' ? 'All types' : getTransactionTypeLabel(typeFilter as TransactionType)}
+              onPress={() => setTypeOpen(true)}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <WorkshopPickerField
+              label="Status"
+              value={
+                statusFilter === 'all'
+                  ? 'All statuses'
+                  : getTransactionStatusLabel(statusFilter as TransactionStatus)
+              }
+              onPress={() => setStatusOpen(true)}
+            />
+          </View>
         </View>
-      </View>
+      </WorkshopFilterBar>
 
       {loading && transactions.length === 0 ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563eb" />
-        </View>
+        <WorkshopLoading />
       ) : (
         <FlatList
+          style={{ flex: 1 }}
           data={transactions}
           keyExtractor={(x) => x.id}
+          contentContainerStyle={{ paddingBottom: 20 }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={WS.primary} />
+          }
+          ListEmptyComponent={
+            <WorkshopEmptyState
+              icon="swap-horizontal-outline"
+              title="No transactions"
+              subtitle="Record deposits, withdrawals, and transfers."
+              actionLabel={canManageBanking() ? 'New transaction' : undefined}
+              onAction={canManageBanking() ? openCreate : undefined}
+            />
           }
           renderItem={({ item }) => (
-            <View className="border-b border-slate-100 bg-white px-4 py-3">
-              <Text className="font-semibold text-slate-900">{item.description}</Text>
-              <Text className="text-xs text-slate-500">
-                {item.transactionNumber} · {getTransactionTypeLabel(item.transactionType)} ·{' '}
-                {getTransactionStatusLabel(item.status)}
-              </Text>
-              <Text className="mt-1 text-sm text-slate-700">
-                {new Date(item.transactionDate).toLocaleString()}
-              </Text>
-              <Text className="mt-1 text-base font-bold text-slate-900">
-                {formatMoney(item.amount, item.currency)}
-              </Text>
-              {canManageBanking() ? (
-                <View className="mt-2 flex-row gap-3">
-                  <Pressable onPress={() => openEdit(item)}>
-                    <Text className="font-medium text-blue-600">Edit</Text>
-                  </Pressable>
-                  <Pressable onPress={() => confirmDelete(item)}>
-                    <Text className="font-medium text-red-600">Delete</Text>
-                  </Pressable>
-                </View>
-              ) : null}
-            </View>
+            <WorkshopListCard
+              icon="swap-horizontal"
+              iconColor="#0891b2"
+              iconBg="#ecfeff"
+              title={item.description}
+              subtitle={item.transactionNumber}
+              meta={`${getTransactionTypeLabel(item.transactionType)} · ${new Date(item.transactionDate).toLocaleString()}`}
+              badges={[
+                { label: formatMoney(item.amount, item.currency) },
+                { label: getTransactionStatusLabel(item.status) },
+              ]}
+              onPress={canManageBanking() ? () => openEdit(item) : undefined}
+              actions={
+                canManageBanking()
+                  ? [
+                      { icon: 'create-outline', onPress: () => openEdit(item) },
+                      { icon: 'trash-outline', onPress: () => confirmDelete(item), danger: true },
+                    ]
+                  : undefined
+              }
+            />
           )}
-          ListEmptyComponent={
-            <Text className="py-8 text-center text-slate-500">No transactions</Text>
-          }
         />
       )}
 
-      <AppModal
+      <WorkshopFormSheet
         visible={createOpen}
-        animationType="slide"
-        transparent
+        title="New transaction"
         onClose={() => setCreateOpen(false)}
+        footer={sheetFooter('Create transaction', () => void submitCreate(), () => setCreateOpen(false))}
       >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
-            <Text className="text-lg font-semibold text-slate-900">New transaction</Text>
-            <ScrollView className="mt-3" keyboardShouldPersistTaps="handled">
-              {formFields}
-            </ScrollView>
-            <Pressable
-              className="items-center rounded-lg bg-blue-600 py-3"
-              disabled={busy}
-              onPress={() => void submitCreate()}
-            >
-              <Text className="font-semibold text-white">Create</Text>
-            </Pressable>
-            <Pressable className="mt-2 py-2" onPress={() => setCreateOpen(false)}>
-              <Text className="text-center text-slate-600">Cancel</Text>
-            </Pressable>
-          </View>
-        </View>
-      </AppModal>
+        {formFields}
+      </WorkshopFormSheet>
 
-      <AppModal
+      <WorkshopFormSheet
         visible={editOpen}
-        animationType="slide"
-        transparent
-        onClose={() => setEditOpen(false)}
+        title="Edit transaction"
+        onClose={() => {
+          setEditOpen(false);
+          setEditing(null);
+        }}
+        footer={sheetFooter(
+          'Save changes',
+          () => void submitEdit(),
+          () => {
+            setEditOpen(false);
+            setEditing(null);
+          },
+        )}
       >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
-            <Text className="text-lg font-semibold text-slate-900">Edit transaction</Text>
-            <ScrollView className="mt-3" keyboardShouldPersistTaps="handled">
-              {formFields}
-            </ScrollView>
-            <Pressable
-              className="items-center rounded-lg bg-blue-600 py-3"
-              disabled={busy}
-              onPress={() => void submitEdit()}
-            >
-              <Text className="font-semibold text-white">Save</Text>
-            </Pressable>
-            <Pressable
-              className="mt-2 py-2"
-              onPress={() => {
-                setEditOpen(false);
-                setEditing(null);
-              }}
-            >
-              <Text className="text-center text-slate-600">Cancel</Text>
-            </Pressable>
-          </View>
-        </View>
-      </AppModal>
+        {formFields}
+      </WorkshopFormSheet>
 
       <OptionSheet
         visible={filterAccountOpen}
@@ -536,7 +468,6 @@ export function MobileBankTransactionsScreen() {
         }}
         onClose={() => setFormAccountOpen(false)}
       />
-
       <OptionSheet
         visible={typeOpen}
         title="Type"
@@ -587,6 +518,6 @@ export function MobileBankTransactionsScreen() {
         }}
         onClose={() => setPayOpen(false)}
       />
-    </View>
+    </WorkshopChrome>
   );
 }

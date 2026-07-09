@@ -6,6 +6,7 @@ import { LoginCredentials } from '../models/auth';
 import { extractErrorMessage } from '../utils/errorUtils';
 import { VerifiedCompanyBadge } from '../components/common/VerifiedCompanyBadge';
 import { BizTrackLogo } from '../components/brand/BizTrackLogo';
+import { getApiBaseUrl } from '../config/apiConfig';
 
 export function LoginScreen() {
   const { login } = useAuth();
@@ -135,7 +136,7 @@ export function LoginScreen() {
             </View>
 
             <Pressable
-              className="mt-2 items-center rounded-lg bg-blue-600 py-3.5 active:bg-blue-700 disabled:opacity-50"
+              className="mt-2 items-center rounded-lg bg-indigo-600 py-3.5 active:bg-indigo-700 disabled:opacity-50"
               onPress={handleSubmit}
               disabled={loading || !email.trim() || !password}
             >
@@ -147,6 +148,11 @@ export function LoginScreen() {
                 </Text>
               )}
             </Pressable>
+            {__DEV__ ? (
+              <Text className="mt-4 text-center text-xs text-slate-400" selectable>
+                API: {getApiBaseUrl()}
+              </Text>
+            ) : null}
           </View>
         </View>
 

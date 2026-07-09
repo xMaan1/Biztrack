@@ -1,8 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, RefreshControl, Alert } from 'react-native';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { FlatList, RefreshControl, View } from 'react-native';
+import {
+  WorkshopChrome,
+  WorkshopListCard,
+  WorkshopEmptyState,
+  WorkshopLoading,
+  WS,
+} from '../../workshop/components/WorkshopChrome';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { appError } from '../../../utils/appDialog';
 import type { ProjectTeamMemberRef } from '../../../models/project';
 import { fetchProjectTeamMembers } from '../../../services/projects/projectMobileApi';
 
@@ -23,7 +30,7 @@ export function MobileTeamScreen() {
       const res = await fetchProjectTeamMembers();
       setMembers(res.teamMembers ?? []);
     } catch (e) {
-      Alert.alert('Team', extractErrorMessage(e, 'Failed to load'));
+      appError('Team', extractErrorMessage(e, 'Failed to load'));
     } finally {
       setLoading(false);
     }
@@ -46,46 +53,45 @@ export function MobileTeamScreen() {
   }, [load]);
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Team members
-        </Text>
-        <View className="w-9" />
-      </View>
-
+    <WorkshopChrome
+      title="Team members"
+      subtitle="Project managers & collaborators"
+      right={<View style={{ width: 72 }} />}
+      scroll={false}
+    >
       {loading && members.length === 0 ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563eb" />
-        </View>
+        <WorkshopLoading />
       ) : (
         <FlatList
           data={members}
           keyExtractor={(x) => x.id}
+          contentContainerStyle={{ paddingBottom: 20 }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={WS.primary}
+            />
           }
           renderItem={({ item }) => (
-            <View className="border-b border-slate-100 bg-white px-4 py-3">
-              <Text className="text-base font-semibold text-slate-900">
-                {item.name}
-              </Text>
-              <Text className="mt-1 text-sm text-slate-600">{item.email}</Text>
-              {item.role ? (
-                <Text className="mt-1 text-xs uppercase text-slate-500">
-                  {roleLabel(item.role)}
-                </Text>
-              ) : null}
-            </View>
+            <WorkshopListCard
+              icon="person"
+              iconColor="#4f46e5"
+              iconBg="#eef2ff"
+              title={item.name}
+              subtitle={item.email}
+              meta={item.role ? roleLabel(item.role) : '—'}
+            />
           )}
           ListEmptyComponent={
-            <Text className="py-8 text-center text-slate-500">
-              No project managers or team members found
-            </Text>
+            <WorkshopEmptyState
+              icon="people-outline"
+              title="No team members"
+              subtitle="No project managers or team members found."
+            />
           }
         />
       )}
-    </View>
+    </WorkshopChrome>
   );
 }

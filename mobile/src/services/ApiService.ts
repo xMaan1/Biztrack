@@ -5,6 +5,7 @@ import {
   enqueueOfflineMutation,
   type OfflineMutation,
 } from './offline/outboxStore';
+import { getApiBaseUrl } from '../config/apiConfig';
 
 export interface ApiResponse<T = any> {
   data: T;
@@ -33,10 +34,8 @@ export class ApiService {
   constructor() {
     this.sessionManager = new SessionManager();
 
-    const getApiUrl = () => process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
-
     this.client = axios.create({
-      baseURL: getApiUrl(),
+      baseURL: getApiBaseUrl(),
       headers: {
         'Content-Type': 'application/json',
       },

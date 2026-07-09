@@ -3,6 +3,7 @@ import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollVie
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppModal } from './AppModal';
+import { WS } from '../../features/workshop/components/workshopTheme';
 
 interface FormSectionProps {
   title?: string;
@@ -10,13 +11,31 @@ interface FormSectionProps {
 }
 
 export const FormSection: React.FC<FormSectionProps> = ({ title, children }) => (
-  <View className="mb-6">
-    {title && (
-      <Text className="mb-3 px-1 text-xs font-bold uppercase tracking-wider text-slate-400">
+  <View style={{ marginBottom: 24 }}>
+    {title ? (
+      <Text
+        style={{
+          marginBottom: 12,
+          paddingHorizontal: 4,
+          fontSize: 11,
+          fontWeight: '700',
+          letterSpacing: 0.8,
+          textTransform: 'uppercase',
+          color: WS.textLight,
+        }}
+      >
         {title}
       </Text>
-    )}
-    <View className="overflow-hidden rounded-2xl bg-white shadow-sm border border-slate-100">
+    ) : null}
+    <View
+      style={{
+        overflow: 'hidden',
+        borderRadius: 16,
+        backgroundColor: WS.card,
+        borderWidth: 1,
+        borderColor: WS.border,
+      }}
+    >
       {children}
     </View>
   </View>
@@ -28,21 +47,37 @@ interface FormInputProps extends TextInputProps {
   last?: boolean;
 }
 
-export const FormInput: React.FC<FormInputProps> = ({ 
-  label, 
-  icon, 
-  last, 
-  className,
-  ...props 
+export const FormInput: React.FC<FormInputProps> = ({
+  label,
+  icon,
+  last,
+  style,
+  ...props
 }) => (
-  <View className={`px-4 py-3 ${!last ? 'border-b border-slate-50' : ''}`}>
-    <View className="flex-row items-center mb-1">
-      {icon && <Ionicons name={icon} size={14} color="#94a3b8" className="mr-1" />}
-      <Text className="text-[11px] font-semibold text-slate-500 uppercase">{label}</Text>
+  <View
+    style={{
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: last ? 0 : 1,
+      borderBottomColor: WS.border,
+    }}
+  >
+    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+      {icon ? <Ionicons name={icon} size={14} color={WS.textLight} style={{ marginRight: 4 }} /> : null}
+      <Text
+        style={{
+          fontSize: 11,
+          fontWeight: '600',
+          color: WS.textMuted,
+          textTransform: 'uppercase',
+        }}
+      >
+        {label}
+      </Text>
     </View>
     <TextInput
-      className={`text-base text-slate-900 p-0 ${className}`}
-      placeholderTextColor="#cbd5e1"
+      style={[{ fontSize: 16, color: WS.text, padding: 0 }, style]}
+      placeholderTextColor={WS.textLight}
       {...props}
     />
   </View>
@@ -56,26 +91,41 @@ interface FormSelectProps {
   last?: boolean;
 }
 
-export const FormSelect: React.FC<FormSelectProps> = ({ 
-  label, 
-  value, 
-  onPress, 
-  icon, 
-  last 
+export const FormSelect: React.FC<FormSelectProps> = ({
+  label,
+  value,
+  onPress,
+  icon,
+  last,
 }) => (
-  <Pressable 
+  <Pressable
     onPress={onPress}
-    className={`px-4 py-3 active:bg-slate-50 ${!last ? 'border-b border-slate-50' : ''}`}
+    style={({ pressed }) => ({
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      backgroundColor: pressed ? WS.bg : WS.card,
+      borderBottomWidth: last ? 0 : 1,
+      borderBottomColor: WS.border,
+    })}
   >
-    <View className="flex-row items-center mb-1">
-      {icon && <Ionicons name={icon as any} size={14} color="#94a3b8" className="mr-1" />}
-      <Text className="text-[11px] font-semibold text-slate-500 uppercase">{label}</Text>
+    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+      {icon ? <Ionicons name={icon as any} size={14} color={WS.textLight} style={{ marginRight: 4 }} /> : null}
+      <Text
+        style={{
+          fontSize: 11,
+          fontWeight: '600',
+          color: WS.textMuted,
+          textTransform: 'uppercase',
+        }}
+      >
+        {label}
+      </Text>
     </View>
-    <View className="flex-row items-center justify-between">
-      <Text className={`text-base ${value ? 'text-slate-900' : 'text-slate-300'}`}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+      <Text style={{ fontSize: 16, color: value ? WS.text : WS.textLight }}>
         {value || 'Select option'}
       </Text>
-      <Ionicons name="chevron-forward" size={16} color="#cbd5e1" />
+      <Ionicons name="chevron-forward" size={16} color={WS.textLight} />
     </View>
   </Pressable>
 );
@@ -85,19 +135,34 @@ interface FormHeaderProps {
   onCancel: () => void;
 }
 
-export const FormHeader: React.FC<FormHeaderProps> = ({ 
-  title, 
-  onCancel,
-}) => (
-  <View className="flex-row items-center justify-between border-b border-slate-100 bg-white px-4 py-3">
-    <Pressable 
+export const FormHeader: React.FC<FormHeaderProps> = ({ title, onCancel }) => (
+  <View
+    style={{
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      borderBottomWidth: 1,
+      borderBottomColor: WS.border,
+      backgroundColor: WS.card,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+    }}
+  >
+    <Pressable
       onPress={onCancel}
-      className="h-10 w-10 items-center justify-center rounded-full bg-slate-50 active:bg-slate-100"
+      style={{
+        width: 40,
+        height: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 20,
+        backgroundColor: WS.bg,
+      }}
     >
-      <Ionicons name="close" size={24} color="#64748b" />
+      <Ionicons name="close" size={24} color={WS.textMuted} />
     </Pressable>
-    <Text className="text-lg font-bold text-slate-900">{title}</Text>
-    <View className="w-10" />
+    <Text style={{ fontSize: 18, fontWeight: '800', color: WS.text }}>{title}</Text>
+    <View style={{ width: 40 }} />
   </View>
 );
 
@@ -114,23 +179,46 @@ export const FormFooterActions: React.FC<FormFooterActionsProps> = ({
   saveLabel = 'Save',
   saveLoading,
 }) => (
-  <View className="border-t border-slate-100 bg-white px-4 pb-3 pt-3">
-    <View className="flex-row gap-2">
+  <View
+    style={{
+      borderTopWidth: 1,
+      borderTopColor: WS.border,
+      backgroundColor: WS.card,
+      paddingHorizontal: 16,
+      paddingTop: 12,
+      paddingBottom: 12,
+    }}
+  >
+    <View style={{ flexDirection: 'row', gap: 10 }}>
       <Pressable
         onPress={onCancel}
-        className="flex-1 items-center rounded-xl border border-slate-300 py-3 active:bg-slate-50"
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          borderRadius: 14,
+          borderWidth: 1,
+          borderColor: WS.border,
+          paddingVertical: 14,
+        }}
       >
-        <Text className="font-semibold text-slate-700">Cancel</Text>
+        <Text style={{ fontWeight: '700', color: WS.textMuted }}>Cancel</Text>
       </Pressable>
       <Pressable
         onPress={onSave}
         disabled={saveLoading}
-        className="flex-1 items-center rounded-xl bg-blue-600 py-3 active:bg-blue-700"
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          borderRadius: 14,
+          backgroundColor: WS.primary,
+          paddingVertical: 14,
+          opacity: saveLoading ? 0.7 : 1,
+        }}
       >
         {saveLoading ? (
           <ActivityIndicator color="#ffffff" />
         ) : (
-          <Text className="font-semibold text-white">{saveLabel}</Text>
+          <Text style={{ fontWeight: '700', color: '#fff' }}>{saveLabel}</Text>
         )}
       </Pressable>
     </View>
@@ -162,14 +250,14 @@ export const MobileFormSheet: React.FC<MobileFormSheetProps> = ({
     presentationStyle="pageSheet"
     onClose={onCancel}
   >
-    <SafeAreaView className="flex-1 bg-slate-50" edges={['top', 'bottom']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: WS.bg }} edges={['top', 'bottom']}>
       <FormHeader title={title} onCancel={onCancel} />
       <KeyboardAvoidingView
-        className="flex-1"
+        style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          className="flex-1 px-4 pt-6"
+          style={{ flex: 1, paddingHorizontal: 16, paddingTop: 20 }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 24 }}

@@ -7,6 +7,7 @@ import type { ProductFormState } from './types';
 import type { ProductEntryMode } from './productCodeHelpers';
 import { ProductChipSelect } from './ProductChipSelect';
 import { ProductFieldRow } from './ProductFieldRow';
+import { ProductDatePickerField } from '../../../workshop/components/WorkshopChrome';
 import { AppModal } from '../../../../components/layout/AppModal';
 
 type Props = {
@@ -149,15 +150,15 @@ export function ProductFormModal({
             <ProductFieldRow label="Barcode" value={form.barcode} onChange={(v) => onFieldChange('barcode', v)} placeholder="Optional" />
             <View style={{ flexDirection: 'row', gap: 10 }}>
               <View style={{ flex: 1 }}>
-                <ProductFieldRow label="Expiry Date" value={form.expiryDate} onChange={(v) => onFieldChange('expiryDate', v)} placeholder="YYYY-MM-DD" />
+                <ProductDatePickerField label="Expiry Date" value={form.expiryDate} onChange={(v) => onFieldChange('expiryDate', v)} />
               </View>
               <View style={{ flex: 1 }}>
-                <ProductFieldRow label="Mfg. Date" value={form.mfgDate} onChange={(v) => onFieldChange('mfgDate', v)} placeholder="YYYY-MM-DD" />
+                <ProductDatePickerField label="Mfg. Date" value={form.mfgDate} onChange={(v) => onFieldChange('mfgDate', v)} />
               </View>
             </View>
             <View style={{ flexDirection: 'row', gap: 10 }}>
               <View style={{ flex: 1 }}>
-                <ProductFieldRow label="Date of Purchase" value={form.dateOfPurchase} onChange={(v) => onFieldChange('dateOfPurchase', v)} placeholder="YYYY-MM-DD" />
+                <ProductDatePickerField label="Date of Purchase" value={form.dateOfPurchase} onChange={(v) => onFieldChange('dateOfPurchase', v)} />
               </View>
               <View style={{ flex: 1 }}>
                 <ProductFieldRow label="Batch Number" value={form.batchNumber} onChange={(v) => onFieldChange('batchNumber', v)} placeholder="Optional" />

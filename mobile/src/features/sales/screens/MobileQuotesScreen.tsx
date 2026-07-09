@@ -1,10 +1,26 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { View, Text, FlatList, Pressable, ScrollView, RefreshControl } from 'react-native';
+import { MobileFormSheet } from '../../../components/layout/MobileForm';
+import {
+  WorkshopChrome,
+  WorkshopListCard,
+  WorkshopEmptyState,
+  WorkshopHeaderButton,
+  WorkshopLoading,
+  WorkshopOutlineButton,
+  WorkshopPickerField,
+  WorkshopFilterBar,
+  countActiveFilters,
+  WorkshopFormSheet,
+  WorkshopDetailRow,
+  WorkshopPrimaryButton,
+  WorkshopDatePickerField,
+  WS,
+} from '../../workshop/components/WorkshopChrome';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { OptionSheet } from '../../../components/crm/OptionSheet';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { appAlert, appConfirm, appError } from '../../../utils/appDialog';
 import { formatUsd } from '../../../services/crm/CrmMobileService';
 import { fetchOpportunitiesPaged } from '../../../services/crm/opportunitiesApi';
 import type { Opportunity } from '../../../models/crm';
@@ -20,12 +36,10 @@ import {
   deleteQuoteApi,
 } from '../../../services/sales/salesApi';
 import { usePermissions } from '../../../hooks/usePermissions';
-import { AppModal } from '../../../components/layout/AppModal';
 import {
   FormInput,
   FormSection,
   FormSelect,
-  MobileFormSheet,
 } from '../../../components/layout/MobileForm';
 
 const PAGE_SIZE = 15;
@@ -90,7 +104,7 @@ export function MobileQuotesScreen() {
       setQuotes(res.quotes ?? []);
       setTotalPages(Math.max(1, res.pagination?.pages ?? 1));
     } catch (e) {
-      Alert.alert('Quotes', extractErrorMessage(e, 'Failed to load'));
+      appError('Quotes', extractErrorMessage(e, 'Failed to load'));
     } finally {
       setLoading(false);
     }
@@ -116,11 +130,6 @@ export function MobileQuotesScreen() {
     setRefreshing(false);
   }, [loadOpportunities, loadQuotes]);
 
-  const oppLabel = useMemo(() => {
-    const o = opportunities.find((x) => x.id === opportunityId);
-    return o?.title ?? 'Select opportunity';
-  }, [opportunities, opportunityId]);
-
   const resetForm = () => {
     setTitle('');
     setDescription('');
@@ -139,7 +148,7 @@ export function MobileQuotesScreen() {
   const submitCreate = async () => {
     const amt = parseFloat(amountStr);
     if (!title.trim() || !opportunityId || !validUntil.trim() || Number.isNaN(amt)) {
-      Alert.alert('Quotes', 'Title, opportunity, valid until, and amount are required.');
+      appAlert('Quotes', 'Title, opportunity, valid until, and amount are required.');
       return;
     }
     const payload: QuoteCreatePayload = {
@@ -169,7 +178,7 @@ export function MobileQuotesScreen() {
       resetForm();
       await loadQuotes();
     } catch (e) {
-      Alert.alert('Quotes', extractErrorMessage(e, 'Failed to create'));
+      appError('Quotes', extractErrorMessage(e, 'Failed to create'));
     }
   };
 
@@ -189,7 +198,7 @@ export function MobileQuotesScreen() {
     if (!editing) return;
     const amt = parseFloat(amountStr);
     if (!title.trim() || !validUntil.trim() || Number.isNaN(amt)) {
-      Alert.alert('Quotes', 'Title, valid until, and amount are required.');
+      appAlert('Quotes', 'Title, valid until, and amount are required.');
       return;
     }
     const payload = {
@@ -218,28 +227,25 @@ export function MobileQuotesScreen() {
       setEditing(null);
       await loadQuotes();
     } catch (e) {
-      Alert.alert('Quotes', extractErrorMessage(e, 'Failed to update'));
+      appError('Quotes', extractErrorMessage(e, 'Failed to update'));
     }
   };
 
   const confirmDelete = (q: Quote) => {
-    Alert.alert('Delete quote', `Remove ${q.quoteNumber}?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => void handleDelete(q.id),
+    appConfirm({
+      title: 'Delete quote',
+      message: `Remove ${q.quoteNumber}?`,
+      confirmLabel: 'Delete',
+      destructive: true,
+      onConfirm: async () => {
+        try {
+          await deleteQuoteApi(q.id);
+          await loadQuotes();
+        } catch (e) {
+          appError('Quotes', extractErrorMessage(e, 'Failed to delete'));
+        }
       },
-    ]);
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteQuoteApi(id);
-      await loadQuotes();
-    } catch (e) {
-      Alert.alert('Quotes', extractErrorMessage(e, 'Failed to delete'));
-    }
+    });
   };
 
   const opportunityName = (id?: string) => {
@@ -247,121 +253,158 @@ export function MobileQuotesScreen() {
     return opportunities.find((o) => o.id === id)?.title ?? id.slice(0, 8);
   };
 
-  return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center justify-between border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Quotes
-        </Text>
-        {canManageSales() ? (
-          <Pressable
-            onPress={openCreate}
-            className="rounded-lg bg-blue-600 px-3 py-2 active:bg-blue-700"
-          >
-            <Text className="font-semibold text-white">New</Text>
-          </Pressable>
-        ) : (
-          <View className="w-14" />
-        )}
-      </View>
+  const oppOptions = useMemo(
+    () => opportunities.map((o) => ({ value: o.id, label: o.title })),
+    [opportunities],
+  );
 
-      <View className="border-b border-slate-200 bg-white px-3 py-2">
-        <Pressable
-          onPress={() => setStatusOpen(true)}
-          className="flex-row items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"
-        >
-          <Text className="text-slate-700">
-            {STATUS_FILTER.find((x) => x.value === statusFilter)?.label}
-          </Text>
-          <Ionicons name="chevron-down" size={18} color="#64748b" />
-        </Pressable>
-      </View>
+  const renderItem = useCallback(
+    ({ item }: { item: Quote }) => (
+      <WorkshopListCard
+        icon="document-text"
+        iconColor="#2563eb"
+        iconBg="#eff6ff"
+        title={item.quoteNumber}
+        subtitle={item.title}
+        meta={opportunityName(item.opportunityId)}
+        badges={[{ label: String(item.status), tone: 'status' }]}
+        onPress={() => {
+          setViewing(item);
+          setViewOpen(true);
+        }}
+        actions={
+          canManageSales()
+            ? [
+                { icon: 'create-outline', onPress: () => openEdit(item) },
+                { icon: 'trash-outline', onPress: () => confirmDelete(item), danger: true },
+              ]
+            : undefined
+        }
+      />
+    ),
+    [canManageSales, opportunities],
+  );
 
-      {loading && !refreshing ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563eb" />
-        </View>
-      ) : (
-        <FlatList
-          data={quotes}
-          keyExtractor={(item) => item.id}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-          contentContainerStyle={{ padding: 12, paddingBottom: 32 }}
-          ListEmptyComponent={
-            <Text className="py-8 text-center text-slate-500">No quotes</Text>
-          }
-          renderItem={({ item }) => (
-            <Pressable
-              onPress={() => {
-                setViewing(item);
-                setViewOpen(true);
-              }}
-              className="mb-3 rounded-xl border border-slate-200 bg-white p-4 active:bg-slate-50"
-            >
-              <View className="flex-row items-start justify-between">
-                <View className="flex-1 pr-2">
-                  <Text className="font-semibold text-slate-900">
-                    {item.quoteNumber}
-                  </Text>
-                  <Text className="mt-1 text-base text-slate-800">{item.title}</Text>
-                  <Text className="mt-1 text-sm text-slate-500">
-                    {opportunityName(item.opportunityId)}
-                  </Text>
-                </View>
-                <View className="items-end">
-                  <Text className="font-semibold text-slate-900">
-                    {formatUsd(quoteTotal(item))}
-                  </Text>
-                  <Text className="mt-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700">
-                    {String(item.status)}
-                  </Text>
-                </View>
-              </View>
-              <View className="mt-3 flex-row flex-wrap gap-2 border-t border-slate-100 pt-3">
-                {canManageSales() ? (
-                  <>
-                    <Pressable
-                      onPress={() => openEdit(item)}
-                      className="rounded-lg bg-slate-100 px-3 py-1.5"
-                    >
-                      <Text className="text-sm font-medium text-slate-800">Edit</Text>
-                    </Pressable>
-                    <Pressable
-                      onPress={() => confirmDelete(item)}
-                      className="rounded-lg bg-red-50 px-3 py-1.5"
-                    >
-                      <Text className="text-sm font-medium text-red-700">Delete</Text>
-                    </Pressable>
-                  </>
-                ) : null}
-              </View>
-            </Pressable>
-          )}
+  const formContent = (
+    <>
+      <FormSection title="General Information">
+        <FormInput
+          label="Quote Title"
+          icon="document-text-outline"
+          value={title}
+          onChangeText={setTitle}
+          placeholder="Ex: Software Development Services"
         />
-      )}
+        <FormSelect
+          label="Related Opportunity"
+          icon="briefcase-outline"
+          value={opportunityId ? opportunities.find((o) => o.id === opportunityId)?.title || '' : ''}
+          onPress={() => setOppPickerOpen(true)}
+          last
+        />
+      </FormSection>
+      <FormSection title="Pricing & Timeline">
+        <FormInput
+          label="Amount"
+          icon="cash-outline"
+          value={amountStr}
+          onChangeText={setAmountStr}
+          keyboardType="decimal-pad"
+          placeholder="0.00"
+        />
+        <WorkshopDatePickerField label="Valid Until" value={validUntil} onChange={setValidUntil} />
+      </FormSection>
+      <FormSection title="Details & Terms">
+        <FormInput
+          label="Description"
+          value={description}
+          onChangeText={setDescription}
+          multiline
+          placeholder="Detailed scope of work..."
+        />
+        <FormInput
+          label="Terms"
+          value={terms}
+          onChangeText={setTerms}
+          multiline
+          placeholder="Payment terms, conditions..."
+        />
+        <FormInput
+          label="Internal Notes"
+          value={notes}
+          onChangeText={setNotes}
+          multiline
+          placeholder="Private notes for team..."
+          last
+        />
+      </FormSection>
+    </>
+  );
 
-      <View className="flex-row items-center justify-center border-t border-slate-200 bg-white py-2">
-        <Pressable
-          disabled={page <= 1}
-          onPress={() => setPage((p) => Math.max(1, p - 1))}
-          className="px-4 py-2 opacity-100 disabled:opacity-40"
+  return (
+    <>
+      <WorkshopChrome
+        title="Quotes"
+        subtitle="Sales proposals"
+        scroll={false}
+        right={
+          canManageSales() ? (
+            <WorkshopHeaderButton onPress={openCreate} />
+          ) : (
+            <View style={{ width: 72 }} />
+          )
+        }
+      >
+        <WorkshopFilterBar
+          resultCount={quotes.length}
+          activeFilterCount={countActiveFilters([statusFilter])}
+          onResetFilters={() => setStatusFilter('all')}
         >
-          <Text className="font-medium text-blue-600">Prev</Text>
-        </Pressable>
-        <Text className="text-slate-600">
-          {page} / {totalPages}
-        </Text>
-        <Pressable
-          disabled={page >= totalPages}
-          onPress={() => setPage((p) => p + 1)}
-          className="px-4 py-2 opacity-100 disabled:opacity-40"
-        >
-          <Text className="font-medium text-blue-600">Next</Text>
-        </Pressable>
-      </View>
+          <WorkshopPickerField
+            label="Status"
+            value={STATUS_FILTER.find((x) => x.value === statusFilter)?.label ?? 'All statuses'}
+            onPress={() => setStatusOpen(true)}
+          />
+        </WorkshopFilterBar>
+
+        {loading && !refreshing ? (
+          <WorkshopLoading />
+        ) : (
+          <FlatList
+            data={quotes}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={WS.primary} />
+            }
+            contentContainerStyle={{ paddingBottom: 12 }}
+            ListEmptyComponent={
+              <WorkshopEmptyState
+                icon="document-text-outline"
+                title="No quotes"
+                subtitle="Create a quote to send proposals to customers."
+                actionLabel={canManageSales() ? 'New quote' : undefined}
+                onAction={canManageSales() ? openCreate : undefined}
+              />
+            }
+          />
+        )}
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, paddingVertical: 10 }}>
+          <View style={{ flex: 1 }}>
+            <WorkshopOutlineButton
+              label="Previous"
+              onPress={() => setPage((p) => Math.max(1, p - 1))}
+            />
+          </View>
+          <Text style={{ fontWeight: '600', color: WS.textMuted }}>
+            {page} / {totalPages}
+          </Text>
+          <View style={{ flex: 1 }}>
+            <WorkshopOutlineButton label="Next" onPress={() => setPage((p) => p + 1)} />
+          </View>
+        </View>
+      </WorkshopChrome>
 
       <OptionSheet
         visible={statusOpen}
@@ -375,41 +418,16 @@ export function MobileQuotesScreen() {
         onClose={() => setStatusOpen(false)}
       />
 
-      <AppModal
+      <OptionSheet
         visible={oppPickerOpen}
-        animationType="slide"
-        transparent
+        title="Opportunity"
+        options={oppOptions}
+        onSelect={(v) => {
+          setOpportunityId(v);
+          setOppPickerOpen(false);
+        }}
         onClose={() => setOppPickerOpen(false)}
-      >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[70%] rounded-t-2xl bg-white p-4">
-            <Text className="mb-3 text-lg font-semibold text-slate-900">
-              Opportunity
-            </Text>
-            <FlatList
-              data={opportunities}
-              keyExtractor={(o) => o.id}
-              renderItem={({ item }) => (
-                <Pressable
-                  onPress={() => {
-                    setOpportunityId(item.id);
-                    setOppPickerOpen(false);
-                  }}
-                  className="border-b border-slate-100 py-3"
-                >
-                  <Text className="font-medium text-slate-900">{item.title}</Text>
-                </Pressable>
-              )}
-            />
-            <Pressable
-              onPress={() => setOppPickerOpen(false)}
-              className="mt-2 items-center py-3"
-            >
-              <Text className="font-medium text-blue-600">Close</Text>
-            </Pressable>
-          </View>
-        </View>
-      </AppModal>
+      />
 
       <MobileFormSheet
         visible={createOpen}
@@ -418,66 +436,7 @@ export function MobileQuotesScreen() {
         onSave={() => void submitCreate()}
         saveLabel="Create"
       >
-            <FormSection title="General Information">
-              <FormInput
-                label="Quote Title"
-                icon="document-text-outline"
-                value={title}
-                onChangeText={setTitle}
-                placeholder="Ex: Software Development Services"
-              />
-              <FormSelect
-                label="Related Opportunity"
-                icon="briefcase-outline"
-                value={opportunityId ? opportunities.find(o => o.id === opportunityId)?.title || '' : ''}
-                onPress={() => setOppPickerOpen(true)}
-                last
-              />
-            </FormSection>
-
-            <FormSection title="Pricing & Timeline">
-              <FormInput
-                label="Amount"
-                icon="cash-outline"
-                value={amountStr}
-                onChangeText={setAmountStr}
-                keyboardType="decimal-pad"
-                placeholder="0.00"
-              />
-              <FormInput
-                label="Valid Until"
-                icon="calendar-outline"
-                value={validUntil}
-                onChangeText={setValidUntil}
-                placeholder="YYYY-MM-DD"
-                last
-              />
-            </FormSection>
-
-            <FormSection title="Details & Terms">
-              <FormInput
-                label="Description"
-                value={description}
-                onChangeText={setDescription}
-                multiline
-                placeholder="Detailed scope of work..."
-              />
-              <FormInput
-                label="Terms"
-                value={terms}
-                onChangeText={setTerms}
-                multiline
-                placeholder="Payment terms, conditions..."
-              />
-              <FormInput
-                label="Internal Notes"
-                value={notes}
-                onChangeText={setNotes}
-                multiline
-                placeholder="Private notes for team..."
-                last
-              />
-            </FormSection>
+        {formContent}
       </MobileFormSheet>
 
       <MobileFormSheet
@@ -486,97 +445,66 @@ export function MobileQuotesScreen() {
         onCancel={() => setEditOpen(false)}
         onSave={() => void submitEdit()}
       >
-            <FormSection title="General Information">
-              <FormInput
-                label="Quote Title"
-                icon="document-text-outline"
-                value={title}
-                onChangeText={setTitle}
-              />
-              <FormSelect
-                label="Opportunity"
-                icon="briefcase-outline"
-                value={opportunityId ? opportunities.find(o => o.id === opportunityId)?.title || '' : ''}
-                onPress={() => setOppPickerOpen(true)}
-                last
-              />
-            </FormSection>
-
-            <FormSection title="Pricing & Timeline">
-              <FormInput
-                label="Amount"
-                icon="cash-outline"
-                value={amountStr}
-                onChangeText={setAmountStr}
-                keyboardType="decimal-pad"
-              />
-              <FormInput
-                label="Valid Until"
-                icon="calendar-outline"
-                value={validUntil}
-                onChangeText={setValidUntil}
-                last
-              />
-            </FormSection>
-
-            <FormSection title="Details & Terms">
-              <FormInput
-                label="Description"
-                value={description}
-                onChangeText={setDescription}
-                multiline
-              />
-              <FormInput
-                label="Terms"
-                value={terms}
-                onChangeText={setTerms}
-                multiline
-              />
-              <FormInput
-                label="Internal Notes"
-                value={notes}
-                onChangeText={setNotes}
-                multiline
-                last
-              />
-            </FormSection>
+        {formContent}
       </MobileFormSheet>
 
-      <AppModal
+      <WorkshopFormSheet
         visible={viewOpen}
-        animationType="fade"
-        transparent
+        title="Quote"
         onClose={() => setViewOpen(false)}
-      >
-        <View className="flex-1 justify-center bg-black/40 px-4">
-          <View className="max-h-[80%] rounded-2xl bg-white p-4">
-            <Text className="text-lg font-semibold text-slate-900">Quote</Text>
-            {viewing ? (
-              <ScrollView className="mt-3">
-                <Text className="text-slate-600">{viewing.quoteNumber}</Text>
-                <Text className="mt-2 text-xl font-semibold text-slate-900">
-                  {viewing.title}
-                </Text>
-                <Text className="mt-2 text-slate-700">
-                  {formatUsd(quoteTotal(viewing))} · {String(viewing.status)}
-                </Text>
-                <Text className="mt-2 text-slate-600">
-                  Opportunity: {opportunityName(viewing.opportunityId)}
-                </Text>
-                {viewing.description ? (
-                  <Text className="mt-3 text-slate-800">{viewing.description}</Text>
-                ) : null}
-              </ScrollView>
+        footer={
+          <View style={{ gap: 8 }}>
+            {canManageSales() && viewing ? (
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <WorkshopPrimaryButton
+                    label="Edit"
+                    onPress={() => {
+                      setViewOpen(false);
+                      openEdit(viewing);
+                    }}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Pressable
+                    onPress={() => viewing && confirmDelete(viewing)}
+                    style={{
+                      alignItems: 'center',
+                      borderRadius: 14,
+                      paddingVertical: 15,
+                      backgroundColor: WS.danger,
+                    }}
+                  >
+                    <Text style={{ fontWeight: '700', fontSize: 16, color: '#fff' }}>Delete</Text>
+                  </Pressable>
+                </View>
+              </View>
             ) : null}
-            <Pressable
-              onPress={() => setViewOpen(false)}
-              className="mt-4 items-center rounded-lg bg-slate-100 py-3"
-            >
-              <Text className="font-semibold text-slate-800">Close</Text>
+            <Pressable onPress={() => setViewOpen(false)} style={{ alignItems: 'center', paddingVertical: 10 }}>
+              <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Close</Text>
             </Pressable>
           </View>
-        </View>
-      </AppModal>
-    </View>
+        }
+      >
+        {viewing ? (
+          <>
+            <Text style={{ fontSize: 20, fontWeight: '800', color: WS.text, marginBottom: 4 }}>
+              {viewing.title}
+            </Text>
+            <Text style={{ fontSize: 14, color: WS.textMuted, marginBottom: 16 }}>
+              {viewing.quoteNumber}
+            </Text>
+            <WorkshopDetailRow label="Amount" value={formatUsd(quoteTotal(viewing))} />
+            <WorkshopDetailRow label="Status" value={String(viewing.status)} />
+            <WorkshopDetailRow label="Opportunity" value={opportunityName(viewing.opportunityId)} />
+            {viewing.description ? (
+              <Text style={{ fontSize: 14, color: WS.text, marginTop: 12, lineHeight: 20 }}>
+                {viewing.description}
+              </Text>
+            ) : null}
+          </>
+        ) : null}
+      </WorkshopFormSheet>
+    </>
   );
 }

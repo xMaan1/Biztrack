@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, FlatList, TextInput, Pressable, ScrollView, RefreshControl, ActivityIndicator, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { View, Text, FlatList, Pressable, RefreshControl, ScrollView } from 'react-native';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { OptionSheet, type OptionItem } from '../../../components/crm/OptionSheet';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { appAlert, appConfirm, appError } from '../../../utils/appDialog';
 import {
   approveInvestment,
   createInvestment,
@@ -17,7 +16,23 @@ import {
   type InvestmentTypeCode,
 } from '../../../services/ledger/investmentsMobileApi';
 import { formatMoney } from '../ledgerFormat';
-import { AppModal } from '../../../components/layout/AppModal';
+import {
+  WorkshopChrome,
+  WorkshopListCard,
+  WorkshopEmptyState,
+  WorkshopHeaderButton,
+  WorkshopLoading,
+  WorkshopFormSheet,
+  WorkshopFieldLabel,
+  WorkshopTextInput,
+  WorkshopDatePickerField,
+  WorkshopPickerField,
+  WorkshopFilterBar,
+  countActiveFilters,
+  WorkshopPrimaryButton,
+  WorkshopStatCard,
+  WS,
+} from '../../workshop/components/WorkshopChrome';
 
 const TYPES: OptionItem<InvestmentTypeCode>[] = [
   { value: 'cash_investment', label: 'Cash investment' },
@@ -46,9 +61,7 @@ export function MobileLedgerInvestmentsScreen() {
   const { workspacePath, setSidebarActivePath } = useSidebarDrawer();
   const { canManageLedger } = usePermissions();
   const [rows, setRows] = useState<InvestmentRow[]>([]);
-  const [stats, setStats] = useState<Awaited<
-    ReturnType<typeof getInvestmentDashboardStats>
-  > | null>(null);
+  const [stats, setStats] = useState<Awaited<ReturnType<typeof getInvestmentDashboardStats>> | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
@@ -77,16 +90,14 @@ export function MobileLedgerInvestmentsScreen() {
       setRows(list.investments);
       setStats(st);
     } catch (e) {
-      Alert.alert('Investments', extractErrorMessage(e, 'Failed to load'));
+      appError('Investments', extractErrorMessage(e, 'Failed to load'));
     } finally {
       setLoading(false);
     }
   }, [statusFilter]);
 
   useEffect(() => {
-    setSidebarActivePath(
-      workspacePath === '/dashboard' ? '/dashboard' : '/ledger/investments',
-    );
+    setSidebarActivePath(workspacePath === '/dashboard' ? '/dashboard' : '/ledger/investments');
   }, [setSidebarActivePath, workspacePath]);
 
   useEffect(() => {
@@ -115,11 +126,11 @@ export function MobileLedgerInvestmentsScreen() {
     const amount = parseFloat(amountStr.replace(',', '.'));
     const investmentDateIso = parseDateInputToIso(invDate);
     if (!invDate || !desc.trim() || Number.isNaN(amount) || amount <= 0) {
-      Alert.alert('Investments', 'Date, description, and valid amount are required.');
+      appAlert('Investments', 'Date, description, and valid amount are required.');
       return;
     }
     if (!investmentDateIso) {
-      Alert.alert('Investments', 'Use valid date format YYYY-MM-DD.');
+      appAlert('Investments', 'Use valid date format YYYY-MM-DD.');
       return;
     }
     try {
@@ -136,7 +147,7 @@ export function MobileLedgerInvestmentsScreen() {
       setCreateOpen(false);
       await load();
     } catch (e) {
-      Alert.alert('Investments', extractErrorMessage(e, 'Create failed'));
+      appError('Investments', extractErrorMessage(e, 'Create failed'));
     } finally {
       setBusy(false);
     }
@@ -154,232 +165,199 @@ export function MobileLedgerInvestmentsScreen() {
   }, [rows, search]);
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Investments
-        </Text>
-        {canManageLedger() ? (
-          <Pressable className="px-2 py-1" onPress={openCreate}>
-            <Ionicons name="add-circle" size={28} color="#2563eb" />
-          </Pressable>
-        ) : (
-          <View className="w-9" />
-        )}
-      </View>
-
+    <WorkshopChrome
+      title="Investments"
+      subtitle="Capital & equipment funding"
+      right={canManageLedger() ? <WorkshopHeaderButton onPress={openCreate} /> : undefined}
+      scroll={false}
+    >
       {stats ? (
         <ScrollView
           horizontal
-          className="max-h-[100px] border-b border-slate-200 bg-white py-2"
           showsHorizontalScrollIndicator={false}
+          style={{ marginBottom: 12, maxHeight: 110 }}
+          contentContainerStyle={{ gap: 10, paddingBottom: 4 }}
         >
-          <View className="flex-row gap-2 px-2">
-            <MiniStat label="Total" value={String(stats.total_investments)} />
-            <MiniStat
+          <View style={{ width: 140 }}>
+            <WorkshopStatCard
+              label="Total"
+              value={stats.total_investments}
+              icon="briefcase"
+              accent="#4f46e5"
+              accentBg="#eef2ff"
+            />
+          </View>
+          <View style={{ width: 140 }}>
+            <WorkshopStatCard
               label="Amount"
               value={formatMoney(stats.total_amount)}
+              icon="cash"
+              accent="#059669"
+              accentBg="#ecfdf5"
             />
-            <MiniStat label="Pending" value={String(stats.pending_investments)} />
-            <MiniStat
+          </View>
+          <View style={{ width: 140 }}>
+            <WorkshopStatCard
+              label="Pending"
+              value={stats.pending_investments}
+              icon="time"
+              accent="#d97706"
+              accentBg="#fffbeb"
+            />
+          </View>
+          <View style={{ width: 140 }}>
+            <WorkshopStatCard
               label="Completed"
-              value={String(stats.completed_investments)}
+              value={stats.completed_investments}
+              icon="checkmark-circle"
+              accent="#2563eb"
+              accentBg="#eff6ff"
             />
           </View>
         </ScrollView>
       ) : null}
 
-      <View className="gap-2 border-b border-slate-200 bg-white px-2 py-2">
-        <TextInput
-          className="rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-          placeholder="Search"
-          value={search}
-          onChangeText={setSearch}
-        />
-        <Pressable
-          className="flex-row items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-2 py-2"
+      <WorkshopFilterBar
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search investments…"
+        resultCount={filtered.length}
+        activeFilterCount={countActiveFilters([statusFilter])}
+        onResetFilters={() => setStatusFilter('all')}
+      >
+        <WorkshopPickerField
+          label="Status"
+          value={STATUSES.find((s) => s.value === statusFilter)?.label ?? 'All statuses'}
           onPress={() => setStatusOpen(true)}
-        >
-          <Text className="text-sm text-slate-900">
-            {STATUSES.find((s) => s.value === statusFilter)?.label}
-          </Text>
-          <Ionicons name="chevron-down" size={18} color="#64748b" />
-        </Pressable>
-      </View>
+        />
+      </WorkshopFilterBar>
 
       {loading && rows.length === 0 ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563eb" />
-        </View>
+        <WorkshopLoading />
       ) : (
         <FlatList
+          style={{ flex: 1 }}
           data={filtered}
           keyExtractor={(x) => x.id}
+          contentContainerStyle={{ paddingBottom: 20 }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={WS.primary} />
+          }
+          ListEmptyComponent={
+            <WorkshopEmptyState
+              icon="briefcase-outline"
+              title="No investments"
+              subtitle="Track capital injections and equipment purchases."
+              actionLabel={canManageLedger() ? 'New investment' : undefined}
+              onAction={canManageLedger() ? openCreate : undefined}
+            />
           }
           renderItem={({ item }) => (
-            <View className="border-b border-slate-100 bg-white px-4 py-3">
-              <Text className="font-semibold text-slate-900">{item.description}</Text>
-              <Text className="text-xs text-slate-500">
-                {item.investment_number} · {item.investment_type.replace(/_/g, ' ')} ·{' '}
-                {item.status}
-              </Text>
-              <Text className="mt-1 text-base font-bold text-slate-900">
-                {formatMoney(item.amount, item.currency || 'USD')}
-              </Text>
-              {canManageLedger() ? (
-                <View className="mt-2 flex-row flex-wrap gap-3">
-                  {item.status === 'pending' ? (
-                    <Pressable
-                      onPress={() => {
-                        void (async () => {
-                          try {
-                            await approveInvestment(item.id);
-                            await load();
-                          } catch (e) {
-                            Alert.alert(
-                              'Investments',
-                              extractErrorMessage(e, 'Approve failed'),
-                            );
-                          }
-                        })();
-                      }}
-                    >
-                      <Text className="font-medium text-blue-600">Approve</Text>
-                    </Pressable>
-                  ) : null}
-                  {item.status === 'pending' ? (
-                    <Pressable
-                      onPress={() => {
-                        void (async () => {
-                          try {
-                            await updateInvestment(item.id, {
-                              status: 'cancelled',
-                            });
-                            await load();
-                          } catch (e) {
-                            Alert.alert(
-                              'Investments',
-                              extractErrorMessage(e, 'Update failed'),
-                            );
-                          }
-                        })();
-                      }}
-                    >
-                      <Text className="font-medium text-amber-700">Cancel</Text>
-                    </Pressable>
-                  ) : null}
-                  <Pressable
-                    onPress={() => {
-                      Alert.alert('Delete', item.investment_number, [
-                        { text: 'No', style: 'cancel' },
-                        {
-                          text: 'Delete',
-                          style: 'destructive',
-                          onPress: () => {
-                            void (async () => {
+            <WorkshopListCard
+              icon="briefcase"
+              iconColor="#4f46e5"
+              iconBg="#eef2ff"
+              title={item.description}
+              subtitle={item.investment_number}
+              meta={`${item.investment_type.replace(/_/g, ' ')} · ${item.status}`}
+              badges={[{ label: formatMoney(item.amount, item.currency || 'USD') }]}
+              actions={
+                canManageLedger()
+                  ? [
+                      ...(item.status === 'pending'
+                        ? [
+                            {
+                              icon: 'checkmark-outline' as const,
+                              label: 'Approve',
+                              onPress: () => {
+                                void (async () => {
+                                  try {
+                                    await approveInvestment(item.id);
+                                    await load();
+                                  } catch (e) {
+                                    appError('Investments', extractErrorMessage(e, 'Approve failed'));
+                                  }
+                                })();
+                              },
+                            },
+                            {
+                              icon: 'close-outline' as const,
+                              label: 'Cancel',
+                              onPress: () => {
+                                void (async () => {
+                                  try {
+                                    await updateInvestment(item.id, { status: 'cancelled' });
+                                    await load();
+                                  } catch (e) {
+                                    appError('Investments', extractErrorMessage(e, 'Update failed'));
+                                  }
+                                })();
+                              },
+                            },
+                          ]
+                        : []),
+                      {
+                        icon: 'trash-outline',
+                        onPress: () => {
+                          appConfirm({
+                            title: 'Delete',
+                            message: item.investment_number,
+                            confirmLabel: 'Delete',
+                            destructive: true,
+                            onConfirm: async () => {
                               try {
                                 await deleteInvestment(item.id);
                                 await load();
                               } catch (e) {
-                                Alert.alert(
-                                  'Investments',
-                                  extractErrorMessage(e, 'Delete failed'),
-                                );
+                                appError('Investments', extractErrorMessage(e, 'Delete failed'));
                               }
-                            })();
-                          },
+                            },
+                          });
                         },
-                      ]);
-                    }}
-                  >
-                    <Text className="font-medium text-red-600">Delete</Text>
-                  </Pressable>
-                </View>
-              ) : null}
-            </View>
+                        danger: true,
+                      },
+                    ]
+                  : undefined
+              }
+            />
           )}
-          ListEmptyComponent={
-            <Text className="py-8 text-center text-slate-500">No investments</Text>
-          }
         />
       )}
 
-      <AppModal
+      <WorkshopFormSheet
         visible={createOpen}
-        animationType="slide"
-        transparent
+        title="New investment"
         onClose={() => setCreateOpen(false)}
-      >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
-            <Text className="text-lg font-semibold text-slate-900">
-              New investment
-            </Text>
-            <ScrollView className="mt-3" keyboardShouldPersistTaps="handled">
-              <Text className="mb-1 text-xs text-slate-500">Date</Text>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                value={invDate}
-                onChangeText={setInvDate}
-                placeholder="YYYY-MM-DD"
-              />
-              <Text className="mb-1 text-xs text-slate-500">Type</Text>
-              <Pressable
-                className="mb-2 flex-row items-center justify-between rounded-lg border border-slate-200 px-3 py-2"
-                onPress={() => setTypeOpen(true)}
-              >
-                <Text>{TYPES.find((t) => t.value === invType)?.label}</Text>
-                <Ionicons name="chevron-down" size={18} color="#64748b" />
-              </Pressable>
-              <Text className="mb-1 text-xs text-slate-500">Amount</Text>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                keyboardType="decimal-pad"
-                value={amountStr}
-                onChangeText={setAmountStr}
-              />
-              <Text className="mb-1 text-xs text-slate-500">Currency</Text>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                value={currency}
-                onChangeText={setCurrency}
-              />
-              <Text className="mb-1 text-xs text-slate-500">Description</Text>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                value={desc}
-                onChangeText={setDesc}
-              />
-              <Text className="mb-1 text-xs text-slate-500">Reference</Text>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                value={refNum}
-                onChangeText={setRefNum}
-              />
-              <Text className="mb-1 text-xs text-slate-500">Notes</Text>
-              <TextInput
-                className="mb-2 min-h-[64px] rounded-lg border border-slate-200 px-3 py-2"
-                value={notes}
-                onChangeText={setNotes}
-                multiline
-              />
-            </ScrollView>
-            <Pressable
-              className="items-center rounded-lg bg-blue-600 py-3"
-              disabled={busy}
+        footer={
+          <>
+            <WorkshopPrimaryButton
+              label={busy ? 'Creating…' : 'Create investment'}
               onPress={() => void submitCreate()}
-            >
-              <Text className="font-semibold text-white">Create</Text>
+              disabled={busy}
+            />
+            <Pressable onPress={() => setCreateOpen(false)} style={{ marginTop: 12, alignItems: 'center', paddingVertical: 10 }}>
+              <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Cancel</Text>
             </Pressable>
-            <Pressable className="mt-2 py-2" onPress={() => setCreateOpen(false)}>
-              <Text className="text-center text-slate-600">Cancel</Text>
-            </Pressable>
-          </View>
-        </View>
-      </AppModal>
+          </>
+        }
+      >
+        <WorkshopDatePickerField label="Date" value={invDate} onChange={setInvDate} />
+        <WorkshopPickerField
+          label="Type"
+          value={TYPES.find((t) => t.value === invType)?.label ?? invType}
+          onPress={() => setTypeOpen(true)}
+        />
+        <WorkshopFieldLabel>Amount</WorkshopFieldLabel>
+        <WorkshopTextInput keyboardType="decimal-pad" value={amountStr} onChangeText={setAmountStr} />
+        <WorkshopFieldLabel>Currency</WorkshopFieldLabel>
+        <WorkshopTextInput value={currency} onChangeText={setCurrency} />
+        <WorkshopFieldLabel>Description</WorkshopFieldLabel>
+        <WorkshopTextInput value={desc} onChangeText={setDesc} />
+        <WorkshopFieldLabel>Reference</WorkshopFieldLabel>
+        <WorkshopTextInput value={refNum} onChangeText={setRefNum} />
+        <WorkshopFieldLabel>Notes</WorkshopFieldLabel>
+        <WorkshopTextInput value={notes} onChangeText={setNotes} multiline style={{ minHeight: 64 }} />
+      </WorkshopFormSheet>
 
       <OptionSheet
         visible={statusOpen}
@@ -401,15 +379,6 @@ export function MobileLedgerInvestmentsScreen() {
         }}
         onClose={() => setTypeOpen(false)}
       />
-    </View>
-  );
-}
-
-function MiniStat({ label, value }: { label: string; value: string }) {
-  return (
-    <View className="min-w-[120px] rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-      <Text className="text-xs text-slate-500">{label}</Text>
-      <Text className="text-sm font-semibold text-slate-900">{value}</Text>
-    </View>
+    </WorkshopChrome>
   );
 }

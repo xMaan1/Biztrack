@@ -173,7 +173,7 @@ function SalesAccessDenied(props: { onBack: () => void }) {
           You do not have permission to open this module.
         </Text>
         <Pressable
-          className="mt-6 items-center rounded-lg bg-blue-600 py-3"
+          className="mt-6 items-center rounded-lg bg-indigo-600 py-3"
           onPress={props.onBack}
         >
           <Text className="font-semibold text-white">Back</Text>
@@ -240,7 +240,7 @@ export function CommerceDashboardScreen() {
           <MenuHeaderButton />
         </View>
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563eb" />
+          <ActivityIndicator size="large" color="#4f46e5" />
           <Text className="mt-3 text-slate-600">Loading dashboard…</Text>
         </View>
       </View>
@@ -259,7 +259,7 @@ export function CommerceDashboardScreen() {
         </Text>
         <Text className="mt-2 text-center text-slate-600">{planError}</Text>
         <Pressable
-          className="mt-6 items-center rounded-lg bg-blue-600 py-3 active:bg-blue-700"
+          className="mt-6 items-center rounded-lg bg-indigo-600 py-3 active:bg-indigo-700"
           onPress={() => void onRefresh()}
         >
           <Text className="font-semibold text-white">Try again</Text>
@@ -289,7 +289,7 @@ export function CommerceDashboardScreen() {
           {dashboardError}
         </Text>
         <Pressable
-          className="mt-6 items-center rounded-lg bg-blue-600 py-3 active:bg-blue-700"
+          className="mt-6 items-center rounded-lg bg-indigo-600 py-3 active:bg-indigo-700"
           onPress={() => void onRefresh()}
         >
           <Text className="font-semibold text-white">Try again</Text>
@@ -319,7 +319,7 @@ export function CommerceDashboardScreen() {
           Unable to load subscription for this workspace.
         </Text>
         <Pressable
-          className="mt-6 items-center rounded-lg bg-blue-600 py-3"
+          className="mt-6 items-center rounded-lg bg-indigo-600 py-3"
           onPress={() => void onRefresh()}
         >
           <Text className="font-semibold text-white">Retry</Text>
@@ -418,7 +418,7 @@ export function CommerceDashboardScreen() {
               You do not have permission to open this module.
             </Text>
             <Pressable
-              className="mt-6 items-center rounded-lg bg-blue-600 py-3"
+              className="mt-6 items-center rounded-lg bg-indigo-600 py-3"
               onPress={() => setWorkspacePath('/dashboard')}
             >
               <Text className="font-semibold text-white">Back</Text>
@@ -539,7 +539,7 @@ export function CommerceDashboardScreen() {
             You do not have permission to open this module.
           </Text>
           <Pressable
-            className="mt-6 items-center rounded-lg bg-blue-600 py-3"
+            className="mt-6 items-center rounded-lg bg-indigo-600 py-3"
             onPress={() => setWorkspacePath('/dashboard')}
           >
             <Text className="font-semibold text-white">Back</Text>

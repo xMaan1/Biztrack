@@ -1,14 +1,24 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, ScrollView, TextInput, Pressable, ActivityIndicator, RefreshControl, Alert, Linking } from 'react-native';
+import { View, Text, ScrollView, Pressable, RefreshControl, Linking, ActivityIndicator } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { Ionicons } from '@expo/vector-icons';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { MobileFormSheet } from '../../../components/layout/MobileForm';
+import {
+  WorkshopChrome,
+  WorkshopCard,
+  WorkshopStatCard,
+  WorkshopLoading,
+  WorkshopFieldLabel,
+  WorkshopTextInput,
+  WorkshopDatePickerField,
+  WS,
+} from '../../workshop/components/WorkshopChrome';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { extractErrorMessage } from '../../../utils/errorUtils';
-import { AppModal } from '../../../components/layout/AppModal';
+import { appAlert, appConfirm, appError } from '../../../utils/appDialog';
 import {
   deleteSavedReport,
   exportReportsDashboard,
@@ -24,26 +34,6 @@ function num(n: unknown): string {
     return new Intl.NumberFormat('en-US').format(Math.round(n * 100) / 100);
   }
   return '0';
-}
-
-function MetricCard(props: {
-  title: string;
-  value: string;
-  hint?: string;
-  icon: keyof typeof Ionicons.glyphMap;
-}) {
-  return (
-    <View className="mb-3 rounded-xl border border-slate-200 bg-white p-4">
-      <View className="flex-row items-center justify-between">
-        <Text className="text-sm font-medium text-slate-600">{props.title}</Text>
-        <Ionicons name={props.icon} size={18} color="#64748b" />
-      </View>
-      <Text className="mt-2 text-2xl font-bold text-slate-900">{props.value}</Text>
-      {props.hint ? (
-        <Text className="mt-1 text-xs text-slate-500">{props.hint}</Text>
-      ) : null}
-    </View>
-  );
 }
 
 export function MobileReportsScreen() {
@@ -131,7 +121,7 @@ export function MobileReportsScreen() {
 
   const handleExport = useCallback(async () => {
     if (!canExportReports()) {
-      Alert.alert('Reports', 'You do not have permission to export.');
+      appAlert('Reports', 'You do not have permission to export.');
       return;
     }
     try {
@@ -151,10 +141,10 @@ export function MobileReportsScreen() {
           dialogTitle: 'Export reports',
         });
       } else {
-        Alert.alert('Export', 'Saved to app cache. Sharing is not available on this device.');
+        appAlert('Export', 'Saved to app cache. Sharing is not available on this device.');
       }
     } catch (e) {
-      Alert.alert('Export', extractErrorMessage(e, 'Export failed'));
+      appError('Export', extractErrorMessage(e, 'Export failed'));
     } finally {
       setExportBusy(false);
     }
@@ -178,13 +168,13 @@ export function MobileReportsScreen() {
         type,
       });
     } catch (e) {
-      Alert.alert('Reports', extractErrorMessage(e, 'Could not pick file'));
+      appError('Reports', extractErrorMessage(e, 'Could not pick file'));
     }
   }, []);
 
   const submitUpload = useCallback(async () => {
     if (!newTitle.trim() || !pickedUri) {
-      Alert.alert('Reports', 'Title and file are required.');
+      appAlert('Reports', 'Title and file are required.');
       return;
     }
     try {
@@ -195,7 +185,7 @@ export function MobileReportsScreen() {
       setPickedUri(null);
       await loadSaved();
     } catch (e) {
-      Alert.alert('Reports', extractErrorMessage(e, 'Upload failed'));
+      appError('Reports', extractErrorMessage(e, 'Upload failed'));
     } finally {
       setSaveBusy(false);
     }
@@ -210,7 +200,7 @@ export function MobileReportsScreen() {
       setRenameId(null);
       await loadSaved();
     } catch (e) {
-      Alert.alert('Reports', extractErrorMessage(e, 'Rename failed'));
+      appError('Reports', extractErrorMessage(e, 'Rename failed'));
     } finally {
       setSaveBusy(false);
     }
@@ -218,271 +208,276 @@ export function MobileReportsScreen() {
 
   const confirmDeleteSaved = useCallback(
     (id: string) => {
-      Alert.alert('Delete report', 'Remove this stored file?', [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            void (async () => {
-              try {
-                await deleteSavedReport(id);
-                await loadSaved();
-              } catch (e) {
-                Alert.alert('Reports', extractErrorMessage(e, 'Delete failed'));
-              }
-            })();
-          },
+      appConfirm({
+        title: 'Delete report',
+        message: 'Remove this stored file?',
+        confirmLabel: 'Delete',
+        destructive: true,
+        onConfirm: async () => {
+          try {
+            await deleteSavedReport(id);
+            await loadSaved();
+          } catch (e) {
+            appError('Reports', extractErrorMessage(e, 'Delete failed'));
+          }
         },
-      ]);
+      });
     },
     [loadSaved],
   );
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Reports
-        </Text>
-        <Pressable
-          className="px-2 py-1"
-          disabled={exportBusy || !canExportReports()}
-          onPress={() => void handleExport()}
-        >
-          {exportBusy ? (
-            <ActivityIndicator size="small" color="#2563eb" />
-          ) : (
-            <Ionicons
-              name="download-outline"
-              size={26}
-              color={canExportReports() ? '#2563eb' : '#cbd5e1'}
-            />
-          )}
-        </Pressable>
-      </View>
-
-      <ScrollView
-        className="flex-1 px-3 pt-3"
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+    <>
+      <WorkshopChrome
+        title="Reports"
+        subtitle="Dashboard & stored files"
+        right={
+          <Pressable
+            onPress={() => void handleExport()}
+            disabled={exportBusy || !canExportReports()}
+            style={{ paddingHorizontal: 8, paddingVertical: 4, opacity: canExportReports() ? 1 : 0.4 }}
+          >
+            {exportBusy ? (
+              <ActivityIndicator size="small" color={WS.primary} />
+            ) : (
+              <Ionicons
+                name="download-outline"
+                size={26}
+                color={canExportReports() ? WS.primary : WS.textLight}
+              />
+            )}
+          </Pressable>
         }
+        scroll={false}
       >
-        <Text className="mb-2 text-base font-semibold text-slate-900">
+        <ScrollView
+          style={{ flex: 1 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={WS.primary} />
+          }
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 24 }}
+        >
+        <Text style={{ fontSize: 15, fontWeight: '700', color: WS.text, marginBottom: 10 }}>
           Date range
         </Text>
-        <View className="mb-3 flex-row gap-2">
-          <TextInput
-            className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-            placeholder="Start YYYY-MM-DD"
-            value={startDate}
-            onChangeText={setStartDate}
-          />
-          <TextInput
-            className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-            placeholder="End YYYY-MM-DD"
-            value={endDate}
-            onChangeText={setEndDate}
-          />
+        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
+          <View style={{ flex: 1 }}>
+            <WorkshopDatePickerField label="Start date" value={startDate} onChange={setStartDate} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <WorkshopDatePickerField label="End date" value={endDate} onChange={setEndDate} />
+          </View>
         </View>
         <Pressable
-          className="mb-4 items-center rounded-lg bg-slate-200 py-2"
           onPress={applyDateFilter}
+          style={{
+            marginBottom: 20,
+            alignItems: 'center',
+            borderRadius: 12,
+            backgroundColor: '#f1f5f9',
+            paddingVertical: 10,
+          }}
         >
-          <Text className="font-semibold text-slate-800">Apply</Text>
+          <Text style={{ fontWeight: '700', color: WS.text }}>Apply</Text>
         </Pressable>
 
-        <View className="mb-2 flex-row items-center justify-between">
-          <Text className="text-base font-semibold text-slate-900">
-            Stored reports
-          </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <Text style={{ fontSize: 15, fontWeight: '700', color: WS.text }}>Stored reports</Text>
           <Pressable
-            className="flex-row items-center rounded-lg bg-blue-600 px-3 py-1.5"
             onPress={() => {
               setNewTitle('');
               setPickedUri(null);
               setAddOpen(true);
             }}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              borderRadius: 12,
+              backgroundColor: WS.primary,
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+            }}
           >
-            <Ionicons name="add" size={20} color="#fff" />
-            <Text className="ml-1 font-semibold text-white">Add</Text>
+            <Ionicons name="add" size={18} color="#fff" />
+            <Text style={{ marginLeft: 4, fontWeight: '700', color: '#fff' }}>Add</Text>
           </Pressable>
         </View>
 
         {savedLoading ? (
-          <ActivityIndicator className="py-4" color="#2563eb" />
+          <ActivityIndicator style={{ paddingVertical: 16 }} color={WS.primary} />
         ) : saved.length === 0 ? (
-          <Text className="mb-4 text-sm text-slate-500">
+          <Text style={{ marginBottom: 16, fontSize: 13, color: WS.textMuted }}>
             No stored reports. Upload a PDF or CSV (max 10MB).
           </Text>
         ) : (
           saved.map((r) => (
-            <View
-              key={r.id}
-              className="mb-2 rounded-lg border border-slate-200 bg-white p-3"
-            >
-              <Text className="font-medium text-slate-900">{r.title}</Text>
-              <Text className="mt-1 text-xs text-slate-500">
+            <WorkshopCard key={r.id}>
+              <Text style={{ fontWeight: '700', color: WS.text }}>{r.title}</Text>
+              <Text style={{ marginTop: 4, fontSize: 11, color: WS.textMuted }}>
                 {r.file_type.toUpperCase()}
                 {typeof r.file_size === 'number'
                   ? ` · ${(r.file_size / 1024).toFixed(1)} KB`
                   : ''}
               </Text>
-              <View className="mt-2 flex-row flex-wrap gap-2">
+              <View style={{ marginTop: 10, flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                 <Pressable
-                  className="rounded-lg bg-slate-100 px-3 py-1.5"
                   onPress={() => void Linking.openURL(r.file_url)}
+                  style={{
+                    borderRadius: 10,
+                    backgroundColor: '#f1f5f9',
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                  }}
                 >
-                  <Text className="text-sm font-medium text-slate-800">Open</Text>
+                  <Text style={{ fontSize: 13, fontWeight: '600', color: WS.text }}>Open</Text>
                 </Pressable>
                 <Pressable
-                  className="rounded-lg bg-slate-100 px-3 py-1.5"
                   onPress={() => {
                     setRenameId(r.id);
                     setRenameTitle(r.title);
                     setRenameOpen(true);
                   }}
+                  style={{
+                    borderRadius: 10,
+                    backgroundColor: '#f1f5f9',
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                  }}
                 >
-                  <Text className="text-sm font-medium text-slate-800">Rename</Text>
+                  <Text style={{ fontSize: 13, fontWeight: '600', color: WS.text }}>Rename</Text>
                 </Pressable>
                 <Pressable
-                  className="rounded-lg bg-red-50 px-3 py-1.5"
                   onPress={() => confirmDeleteSaved(r.id)}
+                  style={{
+                    borderRadius: 10,
+                    backgroundColor: WS.dangerBg,
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                  }}
                 >
-                  <Text className="text-sm font-medium text-red-700">Delete</Text>
+                  <Text style={{ fontSize: 13, fontWeight: '600', color: WS.danger }}>Delete</Text>
                 </Pressable>
               </View>
-            </View>
+            </WorkshopCard>
           ))
         )}
 
         {error ? (
-          <View className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3">
-            <Text className="text-red-800">{error}</Text>
-            <Pressable className="mt-2" onPress={() => void loadDash()}>
-              <Text className="font-semibold text-red-900">Retry</Text>
+          <View
+            style={{
+              marginBottom: 16,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: '#fecaca',
+              backgroundColor: WS.dangerBg,
+              padding: 14,
+            }}
+          >
+            <Text style={{ color: '#b91c1c' }}>{error}</Text>
+            <Pressable onPress={() => void loadDash()} style={{ marginTop: 8 }}>
+              <Text style={{ fontWeight: '700', color: '#991b1b' }}>Retry</Text>
             </Pressable>
           </View>
         ) : null}
 
-        {loading && !dash ? (
-          <View className="items-center py-10">
-            <ActivityIndicator size="large" color="#2563eb" />
-          </View>
-        ) : null}
+        {loading && !dash ? <WorkshopLoading /> : null}
 
         {!loading && dash ? (
           <>
-            <Text className="mb-2 mt-4 text-lg font-semibold text-slate-900">
+            <Text style={{ fontSize: 17, fontWeight: '800', color: WS.text, marginTop: 8, marginBottom: 12 }}>
               Overview
             </Text>
-            <MetricCard
-              title="Work orders"
-              value={num(wo.total_work_orders)}
-              hint={`${num(wo.completed_work_orders)} completed · ${num(wo.completion_rate)}% rate`}
-              icon="construct-outline"
-            />
-            <MetricCard
-              title="Projects"
-              value={num(pr.total_projects)}
-              hint={`${num(pr.active_projects)} active`}
-              icon="folder-outline"
-            />
-            <MetricCard
-              title="Employees"
-              value={num(hrm.total_employees)}
-              hint={`${num(hrm.active_employees)} active`}
-              icon="people-outline"
-            />
-            <MetricCard
-              title="Inventory value"
-              value={num(inv.total_stock_value)}
-              hint={`${num(inv.low_stock_products)} low stock`}
-              icon="cube-outline"
-            />
-            <MetricCard
-              title="Net profit"
-              value={num(fin.net_profit)}
-              hint={`Revenue ${num(fin.total_revenue)} · Expenses ${num(fin.total_expenses)}`}
-              icon="cash-outline"
-            />
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+              <WorkshopStatCard
+                label="Work orders"
+                value={num(wo.total_work_orders)}
+                sub={`${num(wo.completed_work_orders)} completed · ${num(wo.completion_rate)}% rate`}
+                icon="construct-outline"
+                accent="#4f46e5"
+                accentBg="#eef2ff"
+              />
+              <WorkshopStatCard
+                label="Projects"
+                value={num(pr.total_projects)}
+                sub={`${num(pr.active_projects)} active`}
+                icon="folder-outline"
+                accent="#2563eb"
+                accentBg="#eff6ff"
+              />
+              <WorkshopStatCard
+                label="Employees"
+                value={num(hrm.total_employees)}
+                sub={`${num(hrm.active_employees)} active`}
+                icon="people-outline"
+                accent="#7c3aed"
+                accentBg="#f5f3ff"
+              />
+              <WorkshopStatCard
+                label="Inventory value"
+                value={num(inv.total_stock_value)}
+                sub={`${num(inv.low_stock_products)} low stock`}
+                icon="cube-outline"
+                accent="#059669"
+                accentBg="#ecfdf5"
+              />
+              <WorkshopStatCard
+                label="Net profit"
+                value={num(fin.net_profit)}
+                sub={`Revenue ${num(fin.total_revenue)} · Expenses ${num(fin.total_expenses)}`}
+                icon="cash-outline"
+                accent="#d97706"
+                accentBg="#fffbeb"
+              />
+            </View>
           </>
         ) : null}
+        </ScrollView>
+      </WorkshopChrome>
 
-        <View className="h-8" />
-      </ScrollView>
-
-      <AppModal
+      <MobileFormSheet
         visible={addOpen}
-        animationType="slide"
-        transparent
-        onClose={() => setAddOpen(false)}
+        title="Upload report"
+        onCancel={() => setAddOpen(false)}
+        onSave={() => void submitUpload()}
+        saveLabel={saveBusy ? 'Uploading…' : 'Upload'}
+        saveLoading={saveBusy}
       >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="rounded-t-2xl bg-white px-4 pb-8 pt-4">
-            <Text className="text-lg font-semibold text-slate-900">Upload report</Text>
-            <Text className="mb-2 mt-1 text-sm text-slate-500">PDF or CSV</Text>
-            <Text className="mb-1 text-xs font-medium text-slate-500">Title</Text>
-            <TextInput
-              className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-              value={newTitle}
-              onChangeText={setNewTitle}
-              placeholder="Report title"
-            />
-            <Pressable
-              className="mb-3 rounded-lg border border-slate-200 bg-slate-50 py-3"
-              onPress={() => void pickFile()}
-            >
-              <Text className="text-center text-slate-800">
-                {pickedUri ? pickedUri.name : 'Choose file'}
-              </Text>
-            </Pressable>
-            <Pressable
-              className="items-center rounded-lg bg-blue-600 py-3"
-              disabled={saveBusy}
-              onPress={() => void submitUpload()}
-            >
-              <Text className="font-semibold text-white">
-                {saveBusy ? 'Uploading…' : 'Upload'}
-              </Text>
-            </Pressable>
-            <Pressable className="mt-2 py-2" onPress={() => setAddOpen(false)}>
-              <Text className="text-center text-slate-600">Cancel</Text>
-            </Pressable>
-          </View>
-        </View>
-      </AppModal>
+        <Text style={{ marginBottom: 12, fontSize: 13, color: WS.textMuted }}>PDF or CSV</Text>
+        <WorkshopFieldLabel>Title</WorkshopFieldLabel>
+        <WorkshopTextInput
+          value={newTitle}
+          onChangeText={setNewTitle}
+          placeholder="Report title"
+        />
+        <Pressable
+          onPress={() => void pickFile()}
+          style={{
+            marginBottom: 12,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: WS.border,
+            backgroundColor: '#fafafa',
+            paddingVertical: 14,
+          }}
+        >
+          <Text style={{ textAlign: 'center', color: WS.text }}>
+            {pickedUri ? pickedUri.name : 'Choose file'}
+          </Text>
+        </Pressable>
+      </MobileFormSheet>
 
-      <AppModal
+      <MobileFormSheet
         visible={renameOpen}
-        animationType="fade"
-        transparent
-        onClose={() => setRenameOpen(false)}
+        title="Rename"
+        onCancel={() => setRenameOpen(false)}
+        onSave={() => void submitRename()}
+        saveLabel="Save"
+        saveLoading={saveBusy}
       >
-        <View className="flex-1 justify-center bg-black/40 px-4">
-          <View className="rounded-2xl bg-white p-4">
-            <Text className="text-lg font-semibold text-slate-900">Rename</Text>
-            <TextInput
-              className="mt-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-              value={renameTitle}
-              onChangeText={setRenameTitle}
-            />
-            <View className="mt-4 flex-row justify-end gap-2">
-              <Pressable className="px-4 py-2" onPress={() => setRenameOpen(false)}>
-                <Text>Cancel</Text>
-              </Pressable>
-              <Pressable
-                className="rounded-lg bg-blue-600 px-4 py-2"
-                disabled={saveBusy}
-                onPress={() => void submitRename()}
-              >
-                <Text className="font-semibold text-white">Save</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </AppModal>
-    </View>
+        <WorkshopFieldLabel>Title</WorkshopFieldLabel>
+        <WorkshopTextInput value={renameTitle} onChangeText={setRenameTitle} />
+      </MobileFormSheet>
+    </>
   );
 }

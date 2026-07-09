@@ -1,6 +1,36 @@
 import React from 'react';
-import { View, Text, Pressable, ScrollView } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { WS } from './workshopTheme';
+
+export {
+  WorkshopSearchBar,
+  WorkshopChipSelect,
+  WorkshopFilterPanel,
+  WorkshopFilterBar,
+  countActiveFilters,
+  WorkshopListCard,
+  WorkshopEmptyState,
+  WorkshopFAB,
+  WorkshopHeaderButton,
+  WorkshopLoading,
+  WorkshopSegmentTabs,
+  WorkshopStatCard,
+  WorkshopTextInput,
+  WorkshopPickerField,
+  WorkshopFormSheet,
+  WorkshopDetailRow,
+  WorkshopBadge,
+  WorkshopPrimaryButton,
+  WorkshopFieldLabel,
+  WS,
+} from './WorkshopUI';
+
+export {
+  WorkshopDatePickerField,
+  WorkshopDateTimePickerField,
+  ProductDatePickerField,
+} from '../../../components/forms/AppDatePicker';
 
 export function WorkshopChrome(props: {
   title: string;
@@ -11,34 +41,60 @@ export function WorkshopChrome(props: {
 }) {
   const body = props.scroll ? (
     <ScrollView
-      className="flex-1 px-4 pt-4"
+      style={{ flex: 1, paddingHorizontal: 16, paddingTop: 14 }}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ paddingBottom: 24 }}
     >
       {props.children}
     </ScrollView>
   ) : (
-    <View className="flex-1 px-4 pt-4">{props.children}</View>
+    <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 14 }}>
+      {props.children}
+    </View>
   );
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center justify-between border-b border-indigo-100 bg-white px-2 py-2">
+    <View style={{ flex: 1, backgroundColor: WS.bg }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderBottomWidth: 1,
+          borderBottomColor: WS.border,
+          backgroundColor: WS.card,
+          paddingHorizontal: 8,
+          paddingVertical: 10,
+        }}
+      >
         <MenuHeaderButton />
-        <View className="flex-1 px-2">
-          <Text className="text-center text-base font-semibold text-indigo-950">
+        <View style={{ flex: 1, paddingHorizontal: 8 }}>
+          <Text
+            style={{
+              textAlign: 'center',
+              fontSize: 17,
+              fontWeight: '800',
+              color: WS.text,
+            }}
+          >
             {props.title}
           </Text>
           {props.subtitle ? (
             <Text
-              className="text-center text-xs text-slate-500"
+              style={{
+                textAlign: 'center',
+                fontSize: 12,
+                color: WS.textMuted,
+                marginTop: 1,
+              }}
               numberOfLines={1}
             >
               {props.subtitle}
             </Text>
           ) : null}
         </View>
-        <View className="w-10 items-end">{props.right}</View>
+        <View style={{ minWidth: 72, alignItems: 'flex-end' }}>{props.right}</View>
       </View>
       {body}
     </View>
@@ -47,46 +103,42 @@ export function WorkshopChrome(props: {
 
 export function WorkshopCard(props: { children: React.ReactNode }) {
   return (
-    <View className="mb-3 rounded-xl border border-indigo-100 bg-white p-4 shadow-sm">
+    <View
+      style={{
+        marginBottom: 12,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: WS.border,
+        backgroundColor: WS.card,
+        padding: 16,
+        shadowColor: '#0f172a',
+        shadowOpacity: 0.05,
+        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 2 },
+        elevation: 1,
+      }}
+    >
       {props.children}
     </View>
   );
 }
 
-export function WorkshopPrimaryButton(props: {
-  label: string;
-  onPress: () => void;
-  disabled?: boolean;
-}) {
+export function WorkshopOutlineButton(props: { label: string; onPress: () => void }) {
   return (
     <Pressable
-      className={`items-center rounded-lg py-3 ${props.disabled ? 'bg-slate-300' : 'bg-indigo-600 active:bg-indigo-700'}`}
       onPress={props.onPress}
-      disabled={props.disabled}
+      style={{
+        alignItems: 'center',
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: WS.primaryMuted,
+        backgroundColor: WS.card,
+        paddingVertical: 14,
+      }}
     >
-      <Text className="font-semibold text-white">{props.label}</Text>
+      <Text style={{ fontWeight: '700', fontSize: 15, color: WS.primaryDark }}>
+        {props.label}
+      </Text>
     </Pressable>
-  );
-}
-
-export function WorkshopOutlineButton(props: {
-  label: string;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      className="items-center rounded-lg border border-indigo-200 bg-white py-3 active:bg-indigo-50"
-      onPress={props.onPress}
-    >
-      <Text className="font-semibold text-indigo-900">{props.label}</Text>
-    </Pressable>
-  );
-}
-
-export function WorkshopFieldLabel(props: { children: React.ReactNode }) {
-  return (
-    <Text className="mb-1 text-xs font-medium uppercase text-slate-500">
-      {props.children}
-    </Text>
   );
 }

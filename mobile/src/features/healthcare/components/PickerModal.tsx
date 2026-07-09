@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, Text, Pressable, FlatList, TextInput } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { AppModal } from '../../../components/layout/AppModal';
+import { WS } from '../../workshop/components/workshopTheme';
 
 export function PickerModal<T extends { id: string; label: string }>(props: {
   visible: boolean;
@@ -18,16 +20,41 @@ export function PickerModal<T extends { id: string; label: string }>(props: {
       transparent
       onClose={props.onClose}
     >
-      <View className="flex-1 justify-end bg-black/40">
-        <View className="max-h-[80%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
-          <Text className="mb-3 text-lg font-semibold text-slate-900">
-            {props.title}
-          </Text>
+      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(15,23,42,0.55)' }}>
+        <View
+          style={{
+            maxHeight: '80%',
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+            backgroundColor: WS.card,
+            paddingHorizontal: 16,
+            paddingTop: 16,
+            paddingBottom: 28,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 14 }}>
+            <Text style={{ flex: 1, fontSize: 18, fontWeight: '800', color: WS.text }}>
+              {props.title}
+            </Text>
+            <Pressable onPress={props.onClose} hitSlop={8}>
+              <Ionicons name="close" size={24} color={WS.textMuted} />
+            </Pressable>
+          </View>
           {props.onSearchChange ? (
             <TextInput
-              className="mb-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-900"
+              style={{
+                marginBottom: 12,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: WS.border,
+                backgroundColor: WS.bg,
+                paddingHorizontal: 14,
+                paddingVertical: 12,
+                fontSize: 16,
+                color: WS.text,
+              }}
               placeholder="Search…"
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor={WS.textLight}
               value={props.search}
               onChangeText={props.onSearchChange}
             />
@@ -36,23 +63,36 @@ export function PickerModal<T extends { id: string; label: string }>(props: {
             data={props.items}
             keyExtractor={(x) => x.id}
             keyboardShouldPersistTaps="handled"
+            style={{ maxHeight: 360 }}
             renderItem={({ item }) => (
               <Pressable
-                className="border-b border-slate-100 py-3 active:bg-slate-50"
                 onPress={() => {
                   props.onSelect(item);
                   props.onClose();
                 }}
+                style={({ pressed }) => ({
+                  borderBottomWidth: 1,
+                  borderBottomColor: WS.border,
+                  paddingVertical: 14,
+                  backgroundColor: pressed ? WS.primaryLight : WS.card,
+                })}
               >
-                <Text className="text-base text-slate-800">{item.label}</Text>
+                <Text style={{ fontSize: 16, color: WS.text }}>{item.label}</Text>
               </Pressable>
             )}
           />
           <Pressable
-            className="mt-4 items-center rounded-lg border border-slate-300 py-3"
             onPress={props.onClose}
+            style={{
+              marginTop: 14,
+              alignItems: 'center',
+              borderRadius: 14,
+              borderWidth: 1,
+              borderColor: WS.border,
+              paddingVertical: 14,
+            }}
           >
-            <Text className="font-semibold text-slate-700">Cancel</Text>
+            <Text style={{ fontWeight: '700', color: WS.textMuted }}>Cancel</Text>
           </Pressable>
         </View>
       </View>

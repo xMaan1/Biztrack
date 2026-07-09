@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
-import { MobileFormSheet } from '../../../components/layout/MobileForm';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { View, Text, FlatList, Pressable, RefreshControl, ScrollView } from 'react-native';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { appAlert, appError } from '../../../utils/appDialog';
 import {
   getStockMovements,
   createStockMovement,
@@ -14,7 +13,23 @@ import {
 import type { Warehouse, StockMovement } from '../../../models/inventory';
 import { StockMovementType, StockMovementCreate } from '../../../models/inventory';
 import type { Product } from '../../../models/pos';
-import { AppModal } from '../../../components/layout/AppModal';
+import {
+  WorkshopChrome,
+  WorkshopListCard,
+  WorkshopEmptyState,
+  WorkshopHeaderButton,
+  WorkshopLoading,
+  WorkshopFormSheet,
+  WorkshopFieldLabel,
+  WorkshopTextInput,
+  WorkshopPrimaryButton,
+  WorkshopPickerField,
+  WorkshopChipSelect,
+  WorkshopFilterBar,
+  countActiveFilters,
+  WorkshopSearchBar,
+  WS,
+} from '../../workshop/components/WorkshopChrome';
 
 const MOVEMENT_TYPES: StockMovementType[] = [
   StockMovementType.INBOUND,
@@ -28,6 +43,76 @@ const MOVEMENT_TYPES: StockMovementType[] = [
   StockMovementType.INSTOCK,
 ];
 
+function WarehouseChips(props: {
+  warehouses: Warehouse[];
+  value?: string;
+  onChange: (id: string | undefined) => void;
+  includeAll?: boolean;
+}) {
+  return (
+    <>
+      <Text
+        style={{
+          fontSize: 11,
+          fontWeight: '700',
+          color: WS.textMuted,
+          textTransform: 'uppercase',
+          letterSpacing: 0.6,
+          marginBottom: 8,
+        }}
+      >
+        Warehouse
+      </Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <View style={{ flexDirection: 'row', gap: 8, paddingBottom: 2 }}>
+          {props.includeAll ? (
+            <Pressable
+              onPress={() => props.onChange(undefined)}
+              style={{
+                paddingHorizontal: 14,
+                paddingVertical: 8,
+                borderRadius: 20,
+                backgroundColor: !props.value ? WS.primary : '#f1f5f9',
+                borderWidth: 1,
+                borderColor: !props.value ? WS.primary : WS.border,
+              }}
+            >
+              <Text style={{ fontSize: 13, fontWeight: '600', color: !props.value ? '#fff' : '#475569' }}>
+                All
+              </Text>
+            </Pressable>
+          ) : null}
+          {props.warehouses.map((w) => {
+            const active = props.value === w.id;
+            return (
+              <Pressable
+                key={w.id}
+                onPress={() => props.onChange(w.id)}
+                style={{
+                  paddingHorizontal: 14,
+                  paddingVertical: 8,
+                  borderRadius: 20,
+                  backgroundColor: active ? WS.primary : '#f1f5f9',
+                  borderWidth: 1,
+                  borderColor: active ? WS.primary : WS.border,
+                  maxWidth: 200,
+                }}
+              >
+                <Text
+                  style={{ fontSize: 13, fontWeight: '600', color: active ? '#fff' : '#475569' }}
+                  numberOfLines={1}
+                >
+                  {w.name}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </ScrollView>
+    </>
+  );
+}
+
 export function MobileStockMovementsScreen() {
   const { workspacePath, setSidebarActivePath } = useSidebarDrawer();
   const { canManageInventory } = usePermissions();
@@ -37,6 +122,7 @@ export function MobileStockMovementsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [productQ, setProductQ] = useState('');
   const [productPicker, setProductPicker] = useState(false);
@@ -52,59 +138,54 @@ export function MobileStockMovementsScreen() {
   const [referenceNumber, setReferenceNumber] = useState('');
 
   const loadMeta = useCallback(async () => {
-    try {
-      const [whRes, prRes] = await Promise.all([
-        getWarehouses(),
-        fetchPosProducts(),
-      ]);
-      setWarehouses(whRes.warehouses ?? []);
-      setProducts(prRes.products ?? []);
-      setWarehouseId((prev) => prev || whRes.warehouses?.[0]?.id || '');
-    } catch (e) {
-      Alert.alert('Stock movements', extractErrorMessage(e, 'Failed to load'));
-    }
+    const [whRes, prRes] = await Promise.all([getWarehouses(), fetchPosProducts()]);
+    setWarehouses(whRes.warehouses ?? []);
+    setProducts(prRes.products ?? []);
+    setWarehouseId((prev) => prev || whRes.warehouses?.[0]?.id || '');
   }, []);
 
   const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await getStockMovements(undefined, filterWhId);
-      setRows(res.stockMovements ?? []);
-    } catch (e) {
-      Alert.alert('Stock movements', extractErrorMessage(e, 'Failed to load'));
-    } finally {
-      setLoading(false);
-    }
+    const res = await getStockMovements(undefined, filterWhId);
+    setRows(res.stockMovements ?? []);
   }, [filterWhId]);
+
+  const run = useCallback(
+    async (ref: boolean) => {
+      try {
+        if (ref) setRefreshing(true);
+        else setLoading(true);
+        await load();
+      } catch (e) {
+        appError('Stock movements', extractErrorMessage(e, 'Failed to load'));
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [load],
+  );
 
   useEffect(() => {
     setSidebarActivePath(
-      workspacePath === '/dashboard'
-        ? '/dashboard'
-        : '/inventory/stock-movements',
+      workspacePath === '/dashboard' ? '/dashboard' : '/inventory/stock-movements',
     );
   }, [setSidebarActivePath, workspacePath]);
 
   useEffect(() => {
-    void loadMeta();
+    void loadMeta().catch((e) =>
+      appError('Stock movements', extractErrorMessage(e, 'Failed to load')),
+    );
   }, [loadMeta]);
 
   useEffect(() => {
-    void load();
-  }, [load]);
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await load();
-    setRefreshing(false);
-  }, [load]);
+    void run(false);
+  }, [run]);
 
   const filteredProducts = useMemo(() => {
     const t = productQ.trim().toLowerCase();
     if (!t) return products;
     return products.filter(
-      (p) =>
-        p.name.toLowerCase().includes(t) || p.sku.toLowerCase().includes(t),
+      (p) => p.name.toLowerCase().includes(t) || p.sku.toLowerCase().includes(t),
     );
   }, [products, productQ]);
 
@@ -117,13 +198,13 @@ export function MobileStockMovementsScreen() {
 
   const submit = async () => {
     if (!productId || !warehouseId) {
-      Alert.alert('Stock movements', 'Select product and warehouse.');
+      appAlert('Stock movements', 'Select product and warehouse.');
       return;
     }
     const q = parseFloat(quantity);
     const c = parseFloat(unitCost);
     if (!Number.isFinite(q) || q <= 0 || !Number.isFinite(c) || c < 0) {
-      Alert.alert('Stock movements', 'Enter valid quantity and unit cost.');
+      appAlert('Stock movements', 'Enter valid quantity and unit cost.');
       return;
     }
     const payload: StockMovementCreate = {
@@ -136,6 +217,7 @@ export function MobileStockMovementsScreen() {
       referenceNumber: referenceNumber.trim() || undefined,
     };
     try {
+      setSaving(true);
       await createStockMovement(payload);
       setOpen(false);
       setQuantity('');
@@ -144,204 +226,149 @@ export function MobileStockMovementsScreen() {
       setReferenceNumber('');
       setProductId('');
       setProductLabel('');
-      await load();
+      await run(false);
     } catch (e) {
-      Alert.alert('Stock movements', extractErrorMessage(e, 'Failed to save'));
+      appError('Stock movements', extractErrorMessage(e, 'Failed to save'));
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Stock movements
-        </Text>
-        {canManageInventory() ? (
-          <Pressable onPress={() => setOpen(true)} className="px-2 py-1">
-            <Text className="font-semibold text-blue-600">Add</Text>
-          </Pressable>
-        ) : (
-          <View className="w-10" />
-        )}
-      </View>
-
-      <View className="border-b border-slate-200 bg-white px-3 py-2">
-        <Text className="mb-1 text-xs font-medium text-slate-600">Warehouse</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View className="flex-row gap-2">
-            <Pressable
-              onPress={() => setFilterWhId(undefined)}
-              className={`rounded-full px-3 py-1.5 ${!filterWhId ? 'bg-blue-600' : 'bg-slate-100'}`}
-            >
-              <Text className={!filterWhId ? 'font-medium text-white' : 'text-slate-800'}>
-                All
-              </Text>
-            </Pressable>
-            {warehouses.map((w) => (
-              <Pressable
-                key={w.id}
-                onPress={() => setFilterWhId(w.id)}
-                className={`max-w-[180px] rounded-full px-3 py-1.5 ${filterWhId === w.id ? 'bg-blue-600' : 'bg-slate-100'}`}
-              >
-                <Text
-                  className={filterWhId === w.id ? 'font-medium text-white' : 'text-slate-800'}
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
-                >
-                  {w.name}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        </ScrollView>
-      </View>
+    <WorkshopChrome
+      title="Stock movements"
+      subtitle="Inbound, outbound & adjustments"
+      right={canManageInventory() ? <WorkshopHeaderButton onPress={() => setOpen(true)} /> : <View style={{ width: 72 }} />}
+      scroll={false}
+    >
+      <WorkshopFilterBar
+        resultCount={rows.length}
+        activeFilterCount={countActiveFilters([filterWhId ?? ''])}
+        onResetFilters={() => setFilterWhId(undefined)}
+      >
+        <WarehouseChips
+          warehouses={warehouses}
+          value={filterWhId}
+          onChange={setFilterWhId}
+          includeAll
+        />
+      </WorkshopFilterBar>
 
       {loading && !refreshing ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563eb" />
-        </View>
+        <WorkshopLoading />
       ) : (
         <FlatList
+          style={{ flex: 1 }}
           data={rows}
           keyExtractor={(item) => item.id}
+          contentContainerStyle={{ paddingBottom: 20 }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => void run(true)}
+              tintColor={WS.primary}
+            />
           }
-          contentContainerStyle={{ padding: 12, paddingBottom: 32 }}
           ListEmptyComponent={
-            <Text className="py-8 text-center text-slate-500">No movements</Text>
+            <WorkshopEmptyState
+              icon="swap-horizontal-outline"
+              title="No movements"
+              subtitle="Record stock movements to track inventory changes."
+              actionLabel={canManageInventory() ? 'Add movement' : undefined}
+              onAction={canManageInventory() ? () => setOpen(true) : undefined}
+            />
           }
           renderItem={({ item }) => (
-            <View className="mb-3 rounded-xl border border-slate-200 bg-white p-3">
-              <Text className="font-semibold text-slate-900">
-                {item.productName ?? 'Product'}
-              </Text>
-              <Text className="text-xs text-slate-500">{item.productSku}</Text>
-              <Text className="mt-1 text-slate-700">
-                {item.movementType} · Qty {item.quantity} · ${item.unitCost}
-              </Text>
-              <Text className="text-xs text-slate-500">{item.status}</Text>
-            </View>
+            <WorkshopListCard
+              icon="swap-horizontal"
+              iconColor="#0891b2"
+              iconBg="#ecfeff"
+              title={item.productName ?? 'Product'}
+              subtitle={item.productSku}
+              meta={`Qty ${item.quantity} · $${item.unitCost}`}
+              badges={[{ label: item.movementType, tone: 'status' }, { label: item.status, tone: 'status' }]}
+            />
           )}
         />
       )}
 
-      <MobileFormSheet
+      <WorkshopFormSheet
         visible={open}
         title="New movement"
-        onCancel={() => setOpen(false)}
-        onSave={() => void submit()}
-      >
-              <Text className="mb-1 text-sm text-slate-600">Warehouse</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                className="mb-3"
-                contentContainerStyle={{ alignItems: 'center' }}
-              >
-                {warehouses.map((w) => (
-                  <Pressable
-                    key={w.id}
-                    onPress={() => setWarehouseId(w.id)}
-                    className={`mr-2 max-w-[220px] rounded-lg border px-3 py-2 ${warehouseId === w.id ? 'border-blue-600 bg-blue-50' : 'border-slate-200'}`}
-                  >
-                    <Text className="text-slate-800" numberOfLines={1} ellipsizeMode="tail">
-                      {w.name}
-                    </Text>
-                  </Pressable>
-                ))}
-              </ScrollView>
-
-              <Text className="mb-1 text-sm text-slate-600">Movement type</Text>
-              <ScrollView horizontal className="mb-3">
-                {MOVEMENT_TYPES.map((mt) => (
-                  <Pressable
-                    key={mt}
-                    onPress={() => setMovementType(mt)}
-                    className={`mr-2 rounded-lg border px-2 py-1 ${movementType === mt ? 'border-blue-600 bg-blue-50' : 'border-slate-200'}`}
-                  >
-                    <Text className="text-xs text-slate-800">{mt}</Text>
-                  </Pressable>
-                ))}
-              </ScrollView>
-
-              <Pressable
-                onPress={() => setProductPicker(true)}
-                className="mb-3 rounded-lg border border-slate-200 px-3 py-3"
-              >
-                <Text className="text-slate-600">Product</Text>
-                <Text className="text-slate-900">
-                  {productLabel || 'Tap to select'}
-                </Text>
-              </Pressable>
-
-              <Text className="mb-1 text-sm text-slate-600">Quantity</Text>
-              <TextInput
-                value={quantity}
-                onChangeText={setQuantity}
-                keyboardType="decimal-pad"
-                className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-              />
-              <Text className="mb-1 text-sm text-slate-600">Unit cost</Text>
-              <TextInput
-                value={unitCost}
-                onChangeText={setUnitCost}
-                keyboardType="decimal-pad"
-                className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-              />
-              <Text className="mb-1 text-sm text-slate-600">Reference (opt)</Text>
-              <TextInput
-                value={referenceNumber}
-                onChangeText={setReferenceNumber}
-                className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-              />
-              <Text className="mb-1 text-sm text-slate-600">Notes</Text>
-              <TextInput
-                value={notes}
-                onChangeText={setNotes}
-                multiline
-                className="mb-4 min-h-[72px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-              />
-      </MobileFormSheet>
-
-      <AppModal
-        visible={productPicker}
-        animationType="slide"
-        transparent
-        onClose={() => setProductPicker(false)}
-      >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[85%] rounded-t-2xl bg-white px-3 pb-6 pt-3">
-            <TextInput
-              value={productQ}
-              onChangeText={setProductQ}
-              placeholder="Search…"
-              className="mb-2 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <FlatList
-              data={filteredProducts}
-              keyExtractor={(p) => p.id}
-              keyboardShouldPersistTaps="handled"
-              renderItem={({ item }) => (
-                <Pressable
-                  onPress={() => pickProduct(item)}
-                  className="border-b border-slate-100 py-3"
-                >
-                  <Text className="font-medium text-slate-900">{item.name}</Text>
-                  <Text className="text-sm text-slate-600">{item.sku}</Text>
-                </Pressable>
-              )}
+        onClose={() => setOpen(false)}
+        footer={
+          <>
+            <WorkshopPrimaryButton
+              label={saving ? 'Saving…' : 'Save movement'}
+              onPress={() => void submit()}
+              disabled={saving}
             />
             <Pressable
-              onPress={() => setProductPicker(false)}
-              className="mt-2 items-center py-2"
+              onPress={() => setOpen(false)}
+              style={{ marginTop: 12, alignItems: 'center', paddingVertical: 10 }}
             >
-              <Text className="text-blue-600">Close</Text>
+              <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Cancel</Text>
             </Pressable>
-          </View>
-        </View>
-      </AppModal>
-    </View>
+          </>
+        }
+      >
+        <WarehouseChips warehouses={warehouses} value={warehouseId} onChange={(id) => id && setWarehouseId(id)} />
+        <WorkshopChipSelect
+          label="Movement type"
+          options={MOVEMENT_TYPES}
+          value={movementType}
+          onChange={(v) => setMovementType(v as StockMovementType)}
+        />
+        <WorkshopPickerField
+          label="Product"
+          value={productLabel}
+          placeholder="Tap to select"
+          onPress={() => setProductPicker(true)}
+        />
+        <WorkshopFieldLabel>Quantity</WorkshopFieldLabel>
+        <WorkshopTextInput value={quantity} onChangeText={setQuantity} keyboardType="decimal-pad" />
+        <WorkshopFieldLabel>Unit cost</WorkshopFieldLabel>
+        <WorkshopTextInput value={unitCost} onChangeText={setUnitCost} keyboardType="decimal-pad" />
+        <WorkshopFieldLabel>Reference (optional)</WorkshopFieldLabel>
+        <WorkshopTextInput value={referenceNumber} onChangeText={setReferenceNumber} />
+        <WorkshopFieldLabel>Notes</WorkshopFieldLabel>
+        <WorkshopTextInput value={notes} onChangeText={setNotes} multiline style={{ minHeight: 72 }} />
+      </WorkshopFormSheet>
+
+      <WorkshopFormSheet
+        visible={productPicker}
+        title="Select product"
+        onClose={() => setProductPicker(false)}
+        footer={
+          <Pressable
+            onPress={() => setProductPicker(false)}
+            style={{ alignItems: 'center', paddingVertical: 10 }}
+          >
+            <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Close</Text>
+          </Pressable>
+        }
+      >
+        <WorkshopSearchBar value={productQ} onChangeText={setProductQ} placeholder="Search products…" />
+        <FlatList
+          data={filteredProducts}
+          keyExtractor={(p) => p.id}
+          keyboardShouldPersistTaps="handled"
+          style={{ maxHeight: 320 }}
+          renderItem={({ item }) => (
+            <Pressable
+              onPress={() => pickProduct(item)}
+              style={{
+                paddingVertical: 12,
+                borderBottomWidth: 1,
+                borderBottomColor: '#f1f5f9',
+              }}
+            >
+              <Text style={{ fontWeight: '600', color: WS.text }}>{item.name}</Text>
+              <Text style={{ fontSize: 13, color: WS.textMuted, marginTop: 2 }}>{item.sku}</Text>
+            </Pressable>
+          )}
+        />
+      </WorkshopFormSheet>
+    </WorkshopChrome>
   );
 }

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, ScrollView, TextInput, Pressable, ActivityIndicator, RefreshControl, Alert } from 'react-native';
+import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { WorkshopDatePickerField } from '../../workshop/components/WorkshopChrome';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { formatUsd } from '../../../services/crm/CrmMobileService';
 import {
@@ -123,18 +124,12 @@ export function MobilePosReportsScreen() {
 
       {(tab === 'sales' || tab === 'shifts') && (
         <View className="flex-row gap-2 border-b border-slate-200 bg-white px-3 py-2">
-          <TextInput
-            value={dateFrom}
-            onChangeText={setDateFrom}
-            placeholder="From YYYY-MM-DD"
-            className="flex-1 rounded-lg border border-slate-200 px-2 py-2 text-sm text-slate-900"
-          />
-          <TextInput
-            value={dateTo}
-            onChangeText={setDateTo}
-            placeholder="To YYYY-MM-DD"
-            className="flex-1 rounded-lg border border-slate-200 px-2 py-2 text-sm text-slate-900"
-          />
+          <View style={{ flex: 1 }}>
+            <WorkshopDatePickerField label="From" value={dateFrom} onChange={setDateFrom} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <WorkshopDatePickerField label="To" value={dateTo} onChange={setDateTo} />
+          </View>
         </View>
       )}
 

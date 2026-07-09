@@ -1,15 +1,27 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { View, Text, FlatList, Pressable, RefreshControl } from 'react-native';
+import { MobileFormSheet } from '../../../components/layout/MobileForm';
+import {
+  WorkshopChrome,
+  WorkshopListCard,
+  WorkshopEmptyState,
+  WorkshopHeaderButton,
+  WorkshopLoading,
+  WorkshopOutlineButton,
+  WorkshopFieldLabel,
+  WorkshopTextInput,
+  WorkshopDatePickerField,
+  WorkshopPickerField,
+  WS,
+} from '../../workshop/components/WorkshopChrome';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { OptionSheet } from '../../../components/crm/OptionSheet';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { appAlert, appConfirm, appError } from '../../../utils/appDialog';
 import { usePermissions } from '../../../hooks/usePermissions';
 import type { Employee } from '../../../models/hrm';
 import type { ProjectRecord, ProjectTimeEntry, SubTaskRecord } from '../../../models/project';
 import { getEmployees } from '../../../services/hrm/hrmMobileApi';
-import { AppModal } from '../../../components/layout/AppModal';
 import {
   createProjectTimeEntryApi,
   deleteProjectTimeEntryApi,
@@ -107,7 +119,7 @@ export function MobileTimeTrackingScreen() {
       setEntries(res.timeEntries ?? []);
       setTotalPages(Math.max(1, res.pagination?.pages ?? 1));
     } catch (e) {
-      Alert.alert('Time tracking', extractErrorMessage(e, 'Failed to load'));
+      appError('Time tracking', extractErrorMessage(e, 'Failed to load'));
     } finally {
       setLoading(false);
     }
@@ -170,12 +182,12 @@ export function MobileTimeTrackingScreen() {
 
   const submitCreate = useCallback(async () => {
     if (!empId) {
-      Alert.alert('Time tracking', 'Select an employee.');
+      appAlert('Time tracking', 'Select an employee.');
       return;
     }
     const h = parseFloat(hoursStr.replace(',', '.'));
     if (Number.isNaN(h) || h <= 0) {
-      Alert.alert('Time tracking', 'Enter valid hours.');
+      appAlert('Time tracking', 'Enter valid hours.');
       return;
     }
     try {
@@ -198,28 +210,25 @@ export function MobileTimeTrackingScreen() {
       setEditingEntryId(null);
       await loadEntries();
     } catch (e) {
-      Alert.alert('Time tracking', extractErrorMessage(e, 'Could not save'));
+      appError('Time tracking', extractErrorMessage(e, 'Could not save'));
     }
   }, [editingEntryId, empId, dateStr, timeStr, hoursStr, projId, taskId, notes, loadEntries]);
 
   const removeEntry = useCallback((entry: ProjectTimeEntry) => {
-    Alert.alert('Delete entry', `Delete entry on ${entry.date}?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          void (async () => {
-            try {
-              await deleteProjectTimeEntryApi(entry.id);
-              await loadEntries();
-            } catch (e) {
-              Alert.alert('Time tracking', extractErrorMessage(e, 'Could not delete'));
-            }
-          })();
-        },
+    appConfirm({
+      title: 'Delete entry',
+      message: `Delete entry on ${entry.date}?`,
+      confirmLabel: 'Delete',
+      destructive: true,
+      onConfirm: async () => {
+        try {
+          await deleteProjectTimeEntryApi(entry.id);
+          await loadEntries();
+        } catch (e) {
+          appError('Time tracking', extractErrorMessage(e, 'Could not delete'));
+        }
       },
-    ]);
+    });
   }, [loadEntries]);
 
   const empOptions = useMemo(
@@ -240,183 +249,141 @@ export function MobileTimeTrackingScreen() {
     [tasks],
   );
 
+  const formBody = (
+    <>
+      <WorkshopPickerField
+        label="Employee"
+        value={selectedEmployeeLabel}
+        onPress={() => setEmpOpen(true)}
+      />
+      <WorkshopDatePickerField label="Date" value={dateStr} onChange={setDateStr} />
+      <WorkshopFieldLabel>Start time</WorkshopFieldLabel>
+      <WorkshopTextInput value={timeStr} onChangeText={setTimeStr} placeholder="HH:MM" />
+      <WorkshopFieldLabel>Hours</WorkshopFieldLabel>
+      <WorkshopTextInput
+        value={hoursStr}
+        onChangeText={setHoursStr}
+        keyboardType="decimal-pad"
+      />
+      <WorkshopPickerField
+        label="Project"
+        value={projId ? projects.find((p) => p.id === projId)?.name ?? '' : 'Optional'}
+        onPress={() => setProjOpen(true)}
+      />
+      <WorkshopPickerField
+        label="Task"
+        value={
+          !projId
+            ? 'Pick a project first'
+            : taskId
+              ? tasks.find((t) => t.id === taskId)?.title ?? ''
+              : 'Optional'
+        }
+        onPress={() => {
+          if (!projId) {
+            appAlert('Time tracking', 'Select a project first to attach a task.');
+            return;
+          }
+          setTaskOpen(true);
+        }}
+      />
+      <WorkshopFieldLabel>Notes</WorkshopFieldLabel>
+      <WorkshopTextInput
+        value={notes}
+        onChangeText={setNotes}
+        multiline
+        style={{ minHeight: 64 }}
+      />
+    </>
+  );
+
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Time tracking
-        </Text>
-        {canManageProjects() ? (
-          <Pressable className="px-2 py-1" onPress={openCreate}>
-            <Ionicons name="add-circle" size={28} color="#2563eb" />
-          </Pressable>
-        ) : (
-          <View className="w-9" />
-        )}
-      </View>
-
-      {loading && entries.length === 0 ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563eb" />
-        </View>
-      ) : (
-        <FlatList
-          data={entries}
-          keyExtractor={(x) => x.id}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-          renderItem={({ item }) => (
-            <View className="border-b border-slate-100 bg-white px-4 py-3">
-              <Text className="text-sm text-slate-500">{item.date}</Text>
-              <Text className="mt-1 text-base font-semibold text-slate-900">
-                {item.totalHours != null ? `${item.totalHours} h` : '—'}
-              </Text>
-              <Text className="mt-1 text-xs text-slate-500">
-                {item.clockIn}
-                {item.clockOut ? ` → ${item.clockOut}` : ''}
-              </Text>
-              {item.notes ? (
-                <Text className="mt-2 text-sm text-slate-600">{item.notes}</Text>
-              ) : null}
-              {canManageProjects() ? (
-                <View className="mt-2 flex-row gap-3">
-                  <Pressable onPress={() => openEdit(item)}>
-                    <Text className="font-medium text-blue-600">Edit</Text>
-                  </Pressable>
-                  <Pressable onPress={() => removeEntry(item)}>
-                    <Text className="font-medium text-red-600">Delete</Text>
-                  </Pressable>
-                </View>
-              ) : null}
-            </View>
-          )}
-          ListEmptyComponent={
-            <Text className="py-8 text-center text-slate-500">No time entries</Text>
-          }
-        />
-      )}
-
-      <View className="flex-row items-center justify-center border-t border-slate-200 bg-white py-2">
-        <Pressable
-          disabled={page <= 1}
-          className="px-4 py-2"
-          onPress={() => setPage((p) => Math.max(1, p - 1))}
-        >
-          <Text className={page <= 1 ? 'text-slate-300' : 'text-blue-600'}>Prev</Text>
-        </Pressable>
-        <Text className="text-slate-600">
-          {page} / {totalPages}
-        </Text>
-        <Pressable
-          disabled={page >= totalPages}
-          className="px-4 py-2"
-          onPress={() => setPage((p) => p + 1)}
-        >
-          <Text
-            className={page >= totalPages ? 'text-slate-300' : 'text-blue-600'}
-          >
-            Next
-          </Text>
-        </Pressable>
-      </View>
-
-      <AppModal
-        visible={createOpen}
-        animationType="slide"
-        transparent
-        onClose={() => setCreateOpen(false)}
+    <>
+      <WorkshopChrome
+        title="Time tracking"
+        subtitle="Log hours against projects"
+        right={
+          canManageProjects() ? (
+            <WorkshopHeaderButton onPress={openCreate} />
+          ) : (
+            <View style={{ width: 72 }} />
+          )
+        }
+        scroll={false}
       >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
-            <Text className="text-lg font-semibold text-slate-900">
-              {editingEntryId ? 'Edit time entry' : 'Log time'}
-            </Text>
-            <ScrollView className="mt-3" keyboardShouldPersistTaps="handled">
-              <Text className="mb-1 text-xs font-medium text-slate-500">Employee</Text>
-              <Pressable
-                className="mb-3 flex-row items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2"
-                onPress={() => setEmpOpen(true)}
-              >
-                <Text className="text-slate-900">{selectedEmployeeLabel}</Text>
-                <Ionicons name="chevron-down" size={18} color="#64748b" />
-              </Pressable>
-              <Text className="mb-1 text-xs font-medium text-slate-500">Date</Text>
-              <TextInput
-                className="mb-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-                value={dateStr}
-                onChangeText={setDateStr}
-                placeholder="YYYY-MM-DD"
+        {loading && entries.length === 0 ? (
+          <WorkshopLoading />
+        ) : (
+          <FlatList
+            data={entries}
+            keyExtractor={(x) => x.id}
+            contentContainerStyle={{ paddingBottom: 12 }}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={WS.primary}
               />
-              <Text className="mb-1 text-xs font-medium text-slate-500">Start time</Text>
-              <TextInput
-                className="mb-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-                value={timeStr}
-                onChangeText={setTimeStr}
-                placeholder="HH:MM"
+            }
+            renderItem={({ item }) => (
+              <WorkshopListCard
+                icon="time-outline"
+                iconColor="#4f46e5"
+                iconBg="#eef2ff"
+                title={item.totalHours != null ? `${item.totalHours} h` : '—'}
+                subtitle={item.date}
+                meta={item.notes ?? item.clockIn ?? '—'}
+                onPress={canManageProjects() ? () => openEdit(item) : undefined}
+                actions={
+                  canManageProjects()
+                    ? [
+                        { icon: 'create-outline', onPress: () => openEdit(item) },
+                        { icon: 'trash-outline', onPress: () => removeEntry(item), danger: true },
+                      ]
+                    : undefined
+                }
               />
-              <Text className="mb-1 text-xs font-medium text-slate-500">Hours</Text>
-              <TextInput
-                className="mb-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-                value={hoursStr}
-                onChangeText={setHoursStr}
-                keyboardType="decimal-pad"
+            )}
+            ListEmptyComponent={
+              <WorkshopEmptyState
+                icon="time-outline"
+                title="No time entries"
+                subtitle="Log time against projects and tasks."
+                actionLabel={canManageProjects() ? 'Log time' : undefined}
+                onAction={canManageProjects() ? openCreate : undefined}
               />
-              <Text className="mb-1 text-xs font-medium text-slate-500">Project</Text>
-              <Pressable
-                className="mb-3 flex-row items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2"
-                onPress={() => setProjOpen(true)}
-              >
-                <Text className="text-slate-900">
-                  {projId ? projects.find((p) => p.id === projId)?.name : 'Optional'}
-                </Text>
-                <Ionicons name="chevron-down" size={18} color="#64748b" />
-              </Pressable>
-              <Text className="mb-1 text-xs font-medium text-slate-500">Task</Text>
-              <Pressable
-                className="mb-3 flex-row items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2"
-                onPress={() => {
-                  if (!projId) {
-                    Alert.alert('Time tracking', 'Select a project first to attach a task.');
-                    return;
-                  }
-                  setTaskOpen(true);
-                }}
-              >
-                <Text className="text-slate-900">
-                  {!projId ? 'Pick a project first' : taskId ? tasks.find((t) => t.id === taskId)?.title : 'Optional'}
-                </Text>
-                <Ionicons name="chevron-down" size={18} color="#64748b" />
-              </Pressable>
-              <Text className="mb-1 text-xs font-medium text-slate-500">Notes</Text>
-              <TextInput
-                className="mb-3 min-h-[64px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-                value={notes}
-                onChangeText={setNotes}
-                multiline
-              />
-            </ScrollView>
-            <Pressable
-              className="mt-2 items-center rounded-lg bg-blue-600 py-3"
-              onPress={() => void submitCreate()}
-            >
-              <Text className="font-semibold text-white">
-                {editingEntryId ? 'Save changes' : 'Save entry'}
-              </Text>
-            </Pressable>
-            <Pressable
-              className="mt-2 items-center py-2"
-              onPress={() => {
-                setCreateOpen(false);
-                setEditingEntryId(null);
-              }}
-            >
-              <Text className="text-slate-600">Cancel</Text>
-            </Pressable>
+            }
+          />
+        )}
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, paddingVertical: 10 }}>
+          <View style={{ flex: 1 }}>
+            <WorkshopOutlineButton
+              label="Previous"
+              onPress={() => setPage((p) => Math.max(1, p - 1))}
+            />
+          </View>
+          <Text style={{ fontWeight: '600', color: WS.textMuted }}>
+            {page} / {totalPages}
+          </Text>
+          <View style={{ flex: 1 }}>
+            <WorkshopOutlineButton label="Next" onPress={() => setPage((p) => p + 1)} />
           </View>
         </View>
-      </AppModal>
+      </WorkshopChrome>
+
+      <MobileFormSheet
+        visible={createOpen}
+        title={editingEntryId ? 'Edit time entry' : 'Log time'}
+        onCancel={() => {
+          setCreateOpen(false);
+          setEditingEntryId(null);
+        }}
+        onSave={() => void submitCreate()}
+        saveLabel={editingEntryId ? 'Save changes' : 'Save entry'}
+      >
+        {formBody}
+      </MobileFormSheet>
 
       <OptionSheet
         visible={empOpen}
@@ -449,6 +416,6 @@ export function MobileTimeTrackingScreen() {
         }}
         onClose={() => setTaskOpen(false)}
       />
-    </View>
+    </>
   );
 }

@@ -1,5 +1,7 @@
 import { View, Text, Pressable, ScrollView } from 'react-native';
-import { AppModal } from '../../components/layout/AppModal';
+import { Ionicons } from '@expo/vector-icons';
+import { AppModal } from '../layout/AppModal';
+import { WS } from '../../features/workshop/components/workshopTheme';
 
 export type OptionItem<T extends string> = { value: T; label: string };
 
@@ -22,39 +24,68 @@ export function OptionSheet<T extends string>({
     <AppModal
       visible={visible}
       transparent
-      animationType="fade"
+      animationType="slide"
       onClose={onClose}
     >
       <Pressable
-        className="flex-1 justify-end bg-black/40"
+        style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(15,23,42,0.55)' }}
         onPress={onClose}
       >
         <Pressable
-          className="max-h-[70%] rounded-t-2xl bg-white"
+          style={{
+            maxHeight: '70%',
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+            backgroundColor: WS.card,
+          }}
           onPress={(e) => e.stopPropagation()}
         >
-          <Text className="border-b border-slate-200 px-4 py-3 text-base font-semibold text-slate-900">
-            {title}
-          </Text>
-          <ScrollView keyboardShouldPersistTaps="handled" className="px-2 py-2">
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              borderBottomWidth: 1,
+              borderBottomColor: WS.border,
+              paddingHorizontal: 16,
+              paddingVertical: 14,
+            }}
+          >
+            <Text style={{ flex: 1, fontSize: 17, fontWeight: '800', color: WS.text }}>
+              {title}
+            </Text>
+            <Pressable onPress={onClose} hitSlop={8}>
+              <Ionicons name="close" size={22} color={WS.textMuted} />
+            </Pressable>
+          </View>
+          <ScrollView keyboardShouldPersistTaps="handled" style={{ paddingHorizontal: 8, paddingVertical: 8 }}>
             {options.map((o) => (
               <Pressable
                 key={o.value}
-                className="rounded-xl px-4 py-3 active:bg-slate-100"
                 onPress={() => {
                   onSelect(o.value);
                   onClose();
                 }}
+                style={({ pressed }) => ({
+                  borderRadius: 14,
+                  paddingHorizontal: 16,
+                  paddingVertical: 14,
+                  marginBottom: 4,
+                  backgroundColor: pressed ? WS.primaryLight : 'transparent',
+                })}
               >
-                <Text className="text-base text-slate-800">{o.label}</Text>
+                <Text style={{ fontSize: 16, color: WS.text }}>{o.label}</Text>
               </Pressable>
             ))}
           </ScrollView>
           <Pressable
-            className="border-t border-slate-200 py-3"
             onPress={onClose}
+            style={{
+              borderTopWidth: 1,
+              borderTopColor: WS.border,
+              paddingVertical: 16,
+            }}
           >
-            <Text className="text-center font-semibold text-slate-600">
+            <Text style={{ textAlign: 'center', fontWeight: '700', color: WS.textMuted }}>
               Cancel
             </Text>
           </Pressable>

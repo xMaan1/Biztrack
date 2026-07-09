@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl, TextInput, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { View, Text, Pressable } from 'react-native';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { appAlert, appError } from '../../../utils/appDialog';
 import {
   BankAccountType,
   type BankAccountCreate,
@@ -19,35 +18,29 @@ import {
   getTills,
 } from '../../../services/banking/bankingMobileApi';
 import { formatMoney } from '../bankingFormat';
-import { AppModal } from '../../../components/layout/AppModal';
+import { ModuleHubScreen, type HubLink, type HubStat } from '../../../components/layout/ModuleHubScreen';
+import { WS } from '../../workshop/components/workshopTheme';
+import {
+  WorkshopHeaderButton,
+  WorkshopListCard,
+  WorkshopFormSheet,
+  WorkshopFieldLabel,
+  WorkshopTextInput,
+  WorkshopPrimaryButton,
+} from '../../workshop/components/WorkshopChrome';
 
-function Metric(props: {
-  title: string;
-  value: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  tone?: string;
-}) {
-  return (
-    <View className="mb-3 flex-1 min-w-[46%] rounded-xl border border-slate-200 bg-white p-3">
-      <View className="flex-row items-center justify-between">
-        <Text className="text-xs font-medium text-slate-500">{props.title}</Text>
-        <Ionicons name={props.icon} size={16} color="#64748b" />
-      </View>
-      <Text className={`mt-1 text-lg font-bold ${props.tone ?? 'text-slate-900'}`}>
-        {props.value}
-      </Text>
-    </View>
-  );
-}
+const LINKS: HubLink[] = [
+  { path: '/banking/accounts', label: 'Accounts', icon: 'card', color: '#4f46e5', bg: '#eef2ff' },
+  { path: '/banking/transactions', label: 'Transactions', icon: 'swap-horizontal', color: '#0891b2', bg: '#ecfeff' },
+  { path: '/banking/reconciliation', label: 'Reconciliation', icon: 'checkmark-done', color: '#059669', bg: '#ecfdf5' },
+];
 
 export function MobileBankingDashboardScreen() {
-  const { workspacePath, setSidebarActivePath } = useSidebarDrawer();
+  const { workspacePath, setSidebarActivePath, setWorkspacePath } = useSidebarDrawer();
   const { canManageBanking } = usePermissions();
 
   const [dash, setDash] = useState<BankingDashboard | null>(null);
-  const [accounts, setAccounts] = useState<Awaited<
-    ReturnType<typeof getBankAccounts>
-  >>([]);
+  const [accounts, setAccounts] = useState<Awaited<ReturnType<typeof getBankAccounts>>>([]);
   const [tills, setTills] = useState<Till[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -84,16 +77,14 @@ export function MobileBankingDashboardScreen() {
       setAccounts(acc ?? []);
       setTills(tl ?? []);
     } catch (e) {
-      Alert.alert('Banking', extractErrorMessage(e, 'Failed to load'));
+      appError('Banking', extractErrorMessage(e, 'Failed to load'));
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    setSidebarActivePath(
-      workspacePath === '/dashboard' ? '/dashboard' : '/banking',
-    );
+    setSidebarActivePath(workspacePath === '/dashboard' ? '/dashboard' : '/banking');
   }, [setSidebarActivePath, workspacePath]);
 
   useEffect(() => {
@@ -106,126 +97,71 @@ export function MobileBankingDashboardScreen() {
     setRefreshing(false);
   }, [load]);
 
+  const resetForm = useCallback(() => {
+    setForm({
+      accountName: '',
+      accountNumber: '',
+      routingNumber: '',
+      bankName: '',
+      bankCode: '',
+      accountType: BankAccountType.CHECKING,
+      currency: 'USD',
+      currentBalance: 0,
+      availableBalance: 0,
+      pendingBalance: 0,
+      isActive: true,
+      isPrimary: false,
+      supportsOnlineBanking: false,
+      description: '',
+      tags: [],
+    });
+  }, []);
+
   const submitCreate = useCallback(async () => {
     if (!form.accountName.trim() || !form.accountNumber.trim() || !form.bankName.trim()) {
-      Alert.alert('Banking', 'Account name, number, and bank name are required.');
+      appAlert('Banking', 'Account name, number, and bank name are required.');
       return;
     }
     try {
       setBusy(true);
       await createBankAccount(form);
       setCreateOpen(false);
-      setForm({
-        accountName: '',
-        accountNumber: '',
-        routingNumber: '',
-        bankName: '',
-        bankCode: '',
-        accountType: BankAccountType.CHECKING,
-        currency: 'USD',
-        currentBalance: 0,
-        availableBalance: 0,
-        pendingBalance: 0,
-        isActive: true,
-        isPrimary: false,
-        supportsOnlineBanking: false,
-        description: '',
-        tags: [],
-      });
+      resetForm();
       await load();
     } catch (e) {
-      Alert.alert('Banking', extractErrorMessage(e, 'Could not create account'));
+      appError('Banking', extractErrorMessage(e, 'Could not create account'));
     } finally {
       setBusy(false);
     }
-  }, [form, load]);
+  }, [form, load, resetForm]);
 
   const recent: BankTransaction[] = dash?.recentTransactions ?? [];
 
+  const hubStats: HubStat[] = [
+    { label: 'Total balance', value: formatMoney(dash?.totalBankBalance ?? 0), icon: 'wallet', accent: '#4f46e5', accentBg: '#eef2ff' },
+    { label: 'Available', value: formatMoney(dash?.totalAvailableBalance ?? 0), icon: 'checkmark-circle', accent: '#059669', accentBg: '#ecfdf5' },
+    { label: 'Pending txns', value: dash?.pendingTransactionsCount ?? 0, sub: 'Awaiting', icon: 'time', accent: '#d97706', accentBg: '#fffbeb' },
+    { label: 'Net cash flow', value: formatMoney(dash?.netCashFlow ?? 0), icon: 'swap-horizontal', accent: '#2563eb', accentBg: '#eff6ff' },
+  ];
+
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Banking
-        </Text>
-        {canManageBanking() ? (
-          <Pressable className="px-2 py-1" onPress={() => setCreateOpen(true)}>
-            <Ionicons name="add-circle" size={28} color="#2563eb" />
-          </Pressable>
-        ) : (
-          <View className="w-9" />
-        )}
-      </View>
-
-      {loading && !dash ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563eb" />
-        </View>
-      ) : (
-        <ScrollView
-          className="flex-1 px-3 pt-3"
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        >
-          <View className="mb-2 flex-row flex-wrap gap-2">
-            <Metric
-              title="Total balance"
-              value={formatMoney(dash?.totalBankBalance ?? 0)}
-              icon="wallet-outline"
-            />
-            <Metric
-              title="Available"
-              value={formatMoney(dash?.totalAvailableBalance ?? 0)}
-              icon="checkmark-circle-outline"
-            />
-            <Metric
-              title="Pending"
-              value={formatMoney(dash?.totalPendingBalance ?? 0)}
-              icon="time-outline"
-            />
-            <Metric
-              title="Pending txns"
-              value={String(dash?.pendingTransactionsCount ?? 0)}
-              icon="list-outline"
-            />
-            <Metric
-              title="Daily inflow"
-              value={formatMoney(dash?.dailyInflow ?? 0)}
-              icon="trending-up-outline"
-              tone="text-emerald-700"
-            />
-            <Metric
-              title="Daily outflow"
-              value={formatMoney(dash?.dailyOutflow ?? 0)}
-              icon="trending-down-outline"
-              tone="text-red-700"
-            />
-            <Metric
-              title="Net cash flow"
-              value={formatMoney(dash?.netCashFlow ?? 0)}
-              icon="swap-horizontal-outline"
-            />
-            <Metric
-              title="Receivables"
-              value={formatMoney(dash?.outstandingReceivables ?? 0)}
-              icon="arrow-down-circle-outline"
-            />
-            <Metric
-              title="Payables"
-              value={formatMoney(dash?.outstandingPayables ?? 0)}
-              icon="arrow-up-circle-outline"
-            />
-          </View>
-
-          <Text className="mb-2 mt-2 text-base font-semibold text-slate-900">
-            Accounts
-          </Text>
-          {(dash?.bankAccountsSummary ?? []).length === 0 && accounts.length === 0 ? (
-            <Text className="mb-3 text-sm text-slate-500">No accounts yet.</Text>
-          ) : (
-            (dash?.bankAccountsSummary ?? []).map((raw) => {
+    <>
+      <ModuleHubScreen
+        title="Banking"
+        subtitle="Accounts, transactions & reconciliation"
+        accent={WS.primary}
+        loading={loading && !dash}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        stats={hubStats}
+        links={LINKS}
+        onNavigate={(path) => setWorkspacePath(path)}
+        right={canManageBanking() ? <WorkshopHeaderButton onPress={() => setCreateOpen(true)} /> : undefined}
+      >
+        {(dash?.bankAccountsSummary ?? []).length > 0 || accounts.length > 0 ? (
+          <View style={{ marginTop: 16 }}>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: WS.text, marginBottom: 10 }}>Accounts</Text>
+            {(dash?.bankAccountsSummary ?? []).map((raw) => {
               const s = raw as unknown as Record<string, unknown>;
               const id = String(s.id ?? '');
               const name = String(s.name ?? s.account_name ?? '');
@@ -233,136 +169,87 @@ export function MobileBankingDashboardScreen() {
               const cur = Number(s.currentBalance ?? s.current_balance ?? 0);
               const av = Number(s.availableBalance ?? s.available_balance ?? 0);
               return (
-                <View
+                <WorkshopListCard
                   key={id}
-                  className="mb-2 rounded-lg border border-slate-200 bg-white p-3"
-                >
-                  <Text className="font-semibold text-slate-900">{name}</Text>
-                  <Text className="text-xs text-slate-500">{bankName}</Text>
-                  <Text className="mt-1 text-sm text-slate-700">
-                    {formatMoney(cur)} · Avail {formatMoney(av)}
-                  </Text>
-                </View>
+                  icon="card"
+                  iconColor="#4f46e5"
+                  iconBg="#eef2ff"
+                  title={name || 'Account'}
+                  subtitle={bankName}
+                  meta={`${formatMoney(cur)} · Avail ${formatMoney(av)}`}
+                />
               );
-            })
-          )}
-
-          <Text className="mb-2 mt-3 text-base font-semibold text-slate-900">
-            Recent transactions
-          </Text>
-          {recent.length === 0 ? (
-            <Text className="mb-3 text-sm text-slate-500">No recent activity.</Text>
-          ) : (
-            recent.slice(0, 8).map((t) => (
-              <View
-                key={t.id}
-                className="mb-2 rounded-lg border border-slate-100 bg-white p-2"
-              >
-                <Text className="text-sm font-medium text-slate-900">
-                  {t.description}
-                </Text>
-                <Text className="text-xs text-slate-500">
-                  {t.transactionNumber} · {new Date(t.transactionDate).toLocaleString()}
-                </Text>
-                <Text className="mt-1 text-sm font-semibold text-slate-800">
-                  {formatMoney(t.amount, t.currency)}
-                </Text>
-              </View>
-            ))
-          )}
-
-          <Text className="mb-2 mt-3 text-base font-semibold text-slate-900">
-            Tills
-          </Text>
-          {tills.length === 0 ? (
-            <Text className="mb-6 text-sm text-slate-500">No tills configured.</Text>
-          ) : (
-            tills.map((t) => (
-              <View
-                key={t.id}
-                className="mb-2 rounded-lg border border-slate-200 bg-white p-3"
-              >
-                <Text className="font-semibold text-slate-900">{t.name}</Text>
-                {t.location ? (
-                  <Text className="text-xs text-slate-500">{t.location}</Text>
-                ) : null}
-                <Text className="mt-1 text-sm">
-                  {formatMoney(t.currentBalance, t.currency)}
-                  {t.isActive ? '' : ' · Inactive'}
-                </Text>
-              </View>
-            ))
-          )}
-          <View className="h-8" />
-        </ScrollView>
-      )}
-
-      <AppModal
-        visible={createOpen}
-        animationType="slide"
-        transparent
-        onClose={() => setCreateOpen(false)}
-      >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
-            <Text className="text-lg font-semibold text-slate-900">New account</Text>
-            <ScrollView className="mt-3" keyboardShouldPersistTaps="handled">
-              <Field
-                label="Account name"
-                value={form.accountName}
-                onChange={(v) => setForm((f) => ({ ...f, accountName: v }))}
-              />
-              <Field
-                label="Account number"
-                value={form.accountNumber}
-                onChange={(v) => setForm((f) => ({ ...f, accountNumber: v }))}
-              />
-              <Field
-                label="Bank name"
-                value={form.bankName}
-                onChange={(v) => setForm((f) => ({ ...f, bankName: v }))}
-              />
-              <Field
-                label="Routing (optional)"
-                value={form.routingNumber ?? ''}
-                onChange={(v) => setForm((f) => ({ ...f, routingNumber: v }))}
-              />
-              <Field
-                label="Description"
-                value={form.description ?? ''}
-                onChange={(v) => setForm((f) => ({ ...f, description: v }))}
-              />
-            </ScrollView>
-            <Pressable
-              className="mt-2 items-center rounded-lg bg-blue-600 py-3"
-              disabled={busy}
-              onPress={() => void submitCreate()}
-            >
-              <Text className="font-semibold text-white">Create</Text>
-            </Pressable>
-            <Pressable className="mt-2 py-2" onPress={() => setCreateOpen(false)}>
-              <Text className="text-center text-slate-600">Cancel</Text>
-            </Pressable>
+            })}
           </View>
-        </View>
-      </AppModal>
-    </View>
-  );
-}
+        ) : null}
 
-function Field(props: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <>
-      <Text className="mb-1 text-xs font-medium text-slate-500">{props.label}</Text>
-      <TextInput
-        className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-        value={props.value}
-        onChangeText={props.onChange}
-      />
+        {recent.length > 0 ? (
+          <View style={{ marginTop: 20 }}>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: WS.text, marginBottom: 10 }}>
+              Recent transactions
+            </Text>
+            {recent.slice(0, 8).map((t) => (
+              <WorkshopListCard
+                key={t.id}
+                icon="swap-horizontal"
+                iconColor="#0891b2"
+                iconBg="#ecfeff"
+                title={t.description}
+                subtitle={t.transactionNumber}
+                meta={new Date(t.transactionDate).toLocaleString()}
+                badges={[{ label: formatMoney(t.amount, t.currency) }]}
+              />
+            ))}
+          </View>
+        ) : null}
+
+        {tills.length > 0 ? (
+          <View style={{ marginTop: 20 }}>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: WS.text, marginBottom: 10 }}>Tills</Text>
+            {tills.map((t) => (
+              <WorkshopListCard
+                key={t.id}
+                icon="cash"
+                iconColor="#7c3aed"
+                iconBg="#f5f3ff"
+                title={t.name}
+                subtitle={t.location || 'No location'}
+                meta={formatMoney(t.currentBalance, t.currency)}
+                badges={t.isActive ? [] : [{ label: 'Inactive' }]}
+              />
+            ))}
+          </View>
+        ) : null}
+      </ModuleHubScreen>
+
+      <WorkshopFormSheet
+        visible={createOpen}
+        title="New account"
+        onClose={() => setCreateOpen(false)}
+        footer={
+          <>
+            <WorkshopPrimaryButton
+              label={busy ? 'Creating…' : 'Create account'}
+              onPress={() => void submitCreate()}
+              disabled={busy}
+            />
+            <Pressable onPress={() => setCreateOpen(false)} style={{ marginTop: 12, alignItems: 'center', paddingVertical: 10 }}>
+              <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Cancel</Text>
+            </Pressable>
+          </>
+        }
+      >
+        <WorkshopFieldLabel>Account name</WorkshopFieldLabel>
+        <WorkshopTextInput value={form.accountName} onChangeText={(v) => setForm((f) => ({ ...f, accountName: v }))} />
+        <WorkshopFieldLabel>Account number</WorkshopFieldLabel>
+        <WorkshopTextInput value={form.accountNumber} onChangeText={(v) => setForm((f) => ({ ...f, accountNumber: v }))} />
+        <WorkshopFieldLabel>Bank name</WorkshopFieldLabel>
+        <WorkshopTextInput value={form.bankName} onChangeText={(v) => setForm((f) => ({ ...f, bankName: v }))} />
+        <WorkshopFieldLabel>Routing (optional)</WorkshopFieldLabel>
+        <WorkshopTextInput value={form.routingNumber ?? ''} onChangeText={(v) => setForm((f) => ({ ...f, routingNumber: v }))} />
+        <WorkshopFieldLabel>Description</WorkshopFieldLabel>
+        <WorkshopTextInput value={form.description ?? ''} onChangeText={(v) => setForm((f) => ({ ...f, description: v }))} multiline />
+      </WorkshopFormSheet>
     </>
   );
 }

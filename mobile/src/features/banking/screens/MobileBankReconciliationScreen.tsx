@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { View, Text, FlatList, Pressable, RefreshControl, ActivityIndicator } from 'react-native';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { OptionSheet } from '../../../components/crm/OptionSheet';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { appAlert, appConfirm, appError } from '../../../utils/appDialog';
 import {
   TransactionStatus,
   getTransactionStatusLabel,
@@ -21,7 +20,22 @@ import {
   updateBankTransaction,
 } from '../../../services/banking/bankingMobileApi';
 import { formatMoney } from '../bankingFormat';
-import { AppModal } from '../../../components/layout/AppModal';
+import {
+  WorkshopChrome,
+  WorkshopListCard,
+  WorkshopEmptyState,
+  WorkshopLoading,
+  WorkshopFormSheet,
+  WorkshopFieldLabel,
+  WorkshopTextInput,
+  WorkshopDatePickerField,
+  WorkshopPickerField,
+  WorkshopPrimaryButton,
+  WorkshopStatCard,
+  WorkshopFilterBar,
+  countActiveFilters,
+  WS,
+} from '../../workshop/components/WorkshopChrome';
 
 const PAGE = 20;
 const STATUS_OPTS = [
@@ -54,8 +68,7 @@ function buildTxParams(f: TxFilters, skip: number) {
     skip,
     limit: PAGE,
     accountId: f.accountId === 'all' ? undefined : f.accountId,
-    status:
-      f.status === 'all' ? undefined : (f.status as TransactionStatus),
+    status: f.status === 'all' ? undefined : (f.status as TransactionStatus),
     startDate: parseDateInputToIso(f.dateFrom),
     endDate: parseDateInputToIso(f.dateTo, true),
   };
@@ -90,9 +103,7 @@ export function MobileBankReconciliationScreen() {
   const [hasMore, setHasMore] = useState(true);
 
   const [notesOpen, setNotesOpen] = useState(false);
-  const [pendingReconcileId, setPendingReconcileId] = useState<string | null>(
-    null,
-  );
+  const [pendingReconcileId, setPendingReconcileId] = useState<string | null>(null);
   const [reconcileNotes, setReconcileNotes] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -112,21 +123,18 @@ export function MobileBankReconciliationScreen() {
     setSummary(s);
   }, []);
 
-  const fetchPage = useCallback(
-    async (nextPage: number, replace: boolean, f: TxFilters) => {
-      const skip = nextPage * PAGE;
-      const list = await getBankTransactions(buildTxParams(f, skip));
-      const rows = list ?? [];
-      setHasMore(rows.length >= PAGE);
-      setPage(nextPage);
-      if (replace) {
-        setTransactions(rows);
-      } else {
-        setTransactions((prev) => [...prev, ...rows]);
-      }
-    },
-    [],
-  );
+  const fetchPage = useCallback(async (nextPage: number, replace: boolean, f: TxFilters) => {
+    const skip = nextPage * PAGE;
+    const list = await getBankTransactions(buildTxParams(f, skip));
+    const rows = list ?? [];
+    setHasMore(rows.length >= PAGE);
+    setPage(nextPage);
+    if (replace) {
+      setTransactions(rows);
+    } else {
+      setTransactions((prev) => [...prev, ...rows]);
+    }
+  }, []);
 
   const runInitial = useCallback(async () => {
     try {
@@ -143,18 +151,14 @@ export function MobileBankReconciliationScreen() {
       setApplied(f);
       await fetchPage(0, true, f);
     } catch (e) {
-      Alert.alert('Reconciliation', extractErrorMessage(e, 'Failed to load'));
+      appError('Reconciliation', extractErrorMessage(e, 'Failed to load'));
     } finally {
       setLoading(false);
     }
   }, [fetchPage, fetchSummary]);
 
   useEffect(() => {
-    setSidebarActivePath(
-      workspacePath === '/dashboard'
-        ? '/dashboard'
-        : '/banking/reconciliation',
-    );
+    setSidebarActivePath(workspacePath === '/dashboard' ? '/dashboard' : '/banking/reconciliation');
   }, [setSidebarActivePath, workspacePath]);
 
   useEffect(() => {
@@ -167,7 +171,7 @@ export function MobileBankReconciliationScreen() {
       await fetchSummary();
       await fetchPage(0, true, applied);
     } catch (e) {
-      Alert.alert('Reconciliation', extractErrorMessage(e, 'Failed to load'));
+      appError('Reconciliation', extractErrorMessage(e, 'Failed to load'));
     } finally {
       setRefreshing(false);
     }
@@ -176,11 +180,11 @@ export function MobileBankReconciliationScreen() {
   const applyFilters = useCallback(() => {
     void (async () => {
       if (dateFrom.trim() && !parseDateInputToIso(dateFrom)) {
-        Alert.alert('Reconciliation', 'Invalid From date. Use YYYY-MM-DD.');
+        appAlert('Reconciliation', 'Invalid From date. Use YYYY-MM-DD.');
         return;
       }
       if (dateTo.trim() && !parseDateInputToIso(dateTo, true)) {
-        Alert.alert('Reconciliation', 'Invalid To date. Use YYYY-MM-DD.');
+        appAlert('Reconciliation', 'Invalid To date. Use YYYY-MM-DD.');
         return;
       }
       const f: TxFilters = {
@@ -195,19 +199,12 @@ export function MobileBankReconciliationScreen() {
         await fetchSummary();
         await fetchPage(0, true, f);
       } catch (e) {
-        Alert.alert('Reconciliation', extractErrorMessage(e, 'Failed to load'));
+        appError('Reconciliation', extractErrorMessage(e, 'Failed to load'));
       } finally {
         setLoading(false);
       }
     })();
-  }, [
-    accountFilter,
-    statusFilter,
-    dateFrom,
-    dateTo,
-    fetchPage,
-    fetchSummary,
-  ]);
+  }, [accountFilter, statusFilter, dateFrom, dateTo, fetchPage, fetchSummary]);
 
   const loadMore = useCallback(() => {
     if (loadingMore || !hasMore || loading) return;
@@ -216,7 +213,7 @@ export function MobileBankReconciliationScreen() {
         setLoadingMore(true);
         await fetchPage(page + 1, false, applied);
       } catch (e) {
-        Alert.alert('Reconciliation', extractErrorMessage(e, 'Failed to load'));
+        appError('Reconciliation', extractErrorMessage(e, 'Failed to load'));
       } finally {
         setLoadingMore(false);
       }
@@ -253,7 +250,7 @@ export function MobileBankReconciliationScreen() {
       setPendingReconcileId(null);
       await reloadAfterMutation();
     } catch (e) {
-      Alert.alert('Reconciliation', extractErrorMessage(e, 'Reconcile failed'));
+      appError('Reconciliation', extractErrorMessage(e, 'Reconcile failed'));
     } finally {
       setBusy(false);
     }
@@ -261,28 +258,20 @@ export function MobileBankReconciliationScreen() {
 
   const unreconcile = useCallback(
     (t: BankTransaction) => {
-      Alert.alert('Unreconcile', `Mark ${t.transactionNumber} as not reconciled?`, [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Unreconcile',
-          style: 'destructive',
-          onPress: () => {
-            void (async () => {
-              try {
-                await updateBankTransaction(t.id, {
-                  isReconciled: false,
-                });
-                await reloadAfterMutation();
-              } catch (e) {
-                Alert.alert(
-                  'Reconciliation',
-                  extractErrorMessage(e, 'Update failed'),
-                );
-              }
-            })();
-          },
+      appConfirm({
+        title: 'Unreconcile',
+        message: `Mark ${t.transactionNumber} as not reconciled?`,
+        confirmLabel: 'Unreconcile',
+        destructive: true,
+        onConfirm: async () => {
+          try {
+            await updateBankTransaction(t.id, { isReconciled: false });
+            await reloadAfterMutation();
+          } catch (e) {
+            appError('Reconciliation', extractErrorMessage(e, 'Update failed'));
+          }
         },
-      ]);
+      });
     },
     [reloadAfterMutation],
   );
@@ -293,205 +282,163 @@ export function MobileBankReconciliationScreen() {
     : '—';
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Reconciliation
-        </Text>
-        <View className="w-9" />
-      </View>
-
-      <ScrollView
-        className="max-h-[220px] border-b border-slate-200 bg-white"
-        keyboardShouldPersistTaps="handled"
-      >
-        <View className="flex-row flex-wrap gap-2 px-3 py-3">
-          <View className="min-w-[45%] flex-1 rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <Text className="text-xs text-slate-500">Total</Text>
-            <Text className="text-lg font-bold text-slate-900">
-              {summary?.totalTransactions ?? '—'}
-            </Text>
-          </View>
-          <View className="min-w-[45%] flex-1 rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <Text className="text-xs text-slate-500">Reconciled</Text>
-            <Text className="text-lg font-bold text-emerald-700">
-              {summary?.reconciledTransactions ?? '—'}
-            </Text>
-          </View>
-          <View className="min-w-[45%] flex-1 rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <Text className="text-xs text-slate-500">Unreconciled</Text>
-            <Text className="text-lg font-bold text-amber-700">
-              {summary?.unreconciledTransactions ?? '—'}
-            </Text>
-          </View>
-          <View className="min-w-[45%] flex-1 rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <Text className="text-xs text-slate-500">Match %</Text>
-            <Text className="text-lg font-bold text-slate-900">
-              {summary ? `${pct.toFixed(1)}%` : '—'}
-            </Text>
-          </View>
-        </View>
-        <Text className="px-3 pb-3 text-xs text-slate-500">
-          Last reconciliation: {lastDate}
-        </Text>
-      </ScrollView>
-
-      <View className="gap-2 border-b border-slate-200 bg-white px-2 py-2">
-        <TextInput
-          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-          placeholder="Search description or #"
-          value={search}
-          onChangeText={setSearch}
+    <WorkshopChrome title="Reconciliation" subtitle="Match bank transactions" scroll={false}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 12 }}>
+        <WorkshopStatCard
+          label="Total"
+          value={summary?.totalTransactions ?? '—'}
+          icon="list"
+          accent="#4f46e5"
+          accentBg="#eef2ff"
         />
-        <View className="flex-row gap-2">
-          <TextInput
-            className="flex-1 rounded-lg border border-slate-200 px-2 py-2 text-xs text-slate-900"
-            placeholder="From YYYY-MM-DD"
-            value={dateFrom}
-            onChangeText={setDateFrom}
-          />
-          <TextInput
-            className="flex-1 rounded-lg border border-slate-200 px-2 py-2 text-xs text-slate-900"
-            placeholder="To YYYY-MM-DD"
-            value={dateTo}
-            onChangeText={setDateTo}
-          />
-        </View>
-        <View className="flex-row gap-2">
-          <Pressable
-            className="flex-1 flex-row items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-2 py-2"
-            onPress={() => setFilterAccountOpen(true)}
-          >
-            <Text className="flex-1 text-xs text-slate-900" numberOfLines={1}>
-              {filterAccountOptions.find((o) => o.value === accountFilter)?.label}
-            </Text>
-            <Ionicons name="chevron-down" size={14} color="#64748b" />
-          </Pressable>
-          <Pressable
-            className="flex-1 flex-row items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-2 py-2"
-            onPress={() => setFilterStatusOpen(true)}
-          >
-            <Text className="text-xs text-slate-900" numberOfLines={1}>
-              {STATUS_OPTS.find((o) => o.value === statusFilter)?.label}
-            </Text>
-            <Ionicons name="chevron-down" size={14} color="#64748b" />
-          </Pressable>
-        </View>
-        <Pressable
-          className="items-center rounded-lg bg-blue-600 py-2"
-          onPress={applyFilters}
-        >
-          <Text className="font-semibold text-white">Apply filters</Text>
-        </Pressable>
+        <WorkshopStatCard
+          label="Reconciled"
+          value={summary?.reconciledTransactions ?? '—'}
+          icon="checkmark-circle"
+          accent="#059669"
+          accentBg="#ecfdf5"
+        />
+        <WorkshopStatCard
+          label="Unreconciled"
+          value={summary?.unreconciledTransactions ?? '—'}
+          icon="alert-circle"
+          accent="#d97706"
+          accentBg="#fffbeb"
+        />
+        <WorkshopStatCard
+          label="Match %"
+          value={summary ? `${pct.toFixed(1)}%` : '—'}
+          icon="pie-chart"
+          accent="#2563eb"
+          accentBg="#eff6ff"
+        />
       </View>
+      <Text style={{ fontSize: 12, color: WS.textMuted, marginBottom: 12 }}>
+        Last reconciliation: {lastDate}
+      </Text>
+
+      <WorkshopFilterBar
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search description or #"
+        resultCount={filtered.length}
+        activeFilterCount={countActiveFilters([accountFilter, statusFilter, dateFrom, dateTo])}
+        onResetFilters={() => {
+          setAccountFilter('all');
+          setStatusFilter('all');
+          setDateFrom('');
+          setDateTo('');
+        }}
+        onApply={() => void applyFilters()}
+      >
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flex: 1 }}>
+            <WorkshopDatePickerField label="From" value={dateFrom} onChange={setDateFrom} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <WorkshopDatePickerField label="To" value={dateTo} onChange={setDateTo} />
+          </View>
+        </View>
+        <WorkshopPickerField
+          label="Account"
+          value={filterAccountOptions.find((o) => o.value === accountFilter)?.label ?? 'All accounts'}
+          onPress={() => setFilterAccountOpen(true)}
+        />
+        <WorkshopPickerField
+          label="Status"
+          value={STATUS_OPTS.find((o) => o.value === statusFilter)?.label ?? 'All statuses'}
+          onPress={() => setFilterStatusOpen(true)}
+        />
+      </WorkshopFilterBar>
 
       {loading && transactions.length === 0 ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563eb" />
-        </View>
+        <WorkshopLoading />
       ) : (
         <FlatList
+          style={{ flex: 1 }}
           data={filtered}
           keyExtractor={(x) => x.id}
+          contentContainerStyle={{ paddingBottom: 20 }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={WS.primary} />
           }
           onEndReached={loadMore}
           onEndReachedThreshold={0.4}
           ListFooterComponent={
             loadingMore ? (
-              <View className="py-4">
-                <ActivityIndicator color="#2563eb" />
+              <View style={{ paddingVertical: 16 }}>
+                <ActivityIndicator color={WS.primary} />
               </View>
             ) : null
           }
-          renderItem={({ item }) => (
-            <View className="border-b border-slate-100 bg-white px-4 py-3">
-              <View className="flex-row items-start justify-between gap-2">
-                <View className="flex-1">
-                  <Text className="font-semibold text-slate-900">
-                    {item.description}
-                  </Text>
-                  <Text className="text-xs text-slate-500">
-                    {item.transactionNumber} ·{' '}
-                    {getTransactionStatusLabel(item.status)}
-                  </Text>
-                  <Text className="mt-1 text-xs text-slate-600">
-                    {new Date(item.transactionDate).toLocaleString()}
-                  </Text>
-                  <Text className="mt-1 text-base font-bold text-slate-900">
-                    {formatMoney(item.amount, item.currency)}
-                  </Text>
-                  <Text
-                    className={`mt-1 text-xs ${
-                      item.isReconciled ? 'text-emerald-700' : 'text-amber-700'
-                    }`}
-                  >
-                    {item.isReconciled ? 'Reconciled' : 'Not reconciled'}
-                  </Text>
-                </View>
-              </View>
-              {canManageBanking() ? (
-                <View className="mt-2 flex-row flex-wrap gap-3">
-                  {!item.isReconciled ? (
-                    <Pressable onPress={() => openReconcile(item.id)}>
-                      <Text className="font-medium text-blue-600">Reconcile</Text>
-                    </Pressable>
-                  ) : (
-                    <Pressable onPress={() => unreconcile(item)}>
-                      <Text className="font-medium text-slate-700">Unreconcile</Text>
-                    </Pressable>
-                  )}
-                </View>
-              ) : null}
-            </View>
-          )}
           ListEmptyComponent={
-            <Text className="py-8 text-center text-slate-500">
-              No transactions
-            </Text>
+            <WorkshopEmptyState
+              icon="checkmark-done-outline"
+              title="No transactions"
+              subtitle="Adjust filters or record bank transactions first."
+            />
           }
+          renderItem={({ item }) => (
+            <WorkshopListCard
+              icon={item.isReconciled ? 'checkmark-circle' : 'ellipse-outline'}
+              iconColor={item.isReconciled ? '#059669' : '#d97706'}
+              iconBg={item.isReconciled ? '#ecfdf5' : '#fffbeb'}
+              title={item.description}
+              subtitle={item.transactionNumber}
+              meta={`${getTransactionStatusLabel(item.status)} · ${new Date(item.transactionDate).toLocaleString()}`}
+              badges={[
+                { label: formatMoney(item.amount, item.currency) },
+                { label: item.isReconciled ? 'Reconciled' : 'Not reconciled' },
+              ]}
+              actions={
+                canManageBanking()
+                  ? [
+                      item.isReconciled
+                        ? { icon: 'close-circle-outline', label: 'Unreconcile', onPress: () => unreconcile(item) }
+                        : { icon: 'checkmark-outline', label: 'Reconcile', onPress: () => openReconcile(item.id) },
+                    ]
+                  : undefined
+              }
+            />
+          )}
         />
       )}
 
-      <AppModal
+      <WorkshopFormSheet
         visible={notesOpen}
-        animationType="slide"
-        transparent
-        onClose={() => setNotesOpen(false)}
-      >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="rounded-t-2xl bg-white px-4 pb-8 pt-4">
-            <Text className="text-lg font-semibold text-slate-900">
-              Reconciliation notes
-            </Text>
-            <TextInput
-              className="mt-3 min-h-[100px] rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-              placeholder="Optional notes"
-              value={reconcileNotes}
-              onChangeText={setReconcileNotes}
-              multiline
+        title="Reconciliation notes"
+        onClose={() => {
+          setNotesOpen(false);
+          setPendingReconcileId(null);
+        }}
+        footer={
+          <>
+            <WorkshopPrimaryButton
+              label={busy ? 'Saving…' : 'Confirm reconcile'}
+              onPress={() => void submitReconcile()}
+              disabled={busy}
             />
             <Pressable
-              className="mt-4 items-center rounded-lg bg-blue-600 py-3"
-              disabled={busy}
-              onPress={() => void submitReconcile()}
-            >
-              <Text className="font-semibold text-white">Confirm</Text>
-            </Pressable>
-            <Pressable
-              className="mt-2 py-2"
               onPress={() => {
                 setNotesOpen(false);
                 setPendingReconcileId(null);
               }}
+              style={{ marginTop: 12, alignItems: 'center', paddingVertical: 10 }}
             >
-              <Text className="text-center text-slate-600">Cancel</Text>
+              <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Cancel</Text>
             </Pressable>
-          </View>
-        </View>
-      </AppModal>
+          </>
+        }
+      >
+        <WorkshopFieldLabel>Notes (optional)</WorkshopFieldLabel>
+        <WorkshopTextInput
+          placeholder="Optional notes"
+          value={reconcileNotes}
+          onChangeText={setReconcileNotes}
+          multiline
+          style={{ minHeight: 100 }}
+        />
+      </WorkshopFormSheet>
 
       <OptionSheet
         visible={filterAccountOpen}
@@ -513,6 +460,6 @@ export function MobileBankReconciliationScreen() {
         }}
         onClose={() => setFilterStatusOpen(false)}
       />
-    </View>
+    </WorkshopChrome>
   );
 }

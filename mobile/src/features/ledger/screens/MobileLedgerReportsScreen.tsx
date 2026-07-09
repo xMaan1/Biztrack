@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, ScrollView, TextInput, Pressable, ActivityIndicator, Alert } from 'react-native';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { View, Text } from 'react-native';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { appAlert, appError } from '../../../utils/appDialog';
 import type {
   IncomeStatementResponse,
   TrialBalanceResponse,
@@ -13,6 +13,17 @@ import {
   getTrialBalance,
 } from '../../../services/ledger/ledgerMobileApi';
 import { formatMoney } from '../ledgerFormat';
+import {
+  WorkshopChrome,
+  WorkshopLoading,
+  WorkshopSegmentTabs,
+  WorkshopDatePickerField,
+  WorkshopPrimaryButton,
+  WorkshopCard,
+  WorkshopDetailRow,
+  WorkshopListCard,
+  WS,
+} from '../../workshop/components/WorkshopChrome';
 
 type Tab = 'trial' | 'income' | 'balance';
 
@@ -27,17 +38,11 @@ function parseDateInputToIso(dateInput: string): string | null {
 export function MobileLedgerReportsScreen() {
   const { workspacePath, setSidebarActivePath } = useSidebarDrawer();
   const [tab, setTab] = useState<Tab>('trial');
-  const [asOf, setAsOf] = useState(() =>
-    new Date().toISOString().split('T')[0],
-  );
+  const [asOf, setAsOf] = useState(() => new Date().toISOString().split('T')[0]);
   const [start, setStart] = useState(() =>
-    new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-      .toISOString()
-      .split('T')[0],
+    new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
   );
-  const [end, setEnd] = useState(() =>
-    new Date().toISOString().split('T')[0],
-  );
+  const [end, setEnd] = useState(() => new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(false);
   const [trial, setTrial] = useState<TrialBalanceResponse | null>(null);
   const [income, setIncome] = useState<IncomeStatementResponse | null>(null);
@@ -48,7 +53,7 @@ export function MobileLedgerReportsScreen() {
       setLoading(true);
       if (tab === 'trial') {
         if (!parseDateInputToIso(asOf)) {
-          Alert.alert('Reports', 'Use valid as-of date format YYYY-MM-DD.');
+          appAlert('Reports', 'Use valid as-of date format YYYY-MM-DD.');
           return;
         }
         const t = await getTrialBalance(asOf);
@@ -57,33 +62,28 @@ export function MobileLedgerReportsScreen() {
         const startIso = parseDateInputToIso(start);
         const endIso = parseDateInputToIso(end);
         if (!startIso || !endIso) {
-          Alert.alert('Reports', 'Use valid start/end date format YYYY-MM-DD.');
+          appAlert('Reports', 'Use valid start/end date format YYYY-MM-DD.');
           return;
         }
-        const i = await getIncomeStatement(
-          startIso,
-          endIso,
-        );
+        const i = await getIncomeStatement(startIso, endIso);
         setIncome(i);
       } else {
         if (!parseDateInputToIso(asOf)) {
-          Alert.alert('Reports', 'Use valid as-of date format YYYY-MM-DD.');
+          appAlert('Reports', 'Use valid as-of date format YYYY-MM-DD.');
           return;
         }
         const b = await getBalanceSheet(asOf);
         setBalance(b);
       }
     } catch (e) {
-      Alert.alert('Reports', extractErrorMessage(e, 'Failed to load'));
+      appError('Reports', extractErrorMessage(e, 'Failed to load'));
     } finally {
       setLoading(false);
     }
   }, [tab, asOf, start, end]);
 
   useEffect(() => {
-    setSidebarActivePath(
-      workspacePath === '/dashboard' ? '/dashboard' : '/ledger/reports',
-    );
+    setSidebarActivePath(workspacePath === '/dashboard' ? '/dashboard' : '/ledger/reports');
   }, [setSidebarActivePath, workspacePath]);
 
   useEffect(() => {
@@ -91,130 +91,69 @@ export function MobileLedgerReportsScreen() {
   }, [run]);
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Reports
-        </Text>
-        <View className="w-9" />
-      </View>
+    <WorkshopChrome title="Reports" subtitle="Trial balance, income & balance sheet" scroll>
+      <WorkshopSegmentTabs
+        tabs={[
+          { key: 'trial', label: 'Trial', icon: 'list' },
+          { key: 'income', label: 'Income', icon: 'trending-up' },
+          { key: 'balance', label: 'Balance', icon: 'pie-chart' },
+        ]}
+        active={tab}
+        onChange={setTab}
+      />
 
-      <View className="flex-row border-b border-slate-200 bg-white">
-        {(
-          [
-            ['trial', 'Trial balance'],
-            ['income', 'Income'],
-            ['balance', 'Balance sheet'],
-          ] as const
-        ).map(([k, label]) => (
-          <Pressable
-            key={k}
-            className={`flex-1 border-b-2 py-3 ${
-              tab === k ? 'border-blue-600' : 'border-transparent'
-            }`}
-            onPress={() => setTab(k)}
-          >
-            <Text
-              className={`text-center text-xs font-medium ${
-                tab === k ? 'text-blue-600' : 'text-slate-600'
-              }`}
-            >
-              {label}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-
-      <View className="gap-2 border-b border-slate-200 bg-white px-3 py-2">
-        {tab === 'income' ? (
-          <>
-            <Text className="text-xs text-slate-500">Start</Text>
-            <TextInput
-              className="rounded-lg border border-slate-200 px-2 py-2 text-slate-900"
-              value={start}
-              onChangeText={setStart}
-            />
-            <Text className="text-xs text-slate-500">End</Text>
-            <TextInput
-              className="rounded-lg border border-slate-200 px-2 py-2 text-slate-900"
-              value={end}
-              onChangeText={setEnd}
-            />
-          </>
-        ) : (
-          <>
-            <Text className="text-xs text-slate-500">As of date</Text>
-            <TextInput
-              className="rounded-lg border border-slate-200 px-2 py-2 text-slate-900"
-              value={asOf}
-              onChangeText={setAsOf}
-            />
-          </>
-        )}
-        <Pressable
-          className="items-center rounded-lg bg-blue-600 py-2"
-          onPress={() => void run()}
-        >
-          <Text className="font-semibold text-white">Run report</Text>
-        </Pressable>
-      </View>
-
-      {loading ? (
-        <View className="flex-1 items-center justify-center py-12">
-          <ActivityIndicator size="large" color="#2563eb" />
+      {tab === 'income' ? (
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flex: 1 }}>
+            <WorkshopDatePickerField label="Start date" value={start} onChange={setStart} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <WorkshopDatePickerField label="End date" value={end} onChange={setEnd} />
+          </View>
         </View>
       ) : (
-        <ScrollView className="flex-1 px-3 py-3">
+        <WorkshopDatePickerField label="As of date" value={asOf} onChange={setAsOf} />
+      )}
+      <WorkshopPrimaryButton label="Run report" onPress={() => void run()} />
+
+      {loading ? (
+        <WorkshopLoading />
+      ) : (
+        <>
           {tab === 'trial' && trial ? (
             <>
-              <Text className="mb-2 text-sm text-slate-600">
+              <Text style={{ fontSize: 13, color: WS.textMuted, marginBottom: 12 }}>
                 As of {new Date(trial.as_of_date).toLocaleDateString()}
               </Text>
               {(trial.accounts ?? []).map((a) => (
-                <View
+                <WorkshopListCard
                   key={a.account_id}
-                  className="mb-2 rounded-lg border border-slate-200 bg-white p-3"
-                >
-                  <Text className="font-medium text-slate-900">
-                    {a.account_code} {a.account_name}
-                  </Text>
-                  <Text className="text-sm text-slate-700">
-                    Dr {formatMoney(a.debit_balance)} · Cr{' '}
-                    {formatMoney(a.credit_balance)}
-                  </Text>
-                </View>
+                  icon="book"
+                  iconColor="#4f46e5"
+                  iconBg="#eef2ff"
+                  title={`${a.account_code} ${a.account_name}`}
+                  meta={`Dr ${formatMoney(a.debit_balance)} · Cr ${formatMoney(a.credit_balance)}`}
+                />
               ))}
             </>
           ) : null}
 
           {tab === 'income' && income ? (
-            <View className="rounded-xl border border-slate-200 bg-white p-4">
-              <Row label="Revenue" value={formatMoney(income.revenue)} />
-              <Row label="Expenses" value={formatMoney(income.expenses)} />
-              <Row label="Net income" value={formatMoney(income.net_income)} />
-              <Text className="mt-2 text-xs text-slate-500">
+            <WorkshopCard>
+              <WorkshopDetailRow label="Revenue" value={formatMoney(income.revenue)} />
+              <WorkshopDetailRow label="Expenses" value={formatMoney(income.expenses)} />
+              <WorkshopDetailRow label="Net income" value={formatMoney(income.net_income)} />
+              <Text style={{ marginTop: 8, fontSize: 12, color: WS.textMuted }}>
                 {new Date(income.start_date).toLocaleDateString()} –{' '}
                 {new Date(income.end_date).toLocaleDateString()}
               </Text>
-            </View>
+            </WorkshopCard>
           ) : null}
 
-          {tab === 'balance' && balance ? (
-            <BalanceSheetView data={balance} />
-          ) : null}
-        </ScrollView>
+          {tab === 'balance' && balance ? <BalanceSheetView data={balance} /> : null}
+        </>
       )}
-    </View>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <View className="mb-2 flex-row justify-between">
-      <Text className="text-slate-600">{label}</Text>
-      <Text className="font-semibold text-slate-900">{value}</Text>
-    </View>
+    </WorkshopChrome>
   );
 }
 
@@ -228,15 +167,14 @@ function BalanceSheetView({ data }: { data: unknown }) {
   if (assets && typeof assets === 'object') {
     return (
       <View>
-        <Text className="mb-2 text-sm text-slate-600">
-          As of{' '}
-          {asOf ? new Date(String(asOf)).toLocaleDateString() : '—'}
+        <Text style={{ fontSize: 13, color: WS.textMuted, marginBottom: 12 }}>
+          As of {asOf ? new Date(String(asOf)).toLocaleDateString() : '—'}
         </Text>
         <Section title="Assets" sec={assets} />
         <Section title="Liabilities" sec={liab} />
         <Section title="Equity" sec={equity} />
         {typeof o.total_liabilities_and_equity === 'number' ? (
-          <Text className="mt-2 font-semibold text-slate-900">
+          <Text style={{ marginTop: 8, fontWeight: '700', fontSize: 15, color: WS.text }}>
             L+E {formatMoney(o.total_liabilities_and_equity as number)}
           </Text>
         ) : null}
@@ -248,17 +186,17 @@ function BalanceSheetView({ data }: { data: unknown }) {
   const tl = o.total_liabilities;
   const te = o.total_equity;
   return (
-    <View className="rounded-xl border border-slate-200 bg-white p-4">
+    <WorkshopCard>
       {typeof ta === 'number' ? (
-        <Row label="Total assets" value={formatMoney(ta)} />
+        <WorkshopDetailRow label="Total assets" value={formatMoney(ta)} />
       ) : null}
       {typeof tl === 'number' ? (
-        <Row label="Total liabilities" value={formatMoney(tl)} />
+        <WorkshopDetailRow label="Total liabilities" value={formatMoney(tl)} />
       ) : null}
       {typeof te === 'number' ? (
-        <Row label="Total equity" value={formatMoney(te)} />
+        <WorkshopDetailRow label="Total equity" value={formatMoney(te)} />
       ) : null}
-    </View>
+    </WorkshopCard>
   );
 }
 
@@ -271,22 +209,22 @@ function Section({
 }) {
   if (!sec) return null;
   const total = sec.total as number | undefined;
-  const accounts = sec.accounts as
-    | Array<{ account_name?: string; balance?: number }>
-    | undefined;
+  const accounts = sec.accounts as Array<{ account_name?: string; balance?: number }> | undefined;
   return (
-    <View className="mb-3 rounded-xl border border-slate-200 bg-white p-3">
-      <Text className="mb-2 font-semibold text-slate-900">{title}</Text>
+    <WorkshopCard>
+      <Text style={{ fontSize: 15, fontWeight: '700', color: WS.text, marginBottom: 8 }}>{title}</Text>
       {typeof total === 'number' ? (
-        <Text className="mb-2 text-sm text-slate-700">
+        <Text style={{ fontSize: 13, color: WS.textMuted, marginBottom: 8 }}>
           Total {formatMoney(total)}
         </Text>
       ) : null}
       {(accounts ?? []).map((a, i) => (
-        <Text key={i} className="text-sm text-slate-600">
-          {a.account_name ?? '—'} · {formatMoney(a.balance ?? 0)}
-        </Text>
+        <WorkshopDetailRow
+          key={i}
+          label={a.account_name ?? '—'}
+          value={formatMoney(a.balance ?? 0)}
+        />
       ))}
-    </View>
+    </WorkshopCard>
   );
 }

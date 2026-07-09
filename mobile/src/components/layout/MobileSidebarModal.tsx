@@ -129,6 +129,12 @@ export function MobileSidebarModal({
   }, [searchQuery, filteredItems, planInfo, user, isSuperAdminNoTenant]);
 
   const planLabel = getPlanDisplayName(isSuperAdminNoTenant, planInfo);
+  const accent = '#2563eb';
+  const accentBg = '#eff6ff';
+  const accentText = '#1e3a8a';
+  const iconActive = '#334155';
+  const iconDefault = '#475569';
+  const subIconDefault = '#64748b';
 
   return (
     <AppModal
@@ -217,63 +223,81 @@ export function MobileSidebarModal({
                     {item.path ? (
                       <Pressable
                         onPress={() => void onNavigate(item.path!)}
-                        className={`flex-row items-center gap-3 rounded-xl px-3 py-3 ${
-                          isMainItemActive
-                            ? 'border border-blue-200 bg-blue-50'
-                            : 'bg-slate-50 active:bg-slate-100'
-                        }`}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 12,
+                          borderRadius: 14,
+                          paddingHorizontal: 12,
+                          paddingVertical: 12,
+                          marginBottom: 4,
+                          backgroundColor: isMainItemActive ? accentBg : '#f8fafc',
+                          borderWidth: isMainItemActive ? 1 : 0,
+                          borderColor: isMainItemActive ? accent : 'transparent',
+                        }}
                       >
                         <View
-                          className={`rounded-lg p-2 ${
-                            isMainItemActive ? 'bg-blue-100' : 'bg-white'
-                          }`}
+                          style={{
+                            borderRadius: 10,
+                            padding: 8,
+                            backgroundColor: isMainItemActive ? '#fff' : '#fff',
+                          }}
                         >
                           <Ionicons
                             name={item.icon as never}
                             size={22}
-                            color={isMainItemActive ? '#2563eb' : '#475569'}
+                            color={isMainItemActive ? iconActive : iconDefault}
                           />
                         </View>
                         <Text
-                          className={`flex-1 font-semibold ${
-                            isMainItemActive ? 'text-blue-950' : 'text-slate-800'
-                          }`}
+                          style={{
+                            flex: 1,
+                            fontWeight: '700',
+                            color: isMainItemActive ? accentText : '#1e293b',
+                          }}
                         >
                           {item.text}
                         </Text>
                         {isMainItemActive ? (
-                          <View className="h-2 w-2 rounded-full bg-blue-500" />
+                          <View
+                            style={{
+                              width: 8,
+                              height: 8,
+                              borderRadius: 4,
+                              backgroundColor: accent,
+                            }}
+                          />
                         ) : null}
                       </Pressable>
                     ) : (
                       <Pressable
                         onPress={() => toggleExpanded(item.text)}
-                        className={`flex-row items-center justify-between rounded-xl px-3 py-3 ${
-                          hasActiveSubItem
-                            ? 'border border-blue-200 bg-blue-50'
-                            : 'bg-slate-50 active:bg-slate-100'
-                        }`}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          borderRadius: 14,
+                          paddingHorizontal: 12,
+                          paddingVertical: 12,
+                          marginBottom: 4,
+                          backgroundColor: hasActiveSubItem ? accentBg : '#f8fafc',
+                          borderWidth: hasActiveSubItem ? 1 : 0,
+                          borderColor: hasActiveSubItem ? accent : 'transparent',
+                        }}
                       >
-                        <View className="flex-row items-center gap-3">
-                          <View
-                            className={`rounded-lg p-2 ${
-                              hasActiveSubItem ? 'bg-blue-100' : 'bg-white'
-                            }`}
-                          >
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                          <View style={{ borderRadius: 10, padding: 8, backgroundColor: '#fff' }}>
                             <Ionicons
                               name={item.icon as never}
                               size={22}
-                              color={
-                                hasActiveSubItem ? '#2563eb' : '#475569'
-                              }
+                              color={hasActiveSubItem ? iconActive : iconDefault}
                             />
                           </View>
                           <Text
-                            className={`font-semibold ${
-                              hasActiveSubItem
-                                ? 'text-blue-950'
-                                : 'text-slate-800'
-                            }`}
+                            style={{
+                              fontWeight: '700',
+                              color: hasActiveSubItem ? accentText : '#1e293b',
+                            }}
                           >
                             {item.text}
                           </Text>
@@ -282,7 +306,7 @@ export function MobileSidebarModal({
                           <Ionicons
                             name="chevron-down-outline"
                             size={20}
-                            color={hasActiveSubItem ? '#2563eb' : '#64748b'}
+                            color={hasActiveSubItem ? iconActive : subIconDefault}
                             style={{
                               transform: [
                                 { rotate: isExpanded ? '180deg' : '0deg' },
@@ -329,34 +353,51 @@ export function MobileSidebarModal({
                             <Pressable
                               key={subItem.text}
                               onPress={() => void onNavigate(subItem.path)}
-                              className={`mb-1 flex-row items-center gap-2 rounded-lg px-2 py-2.5 ${
-                                subActive
-                                  ? 'border-l-2 border-blue-500 bg-blue-50'
-                                  : 'active:bg-slate-50'
-                              }`}
+                              style={{
+                                marginBottom: 4,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 8,
+                                borderRadius: 12,
+                                paddingHorizontal: 8,
+                                paddingVertical: 10,
+                                backgroundColor: subActive ? accentBg : 'transparent',
+                                borderLeftWidth: subActive ? 3 : 0,
+                                borderLeftColor: accent,
+                              }}
                             >
                               <View
-                                className={`rounded-md p-1.5 ${
-                                  subActive ? 'bg-blue-100' : 'bg-slate-100'
-                                }`}
+                                style={{
+                                  borderRadius: 8,
+                                  padding: 6,
+                                  backgroundColor: subActive ? '#fff' : '#f1f5f9',
+                                }}
                               >
                                 <Ionicons
                                   name={subItem.icon as never}
                                   size={18}
-                                  color={subActive ? '#2563eb' : '#64748b'}
+                                  color={subActive ? iconActive : subIconDefault}
                                 />
                               </View>
                               <Text
-                                className={`flex-1 text-sm font-medium ${
-                                  subActive
-                                    ? 'text-blue-800'
-                                    : 'text-slate-600'
-                                }`}
+                                style={{
+                                  flex: 1,
+                                  fontSize: 14,
+                                  fontWeight: '600',
+                                  color: subActive ? accentText : '#475569',
+                                }}
                               >
                                 {subItem.text}
                               </Text>
                               {subActive ? (
-                                <View className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                                <View
+                                  style={{
+                                    width: 6,
+                                    height: 6,
+                                    borderRadius: 3,
+                                    backgroundColor: accent,
+                                  }}
+                                />
                               ) : null}
                             </Pressable>
                           );

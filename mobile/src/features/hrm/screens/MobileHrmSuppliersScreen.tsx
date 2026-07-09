@@ -1,16 +1,29 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, FlatList, TextInput, ScrollView, Pressable, ActivityIndicator, RefreshControl, Alert } from 'react-native';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { View, Text, FlatList, Pressable, RefreshControl } from 'react-native';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { appAlert, appConfirm, appError } from '../../../utils/appDialog';
 import {
   fetchSuppliers,
   createSupplier,
   deleteSupplier,
 } from '../../../services/hrm/hrmMobileApi';
 import type { Supplier } from '../../../models/hrm';
-import { AppModal } from '../../../components/layout/AppModal';
+import {
+  WorkshopChrome,
+  WorkshopListCard,
+  WorkshopEmptyState,
+  WorkshopHeaderButton,
+  WorkshopLoading,
+  WorkshopFormSheet,
+  WorkshopFieldLabel,
+  WorkshopTextInput,
+  WorkshopPrimaryButton,
+  WorkshopOutlineButton,
+  WorkshopDetailRow,
+  WS,
+} from '../../workshop/components/WorkshopChrome';
 
 export function MobileHrmSuppliersScreen() {
   const { workspacePath, setSidebarActivePath } = useSidebarDrawer();
@@ -29,7 +42,7 @@ export function MobileHrmSuppliersScreen() {
       const res = await fetchSuppliers(0, 200);
       setRows(res.suppliers ?? []);
     } catch (e) {
-      Alert.alert('HRM', extractErrorMessage(e, 'Failed to load'));
+      appError('HRM', extractErrorMessage(e, 'Failed to load'));
     } finally {
       setLoading(false);
     }
@@ -53,7 +66,7 @@ export function MobileHrmSuppliersScreen() {
 
   const submit = async () => {
     if (!name.trim() || !code.trim()) {
-      Alert.alert('HRM', 'Name and code are required.');
+      appAlert('HRM', 'Name and code are required.');
       return;
     }
     try {
@@ -67,154 +80,122 @@ export function MobileHrmSuppliersScreen() {
       setCode('');
       await load();
     } catch (e) {
-      Alert.alert('HRM', extractErrorMessage(e, 'Failed to save'));
+      appError('HRM', extractErrorMessage(e, 'Failed to save'));
     }
   };
 
   const remove = (s: Supplier) => {
-    Alert.alert('Delete supplier', s.name, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () =>
-          void (async () => {
-            try {
-              await deleteSupplier(s.id);
-              setDetail(null);
-              await load();
-            } catch (e) {
-              Alert.alert('HRM', extractErrorMessage(e, 'Failed to delete'));
-            }
-          })(),
+    appConfirm({
+      title: 'Delete supplier',
+      message: s.name,
+      confirmLabel: 'Delete',
+      destructive: true,
+      onConfirm: async () => {
+        try {
+          await deleteSupplier(s.id);
+          setDetail(null);
+          await load();
+        } catch (e) {
+          appError('HRM', extractErrorMessage(e, 'Failed to delete'));
+        }
       },
-    ]);
+    });
   };
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Suppliers
-        </Text>
-        {canManageHRM() ? (
-          <Pressable onPress={() => setOpen(true)} className="px-2 py-1">
-            <Text className="font-semibold text-blue-600">Add</Text>
-          </Pressable>
-        ) : (
-          <View className="w-10" />
-        )}
-      </View>
-
+    <WorkshopChrome
+      title="Suppliers"
+      subtitle="Vendor directory"
+      right={canManageHRM() ? <WorkshopHeaderButton onPress={() => setOpen(true)} /> : undefined}
+      scroll={false}
+    >
       {loading && !refreshing ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563eb" />
-        </View>
+        <WorkshopLoading />
       ) : (
         <FlatList
+          style={{ flex: 1 }}
           data={rows}
           keyExtractor={(item) => item.id}
+          contentContainerStyle={{ paddingBottom: 20 }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={WS.primary} />
           }
-          contentContainerStyle={{ padding: 12, paddingBottom: 32 }}
           ListEmptyComponent={
-            <Text className="py-8 text-center text-slate-500">No suppliers</Text>
+            <WorkshopEmptyState
+              icon="business-outline"
+              title="No suppliers"
+              subtitle="Add vendors to your supplier directory."
+              actionLabel={canManageHRM() ? 'Add supplier' : undefined}
+              onAction={canManageHRM() ? () => setOpen(true) : undefined}
+            />
           }
           renderItem={({ item }) => (
-            <Pressable
+            <WorkshopListCard
+              icon="business"
+              iconColor="#64748b"
+              iconBg="#f1f5f9"
+              title={item.name}
+              subtitle={item.code}
+              meta={item.email || item.phone || undefined}
               onPress={() => setDetail(item)}
-              className="mb-3 rounded-xl border border-slate-200 bg-white p-3"
-            >
-              <Text className="font-semibold text-slate-900">{item.name}</Text>
-              <Text className="text-sm text-slate-600">{item.code}</Text>
-            </Pressable>
+              actions={
+                canManageHRM()
+                  ? [{ icon: 'trash-outline', onPress: () => remove(item), danger: true }]
+                  : undefined
+              }
+            />
           )}
         />
       )}
 
-      <AppModal
+      <WorkshopFormSheet
         visible={open}
-        animationType="slide"
-        transparent
+        title="New supplier"
         onClose={() => setOpen(false)}
+        footer={
+          <>
+            <WorkshopPrimaryButton label="Save supplier" onPress={() => void submit()} />
+            <Pressable onPress={() => setOpen(false)} style={{ marginTop: 12, alignItems: 'center', paddingVertical: 10 }}>
+              <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Cancel</Text>
+            </Pressable>
+          </>
+        }
       >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="rounded-t-2xl bg-white px-4 pb-2 pt-3">
-            <Text className="mb-3 text-lg font-semibold text-slate-900">
-              New supplier
-            </Text>
-            <Text className="mb-1 text-sm text-slate-600">Name</Text>
-            <TextInput
-              value={name}
-              onChangeText={setName}
-              className="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <Text className="mb-1 text-sm text-slate-600">Code</Text>
-            <TextInput
-              value={code}
-              onChangeText={setCode}
-              className="mb-4 rounded-lg border border-slate-200 px-3 py-2 text-slate-900"
-            />
-            <View className="flex-row gap-2">
-              <Pressable
-                onPress={() => setOpen(false)}
-                className="flex-1 items-center rounded-lg border border-slate-200 py-3"
-              >
-                <Text className="font-medium text-slate-800">Cancel</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => void submit()}
-                className="flex-1 items-center rounded-lg bg-blue-600 py-3"
-              >
-                <Text className="font-semibold text-white">Save</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </AppModal>
+        <WorkshopFieldLabel>Name *</WorkshopFieldLabel>
+        <WorkshopTextInput value={name} onChangeText={setName} />
+        <WorkshopFieldLabel>Code *</WorkshopFieldLabel>
+        <WorkshopTextInput value={code} onChangeText={setCode} autoCapitalize="characters" />
+      </WorkshopFormSheet>
 
-      <AppModal
+      <WorkshopFormSheet
         visible={detail != null}
-        animationType="slide"
-        transparent
+        title="Supplier"
         onClose={() => setDetail(null)}
-      >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[85%] rounded-t-2xl bg-white p-4">
-            <Text className="text-lg font-semibold text-slate-900">Supplier</Text>
-            {detail ? (
-              <ScrollView className="mt-3">
-                <Text className="text-xl font-bold text-slate-900">{detail.name}</Text>
-                <Text className="mt-1 text-slate-600">{detail.code}</Text>
-                {detail.email ? (
-                  <Text className="mt-2 text-slate-700">{detail.email}</Text>
-                ) : null}
-                {detail.phone ? (
-                  <Text className="text-slate-700">{detail.phone}</Text>
-                ) : null}
-              </ScrollView>
-            ) : null}
-            <View className="mt-4 flex-row gap-2">
-              {detail && canManageHRM() ? (
+        footer={
+          <>
+            {detail && canManageHRM() ? (
+              <View style={{ marginBottom: 8 }}>
                 <Pressable
                   onPress={() => remove(detail)}
-                  className="flex-1 items-center rounded-lg bg-red-600 py-3"
+                  style={{ alignItems: 'center', borderRadius: 14, paddingVertical: 15, backgroundColor: WS.dangerBg }}
                 >
-                  <Text className="font-semibold text-white">Delete</Text>
+                  <Text style={{ fontWeight: '700', fontSize: 16, color: WS.danger }}>Delete</Text>
                 </Pressable>
-              ) : null}
-              <Pressable
-                onPress={() => setDetail(null)}
-                className="flex-1 items-center rounded-lg bg-slate-100 py-3"
-              >
-                <Text className="font-semibold text-slate-800">Close</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </AppModal>
-    </View>
+              </View>
+            ) : null}
+            <WorkshopOutlineButton label="Close" onPress={() => setDetail(null)} />
+          </>
+        }
+      >
+        {detail ? (
+          <>
+            <Text style={{ fontSize: 22, fontWeight: '800', color: WS.text, marginBottom: 12 }}>{detail.name}</Text>
+            <WorkshopDetailRow label="Code" value={detail.code} />
+            {detail.email ? <WorkshopDetailRow label="Email" value={detail.email} /> : null}
+            {detail.phone ? <WorkshopDetailRow label="Phone" value={detail.phone} /> : null}
+          </>
+        ) : null}
+      </WorkshopFormSheet>
+    </WorkshopChrome>
   );
 }

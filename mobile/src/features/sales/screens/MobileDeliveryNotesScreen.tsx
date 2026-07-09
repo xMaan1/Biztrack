@@ -1,9 +1,19 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, FlatList, TextInput, Pressable, ActivityIndicator, RefreshControl, Alert } from 'react-native';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { View, Text, FlatList, Pressable, RefreshControl } from 'react-native';
 import { MobileFormSheet } from '../../../components/layout/MobileForm';
+import {
+  WorkshopChrome,
+  WorkshopListCard,
+  WorkshopEmptyState,
+  WorkshopHeaderButton,
+  WorkshopLoading,
+  WorkshopFieldLabel,
+  WorkshopTextInput,
+  WS,
+} from '../../workshop/components/WorkshopChrome';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { appAlert, appError } from '../../../utils/appDialog';
 import { type DeliveryNote } from '../../../models/sales';
 import {
   fetchInvoicesPaged,
@@ -35,7 +45,7 @@ export function MobileDeliveryNotesScreen() {
       const data = await getDeliveryNotes(undefined, 0, 200);
       setNotes(Array.isArray(data) ? data : []);
     } catch (e) {
-      Alert.alert('Delivery notes', extractErrorMessage(e, 'Failed to load'));
+      appError('Delivery notes', extractErrorMessage(e, 'Failed to load'));
     } finally {
       setLoading(false);
     }
@@ -81,7 +91,7 @@ export function MobileDeliveryNotesScreen() {
 
   const submitCreate = async () => {
     if (!invoiceId) {
-      Alert.alert('Delivery notes', 'Select an invoice');
+      appAlert('Delivery notes', 'Select an invoice');
       return;
     }
     try {
@@ -96,7 +106,7 @@ export function MobileDeliveryNotesScreen() {
       setInvoiceQuery('');
       await load();
     } catch (e) {
-      Alert.alert('Delivery notes', extractErrorMessage(e, 'Failed to create'));
+      appError('Delivery notes', extractErrorMessage(e, 'Failed to create'));
     }
   };
 
@@ -107,71 +117,65 @@ export function MobileDeliveryNotesScreen() {
         `delivery-note-${n.id}.pdf`,
       );
     } catch (e) {
-      Alert.alert('Delivery notes', extractErrorMessage(e, 'PDF failed'));
+      appError('Delivery notes', extractErrorMessage(e, 'PDF failed'));
     }
   };
 
-  return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center justify-between border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Delivery notes
-        </Text>
-        {canManageSales() ? (
-          <Pressable
-            onPress={() => {
-              setInvoiceId('');
-              setInvoiceLabel('');
-              setNoteText('');
-              setInvoiceQuery('');
-              setCreateOpen(true);
-            }}
-            className="rounded-lg bg-blue-600 px-3 py-2 active:bg-blue-700"
-          >
-            <Text className="font-semibold text-white">New</Text>
-          </Pressable>
-        ) : (
-          <View className="w-14" />
-        )}
-      </View>
+  const openCreate = () => {
+    setInvoiceId('');
+    setInvoiceLabel('');
+    setNoteText('');
+    setInvoiceQuery('');
+    setCreateOpen(true);
+  };
 
-      {loading && !refreshing ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563eb" />
-        </View>
-      ) : (
-        <FlatList
-          data={notes}
-          keyExtractor={(item) => item.id}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-          contentContainerStyle={{ padding: 12, paddingBottom: 32 }}
-          ListEmptyComponent={
-            <Text className="py-8 text-center text-slate-500">No delivery notes</Text>
-          }
-          renderItem={({ item }) => (
-            <View className="mb-3 rounded-xl border border-slate-200 bg-white p-4">
-              <Text className="font-semibold text-slate-900">
-                {item.invoice_number ?? item.invoice_id.slice(0, 8)}
-              </Text>
-              {item.customer_name ? (
-                <Text className="mt-1 text-slate-700">{item.customer_name}</Text>
-              ) : null}
-              {item.note ? (
-                <Text className="mt-2 text-slate-800">{item.note}</Text>
-              ) : null}
-              <Pressable
-                onPress={() => void pdf(item)}
-                className="mt-3 self-start rounded-lg bg-indigo-600 px-3 py-1.5"
-              >
-                <Text className="font-semibold text-white">PDF</Text>
-              </Pressable>
-            </View>
-          )}
-        />
-      )}
+  return (
+    <>
+      <WorkshopChrome
+        title="Delivery notes"
+        subtitle="Shipment records"
+        scroll={false}
+        right={
+          canManageSales() ? (
+            <WorkshopHeaderButton onPress={openCreate} />
+          ) : (
+            <View style={{ width: 72 }} />
+          )
+        }
+      >
+        {loading && !refreshing ? (
+          <WorkshopLoading />
+        ) : (
+          <FlatList
+            data={notes}
+            keyExtractor={(item) => item.id}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={WS.primary} />
+            }
+            contentContainerStyle={{ paddingBottom: 24 }}
+            ListEmptyComponent={
+              <WorkshopEmptyState
+                icon="cube-outline"
+                title="No delivery notes"
+                subtitle="Create a delivery note linked to an invoice."
+                actionLabel={canManageSales() ? 'New note' : undefined}
+                onAction={canManageSales() ? openCreate : undefined}
+              />
+            }
+            renderItem={({ item }) => (
+              <WorkshopListCard
+                icon="cube"
+                iconColor="#0891b2"
+                iconBg="#ecfeff"
+                title={item.invoice_number ?? item.invoice_id.slice(0, 8)}
+                subtitle={item.customer_name ?? undefined}
+                meta={item.note ?? undefined}
+                actions={[{ icon: 'document-outline', label: 'PDF', onPress: () => void pdf(item) }]}
+              />
+            )}
+          />
+        )}
+      </WorkshopChrome>
 
       <MobileFormSheet
         visible={createOpen}
@@ -179,49 +183,64 @@ export function MobileDeliveryNotesScreen() {
         onCancel={() => setCreateOpen(false)}
         onSave={() => void submitCreate()}
       >
-        <Text className="mb-1 text-sm font-medium text-slate-700">Invoice</Text>
-        <TextInput
+        <WorkshopFieldLabel>Invoice</WorkshopFieldLabel>
+        <WorkshopTextInput
           value={invoiceQuery}
           onChangeText={setInvoiceQuery}
           placeholder="Search invoice # or customer…"
-          placeholderTextColor="#94a3b8"
-          className="mb-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
         />
         {invoiceLabel ? (
-          <Text className="mb-2 text-slate-800">Selected: {invoiceLabel}</Text>
+          <Text style={{ fontSize: 14, color: WS.text, marginBottom: 10 }}>
+            Selected: {invoiceLabel}
+          </Text>
         ) : null}
         {invoiceHits.length > 0 ? (
-          <FlatList
-            data={invoiceHits}
-            keyExtractor={(i) => i.id}
-            keyboardShouldPersistTaps="handled"
-            className="mb-3 max-h-48 rounded-lg border border-slate-200 bg-white"
-            renderItem={({ item }) => (
-              <Pressable
-                onPress={() => {
-                  setInvoiceId(item.id);
-                  setInvoiceLabel(`${item.invoiceNumber} · ${item.customerName}`);
-                  setInvoiceHits([]);
-                  setInvoiceQuery('');
-                }}
-                className="border-b border-slate-100 px-3 py-2"
-              >
-                <Text className="font-medium text-slate-900">{item.invoiceNumber}</Text>
-                <Text className="text-sm text-slate-600">{item.customerName}</Text>
-              </Pressable>
-            )}
-          />
+          <View
+            style={{
+              marginBottom: 12,
+              maxHeight: 192,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: WS.border,
+              backgroundColor: WS.card,
+              overflow: 'hidden',
+            }}
+          >
+            <FlatList
+              data={invoiceHits}
+              keyExtractor={(i) => i.id}
+              keyboardShouldPersistTaps="handled"
+              renderItem={({ item }) => (
+                <Pressable
+                  onPress={() => {
+                    setInvoiceId(item.id);
+                    setInvoiceLabel(`${item.invoiceNumber} · ${item.customerName}`);
+                    setInvoiceHits([]);
+                    setInvoiceQuery('');
+                  }}
+                  style={{
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#f1f5f9',
+                    paddingHorizontal: 12,
+                    paddingVertical: 10,
+                  }}
+                >
+                  <Text style={{ fontWeight: '600', color: WS.text }}>{item.invoiceNumber}</Text>
+                  <Text style={{ fontSize: 13, color: WS.textMuted }}>{item.customerName}</Text>
+                </Pressable>
+              )}
+            />
+          </View>
         ) : null}
-        <Text className="mb-1 text-sm font-medium text-slate-700">Note</Text>
-        <TextInput
+        <WorkshopFieldLabel>Note</WorkshopFieldLabel>
+        <WorkshopTextInput
           value={noteText}
           onChangeText={setNoteText}
           multiline
-          className="min-h-[120px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
           placeholder="Optional note"
-          placeholderTextColor="#94a3b8"
+          style={{ minHeight: 120 }}
         />
       </MobileFormSheet>
-    </View>
+    </>
   );
 }

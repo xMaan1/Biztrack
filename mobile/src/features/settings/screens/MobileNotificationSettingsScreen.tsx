@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, Pressable, Alert } from 'react-native';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { View, Text, Pressable } from 'react-native';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { appAlert, appError } from '../../../utils/appDialog';
 import {
   NotificationCategory,
   getCategoryDisplayName,
@@ -12,6 +12,13 @@ import {
   getNotificationPreferences,
   updateNotificationPreference,
 } from '../../../services/settings/notificationsPreferencesMobileApi';
+import {
+  WorkshopChrome,
+  WorkshopCard,
+  WorkshopLoading,
+  WorkshopPrimaryButton,
+  WS,
+} from '../../workshop/components/WorkshopChrome';
 
 const CATEGORIES: NotificationCategory[] = [
   NotificationCategory.SYSTEM,
@@ -53,7 +60,7 @@ export function MobileNotificationSettingsScreen() {
       );
       setPrefs(mapped);
     } catch (e) {
-      Alert.alert('Notifications', extractErrorMessage(e, 'Failed to load'));
+      appError('Notifications', extractErrorMessage(e, 'Failed to load'));
     } finally {
       setLoading(false);
     }
@@ -116,41 +123,28 @@ export function MobileNotificationSettingsScreen() {
         });
       }
       await load();
-      Alert.alert('Notifications', 'Saved.');
+      appAlert('Notifications', 'Saved.');
     } catch (e) {
-      Alert.alert('Notifications', extractErrorMessage(e, 'Save failed'));
+      appError('Notifications', extractErrorMessage(e, 'Save failed'));
     } finally {
       setSaving(false);
     }
   }, [prefs, load]);
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Notifications
-        </Text>
-        <View className="w-9" />
-      </View>
-
+    <WorkshopChrome title="Notifications" subtitle="Channel preferences" scroll>
       {loading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563eb" />
-        </View>
+        <WorkshopLoading />
       ) : (
-        <ScrollView className="flex-1 px-3 py-3">
-          <Text className="mb-3 text-sm text-slate-600">
+        <>
+          <Text style={{ fontSize: 14, color: WS.textMuted, marginBottom: 12 }}>
             Choose channels per category. Tap Save to apply.
           </Text>
           {CATEGORIES.map((cat) => {
             const p = getPref(cat);
             return (
-              <View
-                key={cat}
-                className="mb-3 rounded-xl border border-slate-200 bg-white p-3"
-              >
-                <Text className="mb-2 font-semibold text-slate-900">
+              <WorkshopCard key={cat}>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: WS.text, marginBottom: 10 }}>
                   {getCategoryDisplayName(cat)}
                 </Text>
                 <ToggleRow
@@ -168,21 +162,19 @@ export function MobileNotificationSettingsScreen() {
                   value={p?.in_app_enabled ?? true}
                   onToggle={(v) => patch(cat, 'in_app_enabled', v)}
                 />
-              </View>
+              </WorkshopCard>
             );
           })}
-          <Pressable
-            className="mb-8 items-center rounded-xl bg-blue-600 py-3"
-            disabled={saving}
-            onPress={() => void saveAll()}
-          >
-            <Text className="font-semibold text-white">
-              {saving ? 'Saving…' : 'Save preferences'}
-            </Text>
-          </Pressable>
-        </ScrollView>
+          <View style={{ marginBottom: 24 }}>
+            <WorkshopPrimaryButton
+              label={saving ? 'Saving…' : 'Save preferences'}
+              onPress={() => void saveAll()}
+              disabled={saving}
+            />
+          </View>
+        </>
       )}
-    </View>
+    </WorkshopChrome>
   );
 }
 
@@ -192,15 +184,31 @@ function ToggleRow(props: {
   onToggle: (v: boolean) => void;
 }) {
   return (
-    <View className="mb-2 flex-row items-center justify-between">
-      <Text className="text-slate-700">{props.label}</Text>
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 8,
+      }}
+    >
+      <Text style={{ fontSize: 14, color: WS.text }}>{props.label}</Text>
       <Pressable
-        className={`rounded-full px-4 py-1 ${
-          props.value ? 'bg-blue-600' : 'bg-slate-200'
-        }`}
         onPress={() => props.onToggle(!props.value)}
+        style={{
+          borderRadius: 20,
+          paddingHorizontal: 16,
+          paddingVertical: 6,
+          backgroundColor: props.value ? WS.primary : '#e2e8f0',
+        }}
       >
-        <Text className={`text-sm font-medium ${props.value ? 'text-white' : 'text-slate-600'}`}>
+        <Text
+          style={{
+            fontSize: 13,
+            fontWeight: '600',
+            color: props.value ? '#fff' : WS.textMuted,
+          }}
+        >
           {props.value ? 'On' : 'Off'}
         </Text>
       </Pressable>

@@ -1,15 +1,30 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
+import { View, Text, FlatList, Pressable, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
 import { MobileFormSheet } from '../../../components/layout/MobileForm';
+import {
+  WorkshopChrome,
+  WorkshopSearchBar,
+  WorkshopListCard,
+  WorkshopEmptyState,
+  WorkshopHeaderButton,
+  WorkshopLoading,
+  WorkshopOutlineButton,
+  WorkshopFormSheet,
+  WorkshopFieldLabel,
+  WorkshopTextInput,
+  WorkshopPickerField,
+  WorkshopPrimaryButton,
+  WorkshopDetailRow,
+  WS,
+} from '../../workshop/components/WorkshopChrome';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { OptionSheet } from '../../../components/crm/OptionSheet';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { appAlert, appConfirm, appError } from '../../../utils/appDialog';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { useAuth } from '../../../contexts/AuthContext';
 import type { ProjectRecord, ProjectTeamMemberRef } from '../../../models/project';
-import { AppModal } from '../../../components/layout/AppModal';
 import {
   createProjectApi,
   deleteProjectApi,
@@ -81,7 +96,7 @@ export function MobileProjectsScreen() {
       setItems(res.projects ?? []);
       setTotalPages(Math.max(1, res.pagination?.pages ?? 1));
     } catch (e) {
-      Alert.alert('Projects', extractErrorMessage(e, 'Failed to load'));
+      appError('Projects', extractErrorMessage(e, 'Failed to load'));
     } finally {
       setLoading(false);
     }
@@ -139,7 +154,7 @@ export function MobileProjectsScreen() {
 
   const submitCreate = useCallback(async () => {
     if (!name.trim() || !managerId) {
-      Alert.alert('Projects', 'Name and project manager are required.');
+      appAlert('Projects', 'Name and project manager are required.');
       return;
     }
     try {
@@ -155,7 +170,7 @@ export function MobileProjectsScreen() {
       setPage(1);
       await loadPage();
     } catch (e) {
-      Alert.alert('Projects', extractErrorMessage(e, 'Could not create'));
+      appError('Projects', extractErrorMessage(e, 'Could not create'));
     }
   }, [name, description, managerId, memberIds, statusPick, priorityPick, loadPage]);
 
@@ -176,38 +191,27 @@ export function MobileProjectsScreen() {
       setSelected(null);
       await loadPage();
     } catch (e) {
-      Alert.alert('Projects', extractErrorMessage(e, 'Could not update'));
+      appError('Projects', extractErrorMessage(e, 'Could not update'));
     }
   }, [selected, name, description, managerId, memberIds, statusPick, priorityPick, loadPage]);
 
   const confirmDelete = useCallback(
     (p: ProjectRecord) => {
-      Alert.alert(
-        'Delete project',
-        `Remove "${p.name}"?`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete',
-            style: 'destructive',
-            onPress: () => {
-              void (async () => {
-                try {
-                  await deleteProjectApi(p.id);
-                  setDetailOpen(false);
-                  await loadPage();
-                } catch (e) {
-                  Alert.alert(
-                    'Projects',
-                    extractErrorMessage(e, 'Could not delete'),
-                  );
-                }
-              })();
-            },
-          },
-        ],
-        { cancelable: true },
-      );
+      appConfirm({
+        title: 'Delete project',
+        message: `Remove "${p.name}"?`,
+        confirmLabel: 'Delete',
+        destructive: true,
+        onConfirm: async () => {
+          try {
+            await deleteProjectApi(p.id);
+            setDetailOpen(false);
+            await loadPage();
+          } catch (e) {
+            appError('Projects', extractErrorMessage(e, 'Could not delete'));
+          }
+        },
+      });
     },
     [loadPage],
   );
@@ -219,77 +223,77 @@ export function MobileProjectsScreen() {
 
   const renderItem = useCallback(
     ({ item }: { item: ProjectRecord }) => (
-      <Pressable
-        className="border-b border-slate-100 bg-white px-4 py-3 active:bg-slate-50"
+      <WorkshopListCard
+        icon="folder-open"
+        iconColor="#f97316"
+        iconBg="#fff7ed"
+        title={item.name}
+        subtitle={item.projectManager?.name ?? 'No manager'}
+        meta={`${statusLabel(item.priority)} priority`}
+        badges={[{ label: item.status, tone: 'status' }]}
+        progress={item.completionPercent}
         onPress={() => {
           setSelected(item);
           setDetailOpen(true);
         }}
-      >
-        <Text className="text-base font-semibold text-slate-900">{item.name}</Text>
-        <Text className="mt-1 text-sm text-slate-600">
-          {statusLabel(item.status)} · {statusLabel(item.priority)} ·{' '}
-          {item.completionPercent}%
-        </Text>
-      </Pressable>
+        actions={
+          canManageProjects()
+            ? [{ icon: 'create-outline', onPress: () => openEdit(item) }]
+            : undefined
+        }
+      />
     ),
-    [],
+    [canManageProjects, openEdit],
   );
 
   const formFields = (
     <>
-      <Text className="mb-1 text-xs font-medium text-slate-500">Name</Text>
-      <TextInput
-        className="mb-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
-        value={name}
-        onChangeText={setName}
-        placeholder="Project name"
-      />
-      <Text className="mb-1 text-xs font-medium text-slate-500">Description</Text>
-      <TextInput
-        className="mb-3 min-h-[72px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900"
+      <WorkshopFieldLabel>Name</WorkshopFieldLabel>
+      <WorkshopTextInput value={name} onChangeText={setName} placeholder="Project name" />
+      <WorkshopFieldLabel>Description</WorkshopFieldLabel>
+      <WorkshopTextInput
         value={description}
         onChangeText={setDescription}
         placeholder="Optional"
         multiline
+        style={{ minHeight: 72 }}
       />
-      <Text className="mb-1 text-xs font-medium text-slate-500">Status</Text>
-      <Pressable
-        className="mb-3 flex-row items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2"
+      <WorkshopPickerField
+        label="Status"
+        value={statusLabel(statusPick)}
         onPress={() => setStatusOpen(true)}
-      >
-        <Text className="text-slate-900">{statusLabel(statusPick)}</Text>
-        <Ionicons name="chevron-down" size={18} color="#64748b" />
-      </Pressable>
-      <Text className="mb-1 text-xs font-medium text-slate-500">Priority</Text>
-      <Pressable
-        className="mb-3 flex-row items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2"
+      />
+      <WorkshopPickerField
+        label="Priority"
+        value={statusLabel(priorityPick)}
         onPress={() => setPriorityOpen(true)}
-      >
-        <Text className="text-slate-900">{statusLabel(priorityPick)}</Text>
-        <Ionicons name="chevron-down" size={18} color="#64748b" />
-      </Pressable>
-      <Text className="mb-1 text-xs font-medium text-slate-500">Project manager</Text>
-      <Pressable
-        className="mb-3 flex-row items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2"
+      />
+      <WorkshopPickerField
+        label="Project manager"
+        value={teamPool.find((m) => m.id === managerId)?.name ?? 'Select'}
         onPress={() => setManagerOpen(true)}
+      />
+      <WorkshopFieldLabel>Team members</WorkshopFieldLabel>
+      <View
+        style={{
+          marginBottom: 10,
+          borderRadius: 12,
+          borderWidth: 1,
+          borderColor: WS.border,
+          backgroundColor: '#fafafa',
+          overflow: 'hidden',
+        }}
       >
-        <Text className="text-slate-900">
-          {teamPool.find((m) => m.id === managerId)?.name ?? 'Select'}
-        </Text>
-        <Ionicons name="chevron-down" size={18} color="#64748b" />
-      </Pressable>
-      <Text className="mb-1 text-xs font-medium text-slate-500">Team members</Text>
-      <View className="mb-2 rounded-lg border border-slate-200 bg-white">
         {teamPool.length === 0 ? (
-          <Text className="px-3 py-2 text-sm text-slate-500">No users available</Text>
+          <Text style={{ paddingHorizontal: 14, paddingVertical: 12, color: WS.textMuted }}>
+            No users available
+          </Text>
         ) : (
-          teamPool.map((m) => {
+          teamPool.map((m, idx) => {
             const on = memberIds.has(m.id);
             return (
               <Pressable
                 key={m.id}
-                className="flex-row items-center border-b border-slate-100 px-3 py-2 last:border-b-0"
                 onPress={() => {
                   setMemberIds((prev) => {
                     const n = new Set(prev);
@@ -298,13 +302,21 @@ export function MobileProjectsScreen() {
                     return n;
                   });
                 }}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  paddingHorizontal: 14,
+                  paddingVertical: 12,
+                  borderBottomWidth: idx < teamPool.length - 1 ? 1 : 0,
+                  borderBottomColor: WS.border,
+                }}
               >
                 <Ionicons
                   name={on ? 'checkbox' : 'square-outline'}
                   size={22}
-                  color={on ? '#2563eb' : '#94a3b8'}
+                  color={on ? WS.primary : WS.textLight}
                 />
-                <Text className="ml-2 flex-1 text-slate-900">{m.name}</Text>
+                <Text style={{ marginLeft: 10, flex: 1, color: WS.text }}>{m.name}</Text>
               </Pressable>
             );
           })
@@ -314,137 +326,129 @@ export function MobileProjectsScreen() {
   );
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Projects
-        </Text>
-        {canManageProjects() ? (
-          <Pressable className="px-2 py-1" onPress={openCreate}>
-            <Ionicons name="add-circle" size={28} color="#2563eb" />
-          </Pressable>
+    <>
+    <WorkshopChrome
+      title="Projects"
+      subtitle="Track delivery & progress"
+      right={
+        canManageProjects() ? (
+          <WorkshopHeaderButton onPress={openCreate} />
         ) : (
-          <View className="w-9" />
-        )}
-      </View>
-
-      <View className="border-b border-slate-200 bg-white px-3 py-2">
-        <View className="flex-row items-center rounded-lg border border-slate-200 bg-slate-50 px-2">
-          <Ionicons name="search" size={18} color="#64748b" />
-          <TextInput
-            className="flex-1 py-2 pl-2 text-slate-900"
-            placeholder="Search"
-            value={search}
-            onChangeText={setSearch}
-            onSubmitEditing={() => {
-              setPage(1);
-            }}
-            returnKeyType="search"
-          />
-        </View>
-      </View>
+          <View style={{ width: 72 }} />
+        )
+      }
+      scroll={false}
+    >
+      <WorkshopSearchBar
+        value={search}
+        onChangeText={setSearch}
+        placeholder="Search projects…"
+      />
 
       {loading && items.length === 0 ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563eb" />
-        </View>
+        <WorkshopLoading />
       ) : (
         <FlatList
           data={items}
           keyExtractor={(x) => x.id}
           renderItem={renderItem}
+          contentContainerStyle={{ paddingBottom: 12 }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={WS.primary} />
           }
           ListEmptyComponent={
-            <Text className="py-8 text-center text-slate-500">No projects</Text>
+            <WorkshopEmptyState
+              icon="folder-open-outline"
+              title="No projects"
+              subtitle="Create a project to organize workshop work."
+              actionLabel={canManageProjects() ? 'New project' : undefined}
+              onAction={canManageProjects() ? openCreate : undefined}
+            />
           }
         />
       )}
 
-      <View className="flex-row items-center justify-center border-t border-slate-200 bg-white py-2">
-        <Pressable
-          disabled={page <= 1}
-          className="px-4 py-2"
-          onPress={() => setPage((p) => Math.max(1, p - 1))}
-        >
-          <Text className={page <= 1 ? 'text-slate-300' : 'text-blue-600'}>Prev</Text>
-        </Pressable>
-        <Text className="text-slate-600">
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, paddingVertical: 10 }}>
+        <View style={{ flex: 1 }}>
+          <WorkshopOutlineButton
+            label="Previous"
+            onPress={() => setPage((p) => Math.max(1, p - 1))}
+          />
+        </View>
+        <Text style={{ fontWeight: '600', color: WS.textMuted }}>
           {page} / {totalPages}
         </Text>
-        <Pressable
-          disabled={page >= totalPages}
-          className="px-4 py-2"
-          onPress={() => setPage((p) => p + 1)}
-        >
-          <Text
-            className={page >= totalPages ? 'text-slate-300' : 'text-blue-600'}
-          >
-            Next
-          </Text>
-        </Pressable>
+        <View style={{ flex: 1 }}>
+          <WorkshopOutlineButton label="Next" onPress={() => setPage((p) => p + 1)} />
+        </View>
       </View>
 
-      <AppModal
+    </WorkshopChrome>
+
+      <WorkshopFormSheet
         visible={detailOpen}
-        animationType="slide"
-        transparent
+        title="Project"
         onClose={() => setDetailOpen(false)}
-      >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[85%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
-            <Text className="text-lg font-semibold text-slate-900">Project</Text>
-            <ScrollView className="mt-3">
-              {selected ? (
-                <>
-                  <Text className="text-xl font-bold text-slate-900">
-                    {selected.name}
-                  </Text>
-                  <Text className="mt-2 text-slate-600">
-                    {selected.description || '—'}
-                  </Text>
-                  <Text className="mt-3 text-sm text-slate-700">
-                    {statusLabel(selected.status)} · {statusLabel(selected.priority)}
-                  </Text>
-                  <Text className="mt-1 text-sm text-slate-700">
-                    Progress {selected.completionPercent}% · Manager{' '}
-                    {selected.projectManager?.name ?? '—'}
-                  </Text>
-                </>
-              ) : null}
-            </ScrollView>
-            <View className="mt-4 flex-row gap-2">
+        footer={
+          <View style={{ gap: 8 }}>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
               {canManageProjects() && selected ? (
-                <>
-                  <Pressable
-                    className="flex-1 items-center rounded-lg border border-slate-200 py-3"
+                <View style={{ flex: 1 }}>
+                  <WorkshopPrimaryButton
+                    label="Edit"
                     onPress={() => {
                       setDetailOpen(false);
                       openEdit(selected);
                     }}
-                  >
-                    <Text className="font-semibold text-slate-800">Edit</Text>
-                  </Pressable>
-                  <Pressable
-                    className="flex-1 items-center rounded-lg bg-red-600 py-3"
-                    onPress={() => selected && confirmDelete(selected)}
-                  >
-                    <Text className="font-semibold text-white">Delete</Text>
-                  </Pressable>
-                </>
+                  />
+                </View>
               ) : null}
-              <Pressable
-                className="flex-1 items-center rounded-lg bg-slate-200 py-3"
-                onPress={() => setDetailOpen(false)}
-              >
-                <Text className="font-semibold text-slate-800">Close</Text>
-              </Pressable>
+              {canManageProjects() && selected ? (
+                <View style={{ flex: 1 }}>
+                  <Pressable
+                    onPress={() => selected && confirmDelete(selected)}
+                    style={{
+                      alignItems: 'center',
+                      borderRadius: 14,
+                      paddingVertical: 15,
+                      backgroundColor: WS.danger,
+                    }}
+                  >
+                    <Text style={{ fontWeight: '700', fontSize: 16, color: '#fff' }}>Delete</Text>
+                  </Pressable>
+                </View>
+              ) : null}
             </View>
+            <Pressable
+              onPress={() => setDetailOpen(false)}
+              style={{ alignItems: 'center', paddingVertical: 10 }}
+            >
+              <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Close</Text>
+            </Pressable>
           </View>
-        </View>
-      </AppModal>
+        }
+      >
+        {selected ? (
+          <>
+            <Text style={{ fontSize: 20, fontWeight: '800', color: WS.text, marginBottom: 8 }}>
+              {selected.name}
+            </Text>
+            <Text style={{ fontSize: 14, color: WS.textMuted, marginBottom: 16 }}>
+              {selected.description || '—'}
+            </Text>
+            <WorkshopDetailRow label="Status" value={selected.status} />
+            <WorkshopDetailRow label="Priority" value={selected.priority} />
+            <WorkshopDetailRow
+              label="Progress"
+              value={`${selected.completionPercent}%`}
+            />
+            <WorkshopDetailRow
+              label="Manager"
+              value={selected.projectManager?.name ?? '—'}
+            />
+          </>
+        ) : null}
+      </WorkshopFormSheet>
 
       <MobileFormSheet
         visible={createOpen}
@@ -504,6 +508,6 @@ export function MobileProjectsScreen() {
         }}
         onClose={() => setManagerOpen(false)}
       />
-    </View>
+    </>
   );
 }

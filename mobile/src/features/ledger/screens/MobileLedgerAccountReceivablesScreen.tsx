@@ -1,14 +1,23 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, FlatList, TextInput, RefreshControl, ActivityIndicator, Alert } from 'react-native';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { View, FlatList, RefreshControl } from 'react-native';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { appError } from '../../../utils/appDialog';
 import {
   getAccountReceivableStatusLabel,
   type AccountReceivable,
 } from '../../../models/ledger';
 import { getAccountReceivablesList } from '../../../services/ledger/ledgerMobileApi';
 import { formatMoney } from '../ledgerFormat';
+import {
+  WorkshopChrome,
+  WorkshopSearchBar,
+  WorkshopListCard,
+  WorkshopEmptyState,
+  WorkshopLoading,
+  WorkshopStatCard,
+  WS,
+} from '../../workshop/components/WorkshopChrome';
 
 export function MobileLedgerAccountReceivablesScreen() {
   const { workspacePath, setSidebarActivePath } = useSidebarDrawer();
@@ -31,7 +40,7 @@ export function MobileLedgerAccountReceivablesScreen() {
         total_overdue: res.total_overdue ?? 0,
       });
     } catch (e) {
-      Alert.alert('Credit book', extractErrorMessage(e, 'Failed to load'));
+      appError('Credit book', extractErrorMessage(e, 'Failed to load'));
     } finally {
       setLoading(false);
     }
@@ -39,9 +48,7 @@ export function MobileLedgerAccountReceivablesScreen() {
 
   useEffect(() => {
     setSidebarActivePath(
-      workspacePath === '/dashboard'
-        ? '/dashboard'
-        : '/ledger/account-receivables',
+      workspacePath === '/dashboard' ? '/dashboard' : '/ledger/account-receivables',
     );
   }, [setSidebarActivePath, workspacePath]);
 
@@ -65,69 +72,61 @@ export function MobileLedgerAccountReceivablesScreen() {
     : rows;
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Credit book
-        </Text>
-        <View className="w-9" />
+    <WorkshopChrome title="Credit book" subtitle="Outstanding receivables" scroll={false}>
+      <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
+        <WorkshopStatCard
+          label="Outstanding"
+          value={formatMoney(totals.total_outstanding)}
+          icon="wallet"
+          accent="#d97706"
+          accentBg="#fffbeb"
+        />
+        <WorkshopStatCard
+          label="Overdue"
+          value={formatMoney(totals.total_overdue)}
+          icon="alert-circle"
+          accent="#ef4444"
+          accentBg="#fef2f2"
+        />
       </View>
 
-      <View className="border-b border-slate-200 bg-white px-3 py-2">
-        <Text className="text-xs text-slate-500">Outstanding</Text>
-        <Text className="text-lg font-bold text-amber-700">
-          {formatMoney(totals.total_outstanding)}
-        </Text>
-        <Text className="mt-1 text-xs text-slate-500">Overdue</Text>
-        <Text className="text-base font-semibold text-red-700">
-          {formatMoney(totals.total_overdue)}
-        </Text>
-      </View>
-
-      <TextInput
-        className="border-b border-slate-200 bg-white px-3 py-2 text-slate-900"
-        placeholder="Search customer or invoice #"
+      <WorkshopSearchBar
         value={search}
         onChangeText={setSearch}
+        placeholder="Search customer or invoice #"
       />
 
       {loading && rows.length === 0 ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563eb" />
-        </View>
+        <WorkshopLoading />
       ) : (
         <FlatList
+          style={{ flex: 1 }}
           data={filtered}
           keyExtractor={(x) => x.id}
+          contentContainerStyle={{ paddingBottom: 20 }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={WS.primary} />
+          }
+          ListEmptyComponent={
+            <WorkshopEmptyState
+              icon="book-outline"
+              title="No receivables"
+              subtitle="Outstanding customer invoices will appear here."
+            />
           }
           renderItem={({ item }) => (
-            <View className="border-b border-slate-100 bg-white px-4 py-3">
-              <Text className="font-semibold text-slate-900">
-                {item.customer_name}
-              </Text>
-              <Text className="text-xs text-slate-500">
-                {item.invoice_number} · Due{' '}
-                {new Date(item.due_date).toLocaleDateString()}
-              </Text>
-              <Text className="mt-1 text-sm text-slate-700">
-                {getAccountReceivableStatusLabel(item.status)}
-                {item.days_overdue > 0
-                  ? ` · ${item.days_overdue}d overdue`
-                  : ''}
-              </Text>
-              <Text className="mt-1 text-base font-bold text-slate-900">
-                Balance {formatMoney(item.outstanding_balance, item.currency)}
-              </Text>
-            </View>
+            <WorkshopListCard
+              icon="person"
+              iconColor="#7c3aed"
+              iconBg="#f5f3ff"
+              title={item.customer_name}
+              subtitle={item.invoice_number}
+              meta={`Due ${new Date(item.due_date).toLocaleDateString()} · ${getAccountReceivableStatusLabel(item.status)}${item.days_overdue > 0 ? ` · ${item.days_overdue}d overdue` : ''}`}
+              badges={[{ label: formatMoney(item.outstanding_balance, item.currency) }]}
+            />
           )}
-          ListEmptyComponent={
-            <Text className="py-8 text-center text-slate-500">No receivables</Text>
-          }
         />
       )}
-    </View>
+    </WorkshopChrome>
   );
 }

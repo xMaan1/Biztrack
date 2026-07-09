@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, FlatList, Pressable, RefreshControl } from 'react-native';
+import { appAlert, appConfirm, appError } from '../../../utils/appDialog';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import {
   ProductionType,
@@ -19,15 +19,24 @@ import {
   getTenantUsers,
 } from '../../../services/workshop/workshopMobileApi';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { PickerModal } from '../../healthcare/components/PickerModal';
 import {
   WorkshopChrome,
-  WorkshopCard,
+  WorkshopChipSelect,
+  WorkshopFilterBar,
+  countActiveFilters,
+  WorkshopListCard,
+  WorkshopEmptyState,
+  WorkshopHeaderButton,
+  WorkshopLoading,
+  WorkshopFormSheet,
   WorkshopFieldLabel,
+  WorkshopTextInput,
+  WorkshopDatePickerField,
+  WorkshopPickerField,
   WorkshopPrimaryButton,
+  WS,
 } from '../components/WorkshopChrome';
-import { PickerModal } from '../../healthcare/components/PickerModal';
-import { AppModal } from '../../../components/layout/AppModal';
-import { ProductChipSelect } from '../../inventory/screens/products/ProductChipSelect';
 
 const PROD_TYPES = Object.values(ProductionType);
 const PROD_PRIOS = Object.values(ProductionPriority);
@@ -97,7 +106,7 @@ export function MobileWorkshopProductionScreen() {
         else setLoading(true);
         await Promise.all([loadRefs(), load()]);
       } catch (e) {
-        Alert.alert('Production', extractErrorMessage(e, 'Failed to load'));
+        appError('Production', extractErrorMessage(e, 'Failed to load'));
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -170,7 +179,7 @@ export function MobileWorkshopProductionScreen() {
 
   const submit = async () => {
     if (!form.title.trim()) {
-      Alert.alert('Production', 'Title is required');
+      appAlert('Production', 'Title is required');
       return;
     }
     try {
@@ -232,28 +241,27 @@ export function MobileWorkshopProductionScreen() {
       setModalOpen(false);
       await run(false);
     } catch (e) {
-      Alert.alert('Production', extractErrorMessage(e, 'Save failed'));
+      appError('Production', extractErrorMessage(e, 'Save failed'));
     } finally {
       setSaving(false);
     }
   };
 
   const remove = (p: ProductionPlanResponse) => {
-    Alert.alert('Delete', p.title, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteProductionPlan(p.id);
-            await run(false);
-          } catch (e) {
-            Alert.alert('Production', extractErrorMessage(e, 'Delete failed'));
-          }
-        },
+    appConfirm({
+      title: 'Delete',
+      message: p.title,
+      confirmLabel: 'Delete',
+      destructive: true,
+      onConfirm: async () => {
+        try {
+          await deleteProductionPlan(p.id);
+          await run(false);
+        } catch (e) {
+          appError('Production', extractErrorMessage(e, 'Delete failed'));
+        }
       },
-    ]);
+    });
   };
 
   const woItems = workOrders.map((w) => ({
@@ -269,251 +277,123 @@ export function MobileWorkshopProductionScreen() {
     <WorkshopChrome
       title="Production"
       subtitle="Production planning"
-      right={
-        <Pressable onPress={openCreate} className="p-2">
-          <Ionicons name="add-circle" size={26} color="#4f46e5" />
-        </Pressable>
-      }
+      right={<WorkshopHeaderButton onPress={openCreate} />}
       scroll={false}
     >
-      <TextInput
-        className="mb-2 rounded-xl border border-slate-200 bg-white px-3 py-2"
-        placeholder="Search plans…"
-        placeholderTextColor="#94a3b8"
-        value={search}
-        onChangeText={setSearch}
-      />
-      <View className="mb-2 rounded-xl border border-slate-200 bg-white px-3 py-3">
-        <ProductChipSelect
+      <WorkshopFilterBar
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search plans…"
+        resultCount={filtered.length}
+        activeFilterCount={countActiveFilters([statusF])}
+        onResetFilters={() => setStatusF('all')}
+      >
+        <WorkshopChipSelect
           label="Status"
           options={['all', ...PROD_STATUSES]}
           value={statusF}
           onChange={setStatusF}
         />
-      </View>
+      </WorkshopFilterBar>
 
       {loading && !refreshing ? (
-        <View className="py-12 items-center">
-          <ActivityIndicator color="#4f46e5" />
-        </View>
+        <WorkshopLoading />
       ) : (
         <FlatList
-          className="flex-1"
+          style={{ flex: 1 }}
           data={filtered}
           keyExtractor={(x) => x.id}
+          contentContainerStyle={{ paddingBottom: 20 }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => void run(true)}
-              tintColor="#4f46e5"
+              tintColor={WS.primary}
+            />
+          }
+          ListEmptyComponent={
+            <WorkshopEmptyState
+              icon="cog-outline"
+              title="No production plans"
+              subtitle="Plan production runs and track targets."
+              actionLabel="Create plan"
+              onAction={openCreate}
             />
           }
           renderItem={({ item: p }) => (
-            <WorkshopCard>
-              <Text className="font-semibold text-slate-900">
-                {p.plan_number} · {p.title}
-              </Text>
-              <Text className="text-xs text-slate-500 capitalize">
-                {String(p.status).replace(/_/g, ' ')} ·{' '}
-                {String(p.priority).replace(/_/g, ' ')}
-              </Text>
-              <View className="mt-2 flex-row gap-2">
-                <Pressable
-                  onPress={() => openEdit(p)}
-                  className="rounded-lg bg-indigo-100 px-2 py-1"
-                >
-                  <Text className="text-xs font-medium text-indigo-900">Edit</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => remove(p)}
-                  className="rounded-lg bg-red-50 px-2 py-1"
-                >
-                  <Text className="text-xs text-red-700">Delete</Text>
-                </Pressable>
-              </View>
-            </WorkshopCard>
+            <WorkshopListCard
+              kind="production"
+              icon="cog"
+              iconColor="#0891b2"
+              iconBg="#ecfeff"
+              kicker={p.plan_number}
+              title={p.title}
+              subtitle={p.production_line || undefined}
+              meta={`Target ${p.target_quantity ?? 1} ${p.unit_of_measure ?? 'unit'}`}
+              badges={[
+                { label: String(p.status), tone: 'status' },
+                { label: String(p.priority), tone: 'priority' },
+              ]}
+              onPress={() => openEdit(p)}
+              actions={[
+                { icon: 'create-outline', onPress: () => openEdit(p) },
+                { icon: 'trash-outline', onPress: () => remove(p), danger: true },
+              ]}
+            />
           )}
         />
       )}
 
-      <PickerModal
-        visible={woPick}
-        title="Work order"
-        items={woItems}
-        onSelect={(x) => setForm((f) => ({ ...f, work_order_id: x.id }))}
-        onClose={() => setWoPick(false)}
-      />
-      <PickerModal
-        visible={userPick}
-        title="Assign to"
-        items={[{ id: '', label: 'None' }, ...userItems]}
-        onSelect={(x) =>
-          setForm((f) => ({ ...f, assigned_to_id: x.id }))
-        }
-        onClose={() => setUserPick(false)}
-      />
+      <PickerModal visible={woPick} title="Work order" items={woItems} onSelect={(x) => setForm((f) => ({ ...f, work_order_id: x.id }))} onClose={() => setWoPick(false)} />
+      <PickerModal visible={userPick} title="Assign to" items={[{ id: '', label: 'None' }, ...userItems]} onSelect={(x) => setForm((f) => ({ ...f, assigned_to_id: x.id }))} onClose={() => setUserPick(false)} />
 
-      <AppModal
+      <WorkshopFormSheet
         visible={modalOpen}
-        animationType="slide"
-        transparent
+        title={editing ? 'Edit plan' : 'New plan'}
         onClose={() => setModalOpen(false)}
-      >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[94%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
-            <Text className="mb-3 text-lg font-semibold">
-              {editing ? 'Edit plan' : 'New plan'}
-            </Text>
-            <ScrollView keyboardShouldPersistTaps="handled">
-              <WorkshopFieldLabel>Title *</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                value={form.title}
-                onChangeText={(v) => setForm((f) => ({ ...f, title: v }))}
-              />
-              <WorkshopFieldLabel>Description</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                value={form.description}
-                onChangeText={(v) =>
-                  setForm((f) => ({ ...f, description: v }))
-                }
-                multiline
-              />
-              {editing ? (
-                <ProductChipSelect
-                  label="Status"
-                  options={[...PROD_STATUSES]}
-                  value={form.status}
-                  onChange={(s) =>
-                    setForm((f) => ({ ...f, status: s as ProductionStatus }))
-                  }
-                />
-              ) : null}
-              <ProductChipSelect
-                label="Type"
-                options={[...PROD_TYPES]}
-                value={form.production_type}
-                onChange={(s) =>
-                  setForm((f) => ({ ...f, production_type: s as ProductionType }))
-                }
-              />
-              <ProductChipSelect
-                label="Priority"
-                options={[...PROD_PRIOS]}
-                value={form.priority}
-                onChange={(s) =>
-                  setForm((f) => ({ ...f, priority: s as ProductionPriority }))
-                }
-              />
-              <WorkshopFieldLabel>Planned start / end</WorkshopFieldLabel>
-              <View className="mb-2 flex-row gap-2">
-                <TextInput
-                  className="flex-1 rounded-lg border border-slate-200 px-2 py-2"
-                  placeholder="Start YYYY-MM-DD"
-                  value={form.planned_start_date}
-                  onChangeText={(v) =>
-                    setForm((f) => ({ ...f, planned_start_date: v }))
-                  }
-                />
-                <TextInput
-                  className="flex-1 rounded-lg border border-slate-200 px-2 py-2"
-                  placeholder="End YYYY-MM-DD"
-                  value={form.planned_end_date}
-                  onChangeText={(v) =>
-                    setForm((f) => ({ ...f, planned_end_date: v }))
-                  }
-                />
-              </View>
-              <WorkshopFieldLabel>Target qty / UOM</WorkshopFieldLabel>
-              <View className="mb-2 flex-row gap-2">
-                <TextInput
-                  className="w-24 rounded-lg border border-slate-200 px-2 py-2"
-                  keyboardType="decimal-pad"
-                  value={form.target_quantity}
-                  onChangeText={(v) =>
-                    setForm((f) => ({ ...f, target_quantity: v }))
-                  }
-                />
-                <TextInput
-                  className="flex-1 rounded-lg border border-slate-200 px-2 py-2"
-                  value={form.unit_of_measure}
-                  onChangeText={(v) =>
-                    setForm((f) => ({ ...f, unit_of_measure: v }))
-                  }
-                />
-              </View>
-              <WorkshopFieldLabel>Production line</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                value={form.production_line}
-                onChangeText={(v) =>
-                  setForm((f) => ({ ...f, production_line: v }))
-                }
-              />
-              <WorkshopFieldLabel>Est. material / labor cost</WorkshopFieldLabel>
-              <View className="mb-2 flex-row gap-2">
-                <TextInput
-                  className="flex-1 rounded-lg border border-slate-200 px-2 py-2"
-                  keyboardType="decimal-pad"
-                  value={form.estimated_material_cost}
-                  onChangeText={(v) =>
-                    setForm((f) => ({ ...f, estimated_material_cost: v }))
-                  }
-                />
-                <TextInput
-                  className="flex-1 rounded-lg border border-slate-200 px-2 py-2"
-                  keyboardType="decimal-pad"
-                  value={form.estimated_labor_cost}
-                  onChangeText={(v) =>
-                    setForm((f) => ({ ...f, estimated_labor_cost: v }))
-                  }
-                />
-              </View>
-              <WorkshopFieldLabel>Quality standards</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                value={form.quality_standards}
-                onChangeText={(v) =>
-                  setForm((f) => ({ ...f, quality_standards: v }))
-                }
-                multiline
-              />
-              <WorkshopFieldLabel>Work order</WorkshopFieldLabel>
-              <Pressable
-                onPress={() => setWoPick(true)}
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-              >
-                <Text>
-                  {form.work_order_id
-                    ? woItems.find((x) => x.id === form.work_order_id)?.label
-                    : 'Optional'}
-                </Text>
-              </Pressable>
-              <WorkshopFieldLabel>Assign to</WorkshopFieldLabel>
-              <Pressable
-                onPress={() => setUserPick(true)}
-                className="mb-4 rounded-lg border border-slate-200 px-3 py-2"
-              >
-                <Text>
-                  {form.assigned_to_id
-                    ? userItems.find((x) => x.id === form.assigned_to_id)
-                        ?.label
-                    : 'Optional'}
-                </Text>
-              </Pressable>
-            </ScrollView>
-            <WorkshopPrimaryButton
-              label={saving ? 'Saving…' : 'Save'}
-              onPress={() => void submit()}
-              disabled={saving}
-            />
-            <Pressable className="mt-2 items-center py-2" onPress={() => setModalOpen(false)}>
-              <Text className="text-slate-600">Cancel</Text>
+        footer={
+          <>
+            <WorkshopPrimaryButton label={saving ? 'Saving…' : 'Save plan'} onPress={() => void submit()} disabled={saving} />
+            <Pressable onPress={() => setModalOpen(false)} style={{ marginTop: 12, alignItems: 'center', paddingVertical: 10 }}>
+              <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Cancel</Text>
             </Pressable>
+          </>
+        }
+      >
+        <WorkshopFieldLabel>Title *</WorkshopFieldLabel>
+        <WorkshopTextInput value={form.title} onChangeText={(v) => setForm((f) => ({ ...f, title: v }))} />
+        <WorkshopFieldLabel>Description</WorkshopFieldLabel>
+        <WorkshopTextInput value={form.description} onChangeText={(v) => setForm((f) => ({ ...f, description: v }))} multiline />
+        {editing ? (
+          <WorkshopChipSelect label="Status" options={[...PROD_STATUSES]} value={form.status} onChange={(s) => setForm((f) => ({ ...f, status: s as ProductionStatus }))} />
+        ) : null}
+        <WorkshopChipSelect label="Type" options={[...PROD_TYPES]} value={form.production_type} onChange={(s) => setForm((f) => ({ ...f, production_type: s as ProductionType }))} />
+        <WorkshopChipSelect label="Priority" options={[...PROD_PRIOS]} value={form.priority} onChange={(s) => setForm((f) => ({ ...f, priority: s as ProductionPriority }))} />
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flex: 1 }}>
+            <WorkshopDatePickerField label="Start date" value={form.planned_start_date} onChange={(v) => setForm((f) => ({ ...f, planned_start_date: v }))} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <WorkshopDatePickerField label="End date" value={form.planned_end_date} onChange={(v) => setForm((f) => ({ ...f, planned_end_date: v }))} />
           </View>
         </View>
-      </AppModal>
+        <WorkshopFieldLabel>Target qty / UOM</WorkshopFieldLabel>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ width: 96 }}><WorkshopTextInput keyboardType="decimal-pad" value={form.target_quantity} onChangeText={(v) => setForm((f) => ({ ...f, target_quantity: v }))} /></View>
+          <View style={{ flex: 1 }}><WorkshopTextInput value={form.unit_of_measure} onChangeText={(v) => setForm((f) => ({ ...f, unit_of_measure: v }))} /></View>
+        </View>
+        <WorkshopFieldLabel>Production line</WorkshopFieldLabel>
+        <WorkshopTextInput value={form.production_line} onChangeText={(v) => setForm((f) => ({ ...f, production_line: v }))} />
+        <WorkshopFieldLabel>Est. material / labor cost</WorkshopFieldLabel>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flex: 1 }}><WorkshopTextInput keyboardType="decimal-pad" value={form.estimated_material_cost} onChangeText={(v) => setForm((f) => ({ ...f, estimated_material_cost: v }))} /></View>
+          <View style={{ flex: 1 }}><WorkshopTextInput keyboardType="decimal-pad" value={form.estimated_labor_cost} onChangeText={(v) => setForm((f) => ({ ...f, estimated_labor_cost: v }))} /></View>
+        </View>
+        <WorkshopFieldLabel>Quality standards</WorkshopFieldLabel>
+        <WorkshopTextInput value={form.quality_standards} onChangeText={(v) => setForm((f) => ({ ...f, quality_standards: v }))} multiline />
+        <WorkshopPickerField label="Work order" value={form.work_order_id ? woItems.find((x) => x.id === form.work_order_id)?.label ?? '' : ''} placeholder="Optional" onPress={() => setWoPick(true)} />
+        <WorkshopPickerField label="Assign to" value={form.assigned_to_id ? userItems.find((x) => x.id === form.assigned_to_id)?.label ?? '' : ''} placeholder="Optional" onPress={() => setUserPick(true)} />
+      </WorkshopFormSheet>
     </WorkshopChrome>
   );
 }

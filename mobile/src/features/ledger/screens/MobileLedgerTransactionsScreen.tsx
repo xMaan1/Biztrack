@@ -1,14 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { MenuHeaderButton } from '../../../components/layout/MenuHeaderButton';
+import { View, Text, FlatList, Pressable, RefreshControl } from 'react-native';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
-import {
-  OptionSheet,
-  type OptionItem,
-} from '../../../components/crm/OptionSheet';
+import { OptionSheet, type OptionItem } from '../../../components/crm/OptionSheet';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { appAlert, appConfirm, appError } from '../../../utils/appDialog';
 import {
   TransactionStatus,
   TransactionType,
@@ -25,7 +21,22 @@ import {
   updateLedgerTransaction,
 } from '../../../services/ledger/ledgerMobileApi';
 import { formatMoney } from '../ledgerFormat';
-import { AppModal } from '../../../components/layout/AppModal';
+import {
+  WorkshopChrome,
+  WorkshopListCard,
+  WorkshopEmptyState,
+  WorkshopHeaderButton,
+  WorkshopLoading,
+  WorkshopFormSheet,
+  WorkshopFieldLabel,
+  WorkshopTextInput,
+  WorkshopDatePickerField,
+  WorkshopPickerField,
+  WorkshopPrimaryButton,
+  WorkshopFilterBar,
+  countActiveFilters,
+  WS,
+} from '../../workshop/components/WorkshopChrome';
 
 const TX_TYPES = Object.values(TransactionType).map((v) => ({
   value: v,
@@ -67,9 +78,7 @@ export function MobileLedgerTransactionsScreen() {
   const [accCreditOpen, setAccCreditOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const [editing, setEditing] = useState<LedgerTransactionResponse | null>(
-    null,
-  );
+  const [editing, setEditing] = useState<LedgerTransactionResponse | null>(null);
   const [busy, setBusy] = useState(false);
   const [desc, setDesc] = useState('');
   const [amountStr, setAmountStr] = useState('');
@@ -99,8 +108,7 @@ export function MobileLedgerTransactionsScreen() {
         getLedgerTransactions({
           skip: 0,
           limit: 150,
-          transactionType:
-            typeFilter === 'all' ? undefined : (typeFilter as TransactionType),
+          transactionType: typeFilter === 'all' ? undefined : (typeFilter as TransactionType),
           startDate: undefined,
           endDate: undefined,
         }),
@@ -112,16 +120,14 @@ export function MobileLedgerTransactionsScreen() {
       }
       setTx(rows);
     } catch (e) {
-      Alert.alert('Ledger', extractErrorMessage(e, 'Failed to load'));
+      appError('Ledger', extractErrorMessage(e, 'Failed to load'));
     } finally {
       setLoading(false);
     }
   }, [typeFilter, statusFilter]);
 
   useEffect(() => {
-    setSidebarActivePath(
-      workspacePath === '/dashboard' ? '/dashboard' : '/ledger/transactions',
-    );
+    setSidebarActivePath(workspacePath === '/dashboard' ? '/dashboard' : '/ledger/transactions');
   }, [setSidebarActivePath, workspacePath]);
 
   useEffect(() => {
@@ -136,7 +142,7 @@ export function MobileLedgerTransactionsScreen() {
 
   const openCreate = useCallback(() => {
     if (!accounts.length) {
-      Alert.alert('Ledger', 'Chart of accounts is empty.');
+      appAlert('Ledger', 'Chart of accounts is empty.');
       return;
     }
     const d = new Date();
@@ -166,14 +172,7 @@ export function MobileLedgerTransactionsScreen() {
 
   const buildCreateBody = useCallback(() => {
     const amount = parseFloat(amountStr.replace(',', '.'));
-    if (
-      !desc.trim() ||
-      !debitId ||
-      !creditId ||
-      !txDate ||
-      Number.isNaN(amount) ||
-      amount <= 0
-    ) {
+    if (!desc.trim() || !debitId || !creditId || !txDate || Number.isNaN(amount) || amount <= 0) {
       return null;
     }
     const transactionDateIso = parseDateInputToIso(txDate);
@@ -195,7 +194,7 @@ export function MobileLedgerTransactionsScreen() {
   const submitCreate = useCallback(async () => {
     const b = buildCreateBody();
     if (!b) {
-      Alert.alert('Ledger', 'Fill required fields, valid date, and two accounts.');
+      appAlert('Ledger', 'Fill required fields, valid date, and two accounts.');
       return;
     }
     try {
@@ -204,7 +203,7 @@ export function MobileLedgerTransactionsScreen() {
       setCreateOpen(false);
       await load();
     } catch (e) {
-      Alert.alert('Ledger', extractErrorMessage(e, 'Create failed'));
+      appError('Ledger', extractErrorMessage(e, 'Create failed'));
     } finally {
       setBusy(false);
     }
@@ -214,7 +213,7 @@ export function MobileLedgerTransactionsScreen() {
     if (!editing) return;
     const b = buildCreateBody();
     if (!b) {
-      Alert.alert('Ledger', 'Check fields and date format (YYYY-MM-DD).');
+      appAlert('Ledger', 'Check fields and date format (YYYY-MM-DD).');
       return;
     }
     try {
@@ -233,238 +232,178 @@ export function MobileLedgerTransactionsScreen() {
       setEditing(null);
       await load();
     } catch (e) {
-      Alert.alert('Ledger', extractErrorMessage(e, 'Update failed'));
+      appError('Ledger', extractErrorMessage(e, 'Update failed'));
     } finally {
       setBusy(false);
     }
   }, [editing, buildCreateBody, load]);
 
+  const confirmDelete = useCallback(
+    (item: LedgerTransactionResponse) => {
+      appConfirm({
+        title: 'Delete',
+        message: item.transaction_number,
+        confirmLabel: 'Delete',
+        destructive: true,
+        onConfirm: async () => {
+          try {
+            await deleteLedgerTransaction(item.id);
+            await load();
+          } catch (e) {
+            appError('Ledger', extractErrorMessage(e, 'Delete failed'));
+          }
+        },
+      });
+    },
+    [load],
+  );
+
   const formFields = (
     <>
-      <Text className="mb-1 text-xs text-slate-500">Debit account</Text>
-      <Pressable
-        className="mb-2 flex-row items-center justify-between rounded-lg border border-slate-200 px-3 py-2"
+      <WorkshopPickerField
+        label="Debit account"
+        value={accOpts.find((o) => o.value === debitId)?.label ?? ''}
+        placeholder="Select account"
         onPress={() => setAccDebitOpen(true)}
-      >
-        <Text className="flex-1 text-slate-900" numberOfLines={1}>
-          {accOpts.find((o) => o.value === debitId)?.label ?? 'Select'}
-        </Text>
-        <Ionicons name="chevron-down" size={18} color="#64748b" />
-      </Pressable>
-      <Text className="mb-1 text-xs text-slate-500">Credit account</Text>
-      <Pressable
-        className="mb-2 flex-row items-center justify-between rounded-lg border border-slate-200 px-3 py-2"
+      />
+      <WorkshopPickerField
+        label="Credit account"
+        value={accOpts.find((o) => o.value === creditId)?.label ?? ''}
+        placeholder="Select account"
         onPress={() => setAccCreditOpen(true)}
-      >
-        <Text className="flex-1 text-slate-900" numberOfLines={1}>
-          {accOpts.find((o) => o.value === creditId)?.label ?? 'Select'}
-        </Text>
-        <Ionicons name="chevron-down" size={18} color="#64748b" />
-      </Pressable>
-      <Text className="mb-1 text-xs text-slate-500">Date</Text>
-      <TextInput
-        className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-        value={txDate}
-        onChangeText={setTxDate}
-        placeholder="YYYY-MM-DD"
       />
-      <Text className="mb-1 text-xs text-slate-500">Type</Text>
-      <Pressable
-        className="mb-2 flex-row items-center justify-between rounded-lg border border-slate-200 px-3 py-2"
+      <WorkshopDatePickerField label="Date" value={txDate} onChange={setTxDate} />
+      <WorkshopPickerField
+        label="Type"
+        value={getTransactionTypeLabel(txType)}
         onPress={() => setPickTypeOpen(true)}
-      >
-        <Text>{getTransactionTypeLabel(txType)}</Text>
-        <Ionicons name="chevron-down" size={18} color="#64748b" />
-      </Pressable>
-      <Text className="mb-1 text-xs text-slate-500">Status</Text>
-      <Pressable
-        className="mb-2 flex-row items-center justify-between rounded-lg border border-slate-200 px-3 py-2"
+      />
+      <WorkshopPickerField
+        label="Status"
+        value={getTransactionStatusLabel(txStatus)}
         onPress={() => setPickStatusOpen(true)}
-      >
-        <Text>{getTransactionStatusLabel(txStatus)}</Text>
-        <Ionicons name="chevron-down" size={18} color="#64748b" />
+      />
+      <WorkshopFieldLabel>Amount</WorkshopFieldLabel>
+      <WorkshopTextInput keyboardType="decimal-pad" value={amountStr} onChangeText={setAmountStr} />
+      <WorkshopFieldLabel>Reference</WorkshopFieldLabel>
+      <WorkshopTextInput value={refNum} onChangeText={setRefNum} />
+      <WorkshopFieldLabel>Description</WorkshopFieldLabel>
+      <WorkshopTextInput value={desc} onChangeText={setDesc} multiline style={{ minHeight: 72 }} />
+    </>
+  );
+
+  const sheetFooter = (label: string, onSave: () => void, onCancel: () => void) => (
+    <>
+      <WorkshopPrimaryButton label={busy ? 'Saving…' : label} onPress={onSave} disabled={busy} />
+      <Pressable onPress={onCancel} style={{ marginTop: 12, alignItems: 'center', paddingVertical: 10 }}>
+        <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Cancel</Text>
       </Pressable>
-      <Text className="mb-1 text-xs text-slate-500">Amount</Text>
-      <TextInput
-        className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-        keyboardType="decimal-pad"
-        value={amountStr}
-        onChangeText={setAmountStr}
-      />
-      <Text className="mb-1 text-xs text-slate-500">Reference</Text>
-      <TextInput
-        className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-        value={refNum}
-        onChangeText={setRefNum}
-      />
-      <Text className="mb-1 text-xs text-slate-500">Description</Text>
-      <TextInput
-        className="mb-2 min-h-[72px] rounded-lg border border-slate-200 px-3 py-2"
-        value={desc}
-        onChangeText={setDesc}
-        multiline
-      />
     </>
   );
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="flex-row items-center border-b border-slate-200 bg-white px-2 py-2">
-        <MenuHeaderButton />
-        <Text className="flex-1 text-center text-lg font-semibold text-slate-900">
-          Ledger transactions
-        </Text>
-        {canManageLedger() ? (
-          <Pressable className="px-2 py-1" onPress={openCreate}>
-            <Ionicons name="add-circle" size={28} color="#2563eb" />
-          </Pressable>
-        ) : (
-          <View className="w-9" />
-        )}
-      </View>
-
-      <View className="flex-row gap-2 border-b border-slate-200 bg-white px-2 py-2">
-        <Pressable
-          className="flex-1 flex-row items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-2 py-2"
-          onPress={() => setTypeOpen(true)}
-        >
-          <Text className="text-xs text-slate-900" numberOfLines={1}>
-            {TYPE_FILTER.find((o) => o.value === typeFilter)?.label}
-          </Text>
-          <Ionicons name="chevron-down" size={14} color="#64748b" />
-        </Pressable>
-        <Pressable
-          className="flex-1 flex-row items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-2 py-2"
-          onPress={() => setStatusOpen(true)}
-        >
-          <Text className="text-xs text-slate-900" numberOfLines={1}>
-            {STATUS_FILTER.find((o) => o.value === statusFilter)?.label}
-          </Text>
-          <Ionicons name="chevron-down" size={14} color="#64748b" />
-        </Pressable>
-      </View>
+    <WorkshopChrome
+      title="Ledger transactions"
+      subtitle="Journal entries & transfers"
+      right={canManageLedger() ? <WorkshopHeaderButton onPress={openCreate} /> : undefined}
+      scroll={false}
+    >
+      <WorkshopFilterBar
+        resultCount={tx.length}
+        activeFilterCount={countActiveFilters([typeFilter, statusFilter])}
+        onResetFilters={() => {
+          setTypeFilter('all');
+          setStatusFilter('all');
+        }}
+      >
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flex: 1 }}>
+            <WorkshopPickerField
+              label="Type"
+              value={TYPE_FILTER.find((o) => o.value === typeFilter)?.label ?? 'All types'}
+              onPress={() => setTypeOpen(true)}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <WorkshopPickerField
+              label="Status"
+              value={STATUS_FILTER.find((o) => o.value === statusFilter)?.label ?? 'All statuses'}
+              onPress={() => setStatusOpen(true)}
+            />
+          </View>
+        </View>
+      </WorkshopFilterBar>
 
       {loading && tx.length === 0 ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#2563eb" />
-        </View>
+        <WorkshopLoading />
       ) : (
         <FlatList
+          style={{ flex: 1 }}
           data={tx}
           keyExtractor={(x) => x.id}
+          contentContainerStyle={{ paddingBottom: 20 }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={WS.primary} />
+          }
+          ListEmptyComponent={
+            <WorkshopEmptyState
+              icon="swap-horizontal-outline"
+              title="No transactions"
+              subtitle="Create journal entries between chart of accounts."
+              actionLabel={canManageLedger() ? 'New transaction' : undefined}
+              onAction={canManageLedger() ? openCreate : undefined}
+            />
           }
           renderItem={({ item }) => (
-            <View className="border-b border-slate-100 bg-white px-4 py-3">
-              <Text className="font-semibold text-slate-900">{item.description}</Text>
-              <Text className="text-xs text-slate-500">
-                {item.transaction_number} · {getTransactionTypeLabel(item.transaction_type)} ·{' '}
-                {getTransactionStatusLabel(item.status)}
-              </Text>
-              <Text className="mt-1 text-base font-bold text-slate-900">
-                {formatMoney(item.amount)}
-              </Text>
-              {canManageLedger() ? (
-                <View className="mt-2 flex-row gap-3">
-                  <Pressable onPress={() => openEdit(item)}>
-                    <Text className="font-medium text-blue-600">Edit</Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={() =>
-                      Alert.alert('Delete', item.transaction_number, [
-                        { text: 'Cancel', style: 'cancel' },
-                        {
-                          text: 'Delete',
-                          style: 'destructive',
-                          onPress: () => {
-                            void (async () => {
-                              try {
-                                await deleteLedgerTransaction(item.id);
-                                await load();
-                              } catch (e) {
-                                Alert.alert(
-                                  'Ledger',
-                                  extractErrorMessage(e, 'Delete failed'),
-                                );
-                              }
-                            })();
-                          },
-                        },
-                      ])
-                    }
-                  >
-                    <Text className="font-medium text-red-600">Delete</Text>
-                  </Pressable>
-                </View>
-              ) : null}
-            </View>
+            <WorkshopListCard
+              icon="swap-horizontal"
+              iconColor="#0891b2"
+              iconBg="#ecfeff"
+              title={item.description}
+              subtitle={item.transaction_number}
+              meta={`${getTransactionTypeLabel(item.transaction_type)} · ${getTransactionStatusLabel(item.status)}`}
+              badges={[{ label: formatMoney(item.amount) }]}
+              onPress={canManageLedger() ? () => openEdit(item) : undefined}
+              actions={
+                canManageLedger()
+                  ? [
+                      { icon: 'create-outline', onPress: () => openEdit(item) },
+                      { icon: 'trash-outline', onPress: () => confirmDelete(item), danger: true },
+                    ]
+                  : undefined
+              }
+            />
           )}
-          ListEmptyComponent={
-            <Text className="py-8 text-center text-slate-500">No transactions</Text>
-          }
         />
       )}
 
-      <AppModal
+      <WorkshopFormSheet
         visible={createOpen}
-        animationType="slide"
-        transparent
+        title="New transaction"
         onClose={() => setCreateOpen(false)}
+        footer={sheetFooter('Create transaction', () => void submitCreate(), () => setCreateOpen(false))}
       >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
-            <Text className="text-lg font-semibold text-slate-900">
-              New transaction
-            </Text>
-            <ScrollView className="mt-3" keyboardShouldPersistTaps="handled">
-              {formFields}
-            </ScrollView>
-            <Pressable
-              className="items-center rounded-lg bg-blue-600 py-3"
-              disabled={busy}
-              onPress={() => void submitCreate()}
-            >
-              <Text className="font-semibold text-white">Create</Text>
-            </Pressable>
-            <Pressable className="mt-2 py-2" onPress={() => setCreateOpen(false)}>
-              <Text className="text-center text-slate-600">Cancel</Text>
-            </Pressable>
-          </View>
-        </View>
-      </AppModal>
+        {formFields}
+      </WorkshopFormSheet>
 
-      <AppModal
+      <WorkshopFormSheet
         visible={editOpen}
-        animationType="slide"
-        transparent
-        onClose={() => setEditOpen(false)}
+        title="Edit transaction"
+        onClose={() => {
+          setEditOpen(false);
+          setEditing(null);
+        }}
+        footer={sheetFooter(
+          'Save changes',
+          () => void submitEdit(),
+          () => {
+            setEditOpen(false);
+            setEditing(null);
+          },
+        )}
       >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
-            <Text className="text-lg font-semibold text-slate-900">Edit</Text>
-            <ScrollView className="mt-3" keyboardShouldPersistTaps="handled">
-              {formFields}
-            </ScrollView>
-            <Pressable
-              className="items-center rounded-lg bg-blue-600 py-3"
-              disabled={busy}
-              onPress={() => void submitEdit()}
-            >
-              <Text className="font-semibold text-white">Save</Text>
-            </Pressable>
-            <Pressable
-              className="mt-2 py-2"
-              onPress={() => {
-                setEditOpen(false);
-                setEditing(null);
-              }}
-            >
-              <Text className="text-center text-slate-600">Cancel</Text>
-            </Pressable>
-          </View>
-        </View>
-      </AppModal>
+        {formFields}
+      </WorkshopFormSheet>
 
       <OptionSheet
         visible={typeOpen}
@@ -526,6 +465,6 @@ export function MobileLedgerTransactionsScreen() {
         }}
         onClose={() => setPickStatusOpen(false)}
       />
-    </View>
+    </WorkshopChrome>
   );
 }

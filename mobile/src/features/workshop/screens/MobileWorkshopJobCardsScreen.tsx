@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, FlatList, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
+import { View, Text, FlatList, Pressable, RefreshControl } from 'react-native';
+import { appAlert, appConfirm, appError } from '../../../utils/appDialog';
 import * as Sharing from 'expo-sharing';
-import { Ionicons } from '@expo/vector-icons';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import type { JobCard, JobCardCreate, JobCardUpdate } from '../../../models/workshop/JobCard';
 import {
@@ -14,15 +14,25 @@ import {
   downloadJobCardPdfToShare,
 } from '../../../services/workshop/workshopMobileApi';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { PickerModal } from '../../healthcare/components/PickerModal';
 import {
   WorkshopChrome,
-  WorkshopCard,
+  WorkshopChipSelect,
+  WorkshopFilterBar,
+  countActiveFilters,
+  WorkshopListCard,
+  WorkshopEmptyState,
+  WorkshopHeaderButton,
+  WorkshopLoading,
+  WorkshopFormSheet,
   WorkshopFieldLabel,
+  WorkshopTextInput,
+  WorkshopDatePickerField,
+  WorkshopDateTimePickerField,
+  WorkshopPickerField,
   WorkshopPrimaryButton,
+  WS,
 } from '../components/WorkshopChrome';
-import { PickerModal } from '../../healthcare/components/PickerModal';
-import { AppModal } from '../../../components/layout/AppModal';
-import { ProductChipSelect } from '../../inventory/screens/products/ProductChipSelect';
 
 const JC_STATUSES = ['draft', 'in_progress', 'completed', 'cancelled'];
 const PRIORITIES = ['low', 'medium', 'high', 'urgent'];
@@ -97,7 +107,7 @@ export function MobileWorkshopJobCardsScreen() {
         else setLoading(true);
         await Promise.all([loadRefs(), load()]);
       } catch (e) {
-        Alert.alert('Job cards', extractErrorMessage(e, 'Failed to load'));
+        appError('Job cards', extractErrorMessage(e, 'Failed to load'));
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -111,8 +121,7 @@ export function MobileWorkshopJobCardsScreen() {
   }, [run]);
 
   const filtered = list.filter((jc) => {
-    const ok =
-      statusF === 'all' || jc.status === statusF;
+    const ok = statusF === 'all' || jc.status === statusF;
     const q = search.toLowerCase();
     const matchSearch =
       !q ||
@@ -184,7 +193,7 @@ export function MobileWorkshopJobCardsScreen() {
 
   const submit = async () => {
     if (!form.title.trim()) {
-      Alert.alert('Job card', 'Title is required');
+      appAlert('Job card', 'Title is required');
       return;
     }
     const vatPct = parseFloat(form.vat_rate_percent) || 0;
@@ -228,28 +237,27 @@ export function MobileWorkshopJobCardsScreen() {
       setModalOpen(false);
       await run(false);
     } catch (e) {
-      Alert.alert('Job card', extractErrorMessage(e, 'Save failed'));
+      appError('Job card', extractErrorMessage(e, 'Save failed'));
     } finally {
       setSaving(false);
     }
   };
 
   const remove = (jc: JobCard) => {
-    Alert.alert('Delete', jc.title, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteJobCard(jc.id);
-            await run(false);
-          } catch (e) {
-            Alert.alert('Job card', extractErrorMessage(e, 'Delete failed'));
-          }
-        },
+    appConfirm({
+      title: 'Delete',
+      message: jc.title,
+      confirmLabel: 'Delete',
+      destructive: true,
+      onConfirm: async () => {
+        try {
+          await deleteJobCard(jc.id);
+          await run(false);
+        } catch (e) {
+          appError('Job card', extractErrorMessage(e, 'Delete failed'));
+        }
       },
-    ]);
+    });
   };
 
   const sharePdf = async (jc: JobCard) => {
@@ -260,10 +268,10 @@ export function MobileWorkshopJobCardsScreen() {
       if (can) {
         await Sharing.shareAsync(fileUri);
       } else {
-        Alert.alert('PDF', 'Sharing is not available on this device.');
+        appAlert('PDF', 'Sharing is not available on this device.');
       }
     } catch (e) {
-      Alert.alert('PDF', extractErrorMessage(e, 'Could not export PDF'));
+      appError('PDF', extractErrorMessage(e, 'Could not export PDF'));
     } finally {
       setPdfBusy(null);
     }
@@ -278,83 +286,86 @@ export function MobileWorkshopJobCardsScreen() {
     label: u.name || u.username || u.id,
   }));
 
+  const vehicleLabel = [form.vehicle_make, form.vehicle_model].filter(Boolean).join(' ');
+
   return (
     <WorkshopChrome
       title="Job cards"
       subtitle="Workshop job cards"
-      right={
-        <Pressable onPress={openCreate} className="p-2">
-          <Ionicons name="add-circle" size={26} color="#4f46e5" />
-        </Pressable>
-      }
+      right={<WorkshopHeaderButton onPress={openCreate} />}
       scroll={false}
     >
-      <TextInput
-        className="mb-2 rounded-xl border border-slate-200 bg-white px-3 py-2"
-        placeholder="Search…"
-        placeholderTextColor="#94a3b8"
-        value={search}
-        onChangeText={setSearch}
-      />
-      <View className="mb-2 rounded-xl border border-slate-200 bg-white px-3 py-3">
-        <ProductChipSelect
+      <WorkshopFilterBar
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search job cards…"
+        resultCount={filtered.length}
+        activeFilterCount={countActiveFilters([statusF])}
+        onResetFilters={() => setStatusF('all')}
+      >
+        <WorkshopChipSelect
           label="Status"
           options={['all', ...JC_STATUSES]}
           value={statusF}
           onChange={setStatusF}
         />
-      </View>
+      </WorkshopFilterBar>
 
       {loading && !refreshing ? (
-        <View className="py-12 items-center">
-          <ActivityIndicator color="#4f46e5" />
-        </View>
+        <WorkshopLoading />
       ) : (
         <FlatList
-          className="flex-1"
+          style={{ flex: 1 }}
           data={filtered}
           keyExtractor={(x) => x.id}
+          contentContainerStyle={{ paddingBottom: 20 }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => void run(true)}
-              tintColor="#4f46e5"
+              tintColor={WS.primary}
             />
           }
-          renderItem={({ item: jc }) => (
-            <WorkshopCard>
-              <Text className="font-semibold text-slate-900">
-                {jc.job_card_number} · {jc.title}
-              </Text>
-              <Text className="text-xs text-slate-500">
-                {jc.customer_name || '—'} ·{' '}
-                <Text className="capitalize">{jc.status?.replace('_', ' ')}</Text>
-              </Text>
-              <View className="mt-2 flex-row flex-wrap gap-2">
-                <Pressable
-                  onPress={() => openEdit(jc)}
-                  className="rounded-lg bg-indigo-100 px-2 py-1"
-                >
-                  <Text className="text-xs font-medium text-indigo-900">Edit</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => void sharePdf(jc)}
-                  disabled={pdfBusy === jc.id}
-                  className="rounded-lg bg-slate-100 px-2 py-1"
-                >
-                  <Text className="text-xs font-medium text-slate-800">
-                    {pdfBusy === jc.id ? 'PDF…' : 'PDF'}
-                  </Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => remove(jc)}
-                  className="rounded-lg bg-red-50 px-2 py-1"
-                >
-                  <Text className="text-xs text-red-700">Delete</Text>
-                </Pressable>
-              </View>
-            </WorkshopCard>
-          )}
+          ListEmptyComponent={
+            <WorkshopEmptyState
+              icon="clipboard-outline"
+              title="No job cards"
+              subtitle="Create a job card to track vehicle work and estimates."
+              actionLabel="Create job card"
+              onAction={openCreate}
+            />
+          }
+          renderItem={({ item: jc }) => {
+            const vi = (jc.vehicle_info || {}) as Record<string, string>;
+            const vehicle = [vi.make, vi.model].filter(Boolean).join(' ') || vi.registration_number;
+            return (
+              <WorkshopListCard
+                kind="job-card"
+                icon="clipboard"
+                iconColor="#2563eb"
+                iconBg="#eff6ff"
+                kicker={jc.job_card_number}
+                title={jc.title}
+                subtitle={vehicle || 'No vehicle linked'}
+                meta={jc.customer_name ? `Customer · ${jc.customer_name}` : undefined}
+                badges={[
+                  { label: jc.status, tone: 'status' },
+                  { label: jc.priority, tone: 'priority' },
+                ]}
+                onPress={() => openEdit(jc)}
+                actions={[
+                  { icon: 'create-outline', onPress: () => openEdit(jc) },
+                  {
+                    icon: 'document-text-outline',
+                    label: pdfBusy === jc.id ? '…' : 'PDF',
+                    onPress: () => void sharePdf(jc),
+                    loading: pdfBusy === jc.id,
+                  },
+                  { icon: 'trash-outline', onPress: () => remove(jc), danger: true },
+                ]}
+              />
+            );
+          }}
         />
       )}
 
@@ -369,167 +380,70 @@ export function MobileWorkshopJobCardsScreen() {
         visible={userPick}
         title="Assign to"
         items={[{ id: '', label: 'None' }, ...userItems]}
-        onSelect={(x) =>
-          setForm((f) => ({ ...f, assigned_to_id: x.id }))
-        }
+        onSelect={(x) => setForm((f) => ({ ...f, assigned_to_id: x.id }))}
         onClose={() => setUserPick(false)}
       />
 
-      <AppModal
+      <WorkshopFormSheet
         visible={modalOpen}
-        animationType="slide"
-        transparent
+        title={editing ? 'Edit job card' : 'New job card'}
         onClose={() => setModalOpen(false)}
-      >
-        <View className="flex-1 justify-end bg-black/40">
-          <View className="max-h-[94%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
-            <Text className="mb-3 text-lg font-semibold">
-              {editing ? 'Edit job card' : 'New job card'}
-            </Text>
-            <ScrollView keyboardShouldPersistTaps="handled">
-              <WorkshopFieldLabel>Title *</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                value={form.title}
-                onChangeText={(v) => setForm((f) => ({ ...f, title: v }))}
-              />
-              <WorkshopFieldLabel>Description</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                value={form.description}
-                onChangeText={(v) => setForm((f) => ({ ...f, description: v }))}
-                multiline
-              />
-              <WorkshopFieldLabel>Work order</WorkshopFieldLabel>
-              <Pressable
-                onPress={() => setWoPick(true)}
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-              >
-                <Text>
-                  {workOrders.find((w) => w.id === form.work_order_id)
-                    ? woItems.find((x) => x.id === form.work_order_id)?.label
-                    : 'Optional'}
-                </Text>
-              </Pressable>
-              <WorkshopFieldLabel>Assign to</WorkshopFieldLabel>
-              <Pressable
-                onPress={() => setUserPick(true)}
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-              >
-                <Text>
-                  {form.assigned_to_id
-                    ? userItems.find((x) => x.id === form.assigned_to_id)
-                        ?.label
-                    : 'Optional'}
-                </Text>
-              </Pressable>
-              <ProductChipSelect
-                label="Status"
-                options={[...JC_STATUSES]}
-                value={form.status}
-                onChange={(s) => setForm((f) => ({ ...f, status: s }))}
-              />
-              <ProductChipSelect
-                label="Priority"
-                options={[...PRIORITIES]}
-                value={form.priority}
-                onChange={(s) => setForm((f) => ({ ...f, priority: s }))}
-              />
-              <WorkshopFieldLabel>Vehicle reg / VIN / make / model</WorkshopFieldLabel>
-              <TextInput
-                className="mb-1 rounded-lg border border-slate-200 px-3 py-2"
-                placeholder="Registration"
-                value={form.vehicle_reg}
-                onChangeText={(v) => setForm((f) => ({ ...f, vehicle_reg: v }))}
-              />
-              <TextInput
-                className="mb-1 rounded-lg border border-slate-200 px-3 py-2"
-                placeholder="VIN"
-                value={form.vehicle_vin}
-                onChangeText={(v) => setForm((f) => ({ ...f, vehicle_vin: v }))}
-              />
-              <View className="mb-2 flex-row gap-2">
-                <TextInput
-                  className="flex-1 rounded-lg border border-slate-200 px-2 py-2"
-                  placeholder="Make"
-                  value={form.vehicle_make}
-                  onChangeText={(v) =>
-                    setForm((f) => ({ ...f, vehicle_make: v }))
-                  }
-                />
-                <TextInput
-                  className="flex-1 rounded-lg border border-slate-200 px-2 py-2"
-                  placeholder="Model"
-                  value={form.vehicle_model}
-                  onChangeText={(v) =>
-                    setForm((f) => ({ ...f, vehicle_model: v }))
-                  }
-                />
-              </View>
-              <WorkshopFieldLabel>Planned date</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                placeholder="YYYY-MM-DD"
-                value={form.planned_date}
-                onChangeText={(v) =>
-                  setForm((f) => ({ ...f, planned_date: v }))
-                }
-              />
-              <WorkshopFieldLabel>Completed at (optional)</WorkshopFieldLabel>
-              <TextInput
-                className="mb-2 rounded-lg border border-slate-200 px-3 py-2"
-                placeholder="YYYY-MM-DD HH:mm"
-                value={form.date_time_out}
-                onChangeText={(v) =>
-                  setForm((f) => ({ ...f, date_time_out: v }))
-                }
-              />
-              <WorkshopFieldLabel>Labor / Parts / VAT %</WorkshopFieldLabel>
-              <View className="mb-2 flex-row gap-2">
-                <TextInput
-                  className="flex-1 rounded-lg border border-slate-200 px-2 py-2"
-                  keyboardType="decimal-pad"
-                  value={form.labor_estimate}
-                  onChangeText={(v) =>
-                    setForm((f) => ({ ...f, labor_estimate: v }))
-                  }
-                />
-                <TextInput
-                  className="flex-1 rounded-lg border border-slate-200 px-2 py-2"
-                  keyboardType="decimal-pad"
-                  value={form.parts_estimate}
-                  onChangeText={(v) =>
-                    setForm((f) => ({ ...f, parts_estimate: v }))
-                  }
-                />
-                <TextInput
-                  className="w-16 rounded-lg border border-slate-200 px-2 py-2"
-                  keyboardType="decimal-pad"
-                  value={form.vat_rate_percent}
-                  onChangeText={(v) =>
-                    setForm((f) => ({ ...f, vat_rate_percent: v }))
-                  }
-                />
-              </View>
-              <WorkshopFieldLabel>Notes</WorkshopFieldLabel>
-              <TextInput
-                className="mb-4 rounded-lg border border-slate-200 px-3 py-2"
-                value={form.notes}
-                onChangeText={(v) => setForm((f) => ({ ...f, notes: v }))}
-                multiline
-              />
-            </ScrollView>
+        footer={
+          <>
             <WorkshopPrimaryButton
-              label={saving ? 'Saving…' : 'Save'}
+              label={saving ? 'Saving…' : 'Save job card'}
               onPress={() => void submit()}
               disabled={saving}
             />
-            <Pressable className="mt-2 items-center py-2" onPress={() => setModalOpen(false)}>
-              <Text className="text-slate-600">Cancel</Text>
+            <Pressable onPress={() => setModalOpen(false)} style={{ marginTop: 12, alignItems: 'center', paddingVertical: 10 }}>
+              <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Cancel</Text>
             </Pressable>
+          </>
+        }
+      >
+        <WorkshopFieldLabel>Title *</WorkshopFieldLabel>
+        <WorkshopTextInput value={form.title} onChangeText={(v) => setForm((f) => ({ ...f, title: v }))} />
+        <WorkshopFieldLabel>Description</WorkshopFieldLabel>
+        <WorkshopTextInput value={form.description} onChangeText={(v) => setForm((f) => ({ ...f, description: v }))} multiline />
+        <WorkshopPickerField
+          label="Work order"
+          value={workOrders.find((w) => w.id === form.work_order_id) ? woItems.find((x) => x.id === form.work_order_id)?.label ?? '' : ''}
+          placeholder="Optional"
+          onPress={() => setWoPick(true)}
+        />
+        <WorkshopPickerField
+          label="Assign to"
+          value={form.assigned_to_id ? userItems.find((x) => x.id === form.assigned_to_id)?.label ?? '' : ''}
+          placeholder="Optional"
+          onPress={() => setUserPick(true)}
+        />
+        <WorkshopChipSelect label="Status" options={[...JC_STATUSES]} value={form.status} onChange={(s) => setForm((f) => ({ ...f, status: s }))} />
+        <WorkshopChipSelect label="Priority" options={[...PRIORITIES]} value={form.priority} onChange={(s) => setForm((f) => ({ ...f, priority: s }))} />
+        <WorkshopFieldLabel>Vehicle</WorkshopFieldLabel>
+        <WorkshopTextInput placeholder="Registration" value={form.vehicle_reg} onChangeText={(v) => setForm((f) => ({ ...f, vehicle_reg: v }))} />
+        <WorkshopTextInput placeholder="VIN" value={form.vehicle_vin} onChangeText={(v) => setForm((f) => ({ ...f, vehicle_vin: v }))} />
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flex: 1 }}>
+            <WorkshopTextInput placeholder="Make" value={form.vehicle_make} onChangeText={(v) => setForm((f) => ({ ...f, vehicle_make: v }))} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <WorkshopTextInput placeholder="Model" value={form.vehicle_model} onChangeText={(v) => setForm((f) => ({ ...f, vehicle_model: v }))} />
           </View>
         </View>
-      </AppModal>
+        {vehicleLabel ? (
+          <Text style={{ fontSize: 12, color: WS.textMuted, marginBottom: 8 }}>{vehicleLabel}</Text>
+        ) : null}
+        <WorkshopDatePickerField label="Planned date" value={form.planned_date} onChange={(v) => setForm((f) => ({ ...f, planned_date: v }))} />
+        <WorkshopDateTimePickerField label="Completed at" value={form.date_time_out} onChange={(v) => setForm((f) => ({ ...f, date_time_out: v }))} />
+        <WorkshopFieldLabel>Labor / Parts / VAT %</WorkshopFieldLabel>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flex: 1 }}><WorkshopTextInput keyboardType="decimal-pad" value={form.labor_estimate} onChangeText={(v) => setForm((f) => ({ ...f, labor_estimate: v }))} /></View>
+          <View style={{ flex: 1 }}><WorkshopTextInput keyboardType="decimal-pad" value={form.parts_estimate} onChangeText={(v) => setForm((f) => ({ ...f, parts_estimate: v }))} /></View>
+          <View style={{ width: 64 }}><WorkshopTextInput keyboardType="decimal-pad" value={form.vat_rate_percent} onChangeText={(v) => setForm((f) => ({ ...f, vat_rate_percent: v }))} /></View>
+        </View>
+        <WorkshopFieldLabel>Notes</WorkshopFieldLabel>
+        <WorkshopTextInput value={form.notes} onChangeText={(v) => setForm((f) => ({ ...f, notes: v }))} multiline />
+      </WorkshopFormSheet>
     </WorkshopChrome>
   );
 }
