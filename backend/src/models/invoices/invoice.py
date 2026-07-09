@@ -37,6 +37,7 @@ class Invoice(Base):
     total = Column(Float, default=0.0)
     notes = Column(Text, nullable=True)
     terms = Column(Text, nullable=True)
+    contactId = Column(UUID(as_uuid=True), ForeignKey("contacts.id"), nullable=True)
     opportunityId = Column(String, nullable=True)
     quoteId = Column(String, nullable=True)
     projectId = Column(String, nullable=True)

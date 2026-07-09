@@ -17,6 +17,8 @@ import { Filter, Search } from 'lucide-react';
 import {
   ContactType,
   CRMContactFilters,
+  ContactDateField,
+  ContactDateQuickFilter,
   Industry,
 } from '@/src/models/crm';
 import { User } from '@/src/models';
@@ -26,6 +28,20 @@ function assigneeLabel(u: User): string {
   if (name) return name;
   return u.userName || u.email || (u.id || u.userId || '');
 }
+
+const DATE_FIELDS: { value: ContactDateField; label: string }[] = [
+  { value: 'created', label: 'Created Date' },
+  { value: 'updated', label: 'Updated Date' },
+  { value: 'last_contacted', label: 'Last Contacted Date' },
+];
+
+const QUICK_FILTERS: { value: ContactDateQuickFilter | 'all'; label: string }[] = [
+  { value: 'all', label: 'Any time' },
+  { value: 'today', label: 'Today' },
+  { value: '7d', label: 'Last 7 Days' },
+  { value: '30d', label: 'Last 30 Days' },
+  { value: '90d', label: 'Last 90 Days' },
+];
 
 const MONTHS = [
   { value: 'all', label: 'Any month' },
@@ -190,6 +206,85 @@ export function ContactsFiltersCard({
                 setFilters((prev: CRMContactFilters) => ({
                   ...prev,
                   country: e.target.value || undefined,
+                }))
+              }
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium">Date filter type</label>
+            <Select
+              value={filters.dateField || 'created'}
+              onValueChange={(value) =>
+                setFilters((prev: CRMContactFilters) => ({
+                  ...prev,
+                  dateField: value as ContactDateField,
+                }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Created Date" />
+              </SelectTrigger>
+              <SelectContent>
+                {DATE_FIELDS.map((f) => (
+                  <SelectItem key={f.value} value={f.value}>
+                    {f.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-sm font-medium">Quick date range</label>
+            <Select
+              value={filters.quickFilter || 'all'}
+              onValueChange={(value) =>
+                setFilters((prev: CRMContactFilters) => ({
+                  ...prev,
+                  quickFilter:
+                    value === 'all' ? undefined : (value as ContactDateQuickFilter),
+                  dateFrom: value === 'all' ? undefined : prev.dateFrom,
+                  dateTo: value === 'all' ? undefined : prev.dateTo,
+                }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Any time" />
+              </SelectTrigger>
+              <SelectContent>
+                {QUICK_FILTERS.map((f) => (
+                  <SelectItem key={f.value} value={f.value}>
+                    {f.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-sm font-medium">From</label>
+            <Input
+              type="date"
+              value={filters.dateFrom?.slice(0, 10) || ''}
+              disabled={!!filters.quickFilter}
+              onChange={(e) =>
+                setFilters((prev: CRMContactFilters) => ({
+                  ...prev,
+                  quickFilter: undefined,
+                  dateFrom: e.target.value || undefined,
+                }))
+              }
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium">To</label>
+            <Input
+              type="date"
+              value={filters.dateTo?.slice(0, 10) || ''}
+              disabled={!!filters.quickFilter}
+              onChange={(e) =>
+                setFilters((prev: CRMContactFilters) => ({
+                  ...prev,
+                  quickFilter: undefined,
+                  dateTo: e.target.value || undefined,
                 }))
               }
             />

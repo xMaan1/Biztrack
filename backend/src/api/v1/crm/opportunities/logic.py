@@ -211,6 +211,13 @@ def update_crm_opportunity(opportunity_id: str, opportunity_data: OpportunityUpd
         opportunity.updatedAt = datetime.now()
         db.commit()
         db.refresh(opportunity)
+        try:
+            from .....services.crm_sync_service import sync_on_opportunity_closed
+            sync_on_opportunity_closed(db, opportunity)
+            db.commit()
+            db.refresh(opportunity)
+        except Exception:
+            pass
         notify_assignee(
             db, ctx, current_user, opportunity,
             entity_label="Opportunity",

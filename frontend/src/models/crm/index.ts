@@ -195,6 +195,10 @@ export interface Contact {
   assignedTo?: string;
   lastContactDate?: string;
   nextFollowUpDate?: string;
+  clientValue?: number;
+  dealClosedValue?: number;
+  remainingPayable?: number;
+  lifetimeValue?: number;
   tenantId?: string;
   tenant_id?: string;
   createdBy?: string;
@@ -227,6 +231,7 @@ export interface ContactCreate {
   addresses?: ContactAddressRow[];
   socialLinks?: ContactSocialLinks;
   assignedTo?: string;
+  clientValue?: number;
 }
 
 export interface ContactUpdate {
@@ -254,6 +259,7 @@ export interface ContactUpdate {
   addresses?: ContactAddressRow[];
   socialLinks?: ContactSocialLinks;
   assignedTo?: string;
+  clientValue?: number;
 }
 
 export interface Company {
@@ -504,6 +510,9 @@ export interface CRMLeadFilters {
   search?: string;
 }
 
+export type ContactDateField = 'created' | 'updated' | 'last_contacted';
+export type ContactDateQuickFilter = 'today' | '7d' | '30d' | '90d';
+
 export interface CRMContactFilters {
   type?: ContactType;
   companyId?: string;
@@ -513,6 +522,10 @@ export interface CRMContactFilters {
   website?: string;
   birthdayMonth?: number;
   country?: string;
+  dateField?: ContactDateField;
+  dateFrom?: string;
+  dateTo?: string;
+  quickFilter?: ContactDateQuickFilter;
 }
 
 export interface CRMCompanyFilters {

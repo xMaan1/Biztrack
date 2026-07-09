@@ -22,6 +22,7 @@ import {
   MobileCompaniesScreen,
   MobileLeadsScreen,
   MobileOpportunitiesScreen,
+  MobileAgentPortalScreen,
 } from '../features/crm';
 import {
   MobileQuotesScreen,
@@ -386,6 +387,9 @@ export function CommerceDashboardScreen() {
     if (workspacePath === '/crm/opportunities' && canViewCRM()) {
       return <MobileOpportunitiesScreen />;
     }
+    if (workspacePath === '/crm/agent-portal' && canViewCRM()) {
+      return <MobileAgentPortalScreen />;
+    }
     if (workspacePath === '/sales/invoices') {
       if (
         hasModuleAccess('sales') &&
@@ -403,7 +407,8 @@ export function CommerceDashboardScreen() {
       workspacePath === '/crm/contacts' ||
       workspacePath === '/crm/companies' ||
       workspacePath === '/crm/leads' ||
-      workspacePath === '/crm/opportunities'
+      workspacePath === '/crm/opportunities' ||
+      workspacePath === '/crm/agent-portal'
     ) {
       return (
         <View className="flex-1 bg-slate-50">
@@ -480,6 +485,10 @@ export function CommerceDashboardScreen() {
 
   if (workspacePath === '/crm/opportunities' && canViewCRM()) {
     return <MobileOpportunitiesScreen />;
+  }
+
+  if (workspacePath === '/crm/agent-portal' && canViewCRM()) {
+    return <MobileAgentPortalScreen />;
   }
 
   if (

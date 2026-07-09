@@ -66,6 +66,23 @@ export function ContactFormAdditionalSection({
           />
         </div>
         <div>
+          <Label htmlFor="clientValue">Client value (initial deal value)</Label>
+          <Input
+            id="clientValue"
+            type="number"
+            min={0}
+            step="0.01"
+            value={formData.clientValue ?? ''}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                clientValue: e.target.value ? parseFloat(e.target.value) : undefined,
+              })
+            }
+            placeholder="Expected starting business value"
+          />
+        </div>
+        <div>
           <Label htmlFor="businessTaxId">Business tax ID</Label>
           <Input
             id="businessTaxId"

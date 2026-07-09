@@ -5,7 +5,7 @@ from typing import Optional
 from .....config.database import get_db
 from .....api.dependencies import get_current_user, get_tenant_context, require_permission
 from .....models.common import ModulePermission
-from .schemas import Contact, ContactCreate, ContactUpdate, CRMContactsResponse
+from .schemas import Contact, ContactCreate, ContactUpdate, CRMContactsResponse, ContactLedgerResponse
 from . import logic
 
 router = APIRouter()
@@ -21,6 +21,10 @@ async def get_crm_contacts(
     website: Optional[str] = Query(None),
     birthday_month: Optional[int] = Query(None, ge=1, le=12),
     country: Optional[str] = Query(None),
+    date_field: Optional[str] = Query(None),
+    date_from: Optional[str] = Query(None),
+    date_to: Optional[str] = Query(None),
+    quick_filter: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=500),
     db: Session = Depends(get_db),
@@ -30,7 +34,8 @@ async def get_crm_contacts(
 ):
     return logic.get_crm_contacts(
         db, current_user, tenant_context, type, company_id, search,
-        assigned_to, industry, website, birthday_month, country, page, limit,
+        assigned_to, industry, website, birthday_month, country,
+        date_field, date_from, date_to, quick_filter, page, limit,
     )
 
 
@@ -54,6 +59,17 @@ async def get_crm_contact(
     _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value)),
 ):
     return logic.get_crm_contact(contact_id, db, current_user, tenant_context)
+
+
+@router.get("/contacts/{contact_id}/ledger", response_model=ContactLedgerResponse)
+async def get_crm_contact_ledger(
+    contact_id: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+    _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value)),
+):
+    return logic.get_crm_contact_ledger(contact_id, db, current_user, tenant_context)
 
 
 @router.put("/contacts/{contact_id}", response_model=Contact)

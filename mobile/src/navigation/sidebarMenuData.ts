@@ -148,6 +148,13 @@ export const allMenuItems: MenuItemDef[] = [
         roles: ['*'],
         planTypes: ['commerce', 'agency', 'healthcare'],
       },
+      {
+        text: 'Agent Portal',
+        icon: 'trophy-outline' as const,
+        path: '/crm/agent-portal',
+        roles: ['*'],
+        planTypes: ['commerce', 'agency', 'healthcare'],
+      },
     ],
   },
   {

@@ -174,6 +174,12 @@ def update_crm_activity(activity_id: str, activity_data: SalesActivityUpdate, cu
                 update_data["status"] = "pending"
                 update_data["completedAt"] = None
         updated = update_sales_activity(activity_id, update_data, db, tid)
+        try:
+            from .....services.crm_sync_service import sync_on_activity_completed
+            sync_on_activity_completed(db, updated)
+            db.commit()
+        except Exception:
+            pass
         return SalesActivity.model_validate(updated)
     except HTTPException:
         raise

@@ -764,6 +764,11 @@ export function MobileContactsScreen() {
                       </Text>
                     </View>
                   </View>
+                  {c.lifetimeValue != null && c.lifetimeValue > 0 ? (
+                    <Text className="mt-2 text-xs font-medium text-emerald-700">
+                      CLV ${c.lifetimeValue.toLocaleString()} · Remaining ${(c.remainingPayable ?? 0).toLocaleString()}
+                    </Text>
+                  ) : null}
                   {contactAddressCountriesDisplay(c) ? (
                     <Text className="mt-1 text-xs text-slate-500">
                       {contactAddressCountriesDisplay(c)}

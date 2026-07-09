@@ -6,6 +6,7 @@ from sqlalchemy import String, and_, cast, extract, func, or_
 from sqlalchemy.orm import Session
 
 from .....models.crm import Company, Contact
+from .....services.contact_financials import batch_contact_financials, resolve_date_range
 from ..db_common import (
     attachment_item_to_dict,
     attachment_url_from_stored,
@@ -52,6 +53,10 @@ def search_contacts(
     website: Optional[str] = None,
     birthday_month: Optional[int] = None,
     country: Optional[str] = None,
+    date_field: Optional[str] = None,
+    date_from: Optional[datetime] = None,
+    date_to: Optional[datetime] = None,
+    quick_filter: Optional[str] = None,
     crm_scope_user_id: Optional[str] = None,
 ) -> Tuple[List[Contact], int]:
     q = db.query(Contact).filter(Contact.tenant_id == tenant_id)
@@ -93,6 +98,18 @@ def search_contacts(
     if country and country.strip():
         c = country.strip()
         q = q.filter(cast(Contact.addresses, String).ilike(f"%{c}%"))
+    start, end = resolve_date_range(quick_filter, date_from, date_to)
+    field = (date_field or "created").lower()
+    if start or end:
+        col = Contact.createdAt
+        if field == "updated":
+            col = Contact.updatedAt
+        elif field == "last_contacted":
+            col = Contact.lastContactDate
+        if start:
+            q = q.filter(col >= start)
+        if end:
+            q = q.filter(col < end)
     if search and search.strip():
         term = f"%{search.strip()}%"
         blob = func.concat(
@@ -201,7 +218,7 @@ def update_contact(contact_id: str, update_data: dict, db: Session, tenant_id: s
         if value is not None or key in (
             "email", "notes", "description", "phone", "mobile", "emails", "phones",
             "initials", "fullName", "birthday", "businessTaxId", "website", "addresses", "socialLinks",
-            "assignedToId",
+            "assignedToId", "clientValue", "lastContactDate",
         ):
             setattr(contact, key, value)
     contact.updatedAt = datetime.utcnow()
@@ -239,7 +256,7 @@ from ..http_common import (
     visible_or_404,
 )
 from ..shared import _crm_scope_user_id, _contact_create_to_orm_dict, ensure_lead_row_for_contact
-from .schemas import ContactCreate, ContactUpdate, CRMContactsResponse
+from .schemas import Contact, ContactCreate, ContactUpdate, CRMContactsResponse
 
 logger = logging.getLogger(__name__)
 
@@ -256,12 +273,18 @@ def get_crm_contacts(
     website: Optional[str] = None,
     birthday_month: Optional[int] = None,
     country: Optional[str] = None,
+    date_field: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    quick_filter: Optional[str] = None,
     page: int = 1,
     limit: int = 10,
 ):
     try:
         ctx = require_tenant(tenant_context)
         skip = (page - 1) * limit
+        parsed_from = datetime.fromisoformat(date_from.replace("Z", "+00:00")).replace(tzinfo=None) if date_from else None
+        parsed_to = datetime.fromisoformat(date_to.replace("Z", "+00:00")).replace(tzinfo=None) if date_to else None
         contacts, total = search_contacts(
             db,
             tenant_id_str(ctx),
@@ -275,9 +298,19 @@ def get_crm_contacts(
             website=website,
             birthday_month=birthday_month,
             country=country,
+            date_field=date_field,
+            date_from=parsed_from,
+            date_to=parsed_to,
+            quick_filter=quick_filter,
             crm_scope_user_id=_crm_scope_user_id(ctx, current_user),
         )
-        return CRMContactsResponse(contacts=contacts, pagination=pagination(page, limit, total))
+        financials = batch_contact_financials(db, tenant_id_str(ctx), contacts)
+        enriched = []
+        for c in contacts:
+            data = Contact.model_validate(c, from_attributes=True).model_dump()
+            data.update(financials.get(str(c.id), {}))
+            enriched.append(Contact.model_validate(data))
+        return CRMContactsResponse(contacts=enriched, pagination=pagination(page, limit, total))
     except HTTPException:
         raise
     except Exception as e:
@@ -314,7 +347,13 @@ def create_crm_contact(contact_data: ContactCreate, current_user, db: Session, t
 def get_crm_contact(contact_id: str, db: Session, current_user, tenant_context: Optional[dict] = None):
     try:
         contact = get_contact_by_id(contact_id, db, tenant_id_optional(tenant_context))
-        return visible_or_404(contact, tenant_context, current_user, detail="Contact not found")
+        visible = visible_or_404(contact, tenant_context, current_user, detail="Contact not found")
+        from .....services.contact_financials import compute_contact_financials
+        data = Contact.model_validate(visible, from_attributes=True).model_dump()
+        tid = tenant_id_optional(tenant_context)
+        if tid:
+            data.update(compute_contact_financials(db, str(tid), visible))
+        return Contact.model_validate(data)
     except HTTPException:
         raise
     except Exception as e:
@@ -383,4 +422,37 @@ def delete_crm_contact(contact_id: str, current_user, db: Session, tenant_contex
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error deleting contact: {str(e)}")
+
+
+def get_crm_contact_ledger(contact_id: str, db: Session, current_user, tenant_context: Optional[dict] = None):
+    try:
+        tid = tenant_id_optional(tenant_context)
+        contact = visible_or_404(get_contact_by_id(contact_id, db, tid), tenant_context, current_user, detail="Contact not found")
+        from .....services.crm_sync_service import get_contact_ledger
+        rows = get_contact_ledger(db, str(tid), str(contact.id))
+        entries = []
+        total_paid = 0.0
+        total_pending = 0.0
+        for r in rows:
+            amt = float(r.amount or 0)
+            if r.revenueType == "realized":
+                total_paid += amt
+            else:
+                total_pending += amt
+            entries.append({
+                "id": str(r.id),
+                "entryType": r.entryType,
+                "revenueType": r.revenueType,
+                "amount": amt,
+                "description": r.description,
+                "entryDate": r.entryDate.isoformat() if r.entryDate else "",
+                "invoiceId": str(r.invoiceId) if r.invoiceId else None,
+                "paymentId": str(r.paymentId) if r.paymentId else None,
+            })
+        from .schemas import ContactLedgerResponse
+        return ContactLedgerResponse(entries=entries, totalPaid=round(total_paid, 2), totalPending=round(total_pending, 2))
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching contact ledger: {str(e)}")
 

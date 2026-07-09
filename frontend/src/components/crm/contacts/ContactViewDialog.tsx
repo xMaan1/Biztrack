@@ -14,6 +14,8 @@ import { Label } from '@/src/components/ui/label';
 import { ExternalLink } from 'lucide-react';
 import CRMService from '@/src/services/CRMService';
 import { Contact } from '@/src/models/crm';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
+import agentPortalService, { ContactLedger } from '@/src/services/AgentPortalService';
 import {
   contactTypeDisplayLabel,
   mergeSocialFromApi,
@@ -36,10 +38,16 @@ export function ContactViewDialog({
   onClose,
   onEdit,
 }: ContactViewDialogProps) {
+  const { formatCurrency } = useCurrency();
   const [showFullWebsite, setShowFullWebsite] = useState(false);
+  const [ledger, setLedger] = useState<ContactLedger | null>(null);
 
   useEffect(() => {
     setShowFullWebsite(false);
+    setLedger(null);
+    if (contact?.id) {
+      agentPortalService.getContactLedger(contact.id).then(setLedger).catch(() => setLedger(null));
+    }
   }, [contact?.id]);
 
   const websiteValue = contact?.website?.trim() || '';
@@ -244,6 +252,25 @@ export function ContactViewDialog({
                 </Badge>
               </div>
 
+              <div>
+                <Label className="text-sm font-medium text-gray-500">Client Value</Label>
+                <p>{contact.clientValue != null ? formatCurrency(contact.clientValue) : '—'}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-gray-500">Deal Closed Value</Label>
+                <p>{contact.dealClosedValue != null ? formatCurrency(contact.dealClosedValue) : '—'}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-gray-500">Remaining Payable</Label>
+                <p>{contact.remainingPayable != null ? formatCurrency(contact.remainingPayable) : '—'}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-gray-500">Lifetime Value</Label>
+                <p className="font-semibold">
+                  {contact.lifetimeValue != null ? formatCurrency(contact.lifetimeValue) : '—'}
+                </p>
+              </div>
+
               <div className="md:col-span-2">
                 <Label className="text-sm font-medium text-gray-500">Notes</Label>
                 <p>{contact.notes || 'No notes'}</p>
@@ -257,6 +284,25 @@ export function ContactViewDialog({
                   {contact.description?.trim() ? contact.description : '—'}
                 </p>
               </div>
+
+              {ledger && ledger.entries.length > 0 && (
+                <div className="md:col-span-2 border-t pt-4">
+                  <p className="text-sm font-semibold mb-2">Payment Ledger</p>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Paid {formatCurrency(ledger.totalPaid)} · Pending {formatCurrency(ledger.totalPending)}
+                  </p>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {ledger.entries.map((e) => (
+                      <div key={e.id} className="flex justify-between text-sm border rounded px-3 py-2">
+                        <span>{e.description || e.entryType}</span>
+                        <span className={e.revenueType === 'realized' ? 'text-green-600' : 'text-amber-600'}>
+                          {formatCurrency(e.amount)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="md:col-span-2 border-t pt-4">
                 <p className="text-sm font-semibold mb-2">Additional</p>

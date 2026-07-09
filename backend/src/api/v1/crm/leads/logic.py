@@ -164,6 +164,14 @@ def update_crm_lead(lead_id: str, lead_data: LeadUpdate, current_user, db: Sessi
         if "assignedTo" in update_data:
             update_data["assignedToId"] = update_data.pop("assignedTo", None)
         updated = update_lead(lead_id, update_data, db, tid)
+        try:
+            from .....services.crm_sync_service import sync_on_lead_status_change
+            new_status = update_data.get("status") or getattr(updated, "status", None)
+            if new_status:
+                sync_on_lead_status_change(db, updated, str(new_status))
+                db.commit()
+        except Exception:
+            pass
         name = f"{getattr(updated, 'firstName', '')} {getattr(updated, 'lastName', '')}".strip() or "Lead"
         notify_crm_broadcast(
             db, ctx, current_user,

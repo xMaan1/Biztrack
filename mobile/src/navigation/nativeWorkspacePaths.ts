@@ -19,6 +19,7 @@ export const NATIVE_WORKSPACE_PATHS = [
   '/crm/companies',
   '/crm/leads',
   '/crm/opportunities',
+  '/crm/agent-portal',
   '/sales/quotes',
   '/sales/contracts',
   '/sales/analytics',

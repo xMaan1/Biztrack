@@ -202,6 +202,10 @@ export class CRMService {
       params.append('birthday_month', String(filters.birthdayMonth));
     if (filters?.country?.trim())
       params.append('country', filters.country.trim());
+    if (filters?.dateField) params.append('date_field', filters.dateField);
+    if (filters?.dateFrom) params.append('date_from', filters.dateFrom);
+    if (filters?.dateTo) params.append('date_to', filters.dateTo);
+    if (filters?.quickFilter) params.append('quick_filter', filters.quickFilter);
     params.append('page', page.toString());
     params.append('limit', limit.toString());
 

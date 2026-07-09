@@ -146,6 +146,7 @@ class ContactBase(BaseModel):
     addresses: List[ContactAddressItem] = Field(default_factory=list)
     socialLinks: ContactSocialLinks = Field(default_factory=ContactSocialLinks)
     assignedTo: Optional[str] = None
+    clientValue: Optional[float] = None
 
     @field_validator("initials", "fullName", "businessTaxId", "website", mode="before")
     @classmethod
@@ -289,6 +290,7 @@ class ContactUpdate(BaseModel):
     addresses: Optional[List[ContactAddressItem]] = None
     socialLinks: Optional[ContactSocialLinks] = None
     assignedTo: Optional[str] = None
+    clientValue: Optional[float] = None
 
     @field_validator("initials", "fullName", "businessTaxId", "website", mode="before")
     @classmethod
@@ -399,6 +401,9 @@ class Contact(ContactBase):
     activities: List[Dict[str, Any]] = []
     createdAt: datetime
     updatedAt: datetime
+    dealClosedValue: Optional[float] = None
+    remainingPayable: Optional[float] = None
+    lifetimeValue: Optional[float] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -447,3 +452,20 @@ class ContactsResponse(BaseModel):
 class CRMContactsResponse(BaseModel):
     contacts: List[Contact]
     pagination: Pagination
+
+
+class ContactLedgerEntry(BaseModel):
+    id: str
+    entryType: str
+    revenueType: str
+    amount: float
+    description: Optional[str] = None
+    entryDate: str
+    invoiceId: Optional[str] = None
+    paymentId: Optional[str] = None
+
+
+class ContactLedgerResponse(BaseModel):
+    entries: List[ContactLedgerEntry]
+    totalPaid: float
+    totalPending: float

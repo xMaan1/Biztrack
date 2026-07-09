@@ -129,6 +129,13 @@ def create_payment_endpoint(
         db.commit()
         db.refresh(db_payment)
 
+        try:
+            from .....services.crm_sync_service import sync_on_payment
+            sync_on_payment(db, db_payment, invoice, str(current_user.id))
+            db.commit()
+        except Exception:
+            pass
+
         inventory_sync_result = None
         if invoice_was_paid:
             try:

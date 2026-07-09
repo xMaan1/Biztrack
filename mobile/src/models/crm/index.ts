@@ -193,6 +193,10 @@ export interface Contact {
   addresses?: ContactAddressRow[];
   socialLinks?: ContactSocialLinks;
   assignedTo?: string;
+  clientValue?: number;
+  dealClosedValue?: number;
+  remainingPayable?: number;
+  lifetimeValue?: number;
   lastContactDate?: string;
   nextFollowUpDate?: string;
   tenantId?: string;
@@ -513,6 +517,10 @@ export interface CRMContactFilters {
   website?: string;
   birthdayMonth?: number;
   country?: string;
+  dateField?: 'created' | 'updated' | 'last_contacted';
+  dateFrom?: string;
+  dateTo?: string;
+  quickFilter?: 'today' | '7d' | '30d' | '90d';
 }
 
 export interface CRMCompanyFilters {

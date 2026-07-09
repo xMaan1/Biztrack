@@ -156,6 +156,12 @@ def apply_payment_to_installment(
     if all_paid:
         update_installment_plan(plan_id, {"status": "completed"}, db, tenant_id)
     db.refresh(inst)
+    try:
+        from ..services.crm_sync_service import sync_on_installment_payment
+        sync_on_installment_payment(db, inst, plan, amount, payment_id)
+        db.commit()
+    except Exception:
+        pass
     return inst
 
 

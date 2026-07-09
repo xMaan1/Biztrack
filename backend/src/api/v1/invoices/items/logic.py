@@ -296,6 +296,14 @@ def create_invoice_endpoint(
         db.commit()
         db.refresh(db_invoice)
 
+        try:
+            from .....services.crm_sync_service import sync_on_invoice_created
+            sync_on_invoice_created(db, db_invoice)
+            db.commit()
+            db.refresh(db_invoice)
+        except Exception:
+            pass
+
         if invoice_data.purchaseOrderId or invoice_data.jobCardId:
             from .....config.workshop_document_links import sync_workshop_document_links
             sync_workshop_document_links(

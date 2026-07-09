@@ -126,6 +126,7 @@ def _contact_create_to_orm_dict(
         "addresses": raw.get("addresses") or [],
         "socialLinks": raw.get("socialLinks"),
         "assignedToId": assigned_to_id,
+        "clientValue": raw.get("clientValue"),
         "createdById": created_by_uuid,
         "createdAt": now,
         "updatedAt": now,

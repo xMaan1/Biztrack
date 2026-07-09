@@ -18,6 +18,7 @@ import {
 import { Edit, Trash2, Eye, ExternalLink } from 'lucide-react';
 import CRMService from '@/src/services/CRMService';
 import { Company, Contact } from '@/src/models/crm';
+import { useCurrency } from '@/src/contexts/CurrencyContext';
 import {
   contactAddressCountriesDisplay,
   contactTypeDisplayLabel,
@@ -65,7 +66,13 @@ export function ContactsListCard({
   onEdit,
   onDelete,
 }: ContactsListCardProps) {
+  const { formatCurrency } = useCurrency();
   const companyById = new Map(companies.map((c) => [c.id, c]));
+
+  function money(value?: number): string {
+    if (value == null || Number.isNaN(value)) return '—';
+    return formatCurrency(value);
+  }
 
   return (
     <Card>
@@ -94,13 +101,17 @@ export function ContactsListCard({
                 <TableHead>Birthday</TableHead>
                 <TableHead>Country</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Client Value</TableHead>
+                <TableHead>Deal Closed</TableHead>
+                <TableHead>Remaining</TableHead>
+                <TableHead>Lifetime Value</TableHead>
                 <TableHead className="text-right w-[140px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {!listLoading && contacts.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={14} className="text-center text-muted-foreground py-8">
                     No contacts found
                   </TableCell>
                 </TableRow>
@@ -161,6 +172,18 @@ export function ContactsListCard({
                       >
                         {contact.isActive ? 'Active' : 'Inactive'}
                       </Badge>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-muted-foreground">
+                      {money(contact.clientValue)}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-muted-foreground">
+                      {money(contact.dealClosedValue)}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-muted-foreground">
+                      {money(contact.remainingPayable)}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap font-medium">
+                      {money(contact.lifetimeValue)}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">

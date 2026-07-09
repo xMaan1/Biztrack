@@ -11,7 +11,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 from .config.database import create_tables, get_plans, get_db
-from .api.v1 import auth, users, tenants, plans, sales, crm, hrm, healthcare, ngo, custom_options, invoices, invoice_customization, installments, delivery_notes, pos, inventory, subscriptions, work_orders, job_cards, vehicles, production, quality_control, maintenance, ledger, admin, file_upload, deduct_stock, customer_import, dashboard, investments, reports, notifications, events, profile, workshop, mot
+from .api.v1 import auth, users, tenants, plans, sales, crm, hrm, healthcare, ngo, custom_options, invoices, invoice_customization, installments, delivery_notes, pos, inventory, subscriptions, work_orders, job_cards, vehicles, production, quality_control, maintenance, ledger, admin, file_upload, deduct_stock, customer_import, dashboard, investments, reports, notifications, events, profile, workshop, mot, agent_portal
 from .api.v1.rbac.router import router as rbac_router
 from .api.v1.projects.router import router as projects_router
 from .api.v1.tasks.router import router as tasks_router
@@ -179,6 +179,7 @@ app.include_router(dashboard.router)
 app.include_router(events.router)
 app.include_router(sales.router)
 app.include_router(crm.router)
+app.include_router(agent_portal.router)
 app.include_router(customer_import.router)
 app.include_router(hrm.router)
 app.include_router(custom_options.router)
