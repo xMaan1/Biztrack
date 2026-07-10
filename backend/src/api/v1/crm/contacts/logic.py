@@ -256,7 +256,7 @@ from ..http_common import (
     visible_or_404,
 )
 from ..shared import _crm_scope_user_id, _contact_create_to_orm_dict, ensure_lead_row_for_contact
-from .schemas import Contact, ContactCreate, ContactUpdate, CRMContactsResponse
+from .schemas import Contact as ContactSchema, ContactCreate, ContactUpdate, CRMContactsResponse
 
 logger = logging.getLogger(__name__)
 
@@ -307,9 +307,9 @@ def get_crm_contacts(
         financials = batch_contact_financials(db, tenant_id_str(ctx), contacts)
         enriched = []
         for c in contacts:
-            data = Contact.model_validate(c, from_attributes=True).model_dump()
+            data = ContactSchema.model_validate(c, from_attributes=True).model_dump()
             data.update(financials.get(str(c.id), {}))
-            enriched.append(Contact.model_validate(data))
+            enriched.append(ContactSchema.model_validate(data))
         return CRMContactsResponse(contacts=enriched, pagination=pagination(page, limit, total))
     except HTTPException:
         raise
@@ -349,11 +349,11 @@ def get_crm_contact(contact_id: str, db: Session, current_user, tenant_context: 
         contact = get_contact_by_id(contact_id, db, tenant_id_optional(tenant_context))
         visible = visible_or_404(contact, tenant_context, current_user, detail="Contact not found")
         from .....services.contact_financials import compute_contact_financials
-        data = Contact.model_validate(visible, from_attributes=True).model_dump()
+        data = ContactSchema.model_validate(visible, from_attributes=True).model_dump()
         tid = tenant_id_optional(tenant_context)
         if tid:
             data.update(compute_contact_financials(db, str(tid), visible))
-        return Contact.model_validate(data)
+        return ContactSchema.model_validate(data)
     except HTTPException:
         raise
     except Exception as e:
