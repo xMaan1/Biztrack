@@ -15,16 +15,45 @@ export default function SubscriptionSuccessPage() {
   const [error, setError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const sessionId = searchParams.get('session_id');
+  const provider = searchParams.get('provider');
+  const tenantId = searchParams.get('tenant_id');
+  const paypalSubscriptionId = searchParams.get('subscription_id');
 
   useEffect(() => {
     const handleSuccess = async () => {
-      if (!sessionId) {
+      const isPayPal = provider === 'paypal';
+
+      if (!isPayPal && !sessionId) {
         setError('No session ID provided');
         setLoading(false);
         return;
       }
 
+      if (isPayPal && (!tenantId || !paypalSubscriptionId)) {
+        setError('Missing PayPal subscription details');
+        setLoading(false);
+        return;
+      }
+
       try {
+        if (isPayPal && tenantId && paypalSubscriptionId) {
+          let confirmed = false;
+          for (let attempt = 0; attempt < 5; attempt += 1) {
+            try {
+              await apiService.confirmPayPalSubscription(tenantId, paypalSubscriptionId);
+              confirmed = true;
+              break;
+            } catch (confirmErr) {
+              await new Promise((resolve) => setTimeout(resolve, 2000));
+            }
+          }
+          if (!confirmed) {
+            setError('PayPal payment received but subscription activation is still pending. Try syncing below.');
+            setLoading(false);
+            return;
+          }
+        }
+
         let attempts = 0;
         const maxAttempts = 10;
         const pollInterval = 2000;
@@ -35,7 +64,9 @@ export default function SubscriptionSuccessPage() {
             const tenants = apiService.getUserTenants();
             
             if (tenants && tenants.length > 0) {
-              const latestTenant = tenants[0];
+              const latestTenant = tenantId
+                ? tenants.find((tenant) => tenant.id === tenantId) || tenants[0]
+                : tenants[0];
               apiService.setTenantId(latestTenant.id);
               
               try {
@@ -76,7 +107,9 @@ export default function SubscriptionSuccessPage() {
           const tenants = apiService.getUserTenants();
           
           if (tenants && tenants.length > 0) {
-            const latestTenant = tenants[0];
+            const latestTenant = tenantId
+              ? tenants.find((tenant) => tenant.id === tenantId) || tenants[0]
+              : tenants[0];
             apiService.setTenantId(latestTenant.id);
             
             const latestTenantId = latestTenant.id;
@@ -107,7 +140,7 @@ export default function SubscriptionSuccessPage() {
     };
 
     handleSuccess();
-  }, [sessionId, router]);
+  }, [sessionId, provider, tenantId, paypalSubscriptionId, router]);
 
   if (loading) {
     return (
@@ -142,7 +175,12 @@ export default function SubscriptionSuccessPage() {
                     await apiService.refreshTenants();
                     const tenants = apiService.getUserTenants();
                     if (tenants && tenants.length > 0) {
-                      const latestTenant = tenants[0];
+                      const latestTenant = tenantId
+                        ? tenants.find((tenant) => tenant.id === tenantId) || tenants[0]
+                        : tenants[0];
+                      if (provider === 'paypal' && tenantId && paypalSubscriptionId) {
+                        await apiService.confirmPayPalSubscription(tenantId, paypalSubscriptionId);
+                      }
                       await apiService.syncSubscriptionStatus(latestTenant.id);
                       toast.success('Subscription status synced. Please refresh.');
                       router.push('/dashboard');
@@ -193,4 +231,3 @@ export default function SubscriptionSuccessPage() {
     </div>
   );
 }
-

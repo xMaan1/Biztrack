@@ -586,8 +586,15 @@ export class ApiService {
     planId: string;
     tenantName: string;
     domain?: string;
+    paymentMethod?: 'stripe' | 'paypal';
   }) {
     return this.post('/tenants/create-tenant', data);
+  }
+
+  async confirmPayPalSubscription(tenantId: string, subscriptionId: string) {
+    return this.post(
+      `/subscriptions/paypal/confirm?tenant_id=${tenantId}&subscription_id=${subscriptionId}`,
+    );
   }
 
   async getSubscriptionBilling(tenantId: string) {

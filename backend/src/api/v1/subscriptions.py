@@ -9,6 +9,7 @@ from ...config.database import get_db, get_subscription_by_tenant, get_plan_by_i
 from ...config.core_models import Subscription
 from ...services.subscription_service import subscription_service
 from ...services.stripe_service import stripe_service
+from ...services.paypal_service import paypal_service
 from ...api.dependencies import get_current_user, require_tenant_admin_or_super_admin
 from ...core.audit import audit_logger, AuditEventType, AuditSeverity
 from ...models.user_models import PlanUpgradeRequest, UsageSummary, PlanLimits
@@ -17,6 +18,52 @@ from ...models.common import SubscriptionStatus
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])
+
+
+def _apply_paypal_subscription_activation(
+    db: Session,
+    tenant_id: str,
+    paypal_subscription_id: str,
+) -> bool:
+    subscription = get_subscription_by_tenant(tenant_id, db)
+    if not subscription:
+        logger.error("Subscription not found for tenant_id: %s", tenant_id)
+        return False
+
+    paypal_service.activate_subscription(paypal_subscription_id)
+    paypal_subscription_data = paypal_service.get_subscription(paypal_subscription_id)
+    paypal_status = (paypal_subscription_data or {}).get("status")
+
+    if paypal_status not in {"active", "approved"}:
+        logger.warning(
+            "PayPal subscription %s not active yet (status=%s)",
+            paypal_subscription_id,
+            paypal_status,
+        )
+        return False
+
+    subscription.payment_provider = "paypal"
+    subscription.paypal_subscription_id = paypal_subscription_id
+    subscription.status = SubscriptionStatus.ACTIVE.value
+    subscription.startDate = datetime.utcnow()
+
+    if paypal_subscription_data and paypal_subscription_data.get("current_period_end"):
+        subscription.endDate = paypal_subscription_data["current_period_end"]
+    else:
+        subscription.endDate = datetime.utcnow() + timedelta(days=30)
+
+    subscription.updatedAt = datetime.utcnow()
+    db.commit()
+
+    audit_logger.log_event(
+        event_type=AuditEventType.SUBSCRIPTION_CHANGED,
+        user_id=None,
+        tenant_id=tenant_id,
+        action="Subscription activated via PayPal",
+        details={"paypal_subscription_id": paypal_subscription_id},
+        severity=AuditSeverity.MEDIUM,
+    )
+    return True
 
 @router.get("/usage")
 async def get_usage_summary(
@@ -274,19 +321,30 @@ async def cancel_subscription(
                 detail="No subscription found for tenant"
             )
         
-        if not subscription.stripe_subscription_id:
+        if not subscription.stripe_subscription_id and not subscription.paypal_subscription_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Subscription is not linked to Stripe"
+                detail="Subscription is not linked to a payment provider"
             )
+
+        if subscription.payment_provider == "paypal" and subscription.paypal_subscription_id:
+            provider_cancelled = paypal_service.cancel_subscription(
+                subscription.paypal_subscription_id,
+                reason=reason,
+            )
+        elif subscription.stripe_subscription_id:
+            provider_cancelled = stripe_service.cancel_subscription(
+                subscription.stripe_subscription_id,
+                immediately=False,
+            )
+        else:
+            provider_cancelled = False
         
-        stripe_cancelled = stripe_service.cancel_subscription(
-            subscription.stripe_subscription_id,
-            immediately=False
-        )
-        
-        if not stripe_cancelled:
-            logger.warning(f"Failed to cancel Stripe subscription {subscription.stripe_subscription_id}, but proceeding with database update")
+        if not provider_cancelled:
+            logger.warning(
+                "Failed to cancel external subscription for tenant %s, but proceeding with database update",
+                tenant_id,
+            )
         
         subscription.status = SubscriptionStatus.CANCELLED.value
         subscription.autoRenew = False
@@ -441,6 +499,7 @@ async def stripe_webhook(
             
             subscription.stripe_customer_id = stripe_customer_id
             subscription.stripe_subscription_id = stripe_subscription_id
+            subscription.payment_provider = "stripe"
             subscription.status = SubscriptionStatus.ACTIVE.value
             subscription.startDate = datetime.utcnow()
             
@@ -584,6 +643,122 @@ async def stripe_webhook(
             detail=f"Webhook processing failed: {str(e)}"
         )
 
+
+@router.post("/paypal/confirm")
+async def confirm_paypal_subscription(
+    tenant_id: str = Query(..., description="Tenant ID"),
+    subscription_id: str = Query(..., description="PayPal subscription ID"),
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        subscription = get_subscription_by_tenant(tenant_id, db)
+        if not subscription:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No subscription found for tenant",
+            )
+
+        if subscription.paypal_subscription_id and subscription.paypal_subscription_id != subscription_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="PayPal subscription ID does not match tenant subscription",
+            )
+
+        activated = _apply_paypal_subscription_activation(db, tenant_id, subscription_id)
+        if not activated:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="PayPal subscription is not active yet. Please wait a moment and try again.",
+            )
+
+        return {
+            "success": True,
+            "message": "PayPal subscription confirmed",
+            "subscription": {
+                "id": str(subscription.id),
+                "status": subscription.status,
+                "payment_provider": subscription.payment_provider,
+            },
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("PayPal confirm failed: %s", e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"PayPal confirmation failed: {str(e)}",
+        )
+
+
+@router.post("/paypal/webhook")
+async def paypal_webhook(
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    payload = await request.body()
+    event = paypal_service.verify_webhook(dict(request.headers), payload)
+
+    if not event:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid PayPal webhook",
+        )
+
+    try:
+        event_type = event.get("event_type")
+        resource = event.get("resource") or {}
+
+        if event_type in {
+            "BILLING.SUBSCRIPTION.ACTIVATED",
+            "BILLING.SUBSCRIPTION.RE-ACTIVATED",
+        }:
+            paypal_subscription_id = resource.get("id")
+            custom_id = resource.get("custom_id") or ""
+            tenant_id = custom_id.split(":")[0] if custom_id else None
+
+            if tenant_id and paypal_subscription_id:
+                _apply_paypal_subscription_activation(db, tenant_id, paypal_subscription_id)
+
+        elif event_type == "BILLING.SUBSCRIPTION.CANCELLED":
+            paypal_subscription_id = resource.get("id")
+            subscription = db.query(Subscription).filter(
+                Subscription.paypal_subscription_id == paypal_subscription_id
+            ).first()
+            if subscription:
+                subscription.status = SubscriptionStatus.CANCELLED.value
+                subscription.autoRenew = False
+                subscription.updatedAt = datetime.utcnow()
+                db.commit()
+
+        elif event_type == "BILLING.SUBSCRIPTION.SUSPENDED":
+            paypal_subscription_id = resource.get("id")
+            subscription = db.query(Subscription).filter(
+                Subscription.paypal_subscription_id == paypal_subscription_id
+            ).first()
+            if subscription:
+                subscription.status = SubscriptionStatus.EXPIRED.value
+                subscription.updatedAt = datetime.utcnow()
+                db.commit()
+
+        elif event_type == "BILLING.SUBSCRIPTION.PAYMENT.FAILED":
+            paypal_subscription_id = resource.get("billing_agreement_id") or resource.get("id")
+            subscription = db.query(Subscription).filter(
+                Subscription.paypal_subscription_id == paypal_subscription_id
+            ).first()
+            if subscription:
+                subscription.status = SubscriptionStatus.EXPIRED.value
+                subscription.updatedAt = datetime.utcnow()
+                db.commit()
+
+        return {"status": "success"}
+    except Exception as e:
+        logger.error("PayPal webhook processing failed: %s", e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"PayPal webhook processing failed: {str(e)}",
+        )
+
 @router.post("/sync")
 async def sync_subscription_status(
     tenant_id: str = Query(..., description="Tenant ID"),
@@ -601,33 +776,54 @@ async def sync_subscription_status(
                 detail="No subscription found for tenant"
             )
         
-        if not subscription.stripe_subscription_id:
+        if subscription.payment_provider == "paypal" and subscription.paypal_subscription_id:
+            paypal_subscription_data = paypal_service.get_subscription(subscription.paypal_subscription_id)
+            if not paypal_subscription_data:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to retrieve subscription from PayPal",
+                )
+
+            paypal_status = paypal_subscription_data.get("status")
+            if paypal_status:
+                status_mapping = {
+                    "active": SubscriptionStatus.ACTIVE.value,
+                    "cancelled": SubscriptionStatus.CANCELLED.value,
+                    "suspended": SubscriptionStatus.EXPIRED.value,
+                    "expired": SubscriptionStatus.EXPIRED.value,
+                    "approved": SubscriptionStatus.ACTIVE.value,
+                }
+                subscription.status = status_mapping.get(paypal_status, subscription.status)
+
+            if paypal_subscription_data.get("current_period_end"):
+                subscription.endDate = paypal_subscription_data["current_period_end"]
+        elif subscription.stripe_subscription_id:
+            stripe_subscription_data = stripe_service.get_subscription(subscription.stripe_subscription_id)
+            
+            if not stripe_subscription_data:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to retrieve subscription from Stripe"
+                )
+            
+            stripe_status = stripe_subscription_data.get('status')
+            if stripe_status:
+                status_mapping = {
+                    'active': SubscriptionStatus.ACTIVE.value,
+                    'canceled': SubscriptionStatus.CANCELLED.value,
+                    'past_due': SubscriptionStatus.EXPIRED.value,
+                    'unpaid': SubscriptionStatus.EXPIRED.value,
+                    'trialing': SubscriptionStatus.TRIAL.value,
+                }
+                subscription.status = status_mapping.get(stripe_status, subscription.status)
+            
+            if stripe_subscription_data.get('current_period_end'):
+                subscription.endDate = stripe_subscription_data['current_period_end']
+        else:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Subscription is not linked to Stripe"
+                detail="Subscription is not linked to a payment provider"
             )
-        
-        stripe_subscription_data = stripe_service.get_subscription(subscription.stripe_subscription_id)
-        
-        if not stripe_subscription_data:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to retrieve subscription from Stripe"
-            )
-        
-        stripe_status = stripe_subscription_data.get('status')
-        if stripe_status:
-            status_mapping = {
-                'active': SubscriptionStatus.ACTIVE.value,
-                'canceled': SubscriptionStatus.CANCELLED.value,
-                'past_due': SubscriptionStatus.EXPIRED.value,
-                'unpaid': SubscriptionStatus.EXPIRED.value,
-                'trialing': SubscriptionStatus.TRIAL.value,
-            }
-            subscription.status = status_mapping.get(stripe_status, subscription.status)
-        
-        if stripe_subscription_data.get('current_period_end'):
-            subscription.endDate = stripe_subscription_data['current_period_end']
         
         subscription.updatedAt = datetime.utcnow()
         db.commit()
@@ -636,9 +832,11 @@ async def sync_subscription_status(
             event_type=AuditEventType.SUBSCRIPTION_CHANGED,
             user_id=str(current_user.id),
             tenant_id=tenant_id,
-            action="Subscription status synced from Stripe",
+            action="Subscription status synced from payment provider",
             details={
+                "payment_provider": subscription.payment_provider,
                 "stripe_subscription_id": subscription.stripe_subscription_id,
+                "paypal_subscription_id": subscription.paypal_subscription_id,
                 "new_status": subscription.status
             },
             severity=AuditSeverity.LOW

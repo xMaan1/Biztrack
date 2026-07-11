@@ -228,4 +228,5 @@ class SubscribeRequest(BaseModel):
     planId: str
     tenantName: str
     domain: Optional[str] = None
+    paymentMethod: Optional[str] = "stripe"
 

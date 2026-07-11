@@ -113,7 +113,7 @@ interface SubscriptionModalProps {
   plan: Plan | null;
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (tenantName: string) => void;
+  onSubmit: (tenantName: string, paymentMethod: 'stripe' | 'paypal') => void;
   loading: boolean;
 }
 
@@ -126,11 +126,12 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
 }) => {
   const { getCurrencySymbol } = useCurrency();
   const [tenantName, setTenantName] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'paypal'>('stripe');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (tenantName.trim()) {
-      onSubmit(tenantName.trim());
+      onSubmit(tenantName.trim(), paymentMethod);
     }
   };
 
@@ -169,6 +170,28 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
               </p>
             </div>
           )}
+
+          <div className="space-y-2">
+            <Label>Payment Method</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant={paymentMethod === 'stripe' ? 'default' : 'outline'}
+                onClick={() => setPaymentMethod('stripe')}
+                className="w-full"
+              >
+                Card (Stripe)
+              </Button>
+              <Button
+                type="button"
+                variant={paymentMethod === 'paypal' ? 'default' : 'outline'}
+                onClick={() => setPaymentMethod('paypal')}
+                className="w-full"
+              >
+                PayPal
+              </Button>
+            </div>
+          </div>
 
           <div className="flex space-x-2">
             <Button
@@ -284,7 +307,7 @@ export default function LandingPage() {
     checkExistingTenantsAndHandlePlan(plan);
   };
 
-  const handleCreateTenant = async (tenantName: string) => {
+  const handleCreateTenant = async (tenantName: string, paymentMethod: 'stripe' | 'paypal' = 'stripe') => {
     if (!subscriptionModal.plan) return;
 
     try {
@@ -293,6 +316,7 @@ export default function LandingPage() {
         planId: subscriptionModal.plan.id,
         tenantName,
         domain: tenantName.toLowerCase().replace(/\s+/g, '-'),
+        paymentMethod,
       });
 
       if (response.success && response.checkout_url) {

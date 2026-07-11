@@ -82,6 +82,8 @@ class TenantMiddleware:
             "/tenants/create-tenant",
             "/inventory/health",
             "/subscriptions/webhook",
+            "/subscriptions/paypal/webhook",
+            "/subscriptions/paypal/confirm",
             "/public/",
             "/"  # Root landing page
         ]
@@ -270,7 +272,9 @@ class TenantMiddleware:
             "/health",
             "/docs",
             "/openapi.json",
-            "/subscriptions/webhook"
+            "/subscriptions/webhook",
+            "/subscriptions/paypal/webhook",
+            "/subscriptions/paypal/confirm",
         ]
         
         return any(request.url.path.startswith(path) for path in skip_paths)

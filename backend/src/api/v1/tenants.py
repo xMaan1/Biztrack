@@ -30,6 +30,7 @@ from ...services.ledger_seeding import create_default_chart_of_accounts
 from ...api.dependencies import get_current_user, require_super_admin, require_tenant_admin_or_super_admin
 from ...services.rbac_service import RBACService
 from ...services.stripe_service import stripe_service
+from ...services.paypal_service import paypal_service
 import os
 
 @router.get("/plans", response_model=PlansResponse)
@@ -218,31 +219,74 @@ async def create_tenant_from_landing(
         logger.warning(f"⚠️ Warning: Ledger seeding failed for tenant {tenant.name}: {str(e)}")
     
     frontend_url = os.getenv("FRONTEND_URL", "https://biztrack.uk")
-    success_url = f"{frontend_url}/subscription/success?session_id={{CHECKOUT_SESSION_ID}}"
-    cancel_url = f"{frontend_url}/subscription/cancel"
-    
-    checkout_result = stripe_service.create_checkout_session(
-        plan_id=str(plan.id),
-        plan_name=plan.name,
-        plan_price=plan.price,
-        tenant_id=str(tenant.id),
-        user_email=current_user.email,
-        success_url=success_url,
-        cancel_url=cancel_url,
-        billing_cycle=plan.billingCycle
-    )
+    payment_method = (req.paymentMethod or "stripe").lower()
+
+    if payment_method == "paypal":
+        if not paypal_service.is_configured():
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="PayPal is not configured on the server",
+            )
+
+        try:
+            paypal_plan_id = paypal_service.ensure_billing_plan(
+                plan_id=str(plan.id),
+                plan_name=plan.name,
+                plan_price=plan.price,
+                billing_cycle=plan.billingCycle,
+                existing_paypal_plan_id=getattr(plan, "paypal_plan_id", None),
+            )
+            if paypal_plan_id != getattr(plan, "paypal_plan_id", None):
+                plan.paypal_plan_id = paypal_plan_id
+                db.commit()
+        except Exception as exc:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to prepare PayPal plan: {exc}",
+            ) from exc
+
+        success_url = f"{frontend_url}/subscription/success?provider=paypal&tenant_id={tenant.id}"
+        cancel_url = f"{frontend_url}/subscription/cancel?provider=paypal"
+
+        checkout_result = paypal_service.create_subscription(
+            paypal_plan_id=paypal_plan_id,
+            tenant_id=str(tenant.id),
+            plan_id=str(plan.id),
+            success_url=success_url,
+            cancel_url=cancel_url,
+        )
+    else:
+        success_url = f"{frontend_url}/subscription/success?session_id={{CHECKOUT_SESSION_ID}}"
+        cancel_url = f"{frontend_url}/subscription/cancel?provider=stripe"
+
+        checkout_result = stripe_service.create_checkout_session(
+            plan_id=str(plan.id),
+            plan_name=plan.name,
+            plan_price=plan.price,
+            tenant_id=str(tenant.id),
+            user_email=current_user.email,
+            success_url=success_url,
+            cancel_url=cancel_url,
+            billing_cycle=plan.billingCycle,
+        )
     
     if not checkout_result.get('success'):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create checkout session: {checkout_result.get('error')}"
         )
+
+    subscription.payment_provider = payment_method
+    if payment_method == "paypal":
+        subscription.paypal_subscription_id = checkout_result.get("subscription_id")
+    db.commit()
     
     return {
         "success": True,
         "message": "Tenant created. Redirecting to payment...",
         "checkout_url": checkout_result.get('url'),
-        "session_id": checkout_result.get('session_id'),
+        "session_id": checkout_result.get('session_id') or checkout_result.get('subscription_id'),
+        "payment_provider": payment_method,
         "tenant": {
             "id": str(tenant.id),
             "name": tenant.name,

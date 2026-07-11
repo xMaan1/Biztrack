@@ -22,6 +22,7 @@ class Plan(Base):
     features = Column(JSON)
     modules = Column(JSON, default=[])
     isActive = Column(Boolean, default=True)
+    paypal_plan_id = Column(String, nullable=True)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -43,6 +44,8 @@ class Subscription(Base):
     stripe_subscription_id = Column(String, nullable=True, index=True)
     stripe_payment_method_id = Column(String, nullable=True)
     stripe_price_id = Column(String, nullable=True)
+    payment_provider = Column(String, nullable=True, index=True)
+    paypal_subscription_id = Column(String, nullable=True, index=True)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
