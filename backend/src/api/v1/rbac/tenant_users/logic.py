@@ -79,6 +79,10 @@ def delete_tenant_user(tenant_user_id: str, db: Session) -> bool:
     return False
 
 
+def _tenant_joined_at(tenant_user: TenantUserORM) -> Optional[datetime]:
+    return tenant_user.joinedAt or tenant_user.createdAt
+
+
 def _tenant_user_to_schema(tenant_user: TenantUserORM) -> TenantUser:
     return TenantUser(
         id=str(tenant_user.id),
@@ -88,7 +92,7 @@ def _tenant_user_to_schema(tenant_user: TenantUserORM) -> TenantUser:
         custom_permissions=tenant_user.custom_permissions,
         isActive=tenant_user.isActive,
         invitedBy=str(tenant_user.invitedBy) if tenant_user.invitedBy else None,
-        joinedAt=tenant_user.joinedAt,
+        joinedAt=_tenant_joined_at(tenant_user),
         createdAt=tenant_user.createdAt,
         updatedAt=tenant_user.updatedAt,
     )
@@ -116,7 +120,7 @@ def get_tenant_users_list(db: Session, tenant_id: Optional[str]) -> List[UserWit
             role_id=str(tenant_user.role_id),
             custom_permissions=tenant_user.custom_permissions or [],
             permissions=user_permissions,
-            joinedAt=tenant_user.joinedAt,
+            joinedAt=_tenant_joined_at(tenant_user),
         ))
     return user_list
 
@@ -158,6 +162,7 @@ def add_user_to_tenant(
         custom_permissions=user_data.custom_permissions,
         isActive=user_data.isActive,
         invitedBy=str(current_user.id),
+        joinedAt=datetime.utcnow(),
     )
     db.add(tenant_user)
     db.commit()
@@ -353,6 +358,7 @@ def create_user_for_tenant(
         custom_permissions=[],
         isActive=True,
         invitedBy=UUID(str(current_user.id)),
+        joinedAt=datetime.utcnow(),
     )
     db.add(tenant_user)
     db.commit()

@@ -40,6 +40,8 @@ import {
   EmployeeType,
 } from '@/src/models/hrm';
 import { toast } from 'sonner';
+import { extractErrorMessage } from '@/src/utils/errorUtils';
+import { Alert, AlertDescription } from '@/src/components/ui/alert';
 
 export default function NewEmployeePage() {
   return (
@@ -52,6 +54,7 @@ export default function NewEmployeePage() {
 function NewEmployeeContent() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [formData, setFormData] = useState<EmployeeCreate>({
     firstName: '',
@@ -81,6 +84,7 @@ function NewEmployeeContent() {
   const [attachments, setAttachments] = useState<File[]>([]);
 
   const handleInputChange = (field: keyof EmployeeCreate, value: string | number) => {
+    if (formError) setFormError(null);
     setFormData(prev => ({
       ...prev,
       [field]: value,
@@ -131,6 +135,7 @@ function NewEmployeeContent() {
 
     try {
       setLoading(true);
+      setFormError(null);
       
       let resumeUrl = '';
       const attachmentUrls: string[] = [];
@@ -164,8 +169,9 @@ function NewEmployeeContent() {
       await HRMService.createEmployee(employeeData);
       toast.success('Employee created successfully');
       router.push('/hrm/employees');
-    } catch (error: any) {
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to create employee';
+    } catch (error: unknown) {
+      const errorMessage = extractErrorMessage(error, 'Failed to create employee');
+      setFormError(errorMessage);
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -225,6 +231,12 @@ function NewEmployeeContent() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {formError ? (
+            <Alert variant="destructive">
+              <AlertDescription>{formError}</AlertDescription>
+            </Alert>
+          ) : null}
+
           {/* Basic Information */}
           <Card>
             <CardHeader>

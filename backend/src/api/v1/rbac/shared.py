@@ -1,4 +1,5 @@
 import logging
+import threading
 from typing import Optional
 from uuid import UUID
 
@@ -68,13 +69,22 @@ def send_user_invitation(
         tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
         tenant_name = tenant.name if tenant else None
         user_name = f"{user.firstName} {user.lastName}".strip() if user.firstName else user.userName
-        email_service = EmailService()
-        email_service.send_user_invitation_email(
-            to_email=user.email,
-            user_name=user_name,
-            inviter_name=inviter_display_name(current_user),
-            tenant_name=tenant_name,
-            role_name=role.display_name or role.name,
-        )
+        email_payload = {
+            "to_email": user.email,
+            "user_name": user_name,
+            "inviter_name": inviter_display_name(current_user),
+            "tenant_name": tenant_name,
+            "role_name": role.display_name or role.name,
+        }
     except Exception as email_error:
-        logger.error(f"Failed to send invitation email: {email_error}", exc_info=True)
+        logger.error(f"Failed to prepare invitation email: {email_error}", exc_info=True)
+        return
+
+    def _send_invitation() -> None:
+        try:
+            email_service = EmailService()
+            email_service.send_user_invitation_email(**email_payload)
+        except Exception as email_error:
+            logger.error(f"Failed to send invitation email: {email_error}", exc_info=True)
+
+    threading.Thread(target=_send_invitation, daemon=True).start()

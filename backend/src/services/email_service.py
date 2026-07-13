@@ -18,6 +18,7 @@ class EmailService:
         self.smtp_password = os.getenv('SMTP_PASSWORD', '')
         self.from_email = os.getenv('FROM_EMAIL', self.smtp_username)
         self.from_name = os.getenv('FROM_NAME', 'BizTrack')
+        self.smtp_timeout = int(os.getenv('SMTP_TIMEOUT', '15'))
         
     def send_invoice_email(
         self, 
@@ -183,7 +184,7 @@ Best regards,
             
             msg.attach(MIMEText(body, 'plain'))
             
-            server = smtplib.SMTP(self.smtp_server, self.smtp_port)
+            server = smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=self.smtp_timeout)
             server.starttls()
             server.login(self.smtp_username, self.smtp_password)
             text = msg.as_string()

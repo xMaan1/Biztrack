@@ -42,6 +42,7 @@ import {
 import { Label } from '@/src/components/ui/label';
 import { Textarea } from '@/src/components/ui/textarea';
 import { toast } from 'sonner';
+import { extractErrorMessage } from '@/src/utils/errorUtils';
 
 export default function HRMEmployeesPage() {
   return (
@@ -186,8 +187,8 @@ function HRMEmployeesContent() {
       toast.success('Employee updated successfully');
       loadEmployees();
       closeEditModal();
-    } catch (error: any) {
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to update employee';
+    } catch (error: unknown) {
+      const errorMessage = extractErrorMessage(error, 'Failed to update employee');
       toast.error(errorMessage);
     } finally {
       setEditLoading(false);
@@ -214,8 +215,8 @@ function HRMEmployeesContent() {
       toast.success('Employee deleted successfully');
       loadEmployees();
       closeDeleteModal();
-    } catch (error: any) {
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to delete employee';
+    } catch (error: unknown) {
+      const errorMessage = extractErrorMessage(error, 'Failed to delete employee');
       toast.error(errorMessage);
     } finally {
       setDeleteLoading(false);

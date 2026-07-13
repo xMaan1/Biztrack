@@ -37,7 +37,7 @@ class UserSummary(BaseModel):
 class TenantUser(TenantUserBase):
     id: str
     invitedBy: Optional[str] = None
-    joinedAt: datetime
+    joinedAt: Optional[datetime] = None
     createdAt: datetime
     updatedAt: datetime
     role: Optional[Role] = None
@@ -65,7 +65,7 @@ class UserWithPermissions(BaseModel):
     role_id: Optional[str] = None
     custom_permissions: Optional[List[str]] = []
     permissions: List[str] = []
-    joinedAt: datetime
+    joinedAt: Optional[datetime] = None
 
     class Config:
         from_attributes = True
