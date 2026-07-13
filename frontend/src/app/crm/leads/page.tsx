@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { Suspense, useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
@@ -47,7 +47,9 @@ import { CustomOptionDialog } from '../../../components/common/CustomOptionDialo
 export default function CRMLeadsPage() {
   return (
     <ModuleGuard module="crm" fallback={<div>You don't have access to CRM module</div>}>
-      <CRMLeadsContent />
+      <Suspense fallback={<div className="p-6">Loading leads...</div>}>
+        <CRMLeadsContent />
+      </Suspense>
     </ModuleGuard>
   );
 }

@@ -22,7 +22,7 @@ from ..http_common import (
 from ...repository import create_entity, delete_by_id, get_by_id, list_for_tenant, update_entity
 from ..shared import _contact_create_to_orm_dict
 from ..contacts.schemas import ContactCreate
-from .schemas import LeadCreate, LeadUpdate, CRMLeadsResponse
+from .schemas import Lead as LeadSchema, LeadCreate, LeadUpdate, CRMLeadsResponse
 
 ORM_KEYS = frozenset({
     "id", "tenant_id", "firstName", "lastName", "email", "phone", "company", "jobTitle",
@@ -105,7 +105,8 @@ def get_crm_leads(
             leads, tenant_context, current_user, _lead_predicate(status, source, assigned_to, search)
         )
         total = len(leads)
-        return CRMLeadsResponse(leads=leads, pagination=pagination(page, limit, total))
+        serialized = [LeadSchema.model_validate(lead) for lead in leads]
+        return CRMLeadsResponse(leads=serialized, pagination=pagination(page, limit, total))
     except HTTPException:
         raise
     except Exception as e:

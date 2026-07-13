@@ -39,7 +39,8 @@ function leadSourceLabel(lead: Lead): string {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function displayEmail(email: string): string {
+function displayEmail(email?: string | null): string {
+  if (!email) return '—';
   if (email.endsWith('@noemail.crm')) return '—';
   return email;
 }
