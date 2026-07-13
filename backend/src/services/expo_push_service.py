@@ -36,6 +36,8 @@ def send_expo_push_to_user(
                 "body": (body or "")[:800],
                 "data": payload_data,
                 "sound": "default",
+                "priority": "high",
+                "channelId": "default",
             }
         )
     headers = {

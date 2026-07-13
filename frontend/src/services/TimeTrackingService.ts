@@ -11,12 +11,12 @@ import {
 
 class TimeTrackingService {
   async getTimeEntries(
-    skip: number = 0,
+    page: number = 1,
     limit: number = 100,
     filters?: TimeEntryFilters
   ): Promise<TimeEntriesResponse> {
     const params = new URLSearchParams({
-      skip: skip.toString(),
+      page: page.toString(),
       limit: limit.toString(),
     });
 

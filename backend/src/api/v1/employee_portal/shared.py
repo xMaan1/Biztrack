@@ -30,6 +30,16 @@ from ....services.rbac_service import RBACService
 ANNUAL_LEAVE_ALLOWANCE = 20
 
 
+def _format_date(value):
+    if not value:
+        return None
+    if isinstance(value, str):
+        return value
+    if hasattr(value, "isoformat"):
+        return value.isoformat()
+    return str(value)
+
+
 def is_manager(db: Session, user: User, tenant_id: str) -> bool:
     if RBACService.is_owner(db, str(user.id), tenant_id):
         return True
@@ -226,7 +236,7 @@ def user_tasks(db: Session, user_id: str, tenant_id: str, limit: int = 20) -> Li
             "description": t.description,
             "status": t.status,
             "priority": t.priority,
-            "dueDate": t.dueDate.isoformat() if t.dueDate else None,
+            "dueDate": _format_date(t.dueDate),
             "projectId": str(t.projectId) if t.projectId else None,
             "actualHours": t.actualHours or 0,
         })

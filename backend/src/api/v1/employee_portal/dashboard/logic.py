@@ -28,7 +28,7 @@ def get_dashboard(db: Session, current_user: User, tenant_context: dict) -> dict
     due_today = sum(
         1
         for t in tasks
-        if t.get("dueDate") and t["dueDate"][:10] == today.isoformat()
+        if t.get("dueDate") and str(t["dueDate"])[:10] == today.isoformat()
     )
     devices_count = (
         db.query(DBEmployeeDevice)

@@ -445,7 +445,13 @@ async def delete_hrm_employee(
         raise
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Error deleting employee: {str(e)}")
+        err = str(e)
+        if "ForeignKeyViolation" in err or "foreign key constraint" in err.lower():
+            raise HTTPException(
+                status_code=409,
+                detail="Cannot delete employee while related leave, time, payroll, or device records exist.",
+            )
+        raise HTTPException(status_code=500, detail=f"Error deleting employee: {err}")
 
 # Job Posting endpoints
 @router.get("/jobs", response_model=HRMJobPostingsResponse)

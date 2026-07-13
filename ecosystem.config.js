@@ -2,9 +2,8 @@ module.exports = {
   apps: [
     {
       name: 'biztrack-backend',
-      script: 'uv',
-      args:
-        "run --no-sync fastapi run --host 0.0.0.0 --port 8000 --workers 2 --proxy-headers --forwarded-allow-ips '*'",
+      script: 'start.sh',
+      interpreter: 'bash',
       cwd: './backend',
       instances: 1,
       exec_mode: 'fork',
@@ -26,14 +25,14 @@ module.exports = {
     },
     {
       name: 'biztrack-frontend',
-      script: 'npm',
-      args: 'start',
-      cwd: './frontend',
+      script: 'server.js',
+      cwd: './frontend/.next/standalone',
       instances: 1,
       exec_mode: 'fork',
       env: {
         NODE_ENV: 'production',
         PORT: 3000,
+        HOSTNAME: '0.0.0.0',
       },
       error_file: './logs/frontend-error.log',
       out_file: './logs/frontend-out.log',

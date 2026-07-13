@@ -5,6 +5,7 @@ import Constants from 'expo-constants';
 import { apiService } from '../ApiService';
 
 const EXPO_PUSH_TOKEN_KEY = 'biztrack_expo_push_token_v1';
+export const DEFAULT_NOTIFICATION_CHANNEL_ID = 'default';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -15,7 +16,24 @@ Notifications.setNotificationHandler({
   }),
 });
 
+export async function ensureAndroidNotificationChannel(): Promise<void> {
+  if (Platform.OS !== 'android') return;
+  await Notifications.setNotificationChannelAsync(
+    DEFAULT_NOTIFICATION_CHANNEL_ID,
+    {
+      name: 'BizTrack',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#4f46e5',
+      sound: 'default',
+      enableVibrate: true,
+      showBadge: true,
+    },
+  );
+}
+
 export async function ensurePushPermissions(): Promise<boolean> {
+  await ensureAndroidNotificationChannel();
   const settings = await Notifications.getPermissionsAsync();
   if (
     settings.granted ||
@@ -28,6 +46,24 @@ export async function ensurePushPermissions(): Promise<boolean> {
     req.granted ||
       req.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL,
   );
+}
+
+export function resolveNotificationActionPath(
+  response: Notifications.NotificationResponse,
+): string | null {
+  const data = response.notification.request.content.data as Record<
+    string,
+    unknown
+  >;
+  const raw =
+    (typeof data?.action_url === 'string' && data.action_url) ||
+    (typeof data?.actionUrl === 'string' && data.actionUrl) ||
+    '';
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return '/notifications';
+  }
+  return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
 }
 
 export async function registerAndSyncPushTokenWithBackend(): Promise<
@@ -68,7 +104,6 @@ export async function unregisterStoredPushTokenFromBackend(): Promise<void> {
       data: { expo_push_token: token },
     });
   } catch {
-    // ignore
   }
   await AsyncStorage.removeItem(EXPO_PUSH_TOKEN_KEY);
 }

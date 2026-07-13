@@ -79,8 +79,13 @@ def delete_tenant_user(tenant_user_id: str, db: Session) -> bool:
     return False
 
 
-def _tenant_joined_at(tenant_user: TenantUserORM) -> Optional[datetime]:
-    return tenant_user.joinedAt or tenant_user.createdAt
+def _tenant_joined_at(tenant_user: TenantUserORM) -> datetime:
+    return (
+        tenant_user.joinedAt
+        or tenant_user.createdAt
+        or tenant_user.updatedAt
+        or datetime.utcnow()
+    )
 
 
 def _tenant_user_to_schema(tenant_user: TenantUserORM) -> TenantUser:

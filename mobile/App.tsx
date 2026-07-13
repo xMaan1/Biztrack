@@ -12,6 +12,8 @@ import { BizTrackLogo } from './src/components/brand/BizTrackLogo';
 import { CommerceDashboardScreen } from './src/screens/CommerceDashboardScreen';
 import { AppDialogProvider } from './src/contexts/AppDialogContext';
 import { AppDialogRegistrar } from './src/components/layout/AppDialogRegistrar';
+import { PushNotificationBridge } from './src/components/push/PushNotificationBridge';
+import './src/services/push/expoPush';
 
 function RootBody() {
   const { isAuthenticated, loading } = useAuth();
@@ -35,6 +37,7 @@ function RootBody() {
       <AppDialogRegistrar />
       <RBACProvider>
         <SidebarDrawerProvider>
+          <PushNotificationBridge />
           <CommerceDashboardScreen />
         </SidebarDrawerProvider>
       </RBACProvider>

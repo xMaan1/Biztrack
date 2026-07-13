@@ -83,12 +83,35 @@ def update_employee(employee_id: str, update_data: dict, db: Session, tenant_id:
     return employee
 
 def delete_employee(employee_id: str, db: Session, tenant_id: str = None) -> bool:
+    from sqlalchemy import or_
+    from .hrm_models import (
+        EmployeeDevice,
+        LeaveRequest,
+        TimeEntry,
+        PerformanceReview,
+        Payroll,
+        TrainingEnrollment,
+        Employee,
+    )
+
     employee = get_employee_by_id(employee_id, db, tenant_id)
-    if employee:
-        db.delete(employee)
-        db.commit()
-        return True
-    return False
+    if not employee:
+        return False
+    uid = employee.id
+    db.query(EmployeeDevice).filter(EmployeeDevice.employeeId == uid).delete(synchronize_session=False)
+    db.query(LeaveRequest).filter(LeaveRequest.employeeId == uid).delete(synchronize_session=False)
+    db.query(TimeEntry).filter(TimeEntry.employeeId == uid).delete(synchronize_session=False)
+    db.query(PerformanceReview).filter(
+        or_(PerformanceReview.employeeId == uid, PerformanceReview.reviewerId == uid)
+    ).delete(synchronize_session=False)
+    db.query(Payroll).filter(Payroll.employeeId == uid).delete(synchronize_session=False)
+    db.query(TrainingEnrollment).filter(TrainingEnrollment.employeeId == uid).delete(synchronize_session=False)
+    db.query(Employee).filter(Employee.managerId == uid).update(
+        {Employee.managerId: None}, synchronize_session=False
+    )
+    db.delete(employee)
+    db.commit()
+    return True
 
 # JobPosting functions
 def get_job_posting_by_id(job_id: str, db: Session, tenant_id: str = None) -> Optional[JobPosting]:

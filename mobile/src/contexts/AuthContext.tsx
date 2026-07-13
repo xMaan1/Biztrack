@@ -9,10 +9,7 @@ import { User, LoginCredentials } from '../models/auth';
 import { apiService } from '../services/ApiService';
 import { SessionManager } from '../services/SessionManager';
 import { appCache } from '../services/appCache';
-import {
-  registerAndSyncPushTokenWithBackend,
-  unregisterStoredPushTokenFromBackend,
-} from '../services/push/expoPush';
+import { unregisterStoredPushTokenFromBackend } from '../services/push/expoPush';
 
 export interface Tenant {
   id: string;
@@ -96,7 +93,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               apiService.setTenantId(storedTenants[0].id);
             }
           }
-          void registerAndSyncPushTokenWithBackend();
         } else {
           await sessionManager.clearSession();
           setUser(null);

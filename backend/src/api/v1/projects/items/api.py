@@ -286,6 +286,11 @@ async def update_existing_project(
     
     update_dict = project_data.model_dump(exclude_unset=True)
     updated_team_members = None
+    newly_added_team_members = None
+    previous_team_member_ids = {str(m.id) for m in (project.teamMembers or [])}
+    previous_project_manager_id = (
+        str(project.projectManagerId) if project.projectManagerId else None
+    )
     if 'teamMemberIds' in update_dict:
         team_member_ids = update_dict.pop('teamMemberIds')
         team_members = []
@@ -293,11 +298,19 @@ async def update_existing_project(
             member = get_user_by_id(member_id, db)
             if not member:
                 raise HTTPException(status_code=400, detail=f"Team member {member_id} not found")
-            # Check tenant access for team member
-            if tenant_context and str(member.tenant_id) != tenant_context["tenant_id"]:
-                raise HTTPException(status_code=400, detail=f"Team member {member_id} not in tenant")
+            if tenant_context:
+                tenant_user = db.query(TenantUser).filter(
+                    TenantUser.userId == member.id,
+                    TenantUser.tenant_id == tenant_context["tenant_id"],
+                ).first()
+                if not tenant_user:
+                    raise HTTPException(status_code=400, detail=f"Team member {member_id} not in tenant")
             team_members.append(member)
         updated_team_members = team_members
+        newly_added_team_members = [
+            member for member in team_members
+            if str(member.id) not in previous_team_member_ids
+        ]
         project.teamMembers = team_members
     if 'status' in update_dict and hasattr(update_dict['status'], 'value'):
         update_dict['status'] = update_dict['status'].value
@@ -320,16 +333,20 @@ async def update_existing_project(
             notification_data={"project_id": project_id, "updated_by": str(current_user.id)}
         )
         if tenant_id and 'projectManagerId' in update_dict and update_dict.get('projectManagerId'):
-            new_pm = get_user_by_id(update_dict['projectManagerId'], db)
-            if new_pm:
-                send_assignment_notification(
-                    db, str(tenant_id), new_pm, user_name,
-                    "Project (Manager)", updated_project.name,
-                    action_url=f"/projects/{project_id}",
-                    category=NotificationCategory.PROJECTS
-                )
-        if tenant_id and updated_team_members is not None:
-            for member in updated_team_members:
+            new_pm_id = str(update_dict['projectManagerId'])
+            if new_pm_id != previous_project_manager_id:
+                new_pm = get_user_by_id(new_pm_id, db)
+                if new_pm:
+                    send_assignment_notification(
+                        db, str(tenant_id), new_pm, user_name,
+                        "Project (Manager)", updated_project.name,
+                        action_url=f"/projects/{project_id}",
+                        category=NotificationCategory.PROJECTS
+                    )
+        if tenant_id and newly_added_team_members:
+            for member in newly_added_team_members:
+                if str(member.id) == str(current_user.id):
+                    continue
                 send_assignment_notification(
                     db, str(tenant_id), member, user_name,
                     "Project (Team)", updated_project.name,

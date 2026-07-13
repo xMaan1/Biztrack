@@ -1,6 +1,9 @@
 from sqlalchemy.orm import Session
 from typing import List, Optional, Dict, Any
 from datetime import datetime
+import logging
+import os
+import threading
 import uuid
 from ..config.notification_crud import (
     create_notification, get_user_notifications, get_unread_count,
@@ -10,6 +13,21 @@ from ..config.notification_crud import (
 )
 from ..config.notification_models import NotificationType, NotificationCategory
 from ..config.database import get_tenant_users
+
+logger = logging.getLogger(__name__)
+
+
+def _build_notification_link(action_url: Optional[str]) -> Optional[str]:
+    if not action_url:
+        return None
+    trimmed = action_url.strip()
+    if trimmed.startswith("http://") or trimmed.startswith("https://"):
+        return trimmed
+    base = (os.getenv("FRONTEND_URL") or os.getenv("INVOICE_SHARE_BASE_URL") or "").rstrip("/")
+    if not base:
+        return trimmed
+    path = trimmed if trimmed.startswith("/") else f"/{trimmed}"
+    return f"{base}{path}"
 
 class NotificationService:
     def __init__(self, db: Session):
@@ -418,45 +436,38 @@ def send_assignment_notification(
     title = f"Assigned: {entity_type} - {entity_name[:60]}{'...' if len(entity_name) > 60 else ''}"
     message = f"{assigner_name} assigned you to {entity_type}: {entity_name}"
     if getattr(assignee_user, 'email', None) and is_notification_enabled(db, tenant_id, assignee_id, category, 'email'):
-        try:
-            from .email_service import EmailService
-            email_service = EmailService()
-            email_service.send_assignment_email(
-                to_email=assignee_user.email,
-                assignee_name=assignee_name,
-                assigner_name=assigner_name,
-                entity_type=entity_type,
-                entity_name=entity_name,
-                action_url=action_url,
-                extra_details=extra_details
-            )
-        except Exception:
-            pass
-    if is_notification_enabled(db, tenant_id, assignee_id, category, 'in_app'):
-        service = NotificationService(db)
-        service.create_notification(
-            tenant_id=tenant_id,
-            user_id=assignee_id,
-            title=title,
-            message=message,
-            category=category,
-            type=NotificationType.INFO,
-            action_url=action_url,
-            notification_data={"entity_type": entity_type, "entity_name": entity_name}
-        )
-    elif is_notification_enabled(db, tenant_id, assignee_id, category, 'push'):
-        try:
-            from .expo_push_service import send_expo_push_to_user
-            send_expo_push_to_user(
-                db,
-                assignee_id,
-                title,
-                message,
-                data={
-                    "action_url": action_url or "",
-                    "entity_type": entity_type,
-                    "entity_name": entity_name,
-                },
-            )
-        except Exception:
-            pass
+        email_link = _build_notification_link(action_url)
+        email_payload = {
+            "to_email": assignee_user.email,
+            "assignee_name": assignee_name,
+            "assigner_name": assigner_name,
+            "entity_type": entity_type,
+            "entity_name": entity_name,
+            "action_url": email_link,
+            "extra_details": extra_details,
+        }
+
+        def _send_assignment_email() -> None:
+            try:
+                from .email_service import EmailService
+                EmailService().send_assignment_email(**email_payload)
+            except Exception as e:
+                logger.error(
+                    "Failed to send assignment email to %s: %s",
+                    email_payload.get("to_email"),
+                    e,
+                    exc_info=True,
+                )
+
+        threading.Thread(target=_send_assignment_email, daemon=True).start()
+    service = NotificationService(db)
+    service.create_notification(
+        tenant_id=tenant_id,
+        user_id=assignee_id,
+        title=title,
+        message=message,
+        category=category,
+        type=NotificationType.INFO,
+        action_url=action_url,
+        notification_data={"entity_type": entity_type, "entity_name": entity_name},
+    )

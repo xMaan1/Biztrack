@@ -280,7 +280,7 @@ Best regards,
 {self.from_name}
             """
             msg.attach(MIMEText(body.strip(), 'plain'))
-            server = smtplib.SMTP(self.smtp_server, self.smtp_port)
+            server = smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=self.smtp_timeout)
             server.starttls()
             server.login(self.smtp_username, self.smtp_password)
             server.sendmail(self.from_email, to_email, msg.as_string())

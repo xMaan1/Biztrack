@@ -362,15 +362,28 @@ def update_task_and_notify(task_id: str, task_data: TaskUpdate, current_user, te
     update_dict = normalize_task_duration_fields(task_data.dict(exclude_unset=True))
 
     assignee_for_notification = None
-    if 'assignedTo' in update_dict:
-        assignee_id = update_dict.pop('assignedTo')
+    previous_assignee_id = str(task.assignedToId) if task.assignedToId else None
+    assignee_field_present = 'assignedToId' in update_dict or 'assignedTo' in update_dict
+    if assignee_field_present:
+        assignee_id = update_dict.pop('assignedToId', None)
+        if assignee_id is None and 'assignedTo' in update_dict:
+            assignee_id = update_dict.pop('assignedTo')
+        elif 'assignedTo' in update_dict:
+            update_dict.pop('assignedTo', None)
         if assignee_id:
             assignee = get_user_by_id(assignee_id, db)
             if not assignee:
                 raise HTTPException(status_code=400, detail="Assignee not found")
-            if str(assignee.tenant_id) != tenant_context["tenant_id"]:
+            tenant_user = db.query(TenantUser).filter(
+                TenantUser.userId == assignee.id,
+                TenantUser.tenant_id == tenant_context["tenant_id"],
+            ).first()
+            if not tenant_user:
                 raise HTTPException(status_code=400, detail="Assignee not in tenant")
-            assignee_for_notification = assignee
+            if str(assignee_id) != previous_assignee_id:
+                assignee_for_notification = assignee
+        elif previous_assignee_id:
+            assignee_for_notification = None
         update_dict['assignedToId'] = assignee_id
 
     if 'tags' in update_dict:

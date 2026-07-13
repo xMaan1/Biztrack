@@ -7,6 +7,7 @@ from fastapi import HTTPException, status
 import asyncio
 import json
 from collections import defaultdict, deque
+from sqlalchemy import text
 
 from ..config.database import get_db
 from ..core.audit import audit_logger, AuditEventType, AuditSeverity
@@ -101,15 +102,13 @@ class SystemMonitor:
             db = next(get_db())
             
             # Test basic connectivity
-            db.execute("SELECT 1")
+            db.execute(text("SELECT 1"))
             
-            # Check connection pool status
-            connection_count = db.execute("SELECT count(*) FROM pg_stat_activity").scalar()
-            max_connections = db.execute("SHOW max_connections").scalar()
+            connection_count = db.execute(text("SELECT count(*) FROM pg_stat_activity")).scalar()
+            max_connections = db.execute(text("SHOW max_connections")).scalar()
             
-            # Test query performance
             query_start = time.time()
-            db.execute("SELECT count(*) FROM users LIMIT 1")
+            db.execute(text("SELECT count(*) FROM users LIMIT 1"))
             query_time = time.time() - query_start
             
             db.close()

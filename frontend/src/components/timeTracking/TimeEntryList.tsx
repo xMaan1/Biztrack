@@ -82,7 +82,7 @@ export function TimeEntryList({
       }
       
       const response = await timeTrackingService.getTimeEntries(
-        (currentPage - 1) * 10,
+        currentPage,
         10,
         cleanFilters
       );
