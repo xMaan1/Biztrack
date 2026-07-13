@@ -1,8 +1,8 @@
+import { useEffect } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { useSidebarDrawer } from '../../contexts/SidebarDrawerContext';
 import { useIsManagerPortal } from '../../hooks/useIsManagerPortal';
 import { MenuHeaderButton } from '../../components/layout/MenuHeaderButton';
-import { MobileEmployeeDashboard } from '../../components/dashboard/MobileEmployeeDashboard';
 import { isEmployeePortalPath } from './employeePortalPaths';
 import { MobileEmployeeProfileScreen } from './screens/MobileEmployeeProfileScreen';
 import { MobileEmployeeLeaveScreen } from './screens/MobileEmployeeLeaveScreen';
@@ -11,7 +11,6 @@ import { MobileEmployeeTasksScreen } from './screens/MobileEmployeeTasksScreen';
 import { MobileEmployeeDevicesScreen } from './screens/MobileEmployeeDevicesScreen';
 import { MobileManagerApprovalsScreen } from './screens/MobileManagerApprovalsScreen';
 import { MobileManagerDevicesScreen } from './screens/MobileManagerDevicesScreen';
-import { useAuth } from '../../contexts/AuthContext';
 
 function PortalAccessDenied(props: { onBack: () => void }) {
   return (
@@ -35,30 +34,33 @@ function PortalAccessDenied(props: { onBack: () => void }) {
 }
 
 export function EmployeePortalRouter() {
-  const { workspacePath, setWorkspacePath, navigateMenuPath } = useSidebarDrawer();
-  const { logout } = useAuth();
+  const { workspacePath, setWorkspacePath, setSidebarActivePath } = useSidebarDrawer();
   const isManager = useIsManagerPortal();
+
+  useEffect(() => {
+    if (workspacePath === '/employee-portal') {
+      setWorkspacePath('/dashboard');
+      setSidebarActivePath('/dashboard');
+    }
+  }, [workspacePath, setWorkspacePath, setSidebarActivePath]);
 
   if (!isEmployeePortalPath(workspacePath)) {
     return null;
   }
 
+  if (workspacePath === '/employee-portal') {
+    return null;
+  }
+
   if (workspacePath === '/employee-portal/approvals' && !isManager) {
-    return <PortalAccessDenied onBack={() => setWorkspacePath('/employee-portal')} />;
+    return <PortalAccessDenied onBack={() => setWorkspacePath('/dashboard')} />;
   }
 
   if (workspacePath === '/employee-portal/manage-devices' && !isManager) {
-    return <PortalAccessDenied onBack={() => setWorkspacePath('/employee-portal')} />;
+    return <PortalAccessDenied onBack={() => setWorkspacePath('/dashboard')} />;
   }
 
   switch (workspacePath) {
-    case '/employee-portal':
-      return (
-        <MobileEmployeeDashboard
-          onLogout={() => void logout()}
-          onNavigatePath={navigateMenuPath}
-        />
-      );
     case '/employee-portal/profile':
       return <MobileEmployeeProfileScreen />;
     case '/employee-portal/leave':

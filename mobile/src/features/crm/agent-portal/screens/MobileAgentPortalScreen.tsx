@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
-import { apiService } from '../../../services/ApiService';
+import { apiService } from '../../../../services/ApiService';
 
 type Overview = {
   totalEarnings: number;

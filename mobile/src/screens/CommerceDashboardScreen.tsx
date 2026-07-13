@@ -572,7 +572,7 @@ export function CommerceDashboardScreen() {
 
   return (
     <View className="flex-1 bg-slate-50">
-      {!isManagerPortal ? (
+      {planInfo.planType === 'agency' && !isManagerPortal ? (
         <MobileEmployeeDashboard
           onLogout={logout}
           userLabel={
