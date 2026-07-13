@@ -16,6 +16,7 @@ from .api.v1.rbac.router import router as rbac_router
 from .api.v1.projects.router import router as projects_router
 from .api.v1.tasks.router import router as tasks_router
 from .api.v1.banking.router import router as banking_router
+from .api.v1.employee_portal import router as employee_portal_router
 from .core.security import security_middleware
 from .core.tenant_middleware import tenant_middleware
 from .core.audit import audit_logger
@@ -182,6 +183,7 @@ app.include_router(crm.router)
 app.include_router(agent_portal.router)
 app.include_router(customer_import.router)
 app.include_router(hrm.router)
+app.include_router(employee_portal_router)
 app.include_router(custom_options.router)
 app.include_router(invoices.router)
 app.include_router(invoice_customization.router)

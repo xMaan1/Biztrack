@@ -306,3 +306,31 @@ class Supplier(Base):
         Index("idx_suppliers_code", "code"),
         Index("idx_suppliers_tenant_code", "tenant_id", "code", unique=True),
     )
+
+
+class EmployeeDevice(Base):
+    __tablename__ = "employee_devices"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
+    employeeId = Column(UUID(as_uuid=True), ForeignKey("employees.id"), nullable=False)
+    name = Column(String, nullable=False)
+    deviceType = Column("devicetype", String, default="other")
+    serialNumber = Column("serialnumber", String, nullable=True)
+    model = Column(String, nullable=True)
+    status = Column(String, default="assigned")
+    assignedAt = Column(DateTime, default=datetime.utcnow)
+    returnedAt = Column(DateTime, nullable=True)
+    notes = Column(Text, nullable=True)
+    assignedBy = Column("assignedby", UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    createdAt = Column(DateTime, default=datetime.utcnow)
+    updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    tenant = relationship("Tenant")
+    employee = relationship("Employee", foreign_keys=[employeeId])
+    assigner = relationship("User", foreign_keys=[assignedBy])
+
+    __table_args__ = (
+        Index("idx_employee_devices_tenant", "tenant_id"),
+        Index("idx_employee_devices_employee", "employeeId"),
+    )

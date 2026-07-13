@@ -1,6 +1,9 @@
 import { View, Text, Pressable, ScrollView, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useCallback, useEffect, useState } from 'react';
 import { MenuHeaderButton } from '../layout/MenuHeaderButton';
+import { getEmployeePortalDashboard } from '../../services/employeePortal/employeePortalMobileApi';
+import type { PendingApproval, TeamTimeRow } from '../../models/employeePortal';
 
 export interface AgencyProjectSummary {
   id: string;
@@ -69,13 +72,36 @@ export function MobileAgencyDashboard({
 
   const activeMembers = stats.teamMembers.filter((m) => m.isActive !== false);
 
+  const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>([]);
+  const [teamTimeToday, setTeamTimeToday] = useState<TeamTimeRow[]>([]);
+
+  const loadPortal = useCallback(async () => {
+    try {
+      const d = await getEmployeePortalDashboard();
+      setPendingApprovals(d.pendingApprovals ?? []);
+      setTeamTimeToday(d.teamTimeToday ?? []);
+    } catch {
+      setPendingApprovals([]);
+      setTeamTimeToday([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadPortal();
+  }, [loadPortal]);
+
+  const handleRefresh = useCallback(() => {
+    void onRefresh?.();
+    void loadPortal();
+  }, [onRefresh, loadPortal]);
+
   return (
     <ScrollView
       className="flex-1 bg-slate-50"
       contentContainerClassName="pb-10 pt-2"
       refreshControl={
         onRefresh ? (
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         ) : undefined
       }
     >
@@ -172,6 +198,53 @@ export function MobileAgencyDashboard({
       </View>
 
       <View className="mt-4 gap-4 px-4">
+        {pendingApprovals.length > 0 ? (
+          <View className="rounded-xl border border-amber-200 bg-white p-4 shadow-sm">
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center gap-2">
+                <Ionicons name="alert-circle-outline" size={20} color="#d97706" />
+                <Text className="text-base font-semibold text-slate-900">
+                  Pending approvals ({pendingApprovals.length})
+                </Text>
+              </View>
+              <Pressable onPress={() => void onNavigatePath?.('/employee-portal/approvals')}>
+                <Text className="text-sm font-semibold text-indigo-600">Review</Text>
+              </Pressable>
+            </View>
+            {pendingApprovals.slice(0, 3).map((item) => (
+              <View key={item.id} className="mt-3 rounded-lg border border-slate-100 bg-amber-50 p-3">
+                <Text className="font-medium text-slate-900">{item.employeeName}</Text>
+                <Text className="text-xs capitalize text-slate-600">
+                  {item.leaveType} · {item.totalDays} days
+                </Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
+
+        {teamTimeToday.length > 0 ? (
+          <View className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center gap-2">
+                <Ionicons name="time-outline" size={20} color="#4f46e5" />
+                <Text className="text-base font-semibold text-slate-900">Team time today</Text>
+              </View>
+              <Pressable onPress={() => void onNavigatePath?.('/employee-portal/time')}>
+                <Text className="text-sm font-semibold text-indigo-600">Details</Text>
+              </Pressable>
+            </View>
+            {teamTimeToday.slice(0, 5).map((row) => (
+              <View
+                key={row.employeeId}
+                className="mt-3 flex-row items-center justify-between border-b border-slate-100 pb-2"
+              >
+                <Text className="font-medium text-slate-900">{row.name}</Text>
+                <Text className="text-sm font-semibold text-indigo-600">{row.hoursToday}h</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
+
         <View className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center gap-2">
@@ -276,8 +349,8 @@ export function MobileAgencyDashboard({
             {[
               { path: '/projects', label: 'Projects', icon: 'folder-open-outline' as const },
               { path: '/tasks', label: 'Tasks', icon: 'checkbox-outline' as const },
-              { path: '/team', label: 'Team', icon: 'people-outline' as const },
-              { path: '/hrm/employees', label: 'Employees', icon: 'id-card-outline' as const },
+              { path: '/employee-portal/approvals', label: 'Approvals', icon: 'checkmark-done-outline' as const },
+              { path: '/employee-portal/manage-devices', label: 'Devices', icon: 'laptop-outline' as const },
             ].map((action) => (
               <Pressable
                 key={action.path}

@@ -58,6 +58,9 @@ import {
   WorkshopRouter,
   isWorkshopWorkspacePath,
 } from '../features/workshop';
+import { EmployeePortalRouter, isEmployeePortalPath } from '../features/employee-portal';
+import { MobileEmployeeDashboard } from '../components/dashboard/MobileEmployeeDashboard';
+import { useIsManagerPortal } from '../hooks/useIsManagerPortal';
 
 function getTeamMembersFromDashboard(usersData: DashboardData['users'] | undefined) {
   const raw = usersData as { users?: AgencyStats['teamMembers']; recent?: AgencyStats['teamMembers'] };
@@ -189,6 +192,7 @@ export function CommerceDashboardScreen() {
   const { setSidebarActivePath, workspacePath, setWorkspacePath, navigateMenuPath } =
     useSidebarDrawer();
   const { canViewCRM } = usePermissions();
+  const isManagerPortal = useIsManagerPortal();
   const { hasPermission, isOwner, hasModuleAccess } = useRBAC();
   const { planInfo, loading: planLoading, error: planError, refreshPlanInfo } =
     usePlanInfo();
@@ -344,6 +348,10 @@ export function CommerceDashboardScreen() {
 
   if (isProjectWorkspacePath(workspacePath)) {
     return <ProjectRouter />;
+  }
+
+  if (isEmployeePortalPath(workspacePath)) {
+    return <EmployeePortalRouter />;
   }
 
   if (isBankingWorkspacePath(workspacePath)) {
@@ -564,7 +572,17 @@ export function CommerceDashboardScreen() {
 
   return (
     <View className="flex-1 bg-slate-50">
-      {planInfo.planType === 'agency' ? (
+      {!isManagerPortal ? (
+        <MobileEmployeeDashboard
+          onLogout={logout}
+          userLabel={
+            currentTenant
+              ? `${currentTenant.name}${userLabel ? ` · ${userLabel}` : ''}`
+              : userLabel
+          }
+          onNavigatePath={navigateMenuPath}
+        />
+      ) : planInfo.planType === 'agency' ? (
         <MobileAgencyDashboard
           stats={agencyStats}
           onLogout={logout}

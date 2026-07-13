@@ -8,9 +8,11 @@ import { SETTINGS_NATIVE_PATHS } from '../features/settings/settingsPaths';
 import { WORKSPACE_HUB_PATHS } from '../features/workspace/workspacePaths';
 import { HEALTHCARE_NATIVE_PATHS } from '../features/healthcare/healthcarePaths';
 import { WORKSHOP_NATIVE_PATHS } from '../features/workshop/workshopPaths';
+import { EMPLOYEE_PORTAL_PATHS } from '../features/employee-portal/employeePortalPaths';
 
 export const NATIVE_WORKSPACE_PATHS = [
   '/dashboard',
+  ...EMPLOYEE_PORTAL_PATHS,
   ...HEALTHCARE_NATIVE_PATHS,
   ...WORKSHOP_NATIVE_PATHS,
   '/crm',

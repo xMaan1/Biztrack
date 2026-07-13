@@ -26,6 +26,7 @@ def register_all_models():
         TrainingEnrollment,
         Application,
         Supplier,
+        EmployeeDevice,
     )
     from ..config.notification_models import Notification, NotificationPreference, MobilePushDevice
     from ..config.inventory_models import (
@@ -127,6 +128,7 @@ def register_all_models():
         TrainingEnrollment,
         Application,
         Supplier,
+        EmployeeDevice,
         Notification,
         NotificationPreference,
         MobilePushDevice,
