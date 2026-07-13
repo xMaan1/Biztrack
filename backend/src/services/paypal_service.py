@@ -51,6 +51,13 @@ class PayPalService:
             data={"grant_type": "client_credentials"},
             timeout=30,
         )
+        if response.status_code == 401:
+            mode_hint = "sandbox" if self.mode == "sandbox" else "live"
+            raise ValueError(
+                f"PayPal authentication failed ({mode_hint} API). "
+                "Check PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET are from the same "
+                f"PayPal REST app and PAYPAL_MODE={self.mode} matches that app."
+            )
         response.raise_for_status()
         data = response.json()
         self._access_token = data["access_token"]

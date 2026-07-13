@@ -26,11 +26,13 @@ jobs:
               - 'ecosystem.config.js'
               - 'scripts/ensure-uv.sh'
               - 'scripts/deploy-backend-uv.sh'
+              - 'scripts/run-migrations.sh'
             frontend:
               - 'frontend/**'
             migrations:
               - 'backend/alembic/versions/**'
               - '!backend/alembic/versions/.gitkeep'
+              - 'scripts/run-migrations.sh'
 
   sync-code:
     runs-on: ubuntu-latest
@@ -158,13 +160,8 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_HOST} "DEPLOY_PATH='${DEPLOY_PATH}' bash" << 'ENDSSH'
             set -euo pipefail
             export PATH="${HOME}/.local/bin:${PATH}"
-            cd "${DEPLOY_PATH}/backend"
-            if [ ! -f .env ]; then
-              echo "❌ Error: backend/.env not found on server (DATABASE_URL required)"
-              exit 1
-            fi
             echo "🔄 Running Alembic migrations..."
-            uv run alembic upgrade head
+            bash "${DEPLOY_PATH}/scripts/run-migrations.sh" "${DEPLOY_PATH}/backend"
             echo "✅ Migrations completed successfully!"
           ENDSSH
 

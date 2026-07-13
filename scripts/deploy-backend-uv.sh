@@ -15,8 +15,7 @@ uv sync --frozen --no-dev
 if [ -f "${BACKEND_DIR}/.env" ] && [ -d "${BACKEND_DIR}/alembic/versions" ]; then
   version_count=$(find "${BACKEND_DIR}/alembic/versions" -maxdepth 1 -name '*.py' | wc -l)
   if [ "${version_count}" -gt 0 ]; then
-    echo "Running Alembic migrations..."
-    uv run alembic upgrade head
+    "${SCRIPT_DIR}/run-migrations.sh" "${BACKEND_DIR}"
   fi
 fi
 
