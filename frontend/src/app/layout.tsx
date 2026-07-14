@@ -8,6 +8,10 @@ import { RBACProvider } from '@/src/contexts/RBACContext';
 import { CurrencyProvider } from '@/src/contexts/CurrencyContext';
 import { NotificationProvider } from '@/src/contexts/NotificationContext';
 import { ConfirmProvider } from '@/src/contexts/ConfirmContext';
+import {
+  AnalyticsNoscript,
+  AnalyticsScripts,
+} from '@/src/components/analytics/AnalyticsScripts';
 import { Toaster } from 'sonner';
 
 const inter = Inter({
@@ -50,6 +54,8 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
+        <AnalyticsNoscript />
+        <AnalyticsScripts />
         <DesktopRuntimeClass />
         <AuthProvider>
           <RBACProvider>
