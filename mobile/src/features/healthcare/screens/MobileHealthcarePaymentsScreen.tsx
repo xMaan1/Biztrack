@@ -14,6 +14,7 @@ import {
   HealthcareOutlineButton,
 } from '../components/HealthcareChrome';
 import { WorkshopDatePickerField } from '../../workshop/components/WorkshopChrome';
+import { KeyboardBottomSheetShell } from '../../../components/layout/KeyboardBottomSheetShell';
 
 const PAYMENT_METHODS = [
   { value: 'cash', label: 'Cash' },
@@ -200,7 +201,7 @@ export function MobileHealthcarePaymentsScreen() {
         transparent
         onClose={() => setPayOpen(false)}
       >
-        <View className="flex-1 justify-end bg-black/40">
+        <KeyboardBottomSheetShell overlayColor="rgba(0,0,0,0.4)">
           <View className="rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-3 text-lg font-semibold">Record payment</Text>
             <ScrollView keyboardShouldPersistTaps="handled">
@@ -251,7 +252,7 @@ export function MobileHealthcarePaymentsScreen() {
               <Text className="text-slate-600">Cancel</Text>
             </Pressable>
           </View>
-        </View>
+        </KeyboardBottomSheetShell>
       </AppModal>
     </HealthcareChrome>
   );

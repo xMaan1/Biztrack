@@ -6,6 +6,7 @@ import { formatUsd } from '../../../services/crm/CrmMobileService';
 import { getPosTransactions } from '../../../services/pos/posMobileApi';
 import type { POSTransaction } from '../../../models/pos';
 import { AppModal } from '../../../components/layout/AppModal';
+import { KeyboardBottomSheetShell } from '../../../components/layout/KeyboardBottomSheetShell';
 
 export function MobilePosTransactionsScreen() {
   const { workspacePath, setSidebarActivePath } = useSidebarDrawer();
@@ -108,7 +109,7 @@ export function MobilePosTransactionsScreen() {
         transparent
         onClose={() => setDetail(null)}
       >
-        <View className="flex-1 justify-end bg-black/40">
+        <KeyboardBottomSheetShell overlayColor="rgba(0,0,0,0.4)">
           <View className="max-h-[88%] rounded-t-2xl bg-white p-4">
             <Text className="text-lg font-semibold text-slate-900">Transaction</Text>
             {detail ? (
@@ -144,7 +145,7 @@ export function MobilePosTransactionsScreen() {
               <Text className="font-semibold text-slate-800">Close</Text>
             </Pressable>
           </View>
-        </View>
+        </KeyboardBottomSheetShell>
       </AppModal>
     </View>
   );

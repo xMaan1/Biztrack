@@ -4,6 +4,7 @@ import { formatUsd } from '../../../../services/crm/CrmMobileService';
 import type { Product } from '../../../../models/pos';
 import { stockColor } from './helpers';
 import { AppModal } from '../../../../components/layout/AppModal';
+import { KeyboardBottomSheetShell } from '../../../../components/layout/KeyboardBottomSheetShell';
 
 type Props = {
   visible: boolean;
@@ -29,7 +30,7 @@ export function ProductDetailSheet({
       transparent
       onClose={onClose}
     >
-      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.45)' }}>
+      <KeyboardBottomSheetShell overlayColor="rgba(0,0,0,0.45)">
         <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '85%' }}>
           <View style={{ alignItems: 'center', paddingTop: 12 }}>
             <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: '#e2e8f0' }} />
@@ -100,7 +101,7 @@ export function ProductDetailSheet({
             </ScrollView>
           )}
         </View>
-      </View>
+      </KeyboardBottomSheetShell>
     </AppModal>
   );
 }

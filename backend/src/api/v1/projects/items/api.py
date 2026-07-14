@@ -229,7 +229,12 @@ async def create_new_project(
         db.refresh(db_project)
         
         try:
-            from .....services.notification_service import create_project_notification_for_all_tenant_users, send_assignment_notification
+            from .....services.notification_service import (
+                create_project_notification_for_all_tenant_users,
+                display_user_name,
+                send_assigner_confirmation_notification,
+                send_assignment_notification,
+            )
             from .....config.notification_models import NotificationType, NotificationCategory
             user_name = f"{current_user.firstName} {current_user.lastName}".strip() if hasattr(current_user, 'firstName') else current_user.userName if hasattr(current_user, 'userName') else "A user"
             create_project_notification_for_all_tenant_users(
@@ -241,7 +246,9 @@ async def create_new_project(
                 f"/projects/{str(db_project.id)}",
                 {"project_id": str(db_project.id), "created_by": str(current_user.id)}
             )
+            receivers = []
             if project_manager:
+                receivers.append(project_manager)
                 send_assignment_notification(
                     db, str(tenant_id), project_manager, user_name,
                     "Project (Manager)", project_data.name,
@@ -249,12 +256,38 @@ async def create_new_project(
                     category=NotificationCategory.PROJECTS
                 )
             for member in team_members:
-                if member.id != project_manager.id:
+                if not project_manager or member.id != project_manager.id:
+                    receivers.append(member)
                     send_assignment_notification(
                         db, str(tenant_id), member, user_name,
                         "Project (Team)", project_data.name,
                         action_url=f"/projects/{str(db_project.id)}",
                         category=NotificationCategory.PROJECTS
+                    )
+            if receivers:
+                assigner_id = str(current_user.id)
+                unique_receivers = []
+                seen = set()
+                for receiver in receivers:
+                    rid = str(receiver.id)
+                    if rid in seen:
+                        continue
+                    seen.add(rid)
+                    unique_receivers.append(receiver)
+                only_self = len(unique_receivers) == 1 and str(unique_receivers[0].id) == assigner_id
+                if not only_self:
+                    receiver_names = ", ".join(
+                        display_user_name(r, fallback="User") for r in unique_receivers
+                    )
+                    send_assigner_confirmation_notification(
+                        db,
+                        str(tenant_id),
+                        current_user,
+                        receiver_names,
+                        "Project",
+                        project_data.name,
+                        action_url=f"/projects/{str(db_project.id)}",
+                        category=NotificationCategory.PROJECTS,
                     )
         except Exception as notification_error:
             import logging
@@ -319,8 +352,13 @@ async def update_existing_project(
     # Update other fields
     updated_project = project_logic.update_project(project_id, update_dict, db, tenant_id=tenant_id)
     try:
-        from .....services.notification_service import notify_project_members, send_assignment_notification
-        from .....config.notification_models import NotificationType, NotificationCategory
+        from .....services.notification_service import (
+            display_user_name,
+            notify_project_members,
+            send_assigner_confirmation_notification,
+            send_assignment_notification,
+        )
+        from .....config.notification_models import NotificationCategory
         user_name = f"{current_user.firstName} {current_user.lastName}".strip() if hasattr(current_user, 'firstName') else current_user.userName if hasattr(current_user, 'userName') else "A user"
         notify_project_members(
             db,
@@ -332,11 +370,13 @@ async def update_existing_project(
             exclude_user_id=str(current_user.id),
             notification_data={"project_id": project_id, "updated_by": str(current_user.id)}
         )
+        newly_assigned = []
         if tenant_id and 'projectManagerId' in update_dict and update_dict.get('projectManagerId'):
             new_pm_id = str(update_dict['projectManagerId'])
             if new_pm_id != previous_project_manager_id:
                 new_pm = get_user_by_id(new_pm_id, db)
                 if new_pm:
+                    newly_assigned.append(new_pm)
                     send_assignment_notification(
                         db, str(tenant_id), new_pm, user_name,
                         "Project (Manager)", updated_project.name,
@@ -345,6 +385,7 @@ async def update_existing_project(
                     )
         if tenant_id and newly_added_team_members:
             for member in newly_added_team_members:
+                newly_assigned.append(member)
                 if str(member.id) == str(current_user.id):
                     continue
                 send_assignment_notification(
@@ -352,6 +393,27 @@ async def update_existing_project(
                     "Project (Team)", updated_project.name,
                     action_url=f"/projects/{project_id}",
                     category=NotificationCategory.PROJECTS
+                )
+        if newly_assigned:
+            unique_receivers = []
+            seen = set()
+            for receiver in newly_assigned:
+                rid = str(receiver.id)
+                if rid in seen:
+                    continue
+                seen.add(rid)
+                unique_receivers.append(receiver)
+            only_self = len(unique_receivers) == 1 and str(unique_receivers[0].id) == str(current_user.id)
+            if not only_self:
+                send_assigner_confirmation_notification(
+                    db,
+                    str(tenant_id),
+                    current_user,
+                    ", ".join(display_user_name(r, fallback="User") for r in unique_receivers),
+                    "Project",
+                    updated_project.name,
+                    action_url=f"/projects/{project_id}",
+                    category=NotificationCategory.PROJECTS,
                 )
     except Exception as notification_error:
         import logging

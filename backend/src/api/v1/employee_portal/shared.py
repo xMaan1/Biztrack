@@ -17,7 +17,6 @@ from ....config.hrm_models import (
     TimeEntry as DBTimeEntry,
 )
 from ....models.hrm_models import (
-    Department,
     Employee,
     EmployeeType,
     EmploymentStatus,
@@ -64,11 +63,7 @@ def employee_display_name(db: Session, emp: Optional[DBEmployee]) -> str:
 
 def employee_to_model(db_employee: DBEmployee, db: Session) -> Employee:
     user = get_user_by_id(str(db_employee.userId), db) if db_employee.userId else None
-    dept = db_employee.department or "other"
-    try:
-        department = Department(dept)
-    except ValueError:
-        department = Department.OTHER
+    department = db_employee.department or "other"
     emp_type = db_employee.employeeType or "full_time"
     try:
         employee_type = EmployeeType(emp_type)
@@ -102,6 +97,7 @@ def employee_to_model(db_employee: DBEmployee, db: Session) -> Employee:
         notes=db_employee.notes,
         resume_url=db_employee.resume_url,
         attachments=db_employee.attachments or [],
+        avatar=user.avatar if user else None,
         tenant_id=str(db_employee.tenant_id),
         createdBy=str(db_employee.userId) if db_employee.userId else "",
         createdAt=db_employee.createdAt.isoformat() if db_employee.createdAt else "",

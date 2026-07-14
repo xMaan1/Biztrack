@@ -1,6 +1,7 @@
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppModal } from '../layout/AppModal';
+import { KeyboardBottomSheetShell } from '../layout/KeyboardBottomSheetShell';
 import { WS } from '../../features/workshop/components/workshopTheme';
 
 export type OptionItem<T extends string> = { value: T; label: string };
@@ -27,9 +28,9 @@ export function OptionSheet<T extends string>({
       animationType="slide"
       onClose={onClose}
     >
-      <Pressable
-        style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(15,23,42,0.55)' }}
-        onPress={onClose}
+      <KeyboardBottomSheetShell
+        overlayColor="rgba(15,23,42,0.55)"
+        onOverlayPress={onClose}
       >
         <Pressable
           style={{
@@ -90,7 +91,7 @@ export function OptionSheet<T extends string>({
             </Text>
           </Pressable>
         </Pressable>
-      </Pressable>
+      </KeyboardBottomSheetShell>
     </AppModal>
   );
 }

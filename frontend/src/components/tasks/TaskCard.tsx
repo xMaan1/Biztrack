@@ -22,6 +22,7 @@ import {
   Trash2,
   Edit,
   AlertTriangle,
+  MessageCircle,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -30,12 +31,19 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from '../../components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '../../components/ui/dialog';
 import { Task, TaskStatus, TaskPriority, SubTask } from '../../models/task';
 import {
   formatDurationHms,
   getEstimatedDurationSeconds,
   hasEstimatedDuration,
 } from '../../utils/taskTimeUtils';
+import { TaskMessagesPanel } from './TaskMessagesPanel';
 
 interface TaskCardProps {
   task: Task;
@@ -128,6 +136,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
 }) => {
   const [showSubtasks, setShowSubtasks] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [messagesOpen, setMessagesOpen] = useState(false);
   const [subtaskMenuOpenId, setSubtaskMenuOpenId] = useState<string | null>(
     null,
   );
@@ -166,9 +175,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     return threshold > 0 && liveRemainingSeconds <= threshold;
   }, [task, liveRemainingSeconds]);
 
-  const showTaskActionsMenu =
-    (canUpdateTasks && (onEdit || onStatusChange)) ||
-    (canDeleteTasks && onDelete);
+  const showTaskActionsMenu = true;
 
   const completionPercentage =
     task.subtaskCount > 0
@@ -194,14 +201,20 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setMessagesOpen(true)}>
+                  <MessageCircle className="mr-2 h-4 w-4" /> Ask / Chat
+                </DropdownMenuItem>
                 {canUpdateTasks && onEdit && (
-                  <DropdownMenuItem onClick={() => onEdit(task)}>
-                    <Edit className="mr-2 h-4 w-4" /> Edit Task
-                  </DropdownMenuItem>
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => onEdit(task)}>
+                      <Edit className="mr-2 h-4 w-4" /> Edit Task
+                    </DropdownMenuItem>
+                  </>
                 )}
                 {canUpdateTasks && onStatusChange && (
                   <>
-                    {canUpdateTasks && onEdit && <DropdownMenuSeparator />}
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={() => onStatusChange(task.id, TaskStatus.TODO)}
                     >
@@ -461,6 +474,15 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           </div>
         )}
       </CardContent>
+
+      <Dialog open={messagesOpen} onOpenChange={setMessagesOpen}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Communicate: {task.title}</DialogTitle>
+          </DialogHeader>
+          <TaskMessagesPanel taskId={task.id} />
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

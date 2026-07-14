@@ -60,6 +60,7 @@ import {
   MobileFormSheet,
 } from '../../../../components/layout/MobileForm';
 import { WorkshopDatePickerField } from '../../../workshop/components/WorkshopChrome';
+import { KeyboardBottomSheetShell } from '../../../../components/layout/KeyboardBottomSheetShell';
 
 const ITEMS_PER_PAGE = 10;
 const FILTER_ANY = 'all';
@@ -894,7 +895,7 @@ export function MobileContactsScreen() {
         animationType="slide"
         onClose={() => setFiltersModalOpen(false)}
       >
-        <View className="flex-1 justify-end bg-black/40">
+        <KeyboardBottomSheetShell overlayColor="rgba(0,0,0,0.4)">
           <View className="max-h-[85%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
             <Text className="text-lg font-bold text-slate-900">Filters</Text>
             <ScrollView className="mt-3" keyboardShouldPersistTaps="handled">
@@ -962,7 +963,7 @@ export function MobileContactsScreen() {
               </Pressable>
             </View>
           </View>
-        </View>
+        </KeyboardBottomSheetShell>
       </AppModal>
 
       <MobileFormSheet
@@ -1471,7 +1472,7 @@ export function MobileContactsScreen() {
         transparent
         onClose={() => setViewOpen(false)}
       >
-        <View className="flex-1 justify-end bg-black/40">
+        <KeyboardBottomSheetShell overlayColor="rgba(0,0,0,0.4)">
           <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="text-lg font-bold text-slate-900">Contact</Text>
             {viewingContact ? (
@@ -1555,7 +1556,7 @@ export function MobileContactsScreen() {
               ) : null}
             </View>
           </View>
-        </View>
+        </KeyboardBottomSheetShell>
       </AppModal>
 
     </View>

@@ -78,6 +78,7 @@ export interface EmployeeProfileUpdate {
   address?: string;
   emergencyContact?: string;
   emergencyPhone?: string;
+  avatar?: string | null;
 }
 
 export interface LeaveRequestSelfCreate {

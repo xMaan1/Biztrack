@@ -135,6 +135,7 @@ def add_user_to_tenant(
     tenant_id: str,
     user_data: TenantUserCreate,
     current_user,
+    background_tasks=None,
 ) -> TenantUser:
     user = get_user_by_id(user_data.userId, db)
     if not user:
@@ -157,8 +158,9 @@ def add_user_to_tenant(
         existing_tenant_user.custom_permissions = user_data.custom_permissions
         db.commit()
         db.refresh(existing_tenant_user)
-        send_user_invitation(db, tenant_id, user, role, current_user)
-        return _tenant_user_to_schema(existing_tenant_user)
+        result = _tenant_user_to_schema(existing_tenant_user)
+        send_user_invitation(db, tenant_id, user, role, current_user, background_tasks)
+        return result
     tenant_user = TenantUserORM(
         tenant_id=tenant_id,
         userId=user_data.userId,
@@ -172,8 +174,9 @@ def add_user_to_tenant(
     db.add(tenant_user)
     db.commit()
     db.refresh(tenant_user)
-    send_user_invitation(db, tenant_id, user, role, current_user)
-    return _tenant_user_to_schema(tenant_user)
+    result = _tenant_user_to_schema(tenant_user)
+    send_user_invitation(db, tenant_id, user, role, current_user, background_tasks)
+    return result
 
 
 def update_rbac_tenant_user(
@@ -336,6 +339,7 @@ def create_user_for_tenant(
     user_data: UserCreate,
     role_id: str,
     current_user,
+    background_tasks=None,
 ) -> User:
     existing_global_user = get_user_by_email(user_data.email, db)
     if existing_global_user:
@@ -367,8 +371,7 @@ def create_user_for_tenant(
     )
     db.add(tenant_user)
     db.commit()
-    send_user_invitation(db, tenant_id, db_user, role, current_user)
-    return User(
+    result = User(
         userId=str(db_user.id),
         userName=db_user.userName,
         email=db_user.email,
@@ -378,3 +381,5 @@ def create_user_for_tenant(
         avatar=db_user.avatar,
         permissions=[],
     )
+    send_user_invitation(db, tenant_id, db_user, role, current_user, background_tasks)
+    return result

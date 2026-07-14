@@ -43,12 +43,15 @@ const MODULE_MAP: Record<string, string> = {
   Customers: 'crm',
   Sales: 'sales',
   Invoicing: 'sales',
+  'Create Invoice': 'sales',
+  'Invoice Dashboard': 'sales',
   HRM: 'hrm',
   'HRM Management': 'hrm',
   Inventory: 'inventory',
   Finance: 'finance',
   Banking: 'banking',
   Ledger: 'ledger',
+  'Financial Ledger': 'ledger',
   POS: 'pos',
   Projects: 'projects',
   'Project Management': 'projects',
@@ -59,6 +62,7 @@ const MODULE_MAP: Record<string, string> = {
   Events: 'events',
   Reports: 'reports',
   Dashboard: 'dashboard',
+  Healthcare: 'healthcare',
   'Donor Management': 'ngo',
   'Donation Management': 'ngo',
   'Gift & Inventory': 'ngo',
@@ -68,6 +72,7 @@ const MODULE_MAP: Record<string, string> = {
   'Charity Events': 'events',
   'Charity Banking': 'banking',
   'Fund Accounting': 'ledger',
+  'User Management': 'users',
 };
 
 function getModuleForMenuItem(item: MenuItem): string | null {
@@ -102,6 +107,18 @@ export function useSidebar() {
   );
 
   const isSuperAdmin = user?.userRole === 'super_admin';
+
+  const hasMenuRoleAccess = useCallback(
+    (roles?: string[]) => {
+      if (!roles || roles.length === 0 || roles.includes('*')) return true;
+      if (isSuperAdmin && roles.includes('super_admin')) return true;
+      if (isOwner() && (roles.includes('owner') || roles.includes('admin'))) return true;
+      if (roles.includes('admin') && hasPermission('users:view')) return true;
+      if (user?.userRole && roles.includes(user.userRole)) return true;
+      return false;
+    },
+    [hasPermission, isOwner, isSuperAdmin, user?.userRole],
+  );
 
   const hasPathPermission = useCallback(
     (path?: string) => {
@@ -232,6 +249,7 @@ export function useSidebar() {
         item.planTypes.includes('*') || item.planTypes.includes(currentPlanType);
 
       if (!isAvailableForPlan) return false;
+      if (!hasMenuRoleAccess(item.roles)) return false;
 
       if (!isOwner()) {
         if (item.path && !hasPathPermission(item.path)) {
@@ -240,6 +258,16 @@ export function useSidebar() {
         const module = getModuleForMenuItem(item);
         if (module && !hasModuleAccess(module)) {
           return false;
+        }
+        if (item.subItems?.length) {
+          const hasVisibleChild = item.subItems.some((subItem) => {
+            const subItemAvailable =
+              (subItem.planTypes.includes('*') ||
+                subItem.planTypes.includes(currentPlanType)) &&
+              hasMenuRoleAccess(subItem.roles);
+            return subItemAvailable && hasPathPermission(subItem.path);
+          });
+          if (!hasVisibleChild) return false;
         }
       }
 
@@ -253,10 +281,13 @@ export function useSidebar() {
         if (item.subItems) {
           return item.subItems.some((subItem) => {
             const subItemAvailable =
-              subItem.planTypes.includes('*') || subItem.planTypes.includes(currentPlanType);
+              (subItem.planTypes.includes('*') ||
+                subItem.planTypes.includes(currentPlanType)) &&
+              hasMenuRoleAccess(subItem.roles);
             const label = purchaseOrdersNavLabel(subItem);
             return (
               subItemAvailable &&
+              hasPathPermission(subItem.path) &&
               (label.toLowerCase().includes(query) || subItem.text.toLowerCase().includes(query))
             );
           });
@@ -279,6 +310,7 @@ export function useSidebar() {
     user,
     accessibleModules,
     hasModuleAccess,
+    hasMenuRoleAccess,
     hasPathPermission,
     isOwner,
     purchaseOrdersNavLabel,
@@ -351,11 +383,12 @@ export function useSidebar() {
 
   const isSubItemAvailable = useCallback(
     (subItem: SubMenuItem) => {
+      if (!hasMenuRoleAccess(subItem.roles)) return false;
       if (isSuperAdmin && subItem.roles?.includes('super_admin')) return true;
       if (subItem.planTypes.includes('*')) return true;
       return planInfo != null && subItem.planTypes.includes(planInfo.planType);
     },
-    [isSuperAdmin, planInfo],
+    [hasMenuRoleAccess, isSuperAdmin, planInfo],
   );
 
   const clearSearch = useCallback(() => setSearchQuery(''), []);

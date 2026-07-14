@@ -239,9 +239,26 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const findCreatedTenantUser = async (email: string) => {
+    const response = await apiService.get('/rbac/tenant-users');
+    const users = Array.isArray(response)
+      ? response
+      : response?.success && Array.isArray(response.data)
+        ? response.data
+        : [];
+    const normalizedEmail = email.trim().toLowerCase();
+    return users.find(
+      (user: any) => user?.email?.toLowerCase() === normalizedEmail || user?.user?.email?.toLowerCase() === normalizedEmail,
+    );
+  };
+
   const createUser = async (userData: CreateUserData, roleId: string): Promise<any> => {
     try {
-      const response = await apiService.post(`/rbac/create-user?role_id=${roleId}`, userData);
+      const response = await apiService.post(
+        `/rbac/create-user?role_id=${roleId}`,
+        userData,
+        { timeout: 90000 },
+      );
       if (response && response.userId) {
         await fetchTenantUsers();
         return response;
@@ -253,6 +270,20 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
       throw new Error(response.message || 'Failed to create user');
     } catch (error: any) {
       const errorMessage = extractErrorMessage(error, 'Failed to create user');
+      const timedOut =
+        error?.isTimeout === true ||
+        error?.code === 'ECONNABORTED' ||
+        errorMessage.toLowerCase().includes('timeout');
+      if (timedOut) {
+        try {
+          const createdUser = await findCreatedTenantUser(userData.email);
+          if (createdUser) {
+            await fetchTenantUsers();
+            return createdUser;
+          }
+        } catch {
+        }
+      }
       throw new Error(errorMessage);
     }
   };

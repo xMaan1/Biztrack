@@ -31,6 +31,7 @@ import {
   TaskUser,
 } from '../../models/task';
 import { Project } from '../../models/project/Project';
+import { TaskMessagesPanel } from './TaskMessagesPanel';
 
 interface TaskDialogProps {
   open: boolean;
@@ -522,6 +523,12 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 </div>
               </div>
             </div>
+
+            {isEditing && task?.id && (
+              <div className="md:col-span-2">
+                <TaskMessagesPanel taskId={task.id} />
+              </div>
+            )}
           </div>
         </div>
 

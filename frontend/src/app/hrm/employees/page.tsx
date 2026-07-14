@@ -41,8 +41,18 @@ import {
 } from '@/src/components/ui/dialog';
 import { Label } from '@/src/components/ui/label';
 import { Textarea } from '@/src/components/ui/textarea';
+import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar';
 import { toast } from 'sonner';
 import { extractErrorMessage } from '@/src/utils/errorUtils';
+import { useCustomDepartments } from '@/src/hooks/useCustomDepartments';
+import { CustomOptionDialog } from '@/src/components/common/CustomOptionDialog';
+
+function formatDepartmentLabel(department: string) {
+  if (Object.values(Department).includes(department as Department)) {
+    return department.charAt(0).toUpperCase() + department.slice(1).replace('_', ' ');
+  }
+  return department;
+}
 
 export default function HRMEmployeesPage() {
   return (
@@ -64,7 +74,6 @@ function HRMEmployeesContent() {
     search: '',
   });
 
-  // Modal states
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -74,6 +83,12 @@ function HRMEmployeesContent() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [newResumeFile, setNewResumeFile] = useState<File | null>(null);
   const [newAttachments, setNewAttachments] = useState<File[]>([]);
+  const [showCustomDepartmentDialog, setShowCustomDepartmentDialog] = useState(false);
+  const [creatingDepartment, setCreatingDepartment] = useState(false);
+  const {
+    customDepartments,
+    createCustomDepartment,
+  } = useCustomDepartments();
 
   useEffect(() => {
     loadEmployees();
@@ -144,6 +159,19 @@ function HRMEmployeesContent() {
       ...prev,
       [field]: value,
     }));
+  };
+
+  const handleCreateCustomDepartment = async (name: string, description: string) => {
+    try {
+      setCreatingDepartment(true);
+      await createCustomDepartment(name, description);
+      handleEditInputChange('department', name);
+      toast.success('Department created');
+    } catch (err) {
+      toast.error(extractErrorMessage(err) || 'Failed to create department');
+    } finally {
+      setCreatingDepartment(false);
+    }
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
@@ -303,6 +331,11 @@ function HRMEmployeesContent() {
                         {dept.replace('_', ' ').toUpperCase()}
                       </SelectItem>
                     ))}
+                    {customDepartments.map((customDept) => (
+                      <SelectItem key={customDept.id} value={customDept.name}>
+                        {customDept.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -367,10 +400,16 @@ function HRMEmployeesContent() {
                   className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-lg">
-                      {employee.firstName[0]}
-                      {employee.lastName[0]}
-                    </div>
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage
+                        src={employee.avatar || undefined}
+                        alt={`${employee.firstName} ${employee.lastName}`}
+                      />
+                      <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-lg font-semibold text-white">
+                        {employee.firstName[0]}
+                        {employee.lastName[0]}
+                      </AvatarFallback>
+                    </Avatar>
                     <div>
                       <div className="font-semibold text-lg">
                         {employee.firstName} {employee.lastName}
@@ -385,7 +424,7 @@ function HRMEmployeesContent() {
                     <div className="text-right">
                       <div className="font-medium">{employee.employeeId}</div>
                       <div className="text-sm text-gray-500">
-                        {employee.department}
+                        {formatDepartmentLabel(employee.department)}
                       </div>
                     </div>
                     <div className="flex flex-col gap-2">
@@ -449,7 +488,24 @@ function HRMEmployeesContent() {
             </DialogHeader>
             {selectedEmployee && (
               <div className="space-y-6 py-4">
-                {/* Basic Information */}
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-16 w-16">
+                    <AvatarImage
+                      src={selectedEmployee.avatar || undefined}
+                      alt={`${selectedEmployee.firstName} ${selectedEmployee.lastName}`}
+                    />
+                    <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-xl font-semibold text-white">
+                      {selectedEmployee.firstName[0]}
+                      {selectedEmployee.lastName[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="text-lg font-semibold">
+                      {selectedEmployee.firstName} {selectedEmployee.lastName}
+                    </p>
+                    <p className="text-sm text-gray-500">{selectedEmployee.position}</p>
+                  </div>
+                </div>
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Basic Information</h3>
                   <div className="grid grid-cols-2 gap-4">
@@ -494,7 +550,7 @@ function HRMEmployeesContent() {
                     </div>
                     <div>
                       <Label className="text-sm font-medium text-gray-500">Department</Label>
-                      <p className="text-sm">{selectedEmployee.department}</p>
+                      <p className="text-sm">{formatDepartmentLabel(selectedEmployee.department)}</p>
                     </div>
                     <div>
                       <Label className="text-sm font-medium text-gray-500">Employee Type</Label>
@@ -722,7 +778,13 @@ function HRMEmployeesContent() {
                     <Label htmlFor="edit-department">Department</Label>
                     <Select
                       value={editFormData.department || ''}
-                      onValueChange={(value) => handleEditInputChange('department', value as Department)}
+                      onValueChange={(value) => {
+                        if (value === 'create_new') {
+                          setShowCustomDepartmentDialog(true);
+                        } else {
+                          handleEditInputChange('department', value);
+                        }
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select department" />
@@ -733,6 +795,24 @@ function HRMEmployeesContent() {
                             {dept.charAt(0).toUpperCase() + dept.slice(1).replace('_', ' ')}
                           </SelectItem>
                         ))}
+                        {customDepartments.map((customDept) => (
+                          <SelectItem key={customDept.id} value={customDept.name}>
+                            {customDept.name}
+                          </SelectItem>
+                        ))}
+                        {editFormData.department &&
+                          !Object.values(Department).includes(editFormData.department as Department) &&
+                          !customDepartments.some((d) => d.name === editFormData.department) && (
+                            <SelectItem value={editFormData.department}>
+                              {editFormData.department}
+                            </SelectItem>
+                          )}
+                        <SelectItem
+                          value="create_new"
+                          className="font-semibold text-blue-600"
+                        >
+                          + Create New Department
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -949,7 +1029,6 @@ function HRMEmployeesContent() {
           </DialogContent>
         </Dialog>
 
-        {/* Delete Employee Modal */}
         <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
           <DialogContent>
             <DialogHeader>
@@ -990,6 +1069,17 @@ function HRMEmployeesContent() {
             </div>
           </DialogContent>
         </Dialog>
+
+        <CustomOptionDialog
+          open={showCustomDepartmentDialog}
+          onOpenChange={setShowCustomDepartmentDialog}
+          title="Create New Department"
+          description="Create a custom department that will be available for your tenant."
+          optionName="Department"
+          placeholder="e.g., Data Science, DevOps"
+          onSubmit={handleCreateCustomDepartment}
+          loading={creatingDepartment}
+        />
       </div>
     </DashboardLayout>
   );

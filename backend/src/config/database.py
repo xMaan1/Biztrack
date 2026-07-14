@@ -11,7 +11,7 @@ from .core_models import (
 )
 
 from ..models.projects import (
-    Project, Task
+    Project, Task, TaskMessage
 )
 
 from ..models.crm import (

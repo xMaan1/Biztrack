@@ -6,6 +6,10 @@ import { extractErrorMessage } from '../../../utils/errorUtils';
 import { appAlert, appConfirm, appError } from '../../../utils/appDialog';
 import { formatUsd } from '../../../services/crm/CrmMobileService';
 import { getEmployees, deleteEmployee, createEmployee, updateEmployee } from '../../../services/hrm/hrmMobileApi';
+import {
+  createCustomDepartment,
+  getCustomDepartments,
+} from '../../../services/hrm/customOptionsMobileApi';
 import type { Employee, EmployeeCreate, EmployeeUpdate } from '../../../models/hrm';
 import { Department, EmployeeType, EmploymentStatus } from '../../../models/hrm';
 import {
@@ -29,6 +33,7 @@ import {
 const DEPARTMENTS = Object.values(Department);
 const EMPLOYEE_TYPES = Object.values(EmployeeType);
 const EMPLOYMENT_STATUSES = Object.values(EmploymentStatus);
+const CREATE_DEPT = '+ Create New Department';
 
 function todayIsoDate() {
   return new Date().toISOString().split('T')[0] || '';
@@ -42,7 +47,7 @@ function buildEmptyForm() {
     phone: '',
     hireDate: todayIsoDate(),
     employeeId: '',
-    department: Department.GENERAL,
+    department: Department.GENERAL as string,
     position: '',
     employeeType: EmployeeType.FULL_TIME,
     employmentStatus: EmploymentStatus.ACTIVE,
@@ -64,6 +69,32 @@ export function MobileHrmEmployeesScreen() {
   const [selected, setSelected] = useState<Employee | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(buildEmptyForm());
+  const [customDepartments, setCustomDepartments] = useState<string[]>([]);
+  const [createDeptOpen, setCreateDeptOpen] = useState(false);
+  const [newDeptName, setNewDeptName] = useState('');
+  const [creatingDept, setCreatingDept] = useState(false);
+
+  const departmentOptions = (() => {
+    const opts = [...DEPARTMENTS.map(String), ...customDepartments];
+    if (
+      form.department &&
+      !opts.includes(form.department) &&
+      form.department !== CREATE_DEPT
+    ) {
+      opts.push(form.department);
+    }
+    opts.push(CREATE_DEPT);
+    return opts;
+  })();
+
+  const loadCustomDepartments = useCallback(async () => {
+    try {
+      const depts = await getCustomDepartments();
+      setCustomDepartments(depts.map((d) => d.name).filter(Boolean));
+    } catch {
+      setCustomDepartments([]);
+    }
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -82,6 +113,10 @@ export function MobileHrmEmployeesScreen() {
       workspacePath === '/dashboard' ? '/dashboard' : '/hrm/employees',
     );
   }, [setSidebarActivePath, workspacePath]);
+
+  useEffect(() => {
+    void loadCustomDepartments();
+  }, [loadCustomDepartments]);
 
   useEffect(() => {
     const t = setTimeout(() => void load(), q.trim() ? 300 : 0);
@@ -126,7 +161,7 @@ export function MobileHrmEmployeesScreen() {
       phone: employee.phone || '',
       hireDate: employee.hireDate || todayIsoDate(),
       employeeId: employee.employeeId,
-      department: employee.department,
+      department: String(employee.department),
       position: employee.position,
       employeeType: employee.employeeType,
       employmentStatus: employee.employmentStatus,
@@ -160,7 +195,7 @@ export function MobileHrmEmployeesScreen() {
         phone: form.phone.trim() || undefined,
         hireDate: form.hireDate.trim(),
         employeeId: form.employeeId.trim(),
-        department: form.department,
+        department: form.department as Department,
         position: form.position.trim(),
         employeeType: form.employeeType,
         employmentStatus: form.employmentStatus,
@@ -189,7 +224,7 @@ export function MobileHrmEmployeesScreen() {
         phone: form.phone.trim() || undefined,
         hireDate: form.hireDate.trim(),
         employeeId: form.employeeId.trim(),
-        department: form.department,
+        department: form.department as Department,
         position: form.position.trim(),
         employeeType: form.employeeType,
         employmentStatus: form.employmentStatus,
@@ -224,7 +259,19 @@ export function MobileHrmEmployeesScreen() {
       <WorkshopDatePickerField label="Hire date *" value={form.hireDate} onChange={(v) => setForm((p) => ({ ...p, hireDate: v }))} />
       <WorkshopFieldLabel>Salary</WorkshopFieldLabel>
       <WorkshopTextInput value={form.salary} onChangeText={(v) => setForm((p) => ({ ...p, salary: v }))} keyboardType="decimal-pad" />
-      <WorkshopChipSelect label="Department" options={[...DEPARTMENTS]} value={form.department} onChange={(v) => setForm((p) => ({ ...p, department: v as Department }))} />
+      <WorkshopChipSelect
+        label="Department"
+        options={departmentOptions}
+        value={form.department}
+        onChange={(v) => {
+          if (v === CREATE_DEPT) {
+            setNewDeptName('');
+            setCreateDeptOpen(true);
+            return;
+          }
+          setForm((p) => ({ ...p, department: v }));
+        }}
+      />
       <WorkshopChipSelect label="Type" options={[...EMPLOYEE_TYPES]} value={form.employeeType} onChange={(v) => setForm((p) => ({ ...p, employeeType: v as EmployeeType }))} />
       <WorkshopChipSelect label="Status" options={[...EMPLOYMENT_STATUSES]} value={form.employmentStatus} onChange={(v) => setForm((p) => ({ ...p, employmentStatus: v as EmploymentStatus }))} />
       <WorkshopFieldLabel>Notes</WorkshopFieldLabel>
@@ -362,6 +409,54 @@ export function MobileHrmEmployeesScreen() {
         footer={formFooter(() => void submitEdit(), 'Save employee', () => { setEditOpen(false); setSelected(null); })}
       >
         {renderForm()}
+      </WorkshopFormSheet>
+
+      <WorkshopFormSheet
+        visible={createDeptOpen}
+        title="New department"
+        onClose={() => setCreateDeptOpen(false)}
+        footer={
+          <>
+            <WorkshopPrimaryButton
+              label={creatingDept ? 'Creating…' : 'Create department'}
+              disabled={creatingDept}
+              onPress={() => {
+                void (async () => {
+                  const name = newDeptName.trim();
+                  if (!name) {
+                    appAlert('HRM', 'Department name is required.');
+                    return;
+                  }
+                  setCreatingDept(true);
+                  try {
+                    const created = await createCustomDepartment(name);
+                    await loadCustomDepartments();
+                    setForm((p) => ({ ...p, department: created.name || name }));
+                    setCreateDeptOpen(false);
+                    setNewDeptName('');
+                  } catch (e) {
+                    appError('HRM', extractErrorMessage(e, 'Failed to create department'));
+                  } finally {
+                    setCreatingDept(false);
+                  }
+                })();
+              }}
+            />
+            <Pressable
+              onPress={() => setCreateDeptOpen(false)}
+              style={{ marginTop: 12, alignItems: 'center', paddingVertical: 10 }}
+            >
+              <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Cancel</Text>
+            </Pressable>
+          </>
+        }
+      >
+        <WorkshopFieldLabel>Department name *</WorkshopFieldLabel>
+        <WorkshopTextInput
+          value={newDeptName}
+          onChangeText={setNewDeptName}
+          placeholder="e.g. Field Operations"
+        />
       </WorkshopFormSheet>
     </WorkshopChrome>
   );

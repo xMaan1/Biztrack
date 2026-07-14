@@ -8,10 +8,13 @@ import {
   evalSidebarPathPermission,
 } from '../../hooks/useSidebarFilteredMenu';
 import { usePermissions } from '../../hooks/usePermissions';
+import { useIsManagerPortal } from '../../hooks/useIsManagerPortal';
 import type { SubMenuItemDef } from '../../navigation/sidebarMenuData';
 import { AppModal } from '../../components/layout/AppModal';
 import { VerifiedCompanyBadge } from '../common/VerifiedCompanyBadge';
 import { BizTrackLogo } from '../brand/BizTrackLogo';
+
+const EMPLOYEE_HIDDEN_PATHS = new Set(['/tasks', '/time-tracking']);
 
 function subRolesAllowed(
   sub: SubMenuItemDef,
@@ -61,6 +64,7 @@ export function MobileSidebarModal({
 }: Props) {
   const { user, logout } = useAuth();
   const { hasPermission, isOwner } = usePermissions();
+  const isManagerPortal = useIsManagerPortal();
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 
@@ -326,6 +330,13 @@ export function MobileSidebarModal({
                               subItem.planTypes.includes(planInfo.planType));
 
                           if (!subItemAvailable) return null;
+
+                          if (
+                            !isManagerPortal &&
+                            EMPLOYEE_HIDDEN_PATHS.has(subItem.path)
+                          ) {
+                            return null;
+                          }
 
                           if (
                             !evalSidebarPathPermission(

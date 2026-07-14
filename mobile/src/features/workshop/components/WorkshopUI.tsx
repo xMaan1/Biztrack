@@ -12,6 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import type { ComponentProps } from 'react';
 import { AppModal } from '../../../components/layout/AppModal';
+import { KeyboardBottomSheetShell } from '../../../components/layout/KeyboardBottomSheetShell';
 import { WS, cardShadow, statusTone, fmtLabel } from './workshopTheme';
 
 type IonName = ComponentProps<typeof Ionicons>['name'];
@@ -249,9 +250,9 @@ export function WorkshopFilterBar(props: {
       ) : null}
 
       <AppModal visible={open} transparent animationType="slide" onClose={() => setOpen(false)}>
-        <Pressable
-          style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(15,23,42,0.55)' }}
-          onPress={() => setOpen(false)}
+        <KeyboardBottomSheetShell
+          overlayColor="rgba(15,23,42,0.55)"
+          onOverlayPress={() => setOpen(false)}
         >
           <Pressable
             style={{
@@ -324,7 +325,7 @@ export function WorkshopFilterBar(props: {
               </Pressable>
             </ScrollView>
           </Pressable>
-        </Pressable>
+        </KeyboardBottomSheetShell>
       </AppModal>
     </>
   );
@@ -1036,7 +1037,7 @@ export function WorkshopFormSheet(props: {
       transparent
       onClose={props.onClose}
     >
-      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(15,23,42,0.5)' }}>
+      <KeyboardBottomSheetShell>
         <View
           style={{
             maxHeight: '92%',
@@ -1065,12 +1066,13 @@ export function WorkshopFormSheet(props: {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
             style={{ maxHeight: '75%' }}
+            contentContainerStyle={{ paddingBottom: 8 }}
           >
             {props.children}
           </ScrollView>
           <View style={{ marginTop: 16 }}>{props.footer}</View>
         </View>
-      </View>
+      </KeyboardBottomSheetShell>
     </AppModal>
   );
 }

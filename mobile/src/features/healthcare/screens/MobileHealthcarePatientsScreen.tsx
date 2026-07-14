@@ -19,6 +19,7 @@ import {
   HealthcareOutlineButton,
 } from '../components/HealthcareChrome';
 import { WorkshopDatePickerField } from '../../workshop/components/WorkshopChrome';
+import { KeyboardBottomSheetShell } from '../../../components/layout/KeyboardBottomSheetShell';
 
 const PAGE_SIZE = 20;
 
@@ -249,7 +250,7 @@ export function MobileHealthcarePatientsScreen() {
         transparent
         onClose={() => setFormOpen(false)}
       >
-        <View className="flex-1 justify-end bg-black/40">
+        <KeyboardBottomSheetShell overlayColor="rgba(0,0,0,0.4)">
           <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-4 text-lg font-semibold text-slate-900">
               {editing ? 'Edit patient' : 'Add patient'}
@@ -308,7 +309,7 @@ export function MobileHealthcarePatientsScreen() {
               <Text className="text-slate-600">Cancel</Text>
             </Pressable>
           </View>
-        </View>
+        </KeyboardBottomSheetShell>
       </AppModal>
     </HealthcareChrome>
   );

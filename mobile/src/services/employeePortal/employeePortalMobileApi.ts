@@ -67,7 +67,13 @@ export async function getPortalTimeEntries(opts?: {
 }
 
 export async function getCurrentTimeSession(): Promise<{
-  session: { id: string; startTime?: string; isActive: boolean } | null;
+  session: {
+    id: string;
+    employeeId?: string;
+    startTime?: string | null;
+    description?: string | null;
+    isActive: boolean;
+  } | null;
 }> {
   return apiService.get('/employee-portal/time-tracking/current-session');
 }
@@ -76,17 +82,31 @@ export async function startTimeSession(body?: {
   projectId?: string;
   taskId?: string;
   description?: string;
-}): Promise<{ session: { id: string; startTime?: string; isActive: boolean } }> {
-  return apiService.post('/employee-portal/time-tracking/start', body ?? {});
+}): Promise<{
+  session: {
+    id: string;
+    startTime?: string | null;
+    description?: string | null;
+    isActive: boolean;
+  };
+}> {
+  const payload: {
+    projectId?: string;
+    taskId?: string;
+    description?: string;
+  } = {};
+  if (body?.projectId) payload.projectId = body.projectId;
+  if (body?.taskId) payload.taskId = body.taskId;
+  if (body?.description?.trim()) payload.description = body.description.trim();
+  return apiService.post('/employee-portal/time-tracking/start', payload);
 }
 
 export async function stopTimeSession(
   sessionId: string,
   notes?: string,
 ): Promise<{ timeEntry: ProjectTimeEntry }> {
-  return apiService.post(`/employee-portal/time-tracking/stop/${sessionId}`, {
-    notes,
-  });
+  const payload = notes?.trim() ? { notes: notes.trim() } : {};
+  return apiService.post(`/employee-portal/time-tracking/stop/${sessionId}`, payload);
 }
 
 export async function getPortalTasks(status?: string): Promise<PortalTasksResponse> {
@@ -111,6 +131,30 @@ export async function logPortalTask(
 
 export async function completePortalTask(taskId: string): Promise<unknown> {
   return apiService.put(`/employee-portal/tasks/${taskId}/complete`, {});
+}
+
+export type PortalTaskMessage = {
+  id: string;
+  taskId: string;
+  authorId: string;
+  authorName: string;
+  body: string;
+  messageType: string;
+  createdAt?: string;
+  isMine?: boolean;
+};
+
+export async function getPortalTaskMessages(
+  taskId: string,
+): Promise<PortalTaskMessage[]> {
+  return apiService.get(`/employee-portal/tasks/${taskId}/messages`);
+}
+
+export async function createPortalTaskMessage(
+  taskId: string,
+  data: { body: string; messageType?: string },
+): Promise<PortalTaskMessage> {
+  return apiService.post(`/employee-portal/tasks/${taskId}/messages`, data);
 }
 
 export async function getPortalDevices(opts?: {

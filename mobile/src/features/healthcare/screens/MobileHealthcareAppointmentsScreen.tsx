@@ -37,6 +37,7 @@ import {
 import { WorkshopDatePickerField } from '../../workshop/components/WorkshopChrome';
 import { PickerModal } from '../components/PickerModal';
 import { AppModal } from '../../../components/layout/AppModal';
+import { KeyboardBottomSheetShell } from '../../../components/layout/KeyboardBottomSheetShell';
 
 const PAGE_SIZE = 20;
 
@@ -538,7 +539,7 @@ export function MobileHealthcareAppointmentsScreen() {
         transparent
         onClose={() => setPatientPicker(false)}
       >
-        <View className="flex-1 justify-end bg-black/40">
+        <KeyboardBottomSheetShell overlayColor="rgba(0,0,0,0.4)">
           <View className="max-h-[70%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
             <Text className="mb-2 font-semibold text-slate-900">
               Select patient
@@ -578,7 +579,7 @@ export function MobileHealthcareAppointmentsScreen() {
               <Text className="text-slate-600">Close</Text>
             </Pressable>
           </View>
-        </View>
+        </KeyboardBottomSheetShell>
       </AppModal>
 
       <AppModal
@@ -587,7 +588,7 @@ export function MobileHealthcareAppointmentsScreen() {
         transparent
         onClose={() => setFormOpen(false)}
       >
-        <View className="flex-1 justify-end bg-black/40">
+        <KeyboardBottomSheetShell overlayColor="rgba(0,0,0,0.4)">
           <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-4 text-lg font-semibold text-slate-900">
               {editing ? 'Edit appointment' : 'New appointment'}
@@ -701,7 +702,7 @@ export function MobileHealthcareAppointmentsScreen() {
               <Text className="text-slate-600">Cancel</Text>
             </Pressable>
           </View>
-        </View>
+        </KeyboardBottomSheetShell>
       </AppModal>
 
       <AppModal
@@ -710,7 +711,7 @@ export function MobileHealthcareAppointmentsScreen() {
         transparent
         onClose={() => setRxOpen(false)}
       >
-        <View className="flex-1 justify-end bg-black/40">
+        <KeyboardBottomSheetShell overlayColor="rgba(0,0,0,0.4)">
           <View className="max-h-[85%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-2 text-lg font-semibold">New prescription</Text>
             <ScrollView>
@@ -795,7 +796,7 @@ export function MobileHealthcareAppointmentsScreen() {
               <Text className="text-slate-600">Cancel</Text>
             </Pressable>
           </View>
-        </View>
+        </KeyboardBottomSheetShell>
       </AppModal>
 
       <AppModal
@@ -804,7 +805,7 @@ export function MobileHealthcareAppointmentsScreen() {
         transparent
         onClose={() => setViewRxOpen(false)}
       >
-        <View className="flex-1 justify-end bg-black/40">
+        <KeyboardBottomSheetShell overlayColor="rgba(0,0,0,0.4)">
           <View className="max-h-[80%] rounded-t-2xl bg-white px-4 pb-6 pt-4">
             <Text className="mb-2 font-semibold text-slate-900">
               Prescriptions · {viewRxApt?.patient_name}
@@ -863,7 +864,7 @@ export function MobileHealthcareAppointmentsScreen() {
               <Text className="text-slate-600">Close</Text>
             </Pressable>
           </View>
-        </View>
+        </KeyboardBottomSheetShell>
       </AppModal>
 
       <AppModal
@@ -872,7 +873,7 @@ export function MobileHealthcareAppointmentsScreen() {
         transparent
         onClose={() => setInvOpen(false)}
       >
-        <View className="flex-1 justify-end bg-black/40">
+        <KeyboardBottomSheetShell overlayColor="rgba(0,0,0,0.4)">
           <View className="max-h-[80%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-2 font-semibold">Appointment invoice</Text>
             <ScrollView>
@@ -922,7 +923,7 @@ export function MobileHealthcareAppointmentsScreen() {
               <Text className="text-slate-600">Cancel</Text>
             </Pressable>
           </View>
-        </View>
+        </KeyboardBottomSheetShell>
       </AppModal>
     </HealthcareChrome>
   );

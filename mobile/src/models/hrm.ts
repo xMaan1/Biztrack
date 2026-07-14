@@ -130,6 +130,7 @@ export interface Employee {
   notes?: string;
   resume_url?: string;
   attachments?: string[];
+  avatar?: string | null;
   tenantId: string;
   createdBy: string;
   createdAt: string;

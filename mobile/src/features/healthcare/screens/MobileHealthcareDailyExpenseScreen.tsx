@@ -29,6 +29,7 @@ import {
 import { WorkshopDatePickerField } from '../../workshop/components/WorkshopChrome';
 import { PickerModal } from '../components/PickerModal';
 import { AppModal } from '../../../components/layout/AppModal';
+import { KeyboardBottomSheetShell } from '../../../components/layout/KeyboardBottomSheetShell';
 
 type Tab = 'categories' | 'expenses';
 
@@ -423,7 +424,7 @@ export function MobileHealthcareDailyExpenseScreen() {
         transparent
         onClose={() => setCatFormOpen(false)}
       >
-        <View className="flex-1 justify-end bg-black/40">
+        <KeyboardBottomSheetShell overlayColor="rgba(0,0,0,0.4)">
           <View className="rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-3 text-lg font-semibold">
               {editingCat ? 'Edit category' : 'New category'}
@@ -450,7 +451,7 @@ export function MobileHealthcareDailyExpenseScreen() {
               <Text className="text-slate-600">Cancel</Text>
             </Pressable>
           </View>
-        </View>
+        </KeyboardBottomSheetShell>
       </AppModal>
 
       <AppModal
@@ -459,7 +460,7 @@ export function MobileHealthcareDailyExpenseScreen() {
         transparent
         onClose={() => setExpFormOpen(false)}
       >
-        <View className="flex-1 justify-end bg-black/40">
+        <KeyboardBottomSheetShell overlayColor="rgba(0,0,0,0.4)">
           <View className="max-h-[85%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-3 text-lg font-semibold">
               {editingExp ? 'Edit expense' : 'New expense'}
@@ -500,7 +501,7 @@ export function MobileHealthcareDailyExpenseScreen() {
               <Text className="text-slate-600">Cancel</Text>
             </Pressable>
           </View>
-        </View>
+        </KeyboardBottomSheetShell>
       </AppModal>
     </HealthcareChrome>
   );

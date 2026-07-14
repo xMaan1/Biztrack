@@ -291,6 +291,106 @@ Best regards,
             logger.error(f"Failed to send assignment email to {to_email}: {str(e)}")
             return False
 
+    def send_assigner_confirmation_email(
+        self,
+        to_email: str,
+        assigner_name: str,
+        receiver_names: str,
+        entity_type: str,
+        entity_name: str,
+        action_url: Optional[str] = None,
+        extra_details: Optional[Dict[str, str]] = None
+    ) -> bool:
+        try:
+            if not to_email:
+                logger.error("Recipient email is required for assigner confirmation")
+                return False
+            if not self.smtp_username or not self.smtp_password:
+                logger.warning("SMTP credentials not configured. Assigner confirmation email not sent.")
+                return False
+            msg = MIMEMultipart()
+            msg['From'] = f"{self.from_name} <{self.from_email}>"
+            msg['To'] = to_email
+            msg['Subject'] = f"Assignment confirmation: {entity_type} - {entity_name[:50]}{'...' if len(entity_name) > 50 else ''}"
+            link_line = f"\n\nOpen it here: {action_url}" if action_url else ""
+            details_block = ""
+            if extra_details:
+                details_block = "\n".join(f"{k}: {v}" for k, v in extra_details.items() if v) + "\n\n" if any(extra_details.values()) else ""
+            body = f"""
+Dear {assigner_name},
+
+You assigned the following:
+
+Type: {entity_type}
+Name: {entity_name}
+Assigned to: {receiver_names}
+{details_block}{link_line}
+
+Best regards,
+{self.from_name}
+            """
+            msg.attach(MIMEText(body.strip(), 'plain'))
+            server = smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=self.smtp_timeout)
+            server.starttls()
+            server.login(self.smtp_username, self.smtp_password)
+            server.sendmail(self.from_email, to_email, msg.as_string())
+            server.quit()
+            logger.info(f"Assigner confirmation email sent to {to_email} for {entity_type}: {entity_name[:30]}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to send assigner confirmation email to {to_email}: {str(e)}")
+            return False
+
+    def send_task_message_email(
+        self,
+        to_email: str,
+        recipient_name: str,
+        sender_name: str,
+        task_title: str,
+        message_body: str,
+        is_info_request: bool = False,
+        action_url: Optional[str] = None,
+    ) -> bool:
+        try:
+            if not to_email:
+                return False
+            if not self.smtp_username or not self.smtp_password:
+                logger.warning("SMTP credentials not configured. Task message email not sent.")
+                return False
+            subject_prefix = "Info requested" if is_info_request else "New message"
+            msg = MIMEMultipart()
+            msg['From'] = f"{self.from_name} <{self.from_email}>"
+            msg['To'] = to_email
+            msg['Subject'] = f"{subject_prefix} on task: {task_title[:60]}{'...' if len(task_title) > 60 else ''}"
+            link_line = f"\n\nOpen the task: {action_url}" if action_url else ""
+            intro = (
+                f"{sender_name} asked for more information on the task \"{task_title}\"."
+                if is_info_request
+                else f"{sender_name} sent a message on the task \"{task_title}\"."
+            )
+            body = f"""
+Dear {recipient_name},
+
+{intro}
+
+Message:
+{message_body}
+{link_line}
+
+Best regards,
+{self.from_name}
+            """
+            msg.attach(MIMEText(body.strip(), 'plain'))
+            server = smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=self.smtp_timeout)
+            server.starttls()
+            server.login(self.smtp_username, self.smtp_password)
+            server.sendmail(self.from_email, to_email, msg.as_string())
+            server.quit()
+            return True
+        except Exception as e:
+            logger.error(f"Failed to send task message email to {to_email}: {str(e)}")
+            return False
+
     def send_mot_booking_confirmation_email(
         self,
         to_email: str,

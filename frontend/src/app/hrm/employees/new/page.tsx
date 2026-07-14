@@ -42,6 +42,8 @@ import {
 import { toast } from 'sonner';
 import { extractErrorMessage } from '@/src/utils/errorUtils';
 import { Alert, AlertDescription } from '@/src/components/ui/alert';
+import { useCustomDepartments } from '@/src/hooks/useCustomDepartments';
+import { CustomOptionDialog } from '@/src/components/common/CustomOptionDialog';
 
 export default function NewEmployeePage() {
   return (
@@ -56,6 +58,12 @@ function NewEmployeeContent() {
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showCustomDepartmentDialog, setShowCustomDepartmentDialog] = useState(false);
+  const [creatingDepartment, setCreatingDepartment] = useState(false);
+  const {
+    customDepartments,
+    createCustomDepartment,
+  } = useCustomDepartments();
   const [formData, setFormData] = useState<EmployeeCreate>({
     firstName: '',
     lastName: '',
@@ -89,6 +97,19 @@ function NewEmployeeContent() {
       ...prev,
       [field]: value,
     }));
+  };
+
+  const handleCreateCustomDepartment = async (name: string, description: string) => {
+    try {
+      setCreatingDepartment(true);
+      await createCustomDepartment(name, description);
+      handleInputChange('department', name);
+      toast.success('Department created');
+    } catch (error) {
+      toast.error(extractErrorMessage(error) || 'Failed to create department');
+    } finally {
+      setCreatingDepartment(false);
+    }
   };
 
   const handleSkillsAdd = () => {
@@ -360,7 +381,13 @@ function NewEmployeeContent() {
                   <Label htmlFor="department">Department</Label>
                   <Select
                     value={formData.department}
-                    onValueChange={(value) => handleInputChange('department', value as Department)}
+                    onValueChange={(value) => {
+                      if (value === 'create_new') {
+                        setShowCustomDepartmentDialog(true);
+                      } else {
+                        handleInputChange('department', value);
+                      }
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select department" />
@@ -371,6 +398,17 @@ function NewEmployeeContent() {
                           {dept.charAt(0).toUpperCase() + dept.slice(1).replace('_', ' ')}
                         </SelectItem>
                       ))}
+                      {customDepartments.map((customDept) => (
+                        <SelectItem key={customDept.id} value={customDept.name}>
+                          {customDept.name}
+                        </SelectItem>
+                      ))}
+                      <SelectItem
+                        value="create_new"
+                        className="font-semibold text-blue-600"
+                      >
+                        + Create New Department
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -627,7 +665,6 @@ function NewEmployeeContent() {
           </div>
         </form>
 
-        {/* Cancel Confirmation Dialog */}
         <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
           <DialogContent>
             <DialogHeader>
@@ -652,6 +689,17 @@ function NewEmployeeContent() {
             </div>
           </DialogContent>
         </Dialog>
+
+        <CustomOptionDialog
+          open={showCustomDepartmentDialog}
+          onOpenChange={setShowCustomDepartmentDialog}
+          title="Create New Department"
+          description="Create a custom department that will be available for your tenant."
+          optionName="Department"
+          placeholder="e.g., Data Science, DevOps"
+          onSubmit={handleCreateCustomDepartment}
+          loading={creatingDepartment}
+        />
       </div>
     </DashboardLayout>
   );

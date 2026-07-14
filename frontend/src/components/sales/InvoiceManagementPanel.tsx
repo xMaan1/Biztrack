@@ -42,7 +42,8 @@ type InvoiceManagementPanelProps = {
 };
 
 export function InvoiceManagementPanel({ onInvoicesChange }: InvoiceManagementPanelProps) {
-  const { canViewInvoices } = usePermissions();
+  const { canViewInvoices, isOwner } = usePermissions();
+  const canCustomizeInvoice = isOwner();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -246,16 +247,18 @@ export function InvoiceManagementPanel({ onInvoicesChange }: InvoiceManagementPa
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <Button
-          onClick={() => setShowCustomizeDialog(true)}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <Settings className="h-4 w-4" />
-          Customize Invoice
-        </Button>
-      </div>
+      {canCustomizeInvoice && (
+        <div className="flex justify-end">
+          <Button
+            onClick={() => setShowCustomizeDialog(true)}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Settings className="h-4 w-4" />
+            Customize Invoice
+          </Button>
+        </div>
+      )}
 
       <Card>
         <CardHeader>
@@ -350,24 +353,26 @@ export function InvoiceManagementPanel({ onInvoicesChange }: InvoiceManagementPa
         onPageChange={setCurrentPage}
       />
 
-      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-        <div className="flex items-start">
-          <div className="flex-shrink-0">
-            <Settings className="h-5 w-5 text-blue-400" />
-          </div>
-          <div className="ml-3">
-            <h3 className="text-sm font-medium text-blue-800">
-              Customize Your Invoice Template
-            </h3>
-            <div className="mt-2 text-sm text-blue-700">
-              <p>
-                Before downloading invoices, please customize your invoice template with your company details,
-                payment information, and styling preferences using the Customize Invoice button above.
-              </p>
+      {canCustomizeInvoice && (
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <Settings className="h-5 w-5 text-blue-400" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-blue-800">
+                Customize Your Invoice Template
+              </h3>
+              <div className="mt-2 text-sm text-blue-700">
+                <p>
+                  Before downloading invoices, please customize your invoice template with your company details,
+                  payment information, and styling preferences using the Customize Invoice button above.
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       <InvoiceDialog
         open={showEditDialog && !!selectedInvoice}
@@ -439,10 +444,12 @@ export function InvoiceManagementPanel({ onInvoicesChange }: InvoiceManagementPa
         </DialogContent>
       </Dialog>
 
-      <InvoiceCustomizationDialog
-        open={showCustomizeDialog}
-        onOpenChange={setShowCustomizeDialog}
-      />
+      {canCustomizeInvoice && (
+        <InvoiceCustomizationDialog
+          open={showCustomizeDialog}
+          onOpenChange={setShowCustomizeDialog}
+        />
+      )}
     </div>
   );
 }

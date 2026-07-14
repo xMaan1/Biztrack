@@ -11,14 +11,17 @@ import { InstallmentPlanCreateOption } from './InvoiceDialog';
 import InvoiceService from '@/src/services/InvoiceService';
 import type { InvoiceCreate } from '@/src/models/sales';
 import { usePlanInfo } from '@/src/hooks/usePlanInfo';
+import { usePermissions } from '@/src/hooks/usePermissions';
 import { extractErrorMessage } from '@/src/utils/errorUtils';
 
 function CreateInvoicePageContent() {
   const { planInfo } = usePlanInfo();
+  const { isOwner } = usePermissions();
   const isCommerce =
     planInfo?.planType === 'commerce' || planInfo?.planType === 'agency';
   const [createError, setCreateError] = useState<string | null>(null);
   const [showCustomizeDialog, setShowCustomizeDialog] = useState(false);
+  const canCustomizeInvoice = isOwner();
 
   const handleCreateInvoice = async (
     invoiceData: InvoiceCreate,
@@ -52,22 +55,26 @@ function CreateInvoicePageContent() {
                 : 'Create a new invoice'}
             </p>
           </div>
-          <Button
-            onClick={() => setShowCustomizeDialog(true)}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <Settings className="h-4 w-4" />
-            Customize Invoice
-          </Button>
+          {canCustomizeInvoice && (
+            <Button
+              onClick={() => setShowCustomizeDialog(true)}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Settings className="h-4 w-4" />
+              Customize Invoice
+            </Button>
+          )}
         </div>
 
         <CreateInvoiceSection onSubmit={handleCreateInvoice} error={createError} />
 
-        <InvoiceCustomizationDialog
-          open={showCustomizeDialog}
-          onOpenChange={setShowCustomizeDialog}
-        />
+        {canCustomizeInvoice && (
+          <InvoiceCustomizationDialog
+            open={showCustomizeDialog}
+            onOpenChange={setShowCustomizeDialog}
+          />
+        )}
       </div>
     </DashboardLayout>
   );

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Pressable, FlatList, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppModal } from '../../../components/layout/AppModal';
+import { KeyboardBottomSheetShell } from '../../../components/layout/KeyboardBottomSheetShell';
 import { WS } from '../../workshop/components/workshopTheme';
 
 export function PickerModal<T extends { id: string; label: string }>(props: {
@@ -20,7 +21,7 @@ export function PickerModal<T extends { id: string; label: string }>(props: {
       transparent
       onClose={props.onClose}
     >
-      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(15,23,42,0.55)' }}>
+      <KeyboardBottomSheetShell overlayColor="rgba(15,23,42,0.55)">
         <View
           style={{
             maxHeight: '80%',
@@ -95,7 +96,7 @@ export function PickerModal<T extends { id: string; label: string }>(props: {
             <Text style={{ fontWeight: '700', color: WS.textMuted }}>Cancel</Text>
           </Pressable>
         </View>
-      </View>
+      </KeyboardBottomSheetShell>
     </AppModal>
   );
 }

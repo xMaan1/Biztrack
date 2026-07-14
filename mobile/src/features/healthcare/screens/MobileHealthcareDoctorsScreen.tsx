@@ -16,6 +16,7 @@ import {
 } from '../../../services/healthcare/healthcareMobileApi';
 import { extractErrorMessage } from '../../../utils/errorUtils';
 import { AppModal } from '../../../components/layout/AppModal';
+import { KeyboardBottomSheetShell } from '../../../components/layout/KeyboardBottomSheetShell';
 import {
   HealthcareChrome,
   HealthcareCard,
@@ -294,7 +295,7 @@ export function MobileHealthcareDoctorsScreen() {
         transparent
         onClose={() => setFormOpen(false)}
       >
-        <View className="flex-1 justify-end bg-black/40">
+        <KeyboardBottomSheetShell overlayColor="rgba(0,0,0,0.4)">
           <View className="max-h-[92%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-4 text-lg font-semibold text-slate-900">
               {editing ? 'Edit doctor' : 'Add doctor'}
@@ -431,7 +432,7 @@ export function MobileHealthcareDoctorsScreen() {
               <Text className="text-slate-600">Cancel</Text>
             </Pressable>
           </View>
-        </View>
+        </KeyboardBottomSheetShell>
       </AppModal>
     </HealthcareChrome>
   );

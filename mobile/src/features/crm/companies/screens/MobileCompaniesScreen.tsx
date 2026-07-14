@@ -22,6 +22,7 @@ import {
 import { formatCrmDate, formatUsd } from '../../../../services/crm/CrmMobileService';
 import { industryLabel } from '../../contacts/utils/contactFormUtils';
 import { AppModal } from '../../../../components/layout/AppModal';
+import { KeyboardBottomSheetShell } from '../../../../components/layout/KeyboardBottomSheetShell';
 import {
   FormInput,
   FormSection,
@@ -932,7 +933,7 @@ export function MobileCompaniesScreen() {
         transparent
         onClose={() => setViewOpen(false)}
       >
-        <View className="flex-1 justify-end bg-black/40">
+        <KeyboardBottomSheetShell overlayColor="rgba(0,0,0,0.4)">
           <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="text-lg font-bold text-slate-900">Company</Text>
             {viewingCompany ? (
@@ -991,7 +992,7 @@ export function MobileCompaniesScreen() {
               ) : null}
             </View>
           </View>
-        </View>
+        </KeyboardBottomSheetShell>
       </AppModal>
     </View>
   );

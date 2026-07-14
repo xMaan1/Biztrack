@@ -415,6 +415,14 @@ def notify_project_members(
     )
 
 
+def display_user_name(user: Any, fallback: str = "there") -> str:
+    return (
+        f"{(getattr(user, 'firstName') or '')} {(getattr(user, 'lastName') or '')}".strip()
+        or getattr(user, 'userName', '')
+        or fallback
+    )
+
+
 def send_assignment_notification(
     db: Session,
     tenant_id: str,
@@ -429,10 +437,7 @@ def send_assignment_notification(
     if not assignee_user:
         return
     assignee_id = str(assignee_user.id)
-    assignee_name = (
-        f"{(getattr(assignee_user, 'firstName') or '')} {(getattr(assignee_user, 'lastName') or '')}".strip()
-        or getattr(assignee_user, 'userName', '') or 'there'
-    )
+    assignee_name = display_user_name(assignee_user)
     title = f"Assigned: {entity_type} - {entity_name[:60]}{'...' if len(entity_name) > 60 else ''}"
     message = f"{assigner_name} assigned you to {entity_type}: {entity_name}"
     if getattr(assignee_user, 'email', None) and is_notification_enabled(db, tenant_id, assignee_id, category, 'email'):
@@ -470,4 +475,124 @@ def send_assignment_notification(
         type=NotificationType.INFO,
         action_url=action_url,
         notification_data={"entity_type": entity_type, "entity_name": entity_name},
+    )
+
+
+def send_assigner_confirmation_notification(
+    db: Session,
+    tenant_id: str,
+    assigner_user: Any,
+    receiver_names: str,
+    entity_type: str,
+    entity_name: str,
+    action_url: Optional[str] = None,
+    category: NotificationCategory = NotificationCategory.PROJECTS,
+    extra_details: Optional[dict] = None,
+) -> None:
+    if not assigner_user:
+        return
+    assigner_id = str(assigner_user.id)
+    assigner_name = display_user_name(assigner_user, fallback="there")
+    receivers_label = (receiver_names or "").strip() or "the assigned recipient(s)"
+    title = f"Assignment confirmed: {entity_type} - {entity_name[:50]}{'...' if len(entity_name) > 50 else ''}"
+    message = f"You assigned {entity_type}: {entity_name} to {receivers_label}"
+    if getattr(assigner_user, 'email', None) and is_notification_enabled(db, tenant_id, assigner_id, category, 'email'):
+        email_link = _build_notification_link(action_url)
+        email_payload = {
+            "to_email": assigner_user.email,
+            "assigner_name": assigner_name,
+            "receiver_names": receivers_label,
+            "entity_type": entity_type,
+            "entity_name": entity_name,
+            "action_url": email_link,
+            "extra_details": extra_details,
+        }
+
+        def _send_assigner_email() -> None:
+            try:
+                from .email_service import EmailService
+                EmailService().send_assigner_confirmation_email(**email_payload)
+            except Exception as e:
+                logger.error(
+                    "Failed to send assigner confirmation email to %s: %s",
+                    email_payload.get("to_email"),
+                    e,
+                    exc_info=True,
+                )
+
+        threading.Thread(target=_send_assigner_email, daemon=True).start()
+    service = NotificationService(db)
+    service.create_notification(
+        tenant_id=tenant_id,
+        user_id=assigner_id,
+        title=title,
+        message=message,
+        category=category,
+        type=NotificationType.INFO,
+        action_url=action_url,
+        notification_data={
+            "entity_type": entity_type,
+            "entity_name": entity_name,
+            "receivers": receivers_label,
+            "role": "assigner",
+        },
+    )
+
+
+def notify_assignment_parties(
+    db: Session,
+    tenant_id: str,
+    assigner_user: Any,
+    receiver_users: List[Any],
+    entity_type: str,
+    entity_name: str,
+    action_url: Optional[str] = None,
+    category: NotificationCategory = NotificationCategory.PROJECTS,
+    extra_details: Optional[dict] = None,
+    receiver_entity_type: Optional[str] = None,
+) -> None:
+    assigner_name = display_user_name(assigner_user, fallback="A user")
+    assigner_id = str(assigner_user.id) if assigner_user else None
+    unique_receivers = []
+    seen_ids = set()
+    for receiver in receiver_users or []:
+        if not receiver:
+            continue
+        receiver_id = str(receiver.id)
+        if receiver_id in seen_ids:
+            continue
+        seen_ids.add(receiver_id)
+        unique_receivers.append(receiver)
+
+    for receiver in unique_receivers:
+        send_assignment_notification(
+            db,
+            tenant_id,
+            receiver,
+            assigner_name,
+            receiver_entity_type or entity_type,
+            entity_name,
+            action_url=action_url,
+            category=category,
+            extra_details=extra_details,
+        )
+
+    if not assigner_user or not unique_receivers:
+        return
+
+    receiver_names = ", ".join(display_user_name(user, fallback="User") for user in unique_receivers)
+    only_self_assigned = len(unique_receivers) == 1 and str(unique_receivers[0].id) == assigner_id
+    if only_self_assigned:
+        return
+
+    send_assigner_confirmation_notification(
+        db,
+        tenant_id,
+        assigner_user,
+        receiver_names,
+        entity_type,
+        entity_name,
+        action_url=action_url,
+        category=category,
+        extra_details=extra_details,
     )

@@ -38,3 +38,4 @@ class Task(Base):
     createdBy = relationship("User", foreign_keys=[createdById], back_populates="created_tasks")
     parent_task = relationship("Task", remote_side=[id], back_populates="subtasks")
     subtasks = relationship("Task", back_populates="parent_task")
+    messages = relationship("TaskMessage", back_populates="task", cascade="all, delete-orphan")

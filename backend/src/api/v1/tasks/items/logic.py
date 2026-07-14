@@ -200,9 +200,8 @@ def transform_task_to_response(task: Task, db: Session, include_subtasks: bool =
 
 def _send_task_assignment_notification(db, tenant_context, assignee, current_user, entity_label, task, project_name=None, include_details=True):
     try:
-        from .....services.notification_service import send_assignment_notification
+        from .....services.notification_service import notify_assignment_parties
         from .....config.notification_models import NotificationCategory
-        assigner_name = f"{getattr(current_user, 'firstName', '') or ''} {getattr(current_user, 'lastName', '') or ''}".strip() or getattr(current_user, 'userName', 'A user')
         extra = None
         if include_details:
             extra = {}
@@ -215,12 +214,16 @@ def _send_task_assignment_notification(db, tenant_context, assignee, current_use
                 extra["Due date"] = str(task.dueDate)
             extra["Priority"] = getattr(task.priority, "value", str(task.priority))
             extra["Status"] = getattr(task.status, "value", str(task.status))
-        send_assignment_notification(
-            db, str(tenant_context["tenant_id"]), assignee, assigner_name,
-            entity_label, task.title,
+        notify_assignment_parties(
+            db,
+            str(tenant_context["tenant_id"]),
+            current_user,
+            [assignee] if assignee else [],
+            entity_label,
+            task.title,
             action_url=f"/projects/{task.projectId}",
             category=NotificationCategory.PROJECTS,
-            extra_details=extra
+            extra_details=extra,
         )
     except Exception:
         pass

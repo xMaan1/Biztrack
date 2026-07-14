@@ -116,7 +116,7 @@ export interface Employee {
   dateOfBirth?: string;
   hireDate: string;
   employeeId: string;
-  department: Department;
+  department: string;
   position: string;
   employeeType: EmployeeType;
   employmentStatus: EmploymentStatus;
@@ -130,6 +130,7 @@ export interface Employee {
   notes?: string;
   resume_url?: string;
   attachments?: string[];
+  avatar?: string | null;
   tenantId: string;
   createdBy: string;
   createdAt: string;
@@ -144,7 +145,7 @@ export interface EmployeeCreate {
   dateOfBirth?: string;
   hireDate: string;
   employeeId: string;
-  department: Department;
+  department: string;
   position: string;
   employeeType: EmployeeType;
   employmentStatus: EmploymentStatus;
@@ -168,7 +169,7 @@ export interface EmployeeUpdate {
   dateOfBirth?: string;
   hireDate?: string;
   employeeId?: string;
-  department?: Department;
+  department?: string;
   position?: string;
   employeeType?: EmployeeType;
   employmentStatus?: EmploymentStatus;

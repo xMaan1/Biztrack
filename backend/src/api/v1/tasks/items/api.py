@@ -3,6 +3,12 @@ from sqlalchemy.orm import Session
 from typing import Optional, List
 
 from .schemas import TaskCreate, TaskUpdate, TasksResponse, SubTask
+from .messages import (
+    TaskMessageCreate,
+    TaskMessageResponse,
+    list_task_messages,
+    create_task_message,
+)
 from .....config.database import get_db
 from .....api.dependencies import get_current_user, get_tenant_context, require_permission
 from . import logic as task_logic
@@ -102,3 +108,24 @@ async def create_subtask(
     if not tenant_context:
         raise HTTPException(status_code=400, detail="Tenant context required")
     return task_logic.create_subtask_and_notify(task_id, subtask_data, current_user, tenant_context, db)
+
+
+@router.get("/{task_id}/messages", response_model=List[TaskMessageResponse])
+async def get_task_messages(
+    task_id: str,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+):
+    return list_task_messages(task_id, db, current_user, tenant_context or {})
+
+
+@router.post("/{task_id}/messages", response_model=TaskMessageResponse)
+async def post_task_message(
+    task_id: str,
+    body: TaskMessageCreate,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+    tenant_context: Optional[dict] = Depends(get_tenant_context),
+):
+    return create_task_message(task_id, body, db, current_user, tenant_context or {})

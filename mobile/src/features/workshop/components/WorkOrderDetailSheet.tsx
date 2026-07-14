@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { AppModal } from '../../../components/layout/AppModal';
+import { KeyboardBottomSheetShell } from '../../../components/layout/KeyboardBottomSheetShell';
 import { WorkshopDetailRow, WorkshopBadge, WS } from './WorkshopUI';
 
 export type WorkOrderDetail = {
@@ -49,7 +50,7 @@ export function WorkOrderDetailSheet({
       transparent
       onClose={onClose}
     >
-      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(15,23,42,0.55)' }}>
+      <KeyboardBottomSheetShell overlayColor="rgba(15,23,42,0.55)">
         <View
           style={{
             maxHeight: '88%',
@@ -232,7 +233,7 @@ export function WorkOrderDetailSheet({
             </ScrollView>
           ) : null}
         </View>
-      </View>
+      </KeyboardBottomSheetShell>
     </AppModal>
   );
 }

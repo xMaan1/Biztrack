@@ -1,8 +1,17 @@
 import React from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, TextInputProps, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  TextInputProps,
+  View,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppModal } from './AppModal';
+import { useKeyboardBottomInset } from '../../hooks/useKeyboardBottomInset';
 import { WS } from '../../features/workshop/components/workshopTheme';
 
 interface FormSectionProps {
@@ -243,34 +252,35 @@ export const MobileFormSheet: React.FC<MobileFormSheetProps> = ({
   saveLabel,
   saveLoading,
   children,
-}) => (
-  <AppModal
-    visible={visible}
-    animationType="slide"
-    presentationStyle="pageSheet"
-    onClose={onCancel}
-  >
-    <SafeAreaView style={{ flex: 1, backgroundColor: WS.bg }} edges={['top', 'bottom']}>
-      <FormHeader title={title} onCancel={onCancel} />
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          style={{ flex: 1, paddingHorizontal: 16, paddingTop: 20 }}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 24 }}
-        >
-          {children}
-        </ScrollView>
-      </KeyboardAvoidingView>
-      <FormFooterActions
-        onCancel={onCancel}
-        onSave={onSave}
-        saveLabel={saveLabel}
-        saveLoading={saveLoading}
-      />
-    </SafeAreaView>
-  </AppModal>
-);
+}) => {
+  const keyboardInset = useKeyboardBottomInset();
+
+  return (
+    <AppModal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onClose={onCancel}
+    >
+      <SafeAreaView style={{ flex: 1, backgroundColor: WS.bg }} edges={['top', 'bottom']}>
+        <View style={{ flex: 1, paddingBottom: keyboardInset }}>
+          <FormHeader title={title} onCancel={onCancel} />
+          <ScrollView
+            style={{ flex: 1, paddingHorizontal: 16, paddingTop: 20 }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 24 }}
+          >
+            {children}
+          </ScrollView>
+          <FormFooterActions
+            onCancel={onCancel}
+            onSave={onSave}
+            saveLabel={saveLabel}
+            saveLoading={saveLoading}
+          />
+        </View>
+      </SafeAreaView>
+    </AppModal>
+  );
+};

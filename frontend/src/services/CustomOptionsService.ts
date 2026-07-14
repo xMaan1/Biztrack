@@ -36,16 +36,15 @@ export class CustomOptionsService {
     name: string,
     description?: string,
   ): Promise<CustomOption> {
-    const response = await this.apiService.post('/custom-options/departments', {
-      name,
-      description,
-    });
-    return response.data;
+    const params = new URLSearchParams({ name });
+    if (description?.trim()) params.append('description', description.trim());
+    return this.apiService.post(
+      `/custom-options/departments?${params.toString()}`,
+    );
   }
 
   async getCustomDepartments(): Promise<CustomOption[]> {
-    const response = await this.apiService.get('/custom-options/departments');
-    return response.data;
+    return this.apiService.get('/custom-options/departments');
   }
 
   // Custom Leave Types

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -6,6 +6,12 @@ from sqlalchemy.orm import Session
 from .....api.dependencies import get_current_user, get_tenant_context
 from .....config.database import get_db
 from .....models.platform.user import User
+from ...tasks.items.messages import (
+    TaskMessageCreate,
+    TaskMessageResponse,
+    create_task_message,
+    list_task_messages,
+)
 from . import logic
 from .schemas import EmployeeTaskCreate, EmployeeTaskLog
 
@@ -53,3 +59,24 @@ async def complete_my_task(
     tenant_context: dict = Depends(get_tenant_context),
 ):
     return logic.complete_my_task(task_id, db, current_user, tenant_context)
+
+
+@router.get("/tasks/{task_id}/messages", response_model=List[TaskMessageResponse])
+async def my_task_messages(
+    task_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+):
+    return list_task_messages(task_id, db, current_user, tenant_context)
+
+
+@router.post("/tasks/{task_id}/messages", response_model=TaskMessageResponse)
+async def post_my_task_message(
+    task_id: str,
+    body: TaskMessageCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    tenant_context: dict = Depends(get_tenant_context),
+):
+    return create_task_message(task_id, body, db, current_user, tenant_context)

@@ -189,27 +189,68 @@ export function MobileEmployeeDashboard({
 
       <View className="mt-4 px-4">
         <View className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <View className="flex-row items-center gap-2">
-            <Ionicons name="timer-outline" size={20} color="#4f46e5" />
-            <Text className="text-base font-semibold text-slate-900">Clock</Text>
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center gap-2">
+              <Ionicons name="timer-outline" size={20} color="#4f46e5" />
+              <Text className="text-base font-semibold text-slate-900">Clock</Text>
+            </View>
+            <Text className="text-sm font-semibold text-violet-600">
+              Today {stats?.hoursToday ?? 0}h
+            </Text>
           </View>
           <Text className="mt-3 text-center font-mono text-2xl font-bold text-slate-900">
-            {clockedIn ? formatElapsed(data?.activeSession?.startTime) : 'Not clocked in'}
+            {clockedIn ? formatElapsed(data?.activeSession?.startTime) : '00:00:00'}
           </Text>
           <Text className="mt-1 text-center text-sm text-slate-500">
-            {clockedIn ? 'Currently working' : 'Tap to start your day'}
+            {clockedIn ? 'Currently working' : 'Tap Clock in to start your day'}
           </Text>
+          {clockedIn && data?.activeSession?.description ? (
+            <Text className="mt-2 text-center text-sm font-medium text-slate-700" numberOfLines={2}>
+              {data.activeSession.description}
+            </Text>
+          ) : null}
           <Pressable
-            className={`mt-4 items-center rounded-lg py-3 ${clockedIn ? 'bg-red-600 active:bg-red-700' : 'bg-indigo-600 active:bg-indigo-700'}`}
+            className={`mt-4 items-center rounded-lg py-3 ${clockedIn ? 'bg-red-600 active:bg-red-700' : 'bg-emerald-600 active:bg-emerald-700'}`}
             disabled={clockBusy}
             onPress={() => void toggleClock()}
           >
             <Text className="font-semibold text-white">
-              {clockBusy ? '...' : clockedIn ? 'Clock out' : 'Clock in'}
+              {clockBusy
+                ? clockedIn
+                  ? 'Clocking out…'
+                  : 'Clocking in…'
+                : clockedIn
+                  ? 'Clock out'
+                  : 'Clock in'}
             </Text>
+          </Pressable>
+          <Pressable
+            className="mt-3 items-center py-2"
+            onPress={() => void onNavigatePath?.('/employee-portal/time')}
+          >
+            <Text className="text-sm font-semibold text-indigo-600">View time history</Text>
           </Pressable>
         </View>
       </View>
+
+      {(data?.isManager && (data.teamTimeToday?.length ?? 0) > 0) ? (
+        <View className="mt-4 px-4">
+          <View className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <Text className="text-base font-semibold text-slate-900">Team hours today</Text>
+            {(data.teamTimeToday ?? []).map((row) => (
+              <View
+                key={row.employeeId}
+                className="mt-3 flex-row items-center justify-between border-b border-slate-100 pb-2"
+              >
+                <Text className="text-sm font-medium text-slate-800">{row.name}</Text>
+                <Text className="text-sm font-semibold text-violet-600">
+                  {(row.hoursToday ?? 0).toFixed(1)}h
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      ) : null}
 
       <View className="mt-4 gap-4 px-4">
         <View className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">

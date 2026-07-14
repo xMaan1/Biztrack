@@ -245,7 +245,13 @@ export class ApiService {
       },
       async (error) => {
         if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {
-          return Promise.reject(new Error('Request timeout. Please try again.'));
+          const timeoutError = new Error('Request timeout. Please try again.') as Error & {
+            isTimeout?: boolean;
+            config?: typeof error.config;
+          };
+          timeoutError.isTimeout = true;
+          timeoutError.config = error.config;
+          return Promise.reject(timeoutError);
         }
 
         if (error.response?.status === 401) {
@@ -744,6 +750,17 @@ export class ApiService {
 
   async createSubtask(taskId: string, data: any) {
     return this.post(`/tasks/${taskId}/subtasks`, data);
+  }
+
+  async getTaskMessages(taskId: string) {
+    return this.get(`/tasks/${taskId}/messages`);
+  }
+
+  async createTaskMessage(
+    taskId: string,
+    data: { body: string; messageType?: string },
+  ) {
+    return this.post(`/tasks/${taskId}/messages`, data);
   }
 
   // Health check

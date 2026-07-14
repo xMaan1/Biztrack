@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/src/hooks/useAuth';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
 import { DashboardLayout } from '@/src/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
@@ -21,6 +20,7 @@ import InvoiceCustomizationService from '@/src/services/InvoiceCustomizationServ
 import { useNotifications } from '@/src/contexts/NotificationContext';
 import { Bell } from 'lucide-react';
 import { extractErrorMessage } from '@/src/utils/errorUtils';
+import { usePermissions } from '@/src/hooks/usePermissions';
 
 const CURRENCIES = [
   { code: 'USD', name: 'US Dollar', symbol: '$' },
@@ -32,12 +32,13 @@ const CURRENCIES = [
 ];
 
 export default function SettingsPage() {
-  const { } = useAuth();
+  const { isOwner, hasPermission, initializing } = usePermissions();
   const { currency, setCurrency, formatCurrency, loading: currencyLoading } = useCurrency();
   const { preferences, unreadCount } = useNotifications();
   const [selectedCurrency, setSelectedCurrency] = useState(currency);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const canManageSettings = isOwner() || hasPermission('users:view');
 
   useEffect(() => {
     setSelectedCurrency(currency);
@@ -72,7 +73,7 @@ export default function SettingsPage() {
 
   const selectedCurrencyInfo = CURRENCIES.find(c => c.code === selectedCurrency);
 
-  if (currencyLoading) {
+  if (currencyLoading || initializing) {
     return (
       <DashboardLayout>
         <div className="container mx-auto px-6 py-8">
@@ -87,11 +88,22 @@ export default function SettingsPage() {
     );
   }
 
+  if (!canManageSettings) {
+    return (
+      <DashboardLayout>
+        <div className="container mx-auto px-6 py-8">
+          <div className="rounded-lg border border-dashed p-10 text-center text-muted-foreground">
+            You do not have permission to manage general settings.
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="container mx-auto px-6 py-8">
         <div className="space-y-6">
-          {/* Header */}
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
@@ -99,7 +111,6 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Currency Settings */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

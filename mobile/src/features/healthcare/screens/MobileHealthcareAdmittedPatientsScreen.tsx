@@ -29,6 +29,7 @@ import {
 import { WorkshopDatePickerField } from '../../workshop/components/WorkshopChrome';
 import { PickerModal } from '../components/PickerModal';
 import { AppModal } from '../../../components/layout/AppModal';
+import { KeyboardBottomSheetShell } from '../../../components/layout/KeyboardBottomSheetShell';
 
 const PAGE_SIZE = 20;
 
@@ -434,7 +435,7 @@ export function MobileHealthcareAdmittedPatientsScreen() {
         transparent
         onClose={() => setFormOpen(false)}
       >
-        <View className="flex-1 justify-end bg-black/40">
+        <KeyboardBottomSheetShell overlayColor="rgba(0,0,0,0.4)">
           <View className="max-h-[90%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-3 text-lg font-semibold">
               {editing ? 'Edit admission' : 'New admission'}
@@ -536,7 +537,7 @@ export function MobileHealthcareAdmittedPatientsScreen() {
               <Text className="text-slate-600">Cancel</Text>
             </Pressable>
           </View>
-        </View>
+        </KeyboardBottomSheetShell>
       </AppModal>
 
       <AppModal
@@ -545,7 +546,7 @@ export function MobileHealthcareAdmittedPatientsScreen() {
         transparent
         onClose={() => setBillOpen(false)}
       >
-        <View className="flex-1 justify-end bg-black/40">
+        <KeyboardBottomSheetShell overlayColor="rgba(0,0,0,0.4)">
           <View className="max-h-[75%] rounded-t-2xl bg-white px-4 pb-8 pt-4">
             <Text className="mb-2 font-semibold">Admission invoice</Text>
             <ScrollView>
@@ -590,7 +591,7 @@ export function MobileHealthcareAdmittedPatientsScreen() {
               <Text className="text-slate-600">Cancel</Text>
             </Pressable>
           </View>
-        </View>
+        </KeyboardBottomSheetShell>
       </AppModal>
     </HealthcareChrome>
   );

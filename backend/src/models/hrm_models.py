@@ -109,7 +109,7 @@ class EmployeeBase(BaseModel):
     dateOfBirth: Optional[str] = None
     hireDate: str
     employeeId: str
-    department: Department
+    department: str
     position: str
     employeeType: EmployeeType
     employmentStatus: EmploymentStatus
@@ -123,6 +123,7 @@ class EmployeeBase(BaseModel):
     notes: Optional[str] = None
     resume_url: Optional[str] = None
     attachments: List[str] = []
+    avatar: Optional[str] = None
 
 class EmployeeCreate(EmployeeBase):
     pass
@@ -135,7 +136,7 @@ class EmployeeUpdate(BaseModel):
     dateOfBirth: Optional[str] = None
     hireDate: Optional[str] = None
     employeeId: Optional[str] = None
-    department: Optional[Department] = None
+    department: Optional[str] = None
     position: Optional[str] = None
     employeeType: Optional[EmployeeType] = None
     employmentStatus: Optional[EmploymentStatus] = None
@@ -149,6 +150,7 @@ class EmployeeUpdate(BaseModel):
     notes: Optional[str] = None
     resume_url: Optional[str] = None
     attachments: Optional[List[str]] = None
+    avatar: Optional[str] = None
 
 class Employee(EmployeeBase):
     id: str

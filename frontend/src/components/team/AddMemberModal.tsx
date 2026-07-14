@@ -123,12 +123,43 @@ export default function AddMemberModal({
         password: 'TempPassword123!',
       };
       
-      await apiService.post(`/rbac/create-user?role_id=${formData.roleId}`, userData);
+      await apiService.post(
+        `/rbac/create-user?role_id=${formData.roleId}`,
+        userData,
+        { timeout: 90000 },
+      );
 
       onSuccess();
       onClose();
     } catch (err: any) {
-      setError(extractErrorMessage(err, 'Failed to create team member'));
+      const errorMessage = extractErrorMessage(err, 'Failed to create team member');
+      const timedOut =
+        err?.isTimeout === true ||
+        err?.code === 'ECONNABORTED' ||
+        errorMessage.toLowerCase().includes('timeout');
+      if (timedOut) {
+        try {
+          const response = await apiService.get('/rbac/tenant-users');
+          const users = Array.isArray(response)
+            ? response
+            : response?.success && Array.isArray(response.data)
+              ? response.data
+              : [];
+          const normalizedEmail = formData.email.trim().toLowerCase();
+          const created = users.find(
+            (user: any) =>
+              user?.email?.toLowerCase() === normalizedEmail ||
+              user?.user?.email?.toLowerCase() === normalizedEmail,
+          );
+          if (created) {
+            onSuccess();
+            onClose();
+            return;
+          }
+        } catch {
+        }
+      }
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

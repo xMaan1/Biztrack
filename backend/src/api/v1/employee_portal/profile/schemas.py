@@ -8,3 +8,4 @@ class EmployeeProfileUpdate(BaseModel):
     address: Optional[str] = None
     emergencyContact: Optional[str] = None
     emergencyPhone: Optional[str] = None
+    avatar: Optional[str] = None

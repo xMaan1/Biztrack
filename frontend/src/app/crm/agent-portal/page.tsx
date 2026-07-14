@@ -23,9 +23,7 @@ import agentPortalService, {
 } from '@/src/services/AgentPortalService';
 import { AgentPortalDateFilter } from '@/src/components/crm/agent-portal/AgentPortalDateFilter';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
-import { useRBAC } from '@/src/contexts/RBACContext';
-import { apiService } from '@/src/services/ApiService';
-import { User } from '@/src/models';
+import { useRBAC, type UserWithPermissions } from '@/src/contexts/RBACContext';
 import { Target, TrendingUp, Trophy, Users, DollarSign, Award } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -48,13 +46,21 @@ export default function AgentPortalPage() {
   );
 }
 
+function agentOptionId(u: UserWithPermissions): string {
+  return u.id || '';
+}
+
+function agentOptionLabel(u: UserWithPermissions): string {
+  const name = [u.firstName, u.lastName].filter(Boolean).join(' ').trim();
+  return name || u.userName || u.email;
+}
+
 function AgentPortalContent() {
   const { formatCurrency } = useCurrency();
-  const { userPermissions } = useRBAC();
+  const { userPermissions, tenantUsers, fetchTenantUsers } = useRBAC();
   const manager = isManager(userPermissions);
   const [tab, setTab] = useState('overview');
   const [filters, setFilters] = useState<AgentPortalFilters>({ quickFilter: '30d' });
-  const [users, setUsers] = useState<User[]>([]);
   const [overview, setOverview] = useState<AgentOverview | null>(null);
   const [earnings, setEarnings] = useState<AgentEarnings | null>(null);
   const [achievements, setAchievements] = useState<AgentAchievements | null>(null);
@@ -63,14 +69,14 @@ function AgentPortalContent() {
   const [team, setTeam] = useState<TeamMember[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [targetUserId, setTargetUserId] = useState('');
+  const [targetUserId, setTargetUserId] = useState<string | undefined>(undefined);
   const [targetAmount, setTargetAmount] = useState('10000');
+
+  const agentUsers = (tenantUsers || []).filter((u) => agentOptionId(u) && u.isActive !== false);
 
   useEffect(() => {
     if (!manager) return;
-    apiService.get('/rbac/tenant-users').then((res: { users?: User[] }) => {
-      setUsers(res.users || []);
-    }).catch(() => {});
+    void fetchTenantUsers();
   }, [manager]);
 
   const load = useCallback(async () => {
@@ -179,13 +185,11 @@ function AgentPortalContent() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="self">My data</SelectItem>
-                  {users.map((u) => {
-                    const id = u.id || u.userId;
-                    if (!id) return null;
-                    const name = [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email;
+                  {agentUsers.map((u) => {
+                    const id = agentOptionId(u);
                     return (
                       <SelectItem key={id} value={id}>
-                        {name}
+                        {agentOptionLabel(u)}
                       </SelectItem>
                     );
                   })}
@@ -227,20 +231,28 @@ function AgentPortalContent() {
                   <CardTitle>Set Monthly Target</CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col sm:flex-row gap-3">
-                  <Select value={targetUserId} onValueChange={setTargetUserId}>
+                  <Select
+                    value={targetUserId}
+                    onValueChange={setTargetUserId}
+                  >
                     <SelectTrigger className="sm:w-48">
-                      <SelectValue placeholder="Agent" />
+                      <SelectValue placeholder="Select agent" />
                     </SelectTrigger>
                     <SelectContent>
-                      {users.map((u) => {
-                        const id = u.id || u.userId;
-                        if (!id) return null;
-                        return (
-                          <SelectItem key={id} value={id}>
-                            {[u.firstName, u.lastName].filter(Boolean).join(' ') || u.email}
-                          </SelectItem>
-                        );
-                      })}
+                      {agentUsers.length === 0 ? (
+                        <SelectItem value="__none__" disabled>
+                          No agents available
+                        </SelectItem>
+                      ) : (
+                        agentUsers.map((u) => {
+                          const id = agentOptionId(u);
+                          return (
+                            <SelectItem key={id} value={id}>
+                              {agentOptionLabel(u)}
+                            </SelectItem>
+                          );
+                        })
+                      )}
                     </SelectContent>
                   </Select>
                   <Input

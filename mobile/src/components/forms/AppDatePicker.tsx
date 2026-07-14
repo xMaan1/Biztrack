@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppModal } from '../layout/AppModal';
+import { KeyboardBottomSheetShell } from '../layout/KeyboardBottomSheetShell';
 import { WS } from '../../features/workshop/components/workshopTheme';
 import {
   addMonths,
@@ -94,9 +95,9 @@ function DatePickerSheet({
 
   return (
     <AppModal visible={visible} transparent animationType="slide" onClose={onClose}>
-      <Pressable
-        style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(15,23,42,0.55)' }}
-        onPress={onClose}
+      <KeyboardBottomSheetShell
+        overlayColor="rgba(15,23,42,0.55)"
+        onOverlayPress={onClose}
       >
         <Pressable
           style={{
@@ -414,7 +415,7 @@ function DatePickerSheet({
             </Pressable>
           </View>
         </Pressable>
-      </Pressable>
+      </KeyboardBottomSheetShell>
     </AppModal>
   );
 }

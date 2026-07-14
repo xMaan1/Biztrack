@@ -58,18 +58,18 @@ def inviter_display_name(current_user) -> str:
     return getattr(current_user, 'userName', None) or "A team member"
 
 
-def send_user_invitation(
+def build_invitation_payload(
     db: Session,
     tenant_id: str,
     user: User,
     role: Role,
     current_user,
-) -> None:
+) -> Optional[dict]:
     try:
         tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
         tenant_name = tenant.name if tenant else None
         user_name = f"{user.firstName} {user.lastName}".strip() if user.firstName else user.userName
-        email_payload = {
+        return {
             "to_email": user.email,
             "user_name": user_name,
             "inviter_name": inviter_display_name(current_user),
@@ -78,13 +78,51 @@ def send_user_invitation(
         }
     except Exception as email_error:
         logger.error(f"Failed to prepare invitation email: {email_error}", exc_info=True)
+        return None
+
+
+def send_invitation_email_task(
+    to_email: str,
+    user_name: str,
+    inviter_name: str,
+    tenant_name: Optional[str] = None,
+    role_name: Optional[str] = None,
+) -> None:
+    try:
+        email_service = EmailService()
+        email_service.send_user_invitation_email(
+            to_email=to_email,
+            user_name=user_name,
+            inviter_name=inviter_name,
+            tenant_name=tenant_name,
+            role_name=role_name,
+        )
+    except Exception as email_error:
+        logger.error(f"Failed to send invitation email: {email_error}", exc_info=True)
+
+
+def _queue_invitation_email(email_payload: dict) -> None:
+    threading.Thread(
+        target=send_invitation_email_task,
+        kwargs=email_payload,
+        daemon=True,
+    ).start()
+
+
+def send_user_invitation(
+    db: Session,
+    tenant_id: str,
+    user: User,
+    role: Role,
+    current_user,
+    background_tasks=None,
+) -> None:
+    email_payload = build_invitation_payload(db, tenant_id, user, role, current_user)
+    if not email_payload:
         return
 
-    def _send_invitation() -> None:
-        try:
-            email_service = EmailService()
-            email_service.send_user_invitation_email(**email_payload)
-        except Exception as email_error:
-            logger.error(f"Failed to send invitation email: {email_error}", exc_info=True)
+    if background_tasks is not None:
+        background_tasks.add_task(_queue_invitation_email, email_payload)
+        return
 
-    threading.Thread(target=_send_invitation, daemon=True).start()
+    _queue_invitation_email(email_payload)

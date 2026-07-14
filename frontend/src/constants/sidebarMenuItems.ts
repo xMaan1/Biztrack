@@ -6,6 +6,7 @@ import {
   Clock,
   BarChart3,
   UserCheck,
+  UserCircle,
   Building,
   Calendar,
   TrendingUp,
@@ -621,6 +622,29 @@ export const allMenuItems: MenuItem[] = [
     ],
   },
   {
+    text: 'My Work',
+    icon: UserCircle,
+    roles: ['*'],
+    planTypes: ['agency'],
+    gradient: 'from-indigo-500 to-violet-500',
+    subItems: [
+      {
+        text: 'My Profile',
+        icon: UserCircle,
+        path: '/employee-portal/profile',
+        roles: ['*'],
+        planTypes: ['agency'],
+      },
+      {
+        text: 'Time Tracking',
+        icon: Clock,
+        path: '/employee-portal/time',
+        roles: ['*'],
+        planTypes: ['agency'],
+      },
+    ],
+  },
+  {
     text: 'HRM',
     icon: UserCheck,
     roles: ['*'],
@@ -905,7 +929,7 @@ export const allMenuItems: MenuItem[] = [
         text: 'General Settings',
         icon: Settings,
         path: '/settings',
-        roles: ['*'],
+        roles: ['owner', 'admin'],
         planTypes: ['*'],
       },
       {
