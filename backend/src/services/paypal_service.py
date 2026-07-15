@@ -123,6 +123,7 @@ class PayPalService:
                 "product_id": product_id,
                 "name": plan_name[:127],
                 "description": f"BizTrack {plan_name} subscription",
+                "status": "ACTIVE",
                 "billing_cycles": [
                     {
                         "frequency": self._billing_interval(billing_cycle),
@@ -145,8 +146,18 @@ class PayPalService:
             },
         )
         plan_id = result["id"]
-        self._request("POST", f"/v1/billing/plans/{plan_id}/activate")
+        if result.get("status") == "CREATED":
+            self._request("POST", f"/v1/billing/plans/{plan_id}/activate")
         return plan_id
+
+    def ensure_plan_active(self, paypal_plan_id: str) -> None:
+        plan = self.get_billing_plan(paypal_plan_id)
+        if plan.get("status") == "CREATED":
+            self._request("POST", f"/v1/billing/plans/{paypal_plan_id}/activate")
+        elif plan.get("status") != "ACTIVE":
+            raise ValueError(
+                f"PayPal plan {paypal_plan_id} has status {plan.get('status')}, expected ACTIVE"
+            )
 
     def ensure_billing_plan(
         self,
@@ -159,7 +170,11 @@ class PayPalService:
         if existing_paypal_plan_id:
             try:
                 plan = self.get_billing_plan(existing_paypal_plan_id)
-                if plan.get("status") in {"ACTIVE", "CREATED"}:
+                status = plan.get("status")
+                if status == "ACTIVE":
+                    return existing_paypal_plan_id
+                if status == "CREATED":
+                    self.ensure_plan_active(existing_paypal_plan_id)
                     return existing_paypal_plan_id
             except Exception:
                 logger.warning("Stored PayPal plan %s invalid, recreating", existing_paypal_plan_id)
