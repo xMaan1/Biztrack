@@ -33,6 +33,7 @@ function getModuleForMenuItem(item: MenuItemDef): string | null {
     Finance: 'finance',
     Banking: 'banking',
     Ledger: 'ledger',
+    'Financial Ledger': 'ledger',
     POS: 'pos',
     Projects: 'projects',
     'Project Management': 'projects',

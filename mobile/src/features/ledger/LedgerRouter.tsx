@@ -49,12 +49,7 @@ export function LedgerRouter() {
     );
   }
 
-  const pathOk =
-    workspacePath === '/ledger'
-      ? true
-      : evalSidebarPathPermission(workspacePath, isOwner, hasPermission);
-
-  if (!pathOk) {
+  if (!evalSidebarPathPermission(workspacePath, isOwner, hasPermission)) {
     return (
       <LedgerAccessDenied onBack={() => setWorkspacePath('/dashboard')} />
     );

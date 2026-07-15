@@ -575,11 +575,6 @@ export function CommerceDashboardScreen() {
       {planInfo.planType === 'agency' && !isManagerPortal ? (
         <MobileEmployeeDashboard
           onLogout={logout}
-          userLabel={
-            currentTenant
-              ? `${currentTenant.name}${userLabel ? ` · ${userLabel}` : ''}`
-              : userLabel
-          }
           onNavigatePath={navigateMenuPath}
         />
       ) : planInfo.planType === 'agency' ? (

@@ -698,14 +698,14 @@ export const allMenuItems: MenuItemDef[] = [
         text: 'General Settings',
         icon: 'settings-outline' as const,
         path: '/settings',
-        roles: ['*'],
+        roles: ['owner', 'admin'],
         planTypes: ['*'],
       },
       {
         text: 'Invoice Customization',
         icon: 'document-text-outline' as const,
         path: '/settings/invoice',
-        roles: ['*'],
+        roles: ['owner', 'admin'],
         planTypes: ['*'],
       },
       {

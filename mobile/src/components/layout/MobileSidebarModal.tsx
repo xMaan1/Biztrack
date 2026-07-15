@@ -14,7 +14,12 @@ import { AppModal } from '../../components/layout/AppModal';
 import { VerifiedCompanyBadge } from '../common/VerifiedCompanyBadge';
 import { BizTrackLogo } from '../brand/BizTrackLogo';
 
-const EMPLOYEE_HIDDEN_PATHS = new Set(['/tasks', '/time-tracking']);
+const EMPLOYEE_HIDDEN_PATHS = new Set([
+  '/tasks',
+  '/time-tracking',
+  '/employee-portal/approvals',
+  '/employee-portal/manage-devices',
+]);
 
 function subRolesAllowed(
   sub: SubMenuItemDef,
@@ -23,8 +28,46 @@ function subRolesAllowed(
 ): boolean {
   if (isOwner()) return true;
   if (!sub.roles?.length || sub.roles.includes('*')) return true;
+  if (userRole === 'super_admin' || userRole === 'admin') {
+    return sub.roles.includes('admin') || sub.roles.includes('owner') || sub.roles.includes(userRole);
+  }
   if (!userRole) return false;
   return sub.roles.includes(userRole);
+}
+
+function isSubItemVisible(
+  subItem: SubMenuItemDef,
+  opts: {
+    planType?: string | null;
+    isSuperAdminNoTenant: boolean;
+    isManagerPortal: boolean;
+    isOwner: () => boolean;
+    hasPermission: (p: string) => boolean;
+    userRole?: string;
+  },
+): boolean {
+  if (!opts.isSuperAdminNoTenant) {
+    const subItemAvailable =
+      subItem.planTypes.includes('*') ||
+      (!!opts.planType && subItem.planTypes.includes(opts.planType));
+    if (!subItemAvailable) return false;
+  }
+
+  if (!opts.isManagerPortal && EMPLOYEE_HIDDEN_PATHS.has(subItem.path)) {
+    return false;
+  }
+
+  if (
+    !evalSidebarPathPermission(subItem.path, opts.isOwner, opts.hasPermission)
+  ) {
+    return false;
+  }
+
+  if (!subRolesAllowed(subItem, opts.userRole, opts.isOwner)) {
+    return false;
+  }
+
+  return true;
 }
 
 function getPlanDisplayName(
@@ -211,16 +254,27 @@ export function MobileSidebarModal({
               </View>
             ) : (
               filteredItems.map((item) => {
-                const isExpanded = expandedItems.has(item.text);
-                const hasSubItems = !!(
-                  item.subItems && item.subItems.length > 0
+                const visibleSubItems = (item.subItems ?? []).filter((subItem) =>
+                  isSubItemVisible(subItem, {
+                    planType: planInfo?.planType,
+                    isSuperAdminNoTenant,
+                    isManagerPortal,
+                    isOwner,
+                    hasPermission,
+                    userRole: user?.userRole,
+                  }),
                 );
+                const isExpanded = expandedItems.has(item.text);
+                const hasSubItems = visibleSubItems.length > 0;
+                if (!item.path && item.subItems && !hasSubItems) {
+                  return null;
+                }
                 const isMainItemActive = !!(
                   item.path && isActive(item.path, item.text === 'Dashboard')
                 );
                 const hasActiveSubItem =
                   hasSubItems &&
-                  item.subItems!.some((s) => isActive(s.path, s.text === 'Dashboard'));
+                  visibleSubItems.some((s) => isActive(s.path, s.text === 'Dashboard'));
 
                 return (
                   <View key={item.text} className="mb-2">
@@ -323,41 +377,7 @@ export function MobileSidebarModal({
 
                     {hasSubItems && isExpanded ? (
                       <View className="ml-3 mt-1 border-l-2 border-slate-200 pl-3">
-                        {item.subItems!.map((subItem) => {
-                          const subItemAvailable =
-                            subItem.planTypes.includes('*') ||
-                            (planInfo &&
-                              subItem.planTypes.includes(planInfo.planType));
-
-                          if (!subItemAvailable) return null;
-
-                          if (
-                            !isManagerPortal &&
-                            EMPLOYEE_HIDDEN_PATHS.has(subItem.path)
-                          ) {
-                            return null;
-                          }
-
-                          if (
-                            !evalSidebarPathPermission(
-                              subItem.path,
-                              isOwner,
-                              hasPermission,
-                            )
-                          ) {
-                            return null;
-                          }
-
-                          if (
-                            !subRolesAllowed(
-                              subItem,
-                              user?.userRole,
-                              isOwner,
-                            )
-                          ) {
-                            return null;
-                          }
-
+                        {visibleSubItems.map((subItem) => {
                           const subActive = isActive(subItem.path, subItem.text === 'Dashboard');
 
                           return (

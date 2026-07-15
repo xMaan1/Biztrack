@@ -28,6 +28,11 @@ import {
 const LEAVE_TYPES = Object.values(LeaveType);
 const TABS = ['all', 'pending', 'approved', 'rejected'] as const;
 
+function capitalize(value: string): string {
+  if (!value) return value;
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
 export function MobileEmployeeLeaveScreen() {
   const { setSidebarActivePath } = useSidebarDrawer();
   const [rows, setRows] = useState<LeaveRequest[]>([]);
@@ -105,7 +110,7 @@ export function MobileEmployeeLeaveScreen() {
     <View style={{ flex: 1, backgroundColor: WS.bg }}>
       <WorkshopChrome title="Leave" subtitle="Request and track leave" scroll={false}>
         <WorkshopSegmentTabs
-          tabs={TABS.map((t) => ({ key: t, label: t }))}
+          tabs={TABS.map((t) => ({ key: t, label: capitalize(t) }))}
           active={tab}
           onChange={(k) => setTab(k)}
         />
@@ -130,7 +135,7 @@ export function MobileEmployeeLeaveScreen() {
             <View className="mb-3 rounded-xl border border-slate-200 bg-white p-4">
               <View className="flex-row items-center justify-between">
                 <Text className="font-semibold capitalize text-slate-900">{item.leaveType}</Text>
-                <WorkshopBadge label={item.status} />
+                <WorkshopBadge label={capitalize(item.status)} />
               </View>
               <Text className="mt-2 text-sm text-slate-600">
                 {item.startDate?.slice(0, 10)} – {item.endDate?.slice(0, 10)} · {item.totalDays} days
