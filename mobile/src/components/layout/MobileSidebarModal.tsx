@@ -9,6 +9,7 @@ import {
 } from '../../hooks/useSidebarFilteredMenu';
 import { usePermissions } from '../../hooks/usePermissions';
 import { useIsManagerPortal } from '../../hooks/useIsManagerPortal';
+import { useEmployeeAccess } from '../../contexts/EmployeeAccessContext';
 import type { SubMenuItemDef } from '../../navigation/sidebarMenuData';
 import { AppModal } from '../../components/layout/AppModal';
 import { VerifiedCompanyBadge } from '../common/VerifiedCompanyBadge';
@@ -20,6 +21,8 @@ const EMPLOYEE_HIDDEN_PATHS = new Set([
   '/employee-portal/approvals',
   '/employee-portal/manage-devices',
 ]);
+
+const EMPLOYEE_HIDDEN_MENU_PATHS = new Set(['/users']);
 
 function subRolesAllowed(
   sub: SubMenuItemDef,
@@ -108,6 +111,7 @@ export function MobileSidebarModal({
   const { user, logout } = useAuth();
   const { hasPermission, isOwner } = usePermissions();
   const isManagerPortal = useIsManagerPortal();
+  const { isEmployee } = useEmployeeAccess();
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 
@@ -253,7 +257,14 @@ export function MobileSidebarModal({
                 ))}
               </View>
             ) : (
-              filteredItems.map((item) => {
+              filteredItems
+                .filter(
+                  (item) =>
+                    !isEmployee ||
+                    !item.path ||
+                    !EMPLOYEE_HIDDEN_MENU_PATHS.has(item.path),
+                )
+                .map((item) => {
                 const visibleSubItems = (item.subItems ?? []).filter((subItem) =>
                   isSubItemVisible(subItem, {
                     planType: planInfo?.planType,

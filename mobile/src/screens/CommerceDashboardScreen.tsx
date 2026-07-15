@@ -60,7 +60,7 @@ import {
 } from '../features/workshop';
 import { EmployeePortalRouter, isEmployeePortalPath } from '../features/employee-portal';
 import { MobileEmployeeDashboard } from '../components/dashboard/MobileEmployeeDashboard';
-import { useIsManagerPortal } from '../hooks/useIsManagerPortal';
+import { useEmployeeAccess } from '../contexts/EmployeeAccessContext';
 
 function getTeamMembersFromDashboard(usersData: DashboardData['users'] | undefined) {
   const raw = usersData as { users?: AgencyStats['teamMembers']; recent?: AgencyStats['teamMembers'] };
@@ -192,7 +192,7 @@ export function CommerceDashboardScreen() {
   const { setSidebarActivePath, workspacePath, setWorkspacePath, navigateMenuPath } =
     useSidebarDrawer();
   const { canViewCRM } = usePermissions();
-  const isManagerPortal = useIsManagerPortal();
+  const { isEmployee, loading: employeeAccessLoading } = useEmployeeAccess();
   const { hasPermission, isOwner, hasModuleAccess } = useRBAC();
   const { planInfo, loading: planLoading, error: planError, refreshPlanInfo } =
     usePlanInfo();
@@ -229,7 +229,7 @@ export function CommerceDashboardScreen() {
   }, [workspacePath, setSidebarActivePath]);
 
   const awaitingFirstPayload =
-    planLoading && !planInfo
+    (planLoading && !planInfo) || employeeAccessLoading
     ? true
     : Boolean(
         planInfo &&
@@ -572,7 +572,7 @@ export function CommerceDashboardScreen() {
 
   return (
     <View className="flex-1 bg-slate-50">
-      {planInfo.planType === 'agency' && !isManagerPortal ? (
+      {planInfo.planType === 'agency' && isEmployee ? (
         <MobileEmployeeDashboard
           onLogout={logout}
           onNavigatePath={navigateMenuPath}

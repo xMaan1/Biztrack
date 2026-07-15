@@ -6,6 +6,7 @@ import { apiService } from './src/services/ApiService';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import { NetworkSyncProvider } from './src/contexts/NetworkSyncContext';
 import { RBACProvider } from './src/contexts/RBACContext';
+import { EmployeeAccessProvider } from './src/contexts/EmployeeAccessContext';
 import { SidebarDrawerProvider } from './src/contexts/SidebarDrawerContext';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { BizTrackLogo } from './src/components/brand/BizTrackLogo';
@@ -36,10 +37,12 @@ function RootBody() {
     <AppDialogProvider>
       <AppDialogRegistrar />
       <RBACProvider>
-        <SidebarDrawerProvider>
-          <PushNotificationBridge />
-          <CommerceDashboardScreen />
-        </SidebarDrawerProvider>
+        <EmployeeAccessProvider>
+          <SidebarDrawerProvider>
+            <PushNotificationBridge />
+            <CommerceDashboardScreen />
+          </SidebarDrawerProvider>
+        </EmployeeAccessProvider>
       </RBACProvider>
     </AppDialogProvider>
   );
