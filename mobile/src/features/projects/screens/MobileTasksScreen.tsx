@@ -46,7 +46,9 @@ export function MobileTasksScreen() {
 
   const [tasks, setTasks] = useState<SubTaskRecord[]>([]);
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
-  const [team, setTeam] = useState<{ id: string; name: string }[]>([]);
+  const [team, setTeam] = useState<
+    { id: string; name: string; role?: string; email?: string }[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -79,7 +81,14 @@ export function MobileTasksScreen() {
         fetchProjectTeamMembers(),
       ]);
       setProjects(pr.projects ?? []);
-      setTeam((tm.teamMembers ?? []).map((m) => ({ id: m.id, name: m.name })));
+      setTeam(
+        (tm.teamMembers ?? []).map((m) => ({
+          id: m.id,
+          name: m.name,
+          role: m.role,
+          email: m.email,
+        })),
+      );
     } catch {
       setProjects([]);
       setTeam([]);
@@ -218,12 +227,30 @@ export function MobileTasksScreen() {
   );
 
   const projectFormOptions = useMemo(
-    () => projects.map((p) => ({ value: p.id, label: p.name })),
+    () =>
+      projects.map((p) => ({
+        value: p.id,
+        label: p.name,
+        icon: 'folder-outline' as const,
+        subtitle: `${label(p.status)} · ${p.completionPercent ?? 0}% complete`,
+      })),
     [projects],
   );
 
   const assignOptions = useMemo(
-    () => [{ value: '', label: 'Unassigned' }, ...team.map((m) => ({ value: m.id, label: m.name }))],
+    () => [
+      {
+        value: '',
+        label: 'Unassigned',
+        subtitle: 'No one assigned to this task',
+        icon: 'person-outline' as const,
+      },
+      ...team.map((m) => ({
+        value: m.id,
+        label: m.name,
+        subtitle: m.role || m.email || 'Team member',
+      })),
+    ],
     [team],
   );
 
@@ -479,8 +506,13 @@ export function MobileTasksScreen() {
       />
       <OptionSheet
         visible={assignOpen}
-        title="Assignee"
+        title="Assign to"
+        description="Choose a team member for this task"
         options={assignOptions}
+        selectedValue={assignId}
+        searchable
+        searchPlaceholder="Search team members…"
+        emptyText="No team members match your search"
         onSelect={(v) => {
           setAssignId(v);
           setAssignOpen(false);
@@ -489,8 +521,13 @@ export function MobileTasksScreen() {
       />
       <OptionSheet
         visible={projectPickOpen}
-        title="Project"
+        title="Select project"
+        description="Which project does this task belong to?"
         options={projectFormOptions}
+        selectedValue={projectId}
+        searchable
+        searchPlaceholder="Search projects…"
+        emptyText="No projects match your search"
         onSelect={(v) => {
           setProjectId(v);
           setProjectPickOpen(false);
