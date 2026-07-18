@@ -1,20 +1,26 @@
 from datetime import datetime
 from typing import List, Optional, Dict, Any
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from .core_models import User, Tenant, Plan, Subscription
 
-# User functions
 def get_user_by_email(email: str, db: Session) -> Optional[User]:
-    return db.query(User).filter(User.email == email).first()
+    if not email:
+        return None
+    normalized = email.strip().lower()
+    return (
+        db.query(User)
+        .filter(func.lower(User.email) == normalized)
+        .first()
+    )
 
 def get_user_by_username(username: str, db: Session) -> Optional[User]:
     return db.query(User).filter(User.userName == username).first()
 
 def get_user_by_id(user_id: str, db: Session) -> Optional[User]:
-    # Validate UUID format before querying
     try:
         from uuid import UUID
-        UUID(user_id)  # This will raise ValueError if not a valid UUID
+        UUID(user_id)
         return db.query(User).filter(User.id == user_id).first()
     except (ValueError, TypeError):
         return None
@@ -26,7 +32,12 @@ def get_all_users(db: Session, tenant_id: str = None, skip: int = 0, limit: int 
     return query.offset(skip).limit(limit).all()
 
 def create_user(user_data: dict, db: Session) -> User:
-    db_user = User(**user_data)
+    data = dict(user_data)
+    if data.get("email"):
+        data["email"] = str(data["email"]).strip().lower()
+        if get_user_by_email(data["email"], db):
+            raise ValueError("Email already registered")
+    db_user = User(**data)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -35,7 +46,13 @@ def create_user(user_data: dict, db: Session) -> User:
 def update_user(user_id: str, update_data: dict, db: Session) -> Optional[User]:
     user = get_user_by_id(user_id, db)
     if user:
-        for key, value in update_data.items():
+        data = dict(update_data)
+        if data.get("email"):
+            data["email"] = str(data["email"]).strip().lower()
+            existing = get_user_by_email(data["email"], db)
+            if existing and str(existing.id) != str(user_id):
+                raise ValueError("Email already registered")
+        for key, value in data.items():
             if hasattr(user, key) and value is not None:
                 setattr(user, key, value)
         user.updatedAt = datetime.utcnow()

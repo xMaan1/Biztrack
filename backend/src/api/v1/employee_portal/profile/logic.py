@@ -2,9 +2,10 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session
 
-from .....config.database import get_employee_by_user_id, update_user
+from .....config.database import update_user
 from .....models.hrm_models import Employee
 from .....models.platform.user import User
+from .....services.rbac_service import RBACService
 from ...http_common import tenant_id_str
 from ...profile import process_avatar_upload
 from ..shared import employee_to_model, get_or_create_employee
@@ -16,12 +17,7 @@ def has_active_employee_record(
     current_user: User,
     tenant_id: str,
 ) -> bool:
-    employee = get_employee_by_user_id(str(current_user.id), db, tenant_id)
-    return bool(
-        employee
-        and employee.isActive
-        and (employee.employmentStatus or "active") == "active"
-    )
+    return not RBACService.is_owner(db, str(current_user.id), tenant_id)
 
 
 def get_my_profile(db: Session, current_user: User, tenant_context: dict) -> Employee:

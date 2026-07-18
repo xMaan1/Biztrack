@@ -135,7 +135,13 @@ def create_healthcare_staff(tenant_id: str, body: HealthcareStaffCreate, db: Ses
         "hashedPassword": get_password_hash(body.password),
         "isActive": True,
     }
-    db_user = create_user(user_dict, db)
+    try:
+        db_user = create_user(user_dict, db)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        ) from e
     tenant_user = TenantUserModel(
         tenant_id=UUID(tenant_id),
         userId=UUID(str(db_user.id)),
@@ -168,13 +174,14 @@ def update_healthcare_staff(
     db_user = db.query(UserModel).filter(UserModel.id == db_staff.user_id).first()
     if not db_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    if body.email is not None and body.email != db_user.email:
-        if get_user_by_email(body.email, db):
+    if body.email is not None and body.email.strip().lower() != (db_user.email or "").strip().lower():
+        existing = get_user_by_email(body.email, db)
+        if existing and str(existing.id) != str(db_user.id):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email already registered",
             )
-        db_user.email = body.email
+        db_user.email = body.email.strip().lower()
     if body.username is not None and body.username != db_user.userName:
         if not RBACService.validate_username_uniqueness(
             db, body.username, tenant_id, exclude_user_id=str(db_user.id)

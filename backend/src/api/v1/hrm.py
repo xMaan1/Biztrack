@@ -174,10 +174,13 @@ async def create_hrm_employee(
                 user_updates["firstName"] = first_name
             if linked_user.lastName != last_name:
                 user_updates["lastName"] = last_name
-            if linked_user.email != employee_email:
+            if linked_user.email and linked_user.email.strip().lower() != employee_email:
                 user_updates["email"] = employee_email
             if user_updates:
-                update_user(str(linked_user.id), user_updates, db)
+                try:
+                    update_user(str(linked_user.id), user_updates, db)
+                except ValueError as e:
+                    raise HTTPException(status_code=400, detail=str(e)) from e
         else:
             username_base = re.sub(r"[^a-z0-9_]", "_", (employee_email.split("@")[0] if "@" in employee_email else employee_data.employeeId.lower())).strip("_")
             if not username_base:
@@ -187,19 +190,22 @@ async def create_hrm_employee(
             while get_user_by_username(username, db):
                 username = f"{username_base}_{suffix}"
                 suffix += 1
-            new_user = create_user(
-                {
-                    "tenant_id": tenant_id,
-                    "userName": username,
-                    "email": employee_email,
-                    "firstName": first_name,
-                    "lastName": last_name,
-                    "userRole": "team_member",
-                    "hashedPassword": get_password_hash(secrets.token_urlsafe(24)),
-                    "isActive": True,
-                },
-                db,
-            )
+            try:
+                new_user = create_user(
+                    {
+                        "tenant_id": tenant_id,
+                        "userName": username,
+                        "email": employee_email,
+                        "firstName": first_name,
+                        "lastName": last_name,
+                        "userRole": "team_member",
+                        "hashedPassword": get_password_hash(secrets.token_urlsafe(24)),
+                        "isActive": True,
+                    },
+                    db,
+                )
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e)) from e
             user_id = new_user.id
 
         db_employee = DBEmployee(
@@ -335,7 +341,10 @@ async def update_hrm_employee(
             raise HTTPException(status_code=404, detail="Employee not found")
         
         if user_update_data and db_employee_before.userId:
-            update_user(str(db_employee_before.userId), user_update_data, db)
+            try:
+                update_user(str(db_employee_before.userId), user_update_data, db)
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e)) from e
         
         db_employee = update_employee(employee_id, employee_update_data, db, tenant_context["tenant_id"] if tenant_context else None)
         if not db_employee:

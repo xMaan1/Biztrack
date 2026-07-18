@@ -54,7 +54,7 @@ async def update_user_info(
     else:
         logger.info(f"User is updating themselves - allowing update")
 
-    if user_data.email and user_data.email != user.email:
+    if user_data.email and user_data.email.strip().lower() != (user.email or "").strip().lower():
         existing_user = get_user_by_email(user_data.email, db)
         if existing_user and str(existing_user.id) != user_id:
             raise HTTPException(status_code=400, detail="Email already registered")
@@ -70,7 +70,10 @@ async def update_user_info(
 
     update_dict = user_data.model_dump(exclude_unset=True)
     logger.info(f"Updating user with data: {update_dict}")
-    updated_user = update_user(user_id, update_dict, db)
+    try:
+        updated_user = update_user(user_id, update_dict, db)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     if not updated_user:
         logger.error(f"Failed to update user: {user_id}")

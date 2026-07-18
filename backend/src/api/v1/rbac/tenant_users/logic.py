@@ -358,7 +358,10 @@ def create_user_for_tenant(
     user_dict.pop('password')
     user_dict['hashedPassword'] = hashed_password
     user_dict['tenant_id'] = UUID(tenant_id)
-    db_user = create_user(user_dict, db)
+    try:
+        db_user = create_user(user_dict, db)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
     tenant_user = TenantUserORM(
         tenant_id=UUID(tenant_id),
         userId=UUID(str(db_user.id)),

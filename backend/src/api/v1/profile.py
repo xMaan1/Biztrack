@@ -139,7 +139,7 @@ async def update_my_profile(
     
     update_dict = profile_data.dict(exclude_unset=True)
     
-    if "email" in update_dict and update_dict["email"] != user.email:
+    if "email" in update_dict and str(update_dict["email"]).strip().lower() != (user.email or "").strip().lower():
         existing_user = get_user_by_email(update_dict["email"], db)
         if existing_user and str(existing_user.id) != str(current_user.id):
             raise HTTPException(status_code=400, detail="Email already registered")
@@ -162,7 +162,10 @@ async def update_my_profile(
         avatar_url = process_avatar_upload(update_dict["avatar"], str(current_user.id))
         update_dict["avatar"] = avatar_url
     
-    updated_user = update_user(str(current_user.id), update_dict, db)
+    try:
+        updated_user = update_user(str(current_user.id), update_dict, db)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
     
     if not updated_user:
         raise HTTPException(status_code=404, detail="User not found or could not be updated")

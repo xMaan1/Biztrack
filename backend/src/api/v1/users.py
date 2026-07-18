@@ -100,7 +100,10 @@ async def create_new_user(
     if tenant_context:
         user_dict['tenant_id'] = tenant_context["tenant_id"]
     
-    db_user = create_user(user_dict, db)
+    try:
+        db_user = create_user(user_dict, db)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
     
     return User(
         userId=str(db_user.id),
@@ -156,7 +159,7 @@ async def update_user_info(
     else:
         logger.info(f"User is updating themselves - allowing update")
     
-    if user_data.email and user_data.email != user.email:
+    if user_data.email and user_data.email.strip().lower() != (user.email or "").strip().lower():
         existing_user = get_user_by_email(user_data.email, db)
         if existing_user and str(existing_user.id) != user_id:
             raise HTTPException(status_code=400, detail="Email already registered")
@@ -172,7 +175,12 @@ async def update_user_info(
     
     update_dict = user_data.dict(exclude_unset=True)
     logger.info(f"Updating user with data: {update_dict}")
-    updated_user = update_user(user_id, update_dict, db)
+    try:
+        updated_user = update_user(user_id, update_dict, db)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    if not updated_user:
+        raise HTTPException(status_code=404, detail="User not found or could not be updated")
     logger.info(f"User updated successfully: {updated_user.id}")
     
     return User(

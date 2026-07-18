@@ -305,7 +305,11 @@ class RBACService:
 
     @staticmethod
     def validate_email_uniqueness(db: Session, email: str, tenant_id: str = None, exclude_user_id: Optional[str] = None) -> bool:
-        query = db.query(User).filter(User.email == email)
+        from sqlalchemy import func
+
+        if not email:
+            return True
+        query = db.query(User).filter(func.lower(User.email) == email.strip().lower())
         if exclude_user_id:
             query = query.filter(User.id != exclude_user_id)
         return query.first() is None

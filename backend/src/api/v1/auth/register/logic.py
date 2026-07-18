@@ -18,7 +18,10 @@ async def register(user_data: RegisterRequest, db: Session):
     user_dict.pop('password')
     user_dict['hashedPassword'] = hashed_password
 
-    db_user = create_user(user_dict, db)
+    try:
+        db_user = create_user(user_dict, db)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     return UserResponse(
         userId=str(db_user.id),
