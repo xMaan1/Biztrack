@@ -15,9 +15,9 @@ import { AppModal } from '../../components/layout/AppModal';
 import { VerifiedCompanyBadge } from '../common/VerifiedCompanyBadge';
 import { BizTrackLogo } from '../brand/BizTrackLogo';
 
-const EMPLOYEE_HIDDEN_PATHS = new Set([
-  '/tasks',
-  '/time-tracking',
+const EMPLOYEE_PROJECT_DUP_PATHS = new Set(['/tasks', '/time-tracking']);
+
+const MANAGER_ONLY_PORTAL_PATHS = new Set([
   '/employee-portal/approvals',
   '/employee-portal/manage-devices',
 ]);
@@ -44,6 +44,7 @@ function isSubItemVisible(
     planType?: string | null;
     isSuperAdminNoTenant: boolean;
     isManagerPortal: boolean;
+    isEmployee: boolean;
     isOwner: () => boolean;
     hasPermission: (p: string) => boolean;
     userRole?: string;
@@ -56,7 +57,11 @@ function isSubItemVisible(
     if (!subItemAvailable) return false;
   }
 
-  if (!opts.isManagerPortal && EMPLOYEE_HIDDEN_PATHS.has(subItem.path)) {
+  if (opts.isEmployee && EMPLOYEE_PROJECT_DUP_PATHS.has(subItem.path)) {
+    return false;
+  }
+
+  if (!opts.isManagerPortal && MANAGER_ONLY_PORTAL_PATHS.has(subItem.path)) {
     return false;
   }
 
@@ -270,6 +275,7 @@ export function MobileSidebarModal({
                     planType: planInfo?.planType,
                     isSuperAdminNoTenant,
                     isManagerPortal,
+                    isEmployee,
                     isOwner,
                     hasPermission,
                     userRole: user?.userRole,

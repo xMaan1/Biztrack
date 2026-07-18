@@ -31,6 +31,7 @@ export const SIDEBAR_PATH_PERMISSIONS: Record<string, string> = {
   '/hrm/suppliers': 'hrm:suppliers:view',
   '/projects': 'projects:projects:view',
   '/tasks': 'projects:tasks:view',
+  '/employee-portal/tasks': 'projects:tasks:view',
   '/team': 'projects:team_members:view',
   '/time-tracking': 'projects:time_tracking:view',
   '/banking/accounts': 'banking:accounts:view',

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { View, Text, FlatList, Pressable, RefreshControl, ScrollView } from 'react-native';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
+import { usePermissions } from '../../../hooks/usePermissions';
 import { extractErrorMessage } from '../../../utils/errorUtils';
 import { appAlert, appConfirm, appError } from '../../../utils/appDialog';
 import {
@@ -52,6 +53,13 @@ function previewText(value?: string | null, max = 100) {
 
 export function MobileEmployeeTasksScreen() {
   const { setSidebarActivePath } = useSidebarDrawer();
+  const { hasPermission, isOwner } = usePermissions();
+  const canViewTasks =
+    isOwner() || hasPermission('projects:tasks:view');
+  const canCreateTasks =
+    isOwner() || hasPermission('projects:tasks:create');
+  const canUpdateTasks =
+    isOwner() || hasPermission('projects:tasks:update');
   const [tasks, setTasks] = useState<SubTaskRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -72,6 +80,11 @@ export function MobileEmployeeTasksScreen() {
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
+    if (!canViewTasks) {
+      setTasks([]);
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const res = await getPortalTasks();
@@ -81,7 +94,7 @@ export function MobileEmployeeTasksScreen() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [canViewTasks]);
 
   useEffect(() => {
     setSidebarActivePath('/employee-portal/tasks');
@@ -103,6 +116,10 @@ export function MobileEmployeeTasksScreen() {
   };
 
   const create = async () => {
+    if (!canCreateTasks) {
+      appAlert('Tasks', 'You do not have permission to create tasks');
+      return;
+    }
     if (!title.trim()) {
       appAlert('Tasks', 'Title is required');
       return;
@@ -129,6 +146,10 @@ export function MobileEmployeeTasksScreen() {
 
   const log = async () => {
     if (!selected) return;
+    if (!canUpdateTasks) {
+      appAlert('Tasks', 'You do not have permission to update tasks');
+      return;
+    }
     const h = parseFloat(logHours);
     if (!Number.isFinite(h) || h <= 0) {
       appAlert('Tasks', 'Enter valid hours');
@@ -153,6 +174,10 @@ export function MobileEmployeeTasksScreen() {
   };
 
   const complete = (task: SubTaskRecord) => {
+    if (!canUpdateTasks) {
+      appAlert('Tasks', 'You do not have permission to update tasks');
+      return;
+    }
     appConfirm({
       title: 'Tasks',
       message: `Mark "${task.title}" as done?`,
@@ -186,6 +211,10 @@ export function MobileEmployeeTasksScreen() {
   };
 
   const sendMessage = async (messageType: 'message' | 'info_request') => {
+    if (!canUpdateTasks) {
+      appAlert('Tasks', 'You do not have permission to update tasks');
+      return;
+    }
     if (!selected || !messageBody.trim()) {
       appAlert('Tasks', 'Enter a message');
       return;
@@ -209,6 +238,18 @@ export function MobileEmployeeTasksScreen() {
     }
   };
 
+  if (!canViewTasks) {
+    return (
+      <WorkshopChrome title="My tasks" subtitle="Assigned tasks and logs">
+        <WorkshopEmptyState
+          icon="lock-closed-outline"
+          title="No access"
+          subtitle="You do not have permission to view tasks."
+        />
+      </WorkshopChrome>
+    );
+  }
+
   if (loading && tasks.length === 0) return <WorkshopLoading />;
 
   return (
@@ -226,9 +267,13 @@ export function MobileEmployeeTasksScreen() {
             <WorkshopEmptyState
               icon="checkbox-outline"
               title="No tasks"
-              subtitle="Create or wait for assigned tasks."
-              actionLabel="Create task"
-              onAction={() => setCreateOpen(true)}
+              subtitle={
+                canCreateTasks
+                  ? 'Create or wait for assigned tasks.'
+                  : 'No tasks assigned to you yet.'
+              }
+              actionLabel={canCreateTasks ? 'Create task' : undefined}
+              onAction={canCreateTasks ? () => setCreateOpen(true) : undefined}
             />
           }
           renderItem={({ item }) => {
@@ -262,7 +307,9 @@ export function MobileEmployeeTasksScreen() {
           }}
         />
       </WorkshopChrome>
-      <WorkshopFAB onPress={() => setCreateOpen(true)} />
+      {canCreateTasks ? (
+        <WorkshopFAB onPress={() => setCreateOpen(true)} />
+      ) : null}
 
       <WorkshopFormSheet
         visible={detailOpen}
@@ -271,33 +318,35 @@ export function MobileEmployeeTasksScreen() {
         footer={
           selected ? (
             <View style={{ gap: 8 }}>
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                <View style={{ flex: 1 }}>
-                  <WorkshopPrimaryButton
-                    label="Ask / Chat"
-                    onPress={() => void openChat(selected)}
-                  />
+              {canUpdateTasks ? (
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <View style={{ flex: 1 }}>
+                    <WorkshopPrimaryButton
+                      label="Ask / Chat"
+                      onPress={() => void openChat(selected)}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Pressable
+                      onPress={() => {
+                        setDetailOpen(false);
+                        setLogOpen(true);
+                      }}
+                      style={{
+                        alignItems: 'center',
+                        borderRadius: 14,
+                        paddingVertical: 15,
+                        borderWidth: 1,
+                        borderColor: WS.primary,
+                        backgroundColor: '#fff',
+                      }}
+                    >
+                      <Text style={{ fontWeight: '700', fontSize: 16, color: WS.primary }}>Log time</Text>
+                    </Pressable>
+                  </View>
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Pressable
-                    onPress={() => {
-                      setDetailOpen(false);
-                      setLogOpen(true);
-                    }}
-                    style={{
-                      alignItems: 'center',
-                      borderRadius: 14,
-                      paddingVertical: 15,
-                      borderWidth: 1,
-                      borderColor: WS.primary,
-                      backgroundColor: '#fff',
-                    }}
-                  >
-                    <Text style={{ fontWeight: '700', fontSize: 16, color: WS.primary }}>Log time</Text>
-                  </Pressable>
-                </View>
-              </View>
-              {selected.status !== 'completed' ? (
+              ) : null}
+              {canUpdateTasks && selected.status !== 'completed' ? (
                 <WorkshopPrimaryButton
                   label="Mark as done"
                   onPress={() => complete(selected)}
