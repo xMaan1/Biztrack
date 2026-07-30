@@ -191,6 +191,7 @@ export interface Contact {
   birthday?: string | null;
   businessTaxId?: string | null;
   website?: string | null;
+  image_url?: string;
   addresses?: ContactAddressRow[];
   socialLinks?: ContactSocialLinks;
   assignedTo?: string;
@@ -229,6 +230,7 @@ export interface ContactCreate {
   birthday?: string | null;
   businessTaxId?: string | null;
   website?: string | null;
+  image_url?: string;
   addresses?: ContactAddressRow[];
   socialLinks?: ContactSocialLinks;
   assignedTo?: string;
@@ -257,6 +259,7 @@ export interface ContactUpdate {
   birthday?: string | null;
   businessTaxId?: string | null;
   website?: string | null;
+  image_url?: string;
   addresses?: ContactAddressRow[];
   socialLinks?: ContactSocialLinks;
   assignedTo?: string;

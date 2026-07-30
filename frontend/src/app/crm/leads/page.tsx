@@ -1,10 +1,9 @@
 'use client';
 
 import React, { Suspense, useState, useEffect, useCallback } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
 import { Input } from '@/src/components/ui/input';
 import {
   Select,
@@ -23,7 +22,7 @@ import {
 import { Label } from '@/src/components/ui/label';
 import { Textarea } from '@/src/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/src/components/ui/avatar';
-import { Plus, Search, Bell, Settings } from 'lucide-react';
+import { Plus, Search, Bell, RotateCcw, HelpCircle, MessageSquare, Mail, ListFilter } from 'lucide-react';
 import { LeadsListCard } from '@/src/components/crm/leads/LeadsListCard';
 import CRMService from '@/src/services/CRMService';
 import {
@@ -48,15 +47,24 @@ export default function CRMLeadsPage() {
   );
 }
 
-const PRIORITY_OPTIONS = [
-  { key: 'urgent', label: 'URGENT', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
-  { key: 'high', label: 'HIGH', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' },
-  { key: 'medium', label: 'MEDIUM', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  { key: 'low', label: 'LOW', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
+const PINNED_FILTERS = [
+  { key: '1st', label: '1st Priority', color: 'bg-blue-500 text-white' },
+  { key: '2nd', label: '2nd Priority', color: 'bg-purple-500 text-white' },
+  { key: '3rd', label: '3rd Priority', color: 'bg-sky-400 text-white' },
+  { key: 'hot', label: 'Hot Leads', color: 'bg-orange-500 text-white' },
+  { key: 'warm', label: 'Warm Leads', color: 'bg-yellow-500 text-white' },
+  { key: 'cold', label: 'Cold Leads', color: 'bg-gray-400 text-white' },
 ];
+
+const PRIORITY_MAP: Record<string, string | undefined> = {
+  '1st': 'urgent',
+  '2nd': 'high',
+  '3rd': 'low',
+};
 
 function CRMLeadsContent() {
   const confirm = useConfirm();
+  const router = useRouter();
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const searchParams = useSearchParams();
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -72,11 +80,10 @@ function CRMLeadsContent() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [showCustomLeadSourceDialog, setShowCustomLeadSourceDialog] = useState(false);
+  const [activePinned, setActivePinned] = useState<string | null>(null);
 
-  const activePriority = filters.priority || null;
   const activeSearch = filters.search || '';
 
   const {
@@ -178,7 +185,6 @@ function CRMLeadsContent() {
       const updated = await CRMService.updateLead(selectedLead.id, payload) as Lead;
       setSelectedLead(updated);
       setIsEditDialogOpen(false);
-      setIsViewDialogOpen(true);
       loadLeads();
     } catch (err) {
       setFormError('Failed to update lead. Please try again.');
@@ -199,14 +205,23 @@ function CRMLeadsContent() {
   const resetFilters = () => {
     setFilters({});
     setSearch('');
+    setActivePinned(null);
     setPage(1);
   };
 
-  const togglePriority = (priority: string) => {
-    setFilters((prev) => ({
-      ...prev,
-      priority: prev.priority === priority ? undefined : priority,
-    }));
+  const togglePinned = (key: string) => {
+    if (activePinned === key) {
+      setActivePinned(null);
+      setFilters((prev) => {
+        const next = { ...prev };
+        delete next.priority;
+        return next;
+      });
+    } else {
+      setActivePinned(key);
+      const priorityVal = PRIORITY_MAP[key];
+      setFilters((prev) => ({ ...prev, priority: priorityVal }));
+    }
     setPage(1);
   };
 
@@ -249,160 +264,193 @@ function CRMLeadsContent() {
     );
   }
 
+  const showClear = activeSearch || Object.keys(filters).some((k) => k !== 'sortBy' && filters[k as keyof CRMLeadFilters] !== undefined);
+
   return (
     <DashboardLayout>
-      <div className="container mx-auto p-6 space-y-4">
-        {/* Top Action Bar */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Select value="apply_actions" onValueChange={() => {}}>
-              <SelectTrigger className="w-[140px] h-9 text-sm">
-                <SelectValue placeholder="APPLY ACTIONS" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="apply_actions" disabled>APPLY ACTIONS</SelectItem>
-                <SelectItem value="assign">Assign to user</SelectItem>
-                <SelectItem value="change_status">Change status</SelectItem>
-                <SelectItem value="change_priority">Change priority</SelectItem>
-                <SelectItem value="delete_selected">Delete selected</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value="saved_filter" onValueChange={() => {}}>
-              <SelectTrigger className="w-[170px] h-9 text-sm">
-                <SelectValue placeholder="APPLY SAVED FILTER" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="saved_filter" disabled>APPLY SAVED FILTER</SelectItem>
-                <SelectItem value="all_leads">All Leads</SelectItem>
-                <SelectItem value="new_leads">New Leads</SelectItem>
-                <SelectItem value="high_priority">High Priority</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <Bell className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <Settings className="w-4 h-4" />
-            </Button>
-            <Avatar className="h-8 w-8">
-              <AvatarFallback className="text-xs bg-primary/10 text-primary">AD</AvatarFallback>
-            </Avatar>
-            <Button size="sm" className="h-9" onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="w-4 h-4 mr-1" /> ADD NEW LEAD
-            </Button>
-          </div>
-        </div>
+      <div className="bg-white min-h-screen">
+        <div className="px-6 py-5 space-y-5">
 
-        {/* Pinned Priority Filters */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {PRIORITY_OPTIONS.map((opt) => (
-            <button
-              key={opt.key}
-              onClick={() => togglePriority(opt.key)}
-              className={`text-[11px] font-semibold px-3 py-1 rounded-full border transition-colors cursor-pointer ${
-                activePriority === opt.key
-                  ? `${opt.color} border-transparent`
-                  : 'bg-background text-muted-foreground border-muted-foreground/20 hover:border-muted-foreground/40'
-              }`}
+          {/* TOP ACTION BAR */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-500 hover:text-gray-700" onClick={loadLeads}>
+                <RotateCcw className="w-4 h-4" />
+              </Button>
+              <Select value="apply_actions" onValueChange={() => {}}>
+                <SelectTrigger className="w-[150px] h-9 text-[12px] rounded-lg border-gray-200">
+                  <SelectValue placeholder="APPLY ACTIONS" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="apply_actions" disabled>APPLY ACTIONS</SelectItem>
+                  <SelectItem value="assign">Assign to user</SelectItem>
+                  <SelectItem value="change_status">Change status</SelectItem>
+                  <SelectItem value="change_priority">Change priority</SelectItem>
+                  <SelectItem value="delete_selected">Delete selected</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value="saved_filter" onValueChange={() => {}}>
+                <SelectTrigger className="w-[180px] h-9 text-[12px] rounded-lg border-gray-200">
+                  <SelectValue placeholder="APPLY SAVED FILTER" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="saved_filter" disabled>APPLY SAVED FILTER</SelectItem>
+                  <SelectItem value="all_leads">All Leads</SelectItem>
+                  <SelectItem value="new_leads">New Leads</SelectItem>
+                  <SelectItem value="high_priority">High Priority</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button
+              size="default"
+              className="h-10 px-6 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold text-[13px] shadow-sm"
+              onClick={() => setIsCreateDialogOpen(true)}
             >
-              {opt.label}
-            </button>
-          ))}
-          {activePriority && (
-            <button
-              onClick={() => {
-                setFilters((prev) => { const next = { ...prev }; delete next.priority; return next; });
-                setPage(1);
-              }}
-              className="text-xs text-muted-foreground hover:text-foreground ml-1"
-            >
-              × Clear
-            </button>
-          )}
-        </div>
-
-        {/* Filter & Search Controls */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <Select value="date_range" onValueChange={() => {}}>
-            <SelectTrigger className="w-[180px] h-9 text-sm">
-              <SelectValue placeholder="Custom Date Range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="date_range" disabled>Custom Date Range</SelectItem>
-              <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="7d">Last 7 Days</SelectItem>
-              <SelectItem value="30d">Last 30 Days</SelectItem>
-              <SelectItem value="90d">Last 90 Days</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select
-            value={filters.sortBy || 'updatedAt'}
-            onValueChange={(v) => {
-              setFilters((prev) => ({ ...prev, sortBy: v || undefined }));
-              setPage(1);
-            }}
-          >
-            <SelectTrigger className="w-[160px] h-9 text-sm">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="updatedAt">Date Modified</SelectItem>
-              <SelectItem value="createdAt">Date Created</SelectItem>
-              <SelectItem value="name">Name</SelectItem>
-              <SelectItem value="budget">Budget</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select
-            value={String(pageSize)}
-            onValueChange={(v) => {
-              setPageSize(Number(v));
-              setPage(1);
-            }}
-          >
-            <SelectTrigger className="w-[130px] h-9 text-sm">
-              <SelectValue placeholder="10 Per Page" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="10">10 Per Page</SelectItem>
-              <SelectItem value="25">25 Per Page</SelectItem>
-              <SelectItem value="50">50 Per Page</SelectItem>
-            </SelectContent>
-          </Select>
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by name, email, company..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
-              className="pl-9 h-9 text-sm"
-            />
-          </div>
-          {(activeSearch || Object.keys(filters).some((k) => k !== 'sortBy' && filters[k as keyof CRMLeadFilters] !== undefined)) && (
-            <Button variant="ghost" size="sm" className="h-9 text-xs" onClick={resetFilters}>
-              Clear
+              <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center mr-2">
+                <Plus className="w-3 h-3 text-white" />
+              </span>
+              ADD NEW LEAD
             </Button>
-          )}
-        </div>
 
-        {/* Leads Table */}
-        <LeadsListCard
-          leads={leads}
-          totalCount={totalCount}
-          page={page}
-          totalPages={totalPages}
-          pageSize={pageSize}
-          listLoading={listLoading}
-          selectedIds={selectedIds}
-          onSelectLead={toggleSelectLead}
-          onSelectAll={toggleSelectAll}
-          onPageChange={setPage}
-          onView={(lead) => { setSelectedLead(lead); setIsViewDialogOpen(true); }}
-          onEdit={openEditLead}
-          onDelete={handleDeleteLead}
-        />
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-400 hover:text-gray-600">
+                <HelpCircle className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-400 hover:text-gray-600">
+                <MessageSquare className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-400 hover:text-gray-600">
+                <Mail className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-400 hover:text-gray-600">
+                <Bell className="w-4 h-4" />
+              </Button>
+              <Avatar className="h-8 w-8 ml-2">
+                <AvatarFallback className="text-[11px] bg-blue-500 text-white font-medium">AD</AvatarFallback>
+              </Avatar>
+            </div>
+          </div>
+
+          {/* PINNED FILTERS ROW */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[12px] font-medium text-gray-600 mr-1">Pinned:</span>
+            {PINNED_FILTERS.map((pf) => (
+              <button
+                key={pf.key}
+                onClick={() => togglePinned(pf.key)}
+                className={`text-[11px] font-semibold px-3.5 py-1 rounded-full transition-colors cursor-pointer ${
+                  activePinned === pf.key
+                    ? `${pf.color} shadow-sm`
+                    : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300 hover:text-gray-700'
+                }`}
+              >
+                {pf.label}
+              </button>
+            ))}
+            {showClear && (
+              <button
+                onClick={resetFilters}
+                className="text-[11px] text-gray-400 hover:text-gray-600 ml-1 underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
+          {/* FILTER BAR */}
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1 text-gray-600">
+                <ListFilter className="w-4 h-4" />
+                <span className="text-[12px] font-semibold uppercase">Filters</span>
+              </div>
+              <Select value="date_range" onValueChange={() => {}}>
+                <SelectTrigger className="w-[160px] h-8 text-[11px] rounded-lg border-gray-200">
+                  <SelectValue placeholder="Date Created" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date_range" disabled>Date Created</SelectItem>
+                  <SelectItem value="today">Today</SelectItem>
+                  <SelectItem value="7d">Last 7 Days</SelectItem>
+                  <SelectItem value="30d">Last 30 Days</SelectItem>
+                  <SelectItem value="90d">Last 90 Days</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                value={filters.sortBy || 'updatedAt'}
+                onValueChange={(v) => {
+                  setFilters((prev) => ({ ...prev, sortBy: v || undefined }));
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-[180px] h-8 text-[11px] rounded-lg border-gray-200">
+                  <SelectValue placeholder="Show most recent first" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="updatedAt">Show most recent first</SelectItem>
+                  <SelectItem value="createdAt">Date Created</SelectItem>
+                  <SelectItem value="name">Name</SelectItem>
+                  <SelectItem value="budget">Budget</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                value={String(pageSize)}
+                onValueChange={(v) => {
+                  setPageSize(Number(v));
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-[90px] h-8 text-[11px] rounded-lg border-gray-200">
+                  <SelectValue placeholder="10" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10 / Page</SelectItem>
+                  <SelectItem value="25">25 / Page</SelectItem>
+                  <SelectItem value="50">50 / Page</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  placeholder="Search leads..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
+                  className="w-[260px] h-9 pl-9 text-[12px] rounded-full border-gray-200 bg-gray-50"
+                />
+              </div>
+              <Button
+                size="sm"
+                className="h-9 px-5 bg-blue-500 hover:bg-blue-600 text-white text-[12px] font-semibold rounded-lg"
+                onClick={handleSearch}
+              >
+                Search
+              </Button>
+            </div>
+          </div>
+
+          {/* Leads Table */}
+          <LeadsListCard
+            leads={leads}
+            totalCount={totalCount}
+            page={page}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            listLoading={listLoading}
+            selectedIds={selectedIds}
+            onSelectLead={toggleSelectLead}
+            onSelectAll={toggleSelectAll}
+            onPageChange={setPage}
+            onView={(lead) => { router.push(`/crm/leads/${lead.id}`); }}
+            onEdit={openEditLead}
+            onDelete={handleDeleteLead}
+          />
+
+        </div>
 
         {/* Create Lead Dialog */}
         <Dialog open={isCreateDialogOpen} onOpenChange={(open) => { setIsCreateDialogOpen(open); if (!open) setFormError(null); }}>
@@ -560,97 +608,6 @@ function CRMLeadsContent() {
             <div className="flex justify-end space-x-2">
               <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
               <Button onClick={handleUpdateLead}>Update Lead</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* View Lead Dialog */}
-        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Lead Details</DialogTitle>
-              <DialogDescription>View complete lead information</DialogDescription>
-            </DialogHeader>
-            {selectedLead && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="font-medium">Name</Label>
-                    <p>{selectedLead.firstName} {selectedLead.lastName}</p>
-                  </div>
-                  <div>
-                    <Label className="font-medium">Email</Label>
-                    <p>{selectedLead.email}</p>
-                  </div>
-                  <div>
-                    <Label className="font-medium">Phone</Label>
-                    <p>{selectedLead.phone || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <Label className="font-medium">Company</Label>
-                    <p>{selectedLead.company || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <Label className="font-medium">Job Title</Label>
-                    <p>{selectedLead.jobTitle || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <Label className="font-medium">Status</Label>
-                    <Badge className={CRMService.getLeadStatusColor(selectedLead.status ?? 'new')}>
-                      {(selectedLead.status ?? 'new').charAt(0).toUpperCase() + (selectedLead.status ?? 'new').slice(1)}
-                    </Badge>
-                  </div>
-                  <div>
-                    <Label className="font-medium">Source</Label>
-                    <Badge variant="outline">
-                      {((selectedLead.leadSource ?? selectedLead.source) ?? '').replace('_', ' ').charAt(0).toUpperCase() +
-                        ((selectedLead.leadSource ?? selectedLead.source) ?? '').replace('_', ' ').slice(1)}
-                    </Badge>
-                  </div>
-                  <div>
-                    <Label className="font-medium">Score</Label>
-                    <p>{selectedLead.score}</p>
-                  </div>
-                  <div>
-                    <Label className="font-medium">Budget</Label>
-                    <p>{selectedLead.budget ? CRMService.formatCurrency(selectedLead.budget) : 'N/A'}</p>
-                  </div>
-                </div>
-                {selectedLead.notes && (
-                  <div>
-                    <Label className="font-medium">Notes</Label>
-                    <p className="text-gray-600">{selectedLead.notes}</p>
-                  </div>
-                )}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="font-medium">Created</Label>
-                    <p>{CRMService.formatDateTime(selectedLead.createdAt)}</p>
-                  </div>
-                  <div>
-                    <Label className="font-medium">Last Updated</Label>
-                    <p>{CRMService.formatDateTime(selectedLead.updatedAt)}</p>
-                  </div>
-                  {selectedLead.lastContactDate && (
-                    <div>
-                      <Label className="font-medium">Last Contact</Label>
-                      <p>{CRMService.formatDate(selectedLead.lastContactDate)}</p>
-                    </div>
-                  )}
-                  {selectedLead.nextFollowUpDate && (
-                    <div>
-                      <Label className="font-medium">Next Follow-up</Label>
-                      <p>{CRMService.formatDate(selectedLead.nextFollowUpDate)}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>Close</Button>
-              <Button onClick={() => { setIsViewDialogOpen(false); if (selectedLead) openEditLead(selectedLead); }}>
-                Edit Lead
-              </Button>
             </div>
           </DialogContent>
         </Dialog>
