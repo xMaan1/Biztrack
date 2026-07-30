@@ -337,6 +337,7 @@ function CRMContactsContent() {
             : null,
           website: formData.website?.trim() || null,
           assignedTo: formData.assignedTo || undefined,
+          image_url: formData.image_url || undefined,
         };
         await CRMService.updateContact(editingContact.id, payload);
         toast.success('Contact updated successfully!');
