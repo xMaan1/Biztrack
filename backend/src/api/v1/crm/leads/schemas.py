@@ -63,6 +63,7 @@ class Lead(LeadBase):
     id: UUID
     tenant_id: UUID
     email: str
+    priority: str = "medium"
     createdBy: Optional[str] = None
     assignedToUser: Optional[Dict[str, str]] = None
     convertedToContact: Optional[str] = None

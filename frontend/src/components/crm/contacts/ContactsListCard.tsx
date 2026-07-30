@@ -16,6 +16,7 @@ import {
   TableRow,
 } from '@/src/components/ui/table';
 import { Edit, Trash2, Eye, ExternalLink } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import CRMService from '@/src/services/CRMService';
 import { Company, Contact } from '@/src/models/crm';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
@@ -33,7 +34,6 @@ type ContactsListCardProps = {
   totalPages: number;
   listLoading?: boolean;
   onPageChange: (page: number) => void;
-  onView: (contact: Contact) => void;
   onEdit: (contact: Contact) => void;
   onDelete: (contact: Contact) => void;
 };
@@ -62,11 +62,11 @@ export function ContactsListCard({
   totalPages,
   listLoading = false,
   onPageChange,
-  onView,
   onEdit,
   onDelete,
 }: ContactsListCardProps) {
   const { formatCurrency } = useCurrency();
+  const router = useRouter();
   const companyById = new Map(companies.map((c) => [c.id, c]));
 
   function money(value?: number): string {
@@ -122,7 +122,7 @@ export function ContactsListCard({
                   : undefined;
                 const site = contact.website?.trim();
                 return (
-                  <TableRow key={contact.id}>
+                    <TableRow key={contact.id} className="cursor-pointer" onClick={() => router.push(`/crm/contacts/${contact.id}`)}>
                     <TableCell className="font-medium whitespace-nowrap">
                       {contact.firstName} {contact.lastName}
                     </TableCell>
@@ -191,7 +191,10 @@ export function ContactsListCard({
                           variant="outline"
                           size="sm"
                           className="h-8 w-8 p-0"
-                          onClick={() => onView(contact)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/crm/contacts/${contact.id}`);
+                          }}
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
@@ -199,7 +202,10 @@ export function ContactsListCard({
                           variant="outline"
                           size="sm"
                           className="h-8 w-8 p-0"
-                          onClick={() => onEdit(contact)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit(contact);
+                          }}
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
@@ -207,7 +213,10 @@ export function ContactsListCard({
                           variant="outline"
                           size="sm"
                           className="h-8 w-8 p-0"
-                          onClick={() => onDelete(contact)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete(contact);
+                          }}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>

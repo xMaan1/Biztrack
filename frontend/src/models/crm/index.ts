@@ -79,6 +79,7 @@ export interface Lead {
   status: LeadStatus;
   source: LeadSource;
   leadSource?: LeadSource;
+  priority?: string;
   assignedTo?: string;
   notes?: string;
   tags: string[];
@@ -508,6 +509,9 @@ export interface CRMLeadFilters {
   source?: LeadSource;
   assignedTo?: string;
   search?: string;
+  priority?: string;
+  sortBy?: string;
+  sortOrder?: string;
 }
 
 export type ContactDateField = 'created' | 'updated' | 'last_contacted';

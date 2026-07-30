@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import { DashboardLayout } from '../../../components/layout';
 import { useCustomOptions } from '../../../hooks/useCustomOptions';
@@ -32,7 +32,6 @@ import { ContactsPageHeader } from '@/src/components/crm/contacts/ContactsPageHe
 import { ContactsFiltersCard } from '@/src/components/crm/contacts/ContactsFiltersCard';
 import { ContactsListCard } from '@/src/components/crm/contacts/ContactsListCard';
 import { ContactFormDialog } from '@/src/components/crm/contacts/ContactFormDialog';
-import { ContactViewDialog } from '@/src/components/crm/contacts/ContactViewDialog';
 import { ContactDeleteDialog } from '@/src/components/crm/contacts/ContactDeleteDialog';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { User } from '@/src/models';
@@ -55,9 +54,7 @@ const CONTACTS_PAGE_SIZE = 20;
 
 function CRMContactsContent() {
   const { user } = useAuth();
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const openedContactIdRef = useRef<string | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [listLoading, setListLoading] = useState(false);
@@ -68,7 +65,6 @@ function CRMContactsContent() {
   const [search, setSearch] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
-  const [viewingContact, setViewingContact] = useState<Contact | null>(null);
   const [deletingContact, setDeletingContact] = useState<Contact | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -198,25 +194,6 @@ function CRMContactsContent() {
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
-
-  useEffect(() => {
-    const contactId = searchParams.get('contactId')?.trim();
-    if (!contactId || openedContactIdRef.current === contactId) {
-      return;
-    }
-    openedContactIdRef.current = contactId;
-
-    (async () => {
-      try {
-        const contact = await CRMService.getContact(contactId);
-        setViewingContact(contact);
-      } catch {
-        toast.error('Contact not found');
-      } finally {
-        router.replace('/crm/contacts', { scroll: false });
-      }
-    })();
-  }, [searchParams, router]);
 
   const selectedAssignee = useMemo((): UserSearchItem | null => {
     if (!formData.assignedTo) return null;
@@ -434,10 +411,6 @@ function CRMContactsContent() {
     }));
   };
 
-  const handleView = (contact: Contact) => {
-    setViewingContact(contact);
-  };
-
   const handleDelete = (contact: Contact) => {
     setDeletingContact(contact);
   };
@@ -492,18 +465,17 @@ function CRMContactsContent() {
           users={users}
         />
 
-        <ContactsListCard
-          contacts={contacts}
-          companies={companies}
-          totalCount={totalCount}
-          page={page}
-          totalPages={totalPages}
-          listLoading={listLoading}
-          onPageChange={setPage}
-          onView={handleView}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
+          <ContactsListCard
+            contacts={contacts}
+            companies={companies}
+            totalCount={totalCount}
+            page={page}
+            totalPages={totalPages}
+            listLoading={listLoading}
+            onPageChange={setPage}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
 
         <ContactFormDialog
           open={showCreateDialog}
@@ -538,13 +510,6 @@ function CRMContactsContent() {
           onAttachmentFile={handleAttachmentFile}
           attachmentUploading={attachmentUploading}
           onRemoveAttachment={removeAttachmentAt}
-        />
-
-        <ContactViewDialog
-          contact={viewingContact}
-          companies={companies}
-          onClose={() => setViewingContact(null)}
-          onEdit={handleEdit}
         />
 
         <ContactDeleteDialog

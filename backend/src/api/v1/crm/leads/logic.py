@@ -66,13 +66,15 @@ def delete_lead(lead_id: str, db: Session, tenant_id: str = None) -> bool:
     return delete_by_id(Lead, lead_id, db, tenant_id)
 
 
-def _lead_predicate(status, source, assigned_to, search):
+def _lead_predicate(status, source, assigned_to, search, priority=None):
     def _match(lead: Lead) -> bool:
         if status and lead.status != status:
             return False
         if source and (lead.leadSource or "") != source:
             return False
         if assigned_to and str(lead.assignedToId or "") != str(assigned_to):
+            return False
+        if priority and (lead.priority or "medium") != priority:
             return False
         if search:
             sl = search.lower()
@@ -94,6 +96,9 @@ def get_crm_leads(
     source: Optional[str] = None,
     assigned_to: Optional[str] = None,
     search: Optional[str] = None,
+    priority: Optional[str] = None,
+    sort_by: Optional[str] = None,
+    sort_order: Optional[str] = "desc",
     page: int = 1,
     limit: int = 10,
 ):
@@ -102,8 +107,18 @@ def get_crm_leads(
         tid = tenant_id_optional(tenant_context)
         leads = get_leads(db, tid, skip, limit)
         leads = apply_scoped_filters(
-            leads, tenant_context, current_user, _lead_predicate(status, source, assigned_to, search)
+            leads, tenant_context, current_user, _lead_predicate(status, source, assigned_to, search, priority)
         )
+        if sort_by:
+            sort_desc = sort_order == "desc"
+            if sort_by == "name":
+                leads.sort(key=lambda l: f"{l.firstName} {l.lastName}".lower(), reverse=sort_desc)
+            elif sort_by == "createdAt":
+                leads.sort(key=lambda l: l.createdAt or "", reverse=sort_desc)
+            elif sort_by == "updatedAt":
+                leads.sort(key=lambda l: l.updatedAt or "", reverse=sort_desc)
+            elif sort_by == "budget":
+                leads.sort(key=lambda l: l.budget or 0, reverse=sort_desc)
         total = len(leads)
         serialized = [LeadSchema.model_validate(lead) for lead in leads]
         return CRMLeadsResponse(leads=serialized, pagination=pagination(page, limit, total))

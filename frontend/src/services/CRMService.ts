@@ -133,6 +133,9 @@ export class CRMService {
     if (filters?.source) params.append('source', filters.source);
     if (filters?.assignedTo) params.append('assigned_to', filters.assignedTo);
     if (filters?.search) params.append('search', filters.search);
+    if (filters?.priority) params.append('priority', filters.priority);
+    if (filters?.sortBy) params.append('sort_by', filters.sortBy);
+    if (filters?.sortOrder) params.append('sort_order', filters.sortOrder);
     params.append('page', page.toString());
     params.append('limit', limit.toString());
 

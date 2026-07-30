@@ -18,6 +18,9 @@ async def get_crm_leads(
     source: Optional[str] = Query(None),
     assigned_to: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
+    priority: Optional[str] = Query(None),
+    sort_by: Optional[str] = Query(None),
+    sort_order: Optional[str] = Query("desc"),
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=1000),
     db: Session = Depends(get_db),
@@ -25,7 +28,7 @@ async def get_crm_leads(
     tenant_context: Optional[dict] = Depends(get_tenant_context),
     _: dict = Depends(require_permission(ModulePermission.CRM_VIEW.value)),
 ):
-    return logic.get_crm_leads(db, current_user, tenant_context, status, source, assigned_to, search, page, limit)
+    return logic.get_crm_leads(db, current_user, tenant_context, status, source, assigned_to, search, priority, sort_by, sort_order, page, limit)
 
 
 @router.post("/leads", response_model=Lead)
