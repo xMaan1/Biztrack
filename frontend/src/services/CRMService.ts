@@ -129,18 +129,29 @@ export class CRMService {
     limit: number = 10,
   ): Promise<CRMLeadsResponse> {
     const params = new URLSearchParams();
-    if (filters?.status) params.append('status', filters.status);
-    if (filters?.source) params.append('source', filters.source);
+    if (filters?.status) params.append('status', String(filters.status));
+    if (filters?.source) params.append('source', String(filters.source));
     if (filters?.assignedTo) params.append('assigned_to', filters.assignedTo);
     if (filters?.search) params.append('search', filters.search);
+    if (filters?.pipeline) params.append('pipeline', filters.pipeline);
+    if (filters?.rating) params.append('rating', filters.rating);
+    if (filters?.priority) params.append('priority', filters.priority);
+    if (filters?.leadType) params.append('lead_type', filters.leadType);
+    if (filters?.isPartial != null)
+      params.append('is_partial', String(filters.isPartial));
+    if (filters?.sort) params.append('sort', filters.sort);
     params.append('page', page.toString());
     params.append('limit', limit.toString());
 
     return this.apiService.get(`/crm/leads?${params.toString()}`);
   }
 
-  async getLead(id: string): Promise<Lead> {
+  async getLead(id: string): Promise<any> {
     return this.apiService.get(`/crm/leads/${id}`);
+  }
+
+  async getLeadDetail(id: string): Promise<any> {
+    return this.apiService.get(`/crm/leads/${id}/detail`);
   }
 
   async createLead(lead: LeadCreate): Promise<Lead> {
@@ -171,6 +182,210 @@ export class CRMService {
 
   async deleteLead(id: string): Promise<void> {
     return this.apiService.delete(`/crm/leads/${id}`);
+  }
+
+  async bulkLeadAction(data: {
+    leadIds: string[];
+    action: string;
+    assignedTo?: string;
+    pipelineStage?: string;
+    status?: string;
+    leadRating?: string;
+    priority?: string;
+    tags?: string[];
+  }): Promise<{ message: string; updated: number }> {
+    return this.apiService.post('/crm/leads/bulk', data);
+  }
+
+  async updateLeadPipeline(id: string, pipelineStage: string): Promise<any> {
+    return this.apiService.post(`/crm/leads/${id}/pipeline`, { pipelineStage });
+  }
+
+  async getLeadTimeline(id: string): Promise<any[]> {
+    return this.apiService.get(`/crm/leads/${id}/timeline`);
+  }
+
+  async getLeadNotes(id: string, hideSystem = false): Promise<any[]> {
+    return this.apiService.get(
+      `/crm/leads/${id}/notes?hide_system=${hideSystem}`,
+    );
+  }
+
+  async createLeadNote(
+    id: string,
+    data: {
+      commType?: string;
+      callResult?: string;
+      content?: string;
+      occurredAt?: string;
+    },
+  ): Promise<any> {
+    return this.apiService.post(`/crm/leads/${id}/notes`, data);
+  }
+
+  async deleteLeadNote(leadId: string, noteId: string): Promise<void> {
+    return this.apiService.delete(`/crm/leads/${leadId}/notes/${noteId}`);
+  }
+
+  async getLeadTasks(id: string, includeCompleted = false): Promise<any[]> {
+    return this.apiService.get(
+      `/crm/leads/${id}/tasks?include_completed=${includeCompleted}`,
+    );
+  }
+
+  async createLeadTask(id: string, data: Record<string, unknown>): Promise<any> {
+    return this.apiService.post(`/crm/leads/${id}/tasks`, data);
+  }
+
+  async updateLeadTask(
+    leadId: string,
+    taskId: string,
+    data: Record<string, unknown>,
+  ): Promise<any> {
+    return this.apiService.put(`/crm/leads/${leadId}/tasks/${taskId}`, data);
+  }
+
+  async completeLeadTask(leadId: string, taskId: string): Promise<any> {
+    return this.apiService.post(
+      `/crm/leads/${leadId}/tasks/${taskId}/complete`,
+      {},
+    );
+  }
+
+  async pushLeadTask(leadId: string, taskId: string, hours = 24): Promise<any> {
+    return this.apiService.post(
+      `/crm/leads/${leadId}/tasks/${taskId}/push?hours=${hours}`,
+      {},
+    );
+  }
+
+  async deleteLeadTask(leadId: string, taskId: string): Promise<void> {
+    return this.apiService.delete(`/crm/leads/${leadId}/tasks/${taskId}`);
+  }
+
+  async getLeadEmails(id: string, direction?: string): Promise<any[]> {
+    const q = direction ? `?direction=${direction}` : '';
+    return this.apiService.get(`/crm/leads/${id}/emails${q}`);
+  }
+
+  async composeLeadEmail(
+    id: string,
+    data: { subject: string; body: string; toEmail?: string },
+  ): Promise<any> {
+    return this.apiService.post(`/crm/leads/${id}/emails`, data);
+  }
+
+  async getLeadSms(id: string): Promise<any[]> {
+    return this.apiService.get(`/crm/leads/${id}/sms`);
+  }
+
+  async sendLeadSms(
+    id: string,
+    data: { body: string; toPhone?: string },
+  ): Promise<any> {
+    return this.apiService.post(`/crm/leads/${id}/sms`, data);
+  }
+
+  async getLeadCampaigns(): Promise<any[]> {
+    return this.apiService.get('/crm/leads/campaigns');
+  }
+
+  async createLeadCampaign(data: {
+    name: string;
+    description?: string;
+    steps?: Record<string, unknown>[];
+  }): Promise<any> {
+    return this.apiService.post('/crm/leads/campaigns', data);
+  }
+
+  async getLeadCampaignAssignments(id: string): Promise<any[]> {
+    return this.apiService.get(`/crm/leads/${id}/campaign-assignments`);
+  }
+
+  async assignLeadCampaign(id: string, campaignId: string): Promise<any> {
+    return this.apiService.post(`/crm/leads/${id}/campaign-assignments`, {
+      campaignId,
+    });
+  }
+
+  async leadCampaignAction(
+    leadId: string,
+    assignmentId: string,
+    action: string,
+  ): Promise<any> {
+    return this.apiService.post(
+      `/crm/leads/${leadId}/campaign-assignments/${assignmentId}/${action}`,
+      {},
+    );
+  }
+
+  async getListingSearches(id: string): Promise<any[]> {
+    return this.apiService.get(`/crm/leads/${id}/listing-searches`);
+  }
+
+  async createListingSearch(
+    id: string,
+    data: Record<string, unknown>,
+  ): Promise<any> {
+    return this.apiService.post(`/crm/leads/${id}/listing-searches`, data);
+  }
+
+  async deleteListingSearch(leadId: string, searchId: string): Promise<void> {
+    return this.apiService.delete(
+      `/crm/leads/${leadId}/listing-searches/${searchId}`,
+    );
+  }
+
+  async runListingSearch(leadId: string, searchId: string): Promise<any> {
+    return this.apiService.post(
+      `/crm/leads/${leadId}/listing-searches/${searchId}/run`,
+      {},
+    );
+  }
+
+  async getPropertyViews(id: string): Promise<any[]> {
+    return this.apiService.get(`/crm/leads/${id}/property-views`);
+  }
+
+  async createPropertyView(
+    id: string,
+    data: Record<string, unknown>,
+  ): Promise<any> {
+    return this.apiService.post(`/crm/leads/${id}/property-views`, data);
+  }
+
+  async getLeadSales(id: string): Promise<any[]> {
+    return this.apiService.get(`/crm/leads/${id}/sales`);
+  }
+
+  async createLeadSale(id: string, data: Record<string, unknown>): Promise<any> {
+    return this.apiService.post(`/crm/leads/${id}/sales`, data);
+  }
+
+  async getAdditionalContacts(id: string): Promise<any[]> {
+    return this.apiService.get(`/crm/leads/${id}/additional-contacts`);
+  }
+
+  async createAdditionalContact(
+    id: string,
+    data: Record<string, unknown>,
+  ): Promise<any> {
+    return this.apiService.post(`/crm/leads/${id}/additional-contacts`, data);
+  }
+
+  async getSavedLeadFilters(): Promise<any[]> {
+    return this.apiService.get('/crm/leads/saved-filters');
+  }
+
+  async createSavedLeadFilter(data: Record<string, unknown>): Promise<any> {
+    return this.apiService.post('/crm/leads/saved-filters', data);
+  }
+
+  async getLeadIntegrationsStatus(): Promise<{
+    twilioConfigured: boolean;
+    smtpConfigured: boolean;
+  }> {
+    return this.apiService.get('/crm/leads/integrations/status');
   }
 
   async convertLeadToContact(

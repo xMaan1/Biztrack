@@ -11,6 +11,20 @@ def register_all_models():
 
     from .projects import Project, Task
     from .crm import Lead, Contact, Company, Opportunity, SalesActivity, Customer, CustomerGuarantor
+    from .crm.lead_related import (
+        LeadPipelineHistory,
+        LeadNote,
+        LeadTask,
+        LeadEmail,
+        LeadSms,
+        LeadCampaign,
+        LeadCampaignAssignment,
+        LeadListingSearch,
+        LeadPropertyView,
+        LeadSale,
+        LeadAdditionalContact,
+        LeadSavedFilter,
+    )
     from .crm.agent_portal import AgentSalesTarget, AgentEarnedBadge
     from .crm.client_payment_ledger import ClientPaymentLedger
     from ..config.sales_models import Quote, Contract

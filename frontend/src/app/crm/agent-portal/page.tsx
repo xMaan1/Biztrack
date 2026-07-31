@@ -413,7 +413,11 @@ function LeadsTab({ leads }: { leads: AgentLeadsResponse | null }) {
           </TableHeader>
           <TableBody>
             {leads.leads.map((l) => (
-              <TableRow key={l.id}>
+              <TableRow
+                key={l.id}
+                className="cursor-pointer"
+                onClick={() => (window.location.href = `/crm/leads/${l.id}`)}
+              >
                 <TableCell className="font-medium">{l.firstName} {l.lastName}</TableCell>
                 <TableCell>{l.email}</TableCell>
                 <TableCell>{l.company || '—'}</TableCell>

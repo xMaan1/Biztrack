@@ -1,24 +1,32 @@
-// CRM Enums
-export enum LeadStatus {
-  NEW = 'new',
-  CONTACTED = 'contacted',
-  QUALIFIED = 'qualified',
-  PROPOSAL_SENT = 'proposal_sent',
-  NEGOTIATION = 'negotiation',
-  WON = 'won',
-  LOST = 'lost',
-}
+import type { Lead } from './lead';
 
-export enum LeadSource {
-  WEBSITE = 'website',
-  REFERRAL = 'referral',
-  SOCIAL_MEDIA = 'social_media',
-  EMAIL_CAMPAIGN = 'email_campaign',
-  COLD_CALL = 'cold_call',
-  TRADE_SHOW = 'trade_show',
-  PARTNER = 'partner',
-  OTHER = 'other',
-}
+export {
+  LeadStatus,
+  LeadPipelineStage,
+  LeadRating,
+  LeadSource,
+  PIPELINE_LABELS,
+  CALL_RESULTS,
+} from './lead';
+export type {
+  Lead,
+  LeadCreate,
+  LeadUpdate,
+  LeadNoteItem,
+  LeadTaskItem,
+  LeadEmailItem,
+  LeadSmsItem,
+  LeadCampaignItem,
+  LeadCampaignAssignment,
+  LeadListingSearch,
+  LeadPropertyView,
+  LeadSaleItem,
+  LeadAdditionalContact,
+  LeadSavedFilter,
+  LeadPipelineHistoryItem,
+  CRMLeadFilters,
+  CRMLeadsResponse,
+} from './lead';
 
 export enum OpportunityStage {
   PROSPECTING = 'prospecting',
@@ -65,68 +73,6 @@ export enum Industry {
   REAL_ESTATE = 'real_estate',
   CONSULTING = 'consulting',
   OTHER = 'other',
-}
-
-// CRM Models
-export interface Lead {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  company?: string;
-  jobTitle?: string;
-  status: LeadStatus;
-  source: LeadSource;
-  leadSource?: LeadSource;
-  assignedTo?: string;
-  notes?: string;
-  tags: string[];
-  score: number;
-  budget?: number;
-  timeline?: string;
-  convertedToContact?: string;
-  convertedToOpportunity?: string;
-  lastContactDate?: string;
-  nextFollowUpDate?: string;
-  tenantId: string;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface LeadCreate {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  company?: string;
-  jobTitle?: string;
-  status?: LeadStatus;
-  source?: LeadSource;
-  assignedTo?: string;
-  notes?: string;
-  tags?: string[];
-  score?: number;
-  budget?: number;
-  timeline?: string;
-}
-
-export interface LeadUpdate {
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  phone?: string;
-  company?: string;
-  jobTitle?: string;
-  status?: LeadStatus;
-  source?: LeadSource;
-  assignedTo?: string;
-  notes?: string;
-  tags?: string[];
-  score?: number;
-  budget?: number;
-  timeline?: string;
 }
 
 export type ContactAttachment = {
@@ -422,17 +368,6 @@ export interface SalesActivityUpdate {
   notes?: string;
 }
 
-// CRM Response Models
-export interface CRMLeadsResponse {
-  leads: Lead[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    pages: number;
-  };
-}
-
 export interface CRMContactsResponse {
   contacts: Contact[];
   pagination: {
@@ -473,7 +408,6 @@ export interface CRMActivitiesResponse {
   };
 }
 
-// CRM Dashboard Models
 export interface CRMMetrics {
   totalLeads: number;
   activeLeads: number;
@@ -500,14 +434,6 @@ export interface CRMDashboard {
   recentActivities: SalesActivity[];
   topOpportunities: Opportunity[];
   recentLeads: Lead[];
-}
-
-// CRM Filter Types
-export interface CRMLeadFilters {
-  status?: LeadStatus;
-  source?: LeadSource;
-  assignedTo?: string;
-  search?: string;
 }
 
 export type ContactDateField = 'created' | 'updated' | 'last_contacted';

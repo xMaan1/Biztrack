@@ -1,6 +1,20 @@
 from __future__ import annotations
 
 from .lead import Lead
+from .lead_related import (
+    LeadPipelineHistory,
+    LeadNote,
+    LeadTask,
+    LeadEmail,
+    LeadSms,
+    LeadCampaign,
+    LeadCampaignAssignment,
+    LeadListingSearch,
+    LeadPropertyView,
+    LeadSale,
+    LeadAdditionalContact,
+    LeadSavedFilter,
+)
 from .customer import Customer
 from .guarantor import CustomerGuarantor
 from .contact import Contact
@@ -9,6 +23,9 @@ from .opportunity import Opportunity
 from .sales_activity import SalesActivity
 from .enums import (
     LeadStatus,
+    LeadPipelineStage,
+    LeadRating,
+    CallResult,
     LeadSource,
     OpportunityStage,
     ContactType,
@@ -21,6 +38,18 @@ from .enums import (
 
 __all__ = [
     "Lead",
+    "LeadPipelineHistory",
+    "LeadNote",
+    "LeadTask",
+    "LeadEmail",
+    "LeadSms",
+    "LeadCampaign",
+    "LeadCampaignAssignment",
+    "LeadListingSearch",
+    "LeadPropertyView",
+    "LeadSale",
+    "LeadAdditionalContact",
+    "LeadSavedFilter",
     "Customer",
     "CustomerGuarantor",
     "Contact",
@@ -28,6 +57,9 @@ __all__ = [
     "Opportunity",
     "SalesActivity",
     "LeadStatus",
+    "LeadPipelineStage",
+    "LeadRating",
+    "CallResult",
     "LeadSource",
     "OpportunityStage",
     "ContactType",

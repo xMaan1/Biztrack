@@ -351,9 +351,10 @@ function CRMDashboardContent() {
               <CardContent>
                 <div className="space-y-4">
                   {dashboard.recentLeads.map((lead: any) => (
-                    <div
+                    <Link
                       key={lead.id}
-                      className="flex items-center justify-between p-3 border rounded-lg"
+                      href={`/crm/leads/${lead.id}`}
+                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/40 transition-colors"
                     >
                       <div className="flex-1">
                         <div className="font-medium">
@@ -391,7 +392,7 @@ function CRMDashboardContent() {
                           </div>
                         )}
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </CardContent>

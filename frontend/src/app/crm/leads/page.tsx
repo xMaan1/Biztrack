@@ -3,50 +3,24 @@
 import React, { Suspense, useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ModuleGuard } from '../../../components/guards/PermissionGuard';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
-import { Input } from '@/src/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/src/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/src/components/ui/dialog';
-import { Label } from '@/src/components/ui/label';
-import { Textarea } from '@/src/components/ui/textarea';
-import { Plus, Search, Filter } from 'lucide-react';
-import { LeadsListCard } from '@/src/components/crm/leads/LeadsListCard';
+import { LeadsDenseTable } from '@/src/components/crm/leads/LeadsDenseTable';
+import { LeadsListToolbar } from '@/src/components/crm/leads/list/LeadsListToolbar';
+import { LeadsPinnedFilters } from '@/src/components/crm/leads/list/LeadsPinnedFilters';
+import { LeadsListControls } from '@/src/components/crm/leads/list/LeadsListControls';
+import { LeadCreateDialog } from '@/src/components/crm/leads/list/LeadCreateDialog';
+import { mapTenantUsers } from '@/src/components/crm/leads/leadUtils';
 import CRMService from '@/src/services/CRMService';
-import {
-  Lead,
-  LeadCreate,
-  LeadStatus,
-  LeadSource,
-  CRMLeadFilters,
-} from '@/src/models/crm';
+import { Lead, CRMLeadFilters, LeadSavedFilter } from '@/src/models/crm';
 import { DashboardLayout } from '../../../components/layout';
 import { useConfirm } from '@/src/contexts/ConfirmContext';
-import { useCustomOptions } from '../../../hooks/useCustomOptions';
-import { CustomOptionDialog } from '../../../components/common/CustomOptionDialog';
+import { useRBAC } from '@/src/contexts/RBACContext';
 
 export default function CRMLeadsPage() {
   return (
-    <ModuleGuard module="crm" fallback={<div>You don't have access to CRM module</div>}>
+    <ModuleGuard
+      module="crm"
+      fallback={<div>You don't have access to CRM module</div>}
+    >
       <Suspense fallback={<div className="p-6">Loading leads...</div>}>
         <CRMLeadsContent />
       </Suspense>
@@ -56,862 +30,208 @@ export default function CRMLeadsPage() {
 
 function CRMLeadsContent() {
   const confirm = useConfirm();
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const searchParams = useSearchParams();
+  const { tenantUsers, fetchTenantUsers } = useRBAC();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [listLoading, setListLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
-  const [filters, setFilters] = useState<CRMLeadFilters>({});
+  const [filters, setFilters] = useState<CRMLeadFilters>({ sort: 'newest' });
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [savedFilters, setSavedFilters] = useState<LeadSavedFilter[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [showCustomLeadSourceDialog, setShowCustomLeadSourceDialog] =
-    useState(false);
+  const [showPartialOnly, setShowPartialOnly] = useState(false);
 
-  // Custom options hook
-  const {
-    customLeadSources,
-    createCustomLeadSource,
-    loading: customOptionsLoading,
-  } = useCustomOptions();
+  useEffect(() => {
+    fetchTenantUsers?.().catch(() => undefined);
+  }, [fetchTenantUsers]);
 
-  const [formData, setFormData] = useState<LeadCreate>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    company: '',
-    jobTitle: '',
-    status: LeadStatus.NEW,
-    source: LeadSource.WEBSITE,
-    notes: '',
-    tags: [],
-    score: 0,
-    budget: undefined,
-    timeline: '',
-  });
+  const users = mapTenantUsers(tenantUsers);
 
   const loadLeads = useCallback(async () => {
     try {
-      if (leads.length === 0) {
-        setLoading(true);
-      } else {
-        setListLoading(true);
-      }
-      const response = await CRMService.getLeads(filters, page, 10);
-      setLeads(response.leads);
+      if (leads.length === 0) setLoading(true);
+      else setListLoading(true);
+      const active: CRMLeadFilters = {
+        ...filters,
+        isPartial: showPartialOnly ? true : undefined,
+      };
+      const response = await CRMService.getLeads(active, page, pageSize);
+      setLeads(response.leads as Lead[]);
       setTotalPages(response.pagination.pages);
       setTotalCount(response.pagination.total);
-    } catch (err) {
-      } finally {
+    } catch {
+    } finally {
       setLoading(false);
       setListLoading(false);
     }
-  }, [filters, page, leads.length]);
+  }, [filters, page, pageSize, showPartialOnly, leads.length]);
+
+  const loadSavedFilters = useCallback(async () => {
+    try {
+      const rows = await CRMService.getSavedLeadFilters();
+      setSavedFilters(rows || []);
+    } catch {
+      setSavedFilters([]);
+    }
+  }, []);
 
   useEffect(() => {
     loadLeads();
   }, [loadLeads]);
 
   useEffect(() => {
-    if (searchParams.get('new') === '1') {
-      setIsCreateDialogOpen(true);
-    }
+    loadSavedFilters();
+  }, [loadSavedFilters]);
+
+  useEffect(() => {
+    if (searchParams.get('new') === '1') setIsCreateDialogOpen(true);
+    if (searchParams.get('partial') === '1') setShowPartialOnly(true);
   }, [searchParams]);
 
-  const handleCreateCustomLeadSource = async (
-    name: string,
-    description: string,
-  ) => {
-    try {
-      await createCustomLeadSource(name, description);
-    } catch (error) {
-      }
-  };
-
-  const handleCreateLead = async () => {
-    const firstName = formData.firstName.trim();
-    const lastName = formData.lastName.trim();
-    const email = (formData.email || '').trim();
-    if (!firstName || !lastName || !emailPattern.test(email)) {
-      setFormError('First name, last name, and a valid email are required.');
-      return;
-    }
-
-    const payload: LeadCreate = {
-      ...formData,
-      firstName,
-      lastName,
-      email,
-      phone: formData.phone?.trim() || undefined,
-      company: formData.company?.trim() || undefined,
-      jobTitle: formData.jobTitle?.trim() || undefined,
-      notes: formData.notes?.trim() || undefined,
-      timeline: formData.timeline?.trim() || undefined,
-    };
-
-    try {
-      setFormError(null);
-      await CRMService.createLead(payload);
-      setIsCreateDialogOpen(false);
-      setFormData({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        company: '',
-        jobTitle: '',
-        status: LeadStatus.NEW,
-        source: LeadSource.WEBSITE,
-        notes: '',
-        tags: [],
-        score: 0,
-        budget: undefined,
-        timeline: '',
-      });
-      loadLeads();
-    } catch (err) {
-      setFormError('Failed to create lead. Please try again.');
-    }
-  };
-
-  const handleUpdateLead = async () => {
-    if (!selectedLead) return;
-    const firstName = formData.firstName.trim();
-    const lastName = formData.lastName.trim();
-    const email = (formData.email || '').trim();
-    if (!firstName || !lastName || !emailPattern.test(email)) {
-      setFormError('First name, last name, and a valid email are required.');
-      return;
-    }
-
-    const payload: LeadCreate = {
-      ...formData,
-      firstName,
-      lastName,
-      email,
-      phone: formData.phone?.trim() || undefined,
-      company: formData.company?.trim() || undefined,
-      jobTitle: formData.jobTitle?.trim() || undefined,
-      notes: formData.notes?.trim() || undefined,
-      timeline: formData.timeline?.trim() || undefined,
-    };
-
-    try {
-      setFormError(null);
-      await CRMService.updateLead(selectedLead.id, payload);
-      setIsEditDialogOpen(false);
-      loadLeads();
-    } catch (err) {
-      setFormError('Failed to update lead. Please try again.');
-    }
-  };
-
-  const handleDeleteLead = async (id: string) => {
-    const ok = await confirm({
-      description: 'Are you sure you want to delete this lead?',
-      destructive: true,
-      confirmLabel: 'Delete',
-    });
-    if (!ok) return;
-    try {
-      await CRMService.deleteLead(id);
-      loadLeads();
-    } catch (err) {
-      }
+  const applyPinned = (sf: LeadSavedFilter) => {
+    const f = sf.filters || {};
+    setPage(1);
+    setFilters((prev) => ({
+      ...prev,
+      priority: (f.priority as string) || undefined,
+      rating: (f.leadRating as string) || undefined,
+      status: (f.status as string) || undefined,
+      pipeline: (f.pipelineStage as string) || undefined,
+    }));
   };
 
   const handleSearch = () => {
-    setFilters((prev: CRMLeadFilters) => ({ ...prev, search }));
     setPage(1);
+    setFilters((prev) => ({ ...prev, search: search.trim() || undefined }));
   };
 
-  const handleFilterChange = (key: keyof CRMLeadFilters, value: string) => {
-    setFilters((prev: CRMLeadFilters) => ({
-      ...prev,
-      [key]: value === 'all' ? undefined : value,
-    }));
-    setPage(1);
-  };
-
-  const resetFilters = () => {
-    setFilters({});
-    setSearch('');
-    setPage(1);
-  };
-
-  const openEditLead = (lead: Lead) => {
-    setSelectedLead(lead);
-    setFormData({
-      firstName: lead.firstName,
-      lastName: lead.lastName,
-      email: lead.email,
-      phone: lead.phone || '',
-      company: lead.company || '',
-      jobTitle: lead.jobTitle || '',
-      status: lead.status,
-      source: lead.leadSource ?? lead.source,
-      notes: lead.notes || '',
-      tags: lead.tags,
-      score: lead.score,
-      budget: lead.budget,
-      timeline: lead.timeline || '',
+  const handleDelete = async (id: string) => {
+    const ok = await confirm({
+      title: 'Delete lead?',
+      description: 'This cannot be undone.',
     });
-    setIsEditDialogOpen(true);
+    if (!ok) return;
+    await CRMService.deleteLead(id);
+    loadLeads();
   };
 
-  if (loading && leads.length === 0) {
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = (ids: string[]) => {
+    setSelectedIds((prev) => {
+      const allSelected = ids.every((id) => prev.has(id));
+      if (allSelected) return new Set();
+      return new Set(ids);
+    });
+  };
+
+  const runBulk = async (action: string, extra: Record<string, string> = {}) => {
+    if (selectedIds.size === 0) return;
+    if (action === 'delete') {
+      const ok = await confirm({
+        title: 'Delete selected leads?',
+        description: `Delete ${selectedIds.size} leads?`,
+      });
+      if (!ok) return;
+    }
+    await CRMService.bulkLeadAction({
+      leadIds: Array.from(selectedIds),
+      action,
+      ...extra,
+    });
+    setSelectedIds(new Set());
+    loadLeads();
+  };
+
+  const pinned = savedFilters.filter((f) => f.pinned);
+
+  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
-          <p className="mt-4 text-lg">Loading Leads...</p>
-        </div>
-      </div>
+      <DashboardLayout>
+        <div className="p-6">Loading leads...</div>
+      </DashboardLayout>
     );
   }
 
   return (
     <DashboardLayout>
-      <div className="container mx-auto p-6 space-y-6">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">CRM Leads</h1>
-            <p className="text-gray-600">Manage and track your sales leads</p>
-          </div>
-          <Button onClick={() => setIsCreateDialogOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            New Lead
-          </Button>
-        </div>
+      <div className="flex flex-col h-[calc(100vh-4rem)] gap-3 p-4">
+        <LeadsListToolbar
+          savedFilters={savedFilters}
+          showPartialOnly={showPartialOnly}
+          onApplyFilter={applyPinned}
+          onClearFilters={() => {
+            setFilters({ sort: 'newest' });
+            setSearch('');
+            setShowPartialOnly(false);
+            setPage(1);
+          }}
+          onBulkAction={runBulk}
+          onAddNew={() => setIsCreateDialogOpen(true)}
+          onTogglePartial={() => {
+            setShowPartialOnly((v) => !v);
+            setPage(1);
+          }}
+        />
 
-        {/* Filters and Search */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Filter className="w-4 h-4 mr-2" />
-              Filters & Search
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <Label htmlFor="search">Search</Label>
-                <div className="flex space-x-2">
-                  <Input
-                    id="search"
-                    placeholder="Search leads..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  />
-                  <Button onClick={handleSearch}>
-                    <Search className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="status">Status</Label>
-                <Select
-                  value={filters.status || 'all'}
-                  onValueChange={(value) => handleFilterChange('status', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Statuses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    {Object.values(LeadStatus).map((status) => (
-                      <SelectItem key={status} value={status}>
-                        {status.charAt(0).toUpperCase() + status.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="source">Source</Label>
-                <Select
-                  value={filters.source || 'all'}
-                  onValueChange={(value) => handleFilterChange('source', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Sources" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Sources</SelectItem>
-                    {Object.values(LeadSource).map((source) => (
-                      <SelectItem key={source} value={source}>
-                        {source.replace('_', ' ').charAt(0).toUpperCase() +
-                          source.replace('_', ' ').slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-end">
-                <Button variant="outline" onClick={resetFilters}>
-                  Reset Filters
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <LeadsPinnedFilters pinned={pinned} onApply={applyPinned} />
 
-        <LeadsListCard
+        <LeadsListControls
+          filters={filters}
+          search={search}
+          pageSize={pageSize}
+          onFiltersChange={setFilters}
+          onSearchChange={setSearch}
+          onSearch={handleSearch}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setPage(1);
+          }}
+        />
+
+        <LeadsDenseTable
           leads={leads}
           totalCount={totalCount}
           page={page}
           totalPages={totalPages}
+          pageSize={pageSize}
           listLoading={listLoading}
+          selectedIds={selectedIds}
+          onToggleSelect={toggleSelect}
+          onToggleSelectAll={toggleSelectAll}
           onPageChange={setPage}
-          onView={(lead) => {
-            setSelectedLead(lead);
-            setIsViewDialogOpen(true);
+          onPipelineChange={async (id, stage) => {
+            await CRMService.updateLeadPipeline(id, stage);
+            loadLeads();
           }}
-          onEdit={openEditLead}
-          onDelete={handleDeleteLead}
-        />
-
-        {/* Create Lead Dialog */}
-        <Dialog
-          open={isCreateDialogOpen}
-          onOpenChange={(open) => {
-            setIsCreateDialogOpen(open);
-            if (!open) {
-              setFormError(null);
-            }
+          onAssigneeChange={async (id, userId) => {
+            await CRMService.updateLead(id, {
+              assignedTo: userId || undefined,
+              mainAgentId: userId || undefined,
+            });
+            loadLeads();
           }}
-        >
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Create New Lead</DialogTitle>
-              <DialogDescription>
-                Add a new lead to your CRM system
-              </DialogDescription>
-            </DialogHeader>
-            {formError && <p className="text-sm text-red-600">{formError}</p>}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="firstName">First Name *</Label>
-                <Input
-                  id="firstName"
-                  value={formData.firstName}
-                  onChange={(e) =>
-                    setFormData((prev: LeadCreate) => ({
-                      ...prev,
-                      firstName: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="lastName">Last Name *</Label>
-                <Input
-                  id="lastName"
-                  value={formData.lastName}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      lastName: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="email">Email *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, email: e.target.value }))
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="phone">Phone</Label>
-                <Input
-                  id="phone"
-                  value={formData.phone}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, phone: e.target.value }))
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="company">Company</Label>
-                <Input
-                  id="company"
-                  value={formData.company}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      company: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="jobTitle">Job Title</Label>
-                <Input
-                  id="jobTitle"
-                  value={formData.jobTitle}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      jobTitle: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="status">Status</Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      status: value as LeadStatus,
-                    }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.values(LeadStatus).map((status) => (
-                      <SelectItem key={status} value={status}>
-                        {status.charAt(0).toUpperCase() + status.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="source">Source</Label>
-                <Select
-                  value={formData.source}
-                  onValueChange={(value) => {
-                    if (value === 'create_new') {
-                      setShowCustomLeadSourceDialog(true);
-                    } else {
-                      setFormData((prev) => ({
-                        ...prev,
-                        source: value as LeadSource,
-                      }));
-                    }
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.values(LeadSource).map((source) => (
-                      <SelectItem key={source} value={source}>
-                        {source.replace('_', ' ').charAt(0).toUpperCase() +
-                          source.replace('_', ' ').slice(1)}
-                      </SelectItem>
-                    ))}
-
-                    {/* Custom Lead Sources */}
-                    {customLeadSources &&
-                      customLeadSources.length > 0 &&
-                      customLeadSources.map((customSource) => (
-                        <SelectItem
-                          key={customSource.id}
-                          value={customSource.id}
-                        >
-                          {customSource.name}
-                        </SelectItem>
-                      ))}
-
-                    <SelectItem
-                      value="create_new"
-                      className="font-semibold text-blue-600"
-                    >
-                      + Create New Lead Source
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="score">Score</Label>
-                <Input
-                  id="score"
-                  type="number"
-                  value={formData.score}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      score: parseInt(e.target.value) || 0,
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="budget">Budget</Label>
-                <Input
-                  id="budget"
-                  type="number"
-                  value={formData.budget || ''}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      budget: e.target.value
-                        ? parseFloat(e.target.value)
-                        : undefined,
-                    }))
-                  }
-                />
-              </div>
-              <div className="col-span-2">
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  value={formData.notes}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, notes: e.target.value }))
-                  }
-                />
-              </div>
-            </div>
-            <div className="flex justify-end space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsCreateDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleCreateLead}>Create Lead</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Edit Lead Dialog */}
-        <Dialog
-          open={isEditDialogOpen}
-          onOpenChange={(open) => {
-            setIsEditDialogOpen(open);
-            if (!open) {
-              setFormError(null);
-            }
-          }}
-        >
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Edit Lead</DialogTitle>
-              <DialogDescription>Update lead information</DialogDescription>
-            </DialogHeader>
-            {formError && <p className="text-sm text-red-600">{formError}</p>}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="editFirstName">First Name *</Label>
-                <Input
-                  id="editFirstName"
-                  value={formData.firstName}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      firstName: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="editLastName">Last Name *</Label>
-                <Input
-                  id="editLastName"
-                  value={formData.lastName}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      lastName: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="editEmail">Email *</Label>
-                <Input
-                  id="editEmail"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, email: e.target.value }))
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="editPhone">Phone</Label>
-                <Input
-                  id="editPhone"
-                  value={formData.phone}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, phone: e.target.value }))
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="editCompany">Company</Label>
-                <Input
-                  id="editCompany"
-                  value={formData.company}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      company: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="editJobTitle">Job Title</Label>
-                <Input
-                  id="editJobTitle"
-                  value={formData.jobTitle}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      jobTitle: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="editStatus">Status</Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      status: value as LeadStatus,
-                    }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.values(LeadStatus).map((status) => (
-                      <SelectItem key={status} value={status}>
-                        {status.charAt(0).toUpperCase() + status.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="editSource">Source</Label>
-                <Select
-                  value={formData.source}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      source: value as LeadSource,
-                    }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.values(LeadSource).map((source) => (
-                      <SelectItem key={source} value={source}>
-                        {source.replace('_', ' ').charAt(0).toUpperCase() +
-                          source.replace('_', ' ').slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="editScore">Score</Label>
-                <Input
-                  id="editScore"
-                  type="number"
-                  value={formData.score}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      score: parseInt(e.target.value) || 0,
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="editBudget">Budget</Label>
-                <Input
-                  id="editBudget"
-                  type="number"
-                  value={formData.budget || ''}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      budget: e.target.value
-                        ? parseFloat(e.target.value)
-                        : undefined,
-                    }))
-                  }
-                />
-              </div>
-              <div className="col-span-2">
-                <Label htmlFor="editNotes">Notes</Label>
-                <Textarea
-                  id="editNotes"
-                  value={formData.notes}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, notes: e.target.value }))
-                  }
-                />
-              </div>
-            </div>
-            <div className="flex justify-end space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsEditDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleUpdateLead}>Update Lead</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* View Lead Dialog */}
-        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Lead Details</DialogTitle>
-              <DialogDescription>
-                View complete lead information
-              </DialogDescription>
-            </DialogHeader>
-            {selectedLead && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="font-medium">Name</Label>
-                    <p>
-                      {selectedLead.firstName} {selectedLead.lastName}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="font-medium">Email</Label>
-                    <p>{selectedLead.email}</p>
-                  </div>
-                  <div>
-                    <Label className="font-medium">Phone</Label>
-                    <p>{selectedLead.phone || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <Label className="font-medium">Company</Label>
-                    <p>{selectedLead.company || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <Label className="font-medium">Job Title</Label>
-                    <p>{selectedLead.jobTitle || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <Label className="font-medium">Status</Label>
-                    <Badge
-                      className={CRMService.getLeadStatusColor(
-                        selectedLead.status ?? 'new',
-                      )}
-                    >
-                      {(selectedLead.status ?? 'new').charAt(0).toUpperCase() +
-                        (selectedLead.status ?? 'new').slice(1)}
-                    </Badge>
-                  </div>
-                  <div>
-                    <Label className="font-medium">Source</Label>
-                    <Badge variant="outline">
-                      {((selectedLead.leadSource ?? selectedLead.source) ?? '')
-                        .replace('_', ' ')
-                        .charAt(0)
-                        .toUpperCase() +
-                        ((selectedLead.leadSource ?? selectedLead.source) ?? '')
-                          .replace('_', ' ')
-                          .slice(1)}
-                    </Badge>
-                  </div>
-                  <div>
-                    <Label className="font-medium">Score</Label>
-                    <p>{selectedLead.score}</p>
-                  </div>
-                  <div>
-                    <Label className="font-medium">Budget</Label>
-                    <p>
-                      {selectedLead.budget
-                        ? CRMService.formatCurrency(selectedLead.budget)
-                        : 'N/A'}
-                    </p>
-                  </div>
-                </div>
-                {selectedLead.notes && (
-                  <div>
-                    <Label className="font-medium">Notes</Label>
-                    <p className="text-gray-600">{selectedLead.notes}</p>
-                  </div>
-                )}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="font-medium">Created</Label>
-                    <p>{CRMService.formatDateTime(selectedLead.createdAt)}</p>
-                  </div>
-                  <div>
-                    <Label className="font-medium">Last Updated</Label>
-                    <p>{CRMService.formatDateTime(selectedLead.updatedAt)}</p>
-                  </div>
-                  {selectedLead.lastContactDate && (
-                    <div>
-                      <Label className="font-medium">Last Contact</Label>
-                      <p>
-                        {CRMService.formatDate(selectedLead.lastContactDate)}
-                      </p>
-                    </div>
-                  )}
-                  {selectedLead.nextFollowUpDate && (
-                    <div>
-                      <Label className="font-medium">Next Follow-up</Label>
-                      <p>
-                        {CRMService.formatDate(selectedLead.nextFollowUpDate)}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-            <div className="flex justify-end">
-              <Button
-                variant="outline"
-                onClick={() => setIsViewDialogOpen(false)}
-              >
-                Close
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Custom Lead Source Dialog */}
-        <CustomOptionDialog
-          open={showCustomLeadSourceDialog}
-          onOpenChange={setShowCustomLeadSourceDialog}
-          title="Create New Lead Source"
-          description="Create a custom lead source that will be available for your tenant."
-          optionName="Lead Source"
-          placeholder="e.g., LinkedIn Campaign, Webinar"
-          onSubmit={handleCreateCustomLeadSource}
-          loading={customOptionsLoading.leadSource}
+          onDelete={handleDelete}
+          users={users}
         />
       </div>
+
+      <LeadCreateDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+      />
     </DashboardLayout>
   );
 }
