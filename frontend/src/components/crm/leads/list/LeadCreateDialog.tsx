@@ -159,7 +159,9 @@ export function LeadCreateDialog({ open, onOpenChange }: Props) {
                         {s.replace(/_/g, ' ')}
                       </SelectItem>
                     ))}
-                    {customLeadSources.map((s) => (
+                    {(customLeadSources || [])
+                      .filter((s) => Boolean(s?.name?.trim()))
+                      .map((s) => (
                       <SelectItem key={s.id} value={s.name}>
                         {s.name}
                       </SelectItem>

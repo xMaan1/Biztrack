@@ -59,14 +59,16 @@ export function useCustomOptions() {
         customOptionsService.getCustomIndustries(),
       ]);
 
-      setCustomEventTypes(eventTypes);
-      setCustomDepartments(departments);
-      setCustomLeaveTypes(leaveTypes);
-      setCustomLeadSources(leadSources);
-      setCustomContactSources(contactSources);
-      setCustomCompanyIndustries(companyIndustries);
-      setCustomContactTypes(contactTypes);
-      setCustomIndustries(industries);
+      setCustomEventTypes(Array.isArray(eventTypes) ? eventTypes : []);
+      setCustomDepartments(Array.isArray(departments) ? departments : []);
+      setCustomLeaveTypes(Array.isArray(leaveTypes) ? leaveTypes : []);
+      setCustomLeadSources(Array.isArray(leadSources) ? leadSources : []);
+      setCustomContactSources(Array.isArray(contactSources) ? contactSources : []);
+      setCustomCompanyIndustries(
+        Array.isArray(companyIndustries) ? companyIndustries : [],
+      );
+      setCustomContactTypes(Array.isArray(contactTypes) ? contactTypes : []);
+      setCustomIndustries(Array.isArray(industries) ? industries : []);
     } catch (error) {
       } finally {
       setLoading((prev) => ({ ...prev, all: false }));
