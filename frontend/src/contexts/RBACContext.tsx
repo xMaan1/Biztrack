@@ -224,20 +224,17 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const fetchTenantUsers = async () => {
+  const fetchTenantUsers = useCallback(async () => {
     try {
-      setLoading(true);
       const response = await apiService.get('/rbac/tenant-users');
       if (Array.isArray(response)) {
         setTenantUsers(response);
       } else if (response.success && Array.isArray(response.data)) {
         setTenantUsers(response.data);
       }
-    } catch (error) {
-    } finally {
-      setLoading(false);
+    } catch {
     }
-  };
+  }, []);
 
   const findCreatedTenantUser = async (email: string) => {
     const response = await apiService.get('/rbac/tenant-users');
@@ -456,7 +453,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setInitializing(false);
     }
-  }, []);
+  }, [fetchTenantUsers]);
 
   useEffect(() => {
     if (isAuthenticated && user) {

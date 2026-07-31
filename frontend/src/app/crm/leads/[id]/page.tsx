@@ -44,8 +44,9 @@ function LeadDetailContent() {
   const users = mapTenantUsers(tenantUsers);
 
   useEffect(() => {
+    if (tenantUsers.length > 0) return;
     fetchTenantUsers?.().catch(() => undefined);
-  }, [fetchTenantUsers]);
+  }, [fetchTenantUsers, tenantUsers.length]);
 
   const reload = useCallback(async () => {
     if (!leadId) return;

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense, useState, useEffect, useCallback } from 'react';
+import React, { Suspense, useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import { LeadsDenseTable } from '@/src/components/crm/leads/LeadsDenseTable';
@@ -45,16 +45,18 @@ function CRMLeadsContent() {
   const [savedFilters, setSavedFilters] = useState<LeadSavedFilter[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [showPartialOnly, setShowPartialOnly] = useState(false);
+  const initialLoadDone = useRef(false);
 
   useEffect(() => {
+    if (tenantUsers.length > 0) return;
     fetchTenantUsers?.().catch(() => undefined);
-  }, [fetchTenantUsers]);
+  }, [fetchTenantUsers, tenantUsers.length]);
 
   const users = mapTenantUsers(tenantUsers);
 
   const loadLeads = useCallback(async () => {
     try {
-      if (leads.length === 0) setLoading(true);
+      if (!initialLoadDone.current) setLoading(true);
       else setListLoading(true);
       const active: CRMLeadFilters = {
         ...filters,
@@ -64,12 +66,13 @@ function CRMLeadsContent() {
       setLeads(response.leads as Lead[]);
       setTotalPages(response.pagination.pages);
       setTotalCount(response.pagination.total);
+      initialLoadDone.current = true;
     } catch {
     } finally {
       setLoading(false);
       setListLoading(false);
     }
-  }, [filters, page, pageSize, showPartialOnly, leads.length]);
+  }, [filters, page, pageSize, showPartialOnly]);
 
   const loadSavedFilters = useCallback(async () => {
     try {
