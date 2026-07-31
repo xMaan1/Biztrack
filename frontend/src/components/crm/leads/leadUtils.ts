@@ -63,13 +63,54 @@ export function ageDays(createdAt?: string) {
   );
 }
 
+const PIPELINE_STAGE_SET = new Set([
+  'new_lead',
+  'tried_to_contact',
+  'made_contact',
+  'qualified',
+  'appointment_set',
+  'offer_made',
+  'under_contract',
+  'closed',
+  'lost',
+]);
+
 export function mapTenantUsers(tenantUsers: unknown[] | null | undefined): LeadUserOption[] {
-  return (tenantUsers || []).map((u: any) => ({
-    id: String(u.id || u.userId),
-    name:
-      [u.firstName, u.lastName].filter(Boolean).join(' ') ||
-      u.userName ||
-      u.email ||
-      'User',
-  }));
+  const seen = new Set<string>();
+  const out: LeadUserOption[] = [];
+  for (const raw of tenantUsers || []) {
+    const u = raw as Record<string, unknown>;
+    const id = String(u.id || u.userId || '').trim();
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    const firstName = typeof u.firstName === 'string' ? u.firstName : '';
+    const lastName = typeof u.lastName === 'string' ? u.lastName : '';
+    const name =
+      [firstName, lastName].filter(Boolean).join(' ') ||
+      (typeof u.userName === 'string' ? u.userName : '') ||
+      (typeof u.email === 'string' ? u.email : '') ||
+      'User';
+    out.push({ id, name });
+  }
+  return out;
+}
+
+export function safePipelineValue(stage?: string | null): string {
+  const v = String(stage || '').trim();
+  if (v && PIPELINE_STAGE_SET.has(v)) return v;
+  return 'new_lead';
+}
+
+export function safeAssigneeValue(
+  assignedTo?: string | null,
+  mainAgentId?: string | null,
+  userIds?: Iterable<string>,
+): string {
+  const allowed = userIds ? new Set(userIds) : null;
+  for (const raw of [assignedTo, mainAgentId]) {
+    const v = String(raw || '').trim();
+    if (!v) continue;
+    if (!allowed || allowed.has(v)) return v;
+  }
+  return '__none__';
 }

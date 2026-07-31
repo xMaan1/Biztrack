@@ -3,7 +3,7 @@
 import { Input } from '@/src/components/ui/input';
 import { Label } from '@/src/components/ui/label';
 import { Button } from '@/src/components/ui/button';
-import type { MotWizardVehicle } from './wizardTypes';
+import type { MotWizardVehicle } from '../wizardTypes';
 
 type Step1VehicleDetailsProps = {
   vehicle: MotWizardVehicle;

@@ -19,7 +19,7 @@ export default function CRMLeadsPage() {
   return (
     <ModuleGuard
       module="crm"
-      fallback={<div>You don't have access to CRM module</div>}
+      fallback={<div>You don&apos;t have access to CRM module</div>}
     >
       <Suspense fallback={<div className="p-6">Loading leads...</div>}>
         <CRMLeadsContent />
@@ -48,9 +48,9 @@ function CRMLeadsContent() {
   const initialLoadDone = useRef(false);
 
   useEffect(() => {
-    if (tenantUsers.length > 0) return;
+    if ((tenantUsers?.length || 0) > 0) return;
     fetchTenantUsers?.().catch(() => undefined);
-  }, [fetchTenantUsers, tenantUsers.length]);
+  }, [fetchTenantUsers, tenantUsers?.length]);
 
   const users = mapTenantUsers(tenantUsers);
 
@@ -63,11 +63,15 @@ function CRMLeadsContent() {
         isPartial: showPartialOnly ? true : undefined,
       };
       const response = await CRMService.getLeads(active, page, pageSize);
-      setLeads(response.leads as Lead[]);
-      setTotalPages(response.pagination.pages);
-      setTotalCount(response.pagination.total);
+      const list = Array.isArray(response?.leads) ? (response.leads as Lead[]) : [];
+      setLeads(list);
+      setTotalPages(response?.pagination?.pages || 1);
+      setTotalCount(response?.pagination?.total || 0);
       initialLoadDone.current = true;
     } catch {
+      setLeads([]);
+      setTotalPages(1);
+      setTotalCount(0);
     } finally {
       setLoading(false);
       setListLoading(false);
@@ -77,7 +81,7 @@ function CRMLeadsContent() {
   const loadSavedFilters = useCallback(async () => {
     try {
       const rows = await CRMService.getSavedLeadFilters();
-      setSavedFilters(rows || []);
+      setSavedFilters(Array.isArray(rows) ? rows : []);
     } catch {
       setSavedFilters([]);
     }
@@ -158,7 +162,9 @@ function CRMLeadsContent() {
     loadLeads();
   };
 
-  const pinned = savedFilters.filter((f) => f.pinned);
+  const pinned = Array.isArray(savedFilters)
+    ? savedFilters.filter((f) => f?.pinned)
+    : [];
 
   if (loading) {
     return (

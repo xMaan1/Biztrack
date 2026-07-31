@@ -28,7 +28,9 @@ export function LeadSelectField({ label, value, options, onSave }: Props) {
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="__none__">Not selected</SelectItem>
-          {options.map((o) => (
+          {options
+            .filter((o) => Boolean(String(o || '').trim()))
+            .map((o) => (
             <SelectItem key={o} value={o} className="capitalize">
               {o}
             </SelectItem>

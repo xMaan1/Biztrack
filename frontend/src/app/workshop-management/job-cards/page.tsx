@@ -51,16 +51,22 @@ function JobCardsContent() {
     };
 
     const rawItems = Array.isArray(jc.items) ? jc.items : [];
-    const mapped: InvoiceItemCreate[] = rawItems
-      .map((it) => {
-        const r = it as Record<string, unknown>;
-        const description = str(r.description ?? r.part_description ?? r.part_no ?? r.partNo);
-        const quantity = num(r.qty ?? r.quantity ?? 1) || 1;
-        const unitPrice = num(r.unit_price ?? r.unitPrice ?? 0);
-        if (!description && !unitPrice) return null;
-        return { description: description || 'Item', quantity, unitPrice, discount: 0, taxRate: 0, unit: 'piece' };
-      })
-      .filter((it): it is InvoiceItemCreate => it !== null);
+    const mapped: InvoiceItemCreate[] = [];
+    for (const it of rawItems) {
+      const r = it as Record<string, unknown>;
+      const description = str(r.description ?? r.part_description ?? r.part_no ?? r.partNo);
+      const quantity = num(r.qty ?? r.quantity ?? 1) || 1;
+      const unitPrice = num(r.unit_price ?? r.unitPrice ?? 0);
+      if (!description && !unitPrice) continue;
+      mapped.push({
+        description: description || 'Item',
+        quantity,
+        unitPrice,
+        discount: 0,
+        taxRate: 0,
+        unit: 'piece',
+      });
+    }
 
     const items: InvoiceItemCreate[] = [...mapped];
     if (items.length === 0) {

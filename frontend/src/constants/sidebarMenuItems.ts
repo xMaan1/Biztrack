@@ -45,7 +45,6 @@ import {
   CircleDollarSign,
   HelpingHand,
   Landmark,
-  Contact,
   Sparkles,
   Gift,
 } from 'lucide-react';

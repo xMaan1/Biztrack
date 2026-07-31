@@ -110,9 +110,9 @@ export interface PurchaseOrderUpdate {
   vatAmount?: number;
   totalAmount?: number;
   notes?: string;
-  vehicleReg?: string;
+  vehicleReg?: string | null;
   purchaseForType?: 'vehicle' | 'garage';
-  vehicleId?: string;
+  vehicleId?: string | null;
   jobCardId?: string | null;
   invoiceId?: string | null;
   department?: string;

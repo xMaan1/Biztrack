@@ -19,10 +19,12 @@ import {
   relTime,
   ageLabel,
   money,
+  safePipelineValue,
+  safeAssigneeValue,
   type LeadUserOption,
 } from '@/src/components/crm/leads/leadUtils';
 
-const PIPELINE_OPTIONS = Object.entries(PIPELINE_LABELS);
+const PIPELINE_OPTIONS = Object.entries(PIPELINE_LABELS).filter(([v]) => Boolean(v));
 
 type Props = {
   leads: Lead[];
@@ -58,8 +60,10 @@ export function LeadsDenseTable({
   users,
 }: Props) {
   const router = useRouter();
+  const rows = Array.isArray(leads) ? leads.filter((l) => l?.id) : [];
+  const userIds = users.map((u) => u.id);
   const allSelected =
-    leads.length > 0 && leads.every((l) => selectedIds.has(l.id));
+    rows.length > 0 && rows.every((l) => selectedIds.has(l.id));
 
   return (
     <div className="relative flex-1 overflow-auto bg-white border rounded-lg">
@@ -74,7 +78,7 @@ export function LeadsDenseTable({
             <th className="p-3 w-10">
               <Checkbox
                 checked={allSelected}
-                onCheckedChange={() => onToggleSelectAll(leads.map((l) => l.id))}
+                onCheckedChange={() => onToggleSelectAll(rows.map((l) => l.id))}
               />
             </th>
             <th className="p-3 font-medium">Info</th>
@@ -89,14 +93,24 @@ export function LeadsDenseTable({
           </tr>
         </thead>
         <tbody className="divide-y">
-          {leads.length === 0 ? (
+          {rows.length === 0 ? (
             <tr>
               <td colSpan={10} className="p-8 text-center text-muted-foreground">
                 No leads found
               </td>
             </tr>
           ) : (
-            leads.map((lead) => (
+            rows.map((lead) => {
+              const pipelineValue = safePipelineValue(lead.pipelineStage);
+              const assigneeValue = safeAssigneeValue(
+                lead.assignedTo,
+                lead.mainAgentId,
+                userIds,
+              );
+              const createdLabel = lead.createdAt
+                ? CRMService.formatDateTime(lead.createdAt)
+                : '—';
+              return (
               <tr
                 key={lead.id}
                 className="hover:bg-muted/30 cursor-pointer"
@@ -141,11 +155,11 @@ export function LeadsDenseTable({
                   onClick={(e) => e.stopPropagation()}
                 >
                   <Select
-                    value={lead.pipelineStage || 'new_lead'}
+                    value={pipelineValue}
                     onValueChange={(v) => onPipelineChange(lead.id, v)}
                   >
                     <SelectTrigger
-                      className={`h-8 text-xs border-0 ${pipelineClass(lead.pipelineStage)}`}
+                      className={`h-8 text-xs border-0 ${pipelineClass(pipelineValue)}`}
                     >
                       <SelectValue />
                     </SelectTrigger>
@@ -168,10 +182,7 @@ export function LeadsDenseTable({
                   </div>
                 </td>
                 <td className="p-3 align-top text-xs min-w-[130px]">
-                  <div className="font-medium">
-                    {CRMService.formatDateTime?.(lead.createdAt) ||
-                      new Date(lead.createdAt).toLocaleString()}
-                  </div>
+                  <div className="font-medium">{createdLabel}</div>
                   {lead.campaignSource && (
                     <div className="text-muted-foreground mt-1 truncate max-w-[120px]">
                       {lead.campaignSource}
@@ -233,10 +244,18 @@ export function LeadsDenseTable({
                 </td>
                 <td className="p-3 align-top text-center">
                   <Flag
-                    className={`h-4 w-4 mx-auto mb-1 ${lead.hasFlaggedTask ? 'text-red-500' : 'text-muted-foreground/40'}`}
+                    className={`h-4 w-4 mx-auto mb-1 ${
+                      lead.hasFlaggedTask
+                        ? 'text-red-500'
+                        : 'text-muted-foreground/40'
+                    }`}
                   />
                   <CheckSquare
-                    className={`h-4 w-4 mx-auto ${lead.hasOpenTask ? 'text-emerald-500' : 'text-muted-foreground/40'}`}
+                    className={`h-4 w-4 mx-auto ${
+                      lead.hasOpenTask
+                        ? 'text-emerald-500'
+                        : 'text-muted-foreground/40'
+                    }`}
                   />
                 </td>
                 <td
@@ -244,7 +263,7 @@ export function LeadsDenseTable({
                   onClick={(e) => e.stopPropagation()}
                 >
                   <Select
-                    value={lead.assignedTo || lead.mainAgentId || '__none__'}
+                    value={assigneeValue}
                     onValueChange={(v) =>
                       onAssigneeChange(lead.id, v === '__none__' ? '' : v)
                     }
@@ -263,7 +282,8 @@ export function LeadsDenseTable({
                   </Select>
                 </td>
               </tr>
-            ))
+              );
+            })
           )}
         </tbody>
       </table>

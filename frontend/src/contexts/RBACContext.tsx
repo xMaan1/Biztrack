@@ -433,8 +433,10 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
 
   const hasModuleAccess = (module: string): boolean => {
     if (!userPermissions) return false;
-    if (userPermissions.accessible_modules.includes(module)) return true;
-    return userPermissions.permissions.some(permission => permission.startsWith(`${module}:`));
+    const modules = userPermissions.accessible_modules || [];
+    if (modules.includes(module)) return true;
+    const permissions = userPermissions.permissions || [];
+    return permissions.some((permission) => permission.startsWith(`${module}:`));
   };
 
   const isOwner = (): boolean => {
