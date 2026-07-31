@@ -3,7 +3,6 @@ from typing import List, Optional
 RETAIL_PLAN_TYPES = frozenset({"commerce", "agency"})
 
 PLAN_EXCLUDED_MODULES = {
-    "agency": frozenset({"pos"}),
 }
 
 

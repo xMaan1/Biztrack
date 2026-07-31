@@ -3,3 +3,7 @@
 *.ppk
 *.md
 idea/
+.github/
+backend/uploads/
+backend/src/__pycache__/
+*.pyc
