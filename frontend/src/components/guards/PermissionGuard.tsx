@@ -23,7 +23,7 @@ export function PermissionGuard({
   fallback = <div>Access Denied</div>,
   redirectTo = undefined,
 }: PermissionGuardProps) {
-  const { hasPermission, hasModuleAccess, isOwner, userPermissions, loading, initializing } = usePermissions();
+  const { hasPermission, hasModuleAccess, isOwner, userPermissions, initializing } = usePermissions();
   const { user } = useAuth();
   const router = useRouter();
 
@@ -43,12 +43,12 @@ export function PermissionGuard({
     : redirectTo;
 
   React.useEffect(() => {
-    if (!loading && !initializing && userPermissions && !hasAccess && resolvedRedirect) {
+    if (!initializing && userPermissions && !hasAccess && resolvedRedirect) {
       router.push(resolvedRedirect);
     }
-  }, [hasAccess, resolvedRedirect, router, loading, initializing, userPermissions]);
+  }, [hasAccess, resolvedRedirect, router, initializing, userPermissions]);
 
-  if (loading || initializing || !userPermissions) {
+  if (initializing || !userPermissions) {
     return <div className="flex items-center justify-center p-8">
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
     </div>;

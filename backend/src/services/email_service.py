@@ -478,6 +478,39 @@ Best regards,
             logger.error(f"Failed to send task time reminder to {to_email}: {str(e)}")
             return False
 
+    def smtp_configured(self) -> bool:
+        return bool(self.smtp_username and self.smtp_password)
+
+    def send_lead_email(
+        self,
+        to_email: str,
+        subject: str,
+        body_html: str,
+        body_text: Optional[str] = None,
+    ) -> bool:
+        try:
+            if not to_email:
+                return False
+            if not self.smtp_configured():
+                logger.warning("SMTP credentials not configured. Lead email not sent.")
+                return False
+            msg = MIMEMultipart("alternative")
+            msg["From"] = f"{self.from_name} <{self.from_email}>"
+            msg["To"] = to_email
+            msg["Subject"] = subject
+            msg.attach(MIMEText(body_text or body_html, "plain"))
+            msg.attach(MIMEText(body_html, "html"))
+            server = smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=self.smtp_timeout)
+            server.starttls()
+            server.login(self.smtp_username, self.smtp_password)
+            server.sendmail(self.from_email, to_email, msg.as_string())
+            server.quit()
+            logger.info(f"Lead email sent to {to_email}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to send lead email to {to_email}: {str(e)}")
+            return False
+
     def test_email_connection(self) -> bool:
         """Test email connection"""
         try:

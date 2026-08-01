@@ -106,8 +106,8 @@ export function MotBookingViewDialog({
 
           <DetailSection title="Vehicle">
             <div>{formatMotVehicleLine(booking)}</div>
-            {(booking.mileage || vehicle.mileage) && (
-              <div>Mileage: {booking.mileage || vehicle.mileage}</div>
+            {Boolean(booking.mileage || vehicle.mileage) && (
+              <div>Mileage: {String(booking.mileage || vehicle.mileage)}</div>
             )}
             {booking.mot_expiry_date && (
               <div>MOT expires: {booking.mot_expiry_date.slice(0, 10)}</div>
@@ -118,18 +118,18 @@ export function MotBookingViewDialog({
             <div>
               {booking.booking_date?.slice(0, 10)} {booking.start_time} – {booking.end_time}
             </div>
-            {deliveryOption && (
+            {Boolean(deliveryOption) && (
               <div className="text-muted-foreground">
                 {getDeliveryOptionLabel(deliveryOption as MotDeliveryOption)}
               </div>
             )}
           </DetailSection>
 
-          {(services.motInspection ||
+          {(Boolean(services.motInspection) ||
             (Array.isArray(services.selectedServiceIds) && services.selectedServiceIds.length > 0) ||
-            services.otherServices) && (
+            Boolean(services.otherServices)) && (
             <DetailSection title="Services">
-              {services.motInspection && (
+              {Boolean(services.motInspection) && (
                 <div className="flex justify-between gap-4">
                   <span>Carry Out MOT Inspection</span>
                   {Number.isFinite(Number(services.motPrice)) && (

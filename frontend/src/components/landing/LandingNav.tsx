@@ -17,27 +17,26 @@ import { BizTrackLogo } from '../brand/BizTrackLogo';
 
 
 const NAV_LINKS = [
-
-  { href: '#modules', label: 'Modules' },
-  { href: '#overview', label: 'Overview' },
-
-  { href: '#features', label: 'Features' },
-
-  { href: '#reviews', label: 'Reviews' },
-
-  { href: '#csr', label: 'CSR' },
-
-  { href: '#verification', label: 'Verify' },
-
+  { id: 'modules', label: 'Modules' },
+  { id: 'overview', label: 'Overview' },
+  { id: 'features', label: 'Features' },
+  { id: 'reviews', label: 'Reviews' },
+  { id: 'csr', label: 'CSR' },
+  { id: 'verification', label: 'Verify' },
+  { id: 'pricing', label: 'Pricing' },
 ] as const;
 
 const PAGE_LINKS = [
-
   { href: '/about', label: 'About Us' },
-
   { href: '/contact', label: 'Contact' },
-
 ] as const;
+
+function scrollToSection(id: string) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
 
 
 
@@ -62,55 +61,25 @@ export function LandingNav() {
 
 
           <div className="hidden lg:flex items-center gap-6 xl:gap-8">
-
             {NAV_LINKS.map((link) => (
-
-              <a
-
-                key={link.href}
-
-                href={link.href}
-
+              <button
+                key={link.id}
+                type="button"
+                onClick={() => scrollToSection(link.id)}
                 className="text-sm font-medium text-slate-700 hover:text-blue-700 transition-colors"
-
               >
-
                 {link.label}
-
-              </a>
-
+              </button>
             ))}
-
             {PAGE_LINKS.map((link) => (
-
               <Link
-
                 key={link.href}
-
                 href={link.href}
-
                 className="text-sm font-medium text-slate-700 hover:text-blue-700 transition-colors"
-
               >
-
                 {link.label}
-
               </Link>
-
             ))}
-
-            <a
-
-              href="#pricing"
-
-              className="text-sm font-medium text-slate-700 hover:text-blue-700 transition-colors"
-
-            >
-
-              Pricing
-
-            </a>
-
           </div>
 
 
@@ -178,55 +147,25 @@ export function LandingNav() {
 
 
         <div className="flex lg:hidden gap-4 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none [scrollbar-width:none]">
-
           {NAV_LINKS.map((link) => (
-
-            <a
-
-              key={link.href}
-
-              href={link.href}
-
+            <button
+              key={link.id}
+              type="button"
+              onClick={() => scrollToSection(link.id)}
               className="shrink-0 text-xs font-medium text-slate-600 hover:text-blue-700 whitespace-nowrap"
-
             >
-
               {link.label}
-
-            </a>
-
+            </button>
           ))}
-
           {PAGE_LINKS.map((link) => (
-
             <Link
-
               key={link.href}
-
               href={link.href}
-
               className="shrink-0 text-xs font-medium text-slate-600 hover:text-blue-700 whitespace-nowrap"
-
             >
-
               {link.label}
-
             </Link>
-
           ))}
-
-          <a
-
-            href="#pricing"
-
-            className="shrink-0 text-xs font-medium text-slate-600 hover:text-blue-700 whitespace-nowrap"
-
-          >
-
-            Pricing
-
-          </a>
-
         </div>
 
       </div>

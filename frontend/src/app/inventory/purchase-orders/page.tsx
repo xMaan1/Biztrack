@@ -240,8 +240,8 @@ function PurchaseOrdersContent() {
       requisitionNumber: order.requisitionNumber || '',
     });
     setEditDocumentLinks({
-      jobCardId: order.jobCardId,
-      invoiceId: order.invoiceId,
+      jobCardId: order.jobCardId ?? undefined,
+      invoiceId: order.invoiceId ?? undefined,
     });
     setEditSelectedVehicle(null);
     setIsEditModalOpen(true);

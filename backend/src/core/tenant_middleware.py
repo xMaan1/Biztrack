@@ -85,6 +85,8 @@ class TenantMiddleware:
             "/subscriptions/paypal/webhook",
             "/subscriptions/paypal/confirm",
             "/public/",
+            "/crm/leads/email-track/",
+            "/crm/leads/twilio/",
             "/"  # Root landing page
         ]
         

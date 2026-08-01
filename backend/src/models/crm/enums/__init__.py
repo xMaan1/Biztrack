@@ -3,12 +3,45 @@ from enum import Enum
 
 class LeadStatus(str, Enum):
     NEW = "new"
+    OPEN = "open"
     CONTACTED = "contacted"
     QUALIFIED = "qualified"
     PROPOSAL_SENT = "proposal_sent"
     NEGOTIATION = "negotiation"
     WON = "won"
     LOST = "lost"
+    CLOSED = "closed"
+
+
+class LeadPipelineStage(str, Enum):
+    NEW_LEAD = "new_lead"
+    TRIED_TO_CONTACT = "tried_to_contact"
+    MADE_CONTACT = "made_contact"
+    QUALIFIED = "qualified"
+    APPOINTMENT_SET = "appointment_set"
+    OFFER_MADE = "offer_made"
+    UNDER_CONTRACT = "under_contract"
+    CLOSED = "closed"
+    LOST = "lost"
+
+
+class LeadRating(str, Enum):
+    HOT = "hot"
+    WARM = "warm"
+    COLD = "cold"
+
+
+class CallResult(str, Enum):
+    LEAD_CALLED_IN = "Lead Called In"
+    CONNECTED = "Connected"
+    INTERESTED = "Interested"
+    ATTEMPTED = "Attempted"
+    CALLED_NO_MESSAGE = "Called (No message left)"
+    OPT_OUT = "Opt Out - Do not call"
+    LEAD_NOT_THERE = "Lead Is Not There"
+    TALKED_TO_LEAD = "Talked to Lead"
+    WRONG_NUMBER = "Wrong Number"
+    LEFT_VOICE_MAIL = "Left Voice Mail"
 
 
 class LeadSource(str, Enum):
@@ -89,6 +122,9 @@ class ContractStatus(str, Enum):
 
 __all__ = [
     "LeadStatus",
+    "LeadPipelineStage",
+    "LeadRating",
+    "CallResult",
     "LeadSource",
     "OpportunityStage",
     "ContactType",
