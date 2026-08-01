@@ -1,4 +1,4 @@
-﻿import type { Lead } from './lead';
+import type { Lead } from './lead';
 
 export {
   LeadStatus,
@@ -130,7 +130,6 @@ export interface Contact {
   description?: string;
   tags: string[];
   attachments?: ContactAttachment[];
-  image_url?: string;
   isActive: boolean;
   initials?: string | null;
   fullName?: string | null;
@@ -170,7 +169,6 @@ export interface ContactCreate {
   tags?: string[];
   attachments?: ContactAttachment[];
   isActive?: boolean;
-  image_url?: string;
   initials?: string | null;
   fullName?: string | null;
   birthday?: string | null;
@@ -199,7 +197,6 @@ export interface ContactUpdate {
   tags?: string[];
   attachments?: ContactAttachment[];
   isActive?: boolean;
-  image_url?: string;
   initials?: string | null;
   fullName?: string | null;
   birthday?: string | null;
@@ -474,4 +471,3 @@ export interface CRMActivityFilters {
   completed?: boolean;
   search?: string;
 }
-
