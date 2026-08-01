@@ -1,4 +1,3 @@
-// @ts-nocheck
 export enum LeadStatus {
   NEW = 'new',
   OPEN = 'open',
