@@ -40,7 +40,6 @@ type Props = {
   onPipelineChange: (id: string, stage: string) => void;
   onAssigneeChange: (id: string, userId: string) => void;
   onDelete: (id: string) => void;
-  onRowClick?: (lead: Lead) => void;
   users: LeadUserOption[];
 };
 
@@ -58,7 +57,6 @@ export function LeadsDenseTable({
   onPipelineChange,
   onAssigneeChange,
   onDelete,
-  onRowClick,
   users,
 }: Props) {
   const router = useRouter();
@@ -116,9 +114,7 @@ export function LeadsDenseTable({
               <tr
                 key={lead.id}
                 className="hover:bg-muted/30 cursor-pointer"
-                onClick={() =>
-                  onRowClick ? onRowClick(lead) : router.push(`/crm/leads/${lead.id}`)
-                }
+                onClick={() => router.push(`/crm/leads/${lead.id}`)}
               >
                 <td
                   className="p-3 align-top"

@@ -8,7 +8,6 @@ import { LeadsListToolbar } from '@/src/components/crm/leads/list/LeadsListToolb
 import { LeadsPinnedFilters } from '@/src/components/crm/leads/list/LeadsPinnedFilters';
 import { LeadsListControls } from '@/src/components/crm/leads/list/LeadsListControls';
 import { LeadCreateDialog } from '@/src/components/crm/leads/list/LeadCreateDialog';
-import { LeadInfoDialog } from '@/src/components/crm/leads/list/LeadInfoDialog';
 import { mapTenantUsers } from '@/src/components/crm/leads/leadUtils';
 import CRMService from '@/src/services/CRMService';
 import { Lead, CRMLeadFilters, LeadSavedFilter } from '@/src/models/crm';
@@ -45,7 +44,6 @@ function CRMLeadsContent() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [savedFilters, setSavedFilters] = useState<LeadSavedFilter[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [viewLead, setViewLead] = useState<Lead | null>(null);
   const [showPartialOnly, setShowPartialOnly] = useState(false);
   const initialLoadDone = useRef(false);
 
@@ -235,20 +233,9 @@ function CRMLeadsContent() {
             loadLeads();
           }}
           onDelete={handleDelete}
-          onRowClick={setViewLead}
           users={users}
         />
       </div>
-
-      <LeadInfoDialog
-        lead={viewLead}
-        open={!!viewLead}
-        onOpenChange={(open) => {
-          if (!open) setViewLead(null);
-        }}
-        users={users}
-        onSaved={loadLeads}
-      />
 
       <LeadCreateDialog
         open={isCreateDialogOpen}
