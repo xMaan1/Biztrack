@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client';
 
 import { MapPin } from 'lucide-react';

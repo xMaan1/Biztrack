@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client';
 
 import { PIPELINE_LABELS, LeadPipelineHistoryItem } from '@/src/models/crm';

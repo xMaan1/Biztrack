@@ -1,4 +1,3 @@
-// @ts-nocheck
 export type LeadUserOption = { id: string; name: string };
 
 export function pipelineClass(stage?: string) {
