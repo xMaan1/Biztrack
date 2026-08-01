@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client';
 
 import { Lead } from '@/src/models/crm';
