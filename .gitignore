@@ -7,3 +7,5 @@ idea/
 backend/uploads/
 backend/src/__pycache__/
 *.pyc
+backend/client_secrets.json
+backend/tokens/
