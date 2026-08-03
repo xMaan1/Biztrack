@@ -9,6 +9,7 @@ from .....config.database import User
 from .....core.cache import cached_sync
 from .....models.invoices import Invoice
 from ..items.schemas import InvoiceStatus
+from ..shared import transform_invoice_to_pydantic
 from .schemas import InvoiceDashboard, InvoiceMetrics
 
 
@@ -132,8 +133,8 @@ def get_invoice_dashboard_endpoint(db: Session, current_user: User, tenant_conte
 
         return InvoiceDashboard(
             metrics=metrics,
-            recentInvoices=recent_invoices,
-            overdueInvoices=overdue_invoices_list,
+            recentInvoices=[transform_invoice_to_pydantic(inv) for inv in recent_invoices],
+            overdueInvoices=[transform_invoice_to_pydantic(inv) for inv in overdue_invoices_list],
             topCustomers=[
                 {"name": c.customerName, "amount": float(c.total_amount), "count": c.invoice_count}
                 for c in top_customers
