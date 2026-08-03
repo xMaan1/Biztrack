@@ -24,6 +24,8 @@ interface VehicleDialogProps {
   mode: 'create' | 'edit';
   vehicle?: Vehicle | null;
   onSuccess: () => void;
+  onCreated?: (vehicle: Vehicle) => void;
+  defaultCustomer?: Customer | null;
 }
 
 export default function VehicleDialog({
@@ -32,6 +34,8 @@ export default function VehicleDialog({
   mode,
   vehicle,
   onSuccess,
+  onCreated,
+  defaultCustomer,
 }: VehicleDialogProps) {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -51,9 +55,9 @@ export default function VehicleDialog({
     if (open && mode === 'edit' && vehicle?.customer_id) {
       apiService.get(`/crm/customers/${vehicle.customer_id}`).then((c: Customer) => setSelectedCustomer(c)).catch(() => setSelectedCustomer(null));
     } else if (open && mode === 'create') {
-      setSelectedCustomer(null);
+      setSelectedCustomer(defaultCustomer ?? null);
     }
-  }, [open, mode, vehicle?.customer_id]);
+  }, [open, mode, vehicle?.customer_id, defaultCustomer]);
 
   useEffect(() => {
     if (vehicle && mode === 'edit') {
@@ -80,7 +84,7 @@ export default function VehicleDialog({
       });
     }
     setErrorMessage('');
-  }, [vehicle, mode]);
+  }, [vehicle, mode, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,7 +112,8 @@ export default function VehicleDialog({
           customer_id: selectedCustomer?.id || undefined,
           notes: formData.notes.trim() || undefined,
         };
-        await apiService.post('/vehicles', payload);
+        const created = await apiService.post('/vehicles', payload) as Vehicle;
+        onCreated?.(created);
       } else if (vehicle) {
         const payload: VehicleUpdate = {
           make,

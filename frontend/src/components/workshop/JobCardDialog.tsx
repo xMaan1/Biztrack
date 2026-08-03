@@ -22,6 +22,7 @@ import { Alert, AlertDescription } from '../ui/alert';
 import { CustomerSearch } from '../ui/customer-search';
 import { VehicleSearch } from '../ui/vehicle-search';
 import { CreateCustomerDialog } from '../crm/CreateCustomerDialog';
+import VehicleDialog from './VehicleDialog';
 import { Plus } from 'lucide-react';
 import { apiService } from '../../services/ApiService';
 import { Customer } from '../../services/CustomerService';
@@ -53,6 +54,7 @@ export default function JobCardDialog({
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [showCreateCustomer, setShowCreateCustomer] = useState(false);
+  const [showCreateVehicle, setShowCreateVehicle] = useState(false);
   const [documentLinks, setDocumentLinks] = useState<WorkshopDocumentLinksValue>({});
   const [formData, setFormData] = useState({
     title: '',
@@ -300,26 +302,39 @@ export default function JobCardDialog({
               </div>
             </div>
             <div className="md:col-span-2">
-              <VehicleSearch
-                label="Vehicle"
-                value={selectedVehicle}
-                onSelect={(v) => {
-                  setSelectedVehicle(v);
-                  if (v) {
-                    setFormData((prev) => ({
-                      ...prev,
-                      vehicle_make: v.make ?? '',
-                      vehicle_model: v.model ?? '',
-                      vehicle_year: v.year ?? '',
-                      vehicle_vin: v.vin ?? '',
-                      vehicle_color: v.color ?? '',
-                      vehicle_reg: v.registration_number ?? '',
-                      vehicle_mileage: v.mileage ?? '',
-                    }));
-                  }
-                }}
-                placeholder="Search by reg, VIN, make, model..."
-              />
+              <div className="flex items-end gap-2">
+                <div className="flex-1">
+                  <VehicleSearch
+                    label="Vehicle"
+                    value={selectedVehicle}
+                    onSelect={(v) => {
+                      setSelectedVehicle(v);
+                      if (v) {
+                        setFormData((prev) => ({
+                          ...prev,
+                          vehicle_make: v.make ?? '',
+                          vehicle_model: v.model ?? '',
+                          vehicle_year: v.year ?? '',
+                          vehicle_vin: v.vin ?? '',
+                          vehicle_color: v.color ?? '',
+                          vehicle_reg: v.registration_number ?? '',
+                          vehicle_mileage: v.mileage ?? '',
+                        }));
+                      }
+                    }}
+                    placeholder="Search by reg, VIN, make, model..."
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowCreateVehicle(true)}
+                  className="shrink-0"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  New
+                </Button>
+              </div>
             </div>
             <div>
               <Label>Vehicle make</Label>
@@ -408,6 +423,30 @@ export default function JobCardDialog({
         open={showCreateCustomer}
         onOpenChange={setShowCreateCustomer}
         onCreated={(customer) => setSelectedCustomer(customer)}
+      />
+
+      <VehicleDialog
+        open={showCreateVehicle}
+        onOpenChange={setShowCreateVehicle}
+        mode="create"
+        onSuccess={() => {}}
+        defaultCustomer={selectedCustomer}
+        onCreated={(v) => {
+          setSelectedVehicle(v);
+          setFormData((prev) => ({
+            ...prev,
+            vehicle_make: v.make ?? '',
+            vehicle_model: v.model ?? '',
+            vehicle_year: v.year ?? '',
+            vehicle_vin: v.vin ?? '',
+            vehicle_color: v.color ?? '',
+            vehicle_reg: v.registration_number ?? '',
+            vehicle_mileage: v.mileage ?? '',
+          }));
+          if (v.customer_id && (!selectedCustomer || selectedCustomer.id !== v.customer_id)) {
+            apiService.get(`/crm/customers/${v.customer_id}`).then((c: Customer) => setSelectedCustomer(c)).catch(() => {});
+          }
+        }}
       />
     </Dialog>
   );
