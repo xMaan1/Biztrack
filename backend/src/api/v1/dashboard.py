@@ -31,7 +31,20 @@ def get_dashboard_overview(
             }
         
         tenant_id = tenant_context["tenant_id"]
-        
+
+        user_role = tenant_context.get("user_role")
+        role_name = getattr(user_role, "name", None) if user_role else None
+        if role_name == "team_member":
+            return {
+                "projects": {"recent": [], "stats": {"total": 0, "active": 0, "completed": 0, "on_hold": 0}},
+                "workOrders": get_work_orders_data(db, tenant_id),
+                "invoices": get_invoices_data(db, tenant_id),
+                "users": {"users": [], "total": 0},
+                "subscription": get_subscription_data(db, tenant_context),
+                "timestamp": tenant_context.get("timestamp"),
+                "tenant_id": tenant_id
+            }
+
         projects_data = get_projects_data(db, tenant_id)
         work_orders_data = get_work_orders_data(db, tenant_id)
         invoices_data = get_invoices_data(db, tenant_id)

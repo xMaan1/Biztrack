@@ -100,6 +100,7 @@ export function useSidebar() {
     hasModuleAccess,
     hasPermission,
     isOwner,
+    currentRoleName,
     initializing: rbacInitializing,
   } = usePermissions();
 
@@ -117,7 +118,7 @@ export function useSidebar() {
   );
 
   const isSuperAdmin = user?.userRole === 'super_admin';
-  const isEmployee = user?.userRole === 'team_member';
+  const isEmployee = currentRoleName === 'team_member';
 
   const hasMenuRoleAccess = useCallback(
     (roles?: string[]) => {
@@ -329,6 +330,7 @@ export function useSidebar() {
     hasPathPermission,
     isOwner,
     isEmployee,
+    currentRoleName,
     purchaseOrdersNavLabel,
   ]);
 

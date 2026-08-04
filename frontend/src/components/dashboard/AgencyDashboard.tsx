@@ -1,6 +1,8 @@
 'use client';
 
 import React from 'react';
+import { usePermissions } from '@/src/hooks/usePermissions';
+import TasksWidget from './TasksWidget';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
@@ -72,6 +74,25 @@ export default function AgencyDashboard({
   stats,
   onNavigate,
 }: AgencyDashboardProps) {
+  const { currentRoleName } = usePermissions();
+  const isEmployee = currentRoleName === 'team_member';
+
+  if (isEmployee) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+            My Dashboard
+          </h1>
+          <p className="mt-2 text-gray-600">
+            Your assigned tasks and updates
+          </p>
+        </div>
+        <TasksWidget />
+      </div>
+    );
+  }
+
   const completionRate =
     stats.totalProjects > 0
       ? Math.round((stats.completedProjects / stats.totalProjects) * 100)
