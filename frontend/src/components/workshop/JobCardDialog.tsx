@@ -217,182 +217,206 @@ export default function JobCardDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[92vh] w-[95vw] max-w-6xl flex-col gap-3 overflow-hidden p-5 sm:rounded-lg">
+        <DialogHeader className="shrink-0 space-y-1">
           <DialogTitle>{mode === 'create' ? 'New Job Card' : 'Edit Job Card'}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col gap-3">
           {errorMessage && (
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="shrink-0">
               <AlertDescription>{errorMessage}</AlertDescription>
             </Alert>
           )}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label>Title *</Label>
-              <Input
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="Job title"
-              />
-            </div>
-            <div>
-              <Label>Status</Label>
-              <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Priority</Label>
-              <Select value={formData.priority} onValueChange={(v) => setFormData({ ...formData, priority: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="md:col-span-2">
-              <div className="flex items-end gap-2">
-                <div className="flex-1">
-                  <CustomerSearch
-                    label="Customer"
-                    value={selectedCustomer}
-                    onSelect={setSelectedCustomer}
-                    placeholder="Search by name, email, phone..."
-                  />
+          <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div className="sm:col-span-1">
+                    <Label>Title *</Label>
+                    <Input
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      placeholder="Job title"
+                    />
+                  </div>
+                  <div>
+                    <Label>Status</Label>
+                    <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="draft">Draft</SelectItem>
+                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Priority</Label>
+                    <Select value={formData.priority} onValueChange={(v) => setFormData({ ...formData, priority: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="urgent">Urgent</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowCreateCustomer(true)}
-                  className="shrink-0"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  New
-                </Button>
+
+                <div className="flex items-end gap-2">
+                  <div className="flex-1">
+                    <CustomerSearch
+                      label="Customer"
+                      value={selectedCustomer}
+                      onSelect={setSelectedCustomer}
+                      placeholder="Search by name, email, phone..."
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowCreateCustomer(true)}
+                    className="shrink-0"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    New
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div>
+                    <Label>Assigned to</Label>
+                    <Select value={formData.assigned_to_id || 'none'} onValueChange={(v) => setFormData({ ...formData, assigned_to_id: v === 'none' ? '' : v })}>
+                      <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {users.map((u) => (
+                          <SelectItem key={u.id} value={u.id}>{u.name || u.username || u.id}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Planned date</Label>
+                    <Input type="date" value={formData.planned_date} onChange={(e) => setFormData({ ...formData, planned_date: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Date/Time out</Label>
+                    <Input type="datetime-local" value={formData.date_time_out} onChange={(e) => setFormData({ ...formData, date_time_out: e.target.value })} />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div>
+                    <Label>Labor estimate</Label>
+                    <Input type="number" step="0.01" min={0} value={formData.labor_estimate} onChange={(e) => setFormData({ ...formData, labor_estimate: parseFloat(e.target.value) || 0 })} />
+                  </div>
+                  <div>
+                    <Label>Parts estimate</Label>
+                    <Input type="number" step="0.01" min={0} value={formData.parts_estimate} onChange={(e) => setFormData({ ...formData, parts_estimate: parseFloat(e.target.value) || 0 })} />
+                  </div>
+                  <div>
+                    <Label>VAT %</Label>
+                    <Input type="number" step="0.01" min={0} max={100} value={formData.vat_rate} onChange={(e) => setFormData({ ...formData, vat_rate: parseFloat(e.target.value) || 0 })} placeholder="15" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <Label>Description</Label>
+                    <Textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={3} />
+                  </div>
+                  <div>
+                    <Label>Notes</Label>
+                    <Textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} rows={3} />
+                  </div>
+                </div>
+
+                {isWorkshop && (
+                  <WorkshopDocumentLinks
+                    excludeType="job_card"
+                    value={documentLinks}
+                    onChange={setDocumentLinks}
+                  />
+                )}
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-end gap-2">
+                  <div className="flex-1">
+                    <VehicleSearch
+                      label="Vehicle"
+                      value={selectedVehicle}
+                      onSelect={(v) => {
+                        setSelectedVehicle(v);
+                        if (v) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            vehicle_make: v.make ?? '',
+                            vehicle_model: v.model ?? '',
+                            vehicle_year: v.year ?? '',
+                            vehicle_vin: v.vin ?? '',
+                            vehicle_color: v.color ?? '',
+                            vehicle_reg: v.registration_number ?? '',
+                            vehicle_mileage: v.mileage ?? '',
+                          }));
+                        }
+                      }}
+                      placeholder="Search by reg, VIN, make, model..."
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowCreateVehicle(true)}
+                    className="shrink-0"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    New
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
+                  <div>
+                    <Label>Vehicle make</Label>
+                    <Input value={formData.vehicle_make} onChange={(e) => setFormData({ ...formData, vehicle_make: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Vehicle model</Label>
+                    <Input value={formData.vehicle_model} onChange={(e) => setFormData({ ...formData, vehicle_model: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Vehicle year</Label>
+                    <Input value={formData.vehicle_year} onChange={(e) => setFormData({ ...formData, vehicle_year: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>VIN</Label>
+                    <Input value={formData.vehicle_vin} onChange={(e) => setFormData({ ...formData, vehicle_vin: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Registration Number</Label>
+                    <Input value={formData.vehicle_reg} onChange={(e) => setFormData({ ...formData, vehicle_reg: e.target.value })} placeholder="Reg. no." />
+                  </div>
+                  <div>
+                    <Label>Mileage</Label>
+                    <Input value={formData.vehicle_mileage} onChange={(e) => setFormData({ ...formData, vehicle_mileage: e.target.value })} placeholder="e.g. 45000" />
+                  </div>
+                  <div>
+                    <Label>Engine Number</Label>
+                    <Input value={formData.vehicle_engine_number} onChange={(e) => setFormData({ ...formData, vehicle_engine_number: e.target.value })} placeholder="Engine no." />
+                  </div>
+                  <div>
+                    <Label>Color</Label>
+                    <Input value={formData.vehicle_color} onChange={(e) => setFormData({ ...formData, vehicle_color: e.target.value })} />
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="md:col-span-2">
-              <div className="flex items-end gap-2">
-                <div className="flex-1">
-                  <VehicleSearch
-                    label="Vehicle"
-                    value={selectedVehicle}
-                    onSelect={(v) => {
-                      setSelectedVehicle(v);
-                      if (v) {
-                        setFormData((prev) => ({
-                          ...prev,
-                          vehicle_make: v.make ?? '',
-                          vehicle_model: v.model ?? '',
-                          vehicle_year: v.year ?? '',
-                          vehicle_vin: v.vin ?? '',
-                          vehicle_color: v.color ?? '',
-                          vehicle_reg: v.registration_number ?? '',
-                          vehicle_mileage: v.mileage ?? '',
-                        }));
-                      }
-                    }}
-                    placeholder="Search by reg, VIN, make, model..."
-                  />
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowCreateVehicle(true)}
-                  className="shrink-0"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  New
-                </Button>
-              </div>
-            </div>
-            <div>
-              <Label>Vehicle make</Label>
-              <Input value={formData.vehicle_make} onChange={(e) => setFormData({ ...formData, vehicle_make: e.target.value })} />
-            </div>
-            <div>
-              <Label>Vehicle model</Label>
-              <Input value={formData.vehicle_model} onChange={(e) => setFormData({ ...formData, vehicle_model: e.target.value })} />
-            </div>
-            <div>
-              <Label>Vehicle year</Label>
-              <Input value={formData.vehicle_year} onChange={(e) => setFormData({ ...formData, vehicle_year: e.target.value })} />
-            </div>
-            <div>
-              <Label>VIN</Label>
-              <Input value={formData.vehicle_vin} onChange={(e) => setFormData({ ...formData, vehicle_vin: e.target.value })} />
-            </div>
-            <div>
-              <Label>Registration Number</Label>
-              <Input value={formData.vehicle_reg} onChange={(e) => setFormData({ ...formData, vehicle_reg: e.target.value })} placeholder="Reg. no." />
-            </div>
-            <div>
-              <Label>Mileage</Label>
-              <Input value={formData.vehicle_mileage} onChange={(e) => setFormData({ ...formData, vehicle_mileage: e.target.value })} placeholder="e.g. 45000" />
-            </div>
-            <div>
-              <Label>Engine Number</Label>
-              <Input value={formData.vehicle_engine_number} onChange={(e) => setFormData({ ...formData, vehicle_engine_number: e.target.value })} placeholder="Engine no." />
-            </div>
-            <div>
-              <Label>Assigned to</Label>
-              <Select value={formData.assigned_to_id || 'none'} onValueChange={(v) => setFormData({ ...formData, assigned_to_id: v === 'none' ? '' : v })}>
-                <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {users.map((u) => (
-                    <SelectItem key={u.id} value={u.id}>{u.name || u.username || u.id}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Planned date</Label>
-              <Input type="date" value={formData.planned_date} onChange={(e) => setFormData({ ...formData, planned_date: e.target.value })} />
-            </div>
-            <div>
-              <Label>Date/Time out</Label>
-              <Input type="datetime-local" value={formData.date_time_out} onChange={(e) => setFormData({ ...formData, date_time_out: e.target.value })} />
-            </div>
-            <div>
-              <Label>Labor estimate</Label>
-              <Input type="number" step="0.01" min={0} value={formData.labor_estimate} onChange={(e) => setFormData({ ...formData, labor_estimate: parseFloat(e.target.value) || 0 })} />
-            </div>
-            <div>
-              <Label>Parts estimate</Label>
-              <Input type="number" step="0.01" min={0} value={formData.parts_estimate} onChange={(e) => setFormData({ ...formData, parts_estimate: parseFloat(e.target.value) || 0 })} />
-            </div>
-            <div>
-              <Label>VAT %</Label>
-              <Input type="number" step="0.01" min={0} max={100} value={formData.vat_rate} onChange={(e) => setFormData({ ...formData, vat_rate: parseFloat(e.target.value) || 0 })} placeholder="15" />
-            </div>
           </div>
-          <div>
-            <Label>Description</Label>
-            <Textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={2} />
-          </div>
-          {isWorkshop && (
-            <WorkshopDocumentLinks
-              excludeType="job_card"
-              value={documentLinks}
-              onChange={setDocumentLinks}
-            />
-          )}
-          <div>
-            <Label>Notes</Label>
-            <Textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} rows={2} />
-          </div>
-          <div className="flex justify-end gap-2">
+
+          <div className="flex shrink-0 justify-end gap-2 border-t pt-3">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" disabled={loading}>{loading ? 'Saving...' : 'Save'}</Button>
           </div>
