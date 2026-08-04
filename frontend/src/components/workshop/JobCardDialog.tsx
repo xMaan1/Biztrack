@@ -21,6 +21,7 @@ import {
 import { Alert, AlertDescription } from '../ui/alert';
 import { CustomerSearch } from '../ui/customer-search';
 import { VehicleSearch } from '../ui/vehicle-search';
+import { AssigneeSearch, AssigneeOption } from '../ui/assignee-search';
 import { CreateCustomerDialog } from '../crm/CreateCustomerDialog';
 import VehicleDialog from './VehicleDialog';
 import { Plus } from 'lucide-react';
@@ -49,9 +50,9 @@ export default function JobCardDialog({
   const isWorkshop = planInfo?.planType === 'workshop';
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [users, setUsers] = useState<{ id: string; name?: string; username?: string }[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [selectedAssignee, setSelectedAssignee] = useState<AssigneeOption | null>(null);
   const [showCreateCustomer, setShowCreateCustomer] = useState(false);
   const [showCreateVehicle, setShowCreateVehicle] = useState(false);
   const [documentLinks, setDocumentLinks] = useState<WorkshopDocumentLinksValue>({});
@@ -79,26 +80,6 @@ export default function JobCardDialog({
 
   useEffect(() => {
     if (open) {
-      const tenantId = apiService.getTenantId();
-      if (!tenantId) {
-        setUsers([]);
-      } else {
-        apiService.getTenantUsers(tenantId).then((res: any) => {
-          const list = res?.users ?? res ?? [];
-          const normalized = (Array.isArray(list) ? list : [])
-            .filter((u: any) => u.isActive !== false)
-            .map((u: any) => ({
-              id: u.id || u.userId,
-              name:
-                `${u.firstName || ''} ${u.lastName || ''}`.trim() ||
-                u.userName ||
-                u.email,
-              username: u.userName,
-            }))
-            .filter((u: { id?: string }) => u.id);
-          setUsers(normalized);
-        }).catch(() => setUsers([]));
-      }
       if (mode === 'edit' && jobCard?.customer_id) {
         apiService.get(`/crm/customers/${jobCard.customer_id}`).then((c: Customer) => setSelectedCustomer(c)).catch(() => setSelectedCustomer(null));
       } else {
@@ -134,9 +115,17 @@ export default function JobCardDialog({
         notes: jobCard.notes || '',
       });
       setSelectedVehicle(null);
+      setSelectedAssignee(
+        jobCard.assigned_to_id
+          ? {
+              id: jobCard.assigned_to_id,
+              name: jobCard.assigned_to_name || jobCard.assigned_to_id,
+              sources: ['user'],
+            }
+          : null,
+      );
       setDocumentLinks({
         purchaseOrderId: jobCard.purchase_order_id,
-        invoiceId: jobCard.invoice_id,
       });
     } else if (mode === 'create') {
       setFormData({
@@ -161,6 +150,7 @@ export default function JobCardDialog({
         notes: '',
       });
       setSelectedVehicle(null);
+      setSelectedAssignee(null);
       setDocumentLinks({});
     }
     setErrorMessage('');
@@ -191,7 +181,7 @@ export default function JobCardDialog({
           mileage: formData.vehicle_mileage || undefined,
           engine_number: formData.vehicle_engine_number || undefined,
         },
-        assigned_to_id: formData.assigned_to_id || undefined,
+        assigned_to_id: selectedAssignee?.id || undefined,
         planned_date: formData.planned_date ? formData.planned_date + 'T12:00:00Z' : undefined,
         completed_at: formData.date_time_out ? formData.date_time_out + ':00Z' : undefined,
         labor_estimate: formData.labor_estimate,
@@ -199,7 +189,6 @@ export default function JobCardDialog({
         vat_rate: formData.vat_rate / 100,
         notes: formData.notes || undefined,
         purchase_order_id: documentLinks.purchaseOrderId,
-        invoice_id: documentLinks.invoiceId,
       };
       if (mode === 'create') {
         await apiService.post('/job-cards', payload);
@@ -227,7 +216,7 @@ export default function JobCardDialog({
               <AlertDescription>{errorMessage}</AlertDescription>
             </Alert>
           )}
-          <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+          <div className="min-h-0 flex-1 overflow-y-auto px-1.5 py-1">
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
               <div className="space-y-3">
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -285,19 +274,13 @@ export default function JobCardDialog({
                   </Button>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                  <div>
-                    <Label>Assigned to</Label>
-                    <Select value={formData.assigned_to_id || 'none'} onValueChange={(v) => setFormData({ ...formData, assigned_to_id: v === 'none' ? '' : v })}>
-                      <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        {users.map((u) => (
-                          <SelectItem key={u.id} value={u.id}>{u.name || u.username || u.id}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <AssigneeSearch
+                  value={selectedAssignee}
+                  onSelect={setSelectedAssignee}
+                  placeholder="Search users or employees..."
+                />
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
                     <Label>Planned date</Label>
                     <Input type="date" value={formData.planned_date} onChange={(e) => setFormData({ ...formData, planned_date: e.target.value })} />
@@ -339,6 +322,9 @@ export default function JobCardDialog({
                     excludeType="job_card"
                     value={documentLinks}
                     onChange={setDocumentLinks}
+                    purchaseOrderInitialData={
+                      mode === 'edit' && jobCard?.id ? { jobCardId: jobCard.id } : undefined
+                    }
                   />
                 )}
               </div>

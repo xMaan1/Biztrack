@@ -26,6 +26,7 @@ import HRMService from '../../services/HRMService';
 import {
   PurchaseOrderCreate,
   PurchaseOrderItemCreate,
+  PurchaseOrder,
 } from '../../models/inventory';
 import { Supplier } from '../../models/hrm';
 import { Product } from '../../models/pos';
@@ -41,7 +42,7 @@ import { WorkshopDocumentLinks, WorkshopDocumentLinksValue } from '../workshop/W
 interface PurchaseOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: () => void;
+  onSuccess?: (order?: PurchaseOrder) => void;
   title?: string;
   showOrderDate?: boolean;
   showSupplierCount?: boolean;
@@ -107,6 +108,10 @@ export default function PurchaseOrderModal({
   useEffect(() => {
     if (isOpen) {
       fetchData();
+      setDocumentLinks({
+        jobCardId: initialData.jobCardId || undefined,
+        invoiceId: initialData.invoiceId || undefined,
+      });
     }
   }, [isOpen]);
 
@@ -243,7 +248,7 @@ export default function PurchaseOrderModal({
             vehicleId: newOrder.purchaseForType === 'vehicle' ? newOrder.vehicleId : undefined,
             purchaseForType: newOrder.purchaseForType,
           };
-      await inventoryService.createPurchaseOrder(payload);
+      const created = await inventoryService.createPurchaseOrder(payload);
       
       if (useToastNotifications) {
         toast.success('Purchase order created successfully');
@@ -251,7 +256,7 @@ export default function PurchaseOrderModal({
       
       onClose();
       resetForm();
-      onSuccess?.();
+      onSuccess?.(created.purchaseOrder);
     } catch (error) {
       const message = 'Failed to create purchase order. Please try again.';
       if (useToastNotifications) {
