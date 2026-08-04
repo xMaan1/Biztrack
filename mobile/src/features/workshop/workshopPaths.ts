@@ -1,10 +1,7 @@
 export const WORKSHOP_NATIVE_PATHS = [
-  '/workshop-management/work-orders',
   '/workshop-management/job-cards',
   '/workshop-management/vehicles',
-  '/workshop-management/production',
   '/workshop-management/quality-control',
-  '/workshop-management/maintenance',
   '/workshop-management/mot/bookings',
 ] as const;
 

@@ -9,7 +9,6 @@ import {
   createJobCard,
   updateJobCard,
   deleteJobCard,
-  getWorkOrders,
   getTenantUsers,
   downloadJobCardPdfToShare,
 } from '../../../services/workshop/workshopMobileApi';
@@ -46,11 +45,7 @@ export function MobileWorkshopJobCardsScreen() {
   const [statusF, setStatusF] = useState('all');
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<JobCard | null>(null);
-  const [woPick, setWoPick] = useState(false);
   const [userPick, setUserPick] = useState(false);
-  const [workOrders, setWorkOrders] = useState<
-    { id: string; work_order_number: string; title: string }[]
-  >([]);
   const [users, setUsers] = useState<
     { id: string; name?: string; username?: string }[]
   >([]);
@@ -61,7 +56,6 @@ export function MobileWorkshopJobCardsScreen() {
     description: '',
     status: 'draft',
     priority: 'medium',
-    work_order_id: '',
     vehicle_make: '',
     vehicle_model: '',
     vehicle_year: '',
@@ -84,14 +78,7 @@ export function MobileWorkshopJobCardsScreen() {
   }, [setSidebarActivePath]);
 
   const loadRefs = useCallback(async () => {
-    const [wo, u] = await Promise.all([getWorkOrders(), getTenantUsers()]);
-    setWorkOrders(
-      wo.map((w: any) => ({
-        id: w.id,
-        work_order_number: w.work_order_number,
-        title: w.title,
-      })),
-    );
+    const u = await getTenantUsers();
     setUsers(u);
   }, []);
 
@@ -138,7 +125,6 @@ export function MobileWorkshopJobCardsScreen() {
       description: '',
       status: 'draft',
       priority: 'medium',
-      work_order_id: '',
       vehicle_make: '',
       vehicle_model: '',
       vehicle_year: '',
@@ -169,7 +155,6 @@ export function MobileWorkshopJobCardsScreen() {
       description: jc.description || '',
       status: jc.status || 'draft',
       priority: jc.priority || 'medium',
-      work_order_id: jc.work_order_id || '',
       vehicle_make: vi.make || '',
       vehicle_model: vi.model || '',
       vehicle_year: vi.year || '',
@@ -202,7 +187,6 @@ export function MobileWorkshopJobCardsScreen() {
       description: form.description || undefined,
       status: form.status,
       priority: form.priority,
-      work_order_id: form.work_order_id || undefined,
       vehicle_info: {
         make: form.vehicle_make || undefined,
         model: form.vehicle_model || undefined,
@@ -277,10 +261,6 @@ export function MobileWorkshopJobCardsScreen() {
     }
   };
 
-  const woItems = workOrders.map((w) => ({
-    id: w.id,
-    label: `${w.work_order_number} · ${w.title}`,
-  }));
   const userItems = users.map((u) => ({
     id: u.id,
     label: u.name || u.username || u.id,
@@ -370,13 +350,6 @@ export function MobileWorkshopJobCardsScreen() {
       )}
 
       <PickerModal
-        visible={woPick}
-        title="Work order"
-        items={woItems}
-        onSelect={(x) => setForm((f) => ({ ...f, work_order_id: x.id }))}
-        onClose={() => setWoPick(false)}
-      />
-      <PickerModal
         visible={userPick}
         title="Assign to"
         items={[{ id: '', label: 'None' }, ...userItems]}
@@ -405,12 +378,6 @@ export function MobileWorkshopJobCardsScreen() {
         <WorkshopTextInput value={form.title} onChangeText={(v) => setForm((f) => ({ ...f, title: v }))} />
         <WorkshopFieldLabel>Description</WorkshopFieldLabel>
         <WorkshopTextInput value={form.description} onChangeText={(v) => setForm((f) => ({ ...f, description: v }))} multiline />
-        <WorkshopPickerField
-          label="Work order"
-          value={workOrders.find((w) => w.id === form.work_order_id) ? woItems.find((x) => x.id === form.work_order_id)?.label ?? '' : ''}
-          placeholder="Optional"
-          onPress={() => setWoPick(true)}
-        />
         <WorkshopPickerField
           label="Assign to"
           value={form.assigned_to_id ? userItems.find((x) => x.id === form.assigned_to_id)?.label ?? '' : ''}

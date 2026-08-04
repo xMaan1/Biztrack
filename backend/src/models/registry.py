@@ -51,10 +51,8 @@ def register_all_models():
         StorageLocation,
         StockMovement,
     )
-    from ..config.workshop_models import WorkOrder, WorkOrderTask
     from ..config.job_card_models import JobCard
     from ..config.vehicle_models import Vehicle
-    from ..config.production_models import ProductionPlan, ProductionStep, ProductionSchedule
     from ..models.invoices import Invoice, Payment, DeliveryNote, InvoiceShareLink
     from ..config.installment_models import InstallmentPlan, Installment
     from ..config.invoice_customization_models import InvoiceCustomization
@@ -88,12 +86,6 @@ def register_all_models():
         QualityInspection,
         QualityDefect,
         QualityReport,
-    )
-    from ..config.maintenance_models import (
-        MaintenanceSchedule,
-        MaintenanceWorkOrder,
-        MaintenanceReport,
-        Equipment,
     )
     from .healthcare import (
         Doctor,
@@ -152,13 +144,8 @@ def register_all_models():
         Receiving,
         StorageLocation,
         StockMovement,
-        WorkOrder,
-        WorkOrderTask,
         JobCard,
         Vehicle,
-        ProductionPlan,
-        ProductionStep,
-        ProductionSchedule,
         Invoice,
         Payment,
         DeliveryNote,
@@ -201,10 +188,6 @@ def register_all_models():
         QualityInspection,
         QualityDefect,
         QualityReport,
-        MaintenanceSchedule,
-        MaintenanceWorkOrder,
-        MaintenanceReport,
-        Equipment,
         Doctor,
         HealthcareStaff,
         Appointment,

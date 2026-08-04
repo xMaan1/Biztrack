@@ -60,7 +60,6 @@ export function resolveNotificationActionPath(actionUrl: string): string {
     [/^\/crm\/customers\/[^/]+\/?$/, '/crm/customers'],
     [/^\/crm\/leads\/[^/]+\/?$/, '/crm/leads'],
     [/^\/crm\/opportunities\/[^/]+\/?$/, '/crm/opportunities'],
-    [/^\/work-orders\/[^/]+\/?$/, '/workshop-management/work-orders'],
     [/^\/job-cards\/[^/]+\/?$/, '/workshop-management/job-cards'],
     [/^\/hrm\/applications\/[^/]+\/?$/, '/hrm/job-postings'],
   ];

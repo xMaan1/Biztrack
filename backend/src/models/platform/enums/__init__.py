@@ -20,7 +20,6 @@ class TenantRole(str, Enum):
     PROJECT_MANAGER = "project_manager"
     PRODUCTION_MANAGER = "production_manager"
     QUALITY_MANAGER = "quality_manager"
-    MAINTENANCE_MANAGER = "maintenance_manager"
 
 
 class ModulePermission(str, Enum):
@@ -56,10 +55,6 @@ class ModulePermission(str, Enum):
     QUALITY_CREATE = "quality:create"
     QUALITY_UPDATE = "quality:update"
     QUALITY_DELETE = "quality:delete"
-    MAINTENANCE_VIEW = "maintenance:view"
-    MAINTENANCE_CREATE = "maintenance:create"
-    MAINTENANCE_UPDATE = "maintenance:update"
-    MAINTENANCE_DELETE = "maintenance:delete"
     BANKING_VIEW = "banking:view"
     BANKING_CREATE = "banking:create"
     BANKING_UPDATE = "banking:update"
@@ -129,10 +124,7 @@ class PlanFeature(str, Enum):
     CUSTOMER_PORTAL = "Customer Portal"
     EMAIL_MARKETING = "Email Marketing"
     PROJECT_MANAGEMENT = "Project Management"
-    PRODUCTION_PLANNING = "Production Planning"
-    WORK_ORDER_MANAGEMENT = "Work Order Management"
     QUALITY_CONTROL = "Quality Control"
-    EQUIPMENT_MAINTENANCE = "Equipment Maintenance"
     TIME_TRACKING = "Time Tracking"
     RESOURCE_ALLOCATION = "Resource Allocation"
     COST_ANALYSIS = "Cost Analysis"

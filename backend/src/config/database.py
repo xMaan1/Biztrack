@@ -36,16 +36,8 @@ from .inventory_models import (
     StorageLocation, StockMovement
 )
 
-from .workshop_models import (
-    WorkOrder, WorkOrderTask, WorkOrderStatus, WorkOrderPriority, WorkOrderType
-)
-
 from .job_card_models import JobCard
 from .vehicle_models import Vehicle
-
-from .production_models import (
-    ProductionPlan, ProductionStep, ProductionSchedule, ProductionStatus, ProductionPriority, ProductionType
-)
 
 from ..models.invoices import (
     Invoice, Payment, DeliveryNote, InvoiceShareLink
@@ -312,35 +304,8 @@ from ..api.v1.pos.categories.logic import (
 )
 from ..api.v1.pos.dashboard.logic import get_pos_dashboard_data
 
-from .workshop_crud import (
-    # Work Order functions
-    get_work_order_by_id, get_all_work_orders, get_work_orders_by_status, get_work_orders_by_type,
-    get_work_orders_by_assigned_user, get_work_orders_by_project, create_work_order, update_work_order, delete_work_order,
-    get_work_order_stats, get_next_work_order_number,
-    
-    # Work Order Task functions
-    get_work_order_task_by_id, get_work_order_tasks, create_work_order_task, update_work_order_task, delete_work_order_task
-)
-
-from .production_crud import (
-    # Production Plan functions
-    get_production_plan_by_id, get_all_production_plans, get_production_plans_by_status,
-    get_production_plans_by_priority, get_production_plans_by_project, get_production_plans_by_work_order,
-    get_production_plans_by_assigned_user, create_production_plan, update_production_plan, delete_production_plan,
-    get_next_production_plan_number, get_production_plan_stats,
-    
-    # Production Step functions
-    get_production_step_by_id, get_production_steps_by_plan, create_production_step,
-    update_production_step, delete_production_step,
-    
-    # Production Schedule functions
-    get_production_schedule_by_id, get_production_schedules_by_plan, create_production_schedule,
-    update_production_schedule, delete_production_schedule
-)
-
 from .reports_crud import (
-    # Reports functions
-    get_reports_dashboard_data, get_work_order_analytics,
+    get_reports_dashboard_data,
     get_project_analytics, get_financial_analytics
 )
 
@@ -420,9 +385,7 @@ __all__ = [
     'StorageLocation', 'StockMovement',
     'Invoice', 'Payment',
     'POSShift', 'POSTransaction', 'PosProductCategory',
-    'WorkOrder', 'WorkOrderTask', 'WorkOrderStatus', 'WorkOrderPriority', 'WorkOrderType',
     'Vehicle',
-    'ProductionPlan', 'ProductionStep', 'ProductionSchedule', 'ProductionStatus', 'ProductionPriority', 'ProductionType',
     'CustomEventType', 'CustomDepartment', 'CustomLeaveType', 'CustomLeadSource',
     'CustomContactSource', 'CustomCompanyIndustry', 'CustomContactType', 'CustomIndustry',
     'AuditLog', 'Permission', 'CustomRole',

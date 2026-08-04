@@ -34,7 +34,6 @@ import {
   Package,
   PieChart,
   BarChart3,
-  Cog,
   Shield,
 } from 'lucide-react';
 
@@ -59,9 +58,7 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
     canViewInventory, 
     canViewFinance, 
     canViewProjects, 
-    canViewProduction, 
     canViewQuality, 
-    canViewMaintenance, 
     canManageUsers, 
     canViewReports,
     isOwner 
@@ -188,16 +185,6 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
           </Link>
         )}
         
-        {canViewProduction() && (
-          <Link
-            href={'/workshop-management/production'}
-            className="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
-          >
-            <Cog className="h-5 w-5" />
-            <span className="text-sm font-medium">Production</span>
-          </Link>
-        )}
-        
         {canViewQuality() && (
           <Link
             href={'/workshop-management/quality-control'}
@@ -205,16 +192,6 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
           >
             <Shield className="h-5 w-5" />
             <span className="text-sm font-medium">Quality Control</span>
-          </Link>
-        )}
-        
-        {canViewMaintenance() && (
-          <Link
-            href={'/maintenance'}
-            className="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
-          >
-            <Settings className="h-5 w-5" />
-            <span className="text-sm font-medium">Maintenance</span>
           </Link>
         )}
         

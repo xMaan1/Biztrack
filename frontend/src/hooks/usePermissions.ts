@@ -58,8 +58,6 @@ export function usePermissions() {
     canManageProduction: () => hasPermission('production:create') || isOwner(),
     canViewQuality: () => hasModuleAccess('quality'),
     canManageQuality: () => hasPermission('quality:create') || isOwner(),
-    canViewMaintenance: () => hasModuleAccess('maintenance'),
-    canManageMaintenance: () => hasPermission('maintenance:create') || isOwner(),
     canViewBanking: () => hasModuleAccess('banking'),
     canManageBanking: () => hasPermission('banking:create') || isOwner(),
     canViewEvents: () => hasModuleAccess('events'),

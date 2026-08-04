@@ -65,18 +65,11 @@ GRANULAR_PERMISSIONS = {
         *_crud("projects:time_tracking"),
     ],
     "production": [
-        *_crud("production:work_orders"),
         *_crud("production:job_cards"),
         *_crud("production:vehicles"),
     ],
     "quality": [
         *_crud("quality:quality_control"),
-    ],
-    "maintenance": [
-        *_crud("maintenance:schedules"),
-        *_crud("maintenance:work_orders"),
-        *_crud("maintenance:equipment"),
-        *_crud("maintenance:reports"),
     ],
     "banking": [
         *_crud("banking:accounts"),
@@ -146,7 +139,6 @@ DEFAULT_ROLE_PERMISSIONS = {
         ModulePermission.PROJECTS_VIEW, ModulePermission.PROJECTS_CREATE, ModulePermission.PROJECTS_UPDATE, ModulePermission.PROJECTS_DELETE,
         ModulePermission.PRODUCTION_VIEW, ModulePermission.PRODUCTION_CREATE, ModulePermission.PRODUCTION_UPDATE, ModulePermission.PRODUCTION_DELETE,
         ModulePermission.QUALITY_VIEW, ModulePermission.QUALITY_CREATE, ModulePermission.QUALITY_UPDATE, ModulePermission.QUALITY_DELETE,
-        ModulePermission.MAINTENANCE_VIEW, ModulePermission.MAINTENANCE_CREATE, ModulePermission.MAINTENANCE_UPDATE, ModulePermission.MAINTENANCE_DELETE,
         ModulePermission.BANKING_VIEW, ModulePermission.BANKING_CREATE, ModulePermission.BANKING_UPDATE, ModulePermission.BANKING_DELETE,
         ModulePermission.EVENTS_VIEW, ModulePermission.EVENTS_CREATE, ModulePermission.EVENTS_UPDATE, ModulePermission.EVENTS_DELETE,
         ModulePermission.USERS_VIEW, ModulePermission.USERS_CREATE, ModulePermission.USERS_UPDATE, ModulePermission.USERS_DELETE,
@@ -186,16 +178,12 @@ DEFAULT_ROLE_PERMISSIONS = {
         ModulePermission.QUALITY_VIEW, ModulePermission.QUALITY_CREATE, ModulePermission.QUALITY_UPDATE, ModulePermission.QUALITY_DELETE,
         ModulePermission.REPORTS_VIEW
     ], GRANULAR_PERMISSIONS["quality"]),
-    TenantRole.MAINTENANCE_MANAGER: _merge_permissions([
-        ModulePermission.MAINTENANCE_VIEW, ModulePermission.MAINTENANCE_CREATE, ModulePermission.MAINTENANCE_UPDATE, ModulePermission.MAINTENANCE_DELETE,
-        ModulePermission.REPORTS_VIEW
-    ], GRANULAR_PERMISSIONS["maintenance"]),
 }
 
 
 OWNER_ACCESSIBLE_MODULES = [
     'crm', 'sales', 'pos', 'inventory', 'hrm', 'projects', 'reports', 'events',
-    'work-orders', 'production', 'quality', 'maintenance', 'banking', 'ledger',
+    'production', 'quality', 'banking', 'ledger',
     'finance', 'settings', 'notifications', 'users', 'dashboard', 'healthcare', 'ngo',
     'lms',
 ]

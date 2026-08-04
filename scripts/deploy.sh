@@ -24,6 +24,17 @@ npm ci
 echo "Building frontend..."
 npm run build
 
+echo "Preparing standalone static assets..."
+node scripts/prepare-standalone.js
+if [ ! -d .next/standalone/.next/static ]; then
+  echo "Missing .next/standalone/.next/static after prepare-standalone"
+  exit 1
+fi
+if [ ! -d .next/standalone/public ]; then
+  echo "Missing .next/standalone/public after prepare-standalone"
+  exit 1
+fi
+
 cd ..
 
 echo "Setting up LMS backend..."

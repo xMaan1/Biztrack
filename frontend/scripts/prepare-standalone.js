@@ -27,4 +27,11 @@ if (!fs.existsSync(standalone)) {
 
 copyDir(publicDir, path.join(standalone, 'public'));
 copyDir(staticDir, path.join(standalone, '.next', 'static'));
+
+const preparedStatic = path.join(standalone, '.next', 'static');
+if (!fs.existsSync(preparedStatic) || fs.readdirSync(preparedStatic).length === 0) {
+  console.error('Standalone static assets missing after copy');
+  process.exit(1);
+}
+
 console.log('Standalone bundle prepared');

@@ -22,7 +22,6 @@ import {
   FileText,
   Target,
   Download,
-  Wrench,
   Calendar,
   Plus,
   Pencil,
@@ -42,13 +41,6 @@ import {
 import { useConfirm } from '@/src/contexts/ConfirmContext';
 
 interface DashboardData {
-  work_orders: {
-    total_work_orders: number;
-    completed_work_orders: number;
-    completion_rate: number;
-    urgent_work_orders: number;
-    total_hours_logged: number;
-  };
   projects: {
     total_projects: number;
     active_projects: number;
@@ -80,7 +72,6 @@ interface DashboardData {
   };
   monthly_trends: {
     projects: Array<{ month: string; count: number }>;
-    work_orders: Array<{ month: string; count: number }>;
     revenue: Array<{ month: string; amount: number }>;
   };
   department_performance: Array<{
@@ -440,30 +431,6 @@ export default function ReportsPage() {
         <>
         {/* Key Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Work Orders */}
-          <Card className="modern-card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Work Orders</CardTitle>
-              <Wrench className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatNumber(dashboardData.work_orders?.total_work_orders || 0)}</div>
-              <p className="text-xs text-muted-foreground">
-                {dashboardData.work_orders?.completed_work_orders || 0} completed
-              </p>
-              <div className="flex items-center mt-2">
-                <Badge variant="secondary" className="mr-2">
-                  {(dashboardData.work_orders.completion_rate || 0).toFixed(1)}% complete
-                </Badge>
-                {(dashboardData.work_orders?.urgent_work_orders || 0) > 0 && (
-                  <Badge variant="destructive">
-                    {dashboardData.work_orders?.urgent_work_orders || 0} urgent
-                  </Badge>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Projects */}
           <Card className="modern-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -618,7 +585,7 @@ export default function ReportsPage() {
               </CardTitle>
             </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Project Trends */}
               <div>
                 <h4 className="font-semibold mb-3">Projects Created</h4>
@@ -631,19 +598,6 @@ export default function ReportsPage() {
                   ))}
               </div>
               </div>
-
-              {/* Work Order Trends */}
-              <div>
-                <h4 className="font-semibold mb-3">Work Orders</h4>
-                <div className="space-y-2">
-                  {(dashboardData.monthly_trends?.work_orders || []).slice(-6).map((trend, index) => (
-                    <div key={index} className="flex justify-between items-center">
-                      <span className="text-sm">{new Date(trend.month).toLocaleDateString('en-US', { month: 'short', year: '2-digit' })}</span>
-                      <Badge variant="outline">{trend.count}</Badge>
-              </div>
-                  ))}
-              </div>
-        </div>
 
               {/* Revenue Trends */}
               <div>

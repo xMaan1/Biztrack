@@ -31,7 +31,6 @@ import {
   PackageCheck,
   AlertTriangle,
   Factory,
-  Wrench,
   Building2,
   Settings,
   Trash2,
@@ -769,13 +768,6 @@ export const allMenuItems: MenuItem[] = [
     gradient: 'from-orange-500 to-red-500',
     subItems: [
       {
-        text: 'Work Orders',
-        icon: Wrench,
-        path: '/workshop-management/work-orders',
-        roles: ['*'],
-        planTypes: ['workshop'],
-      },
-      {
         text: 'Job Cards',
         icon: ClipboardList,
         path: '/workshop-management/job-cards',
@@ -790,23 +782,9 @@ export const allMenuItems: MenuItem[] = [
         planTypes: ['workshop'],
       },
       {
-        text: 'Production Planning',
-        icon: Factory,
-        path: '/workshop-management/production',
-        roles: ['*'],
-        planTypes: ['workshop'],
-      },
-      {
         text: 'Quality Control',
         icon: CheckSquare,
         path: '/workshop-management/quality-control',
-        roles: ['*'],
-        planTypes: ['workshop'],
-      },
-      {
-        text: 'Equipment Maintenance',
-        icon: Wrench,
-        path: '/workshop-management/maintenance',
         roles: ['*'],
         planTypes: ['workshop'],
       },

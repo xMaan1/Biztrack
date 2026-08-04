@@ -8,12 +8,12 @@ from ..dependencies import get_current_user, get_tenant_context
 from ...config.database import get_db
 from ...models.user_models import User
 from ...models.reports_models import (
-    ReportsDashboard, WorkOrderMetrics, ProjectMetrics, HRMMetrics,
+    ReportsDashboard, ProjectMetrics, HRMMetrics,
     InventoryMetrics, FinancialMetrics, MonthlyTrend, DepartmentPerformance,
     ReportsFilters, SavedReportItem, SavedReportsListResponse, SavedReportTitleBody,
 )
 from ...config.reports_crud import (
-    get_reports_dashboard_data, get_work_order_analytics,
+    get_reports_dashboard_data,
     get_project_analytics, get_financial_analytics
 )
 from ...config.saved_reports_crud import (
@@ -56,32 +56,6 @@ def get_reports_dashboard(
         logger.error(f"Dashboard error: {str(e)}")
         logger.error(f"Error type: {type(e).__name__}")
         raise HTTPException(status_code=500, detail=f"Failed to get dashboard data: {str(e)}")
-
-@router.get("/work-orders/analytics")
-def get_work_order_analytics_endpoint(
-    start_date: Optional[str] = Query(None),
-    end_date: Optional[str] = Query(None),
-    user_id: Optional[str] = Query(None),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    tenant_context: dict = Depends(get_tenant_context)
-):
-    """Get detailed work order analytics"""
-    try:
-        tenant_id = str(tenant_context["tenant_id"])
-        
-        filters = {}
-        if start_date:
-            filters['start_date'] = datetime.fromisoformat(start_date)
-        if end_date:
-            filters['end_date'] = datetime.fromisoformat(end_date)
-        if user_id:
-            filters['user_id'] = user_id
-        
-        analytics_data = get_work_order_analytics(db, tenant_id, filters)
-        return {"success": True, "data": analytics_data}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get work order analytics: {str(e)}")
 
 @router.get("/projects/analytics")
 def get_project_analytics_endpoint(
@@ -142,9 +116,6 @@ def get_reports_summary(
         
         # Extract key metrics for quick summary
         summary = {
-            "total_work_orders": dashboard_data["work_orders"]["total_work_orders"],
-            "completed_work_orders": dashboard_data["work_orders"]["completed_work_orders"],
-            "completion_rate": dashboard_data["work_orders"]["completion_rate"],
             "total_projects": dashboard_data["projects"]["total_projects"],
             "active_projects": dashboard_data["projects"]["active_projects"],
             "total_employees": dashboard_data["hrm"]["total_employees"],
@@ -184,8 +155,6 @@ def export_reports(
         
         if report_type == "dashboard":
             data = get_reports_dashboard_data(db, tenant_id)
-        elif report_type == "work_orders":
-            data = get_work_order_analytics(db, tenant_id, filters)
         elif report_type == "projects":
             data = get_project_analytics(db, tenant_id, filters)
         elif report_type == "financial":

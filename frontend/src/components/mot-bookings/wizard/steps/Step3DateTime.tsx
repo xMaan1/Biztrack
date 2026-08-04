@@ -11,14 +11,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/src/components/ui/select';
-import { ArrowLeft, Calendar, ChevronDown, Info } from 'lucide-react';
+import { ArrowLeft, Calendar, Info } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { cn } from '@/src/lib/utils';
 import motBookingService from '@/src/services/MotBookingService';
 import type { MotBooking } from '@/src/models/mot/MotBooking';
-import type { MotWizardDateTime } from '../wizardTypes';
-import { MOT_DELIVERY_OPTIONS, MOT_HOURLY_SLOTS } from '../wizardTypes';
+import type { MotMeridiem, MotWizardDateTime } from '../wizardTypes';
+import {
+  MOT_DELIVERY_OPTIONS,
+  bookingTimeToParts,
+  getHour12OptionsForMeridiem,
+  partsToBookingTime,
+} from '../wizardTypes';
 import {
   formatLocalDate,
   getBookedSlotsByDate,
@@ -50,6 +55,9 @@ export function Step3DateTime({
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [bookedSlotsByDate, setBookedSlotsByDate] = useState<Map<string, Set<string>>>(new Map());
   const [loadingAvailability, setLoadingAvailability] = useState(true);
+  const [meridiem, setMeridiem] = useState<MotMeridiem>(
+    () => bookingTimeToParts(dateTime.bookingTime)?.meridiem || 'AM',
+  );
 
   const bookedTimesForSelectedDate = useMemo(
     () =>
@@ -97,6 +105,11 @@ export function Step3DateTime({
     onChange({ bookingTime: '' });
   }, [bookedTimesForSelectedDate, dateTime.bookingDate, dateTime.bookingTime, onChange]);
 
+  useEffect(() => {
+    const parts = bookingTimeToParts(dateTime.bookingTime);
+    if (parts) setMeridiem(parts.meridiem);
+  }, [dateTime.bookingTime]);
+
   const handleDateChange = (date: Date | null) => {
     if (!date) {
       onChange({ bookingDate: '', bookingTime: '' });
@@ -107,6 +120,29 @@ export function Step3DateTime({
   };
 
   const openCalendar = () => setCalendarOpen(true);
+
+  const timeParts = bookingTimeToParts(dateTime.bookingTime);
+  const selectedHour12 = timeParts?.hour12 || '';
+  const hour12Options = getHour12OptionsForMeridiem(meridiem);
+
+  const handleHourChange = (hour12: string) => {
+    onChange({ bookingTime: partsToBookingTime(hour12, meridiem) });
+  };
+
+  const handleMeridiemChange = (nextMeridiem: MotMeridiem) => {
+    setMeridiem(nextMeridiem);
+    if (!selectedHour12) {
+      onChange({ bookingTime: '' });
+      return;
+    }
+    const hoursForMeridiem = getHour12OptionsForMeridiem(nextMeridiem);
+    const nextHour = hoursForMeridiem.includes(selectedHour12)
+      ? selectedHour12
+      : hoursForMeridiem[0] || '';
+    onChange({
+      bookingTime: nextHour ? partsToBookingTime(nextHour, nextMeridiem) : '',
+    });
+  };
 
   return (
     <div className="space-y-8">
@@ -184,30 +220,46 @@ export function Step3DateTime({
 
         <div className="space-y-2">
           <Label className="text-sm font-bold">Time</Label>
-          <Select
-            value={dateTime.bookingTime || ''}
-            onValueChange={(value) => onChange({ bookingTime: value })}
-            disabled={!dateTime.bookingDate || loadingAvailability}
-          >
-            <SelectTrigger className="h-12 rounded-xl border-2">
-              <SelectValue
-                placeholder={
-                  !dateTime.bookingDate ? 'Select a date first' : 'Select a Time'
-                }
-              />
-              <ChevronDown className="h-4 w-4 opacity-50" />
-            </SelectTrigger>
-            <SelectContent>
-              {MOT_HOURLY_SLOTS.map((slot) => {
-                const taken = bookedTimesForSelectedDate.has(slot);
-                return (
-                  <SelectItem key={slot} value={slot} disabled={taken}>
-                    {taken ? `${slot} (Taken)` : slot}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
+          <div className="grid grid-cols-2 gap-2">
+            <Select
+              value={selectedHour12 || undefined}
+              onValueChange={handleHourChange}
+              disabled={!dateTime.bookingDate || loadingAvailability}
+            >
+              <SelectTrigger className="h-12 rounded-xl border-2">
+                <SelectValue
+                  placeholder={
+                    !dateTime.bookingDate ? 'Select a date first' : 'Time'
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {hour12Options.map((hour12) => {
+                  const slot = partsToBookingTime(hour12, meridiem);
+                  const taken = bookedTimesForSelectedDate.has(slot);
+                  return (
+                    <SelectItem key={hour12} value={hour12} disabled={taken}>
+                      {taken ? `${hour12}:00 (Taken)` : `${hour12}:00`}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={meridiem}
+              onValueChange={(value) => handleMeridiemChange(value as MotMeridiem)}
+              disabled={!dateTime.bookingDate || loadingAvailability}
+            >
+              <SelectTrigger className="h-12 rounded-xl border-2">
+                <SelectValue placeholder="AM/PM" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="AM">AM</SelectItem>
+                <SelectItem value="PM">PM</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 

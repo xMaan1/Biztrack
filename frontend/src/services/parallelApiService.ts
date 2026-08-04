@@ -155,7 +155,6 @@ export const parallelApiHelpers = {
   fetchDashboardData: async (): Promise<ParallelApiResult> => {
     const calls = [
       createApiCall('projects', () => apiClient.get('/projects').then((res: any) => res.data)),
-      createApiCall('workOrdersStats', () => apiClient.get('/work-orders/stats').then((res: any) => res.data)),
       createApiCall('invoicesOverview', () => apiClient.get('/invoices/dashboard/overview').then((res: any) => res.data)),
       createApiCall('subscription', () => apiClient.get('/tenants/current/subscription').then((res: any) => res.data)),
       createApiCall('users', () => apiClient.get('/tenants/current/users').then((res: any) => res.data))

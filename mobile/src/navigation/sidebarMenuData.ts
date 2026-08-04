@@ -546,13 +546,6 @@ export const allMenuItems: MenuItemDef[] = [
     gradient: 'from-orange-500 to-red-500',
     subItems: [
       {
-        text: 'Work Orders',
-        icon: 'build-outline' as const,
-        path: '/workshop-management/work-orders',
-        roles: ['*'],
-        planTypes: ['workshop'],
-      },
-      {
         text: 'Job Cards',
         icon: 'clipboard-outline' as const,
         path: '/workshop-management/job-cards',
@@ -567,23 +560,9 @@ export const allMenuItems: MenuItemDef[] = [
         planTypes: ['workshop'],
       },
       {
-        text: 'Production Planning',
-        icon: 'construct-outline' as const,
-        path: '/workshop-management/production',
-        roles: ['*'],
-        planTypes: ['workshop'],
-      },
-      {
         text: 'Quality Control',
         icon: 'checkbox-outline' as const,
         path: '/workshop-management/quality-control',
-        roles: ['*'],
-        planTypes: ['workshop'],
-      },
-      {
-        text: 'Equipment Maintenance',
-        icon: 'build-outline' as const,
-        path: '/workshop-management/maintenance',
         roles: ['*'],
         planTypes: ['workshop'],
       },

@@ -253,11 +253,11 @@ export function validateNewItem(
 }
 
 export function getInvoiceDialogContentClassName(
-  useCommerceLayout: boolean,
+  _useCommerceLayout: boolean,
   isView: boolean,
   inline: boolean,
 ): string {
-  if (useCommerceLayout && !isView) {
+  if (!isView) {
     return inline
       ? 'w-full min-w-0 max-w-full overflow-x-auto p-2 sm:p-3'
       : 'max-h-[96vh] w-[99vw] max-w-[1600px] overflow-y-auto p-2 sm:p-3';

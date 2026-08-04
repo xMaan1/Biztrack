@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Dict, Any, Optional
 
 from ...config.database import (
-    get_db, get_all_projects, get_work_order_stats, get_invoice_dashboard_data,
+    get_db, get_all_projects, get_invoice_dashboard_data,
     get_project_stats, get_all_users
 )
 from ...api.dependencies import get_tenant_context
@@ -22,7 +22,6 @@ def get_dashboard_overview(
         if not tenant_context:
             return {
                 "projects": {"recent": [], "stats": {"total": 0, "active": 0, "completed": 0, "on_hold": 0}},
-                "workOrders": {"stats": {"total": 0, "draft": 0, "planned": 0, "in_progress": 0, "completed": 0, "on_hold": 0, "urgent": 0}},
                 "invoices": {"invoices": {"total": 0, "draft": 0, "sent": 0, "paid": 0, "overdue": 0}, "amounts": {"total": 0, "paid": 0, "outstanding": 0}},
                 "users": {"users": [], "total": 0},
                 "subscription": {"plan": "basic", "status": "active"},
@@ -33,14 +32,12 @@ def get_dashboard_overview(
         tenant_id = tenant_context["tenant_id"]
         
         projects_data = get_projects_data(db, tenant_id)
-        work_orders_data = get_work_orders_data(db, tenant_id)
         invoices_data = get_invoices_data(db, tenant_id)
         users_data = get_users_data(db, tenant_id)
         subscription_data = get_subscription_data(db, tenant_context)
         
         return {
             "projects": projects_data,
-            "workOrders": work_orders_data,
             "invoices": invoices_data,
             "users": users_data,
             "subscription": subscription_data,
@@ -54,10 +51,8 @@ def get_dashboard_overview(
 def get_projects_data(db: Session, tenant_id: str) -> Dict[str, Any]:
     """Get projects data with stats"""
     try:
-        # Get recent projects (limit to 10 for dashboard)
         projects = get_all_projects(db, tenant_id=tenant_id, skip=0, limit=10)
         
-        # Get project statistics
         stats = get_project_stats(db, tenant_id)
         
         return {
@@ -75,14 +70,6 @@ def get_projects_data(db: Session, tenant_id: str) -> Dict[str, Any]:
         }
     except Exception as e:
         return {"recent": [], "stats": {"total": 0, "active": 0, "completed": 0, "on_hold": 0}, "error": str(e)}
-
-def get_work_orders_data(db: Session, tenant_id: str) -> Dict[str, Any]:
-    """Get work orders statistics"""
-    try:
-        stats = get_work_order_stats(db, tenant_id)
-        return {"stats": stats}
-    except Exception as e:
-        return {"stats": {"total": 0, "draft": 0, "planned": 0, "in_progress": 0, "completed": 0, "on_hold": 0, "urgent": 0}, "error": str(e)}
 
 def get_invoices_data(db: Session, tenant_id: str) -> Dict[str, Any]:
     """Get invoices dashboard data"""
@@ -118,8 +105,6 @@ def get_users_data(db: Session, tenant_id: str) -> Dict[str, Any]:
 def get_subscription_data(db: Session, tenant_context: dict) -> Dict[str, Any]:
     """Get subscription data"""
     try:
-        # This would typically come from a subscription service
-        # For now, return basic tenant info
         return {
             "plan": tenant_context.get("plan", "basic"),
             "status": tenant_context.get("status", "active"),

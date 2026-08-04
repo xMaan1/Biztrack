@@ -1,9 +1,8 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Label } from '@/src/components/ui/label';
 import { Textarea } from '@/src/components/ui/textarea';
 import type { InvoiceCreate } from '@/src/models/sales';
+import { InlineField } from '../commerce-invoice/InlineField';
 
 type InvoiceFormNotesSectionProps = {
   formData: InvoiceCreate;
@@ -12,30 +11,17 @@ type InvoiceFormNotesSectionProps = {
 
 export function InvoiceFormNotesSection({ formData, onInputChange }: InvoiceFormNotesSectionProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Additional Information</CardTitle>
-      </CardHeader>
-      <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div>
-          <Label htmlFor="notes">Notes (Optional)</Label>
-          <Textarea
-            id="notes"
-            value={formData.notes}
-            onChange={(e) => onInputChange('notes', e.target.value)}
-            rows={3}
-          />
-        </div>
-        <div>
-          <Label htmlFor="terms">Terms & Conditions (Optional)</Label>
-          <Textarea
-            id="terms"
-            value={formData.terms}
-            onChange={(e) => onInputChange('terms', e.target.value)}
-            rows={3}
-          />
-        </div>
-      </CardContent>
-    </Card>
+    <section className="rounded-lg border border-border bg-card px-3 py-2">
+      <InlineField label="Terms:">
+        <Textarea
+          id="terms"
+          value={formData.terms || ''}
+          onChange={(e) => onInputChange('terms', e.target.value)}
+          rows={2}
+          placeholder="Terms & conditions (optional)"
+          className="min-h-[56px] resize-none text-sm shadow-none"
+        />
+      </InlineField>
+    </section>
   );
 }

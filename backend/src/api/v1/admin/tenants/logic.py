@@ -270,8 +270,7 @@ async def delete_tenant(
 
                 core_tables = [
                     "payments", "invoices", "projects", "customers", "leads",
-                    "work_orders", "work_order_tasks", "maintenance_schedules",
-                    "equipment", "production_plans", "chart_of_accounts",
+                    "chart_of_accounts",
                     "journal_entries", "ledger_transactions", "financial_periods",
                     "budgets", "quality_checks", "audit_logs"
                 ]
@@ -295,7 +294,7 @@ async def delete_tenant(
                         if other_tenants_count == 0:
                             user_ref_tables = [
                                 "chart_of_accounts", "journal_entries", "ledger_transactions",
-                                "work_order_tasks", "quality_checks", "financial_periods", "budgets"
+                                "quality_checks", "financial_periods", "budgets"
                             ]
 
                             for table in user_ref_tables:

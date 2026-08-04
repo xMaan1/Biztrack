@@ -144,9 +144,6 @@ function buildCommerceStats(data: DashboardData | null): CommerceStats {
       : 0;
 
   const revenue = data.financials?.totalRevenue ?? 0;
-  const orderCount = data.workOrders?.stats?.total ?? 0;
-  const avgOrder =
-    orderCount > 0 ? Math.round(revenue / orderCount) : 0;
 
   return {
     totalProjects: data.projects.stats.total,
@@ -155,10 +152,10 @@ function buildCommerceStats(data: DashboardData | null): CommerceStats {
     totalTeamMembers: data.users.total,
     averageProgress: avgProgress,
     totalSales: revenue,
-    totalOrders: orderCount,
-    averageOrderValue: avgOrder,
+    totalOrders: 0,
+    averageOrderValue: 0,
     lowStockItems: data.inventory?.lowStock ?? 0,
-    pendingOrdersHint: data.workOrders?.stats?.in_progress ?? 0,
+    pendingOrdersHint: 0,
     netIncome: data.financials?.netIncome ?? 0,
   };
 }

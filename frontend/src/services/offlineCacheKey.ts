@@ -28,7 +28,6 @@ export const OFFLINE_AGGREGATE_FALLBACK_PATHS = new Set<string>([
   '/sales/activities',
   '/tasks',
   '/events',
-  '/work-orders',
   '/crm/leads',
   '/crm/contacts',
   '/crm/companies',

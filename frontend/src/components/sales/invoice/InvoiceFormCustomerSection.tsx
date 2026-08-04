@@ -1,9 +1,7 @@
 'use client';
 
-import { Button } from '@/src/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
 import { CustomerSearch } from '@/src/components/ui/customer-search';
-import { User, UserPlus } from 'lucide-react';
+import { AddCustomerButton } from '../commerce-invoice/AddCustomerButton';
 import type { Customer } from '@/src/services/CustomerService';
 import type { InvoiceFormMode } from '@/src/types/sales/invoiceForm';
 
@@ -23,33 +21,29 @@ export function InvoiceFormCustomerSection({
   onNewCustomer,
 }: InvoiceFormCustomerSectionProps) {
   return (
-    <Card className="overflow-visible">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <User className="h-4 w-4" />
-          Customer Information
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3 overflow-visible">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-          <div className="min-w-0 flex-1">
-            <CustomerSearch
-              value={selectedCustomer}
-              onSelect={onCustomerSelect}
-              placeholder="Search for existing customers..."
-              label="Select Customer"
-              required
-              error={customerError}
-            />
+    <div className="border-t border-border/60 pt-3">
+      <div className="flex flex-col gap-2 lg:flex-row lg:items-start">
+        <span className="shrink-0 pt-2 text-sm font-medium text-muted-foreground lg:w-[108px] lg:text-right">
+          Customer Name: *
+        </span>
+        <div className="min-w-0 flex-1 space-y-1">
+          <div className="flex flex-col gap-2 md:flex-row md:items-end">
+            <div className="min-w-0 flex-1 [&_label]:sr-only [&>div>div.mt-2]:hidden [&_input]:h-10">
+              <CustomerSearch
+                value={selectedCustomer}
+                onSelect={onCustomerSelect}
+                placeholder="Search by name, email, phone..."
+                label="Customer"
+                required
+                error={customerError}
+              />
+            </div>
+            {mode !== 'view' && (
+              <AddCustomerButton onClick={onNewCustomer} className="w-full shrink-0 md:w-auto" />
+            )}
           </div>
-          {mode !== 'view' && (
-            <Button type="button" variant="outline" className="shrink-0" onClick={onNewCustomer}>
-              <UserPlus className="mr-2 h-4 w-4" />
-              New Customer
-            </Button>
-          )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

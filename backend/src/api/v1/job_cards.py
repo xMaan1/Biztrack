@@ -34,7 +34,6 @@ def _job_card_to_response(jc) -> JobCardResponse:
         description=jc.description,
         status=jc.status,
         priority=jc.priority,
-        work_order_id=str(jc.work_order_id) if jc.work_order_id else None,
         purchase_order_id=str(jc.purchase_order_id) if getattr(jc, "purchase_order_id", None) else None,
         invoice_id=str(jc.invoice_id) if getattr(jc, "invoice_id", None) else None,
         customer_id=str(jc.customer_id) if jc.customer_id else None,
@@ -63,7 +62,6 @@ def list_job_cards(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
     status: Optional[str] = Query(None),
-    work_order_id: Optional[str] = Query(None),
     assigned_to_id: Optional[str] = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -72,7 +70,7 @@ def list_job_cards(
     tenant_id = str(tenant_context["tenant_id"])
     cards = get_all_job_cards(
         db, tenant_id, skip=skip, limit=limit,
-        status=status, work_order_id=work_order_id, assigned_to_id=assigned_to_id,
+        status=status, assigned_to_id=assigned_to_id,
     )
     return [_job_card_to_response(c) for c in cards]
 

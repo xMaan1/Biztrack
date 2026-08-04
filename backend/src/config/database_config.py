@@ -37,12 +37,16 @@ engine = create_engine(
     echo=False
 )
 
+def _apply_session_timeouts(dbapi_conn) -> None:
+    with dbapi_conn.cursor() as cursor:
+        cursor.execute("SET statement_timeout = 30000")
+        cursor.execute("SET lock_timeout = 10000")
+        cursor.execute("SET idle_in_transaction_session_timeout = 15000")
+
 @event.listens_for(engine, "connect")
 def set_connection_timeouts(dbapi_conn, connection_record):
     try:
-        with dbapi_conn.cursor() as cursor:
-            cursor.execute("SET statement_timeout = 30000")
-            cursor.execute("SET idle_in_transaction_session_timeout = 60000")
+        _apply_session_timeouts(dbapi_conn)
     except Exception as e:
         logger.warning(f"Failed to set connection timeouts: {e}")
 
@@ -54,6 +58,7 @@ def receive_checkout(dbapi_conn, connection_record, connection_proxy):
         cursor = dbapi_conn.cursor()
         cursor.execute("SELECT 1")
         cursor.close()
+        _apply_session_timeouts(dbapi_conn)
     except (psycopg2.OperationalError, psycopg2.InterfaceError) as e:
         error_str = str(e)
         if "SSL connection has been closed" in error_str or "server closed the connection" in error_str:
@@ -94,8 +99,8 @@ def get_db():
     except (OperationalError, DisconnectionError) as e:
         error_str = str(e)
         if "SSL connection has been closed" in error_str:
-            logger.warning(f"SSL connection error, invalidating pool: {error_str}")
-            engine.pool.invalidate()
+            logger.warning(f"SSL connection error, disposing pool: {error_str}")
+            engine.dispose()
         else:
             logger.error(f"Database operational error: {e}")
         try:

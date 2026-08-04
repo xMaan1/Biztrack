@@ -111,6 +111,9 @@ export function formatVehicleSummary(data: MotWizardData): string {
 
 export function getDeliveryOptionLabel(option: MotDeliveryOption | ''): string {
   if (!option) return '';
+  if (option === 'wait_on_site') {
+    return 'I would like to wait for my vehicle whilst it is in the workshop';
+  }
   return MOT_DELIVERY_OPTIONS.find((o) => o.value === option)?.label ?? '';
 }
 
@@ -277,7 +280,10 @@ export function bookingToWizardData(booking: import('@/src/models/mot/MotBooking
       otherServices: servicesMeta.otherServices || booking.notes || '',
     },
     dateTime: {
-      deliveryOption: (booking.delivery_option as MotDeliveryOption) || '',
+      deliveryOption:
+        booking.delivery_option === 'wait_on_site'
+          ? 'wait_security'
+          : (booking.delivery_option as MotDeliveryOption) || '',
       bookingDate: booking.booking_date?.slice(0, 10) || '',
       bookingTime: booking.start_time || '',
     },

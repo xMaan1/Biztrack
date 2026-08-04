@@ -142,32 +142,6 @@ async function syncTasksUnfiltered(client: AxiosInstance, tenantId: string) {
   });
 }
 
-async function syncWorkOrdersSkip(client: AxiosInstance, tenantId: string) {
-  const path = '/work-orders';
-  const all: unknown[] = [];
-  let skip = 0;
-  const limit = 200;
-  for (;;) {
-    const res = await client.get(path, { params: { skip, limit } });
-    const body = res.data as unknown;
-    let chunk: unknown[] = [];
-    if (Array.isArray(body)) {
-      chunk = body;
-    } else if (body && typeof body === 'object') {
-      const o = body as Record<string, unknown>;
-      if (Array.isArray(o.items)) chunk = o.items as unknown[];
-      else if (Array.isArray(o.work_orders)) chunk = o.work_orders as unknown[];
-      else if (Array.isArray(o.data)) chunk = o.data as unknown[];
-    }
-    all.push(...chunk);
-    const cfgUrl = String(res.config.url || path);
-    await putHttpCache(tenantId, cfgUrl, { skip, limit }, res.data);
-    if (chunk.length < limit) break;
-    skip += limit;
-  }
-  await putAggregate(tenantId, path, all);
-}
-
 async function syncEventsSkip(client: AxiosInstance, tenantId: string) {
   const path = '/events';
   const all: unknown[] = [];
@@ -514,9 +488,6 @@ export async function runTenantFullSync(
   );
   await rSafe('sales_rev', () => syncSimple(client, tenantId, '/sales/analytics/revenue?period=monthly'));
   await rSafe('sales_conv', () => syncSimple(client, tenantId, '/sales/analytics/conversion'));
-
-  await rSafe('work_orders', () => syncWorkOrdersSkip(client, tenantId));
-  await rSafe('work_order_stats', () => syncSimple(client, tenantId, '/work-orders/stats'));
 
   await rSafe('crm_leads', () =>
     syncCrmQueryPaged(client, tenantId, '/crm/leads', 'leads', (leads) => ({

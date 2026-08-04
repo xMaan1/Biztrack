@@ -38,7 +38,7 @@ export function NgoInventoryStatusCard({
           </span>
         </div>
         <div className="flex items-center justify-between rounded-xl bg-yellow-50 p-3">
-          <span className="text-sm font-medium">Pending work orders</span>
+          <span className="text-sm font-medium">Pending donations</span>
           <span className="rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold text-yellow-700">
             {snapshot.pendingDonations} awaiting
           </span>

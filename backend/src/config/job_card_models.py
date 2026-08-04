@@ -16,7 +16,6 @@ class JobCard(Base):
     description = Column(Text)
     status = Column(String, default="draft")
     priority = Column(String, default="medium")
-    work_order_id = Column(UUID(as_uuid=True), ForeignKey("work_orders.id"), nullable=True)
     purchase_order_id = Column(UUID(as_uuid=True), ForeignKey("purchase_orders.id"), nullable=True)
     invoice_id = Column(UUID(as_uuid=True), ForeignKey("invoices.id"), nullable=True)
     customer_id = Column(UUID(as_uuid=True), ForeignKey("customers.id"), nullable=True)
@@ -38,7 +37,6 @@ class JobCard(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     tenant = relationship("Tenant")
-    work_order = relationship("WorkOrder", foreign_keys=[work_order_id])
     customer = relationship("Customer", foreign_keys=[customer_id])
     assigned_to = relationship("User", foreign_keys=[assigned_to_id])
     created_by = relationship("User", foreign_keys=[created_by_id])
@@ -46,7 +44,6 @@ class JobCard(Base):
     __table_args__ = (
         Index("idx_job_cards_tenant_id", "tenant_id"),
         Index("idx_job_cards_status", "status"),
-        Index("idx_job_cards_work_order_id", "work_order_id"),
         Index("idx_job_cards_customer_id", "customer_id"),
         Index("idx_job_cards_job_card_number", "job_card_number"),
         Index("idx_job_cards_assigned_to", "assigned_to_id"),

@@ -55,8 +55,6 @@ export interface QualityCheckBase {
   required_equipment: string[];
   required_skills: string[];
   estimated_duration_minutes: number;
-  production_plan_id?: string;
-  work_order_id?: string;
   project_id?: string;
   assigned_to_id?: string;
   scheduled_date?: string;
@@ -87,8 +85,6 @@ export interface QualityDefectBase {
   detected_date: string;
   detected_by_id: string;
   quality_check_id?: string;
-  production_plan_id?: string;
-  work_order_id?: string;
   status: string;
   priority: QualityPriority;
   assigned_to_id?: string;
@@ -134,8 +130,6 @@ export interface QualityCheckUpdate {
   required_equipment?: string[];
   required_skills?: string[];
   estimated_duration_minutes?: number;
-  production_plan_id?: string;
-  work_order_id?: string;
   project_id?: string;
   assigned_to_id?: string;
   scheduled_date?: string;
@@ -281,8 +275,6 @@ export interface QualityCheckFilters {
   priority?: QualityPriority;
   inspection_type?: InspectionType;
   quality_standard?: QualityStandard;
-  production_plan_id?: string;
-  work_order_id?: string;
   project_id?: string;
   assigned_to_id?: string;
   scheduled_date_from?: string;

@@ -101,11 +101,6 @@ export const RBAC_PERMISSION_MODULES: PermissionModule[] = [
     submodules: [],
   },
   {
-    label: 'Maintenance',
-    permissions: crud('maintenance'),
-    submodules: [],
-  },
-  {
     label: 'Banking',
     permissions: crud('banking'),
     submodules: [
