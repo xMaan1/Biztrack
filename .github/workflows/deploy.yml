@@ -191,13 +191,23 @@ jobs:
           BACKEND_URL: ${{ secrets.BACKEND_URL }}
         run: |
           ssh -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_HOST} "DEPLOY_PATH='${DEPLOY_PATH}' BACKEND_URL='${BACKEND_URL}' bash" << 'ENDSSH'
-            set -e
+            set -euo pipefail
             echo "🚀 Setting up frontend..."
             cd ${DEPLOY_PATH}/frontend
             echo "Installing dependencies..."
             npm ci
             echo "Building frontend..."
             NEXT_PUBLIC_API_URL="${BACKEND_URL:-http://localhost:8000}" npm run build
+            echo "Preparing standalone static assets..."
+            node scripts/prepare-standalone.js
+            if [ ! -d .next/standalone/.next/static ]; then
+              echo "❌ Missing .next/standalone/.next/static after prepare-standalone"
+              exit 1
+            fi
+            if [ ! -d .next/standalone/public ]; then
+              echo "❌ Missing .next/standalone/public after prepare-standalone"
+              exit 1
+            fi
             echo "✅ Frontend setup completed successfully!"
           ENDSSH
 
