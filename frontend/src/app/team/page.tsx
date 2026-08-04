@@ -64,8 +64,8 @@ import AddMemberModal from '../../components/team/AddMemberModal';
 export default function TeamPage() {
   const confirm = useConfirm();
   const { user } = useAuth();
-  const { canManageUsers } = usePermissions();
-  const isEmployee = user?.userRole === 'team_member';
+  const { canManageUsers, currentRoleName } = usePermissions();
+  const isEmployee = (currentRoleName || user?.userRole) === 'team_member';
   const [teamMembers, setTeamMembers] = useState<User[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
