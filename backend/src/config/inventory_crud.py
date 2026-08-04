@@ -223,7 +223,7 @@ def update_purchase_order(po_id: str, update_data: dict, db: Session, tenant_id:
     po = get_purchase_order_by_id(po_id, db, tenant_id)
     if po:
         nullable_fields = {
-            "jobCardId", "invoiceId", "vehicleId", "purchaseForType", "vehicleReg",
+            "jobCardId", "vehicleId", "purchaseForType", "vehicleReg",
             "department", "deliveryLocation", "requisitionNumber", "batchNumber", "notes",
         }
         for key, value in update_data.items():

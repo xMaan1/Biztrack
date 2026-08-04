@@ -137,7 +137,6 @@ function PurchaseOrdersContent() {
     purchaseForType: undefined,
     vehicleId: undefined,
     jobCardId: undefined,
-    invoiceId: undefined,
     department: '',
     deliveryLocation: '',
     requisitionNumber: '',
@@ -228,20 +227,17 @@ function PurchaseOrdersContent() {
       warehouseId: order.warehouseId,
       orderDate: order.orderDate ? order.orderDate.split('T')[0] : '',
       expectedDeliveryDate: order.expectedDeliveryDate ? order.expectedDeliveryDate.split('T')[0] : '',
-      vatRate: order.vatRate || 0,
       notes: order.notes || '',
       vehicleReg: order.vehicleReg || '',
       purchaseForType: order.purchaseForType,
       vehicleId: order.vehicleId,
       jobCardId: order.jobCardId,
-      invoiceId: order.invoiceId,
       department: order.department || '',
       deliveryLocation: order.deliveryLocation || '',
       requisitionNumber: order.requisitionNumber || '',
     });
     setEditDocumentLinks({
       jobCardId: order.jobCardId ?? undefined,
-      invoiceId: order.invoiceId ?? undefined,
     });
     setEditSelectedVehicle(null);
     setIsEditModalOpen(true);
@@ -269,7 +265,6 @@ function PurchaseOrdersContent() {
         delete updatePayload.requisitionNumber;
         if (isWorkshop) {
           updatePayload.jobCardId = editDocumentLinks.jobCardId ?? null;
-          updatePayload.invoiceId = editDocumentLinks.invoiceId ?? null;
         }
         updatePayload.vehicleId = editOrder.purchaseForType === 'vehicle' ? editOrder.vehicleId : null;
         if (editOrder.purchaseForType !== 'vehicle') {
@@ -280,7 +275,6 @@ function PurchaseOrdersContent() {
         delete updatePayload.purchaseForType;
         delete updatePayload.vehicleId;
         delete updatePayload.jobCardId;
-        delete updatePayload.invoiceId;
       }
       await inventoryService.updatePurchaseOrder(selectedOrder.id, updatePayload);
       toast.success('Purchase order updated successfully');
@@ -907,42 +901,12 @@ function PurchaseOrdersContent() {
                 />
               )}
 
-              <div className="space-y-2">
-                <Label htmlFor="edit-vatRate">VAT Rate (%)</Label>
-                <Input
-                  id="edit-vatRate"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                  value={editOrder.vatRate}
-                  onChange={(e) =>
-                    setEditOrder((prev) => ({
-                      ...prev,
-                      vatRate: parseFloat(e.target.value) || 0,
-                    }))
-                  }
-                  placeholder="0.00"
-                />
-              </div>
-
-              {/* VAT Summary */}
               {selectedOrder && (
                 <div className="space-y-2 p-4 bg-muted rounded-lg">
-                  <Label className="text-sm font-medium">Current VAT Summary</Label>
-                  <div className="grid grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Subtotal:</span>
-                      <div className="font-medium">{formatCurrency(selectedOrder.subtotal || 0)}</div>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">VAT ({selectedOrder.vatRate || 0}%):</span>
-                      <div className="font-medium">{formatCurrency(selectedOrder.vatAmount || 0)}</div>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Total:</span>
-                      <div className="font-medium">{formatCurrency(selectedOrder.totalAmount || 0)}</div>
-                    </div>
+                  <Label className="text-sm font-medium">Order Total</Label>
+                  <div className="text-sm">
+                    <span className="text-muted-foreground">Total:</span>
+                    <div className="font-medium">{formatCurrency(selectedOrder.totalAmount || 0)}</div>
                   </div>
                 </div>
               )}

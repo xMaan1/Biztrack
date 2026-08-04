@@ -315,38 +315,6 @@ class StockMovementWithProduct(StockMovementBase):
     class Config:
         from_attributes = True
 
-class PurchaseOrderItemBase(BaseModel):
-    productId: str
-    productName: str
-    sku: str
-    quantity: int
-    unitCost: float
-    totalCost: float
-    receivedQuantity: int = 0
-    notes: Optional[str] = None
-
-class PurchaseOrderItemCreate(PurchaseOrderItemBase):
-    pass
-
-class PurchaseOrderItemUpdate(BaseModel):
-    productId: Optional[str] = None
-    productName: Optional[str] = None
-    sku: Optional[str] = None
-    quantity: Optional[int] = None
-    unitCost: Optional[float] = None
-    totalCost: Optional[float] = None
-    receivedQuantity: Optional[int] = None
-    notes: Optional[str] = None
-
-class PurchaseOrderItem(PurchaseOrderItemBase):
-    id: str
-    purchaseOrderId: str
-    createdAt: datetime
-    updatedAt: datetime
-
-    class Config:
-        from_attributes = True
-
 class PurchaseOrderBase(BaseModel):
     orderNumber: str
     batchNumber: Optional[str] = None
@@ -357,7 +325,6 @@ class PurchaseOrderBase(BaseModel):
     expectedDeliveryDate: str
     status: PurchaseOrderStatus
     subtotal: float = 0.0
-    vatRate: float = 0.0
     vatAmount: float = 0.0
     totalAmount: float
     notes: Optional[str] = None
@@ -365,18 +332,15 @@ class PurchaseOrderBase(BaseModel):
     purchaseForType: Optional[str] = None
     vehicleId: Optional[str] = None
     jobCardId: Optional[str] = None
-    invoiceId: Optional[str] = None
     department: Optional[str] = None
     deliveryLocation: Optional[str] = None
     requisitionNumber: Optional[str] = None
-    items: List[PurchaseOrderItemCreate]
 
 class PurchaseOrderCreate(BaseModel):
     vehicleReg: Optional[str] = None
     purchaseForType: Optional[str] = None
     vehicleId: Optional[str] = None
     jobCardId: Optional[str] = None
-    invoiceId: Optional[str] = None
     orderNumber: Optional[str] = None
     batchNumber: Optional[str] = None
     supplierId: str
@@ -384,12 +348,10 @@ class PurchaseOrderCreate(BaseModel):
     warehouseId: str
     orderDate: str
     expectedDeliveryDate: str
-    vatRate: float = 0.0
     notes: Optional[str] = None
     department: Optional[str] = None
     deliveryLocation: Optional[str] = None
     requisitionNumber: Optional[str] = None
-    items: List[PurchaseOrderItemCreate]
 
 class PurchaseOrderUpdate(BaseModel):
     orderNumber: Optional[str] = None
@@ -400,7 +362,6 @@ class PurchaseOrderUpdate(BaseModel):
     orderDate: Optional[str] = None
     expectedDeliveryDate: Optional[str] = None
     status: Optional[PurchaseOrderStatus] = None
-    vatRate: Optional[float] = None
     subtotal: Optional[float] = None
     vatAmount: Optional[float] = None
     totalAmount: Optional[float] = None
@@ -409,7 +370,6 @@ class PurchaseOrderUpdate(BaseModel):
     purchaseForType: Optional[str] = None
     vehicleId: Optional[str] = None
     jobCardId: Optional[str] = None
-    invoiceId: Optional[str] = None
     department: Optional[str] = None
     deliveryLocation: Optional[str] = None
     requisitionNumber: Optional[str] = None

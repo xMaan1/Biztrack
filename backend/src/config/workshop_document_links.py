@@ -58,14 +58,6 @@ def sync_workshop_document_links(
         stale_inv.update({Invoice.jobCardId: None}, synchronize_session=False)
 
     if inv_id:
-        stale_po = db.query(PurchaseOrder).filter(
-            PurchaseOrder.tenant_id == tenant_id,
-            PurchaseOrder.invoiceId == inv_id,
-        )
-        if po_id:
-            stale_po = stale_po.filter(PurchaseOrder.id != po_id)
-        stale_po.update({PurchaseOrder.invoiceId: None}, synchronize_session=False)
-
         stale_jc = db.query(JobCard).filter(
             JobCard.tenant_id == tenant_id,
             JobCard.invoice_id == inv_id,
@@ -81,7 +73,6 @@ def sync_workshop_document_links(
         ).first()
         if po:
             po.jobCardId = jc_id
-            po.invoiceId = inv_id
 
     if jc_id:
         jc = db.query(JobCard).filter(

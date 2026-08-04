@@ -85,17 +85,18 @@ export function WorkshopDocumentLinks({
       }).catch(() => setJobCards([]));
     }
 
-    if (excludeType !== 'invoice' && excludeType !== 'job_card') {
-      InvoiceService.getInvoices({}, 1, 500).then((res) => {
-        setInvoices(
-          (res.invoices || []).map((inv) => ({
-            id: inv.id,
-            invoiceNumber: inv.invoiceNumber,
-            customerName: inv.customerName,
-          })),
-        );
-      }).catch(() => setInvoices([]));
+    if (excludeType === 'invoice' || excludeType === 'job_card' || excludeType === 'purchase_order') {
+      return;
     }
+    InvoiceService.getInvoices({}, 1, 500).then((res) => {
+      setInvoices(
+        (res.invoices || []).map((inv) => ({
+          id: inv.id,
+          invoiceNumber: inv.invoiceNumber,
+          customerName: inv.customerName,
+        })),
+      );
+    }).catch(() => setInvoices([]));
   }, [excludeType]);
 
   useEffect(() => {
@@ -190,7 +191,8 @@ export function WorkshopDocumentLinks({
 
   const showPurchaseOrder = excludeType !== 'purchase_order';
   const showJobCard = excludeType !== 'job_card';
-  const showInvoice = excludeType !== 'invoice' && excludeType !== 'job_card';
+  const showInvoice =
+    excludeType !== 'invoice' && excludeType !== 'job_card' && excludeType !== 'purchase_order';
 
   const inputCls = dense
     ? 'h-8 rounded-md border-input bg-background pl-9 pr-10 text-sm shadow-none'

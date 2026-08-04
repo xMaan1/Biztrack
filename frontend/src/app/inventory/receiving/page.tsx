@@ -43,7 +43,6 @@ import { inventoryService } from '../../../services/InventoryService';
 import {
   Receiving,
   ReceivingCreate,
-  ReceivingItemCreate,
   ReceivingStatus,
   ReceivingUpdate,
   PurchaseOrder,
@@ -182,21 +181,7 @@ function ReceivingContent() {
     setNewReceiving((prev) => ({
       ...prev,
       purchaseOrderId: poId,
-      items: po && po.items && po.items.length > 0
-        ? po.items.map(
-            (item): ReceivingItemCreate => ({
-              purchaseOrderId: poId,
-              productId: item.productId,
-              productName: item.productName,
-              sku: item.sku,
-              quantity: item.quantity,
-              unitCost: item.unitCost,
-              totalCost: item.quantity * item.unitCost,
-              receivedQuantity: item.quantity, // Default to ordered quantity
-              notes: '',
-            }),
-          )
-        : [],
+      items: [],
     }));
   };
 

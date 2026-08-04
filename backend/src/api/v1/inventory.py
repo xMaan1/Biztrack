@@ -87,16 +87,13 @@ def _purchase_order_api_payload(order: PurchaseOrderDB, supplier_name: str) -> d
         "expectedDeliveryDate": order.expectedDeliveryDate.isoformat() if order.expectedDeliveryDate else None,
         "status": order.status,
         "subtotal": order.subtotal,
-        "vatRate": order.vatRate,
         "vatAmount": order.vatAmount,
         "totalAmount": order.totalAmount,
         "notes": order.notes,
-        "items": order.items if order.items else [],
         "vehicleReg": order.vehicleReg if hasattr(order, "vehicleReg") else None,
         "purchaseForType": getattr(order, "purchaseForType", None),
         "vehicleId": str(order.vehicleId) if getattr(order, "vehicleId", None) else None,
         "jobCardId": str(order.jobCardId) if getattr(order, "jobCardId", None) else None,
-        "invoiceId": str(order.invoiceId) if getattr(order, "invoiceId", None) else None,
         "department": getattr(order, "department", None),
         "deliveryLocation": getattr(order, "deliveryLocation", None),
         "requisitionNumber": getattr(order, "requisitionNumber", None),
@@ -109,24 +106,6 @@ def _purchase_order_api_payload(order: PurchaseOrderDB, supplier_name: str) -> d
 @router.get("/health")
 def inventory_health_check():
     return {"status": "ok", "module": "inventory", "message": "Inventory endpoints are accessible"}
-
-def calculate_purchase_order_totals(items: List, vat_rate: float) -> dict:
-    """Calculate purchase order totals including VAT"""
-    subtotal = 0
-    for item in items:
-        if isinstance(item, dict):
-            subtotal += item.get('quantity', 0) * item.get('unitCost', 0)
-        else:
-            subtotal += item.quantity * item.unitCost
-    
-    vat_amount = subtotal * (vat_rate / 100) if vat_rate > 0 else 0
-    total = subtotal + vat_amount
-    
-    return {
-        "subtotal": round(subtotal, 2),
-        "vatAmount": round(vat_amount, 2),
-        "total": round(total, 2)
-    }
 
 def generate_purchase_order_number(tenant_id: str, db: Session) -> str:
     """Generate unique purchase order number with proper race condition handling"""
@@ -699,9 +678,6 @@ def create_purchase_order_endpoint(
     _: dict = Depends(require_permission(ModulePermission.INVENTORY_CREATE.value))
 ):
     """Create a new purchase order"""
-    # Calculate totals including VAT
-    totals = calculate_purchase_order_totals(order.items, order.vatRate)
-    
     # Generate purchase order number if not provided
     if not order.orderNumber:
         order_number = generate_purchase_order_number(str(tenant_context["tenant_id"]), db)
@@ -713,7 +689,6 @@ def create_purchase_order_endpoint(
     order_data.pop("supplierName", None)
     order_data.pop("orderNumber", None)
     order_data["jobCardId"] = _normalize_link_id(order_data.get("jobCardId"))
-    order_data["invoiceId"] = _normalize_link_id(order_data.get("invoiceId"))
     _apply_purchase_for_fields(order_data)
     
     # Convert date strings to date objects
@@ -727,9 +702,9 @@ def create_purchase_order_endpoint(
         "tenant_id": str(tenant_context["tenant_id"]),
         "createdBy": str(current_user.id),
         "status": "draft",
-        "subtotal": totals["subtotal"],
-        "vatAmount": totals["vatAmount"],
-        "totalAmount": totals["total"],
+        "subtotal": 0.0,
+        "vatAmount": 0.0,
+        "totalAmount": 0.0,
         "createdAt": datetime.utcnow(),
         "updatedAt": datetime.utcnow()
     })
@@ -742,7 +717,6 @@ def create_purchase_order_endpoint(
         str(tenant_context["tenant_id"]),
         purchase_order_id=str(db_order.id),
         job_card_id=order_data.get("jobCardId"),
-        invoice_id=order_data.get("invoiceId"),
     )
     db.commit()
     db.refresh(db_order)
@@ -768,7 +742,6 @@ def update_purchase_order_endpoint(
     _: dict = Depends(require_permission(ModulePermission.INVENTORY_UPDATE.value))
 ):
     """Update an existing purchase order"""
-    # Get the existing order to access items for VAT calculation
     existing_order = get_purchase_order_by_id(order_id, db, str(tenant_context["tenant_id"]))
     if not existing_order:
         raise HTTPException(status_code=404, detail="Purchase order not found")
@@ -781,8 +754,6 @@ def update_purchase_order_endpoint(
     order_update.pop("supplierName", None)
     if "jobCardId" in order_update:
         order_update["jobCardId"] = _normalize_link_id(order_update.get("jobCardId"))
-    if "invoiceId" in order_update:
-        order_update["invoiceId"] = _normalize_link_id(order_update.get("invoiceId"))
     if "purchaseForType" in order_update or "vehicleId" in order_update:
         merged = {
             "purchaseForType": order_update.get("purchaseForType", getattr(existing_order, "purchaseForType", None)),
@@ -794,15 +765,6 @@ def update_purchase_order_endpoint(
         order_update["vehicleId"] = merged["vehicleId"]
         if "vehicleReg" not in order.dict(exclude_unset=True):
             order_update["vehicleReg"] = merged["vehicleReg"]
-    if "vatRate" in order_update:
-        vat_rate = order_update["vatRate"]
-        items = existing_order.items if existing_order.items else []
-        totals = calculate_purchase_order_totals(items, vat_rate)
-        order_update.update({
-            "subtotal": totals["subtotal"],
-            "vatAmount": totals["vatAmount"],
-            "totalAmount": totals["total"]
-        })
     
     # Convert date strings to date objects
     if order_update.get("orderDate"):
@@ -814,14 +776,13 @@ def update_purchase_order_endpoint(
     
     db_order = update_purchase_order(order_id, order_update, db, str(tenant_context["tenant_id"]))
 
-    if db_order and any(k in order_update for k in ("jobCardId", "invoiceId")):
+    if db_order and "jobCardId" in order_update:
         from ...config.workshop_document_links import sync_workshop_document_links
         sync_workshop_document_links(
             db,
             str(tenant_context["tenant_id"]),
             purchase_order_id=str(db_order.id),
             job_card_id=str(db_order.jobCardId) if db_order.jobCardId else None,
-            invoice_id=str(db_order.invoiceId) if db_order.invoiceId else None,
         )
         db.commit()
         db.refresh(db_order)

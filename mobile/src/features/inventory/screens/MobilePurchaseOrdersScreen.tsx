@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { View, Text, FlatList, Pressable, RefreshControl, ScrollView } from 'react-native';
 import { useSidebarDrawer } from '../../../contexts/SidebarDrawerContext';
 import { usePermissions } from '../../../hooks/usePermissions';
@@ -10,16 +10,13 @@ import {
   createPurchaseOrder,
   deletePurchaseOrder,
   getWarehouses,
-  fetchPosProducts,
 } from '../../../services/inventory/inventoryMobileApi';
 import { fetchSuppliers } from '../../../services/inventory/hrmSuppliersApi';
 import type {
   Warehouse,
   PurchaseOrder,
   PurchaseOrderCreate,
-  PurchaseOrderItemCreate,
 } from '../../../models/inventory';
-import type { Product } from '../../../models/pos';
 import type { Supplier } from '../../../models/hrm/supplier';
 import {
   WorkshopChrome,
@@ -32,8 +29,6 @@ import {
   WorkshopTextInput,
   WorkshopDatePickerField,
   WorkshopPrimaryButton,
-  WorkshopPickerField,
-  WorkshopSearchBar,
   WS,
 } from '../../workshop/components/WorkshopChrome';
 
@@ -102,7 +97,6 @@ export function MobilePurchaseOrdersScreen() {
   const [rows, setRows] = useState<PurchaseOrder[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [open, setOpen] = useState(false);
@@ -111,14 +105,7 @@ export function MobilePurchaseOrdersScreen() {
   const [warehouseId, setWarehouseId] = useState('');
   const [orderDate, setOrderDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [expectedDeliveryDate, setExpectedDeliveryDate] = useState(defaultExpectedDate);
-  const [vatRate, setVatRate] = useState('0');
   const [notes, setNotes] = useState('');
-  const [items, setItems] = useState<PurchaseOrderItemCreate[]>([]);
-  const [productQ, setProductQ] = useState('');
-  const [productPicker, setProductPicker] = useState(false);
-  const [lineQty, setLineQty] = useState('');
-  const [lineCost, setLineCost] = useState('');
-  const [lineProduct, setLineProduct] = useState<Product | null>(null);
 
   const load = useCallback(async () => {
     const res = await getPurchaseOrders();
@@ -126,14 +113,9 @@ export function MobilePurchaseOrdersScreen() {
   }, []);
 
   const loadMeta = useCallback(async () => {
-    const [whRes, supRes, prRes] = await Promise.all([
-      getWarehouses(),
-      fetchSuppliers(),
-      fetchPosProducts(),
-    ]);
+    const [whRes, supRes] = await Promise.all([getWarehouses(), fetchSuppliers()]);
     setWarehouses(whRes.warehouses ?? []);
     setSuppliers(supRes.suppliers ?? []);
-    setProducts(prRes.products ?? []);
     setSupplierId((prev) => prev || supRes.suppliers?.[0]?.id || '');
     setWarehouseId((prev) => prev || whRes.warehouses?.[0]?.id || '');
   }, []);
@@ -170,70 +152,24 @@ export function MobilePurchaseOrdersScreen() {
     void run(false);
   }, [run]);
 
-  const filteredProducts = useMemo(() => {
-    const t = productQ.trim().toLowerCase();
-    if (!t) return products;
-    return products.filter(
-      (p) => p.name.toLowerCase().includes(t) || p.sku.toLowerCase().includes(t),
-    );
-  }, [products, productQ]);
-
-  const addLine = () => {
-    if (!lineProduct) {
-      appAlert('Purchase orders', 'Select a product.');
-      return;
-    }
-    const q = parseFloat(lineQty);
-    const c = parseFloat(lineCost);
-    if (!Number.isFinite(q) || q <= 0 || !Number.isFinite(c) || c < 0) {
-      appAlert('Purchase orders', 'Enter quantity and unit cost.');
-      return;
-    }
-    const line: PurchaseOrderItemCreate = {
-      productId: lineProduct.id,
-      productName: lineProduct.name,
-      sku: lineProduct.sku,
-      quantity: q,
-      unitCost: c,
-      totalCost: q * c,
-    };
-    setItems((prev) => [...prev, line]);
-    setLineProduct(null);
-    setLineQty('');
-    setLineCost('');
-    setProductQ('');
-  };
-
-  const removeLine = (index: number) => {
-    setItems((prev) => prev.filter((_, i) => i !== index));
-  };
-
   const submit = async () => {
     const sup = suppliers.find((s) => s.id === supplierId);
     if (!sup || !warehouseId || !expectedDeliveryDate.trim()) {
       appAlert('Purchase orders', 'Supplier, warehouse, and expected delivery are required.');
       return;
     }
-    if (items.length === 0) {
-      appAlert('Purchase orders', 'Add at least one line item.');
-      return;
-    }
-    const vr = parseFloat(vatRate);
     const payload: PurchaseOrderCreate = {
       supplierId: sup.id,
       supplierName: sup.name,
       warehouseId,
       orderDate: orderDate.trim(),
       expectedDeliveryDate: expectedDeliveryDate.trim(),
-      vatRate: Number.isFinite(vr) ? vr : 0,
       notes: notes.trim() || undefined,
-      items,
     };
     try {
       setSaving(true);
       await createPurchaseOrder(payload);
       setOpen(false);
-      setItems([]);
       setNotes('');
       setOrderDate(new Date().toISOString().slice(0, 10));
       setExpectedDeliveryDate(defaultExpectedDate());
@@ -352,102 +288,8 @@ export function MobilePurchaseOrdersScreen() {
             <WorkshopDatePickerField label="Expected delivery" value={expectedDeliveryDate} onChange={setExpectedDeliveryDate} />
           </View>
         </View>
-        <WorkshopFieldLabel>VAT %</WorkshopFieldLabel>
-        <WorkshopTextInput value={vatRate} onChangeText={setVatRate} keyboardType="decimal-pad" />
         <WorkshopFieldLabel>Notes</WorkshopFieldLabel>
         <WorkshopTextInput value={notes} onChangeText={setNotes} multiline style={{ minHeight: 64 }} />
-
-        <Text style={{ fontSize: 14, fontWeight: '700', color: WS.text, marginTop: 8, marginBottom: 8 }}>
-          Line items
-        </Text>
-        {items.map((it, idx) => (
-          <View
-            key={`${it.productId}-${idx}`}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: 8,
-              padding: 10,
-              borderRadius: 12,
-              backgroundColor: '#f8fafc',
-              borderWidth: 1,
-              borderColor: WS.border,
-            }}
-          >
-            <View style={{ flex: 1, paddingRight: 8 }}>
-              <Text style={{ fontWeight: '600', color: WS.text }} numberOfLines={1}>
-                {it.productName}
-              </Text>
-              <Text style={{ fontSize: 12, color: WS.textMuted, marginTop: 2 }}>
-                {it.quantity} × {formatUsd(it.unitCost)}
-              </Text>
-            </View>
-            <Pressable onPress={() => removeLine(idx)}>
-              <Text style={{ color: WS.danger, fontWeight: '600' }}>Remove</Text>
-            </Pressable>
-          </View>
-        ))}
-
-        <WorkshopPickerField
-          label="Product for new line"
-          value={lineProduct ? `${lineProduct.name} (${lineProduct.sku})` : ''}
-          placeholder="Tap to select"
-          onPress={() => setProductPicker(true)}
-        />
-        <WorkshopFieldLabel>Quantity</WorkshopFieldLabel>
-        <WorkshopTextInput value={lineQty} onChangeText={setLineQty} keyboardType="decimal-pad" />
-        <WorkshopFieldLabel>Unit cost</WorkshopFieldLabel>
-        <WorkshopTextInput value={lineCost} onChangeText={setLineCost} keyboardType="decimal-pad" />
-        <Pressable
-          onPress={addLine}
-          style={{
-            alignItems: 'center',
-            borderRadius: 12,
-            borderWidth: 1,
-            borderColor: WS.border,
-            backgroundColor: '#f1f5f9',
-            paddingVertical: 12,
-            marginBottom: 8,
-          }}
-        >
-          <Text style={{ fontWeight: '700', color: WS.text }}>Add line</Text>
-        </Pressable>
-      </WorkshopFormSheet>
-
-      <WorkshopFormSheet
-        visible={productPicker}
-        title="Select product"
-        onClose={() => setProductPicker(false)}
-        footer={
-          <Pressable
-            onPress={() => setProductPicker(false)}
-            style={{ alignItems: 'center', paddingVertical: 10 }}
-          >
-            <Text style={{ color: WS.textMuted, fontWeight: '600' }}>Close</Text>
-          </Pressable>
-        }
-      >
-        <WorkshopSearchBar value={productQ} onChangeText={setProductQ} placeholder="Search products…" />
-        <FlatList
-          data={filteredProducts}
-          keyExtractor={(p) => p.id}
-          keyboardShouldPersistTaps="handled"
-          style={{ maxHeight: 320 }}
-          renderItem={({ item }) => (
-            <Pressable
-              onPress={() => {
-                setLineProduct(item);
-                setProductPicker(false);
-                setProductQ('');
-              }}
-              style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' }}
-            >
-              <Text style={{ fontWeight: '600', color: WS.text }}>{item.name}</Text>
-              <Text style={{ fontSize: 13, color: WS.textMuted, marginTop: 2 }}>{item.sku}</Text>
-            </Pressable>
-          )}
-        />
       </WorkshopFormSheet>
     </WorkshopChrome>
   );

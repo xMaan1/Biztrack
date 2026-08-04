@@ -16,7 +16,6 @@ import type {
   PurchaseOrder,
   Receiving,
   ReceivingCreate,
-  ReceivingItemCreate,
 } from '../../../models/inventory';
 import { PurchaseOrderStatus } from '../../../models/inventory';
 import {
@@ -187,22 +186,11 @@ export function MobileReceivingScreen() {
 
   const onSelectPo = (po: PurchaseOrder) => {
     setSelectedPo(po);
-    const items: ReceivingItemCreate[] = (po.items ?? []).map((item) => ({
-      purchaseOrderId: po.id,
-      productId: item.productId,
-      productName: item.productName,
-      sku: item.sku,
-      quantity: item.quantity,
-      unitCost: item.unitCost,
-      totalCost: item.quantity * item.unitCost,
-      receivedQuantity: item.receivedQuantity ?? item.quantity,
-      notes: '',
-    }));
     setDraft((prev) => ({
       ...prev,
       purchaseOrderId: po.id,
       warehouseId: po.warehouseId || prev.warehouseId,
-      items,
+      items: [],
     }));
   };
 

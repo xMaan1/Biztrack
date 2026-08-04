@@ -8,43 +8,6 @@ export enum PurchaseOrderStatus {
   CANCELLED = 'cancelled',
 }
 
-export interface PurchaseOrderItem {
-  id: string;
-  purchaseOrderId: string;
-  productId: string;
-  productName: string;
-  sku: string;
-  quantity: number;
-  unitCost: number;
-  totalCost: number;
-  receivedQuantity: number;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface PurchaseOrderItemCreate {
-  productId: string;
-  productName: string;
-  sku: string;
-  quantity: number;
-  unitCost: number;
-  totalCost: number;
-  receivedQuantity?: number;
-  notes?: string;
-}
-
-export interface PurchaseOrderItemUpdate {
-  productId?: string;
-  productName?: string;
-  sku?: string;
-  quantity?: number;
-  unitCost?: number;
-  totalCost?: number;
-  receivedQuantity?: number;
-  notes?: string;
-}
-
 export interface PurchaseOrder {
   id: string;
   tenantId: string;
@@ -58,7 +21,6 @@ export interface PurchaseOrder {
   expectedDeliveryDate: string;
   status: PurchaseOrderStatus;
   subtotal: number;
-  vatRate: number;
   vatAmount: number;
   totalAmount: number;
   notes?: string;
@@ -66,11 +28,9 @@ export interface PurchaseOrder {
   purchaseForType?: 'vehicle' | 'garage';
   vehicleId?: string;
   jobCardId?: string | null;
-  invoiceId?: string | null;
   department?: string;
   deliveryLocation?: string;
   requisitionNumber?: string;
-  items: PurchaseOrderItemCreate[];
   createdAt: string;
   updatedAt: string;
 }
@@ -83,17 +43,14 @@ export interface PurchaseOrderCreate {
   warehouseId: string;
   orderDate: string;
   expectedDeliveryDate: string;
-  vatRate?: number;
   notes?: string;
   vehicleReg?: string;
   purchaseForType?: 'vehicle' | 'garage';
   vehicleId?: string;
   jobCardId?: string | null;
-  invoiceId?: string | null;
   department?: string;
   deliveryLocation?: string;
   requisitionNumber?: string;
-  items: PurchaseOrderItemCreate[];
 }
 
 export interface PurchaseOrderUpdate {
@@ -105,7 +62,6 @@ export interface PurchaseOrderUpdate {
   orderDate?: string;
   expectedDeliveryDate?: string;
   status?: PurchaseOrderStatus;
-  vatRate?: number;
   subtotal?: number;
   vatAmount?: number;
   totalAmount?: number;
@@ -114,7 +70,6 @@ export interface PurchaseOrderUpdate {
   purchaseForType?: 'vehicle' | 'garage';
   vehicleId?: string | null;
   jobCardId?: string | null;
-  invoiceId?: string | null;
   department?: string;
   deliveryLocation?: string;
   requisitionNumber?: string;

@@ -115,19 +115,11 @@ export default function PurchaseOrderViewModal({
               <Package className="h-5 w-5" />
               Financial Summary
             </h3>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="text-center p-4 bg-gray-50 rounded-lg">
                 <Label className="text-sm font-medium text-gray-600">Subtotal</Label>
                 <p className="text-xl font-bold text-gray-900">
                   {formatCurrency(purchaseOrder.subtotal || 0)}
-                </p>
-              </div>
-              <div className="text-center p-4 bg-gray-50 rounded-lg">
-                <Label className="text-sm font-medium text-gray-600">
-                  VAT ({(purchaseOrder.vatRate || 0)}%)
-                </Label>
-                <p className="text-xl font-bold text-gray-900">
-                  {formatCurrency(purchaseOrder.vatAmount || 0)}
                 </p>
               </div>
               <div className="text-center p-4 bg-blue-50 rounded-lg">
@@ -138,42 +130,6 @@ export default function PurchaseOrderViewModal({
               </div>
             </div>
           </div>
-
-          {/* Order Items */}
-          {purchaseOrder.items && purchaseOrder.items.length > 0 && (
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Package className="h-5 w-5" />
-                Order Items ({purchaseOrder.items.length})
-              </h3>
-              <div className="space-y-3">
-                {purchaseOrder.items.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-4 border rounded-lg bg-gray-50"
-                  >
-                    <div className="flex-1">
-                      <div className="font-medium text-lg">{item.productName}</div>
-                      <div className="text-sm text-gray-600">
-                        SKU: {item.sku} | Quantity: {item.quantity}
-                      </div>
-                      {item.notes && (
-                        <div className="text-sm text-gray-500 mt-1">{item.notes}</div>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm text-gray-600">
-                        {item.quantity} × {formatCurrency(item.unitCost)}
-                      </div>
-                      <div className="font-semibold text-lg">
-                        {formatCurrency(item.totalCost)}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {isHealthcare &&
             (purchaseOrder.department ||

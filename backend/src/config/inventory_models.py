@@ -84,16 +84,13 @@ class PurchaseOrder(Base):
     expectedDeliveryDate = Column(Date)
     status = Column(String, default="draft")  # draft, submitted, approved, ordered, received, cancelled
     subtotal = Column(Float, default=0.0)  # Subtotal before VAT
-    vatRate = Column(Float, default=0.0)  # VAT rate percentage
     vatAmount = Column(Float, default=0.0)  # VAT amount
     totalAmount = Column(Float, default=0.0)  # Total amount including VAT
     notes = Column(Text)
-    items = Column(JSON, default=[])  # Store purchase order items as JSON
     vehicleReg = Column(String, nullable=True)
     purchaseForType = Column(String, nullable=True)
     vehicleId = Column(UUID(as_uuid=True), ForeignKey("vehicles.id"), nullable=True)
     jobCardId = Column(UUID(as_uuid=True), ForeignKey("job_cards.id"), nullable=True)
-    invoiceId = Column(UUID(as_uuid=True), ForeignKey("invoices.id"), nullable=True)
     department = Column(String, nullable=True)
     deliveryLocation = Column("delivery_location", String, nullable=True)
     requisitionNumber = Column("requisition_number", String, nullable=True)
