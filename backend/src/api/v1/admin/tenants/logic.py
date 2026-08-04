@@ -270,8 +270,7 @@ async def delete_tenant(
 
                 core_tables = [
                     "payments", "invoices", "projects", "customers", "leads",
-                    "maintenance_schedules",
-                    "equipment", "production_plans", "chart_of_accounts",
+                    "chart_of_accounts",
                     "journal_entries", "ledger_transactions", "financial_periods",
                     "budgets", "quality_checks", "audit_logs"
                 ]

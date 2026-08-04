@@ -7,17 +7,14 @@ import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
 import {
   Factory,
-  Wrench,
   Users,
   TrendingUp,
-  AlertTriangle,
   CheckCircle2,
   Package,
   BarChart3,
   Plus,
   Calendar,
   Activity,
-  Settings,
   Target,
   Zap,
   DollarSign,
@@ -34,7 +31,6 @@ interface WorkshopStats {
   completedProjects: number;
   totalTeamMembers: number;
   averageProgress: number;
-  equipmentMaintenance?: number;
   qualityIssues?: number;
   productionEfficiency?: number;
 }
@@ -48,7 +44,6 @@ export default function WorkshopDashboard({
   stats,
   onNavigate,
 }: WorkshopDashboardProps) {
-  const equipmentMaintenance = stats.equipmentMaintenance || 0;
   const productionEfficiency = stats.productionEfficiency || 85;
   const qualityIssues = stats.qualityIssues || 0;
   
@@ -57,8 +52,6 @@ export default function WorkshopDashboard({
     : 0;
 
   const handleCreateProject = () => onNavigate('/projects');
-  const handleViewProduction = () => onNavigate('/workshop-management/production');
-  const handleViewMaintenance = () => onNavigate('/workshop-management/maintenance');
   const handleAddInvestment = () => onNavigate('/ledger/investments');
 
   return (
@@ -86,14 +79,6 @@ export default function WorkshopDashboard({
           >
             <Plus className="mr-2 h-4 w-4" />
             New Project
-          </Button>
-          <Button
-            onClick={handleViewProduction}
-            variant="outline"
-            className="border-indigo-200 text-indigo-700 hover:bg-indigo-50"
-          >
-            <Factory className="mr-2 h-4 w-4" />
-            Production
           </Button>
         </div>
       </div>
@@ -188,21 +173,12 @@ export default function WorkshopDashboard({
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <BarChart3 className="h-5 w-5 text-indigo-600" />
-                    Production Analytics
+                    Workshop Analytics
                   </CardTitle>
                   <CardDescription className="mt-1">
                     Performance metrics and insights
                   </CardDescription>
                 </div>
-                <Button
-                  onClick={handleViewProduction}
-                  variant="ghost"
-                  size="sm"
-                  className="text-indigo-600"
-                >
-                  View All
-                  <ChevronRight className="ml-1 h-4 w-4" />
-                </Button>
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -273,62 +249,31 @@ export default function WorkshopDashboard({
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="flex items-center gap-2">
-                    <Settings className="h-5 w-5 text-blue-600" />
-                    Equipment & Maintenance
+                    <AlertCircle className="h-5 w-5 text-amber-600" />
+                    Quality Overview
                   </CardTitle>
                   <CardDescription className="mt-1">
-                    Equipment status and maintenance schedule
+                    Quality issues requiring attention
                   </CardDescription>
                 </div>
                 <Button
-                  onClick={handleViewMaintenance}
+                  onClick={() => onNavigate('/workshop-management/quality-control')}
                   variant="ghost"
                   size="sm"
-                  className="text-blue-600"
+                  className="text-amber-600"
                 >
                   Manage
                   <ChevronRight className="ml-1 h-4 w-4" />
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-blue-900">Maintenance Due</span>
-                    <AlertTriangle className="h-4 w-4 text-amber-500" />
-                  </div>
-                  <div className="text-2xl font-bold text-blue-600">{equipmentMaintenance}</div>
-                  <div className="text-xs text-blue-700 mt-1">Requires attention</div>
+            <CardContent>
+              <div className="flex items-center justify-between p-3 bg-amber-50/50 rounded-lg hover:bg-amber-50 transition-colors">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-amber-600" />
+                  <span className="text-sm font-medium">Open Quality Issues</span>
                 </div>
-
-                <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-emerald-900">Operational</span>
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                  </div>
-                  <div className="text-2xl font-bold text-emerald-600">
-                    {equipmentMaintenance > 0 ? Math.max(0, 10 - equipmentMaintenance) : 10}
-                  </div>
-                  <div className="text-xs text-emerald-700 mt-1">All systems normal</div>
-                </div>
-              </div>
-
-              <div className="space-y-2 pt-2 border-t">
-                <div className="flex items-center justify-between p-3 bg-blue-50/50 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer">
-                  <div className="flex items-center gap-2">
-                    <Wrench className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm font-medium">Preventive Maintenance</span>
-                  </div>
-                  <Badge variant="outline" className="bg-white">Scheduled</Badge>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-amber-50/50 rounded-lg hover:bg-amber-50 transition-colors cursor-pointer">
-                  <div className="flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4 text-amber-600" />
-                    <span className="text-sm font-medium">Quality Issues</span>
-                  </div>
-                  <Badge variant="destructive">{qualityIssues}</Badge>
-                </div>
+                <Badge variant="destructive">{qualityIssues}</Badge>
               </div>
             </CardContent>
           </Card>
@@ -345,7 +290,7 @@ export default function WorkshopDashboard({
             </CardHeader>
             <CardContent className="space-y-2">
               <Button
-                onClick={handleViewProduction}
+                onClick={() => onNavigate('/workshop-management/job-cards')}
                 variant="outline"
                 className="w-full justify-start h-auto py-3 hover:bg-indigo-50 hover:border-indigo-300"
               >
@@ -354,8 +299,8 @@ export default function WorkshopDashboard({
                     <Factory className="h-4 w-4 text-indigo-600" />
                   </div>
                   <div className="flex-1 text-left">
-                    <div className="font-medium">View Production</div>
-                    <div className="text-xs text-muted-foreground">Production plans</div>
+                    <div className="font-medium">Job Cards</div>
+                    <div className="text-xs text-muted-foreground">Workshop jobs</div>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>

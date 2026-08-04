@@ -58,7 +58,6 @@ const MODULE_MAP: Record<string, string> = {
   Production: 'production',
   'Workshop Management': 'production',
   'Quality Control': 'quality',
-  Maintenance: 'maintenance',
   Events: 'events',
   Reports: 'reports',
   Dashboard: 'dashboard',

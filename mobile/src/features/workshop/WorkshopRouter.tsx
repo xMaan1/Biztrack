@@ -6,9 +6,7 @@ import { evalSidebarPathPermission } from '../../hooks/useSidebarFilteredMenu';
 import { MenuHeaderButton } from '../../components/layout/MenuHeaderButton';
 import { MobileWorkshopJobCardsScreen } from './screens/MobileWorkshopJobCardsScreen';
 import { MobileWorkshopVehiclesScreen } from './screens/MobileWorkshopVehiclesScreen';
-import { MobileWorkshopProductionScreen } from './screens/MobileWorkshopProductionScreen';
 import { MobileWorkshopQualityScreen } from './screens/MobileWorkshopQualityScreen';
-import { MobileWorkshopMaintenanceScreen } from './screens/MobileWorkshopMaintenanceScreen';
 import { MobileWorkshopMotBookingsScreen } from './screens/MobileWorkshopMotBookingsScreen';
 import { WS } from './components/workshopTheme';
 
@@ -86,12 +84,8 @@ export function WorkshopRouter() {
       return <MobileWorkshopJobCardsScreen />;
     case '/workshop-management/vehicles':
       return <MobileWorkshopVehiclesScreen />;
-    case '/workshop-management/production':
-      return <MobileWorkshopProductionScreen />;
     case '/workshop-management/quality-control':
       return <MobileWorkshopQualityScreen />;
-    case '/workshop-management/maintenance':
-      return <MobileWorkshopMaintenanceScreen />;
     case '/workshop-management/mot/bookings':
       return <MobileWorkshopMotBookingsScreen />;
     default:

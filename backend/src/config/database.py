@@ -39,10 +39,6 @@ from .inventory_models import (
 from .job_card_models import JobCard
 from .vehicle_models import Vehicle
 
-from .production_models import (
-    ProductionPlan, ProductionStep, ProductionSchedule, ProductionStatus, ProductionPriority, ProductionType
-)
-
 from ..models.invoices import (
     Invoice, Payment, DeliveryNote, InvoiceShareLink
 )
@@ -308,21 +304,6 @@ from ..api.v1.pos.categories.logic import (
 )
 from ..api.v1.pos.dashboard.logic import get_pos_dashboard_data
 
-from .production_crud import (
-    get_production_plan_by_id, get_all_production_plans, get_production_plans_by_status,
-    get_production_plans_by_priority, get_production_plans_by_project,
-    get_production_plans_by_assigned_user, create_production_plan, update_production_plan, delete_production_plan,
-    get_next_production_plan_number, get_production_plan_stats,
-    
-    # Production Step functions
-    get_production_step_by_id, get_production_steps_by_plan, create_production_step,
-    update_production_step, delete_production_step,
-    
-    # Production Schedule functions
-    get_production_schedule_by_id, get_production_schedules_by_plan, create_production_schedule,
-    update_production_schedule, delete_production_schedule
-)
-
 from .reports_crud import (
     get_reports_dashboard_data,
     get_project_analytics, get_financial_analytics
@@ -405,7 +386,6 @@ __all__ = [
     'Invoice', 'Payment',
     'POSShift', 'POSTransaction', 'PosProductCategory',
     'Vehicle',
-    'ProductionPlan', 'ProductionStep', 'ProductionSchedule', 'ProductionStatus', 'ProductionPriority', 'ProductionType',
     'CustomEventType', 'CustomDepartment', 'CustomLeaveType', 'CustomLeadSource',
     'CustomContactSource', 'CustomCompanyIndustry', 'CustomContactType', 'CustomIndustry',
     'AuditLog', 'Permission', 'CustomRole',

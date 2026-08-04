@@ -68,7 +68,6 @@ class QualityCheck(Base):
     estimated_duration_minutes = Column(Integer, default=0)
     
     # Associations
-    production_plan_id = Column(UUID(as_uuid=True), ForeignKey("production_plans.id"), nullable=True, index=True)
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=True, index=True)
 
     # Assignment
@@ -91,7 +90,6 @@ class QualityCheck(Base):
     
     # Relationships
     tenant = relationship("Tenant", back_populates="quality_checks")
-    production_plan = relationship("ProductionPlan", back_populates="quality_checks")
     project = relationship("Project", back_populates="quality_checks")
     assigned_to = relationship("User", foreign_keys=[assigned_to_id], back_populates="assigned_quality_checks")
     created_by = relationship("User", foreign_keys=[created_by_id], back_populates="created_quality_checks")
@@ -171,7 +169,6 @@ class QualityDefect(Base):
     
     # Associations
     quality_check_id = Column(UUID(as_uuid=True), ForeignKey("quality_checks.id"), nullable=True, index=True)
-    production_plan_id = Column(UUID(as_uuid=True), ForeignKey("production_plans.id"), nullable=True, index=True)
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=True, index=True)
 
     # Status and Assignment
@@ -195,7 +192,6 @@ class QualityDefect(Base):
     # Relationships
     tenant = relationship("Tenant", back_populates="quality_defects")
     quality_check = relationship("QualityCheck", back_populates="quality_defects")
-    production_plan = relationship("ProductionPlan", back_populates="quality_defects")
     project = relationship("Project", back_populates="quality_defects")
     detected_by = relationship("User", foreign_keys=[detected_by_id], back_populates="detected_defects")
     assigned_to = relationship("User", foreign_keys=[assigned_to_id], back_populates="assigned_defects")

@@ -39,7 +39,7 @@ const PLAN_MODULES: {
     title: 'Workshop Module',
     planType: 'workshop',
     description:
-      'Production, job cards, quality control, and maintenance.',
+      'Job cards, vehicles, quality control, and MOT booking.',
     accent: 'orange',
   },
   {

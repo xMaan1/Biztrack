@@ -387,10 +387,8 @@ type ListAction = {
 type CardKind =
   | 'job-card'
   | 'vehicle'
-  | 'production'
   | 'quality'
   | 'mot'
-  | 'maintenance'
   | 'default';
 
 const CARD_KIND: Record<
@@ -423,15 +421,6 @@ const CARD_KIND: Record<
     icon: 'car',
     iconColor: '#7c3aed',
   },
-  production: {
-    label: 'Production',
-    headerBg: '#ecfeff',
-    headerBorder: '#a5f3fc',
-    labelColor: '#0e7490',
-    accent: '#0891b2',
-    icon: 'cog',
-    iconColor: '#0891b2',
-  },
   quality: {
     label: 'Quality',
     headerBg: '#ecfdf5',
@@ -449,15 +438,6 @@ const CARD_KIND: Record<
     accent: '#0d9488',
     icon: 'car-sport',
     iconColor: '#0d9488',
-  },
-  maintenance: {
-    label: 'Maintenance',
-    headerBg: '#fffbeb',
-    headerBorder: '#fde68a',
-    labelColor: '#b45309',
-    accent: '#d97706',
-    icon: 'construct',
-    iconColor: '#d97706',
   },
   default: {
     label: 'Record',

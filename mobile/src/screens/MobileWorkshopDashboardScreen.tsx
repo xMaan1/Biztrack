@@ -59,9 +59,7 @@ const quickLinks: {
 }[] = [
   { path: '/workshop-management/job-cards', label: 'Job cards', icon: 'clipboard', color: '#4f46e5', bg: '#eef2ff' },
   { path: '/workshop-management/vehicles', label: 'Vehicles', icon: 'car', color: '#7c3aed', bg: '#f5f3ff' },
-  { path: '/workshop-management/production', label: 'Production', icon: 'cog', color: '#0891b2', bg: '#ecfeff' },
   { path: '/workshop-management/quality-control', label: 'Quality', icon: 'shield-checkmark', color: '#059669', bg: '#ecfdf5' },
-  { path: '/workshop-management/maintenance', label: 'Maintenance', icon: 'build', color: '#d97706', bg: '#fffbeb' },
   { path: '/workshop-management/mot/bookings', label: 'MOT bookings', icon: 'car-sport', color: '#0d9488', bg: '#ccfbf1' },
   { path: '/projects', label: 'Projects', icon: 'folder-open', color: '#64748b', bg: '#f1f5f9' },
   { path: '/crm/customers', label: 'Customers', icon: 'people', color: '#64748b', bg: '#f1f5f9' },

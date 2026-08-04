@@ -16,7 +16,6 @@ interface DashboardStats extends Partial<AgencyStats> {
   completedProjects: number;
   totalTeamMembers: number;
   averageProgress: number;
-  equipmentMaintenance?: number;
   qualityIssues?: number;
   productionEfficiency?: number;
 }
@@ -63,7 +62,6 @@ export default function StandardPlanDashboard({ planInfo }: { planInfo: PlanInfo
         dueDate: project.dueDate,
       })),
       teamMembers,
-      equipmentMaintenance: 0,
       qualityIssues: 0,
       productionEfficiency: averageProgress,
     };

@@ -39,7 +39,6 @@ export function usePlanInfo() {
         planName: 'Workshop Master',
         features: [
           'Project Management',
-          'Production Planning',
         ],
         maxProjects: 100,
         maxUsers: 50,

@@ -117,8 +117,6 @@ export function getTypeIcon(type: string) {
   switch (type.toLowerCase()) {
     case 'production':
       return '🏭';
-    case 'maintenance':
-      return '🔧';
     case 'repair':
       return '🛠️';
     case 'installation':

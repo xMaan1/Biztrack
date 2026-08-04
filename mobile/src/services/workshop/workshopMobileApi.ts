@@ -2,25 +2,11 @@ import { apiService } from '../ApiService';
 import type { JobCard, JobCardCreate, JobCardUpdate } from '../../models/workshop/JobCard';
 import type { Vehicle, VehicleCreate, VehicleUpdate } from '../../models/workshop/Vehicle';
 import type {
-  ProductionPlanCreate,
-  ProductionPlanUpdate,
-  ProductionPlanFilters,
-} from '../../models/production';
-import type {
   QualityCheckResponse,
   QualityCheckCreate,
   QualityCheckUpdate,
   QualityCheckFilters,
 } from '../../models/qualityControl';
-import type {
-  MaintenanceScheduleCreate,
-  MaintenanceScheduleUpdate,
-  MaintenanceScheduleResponse,
-  EquipmentCreate,
-  EquipmentUpdate,
-  EquipmentResponse,
-  MaintenanceDashboardStats,
-} from '../../models/maintenance';
 
 export async function getJobCards(): Promise<JobCard[]> {
   const data = await apiService.get<JobCard[] | unknown>('/job-cards?limit=500');
@@ -85,44 +71,6 @@ export async function getInvoiceCustomer(id: string) {
   return apiService.get(`/invoices/customers/${id}`);
 }
 
-export async function getProductionPlans(
-  filters: ProductionPlanFilters = {},
-  page = 1,
-  limit = 100,
-) {
-  const queryParams = new URLSearchParams();
-  if (filters.status) queryParams.append('status', filters.status);
-  if (filters.priority) queryParams.append('priority', filters.priority);
-  if (filters.production_type)
-    queryParams.append('production_type', filters.production_type);
-  if (filters.search) queryParams.append('search', filters.search);
-  const skip = Math.max(0, (page - 1) * limit);
-  queryParams.append('skip', String(skip));
-  queryParams.append('limit', String(limit));
-  const response = await apiService.get<any[]>(
-    `/production?${queryParams.toString()}`,
-  );
-  return {
-    production_plans: Array.isArray(response) ? response : [],
-    total: Array.isArray(response) ? response.length : 0,
-  };
-}
-
-export async function createProductionPlan(body: ProductionPlanCreate) {
-  return apiService.post('/production', body);
-}
-
-export async function updateProductionPlan(
-  id: string,
-  body: ProductionPlanUpdate,
-) {
-  return apiService.put(`/production/${id}`, body);
-}
-
-export async function deleteProductionPlan(id: string) {
-  return apiService.delete(`/production/${id}`);
-}
-
 export async function getQualityChecks(
   filters: QualityCheckFilters = {},
   page = 1,
@@ -162,62 +110,6 @@ export async function updateQualityCheck(
 
 export async function deleteQualityCheck(id: string) {
   return apiService.delete(`/quality-control/checks/${id}`);
-}
-
-export async function getMaintenanceDashboard(): Promise<MaintenanceDashboardStats> {
-  return apiService.get<MaintenanceDashboardStats>('/maintenance/dashboard');
-}
-
-export async function getMaintenanceSchedules(skip = 0, limit = 100) {
-  const data = await apiService.get<MaintenanceScheduleResponse[] | unknown>(
-    `/maintenance/schedules?skip=${skip}&limit=${limit}`,
-  );
-  return Array.isArray(data) ? data : [];
-}
-
-export async function createMaintenanceSchedule(
-  data: MaintenanceScheduleCreate,
-) {
-  return apiService.post<MaintenanceScheduleResponse>(
-    '/maintenance/schedules',
-    data,
-  );
-}
-
-export async function updateMaintenanceSchedule(
-  id: string,
-  data: MaintenanceScheduleUpdate,
-) {
-  return apiService.put<MaintenanceScheduleResponse>(
-    `/maintenance/schedules/${id}`,
-    data,
-  );
-}
-
-export async function deleteMaintenanceSchedule(id: string) {
-  return apiService.delete(`/maintenance/schedules/${id}`);
-}
-
-export async function getEquipmentList(skip = 0, limit = 100) {
-  const data = await apiService.get<EquipmentResponse[] | unknown>(
-    `/maintenance/equipment?skip=${skip}&limit=${limit}`,
-  );
-  return Array.isArray(data) ? data : [];
-}
-
-export async function createEquipment(data: EquipmentCreate) {
-  return apiService.post<EquipmentResponse>('/maintenance/equipment', data);
-}
-
-export async function updateEquipment(id: string, data: EquipmentUpdate) {
-  return apiService.put<EquipmentResponse>(
-    `/maintenance/equipment/${id}`,
-    data,
-  );
-}
-
-export async function deleteEquipment(id: string) {
-  return apiService.delete(`/maintenance/equipment/${id}`);
 }
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
