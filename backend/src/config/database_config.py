@@ -99,8 +99,8 @@ def get_db():
     except (OperationalError, DisconnectionError) as e:
         error_str = str(e)
         if "SSL connection has been closed" in error_str:
-            logger.warning(f"SSL connection error, invalidating pool: {error_str}")
-            engine.pool.invalidate()
+            logger.warning(f"SSL connection error, disposing pool: {error_str}")
+            engine.dispose()
         else:
             logger.error(f"Database operational error: {e}")
         try:
