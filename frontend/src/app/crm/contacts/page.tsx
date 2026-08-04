@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import { DashboardLayout } from '../../../components/layout';
 import { useCustomOptions } from '../../../hooks/useCustomOptions';
@@ -27,18 +27,25 @@ import {
   birthdayInputFromApi,
   buildAddressesPayload,
 } from '@/src/components/crm/contacts/contactUtils';
-import { ContactsLoadingState } from '@/src/components/crm/contacts/ContactsLoadingState';
-import { ContactsPageHeader } from '@/src/components/crm/contacts/ContactsPageHeader';
-import { ContactsFiltersCard } from '@/src/components/crm/contacts/ContactsFiltersCard';
 import { ContactsListCard } from '@/src/components/crm/contacts/ContactsListCard';
 import { ContactFormDialog } from '@/src/components/crm/contacts/ContactFormDialog';
-import { ContactViewDialog } from '@/src/components/crm/contacts/ContactViewDialog';
-import { ContactDeleteDialog } from '@/src/components/crm/contacts/ContactDeleteDialog';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { User } from '@/src/models';
 import { apiService } from '@/src/services/ApiService';
 import { toast } from 'sonner';
 import { type UserSearchItem } from '@/src/components/ui/user-search';
+import { Button } from '@/src/components/ui/button';
+import { Input } from '@/src/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/src/components/ui/select';
+import { Avatar, AvatarFallback } from '@/src/components/ui/avatar';
+import { Plus, Search, Bell, RotateCcw, HelpCircle, MessageSquare, Mail, ListFilter } from 'lucide-react';
+import { useConfirm } from '@/src/contexts/ConfirmContext';
 
 export default function CRMContactsPage() {
   return (
@@ -53,11 +60,28 @@ export default function CRMContactsPage() {
 
 const CONTACTS_PAGE_SIZE = 20;
 
+const PINNED_FILTERS = [
+  { key: 'active', label: 'Active', color: 'bg-emerald-500 text-white' },
+  { key: 'inactive', label: 'Inactive', color: 'bg-gray-400 text-white' },
+  { key: 'high_value', label: 'High Value', color: 'bg-blue-500 text-white' },
+  { key: 'new', label: 'New', color: 'bg-purple-500 text-white' },
+  { key: 'customer', label: 'Customers', color: 'bg-sky-400 text-white' },
+  { key: 'partner', label: 'Partners', color: 'bg-orange-500 text-white' },
+];
+
+const FILTER_MAP: Record<string, CRMContactFilters> = {
+  active: {},
+  inactive: {},
+  high_value: {},
+  new: {},
+  customer: { type: ContactType.CUSTOMER },
+  partner: { type: ContactType.PARTNER },
+};
+
 function CRMContactsContent() {
+  const confirm = useConfirm();
   const { user } = useAuth();
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const openedContactIdRef = useRef<string | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [listLoading, setListLoading] = useState(false);
@@ -68,17 +92,15 @@ function CRMContactsContent() {
   const [search, setSearch] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
-  const [viewingContact, setViewingContact] = useState<Contact | null>(null);
-  const [deletingContact, setDeletingContact] = useState<Contact | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const [showCustomContactTypeDialog, setShowCustomContactTypeDialog] =
-    useState(false);
+  const [showCustomContactTypeDialog, setShowCustomContactTypeDialog] = useState(false);
   const [openAdditional, setOpenAdditional] = useState(false);
   const [openAddresses, setOpenAddresses] = useState(false);
   const [openContactDetails, setOpenContactDetails] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [activePinned, setActivePinned] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState('updatedAt');
 
   const {
     customContactTypes,
@@ -114,6 +136,7 @@ function CRMContactsContent() {
   const attachmentFileInputRef = React.useRef<HTMLInputElement>(null);
   const [attachmentUploading, setAttachmentUploading] = useState(false);
   const initialContactsLoad = React.useRef(true);
+  const [pageSize, setPageSize] = useState(CONTACTS_PAGE_SIZE);
 
   const loadCompanies = useCallback(async () => {
     try {
@@ -130,11 +153,7 @@ function CRMContactsContent() {
       } else {
         setListLoading(true);
       }
-      const response = await CRMService.getContacts(
-        filters,
-        page,
-        CONTACTS_PAGE_SIZE,
-      );
+      const response = await CRMService.getContacts(filters, page, pageSize);
       setContacts(response.contacts);
       setTotalPages(Math.max(1, response.pagination.pages));
       setTotalCount(response.pagination.total);
@@ -144,7 +163,7 @@ function CRMContactsContent() {
       setListLoading(false);
       initialContactsLoad.current = false;
     }
-  }, [filters, page]);
+  }, [filters, page, pageSize]);
 
   useEffect(() => {
     loadCompanies();
@@ -153,13 +172,6 @@ function CRMContactsContent() {
   useEffect(() => {
     loadContacts();
   }, [loadContacts]);
-
-  const handleFiltersChange: React.Dispatch<
-    React.SetStateAction<CRMContactFilters>
-  > = (action) => {
-    setFilters(action);
-    setPage(1);
-  };
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -199,25 +211,6 @@ function CRMContactsContent() {
     fetchUsers();
   }, [fetchUsers]);
 
-  useEffect(() => {
-    const contactId = searchParams.get('contactId')?.trim();
-    if (!contactId || openedContactIdRef.current === contactId) {
-      return;
-    }
-    openedContactIdRef.current = contactId;
-
-    (async () => {
-      try {
-        const contact = await CRMService.getContact(contactId);
-        setViewingContact(contact);
-      } catch {
-        toast.error('Contact not found');
-      } finally {
-        router.replace('/crm/contacts', { scroll: false });
-      }
-    })();
-  }, [searchParams, router]);
-
   const selectedAssignee = useMemo((): UserSearchItem | null => {
     if (!formData.assignedTo) return null;
     const found = users.find(
@@ -239,13 +232,39 @@ function CRMContactsContent() {
   const resetFilters = () => {
     setFilters({});
     setSearch('');
+    setActivePinned(null);
     setPage(1);
   };
 
-  const handleCreateCustomContactType = async (
-    name: string,
-    description: string,
-  ) => {
+  const togglePinned = (key: string) => {
+    if (activePinned === key) {
+      setActivePinned(null);
+      setFilters({});
+    } else {
+      setActivePinned(key);
+      setFilters(FILTER_MAP[key] || {});
+    }
+    setPage(1);
+  };
+
+  const toggleSelectContact = (id: string, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(new Set(contacts.map((c) => c.id)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleCreateCustomContactType = async (name: string, description: string) => {
     try {
       await createCustomContactType(name, description);
     } catch (error) {
@@ -318,14 +337,14 @@ function CRMContactsContent() {
             : null,
           website: formData.website?.trim() || null,
           assignedTo: formData.assignedTo || undefined,
+          image_url: formData.image_url || undefined,
         };
         await CRMService.updateContact(editingContact.id, payload);
-        setSuccessMessage('Contact updated successfully!');
+        toast.success('Contact updated successfully!');
         setShowCreateDialog(false);
         setEditingContact(null);
         resetForm();
         loadContacts();
-        setTimeout(() => setSuccessMessage(''), 3000);
       } else {
         await CRMService.createContact({
           ...formData,
@@ -342,11 +361,10 @@ function CRMContactsContent() {
           website: formData.website?.trim() || undefined,
           assignedTo: formData.assignedTo || undefined,
         });
-        setSuccessMessage('Contact created successfully!');
+        toast.success('Contact created successfully!');
         setShowCreateDialog(false);
         resetForm();
         loadContacts();
-        setTimeout(() => setSuccessMessage(''), 3000);
       }
     } catch (error) {
       setErrorMessage('Error saving contact. Please try again.');
@@ -359,7 +377,6 @@ function CRMContactsContent() {
   const handleEdit = (contact: Contact) => {
     setEditingContact(contact);
     setErrorMessage('');
-    setSuccessMessage('');
     setFormData({
       firstName: contact.firstName,
       lastName: contact.lastName,
@@ -386,9 +403,20 @@ function CRMContactsContent() {
     setShowCreateDialog(true);
   };
 
-  const handleAttachmentFile = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleDelete = async (contactId: string) => {
+    const ok = await confirm({ description: 'Are you sure you want to delete this contact?', destructive: true, confirmLabel: 'Delete' });
+    if (!ok) return;
+    try {
+      await CRMService.deleteContact(contactId);
+      toast.success('Contact deleted successfully!');
+      loadContacts();
+    } catch (error) {
+      setErrorMessage('Error deleting contact. Please try again.');
+      setTimeout(() => setErrorMessage(''), 5000);
+    }
+  };
+
+  const handleAttachmentFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setAttachmentUploading(true);
@@ -434,80 +462,226 @@ function CRMContactsContent() {
     }));
   };
 
-  const handleView = (contact: Contact) => {
-    setViewingContact(contact);
-  };
-
-  const handleDelete = (contact: Contact) => {
-    setDeletingContact(contact);
-  };
-
-  const confirmDelete = async () => {
-    if (!deletingContact) return;
-
-    setDeleting(true);
-    try {
-      await CRMService.deleteContact(deletingContact.id);
-      setSuccessMessage('Contact deleted successfully!');
-      setDeletingContact(null);
-      loadContacts();
-      setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (error) {
-      setErrorMessage('Error deleting contact. Please try again.');
-      setTimeout(() => setErrorMessage(''), 5000);
-    } finally {
-      setDeleting(false);
-    }
-  };
-
   if (loading && contacts.length === 0) {
-    return <ContactsLoadingState />;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+          <p className="mt-4 text-lg">Loading Contacts...</p>
+        </div>
+      </div>
+    );
   }
+
+  const showClear = activePinned !== null || !!filters.search;
 
   return (
     <DashboardLayout>
-      <div className="container mx-auto p-6 space-y-6">
-        <ContactsPageHeader
-          successMessage={successMessage}
-          onNewContact={() => {
-            setEditingContact(null);
-            resetForm();
-            const uid = user?.id || user?.userId;
-            if (uid) {
-              setFormData((prev) => ({ ...prev, assignedTo: uid }));
-            }
-            setErrorMessage('');
-            setSuccessMessage('');
-            setShowCreateDialog(true);
-          }}
-        />
+      <div className="bg-white min-h-screen">
+        <div className="px-6 py-5 space-y-5">
 
-        <ContactsFiltersCard
-          search={search}
-          onSearchChange={setSearch}
-          onSearchSubmit={handleSearch}
-          filters={filters}
-          setFilters={handleFiltersChange}
-          onResetFilters={resetFilters}
-          users={users}
-        />
+          {/* TOP ACTION BAR */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-500 hover:text-gray-700" onClick={loadContacts}>
+                <RotateCcw className="w-4 h-4" />
+              </Button>
+              <Select value="apply_actions" onValueChange={() => {}}>
+                <SelectTrigger className="w-[150px] h-9 text-[12px] rounded-lg border-gray-200">
+                  <SelectValue placeholder="APPLY ACTIONS" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="apply_actions" disabled>APPLY ACTIONS</SelectItem>
+                  <SelectItem value="assign">Assign to user</SelectItem>
+                  <SelectItem value="change_type">Change type</SelectItem>
+                  <SelectItem value="change_status">Change status</SelectItem>
+                  <SelectItem value="delete_selected">Delete selected</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value="saved_filter" onValueChange={() => {}}>
+                <SelectTrigger className="w-[180px] h-9 text-[12px] rounded-lg border-gray-200">
+                  <SelectValue placeholder="APPLY SAVED FILTER" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="saved_filter" disabled>APPLY SAVED FILTER</SelectItem>
+                  <SelectItem value="all_contacts">All Contacts</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="high_value">High Value</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-        <ContactsListCard
-          contacts={contacts}
-          companies={companies}
-          totalCount={totalCount}
-          page={page}
-          totalPages={totalPages}
-          listLoading={listLoading}
-          onPageChange={setPage}
-          onView={handleView}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
+            <Button
+              size="default"
+              className="h-10 px-6 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold text-[13px] shadow-sm"
+              onClick={() => {
+                setEditingContact(null);
+                resetForm();
+                const uid = user?.id || user?.userId;
+                if (uid) {
+                  setFormData((prev) => ({ ...prev, assignedTo: uid }));
+                }
+                setErrorMessage('');
+                setShowCreateDialog(true);
+              }}
+            >
+              <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center mr-2">
+                <Plus className="w-3 h-3 text-white" />
+              </span>
+              ADD NEW CONTACT
+            </Button>
 
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-400 hover:text-gray-600">
+                <HelpCircle className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-400 hover:text-gray-600">
+                <MessageSquare className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-400 hover:text-gray-600">
+                <Mail className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-400 hover:text-gray-600">
+                <Bell className="w-4 h-4" />
+              </Button>
+              <Avatar className="h-8 w-8 ml-2">
+                <AvatarFallback className="text-[11px] bg-blue-500 text-white font-medium">AD</AvatarFallback>
+              </Avatar>
+            </div>
+          </div>
+
+          {/* PINNED FILTERS ROW */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[12px] font-medium text-gray-600 mr-1">Pinned:</span>
+            {PINNED_FILTERS.map((pf) => (
+              <button
+                key={pf.key}
+                onClick={() => togglePinned(pf.key)}
+                className={`text-[11px] font-semibold px-3.5 py-1 rounded-full transition-colors cursor-pointer ${
+                  activePinned === pf.key
+                    ? `${pf.color} shadow-sm`
+                    : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300 hover:text-gray-700'
+                }`}
+              >
+                {pf.label}
+              </button>
+            ))}
+            {showClear && (
+              <button
+                onClick={resetFilters}
+                className="text-[11px] text-gray-400 hover:text-gray-600 ml-1 underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
+          {/* FILTER BAR */}
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1 text-gray-600">
+                <ListFilter className="w-4 h-4" />
+                <span className="text-[12px] font-semibold uppercase">Filters</span>
+              </div>
+              <Select value="date_range" onValueChange={() => {}}>
+                <SelectTrigger className="w-[160px] h-8 text-[11px] rounded-lg border-gray-200">
+                  <SelectValue placeholder="Date Created" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date_range" disabled>Date Created</SelectItem>
+                  <SelectItem value="today">Today</SelectItem>
+                  <SelectItem value="7d">Last 7 Days</SelectItem>
+                  <SelectItem value="30d">Last 30 Days</SelectItem>
+                  <SelectItem value="90d">Last 90 Days</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                value={sortBy}
+                onValueChange={(v) => {
+                  setSortBy(v);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-[180px] h-8 text-[11px] rounded-lg border-gray-200">
+                  <SelectValue placeholder="Show most recent first" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="updatedAt">Show most recent first</SelectItem>
+                  <SelectItem value="createdAt">Date Created</SelectItem>
+                  <SelectItem value="name">Name</SelectItem>
+                  <SelectItem value="lifetimeValue">Lifetime Value</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                value={String(pageSize)}
+                onValueChange={(v) => {
+                  setPageSize(Number(v));
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-[90px] h-8 text-[11px] rounded-lg border-gray-200">
+                  <SelectValue placeholder="20" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10 / Page</SelectItem>
+                  <SelectItem value="20">20 / Page</SelectItem>
+                  <SelectItem value="50">50 / Page</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  placeholder="Search contacts..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
+                  className="w-[260px] h-9 pl-9 text-[12px] rounded-full border-gray-200 bg-gray-50"
+                />
+              </div>
+              <Button
+                size="sm"
+                className="h-9 px-5 bg-blue-500 hover:bg-blue-600 text-white text-[12px] font-semibold rounded-lg"
+                onClick={handleSearch}
+              >
+                Search
+              </Button>
+            </div>
+          </div>
+
+          {/* Contacts Table */}
+          <ContactsListCard
+            contacts={contacts}
+            companies={companies}
+            totalCount={totalCount}
+            page={page}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            listLoading={listLoading}
+            selectedIds={selectedIds}
+            onSelectContact={toggleSelectContact}
+            onSelectAll={toggleSelectAll}
+            onPageChange={setPage}
+            onView={(contact) => { router.push(`/crm/contacts/${contact.id}`); }}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+
+        </div>
+
+        {/* Create/Edit Contact Dialog */}
         <ContactFormDialog
           open={showCreateDialog}
-          onOpenChange={setShowCreateDialog}
+          onOpenChange={(open) => {
+            setShowCreateDialog(open);
+            if (!open) {
+              setEditingContact(null);
+              resetForm();
+              setErrorMessage('');
+            }
+          }}
           editingContact={editingContact}
           formData={formData}
           setFormData={setFormData}
@@ -529,31 +703,17 @@ function CRMContactsContent() {
           submitting={submitting}
           onCancel={() => {
             setShowCreateDialog(false);
-            setEditingContact(null);
-            resetForm();
-            setErrorMessage('');
-            setSuccessMessage('');
-          }}
+              setEditingContact(null);
+              resetForm();
+              setErrorMessage('');
+            }}
           attachmentFileInputRef={attachmentFileInputRef}
           onAttachmentFile={handleAttachmentFile}
           attachmentUploading={attachmentUploading}
           onRemoveAttachment={removeAttachmentAt}
         />
 
-        <ContactViewDialog
-          contact={viewingContact}
-          companies={companies}
-          onClose={() => setViewingContact(null)}
-          onEdit={handleEdit}
-        />
-
-        <ContactDeleteDialog
-          contact={deletingContact}
-          deleting={deleting}
-          onClose={() => setDeletingContact(null)}
-          onConfirm={confirmDelete}
-        />
-
+        {/* Custom Contact Type Dialog */}
         <CustomOptionDialog
           open={showCustomContactTypeDialog}
           onOpenChange={setShowCustomContactTypeDialog}

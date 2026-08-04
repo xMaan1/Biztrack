@@ -123,6 +123,7 @@ def _contact_create_to_orm_dict(
         "birthday": raw.get("birthday"),
         "businessTaxId": raw.get("businessTaxId"),
         "website": raw.get("website"),
+        "image_url": raw.get("image_url"),
         "addresses": raw.get("addresses") or [],
         "socialLinks": raw.get("socialLinks"),
         "assignedToId": assigned_to_id,

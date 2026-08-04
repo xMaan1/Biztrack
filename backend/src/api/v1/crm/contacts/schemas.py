@@ -143,6 +143,7 @@ class ContactBase(BaseModel):
     birthday: Optional[datetime] = None
     businessTaxId: Optional[str] = None
     website: Optional[str] = None
+    image_url: Optional[str] = None
     addresses: List[ContactAddressItem] = Field(default_factory=list)
     socialLinks: ContactSocialLinks = Field(default_factory=ContactSocialLinks)
     assignedTo: Optional[str] = None
@@ -287,6 +288,7 @@ class ContactUpdate(BaseModel):
     birthday: Optional[datetime] = None
     businessTaxId: Optional[str] = None
     website: Optional[str] = None
+    image_url: Optional[str] = None
     addresses: Optional[List[ContactAddressItem]] = None
     socialLinks: Optional[ContactSocialLinks] = None
     assignedTo: Optional[str] = None

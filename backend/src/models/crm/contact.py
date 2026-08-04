@@ -34,6 +34,7 @@ class Contact(Base):
     socialLinks = Column(JSON, default=dict)
     assignedToId = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     createdById = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    image_url = Column(Text, nullable=True)
     clientValue = Column(Float, nullable=True)
     lastContactDate = Column(DateTime, nullable=True)
     createdAt = Column(DateTime, default=datetime.utcnow)

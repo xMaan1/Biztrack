@@ -27,6 +27,16 @@ class StripeService:
         cancel_url: str,
         billing_cycle: str = 'monthly'
     ) -> Dict[str, Any]:
+        if stripe.api_key and stripe.api_key.startswith('sk_test_dummy'):
+            logger.info(f"DEV MODE: Returning mock checkout session for tenant {tenant_id}")
+            frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+            mock_session_id = f"cs_dev_{plan_id}_{tenant_id[:8]}"
+            return {
+                'success': True,
+                'session_id': mock_session_id,
+                'url': f"{frontend_url}/subscription/success?session_id={mock_session_id}"
+            }
+
         try:
             price_amount = int(plan_price * 100)
             

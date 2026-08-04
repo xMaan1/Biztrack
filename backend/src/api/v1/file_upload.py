@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from typing import Optional
 import os
@@ -261,6 +261,7 @@ def validate_document_file(file: UploadFile) -> bool:
 
 @router.post("/document")
 async def upload_document(
+    request: Request,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -280,25 +281,44 @@ async def upload_document(
         
         file_content = await file.read()
         
-        result = s3_service.upload_file(
-            file_content=file_content,
-            tenant_id=tenant_id,
-            folder="documents",
-            original_filename=file.filename
-        )
-        
-        logger.info(f"Document uploaded successfully for tenant {tenant_id}: {result['file_url']}")
-        
-        return JSONResponse({
-            "success": True,
-            "message": "Document uploaded successfully",
-            "file_url": result["file_url"],
-            "filename": result["filename"],
-            "original_filename": result["original_filename"],
-            "s3_key": result["s3_key"],
-            "file_size": file.size,
-            "content_type": file.content_type
-        })
+        if s3_service.enabled:
+            result = s3_service.upload_file(
+                file_content=file_content,
+                tenant_id=tenant_id,
+                folder="documents",
+                original_filename=file.filename
+            )
+            logger.info(f"Document uploaded successfully for tenant {tenant_id}: {result['file_url']}")
+            return JSONResponse({
+                "success": True,
+                "message": "Document uploaded successfully",
+                "file_url": result["file_url"],
+                "filename": result["filename"],
+                "original_filename": result["original_filename"],
+                "s3_key": result["s3_key"],
+                "file_size": file.size,
+                "content_type": file.content_type
+            })
+        else:
+            ensure_upload_directory()
+            ext = Path(file.filename).suffix.lower() if file.filename else ""
+            local_name = f"{uuid.uuid4().hex}{ext}"
+            local_path = os.path.join(UPLOAD_DIR, local_name)
+            with open(local_path, "wb") as f:
+                f.write(file_content)
+            base_url = str(request.base_url).rstrip("/")
+            file_url = f"{base_url}/static/{local_name}"
+            logger.info(f"Document saved locally for tenant {tenant_id}: {file_url}")
+            return JSONResponse({
+                "success": True,
+                "message": "Document uploaded successfully (local storage)",
+                "file_url": file_url,
+                "filename": local_name,
+                "original_filename": file.filename or local_name,
+                "s3_key": local_name,
+                "file_size": file.size,
+                "content_type": file.content_type
+            })
         
     except HTTPException:
         raise
@@ -358,6 +378,57 @@ async def upload_employee_file(
     except Exception as e:
         logger.error(f"Error uploading employee file: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to upload {category}: {str(e)}")
+
+@router.post("/image")
+async def upload_image(
+    request: Request,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_context: dict = Depends(get_tenant_context)
+):
+    """Upload an image file (for profile photos etc.)"""
+    try:
+        logger.info(f"Image upload request received: {file.filename}, size: {file.size}")
+        if not tenant_context:
+            raise HTTPException(status_code=400, detail="Tenant context required")
+        validate_image_file(file)
+        file_content = await file.read()
+        if s3_service.enabled:
+            result = s3_service.upload_file(
+                file_content=file_content,
+                tenant_id=tenant_context["tenant_id"],
+                folder="images",
+                original_filename=file.filename
+            )
+            return JSONResponse({
+                "success": True, "message": "Image uploaded successfully",
+                "file_url": result["file_url"], "filename": result["filename"],
+                "original_filename": result["original_filename"],
+                "s3_key": result["s3_key"], "file_size": file.size,
+                "content_type": file.content_type
+            })
+        else:
+            ensure_upload_directory()
+            ext = Path(file.filename).suffix.lower() if file.filename else ".jpg"
+            local_name = f"img_{uuid.uuid4().hex}{ext}"
+            local_path = os.path.join(UPLOAD_DIR, local_name)
+            with open(local_path, "wb") as f:
+                f.write(file_content)
+            base_url = str(request.base_url).rstrip("/")
+            file_url = f"{base_url}/static/{local_name}"
+            return JSONResponse({
+                "success": True, "message": "Image uploaded successfully (local)",
+                "file_url": file_url, "filename": local_name,
+                "original_filename": file.filename or local_name,
+                "s3_key": local_name, "file_size": file.size,
+                "content_type": file.content_type
+            })
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error uploading image: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to upload image: {str(e)}")
 
 @router.delete("/delete/{s3_key:path}")
 async def delete_file(

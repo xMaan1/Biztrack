@@ -82,12 +82,27 @@ def receive_invalidate(dbapi_conn, connection_record, exception):
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
+def run_migrations():
+    """Run any needed schema migrations"""
+    import sqlalchemy as sa
+    try:
+        inspector = sa.inspect(engine)
+        contacts_cols = [c["name"] for c in inspector.get_columns("contacts")]
+        if "image_url" not in contacts_cols:
+            with engine.connect() as conn:
+                conn.execute(sa.text("ALTER TABLE contacts ADD COLUMN image_url TEXT"))
+                conn.commit()
+                logger.info("Migration: added image_url column to contacts table")
+    except Exception as e:
+        logger.warning(f"Migration check failed (may be expected): {e}")
+
 def create_tables():
     """Create all database tables"""
     from ..models.registry import register_all_models
 
     register_all_models()
     Base.metadata.create_all(bind=engine)
+    run_migrations()
 
 def get_db():
     """Database dependency for FastAPI"""

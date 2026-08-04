@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { ModuleGuard } from '../../../components/guards/PermissionGuard';
 import {
   Card,
@@ -121,6 +122,7 @@ function CustomersContent() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null,
   );
+  const router = useRouter();
   const [formData, setFormData] = useState<CustomerCreate>({
     firstName: '',
     lastName: '',
@@ -681,7 +683,11 @@ function CustomersContent() {
                   </TableHeader>
                   <TableBody>
                     {customers.map((customer) => (
-                      <TableRow key={customer.id}>
+                      <TableRow
+                        key={customer.id}
+                        className="cursor-pointer"
+                        onClick={() => router.push(`/crm/customers/${customer.id}`)}
+                      >
                         <TableCell className="font-mono text-sm">
                           {customer.customerId}
                         </TableCell>
@@ -776,7 +782,7 @@ function CustomersContent() {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" className="h-8 w-8 p-0">
