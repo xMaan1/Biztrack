@@ -197,7 +197,8 @@ jobs:
             echo "Installing dependencies..."
             npm ci
             echo "Building frontend..."
-            NEXT_PUBLIC_API_URL="${BACKEND_URL:-http://localhost:8000}" npm run build
+            export NEXT_PUBLIC_API_URL="${BACKEND_URL:-http://localhost:8000}"
+            npm run build
             echo "Preparing standalone static assets..."
             node scripts/prepare-standalone.js
             if [ ! -d .next/standalone/.next/static ]; then
