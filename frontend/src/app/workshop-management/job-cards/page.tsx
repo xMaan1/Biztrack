@@ -86,13 +86,7 @@ function JobCardsContent() {
       notes: jc.notes || '',
       jobDescription: jc.description || '',
       documentNo: jc.job_card_number || '',
-      vehicleMake: str(vi.make),
-      vehicleModel: str(vi.model),
-      vehicleYear: str(vi.year),
-      vehicleColor: str(vi.color),
-      vehicleVin: str(vi.vin),
       vehicleReg: str(vi.registration_number),
-      vehicleMileage: str(vi.mileage),
       items,
     };
   }, []);

@@ -66,15 +66,8 @@ export function emptyInvoiceForm(currency: string): InvoiceCreate {
     opportunityId: '',
     quoteId: '',
     projectId: '',
-    vehicleMake: '',
-    vehicleModel: '',
-    vehicleYear: '',
-    vehicleColor: '',
-    vehicleVin: '',
     vehicleReg: '',
-    vehicleMileage: '',
     documentNo: '',
-    purchaseOrderId: '',
     jobCardId: '',
     jobDescription: '',
     partsDescription: '',
@@ -106,15 +99,8 @@ export function invoiceFormDataFromInvoice(invoice: Invoice): InvoiceCreate {
     opportunityId: invoice.opportunityId || '',
     quoteId: invoice.quoteId || '',
     projectId: invoice.projectId || '',
-    vehicleMake: invoice.vehicleMake || '',
-    vehicleModel: invoice.vehicleModel || '',
-    vehicleYear: invoice.vehicleYear || '',
-    vehicleColor: invoice.vehicleColor || '',
-    vehicleVin: invoice.vehicleVin || '',
     vehicleReg: invoice.vehicleReg || '',
-    vehicleMileage: invoice.vehicleMileage || '',
     documentNo: invoice.documentNo || '',
-    purchaseOrderId: invoice.purchaseOrderId || '',
     jobCardId: invoice.jobCardId || '',
     jobDescription: invoice.jobDescription || '',
     partsDescription: invoice.partsDescription || '',
@@ -182,18 +168,13 @@ export function calculateInvoiceTotals(
 
 export function hasWorkshopInvoiceData(invoice: Invoice): boolean {
   return Boolean(
-    invoice.vehicleMake ||
-      invoice.vehicleModel ||
-      invoice.vehicleYear ||
-      invoice.vehicleColor ||
-      invoice.vehicleVin ||
-      invoice.vehicleReg ||
-      invoice.vehicleMileage ||
+    invoice.vehicleReg ||
       invoice.documentNo ||
       invoice.jobDescription ||
       invoice.partsDescription ||
       invoice.labourTotal ||
-      invoice.partsTotal,
+      invoice.partsTotal ||
+      invoice.jobCardId,
   );
 }
 

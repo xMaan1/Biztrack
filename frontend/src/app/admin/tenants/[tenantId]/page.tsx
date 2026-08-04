@@ -949,36 +949,15 @@ function TenantDetailsContent() {
                 </CardContent>
               </Card>
 
-              {/* Vehicle Information (if available) */}
-              {(selectedInvoice.vehicleMake || selectedInvoice.vehicleModel || selectedInvoice.vehicleYear) && (
+              {selectedInvoice.vehicleReg && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Vehicle Information</CardTitle>
                   </CardHeader>
                   <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <span className="font-medium">Make:</span>
-                      <p className="text-sm text-gray-600">{selectedInvoice.vehicleMake || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium">Model:</span>
-                      <p className="text-sm text-gray-600">{selectedInvoice.vehicleModel || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium">Year:</span>
-                      <p className="text-sm text-gray-600">{selectedInvoice.vehicleYear || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium">Color:</span>
-                      <p className="text-sm text-gray-600">{selectedInvoice.vehicleColor || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium">VIN:</span>
-                      <p className="text-sm text-gray-600">{selectedInvoice.vehicleVin || 'N/A'}</p>
-                    </div>
-                    <div>
                       <span className="font-medium">Registration:</span>
-                      <p className="text-sm text-gray-600">{selectedInvoice.vehicleReg || 'N/A'}</p>
+                      <p className="text-sm text-gray-600">{selectedInvoice.vehicleReg}</p>
                     </div>
                   </CardContent>
                 </Card>

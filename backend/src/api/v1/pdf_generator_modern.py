@@ -335,13 +335,7 @@ def create_vehicle_section(invoice, customization: Optional[Dict[str, Any]], sty
     if customization and not customization.get('show_vehicle_info', True):
         return elements
     has_vehicle_data = any([
-        hasattr(invoice, 'vehicleMake') and invoice.vehicleMake,
-        hasattr(invoice, 'vehicleModel') and invoice.vehicleModel,
-        hasattr(invoice, 'vehicleYear') and invoice.vehicleYear,
-        hasattr(invoice, 'vehicleColor') and invoice.vehicleColor,
-        hasattr(invoice, 'vehicleVin') and invoice.vehicleVin,
         hasattr(invoice, 'vehicleReg') and invoice.vehicleReg,
-        hasattr(invoice, 'vehicleMileage') and invoice.vehicleMileage,
         hasattr(invoice, 'documentNo') and invoice.documentNo,
     ])
     
@@ -351,20 +345,8 @@ def create_vehicle_section(invoice, customization: Optional[Dict[str, Any]], sty
     elements.append(Paragraph("Vehicle Information", styles['header']))
     
     vehicle_data = []
-    if hasattr(invoice, 'vehicleMake') and invoice.vehicleMake:
-        vehicle_data.append(f"Make: {invoice.vehicleMake}")
-    if hasattr(invoice, 'vehicleModel') and invoice.vehicleModel:
-        vehicle_data.append(f"Model: {invoice.vehicleModel}")
-    if hasattr(invoice, 'vehicleYear') and invoice.vehicleYear:
-        vehicle_data.append(f"Year: {invoice.vehicleYear}")
-    if hasattr(invoice, 'vehicleColor') and invoice.vehicleColor:
-        vehicle_data.append(f"Color: {invoice.vehicleColor}")
-    if hasattr(invoice, 'vehicleVin') and invoice.vehicleVin:
-        vehicle_data.append(f"VIN: {invoice.vehicleVin}")
     if hasattr(invoice, 'vehicleReg') and invoice.vehicleReg:
         vehicle_data.append(f"Registration: {invoice.vehicleReg}")
-    if hasattr(invoice, 'vehicleMileage') and invoice.vehicleMileage:
-        vehicle_data.append(f"Mileage: {invoice.vehicleMileage}")
     if hasattr(invoice, 'documentNo') and invoice.documentNo:
         vehicle_data.append(f"Document No: {invoice.documentNo}")
     

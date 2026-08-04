@@ -85,18 +85,17 @@ export function WorkshopDocumentLinks({
       }).catch(() => setJobCards([]));
     }
 
-    if (excludeType === 'invoice' || excludeType === 'job_card' || excludeType === 'purchase_order') {
-      return;
+    if (excludeType !== 'invoice' && excludeType !== 'job_card') {
+      InvoiceService.getInvoices({}, 1, 500).then((res) => {
+        setInvoices(
+          (res.invoices || []).map((inv) => ({
+            id: inv.id,
+            invoiceNumber: inv.invoiceNumber,
+            customerName: inv.customerName,
+          })),
+        );
+      }).catch(() => setInvoices([]));
     }
-    InvoiceService.getInvoices({}, 1, 500).then((res) => {
-      setInvoices(
-        (res.invoices || []).map((inv) => ({
-          id: inv.id,
-          invoiceNumber: inv.invoiceNumber,
-          customerName: inv.customerName,
-        })),
-      );
-    }).catch(() => setInvoices([]));
   }, [excludeType]);
 
   useEffect(() => {

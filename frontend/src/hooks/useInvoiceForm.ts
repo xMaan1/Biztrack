@@ -26,7 +26,6 @@ import type {
   InstallmentPlanCreateOption,
   InvoiceFormMode,
 } from '@/src/types/sales/invoiceForm';
-import type { WorkshopDocumentLinksValue } from '@/src/components/workshop/WorkshopDocumentLinks';
 
 type UseInvoiceFormOptions = {
   open: boolean;
@@ -75,7 +74,7 @@ export function useInvoiceForm({
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showCreateCustomerDialog, setShowCreateCustomerDialog] = useState(false);
-  const [documentLinks, setDocumentLinks] = useState<WorkshopDocumentLinksValue>({});
+  const [jobCardId, setJobCardId] = useState<string | undefined>(undefined);
   const [commerceFormKey, setCommerceFormKey] = useState(0);
 
   const initialDataRef = useRef(initialData);
@@ -116,10 +115,7 @@ export function useInvoiceForm({
     if (invoice && (mode === 'edit' || mode === 'view')) {
       setFormData(invoiceFormDataFromInvoice(invoice));
       setItems(invoiceItemsFromInvoice(invoice));
-      setDocumentLinks({
-        purchaseOrderId: invoice.purchaseOrderId,
-        jobCardId: invoice.jobCardId,
-      });
+      setJobCardId(invoice.jobCardId || undefined);
       if (invoice.customerId) {
         InvoiceService.getCustomerById(invoice.customerId)
           .then(setSelectedCustomer)
@@ -148,7 +144,7 @@ export function useInvoiceForm({
       setItems(seed?.items ?? []);
       setSelectedCustomer(seedCustomer ?? null);
       setSelectedVehicle(null);
-      setDocumentLinks({});
+      setJobCardId(seed?.jobCardId || undefined);
       if (mode === 'create' && useCommerceInvoiceLayout && !seededForm.orderNumber) {
         InvoiceService.getNextOrderNumber()
           .then((orderNumber) => {
@@ -297,7 +293,7 @@ export function useInvoiceForm({
     setSelectedCustomer(null);
     setSelectedVehicle(null);
     resetNewItem();
-    setDocumentLinks({});
+    setJobCardId(undefined);
     setCreateInstallmentPlan(false);
     setInstallmentCount(3);
     setInstallmentFrequency('monthly');
@@ -351,8 +347,7 @@ export function useInvoiceForm({
       const submitData: InvoiceCreate = {
         ...formData,
         items,
-        purchaseOrderId: documentLinks.purchaseOrderId,
-        jobCardId: documentLinks.jobCardId,
+        jobCardId,
       };
       const options =
         createInstallmentPlan && totals.total > 0
@@ -399,8 +394,8 @@ export function useInvoiceForm({
     commerceFormKey,
     showCreateCustomerDialog,
     setShowCreateCustomerDialog,
-    documentLinks,
-    setDocumentLinks,
+    jobCardId,
+    setJobCardId,
     totals,
     handleInputChange,
     handleCustomerSelect,

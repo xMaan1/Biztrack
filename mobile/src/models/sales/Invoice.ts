@@ -84,17 +84,10 @@ export interface Invoice {
   balance: number;
   daysOverdue: number;
 
-  // Vehicle details for workshop invoices
-  vehicleMake?: string;
-  vehicleModel?: string;
-  vehicleYear?: string;
-  vehicleColor?: string;
-  vehicleVin?: string;
   vehicleReg?: string;
-  vehicleMileage?: string;
   documentNo?: string;
+  jobCardId?: string;
 
-  // Workshop specific fields
   jobDescription?: string;
   partsDescription?: string;
   labourTotal?: number;
@@ -121,17 +114,10 @@ export interface InvoiceCreate {
   quoteId?: string;
   projectId?: string;
 
-  // Vehicle details for workshop invoices
-  vehicleMake?: string;
-  vehicleModel?: string;
-  vehicleYear?: string;
-  vehicleColor?: string;
-  vehicleVin?: string;
   vehicleReg?: string;
-  vehicleMileage?: string;
   documentNo?: string;
+  jobCardId?: string;
 
-  // Workshop specific fields
   jobDescription?: string;
   partsDescription?: string;
   labourTotal?: number;
@@ -155,17 +141,10 @@ export interface InvoiceUpdate {
   status?: InvoiceStatus;
   items?: InvoiceItemCreate[];
 
-  // Vehicle details for workshop invoices
-  vehicleMake?: string;
-  vehicleModel?: string;
-  vehicleYear?: string;
-  vehicleColor?: string;
-  vehicleVin?: string;
   vehicleReg?: string;
-  vehicleMileage?: string;
   documentNo?: string;
+  jobCardId?: string;
 
-  // Workshop specific fields
   jobDescription?: string;
   partsDescription?: string;
   labourTotal?: number;

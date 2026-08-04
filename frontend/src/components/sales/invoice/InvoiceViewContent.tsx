@@ -94,13 +94,7 @@ export function InvoiceViewContent({ invoice, onClose }: InvoiceViewContentProps
             <CardTitle>Workshop Details</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <InvoiceDetailField label="Vehicle Make" value={invoice.vehicleMake || '-'} />
-            <InvoiceDetailField label="Vehicle Model" value={invoice.vehicleModel || '-'} />
-            <InvoiceDetailField label="Vehicle Year" value={invoice.vehicleYear || '-'} />
-            <InvoiceDetailField label="Vehicle Color" value={invoice.vehicleColor || '-'} />
-            <InvoiceDetailField label="VIN" value={invoice.vehicleVin || '-'} />
             <InvoiceDetailField label="Registration" value={invoice.vehicleReg || '-'} />
-            <InvoiceDetailField label="Mileage" value={invoice.vehicleMileage || '-'} />
             <InvoiceDetailField label="Document No" value={invoice.documentNo || '-'} />
             <InvoiceDetailField label="Labour Total" value={formatCurrency(invoice.labourTotal || 0)} />
             <InvoiceDetailField label="Parts Total" value={formatCurrency(invoice.partsTotal || 0)} />

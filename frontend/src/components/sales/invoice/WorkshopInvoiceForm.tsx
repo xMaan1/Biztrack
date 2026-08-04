@@ -10,7 +10,7 @@ import { InvoiceFormTotalsSummary } from './InvoiceFormTotalsSummary';
 import { InvoiceFormNotesSection } from './InvoiceFormNotesSection';
 import { InvoiceInstallmentSection } from './InvoiceInstallmentSection';
 import { InvoiceFormActions } from './InvoiceFormActions';
-import { WorkshopDocumentLinks } from '../../workshop/WorkshopDocumentLinks';
+import { InvoiceJobCardLink } from './InvoiceJobCardLink';
 
 type WorkshopInvoiceFormProps = {
   mode: InvoiceFormMode;
@@ -53,10 +53,9 @@ export function WorkshopInvoiceForm({ mode, form, error }: WorkshopInvoiceFormPr
       )}
 
       {form.isWorkshop && (
-        <WorkshopDocumentLinks
-          excludeType="invoice"
-          value={form.documentLinks}
-          onChange={form.setDocumentLinks}
+        <InvoiceJobCardLink
+          value={form.jobCardId}
+          onChange={form.setJobCardId}
           dense
         />
       )}

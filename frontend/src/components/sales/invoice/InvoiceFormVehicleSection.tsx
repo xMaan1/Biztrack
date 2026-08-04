@@ -23,88 +23,21 @@ export function InvoiceFormVehicleSection({
 }: InvoiceFormVehicleSectionProps) {
   return (
     <section className="rounded-lg border border-border bg-card px-3 py-2">
-      <p className="mb-2 text-sm font-semibold text-foreground">Vehicle Details</p>
+      <p className="mb-2 text-sm font-semibold text-foreground">Vehicle</p>
       <div className="mb-2 [&_label]:sr-only [&>div>div.mt-2]:hidden [&_input]:h-8">
         <VehicleSearch
           label="Vehicle"
           value={selectedVehicle}
           onSelect={(v) => {
             onVehicleSelect(v);
-            if (v) {
-              onInputChange('vehicleMake', v.make ?? '');
-              onInputChange('vehicleModel', v.model ?? '');
-              onInputChange('vehicleYear', v.year ?? '');
-              onInputChange('vehicleColor', v.color ?? '');
-              onInputChange('vehicleVin', v.vin ?? '');
-              onInputChange('vehicleReg', v.registration_number ?? '');
-              onInputChange('vehicleMileage', v.mileage ?? '');
-            }
+            onInputChange('vehicleReg', v?.registration_number ?? '');
           }}
           placeholder="Search by reg, VIN, make, model..."
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-x-6 gap-y-1.5 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-x-6 gap-y-1.5 lg:grid-cols-2">
         <div className="space-y-1.5">
-          <InlineField label="Make:">
-            <Input
-              id="vehicleMake"
-              value={formData.vehicleMake}
-              onChange={(e) => onInputChange('vehicleMake', e.target.value)}
-              className={COMMERCE_INPUT_CLS}
-            />
-          </InlineField>
-          <InlineField label="Model:">
-            <Input
-              id="vehicleModel"
-              value={formData.vehicleModel}
-              onChange={(e) => onInputChange('vehicleModel', e.target.value)}
-              className={COMMERCE_INPUT_CLS}
-            />
-          </InlineField>
-          <InlineField label="Year:">
-            <Input
-              id="vehicleYear"
-              value={formData.vehicleYear}
-              onChange={(e) => onInputChange('vehicleYear', e.target.value)}
-              className={COMMERCE_INPUT_CLS}
-            />
-          </InlineField>
-          <InlineField label="Color:">
-            <Input
-              id="vehicleColor"
-              value={formData.vehicleColor}
-              onChange={(e) => onInputChange('vehicleColor', e.target.value)}
-              className={COMMERCE_INPUT_CLS}
-            />
-          </InlineField>
-        </div>
-
-        <div className="space-y-1.5">
-          <InlineField label="VIN:">
-            <Input
-              id="vehicleVin"
-              value={formData.vehicleVin}
-              onChange={(e) => onInputChange('vehicleVin', e.target.value)}
-              className={COMMERCE_INPUT_CLS}
-            />
-          </InlineField>
-          <InlineField label="Reg No:">
-            <Input
-              id="vehicleReg"
-              value={formData.vehicleReg}
-              onChange={(e) => onInputChange('vehicleReg', e.target.value)}
-              className={COMMERCE_INPUT_CLS}
-            />
-          </InlineField>
-          <InlineField label="Mileage:">
-            <Input
-              id="vehicleMileage"
-              value={formData.vehicleMileage}
-              onChange={(e) => onInputChange('vehicleMileage', e.target.value)}
-              className={COMMERCE_INPUT_CLS}
-            />
-          </InlineField>
           <InlineField label="Document No:">
             <Input
               id="documentNo"
@@ -113,9 +46,6 @@ export function InvoiceFormVehicleSection({
               className={COMMERCE_INPUT_CLS}
             />
           </InlineField>
-        </div>
-
-        <div className="space-y-1.5">
           <InlineField label="Labour Total:">
             <Input
               id="labourTotal"
@@ -138,6 +68,8 @@ export function InvoiceFormVehicleSection({
               className={COMMERCE_INPUT_CLS}
             />
           </InlineField>
+        </div>
+        <div className="space-y-1.5">
           <InlineField label="Job Desc:">
             <Textarea
               id="jobDescription"
