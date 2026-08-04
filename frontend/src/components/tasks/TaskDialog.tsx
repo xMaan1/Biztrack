@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
-import { Calendar, X, Plus, Loader2, AlertCircle } from 'lucide-react';
+import { Calendar, X, Plus, Loader2, AlertCircle, Clock, Timer, Hourglass, AlertTriangle } from 'lucide-react';
 import {
   Task,
   TaskCreate,
@@ -32,6 +32,11 @@ import {
 } from '../../models/task';
 import { Project } from '../../models/project/Project';
 import { TaskMessagesPanel } from './TaskMessagesPanel';
+import {
+  formatDurationHms,
+  getEstimatedDurationSeconds,
+  getLiveTrackedSeconds,
+} from '../../utils/taskTimeUtils';
 
 interface TaskDialogProps {
   open: boolean;
@@ -43,6 +48,7 @@ interface TaskDialogProps {
   parentTask?: Task;
   loading?: boolean;
   error?: string;
+  readOnly?: boolean;
   defaultProjectId?: string;
 }
 
@@ -70,6 +76,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
   parentTask,
   loading = false,
   error,
+  readOnly = false,
   defaultProjectId,
 }) => {
   const [formData, setFormData] = useState<any>({
@@ -162,6 +169,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
   };
 
   const handleSubmit = () => {
+    if (readOnly) return;
     const submitData = { ...formData };
 
     // Clean up empty values
@@ -207,14 +215,47 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     onClose();
   };
 
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    if (!task?.isTimerActive) return;
+    const id = setInterval(() => setTick((t) => t + 1), 1000);
+    return () => clearInterval(id);
+  }, [task?.isTimerActive]);
+
+  const allottedSeconds = task ? getEstimatedDurationSeconds(task) : 0;
+  const trackedSeconds = task
+    ? getLiveTrackedSeconds(
+        task.trackedSeconds || 0,
+        task.isTimerActive,
+        task.activeTimerStartedAt,
+      )
+    : 0;
+  const remainingSeconds =
+    allottedSeconds > 0 ? Math.max(0, allottedSeconds - trackedSeconds) : null;
+  const overdueSeconds =
+    allottedSeconds > 0 ? Math.max(0, trackedSeconds - allottedSeconds) : 0;
+  const isTimeLow = (() => {
+    if (!task) return false;
+    if (task.isTimeLow) return true;
+    if (remainingSeconds === null) return false;
+    const threshold =
+      (task.reminderHours || 0) * 3600 +
+      (task.reminderMinutes || 0) * 60 +
+      (task.reminderSeconds || 0);
+    return threshold > 0 && remainingSeconds <= threshold;
+  })();
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold bg-gradient-primary bg-clip-text text-transparent">
-            {isEditing
-              ? `Edit ${isSubtask ? 'Subtask' : 'Task'}`
-              : `Create ${isSubtask ? 'Subtask' : 'Task'}`}
+            {readOnly
+              ? `${isSubtask ? 'Subtask' : 'Task'} Details`
+              : isEditing
+                ? `Edit ${isSubtask ? 'Subtask' : 'Task'}`
+                : `Create ${isSubtask ? 'Subtask' : 'Task'}`}
           </DialogTitle>
           {parentTask && (
             <p className="text-sm text-gray-600 mt-1">
@@ -232,6 +273,62 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {isEditing && task && (
+              <div className="md:col-span-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 rounded-lg bg-muted/40 p-4">
+                  <div className="flex items-center gap-3">
+                    <Clock className="h-5 w-5 text-blue-600" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Time Allotted</p>
+                      <p className="font-semibold text-gray-900">
+                        {formatDurationHms(allottedSeconds)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Timer className="h-5 w-5 text-purple-600" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Time Tracked</p>
+                      <p className="font-semibold text-gray-900">
+                        {formatDurationHms(trackedSeconds)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {overdueSeconds > 0 ? (
+                      <AlertTriangle className="h-5 w-5 text-red-600" />
+                    ) : (
+                      <Hourglass
+                        className={
+                          isTimeLow ? 'h-5 w-5 text-red-500' : 'h-5 w-5 text-green-600'
+                        }
+                      />
+                    )}
+                    <div>
+                      <p className="text-xs text-muted-foreground">Time Remaining</p>
+                      {remainingSeconds === null ? (
+                        <p className="font-semibold text-gray-400">No estimate set</p>
+                      ) : overdueSeconds > 0 ? (
+                        <p className="font-semibold text-red-600">
+                          Overdue by {formatDurationHms(overdueSeconds)}
+                        </p>
+                      ) : (
+                        <p
+                          className={
+                            isTimeLow
+                              ? 'font-semibold text-red-500'
+                              : 'font-semibold text-green-700'
+                          }
+                        >
+                          {formatDurationHms(remainingSeconds)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="md:col-span-2">
               <Label htmlFor="title">Title *</Label>
               <Input
@@ -240,6 +337,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 onChange={(e) => handleInputChange('title', e.target.value)}
                 placeholder="Enter task title"
                 className="mt-1"
+                disabled={readOnly}
               />
             </div>
 
@@ -254,6 +352,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 placeholder="Enter task description"
                 rows={3}
                 className="mt-1"
+                disabled={readOnly}
               />
             </div>
 
@@ -262,6 +361,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
               <Select
                 value={formData.status}
                 onValueChange={(value) => handleInputChange('status', value)}
+                disabled={readOnly}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select status" />
@@ -281,6 +381,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
               <Select
                 value={formData.priority}
                 onValueChange={(value) => handleInputChange('priority', value)}
+                disabled={readOnly}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select priority" />
@@ -311,9 +412,8 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                       : formData.project
                   }
                   onValueChange={(value) => handleInputChange('project', value)}
-                  disabled={!!task}
-                >
-                  <SelectTrigger className="mt-1">
+                  disabled={readOnly || !!task}
+                >                  <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Select project" />
                   </SelectTrigger>
                   <SelectContent>
@@ -334,6 +434,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 onValueChange={(value) =>
                   handleInputChange('assignedTo', value)
                 }
+                disabled={readOnly}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select assignee" />
@@ -358,6 +459,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                   value={formData.dueDate}
                   onChange={(e) => handleInputChange('dueDate', e.target.value)}
                   className="pl-10"
+                  disabled={readOnly}
                 />
                 <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               </div>
@@ -378,6 +480,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                     onChange={(e) =>
                       handleInputChange('estimatedHours', parseInt(e.target.value, 10) || 0)
                     }
+                    disabled={readOnly}
                   />
                 </div>
                 <div>
@@ -393,6 +496,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                     onChange={(e) =>
                       handleInputChange('estimatedMinutes', parseInt(e.target.value, 10) || 0)
                     }
+                    disabled={readOnly}
                   />
                 </div>
                 <div>
@@ -408,6 +512,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                     onChange={(e) =>
                       handleInputChange('estimatedSeconds', parseInt(e.target.value, 10) || 0)
                     }
+                    disabled={readOnly}
                   />
                 </div>
               </div>
@@ -428,6 +533,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                     onChange={(e) =>
                       handleInputChange('reminderHours', parseInt(e.target.value, 10) || 0)
                     }
+                    disabled={readOnly}
                   />
                 </div>
                 <div>
@@ -443,6 +549,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                     onChange={(e) =>
                       handleInputChange('reminderMinutes', parseInt(e.target.value, 10) || 0)
                     }
+                    disabled={readOnly}
                   />
                 </div>
                 <div>
@@ -458,6 +565,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                     onChange={(e) =>
                       handleInputChange('reminderSeconds', parseInt(e.target.value, 10) || 0)
                     }
+                    disabled={readOnly}
                   />
                 </div>
               </div>
@@ -491,7 +599,8 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                         <button
                           type="button"
                           onClick={() => handleRemoveTag(tag)}
-                          className="ml-1 hover:text-red-600"
+                          disabled={readOnly}
+                          className="ml-1 hover:text-red-600 disabled:cursor-not-allowed"
                         >
                           <X className="h-3 w-3" />
                         </button>
@@ -511,12 +620,14 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                       }
                     }}
                     className="flex-1"
+                    disabled={readOnly}
                   />
                   <Button
                     type="button"
                     onClick={handleAddTag}
                     variant="outline"
                     size="sm"
+                    disabled={readOnly}
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
@@ -539,21 +650,23 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
             onClick={handleClose}
             disabled={loading}
           >
-            Cancel
+            {readOnly ? 'Close' : 'Cancel'}
           </Button>
-          <Button
-            type="button"
-            onClick={handleSubmit}
-            disabled={
-              loading ||
-              !formData.title.trim() ||
-              (!isSubtask && !task && !formData.project)
-            }
-            className="modern-button"
-          >
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {loading ? 'Saving...' : isEditing ? 'Update' : 'Create'}
-          </Button>
+          {!readOnly && (
+            <Button
+              type="button"
+              onClick={handleSubmit}
+              disabled={
+                loading ||
+                !formData.title.trim() ||
+                (!isSubtask && !task && !formData.project)
+              }
+              className="modern-button"
+            >
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {loading ? 'Saving...' : isEditing ? 'Update' : 'Create'}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

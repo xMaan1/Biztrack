@@ -56,11 +56,16 @@ import { extractErrorMessage } from '../../utils/errorUtils';
 import { User } from '../../models/auth';
 import { DashboardLayout } from '../../components/layout';
 import { useConfirm } from '@/src/contexts/ConfirmContext';
+import { usePermissions } from '@/src/hooks/usePermissions';
+import { useAuth } from '@/src/contexts/AuthContext';
 import { cn, getInitials } from '../../lib/utils';
 import AddMemberModal from '../../components/team/AddMemberModal';
 
 export default function TeamPage() {
   const confirm = useConfirm();
+  const { user } = useAuth();
+  const { canManageUsers } = usePermissions();
+  const isEmployee = user?.userRole === 'team_member';
   const [teamMembers, setTeamMembers] = useState<User[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -190,6 +195,26 @@ export default function TeamPage() {
 
   const stats = getTeamStats();
 
+  if (isEmployee) {
+    return (
+      <DashboardLayout>
+        <div className="container mx-auto px-6 py-8">
+          <Card className="modern-card">
+            <CardContent className="p-8 text-center">
+              <Shield className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Access Denied
+              </h3>
+              <p className="text-gray-600">
+                You do not have permission to view team members.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   const handleAddMemberSuccess = () => {
     fetchTeamMembers();
   };
@@ -306,10 +331,15 @@ export default function TeamPage() {
             >
               <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
             </Button>
-            <Button className="modern-button" onClick={() => setShowAddMemberModal(true)}>
-              <UserPlus className="h-4 w-4 mr-2" />
-              Add Team Member
-            </Button>
+            {canManageUsers() ? (
+              <Button
+                className="modern-button"
+                onClick={() => setShowAddMemberModal(true)}
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add Team Member
+              </Button>
+            ) : null}
           </div>
         </div>
 
@@ -443,41 +473,43 @@ export default function TeamPage() {
                       </div>
                     </div>
 
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => openEditDialog(member)}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit Member
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          className="text-red-600 focus:text-red-600"
-                          onClick={() => {
-                            const memberId = member.userId || member.id;
-                            if (memberId) {
-                              handleRemoveMember(
-                                memberId, 
-                                member.firstName && member.lastName 
-                                  ? `${member.firstName} ${member.lastName}` 
-                                  : member.userName
-                              );
-                            }
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Remove Member
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {canManageUsers() ? (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => openEditDialog(member)}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Member
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            className="text-red-600 focus:text-red-600"
+                            onClick={() => {
+                              const memberId = member.userId || member.id;
+                              if (memberId) {
+                                handleRemoveMember(
+                                  memberId, 
+                                  member.firstName && member.lastName 
+                                    ? `${member.firstName} ${member.lastName}` 
+                                    : member.userName
+                                );
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Remove Member
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    ) : null}
                   </div>
                 </CardHeader>
 

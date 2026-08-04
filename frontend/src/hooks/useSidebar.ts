@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { usePermissions } from './usePermissions';
 import { apiService } from '../services/ApiService';
 import { SIDEBAR_PATH_PERMISSIONS } from '@/src/constants/rbacPermissions';
+import { CheckSquare } from 'lucide-react';
 import {
   allMenuItems,
   superAdminMenuItems,
@@ -14,6 +15,15 @@ import {
 import type { MenuItem, SubMenuItem } from '@/src/types/sidebar';
 
 const TENANT_MOT_BOOK_PATH = '__tenant_mot_book__';
+
+const EMPLOYEE_TASKS_ONLY_ITEM: MenuItem = {
+  text: 'Tasks',
+  icon: CheckSquare,
+  path: '/tasks',
+  roles: ['*'],
+  planTypes: ['*'],
+  gradient: 'from-orange-500 to-red-500',
+};
 
 function resolveTenantMotMenuPaths(items: MenuItem[], tenantDomain?: string | null): MenuItem[] {
   return items.map((item) => {
@@ -107,6 +117,7 @@ export function useSidebar() {
   );
 
   const isSuperAdmin = user?.userRole === 'super_admin';
+  const isEmployee = user?.userRole === 'team_member';
 
   const hasMenuRoleAccess = useCallback(
     (roles?: string[]) => {
@@ -245,6 +256,10 @@ export function useSidebar() {
 
     const tenantItems = resolveTenantMotMenuPaths(
       allMenuItems.filter((item) => {
+      if (isEmployee && item.text === 'Project Management') {
+        item = EMPLOYEE_TASKS_ONLY_ITEM;
+      }
+
       const isAvailableForPlan =
         item.planTypes.includes('*') || item.planTypes.includes(currentPlanType);
 
@@ -313,6 +328,7 @@ export function useSidebar() {
     hasMenuRoleAccess,
     hasPathPermission,
     isOwner,
+    isEmployee,
     purchaseOrdersNavLabel,
   ]);
 

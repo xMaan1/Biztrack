@@ -377,6 +377,10 @@ export const TaskList: React.FC<TaskListProps> = ({
     <TaskCard
       key={task.id}
       task={task}
+      onViewDetails={(t) => {
+        setEditingTask(t);
+        setTaskDialogOpen(true);
+      }}
       onEdit={canUpdateTasks() ? handleEditTask : undefined}
       onDelete={
         canDeleteTasks()
@@ -743,6 +747,7 @@ export const TaskList: React.FC<TaskListProps> = ({
         }))}
         loading={dialogLoading}
         error={dialogError ?? undefined}
+        readOnly={!canUpdateTasks()}
         defaultProjectId={projectId}
       />
 

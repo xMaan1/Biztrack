@@ -116,6 +116,14 @@ async def get_project_team_members(
     from .....models.common import UserRole
     from .....config.database import get_all_users
 
+    user_role = tenant_context.get("user_role") if tenant_context else None
+    role_name = getattr(user_role, "name", None) if user_role else None
+    if role_name == UserRole.TEAM_MEMBER.value:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permission denied: you cannot view team members",
+        )
+
     tenant_id = tenant_context["tenant_id"] if tenant_context else None
     users = get_all_users(db, tenant_id=tenant_id)
     team_members = []

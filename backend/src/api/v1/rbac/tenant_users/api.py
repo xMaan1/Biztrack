@@ -1,4 +1,4 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
@@ -6,6 +6,7 @@ from .....api.dependencies import get_current_user, get_tenant_context, require_
 from .....config.database import get_db
 from .....models.common import ModulePermission
 from .....models.user_models import User, UserCreate
+from .....services.rbac_service import RBACService
 from .schemas import TenantUser, TenantUserCreate, TenantUserUpdate, UserWithPermissions
 from . import logic
 
@@ -16,10 +17,25 @@ router = APIRouter()
 async def get_tenant_users(
     db: Session = Depends(get_db),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
-    _: dict = Depends(require_permission(ModulePermission.USERS_VIEW.value)),
+    current_user = Depends(get_current_user),
 ):
     tenant_id = tenant_context["tenant_id"] if tenant_context else None
-    return logic.get_tenant_users_list(db, tenant_id)
+    user_role = tenant_context.get("user_role") if tenant_context else None
+    role_name = getattr(user_role, "name", None) if user_role else None
+
+    if role_name == "team_member" or (
+        role_name != "project_manager"
+        and not RBACService.has_permission(
+            db, str(current_user.id), tenant_id, ModulePermission.USERS_VIEW.value
+        )
+    ):
+        raise HTTPException(
+            status_code=403, detail="You do not have permission to view team members"
+        )
+
+    return logic.get_tenant_users_list(
+        db, tenant_id, requester_id=str(current_user.id), requester_role=role_name
+    )
 
 
 @router.post("/tenant-users", response_model=TenantUser)

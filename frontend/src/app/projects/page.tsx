@@ -1,6 +1,7 @@
 'use client';
 
 import { DashboardLayout } from '@/src/components/layout';
+import { usePermissions } from '@/src/hooks/usePermissions';
 import {
   ProjectsPageHeader,
   ProjectsToolbar,
@@ -55,9 +56,28 @@ export default function ProjectsPage() {
     handleViewTasks,
     clearFilters,
   } = useProjectsPage();
+  const { hasPermission, isOwner } = usePermissions();
 
   if (!mounted) {
     return null;
+  }
+
+  if (!isOwner() && !hasPermission('projects:projects:view')) {
+    return (
+      <DashboardLayout>
+        <div className="container mx-auto px-6 py-8">
+          <div className="modern-card rounded-xl border bg-card p-8 text-center">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Access Denied
+            </h3>
+            <p className="text-gray-600">
+              You do not have permission to view projects. You can access your
+              assigned tasks from the Tasks page.
+            </p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
   }
 
   return (

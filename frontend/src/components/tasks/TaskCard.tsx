@@ -23,6 +23,7 @@ import {
   Edit,
   AlertTriangle,
   MessageCircle,
+  Eye,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -47,6 +48,7 @@ import { TaskMessagesPanel } from './TaskMessagesPanel';
 
 interface TaskCardProps {
   task: Task;
+  onViewDetails?: (task: Task) => void;
   onEdit?: (task: Task) => void;
   onDelete?: (taskId: string) => void;
   onStatusChange?: (taskId: string, status: TaskStatus) => void;
@@ -123,6 +125,7 @@ const getStatusBadge = (status: TaskStatus) => {
 
 export const TaskCard: React.FC<TaskCardProps> = ({
   task,
+  onViewDetails,
   onEdit,
   onDelete,
   onStatusChange,
@@ -189,7 +192,10 @@ export const TaskCard: React.FC<TaskCardProps> = ({
       <CardContent className="p-4">
         <div className="flex justify-between items-start mb-2">
           <div className="flex-1 pr-2">
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3
+              className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-primary"
+              onClick={() => onViewDetails?.(task)}
+            >
               {task.title}
             </h3>
           </div>
@@ -201,6 +207,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                {onViewDetails && (
+                  <DropdownMenuItem onClick={() => onViewDetails(task)}>
+                    <Eye className="mr-2 h-4 w-4" /> View Details
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={() => setMessagesOpen(true)}>
                   <MessageCircle className="mr-2 h-4 w-4" /> Ask / Chat
                 </DropdownMenuItem>

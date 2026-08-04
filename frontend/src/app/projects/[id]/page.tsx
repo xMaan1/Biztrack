@@ -72,7 +72,7 @@ export default function ProjectDetailsPage() {
   const router = useRouter();
   const confirm = useConfirm();
   const { user } = useAuth();
-  const { canUpdateProjects, canDeleteProjects, isOwner } = usePermissions();
+  const { canUpdateProjects, canDeleteProjects, hasPermission, isOwner } = usePermissions();
   const { getCurrencySymbol } = useCurrency();
   const projectId = params.id as string;
 
@@ -303,6 +303,27 @@ export default function ProjectDetailsPage() {
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Back to Projects</span>
+          </Button>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!isOwner() && !hasPermission('projects:projects:view')) {
+    return (
+      <DashboardLayout>
+        <div className="container mx-auto px-6 py-8">
+          <Alert className="mb-4 border-yellow-200 bg-yellow-50">
+            <AlertDescription className="text-yellow-800">
+              You do not have permission to view this project.
+            </AlertDescription>
+          </Alert>
+          <Button
+            onClick={() => router.push('/tasks')}
+            className="flex items-center space-x-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back to Tasks</span>
           </Button>
         </div>
       </DashboardLayout>
