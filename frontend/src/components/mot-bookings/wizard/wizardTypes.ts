@@ -135,11 +135,7 @@ export const MOT_DELIVERY_OPTIONS: {
   },
   {
     value: 'wait_security',
-    label: 'I would like to wait while my vehicle is in the workshop (security update)',
-  },
-  {
-    value: 'wait_on_site',
-    label: 'I would like to wait for my vehicle whilst it is in the workshop',
+    label: 'I would like to wait while my vehicle is in the workshop',
   },
 ];
 
@@ -149,6 +145,35 @@ export const MOT_HOURLY_SLOTS = Array.from({ length: 10 }, (_, i) => {
   const hour = 8 + i;
   return `${String(hour).padStart(2, '0')}:00`;
 });
+
+export type MotMeridiem = 'AM' | 'PM';
+
+export function bookingTimeToParts(time: string): {
+  hour12: string;
+  meridiem: MotMeridiem;
+} | null {
+  if (!time) return null;
+  const hour24 = Number(time.split(':')[0]);
+  if (Number.isNaN(hour24)) return null;
+  const meridiem: MotMeridiem = hour24 >= 12 ? 'PM' : 'AM';
+  const hour12 = hour24 % 12 || 12;
+  return { hour12: String(hour12), meridiem };
+}
+
+export function partsToBookingTime(hour12: string, meridiem: MotMeridiem): string {
+  const h = Number(hour12);
+  if (!h || Number.isNaN(h)) return '';
+  let hour24 = h % 12;
+  if (meridiem === 'PM') hour24 += 12;
+  return `${String(hour24).padStart(2, '0')}:00`;
+}
+
+export function getHour12OptionsForMeridiem(meridiem: MotMeridiem): string[] {
+  return MOT_HOURLY_SLOTS.filter((slot) => {
+    const parts = bookingTimeToParts(slot);
+    return parts?.meridiem === meridiem;
+  }).map((slot) => bookingTimeToParts(slot)!.hour12);
+}
 
 export function emptyMotWizardData(): MotWizardData {
   return {

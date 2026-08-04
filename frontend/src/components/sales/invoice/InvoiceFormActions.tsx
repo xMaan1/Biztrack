@@ -19,13 +19,13 @@ export function InvoiceFormActions({ mode, loading, error, onCancel }: InvoiceFo
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      <div className="flex justify-end space-x-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" size="sm" className="h-8" onClick={onCancel}>
           {mode === 'view' ? 'Close' : 'Cancel'}
         </Button>
         {mode !== 'view' && (
-          <Button type="submit" disabled={loading} className="modern-button">
-            {loading ? 'Saving...' : mode === 'create' ? 'Create Invoice' : 'Update Invoice'}
+          <Button type="submit" variant="gradient" size="sm" disabled={loading} className="h-8">
+            {loading ? 'Saving...' : mode === 'create' ? 'Generate Invoice' : 'Update Invoice'}
           </Button>
         )}
       </div>

@@ -2,7 +2,7 @@
 
 import type { UseInvoiceFormReturn } from '@/src/hooks/useInvoiceForm';
 import type { InvoiceFormMode } from '@/src/types/sales/invoiceForm';
-import { InvoiceFormCustomerSection } from './InvoiceFormCustomerSection';
+import { CommerceInvoiceFormHeader } from '../commerce-invoice/CommerceInvoiceFormHeader';
 import { InvoiceFormDetailsSection } from './InvoiceFormDetailsSection';
 import { InvoiceFormVehicleSection } from './InvoiceFormVehicleSection';
 import { InvoiceFormItemsSection } from './InvoiceFormItemsSection';
@@ -27,19 +27,22 @@ export function WorkshopInvoiceForm({ mode, form, error }: WorkshopInvoiceFormPr
   };
 
   return (
-    <form onSubmit={form.handleSubmit} className="space-y-6">
-      <InvoiceFormCustomerSection
+    <form onSubmit={form.handleSubmit} className="flex w-full min-w-0 max-w-full flex-col gap-2 text-foreground">
+      <CommerceInvoiceFormHeader
+        mode={mode === 'view' ? 'create' : mode}
+        onClearInvoice={form.clearInvoice}
+      />
+
+      <InvoiceFormDetailsSection
         mode={mode}
+        formData={form.formData}
+        errors={form.errors}
         selectedCustomer={form.selectedCustomer}
-        customerError={form.errors.customer}
+        onInputChange={form.handleInputChange}
         onCustomerSelect={form.handleCustomerSelect}
         onNewCustomer={() => form.setShowCreateCustomerDialog(true)}
       />
-      <InvoiceFormDetailsSection
-        formData={form.formData}
-        errors={form.errors}
-        onInputChange={form.handleInputChange}
-      />
+
       {form.isWorkshop && (
         <InvoiceFormVehicleSection
           formData={form.formData}
@@ -48,14 +51,19 @@ export function WorkshopInvoiceForm({ mode, form, error }: WorkshopInvoiceFormPr
           onInputChange={form.handleInputChange}
         />
       )}
+
       {form.isWorkshop && (
         <WorkshopDocumentLinks
           excludeType="invoice"
           value={form.documentLinks}
           onChange={form.setDocumentLinks}
+          dense
         />
       )}
+
       <InvoiceFormItemsSection
+        mode={mode}
+        loading={form.loading}
         items={form.items}
         newItem={form.newItem}
         products={form.products}
@@ -65,8 +73,15 @@ export function WorkshopInvoiceForm({ mode, form, error }: WorkshopInvoiceFormPr
         onRemoveItem={form.removeItem}
         clearNewItemErrors={clearNewItemErrors}
       />
-      <InvoiceFormTotalsSummary formData={form.formData} totals={form.totals} />
+
+      <InvoiceFormTotalsSummary
+        formData={form.formData}
+        totals={form.totals}
+        showWorkshopTotals={form.isWorkshop}
+      />
+
       <InvoiceFormNotesSection formData={form.formData} onInputChange={form.handleInputChange} />
+
       {form.isCommerceOrAgency && mode !== 'view' && (
         <InvoiceInstallmentSection
           createInstallmentPlan={form.createInstallmentPlan}
@@ -79,6 +94,7 @@ export function WorkshopInvoiceForm({ mode, form, error }: WorkshopInvoiceFormPr
           onFirstDueDateChange={form.setInstallmentFirstDueDate}
         />
       )}
+
       <InvoiceFormActions mode={mode} loading={form.loading} error={error} onCancel={form.handleDismiss} />
     </form>
   );

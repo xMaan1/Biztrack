@@ -54,9 +54,7 @@ export function InvoiceDialog({
               }
             }}
           >
-            <DialogHeader
-              className={form.useCommerceInvoiceLayout && mode !== 'view' ? 'sr-only' : undefined}
-            >
+            <DialogHeader className={mode !== 'view' ? 'sr-only' : undefined}>
               <DialogTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
                 {mode === 'create'

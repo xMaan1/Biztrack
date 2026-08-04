@@ -36,6 +36,7 @@ type WorkshopDocumentLinksProps = {
   excludeType: 'purchase_order' | 'job_card' | 'invoice';
   onChange: (value: WorkshopDocumentLinksValue) => void;
   purchaseOrderInitialData?: Partial<PurchaseOrderCreate>;
+  dense?: boolean;
 };
 
 export function WorkshopDocumentLinks({
@@ -43,6 +44,7 @@ export function WorkshopDocumentLinks({
   excludeType,
   onChange,
   purchaseOrderInitialData,
+  dense = false,
 }: WorkshopDocumentLinksProps) {
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderOption[]>([]);
   const [jobCards, setJobCards] = useState<{ id: string; job_card_number: string; title: string }[]>([]);
@@ -190,15 +192,31 @@ export function WorkshopDocumentLinks({
   const showJobCard = excludeType !== 'job_card';
   const showInvoice = excludeType !== 'invoice' && excludeType !== 'job_card';
 
+  const inputCls = dense
+    ? 'h-8 rounded-md border-input bg-background pl-9 pr-10 text-sm shadow-none'
+    : 'pl-10 pr-10';
+  const triggerCls = dense ? 'h-8 text-sm shadow-none' : undefined;
+
   return (
-    <div className="space-y-3 rounded-lg border p-4">
-      <p className="text-sm font-medium">Linked documents</p>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div
+      className={
+        dense
+          ? 'space-y-2 rounded-lg border border-border bg-card px-3 py-2'
+          : 'space-y-3 rounded-lg border p-4'
+      }
+    >
+      <p className={dense ? 'text-sm font-semibold' : 'text-sm font-medium'}>Linked documents</p>
+      <div className={dense ? 'grid grid-cols-1 gap-2 md:grid-cols-2' : 'grid grid-cols-1 md:grid-cols-2 gap-4'}>
         {showPurchaseOrder && (
-          <div className="space-y-2 md:col-span-2">
+          <div className={dense ? 'space-y-1.5 md:col-span-2' : 'space-y-2 md:col-span-2'}>
             <div className="flex items-end gap-2">
               <div className="relative flex-1" ref={poSearchRef}>
-                <Label>Purchase order</Label>
+                {!dense && <Label>Purchase order</Label>}
+                {dense && (
+                  <span className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Purchase order
+                  </span>
+                )}
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                   <Input
@@ -210,7 +228,7 @@ export function WorkshopDocumentLinks({
                     }}
                     onFocus={() => setPoOpen(true)}
                     placeholder={selectedPo ? '' : 'Search by order number or supplier...'}
-                    className="pl-10 pr-10"
+                    className={inputCls}
                     disabled={!!selectedPo}
                   />
                   {selectedPo && (
@@ -263,7 +281,8 @@ export function WorkshopDocumentLinks({
               <Button
                 type="button"
                 variant="outline"
-                className="shrink-0"
+                size={dense ? 'sm' : 'default'}
+                className={dense ? 'h-8 shrink-0' : 'shrink-0'}
                 onClick={() => setShowCreatePo(true)}
               >
                 <Plus className="mr-1 h-4 w-4" />
@@ -286,13 +305,17 @@ export function WorkshopDocumentLinks({
         )}
 
         {showJobCard && (
-          <div className="space-y-2">
-            <Label>Job card</Label>
+          <div className={dense ? 'space-y-1' : 'space-y-2'}>
+            {dense ? (
+              <span className="mb-1 block text-xs font-medium text-muted-foreground">Job card</span>
+            ) : (
+              <Label>Job card</Label>
+            )}
             <Select
               value={value.jobCardId || 'none'}
               onValueChange={(v) => update({ jobCardId: v === 'none' ? undefined : v })}
             >
-              <SelectTrigger>
+              <SelectTrigger className={triggerCls}>
                 <SelectValue placeholder="Select job card" />
               </SelectTrigger>
               <SelectContent>
@@ -308,13 +331,17 @@ export function WorkshopDocumentLinks({
         )}
 
         {showInvoice && (
-          <div className="space-y-2">
-            <Label>Invoice</Label>
+          <div className={dense ? 'space-y-1' : 'space-y-2'}>
+            {dense ? (
+              <span className="mb-1 block text-xs font-medium text-muted-foreground">Invoice</span>
+            ) : (
+              <Label>Invoice</Label>
+            )}
             <Select
               value={value.invoiceId || 'none'}
               onValueChange={(v) => update({ invoiceId: v === 'none' ? undefined : v })}
             >
-              <SelectTrigger>
+              <SelectTrigger className={triggerCls}>
                 <SelectValue placeholder="Select invoice" />
               </SelectTrigger>
               <SelectContent>

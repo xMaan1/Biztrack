@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 DELIVERY_LABELS = {
     "drop_off": "Drop off — own onward travel",
-    "wait_security": "Wait on site (security update)",
+    "wait_security": "Wait on site while vehicle is tested",
     "wait_on_site": "Wait on site while vehicle is tested",
 }
 
