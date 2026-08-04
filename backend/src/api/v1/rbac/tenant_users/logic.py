@@ -4,7 +4,7 @@ from typing import List, Optional
 from uuid import UUID
 
 from fastapi import HTTPException, status
-from sqlalchemy import and_, select
+from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -106,30 +106,12 @@ def _tenant_user_to_schema(tenant_user: TenantUserORM) -> TenantUser:
 def get_tenant_users_list(
     db: Session,
     tenant_id: Optional[str],
-    requester_id: Optional[str] = None,
-    requester_role: Optional[str] = None,
 ) -> List[UserWithPermissions]:
     if not tenant_id:
         return []
     tenant_users = db.query(TenantUserORM).join(UserORM).join(RoleORM).filter(
         TenantUserORM.tenant_id == tenant_id
     ).all()
-
-    if requester_role == "project_manager" and requester_id:
-        managed_project_ids = db.query(Project.id).filter(
-            Project.tenant_id == tenant_id,
-            Project.projectManagerId == requester_id,
-        ).subquery()
-        rows = db.execute(
-            select(project_team_members.c.user_id).where(
-                project_team_members.c.project_id.in_(select(managed_project_ids.c.id))
-            )
-        ).fetchall()
-        allowed_user_ids = {str(row[0]) for row in rows}
-        allowed_user_ids.add(requester_id)
-        tenant_users = [
-            tu for tu in tenant_users if str(tu.userId) in allowed_user_ids
-        ]
 
     user_list = []
     for tenant_user in tenant_users:

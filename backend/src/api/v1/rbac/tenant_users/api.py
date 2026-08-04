@@ -33,9 +33,7 @@ async def get_tenant_users(
             status_code=403, detail="You do not have permission to view team members"
         )
 
-    return logic.get_tenant_users_list(
-        db, tenant_id, requester_id=str(current_user.id), requester_role=role_name
-    )
+    return logic.get_tenant_users_list(db, tenant_id)
 
 
 @router.post("/tenant-users", response_model=TenantUser)
