@@ -10,13 +10,11 @@ import { InlineField } from '../commerce-invoice/InlineField';
 type InvoiceFormTotalsSummaryProps = {
   formData: InvoiceCreate;
   totals: InvoiceFormTotals;
-  showWorkshopTotals?: boolean;
 };
 
 export function InvoiceFormTotalsSummary({
   formData,
   totals,
-  showWorkshopTotals = false,
 }: InvoiceFormTotalsSummaryProps) {
   const { formatCurrency } = useCurrency();
 
@@ -48,24 +46,6 @@ export function InvoiceFormTotalsSummary({
               className={`${COMMERCE_INPUT_CLS} bg-background`}
             />
           </InlineField>
-          {showWorkshopTotals && (
-            <>
-              <InlineField label="Labour Total:">
-                <Input
-                  readOnly
-                  value={formatCurrency(formData.labourTotal || 0)}
-                  className={`${COMMERCE_INPUT_CLS} bg-background`}
-                />
-              </InlineField>
-              <InlineField label="Parts Total:">
-                <Input
-                  readOnly
-                  value={formatCurrency(formData.partsTotal || 0)}
-                  className={`${COMMERCE_INPUT_CLS} bg-background`}
-                />
-              </InlineField>
-            </>
-          )}
         </div>
 
         <div className="space-y-1.5">

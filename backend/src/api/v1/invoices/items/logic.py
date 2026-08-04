@@ -168,8 +168,6 @@ def create_invoice_endpoint(
             invoice_data.items,
             invoice_data.taxRate,
             invoice_data.discount,
-            labour_total=invoice_data.labourTotal or 0.0,
-            parts_total=invoice_data.partsTotal or 0.0,
         )
 
         db_invoice = Invoice(
@@ -197,12 +195,7 @@ def create_invoice_endpoint(
             quoteId=invoice_data.quoteId,
             projectId=invoice_data.projectId,
             vehicleReg=invoice_data.vehicleReg,
-            documentNo=invoice_data.documentNo,
             jobCardId=invoice_data.jobCardId or None,
-            jobDescription=invoice_data.jobDescription,
-            partsDescription=invoice_data.partsDescription,
-            labourTotal=invoice_data.labourTotal or 0.0,
-            partsTotal=invoice_data.partsTotal or 0.0,
             **totals,
             createdAt=datetime.utcnow(),
             updatedAt=datetime.utcnow(),
@@ -388,7 +381,9 @@ def get_invoices_endpoint(
         tenant_id = tenant_context["tenant_id"]
         query = db.query(Invoice).filter(Invoice.tenant_id == tenant_id)
 
-        if status:
+        if status == "outstanding":
+            query = query.filter(Invoice.status != InvoiceStatus.PAID)
+        elif status:
             query = query.filter(Invoice.status == status)
         if customer_id:
             query = query.filter(Invoice.customerId == customer_id)
@@ -568,8 +563,6 @@ def update_invoice_endpoint(
                     value,
                     invoice.taxRate,
                     invoice.discount,
-                    labour_total=invoice.labourTotal or 0.0,
-                    parts_total=invoice.partsTotal or 0.0,
                 )
                 invoice.subtotal = totals["subtotal"]
                 invoice.discountAmount = totals["discountAmount"]
@@ -577,8 +570,6 @@ def update_invoice_endpoint(
                 invoice.total = totals["total"]
             elif field == "orderTime" and value:
                 setattr(invoice, field, datetime.fromisoformat(value))
-            elif field in ["labourTotal", "partsTotal"] and value is not None:
-                setattr(invoice, field, float(value))
             elif field in ["issueDate", "dueDate"] and value:
                 setattr(invoice, field, datetime.fromisoformat(value))
             elif field == "jobCardId":
@@ -595,13 +586,11 @@ def update_invoice_endpoint(
             except Exception:
                 pass
 
-        if any(k in update_data for k in ("items", "labourTotal", "partsTotal", "taxRate", "discount")):
+        if any(k in update_data for k in ("items", "taxRate", "discount")):
             totals = calculate_invoice_totals(
                 invoice.items or [],
                 invoice.taxRate or 0,
                 invoice.discount or 0,
-                labour_total=invoice.labourTotal or 0.0,
-                parts_total=invoice.partsTotal or 0.0,
             )
             invoice.subtotal = totals["subtotal"]
             invoice.discountAmount = totals["discountAmount"]

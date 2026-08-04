@@ -124,8 +124,6 @@ def calculate_invoice_totals(
     items: List,
     tax_rate: float,
     discount: float,
-    labour_total: float = 0.0,
-    parts_total: float = 0.0,
 ) -> dict:
     subtotal = 0
     for item in items:
@@ -133,8 +131,6 @@ def calculate_invoice_totals(
             subtotal += item.get("quantity", 0) * item.get("unitPrice", 0)
         else:
             subtotal += item.quantity * item.unitPrice
-
-    subtotal += float(labour_total or 0) + float(parts_total or 0)
 
     discount_amount = subtotal * (discount / 100) if discount > 0 else 0
     taxable_amount = subtotal - discount_amount
@@ -223,10 +219,5 @@ def transform_invoice_to_pydantic(db_invoice: Invoice):
         balance=db_invoice.balance if hasattr(db_invoice, "balance") else 0.0,
         daysOverdue=db_invoice.daysOverdue if hasattr(db_invoice, "daysOverdue") else 0,
         vehicleReg=db_invoice.vehicleReg,
-        documentNo=db_invoice.documentNo,
         jobCardId=str(db_invoice.jobCardId) if getattr(db_invoice, "jobCardId", None) else None,
-        jobDescription=db_invoice.jobDescription,
-        partsDescription=db_invoice.partsDescription,
-        labourTotal=db_invoice.labourTotal,
-        partsTotal=db_invoice.partsTotal,
     )

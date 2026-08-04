@@ -105,9 +105,12 @@ export function InvoiceJobCardLink({
         open={showCreate}
         onOpenChange={setShowCreate}
         mode="create"
-        onSuccess={() => {
+        onSuccess={(created) => {
           setShowCreate(false);
           loadJobCards();
+          if (created?.id) {
+            onChange(created.id);
+          }
         }}
       />
     </div>

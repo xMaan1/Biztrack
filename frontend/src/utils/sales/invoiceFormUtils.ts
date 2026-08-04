@@ -1,6 +1,7 @@
 import type { Invoice, InvoiceCreate, InvoiceItemCreate } from '@/src/models/sales';
 import type { Customer } from '@/src/services/CustomerService';
 import type { InvoiceFormErrors, InvoiceFormTotals } from '@/src/types/sales/invoiceForm';
+import type { JobCard } from '@/src/models/workshop';
 
 export const EMPTY_NEW_ITEM: InvoiceItemCreate = {
   description: '',
@@ -67,12 +68,7 @@ export function emptyInvoiceForm(currency: string): InvoiceCreate {
     quoteId: '',
     projectId: '',
     vehicleReg: '',
-    documentNo: '',
     jobCardId: '',
-    jobDescription: '',
-    partsDescription: '',
-    labourTotal: 0,
-    partsTotal: 0,
   };
 }
 
@@ -100,12 +96,7 @@ export function invoiceFormDataFromInvoice(invoice: Invoice): InvoiceCreate {
     quoteId: invoice.quoteId || '',
     projectId: invoice.projectId || '',
     vehicleReg: invoice.vehicleReg || '',
-    documentNo: invoice.documentNo || '',
     jobCardId: invoice.jobCardId || '',
-    jobDescription: invoice.jobDescription || '',
-    partsDescription: invoice.partsDescription || '',
-    labourTotal: invoice.labourTotal || 0,
-    partsTotal: invoice.partsTotal || 0,
   };
 }
 
@@ -121,6 +112,31 @@ export function invoiceItemsFromInvoice(invoice: Invoice): InvoiceItemCreate[] {
     projectId: item.projectId,
     taskId: item.taskId,
   }));
+}
+
+export function invoiceItemsFromJobCard(jc: JobCard): InvoiceItemCreate[] {
+  const rawItems = Array.isArray(jc.items) ? jc.items : [];
+  const mapped: InvoiceItemCreate[] = [];
+  for (const it of rawItems) {
+    const r = it as Record<string, unknown>;
+    const description = String(r.description ?? r.part_description ?? r.part_no ?? r.partNo ?? '');
+    const quantityRaw = typeof r.quantity === 'number' ? r.quantity : parseFloat(String(r.qty ?? r.quantity ?? 1));
+    const quantity = Number.isFinite(quantityRaw) && quantityRaw > 0 ? quantityRaw : 1;
+    const unitPriceRaw = typeof r.unitPrice === 'number' ? r.unitPrice : parseFloat(String(r.unit_price ?? r.unitPrice ?? 0));
+    const unitPrice = Number.isFinite(unitPriceRaw) ? unitPriceRaw : 0;
+    const productId = r.productId ? String(r.productId) : '';
+    if (!description && !unitPrice && !productId) continue;
+    mapped.push({
+      description: description || 'Item',
+      quantity,
+      unitPrice,
+      discount: 0,
+      taxRate: 0,
+      unit: String(r.unit ?? 'piece'),
+      productId,
+    });
+  }
+  return mapped;
 }
 
 export function customerFallbackFromInvoice(invoice: Invoice): Customer {
@@ -147,12 +163,10 @@ export function calculateInvoiceTotals(
   formData: InvoiceCreate,
   items: InvoiceItemCreate[],
 ): InvoiceFormTotals {
-  const itemsSubtotal = items.reduce(
+  const subtotal = items.reduce(
     (sum, item) => sum + item.quantity * item.unitPrice * (1 - item.discount / 100),
     0,
   );
-  const workshopExtras = (formData.labourTotal || 0) + (formData.partsTotal || 0);
-  const subtotal = itemsSubtotal + workshopExtras;
   const discountAmount = subtotal * (formData.discount / 100);
   const taxableAmount = subtotal - discountAmount;
   const taxAmount = taxableAmount * (formData.taxRate / 100);
@@ -167,15 +181,7 @@ export function calculateInvoiceTotals(
 }
 
 export function hasWorkshopInvoiceData(invoice: Invoice): boolean {
-  return Boolean(
-    invoice.vehicleReg ||
-      invoice.documentNo ||
-      invoice.jobDescription ||
-      invoice.partsDescription ||
-      invoice.labourTotal ||
-      invoice.partsTotal ||
-      invoice.jobCardId,
-  );
+  return Boolean(invoice.vehicleReg || invoice.jobCardId);
 }
 
 export function validateInvoiceForm(

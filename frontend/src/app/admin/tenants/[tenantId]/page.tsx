@@ -1011,35 +1011,24 @@ function TenantDetailsContent() {
                 </CardContent>
               </Card>
 
-              {/* Workshop Information (if available) */}
-              {(selectedInvoice.jobDescription || selectedInvoice.partsDescription || selectedInvoice.labourTotal || selectedInvoice.partsTotal) && (
+              {(selectedInvoice.vehicleReg || selectedInvoice.jobCardId) && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Workshop Information</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    {selectedInvoice.jobDescription && (
+                  <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {selectedInvoice.vehicleReg && (
                       <div>
-                        <span className="font-medium">Job Description:</span>
-                        <p className="text-sm text-gray-600 whitespace-pre-line">{selectedInvoice.jobDescription}</p>
+                        <span className="font-medium">Registration:</span>
+                        <p className="text-sm text-gray-600">{selectedInvoice.vehicleReg}</p>
                       </div>
                     )}
-                    {selectedInvoice.partsDescription && (
+                    {selectedInvoice.jobCardId && (
                       <div>
-                        <span className="font-medium">Parts Description:</span>
-                        <p className="text-sm text-gray-600 whitespace-pre-line">{selectedInvoice.partsDescription}</p>
+                        <span className="font-medium">Job Card:</span>
+                        <p className="text-sm text-gray-600">{selectedInvoice.jobCardId}</p>
                       </div>
                     )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <span className="font-medium">Labour Total:</span>
-                        <p className="text-sm text-gray-600">{formatCurrency(selectedInvoice.labourTotal || 0)}</p>
-                      </div>
-                      <div>
-                        <span className="font-medium">Parts Total:</span>
-                        <p className="text-sm text-gray-600">{formatCurrency(selectedInvoice.partsTotal || 0)}</p>
-                      </div>
-                    </div>
                   </CardContent>
                 </Card>
               )}

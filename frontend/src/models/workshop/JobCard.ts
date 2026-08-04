@@ -1,3 +1,12 @@
+export interface JobCardItem {
+  productId?: string;
+  description: string;
+  sku?: string;
+  quantity: number;
+  unitPrice: number;
+  unit?: string;
+}
+
 export interface JobCard {
   id: string;
   tenant_id: string;
@@ -22,7 +31,7 @@ export interface JobCard {
   vat_rate?: number;
   notes?: string;
   attachments: string[];
-  items: Record<string, unknown>[];
+  items: JobCardItem[];
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -47,7 +56,7 @@ export interface JobCardCreate {
   vat_rate?: number;
   notes?: string;
   attachments?: string[];
-  items?: Record<string, unknown>[];
+  items?: JobCardItem[];
 }
 
 export interface JobCardUpdate {
@@ -69,5 +78,5 @@ export interface JobCardUpdate {
   vat_rate?: number;
   notes?: string;
   attachments?: string[];
-  items?: Record<string, unknown>[];
+  items?: JobCardItem[];
 }

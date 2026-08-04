@@ -85,13 +85,7 @@ export interface Invoice {
   daysOverdue: number;
 
   vehicleReg?: string;
-  documentNo?: string;
   jobCardId?: string;
-
-  jobDescription?: string;
-  partsDescription?: string;
-  labourTotal?: number;
-  partsTotal?: number;
 }
 
 export interface InvoiceCreate {
@@ -115,13 +109,7 @@ export interface InvoiceCreate {
   projectId?: string;
 
   vehicleReg?: string;
-  documentNo?: string;
   jobCardId?: string;
-
-  jobDescription?: string;
-  partsDescription?: string;
-  labourTotal?: number;
-  partsTotal?: number;
 }
 
 export interface InvoiceUpdate {
@@ -142,13 +130,7 @@ export interface InvoiceUpdate {
   items?: InvoiceItemCreate[];
 
   vehicleReg?: string;
-  documentNo?: string;
   jobCardId?: string;
-
-  jobDescription?: string;
-  partsDescription?: string;
-  labourTotal?: number;
-  partsTotal?: number;
 }
 
 export interface InvoiceFilters {

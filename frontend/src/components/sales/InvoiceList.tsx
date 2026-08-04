@@ -527,7 +527,7 @@ export function InvoiceList({
                           </>
                         )}
                       </DropdownMenuItem>
-                      {invoice.status === 'sent' && (
+                      {invoice.status !== 'paid' && (
                         <DropdownMenuItem
                           onClick={() => onMarkAsPaid(invoice.id)}
                         >

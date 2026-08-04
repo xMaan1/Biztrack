@@ -22,8 +22,9 @@ import { InvoiceDialog } from '../../../components/sales/InvoiceDialog';
 import type { InstallmentPlanCreateOption } from '../../../components/sales/InvoiceDialog';
 import InvoiceService from '../../../services/InvoiceService';
 import type { Customer } from '../../../services/CustomerService';
-import type { InvoiceCreate, InvoiceItemCreate } from '../../../models/sales';
+import type { InvoiceCreate } from '../../../models/sales';
 import { extractErrorMessage } from '../../../utils/errorUtils';
+import { invoiceItemsFromJobCard } from '../../../utils/sales/invoiceFormUtils';
 
 function JobCardsContent() {
   const [jobCards, setJobCards] = useState<JobCard[]>([]);
@@ -45,36 +46,33 @@ function JobCardsContent() {
   const buildInvoicePrefill = useCallback((jc: JobCard): Partial<InvoiceCreate> => {
     const vi = (jc.vehicle_info || {}) as Record<string, unknown>;
     const str = (v: unknown) => (v === null || v === undefined ? '' : String(v));
-    const num = (v: unknown) => {
-      const n = typeof v === 'number' ? v : parseFloat(String(v));
-      return Number.isFinite(n) ? n : 0;
-    };
-
-    const rawItems = Array.isArray(jc.items) ? jc.items : [];
-    const mapped: InvoiceItemCreate[] = [];
-    for (const it of rawItems) {
-      const r = it as Record<string, unknown>;
-      const description = str(r.description ?? r.part_description ?? r.part_no ?? r.partNo);
-      const quantity = num(r.qty ?? r.quantity ?? 1) || 1;
-      const unitPrice = num(r.unit_price ?? r.unitPrice ?? 0);
-      if (!description && !unitPrice) continue;
-      mapped.push({
-        description: description || 'Item',
-        quantity,
-        unitPrice,
-        discount: 0,
-        taxRate: 0,
-        unit: 'piece',
-      });
-    }
-
-    const items: InvoiceItemCreate[] = [...mapped];
+    let items = invoiceItemsFromJobCard(jc);
     if (items.length === 0) {
       if (jc.parts_estimate) {
-        items.push({ description: 'Parts', quantity: 1, unitPrice: jc.parts_estimate, discount: 0, taxRate: 0, unit: 'piece' });
+        items = [
+          ...items,
+          {
+            description: 'Parts',
+            quantity: 1,
+            unitPrice: jc.parts_estimate,
+            discount: 0,
+            taxRate: 0,
+            unit: 'piece',
+          },
+        ];
       }
       if (jc.labor_estimate) {
-        items.push({ description: 'Labour', quantity: 1, unitPrice: jc.labor_estimate, discount: 0, taxRate: 0, unit: 'hour' });
+        items = [
+          ...items,
+          {
+            description: 'Labour',
+            quantity: 1,
+            unitPrice: jc.labor_estimate,
+            discount: 0,
+            taxRate: 0,
+            unit: 'hour',
+          },
+        ];
       }
     }
 
@@ -84,9 +82,8 @@ function JobCardsContent() {
       customerPhone: jc.customer_phone || '',
       taxRate: (jc.vat_rate ?? 0.15) * 100,
       notes: jc.notes || '',
-      jobDescription: jc.description || '',
-      documentNo: jc.job_card_number || '',
       vehicleReg: str(vi.registration_number),
+      jobCardId: jc.id,
       items,
     };
   }, []);

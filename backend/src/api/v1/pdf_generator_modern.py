@@ -336,7 +336,6 @@ def create_vehicle_section(invoice, customization: Optional[Dict[str, Any]], sty
         return elements
     has_vehicle_data = any([
         hasattr(invoice, 'vehicleReg') and invoice.vehicleReg,
-        hasattr(invoice, 'documentNo') and invoice.documentNo,
     ])
     
     if not has_vehicle_data:
@@ -347,8 +346,6 @@ def create_vehicle_section(invoice, customization: Optional[Dict[str, Any]], sty
     vehicle_data = []
     if hasattr(invoice, 'vehicleReg') and invoice.vehicleReg:
         vehicle_data.append(f"Registration: {invoice.vehicleReg}")
-    if hasattr(invoice, 'documentNo') and invoice.documentNo:
-        vehicle_data.append(f"Document No: {invoice.documentNo}")
     
     if vehicle_data:
         vehicle_table_data = []
@@ -396,26 +393,6 @@ def create_items_table(invoice, styles: Dict[str, ParagraphStyle], colors: Dict[
                 format_currency(item_total, currency)
             ]
             table_data.append(row)
-    
-    if hasattr(invoice, 'labourTotal') and invoice.labourTotal and invoice.labourTotal > 0:
-        table_data.append([
-            "Labour & Services",
-            "",
-            "1",
-            format_currency(invoice.labourTotal, currency),
-            "0%",
-            format_currency(invoice.labourTotal, currency)
-        ])
-    
-    if hasattr(invoice, 'partsTotal') and invoice.partsTotal and invoice.partsTotal > 0:
-        table_data.append([
-            "Parts & Materials",
-            "",
-            "1",
-            format_currency(invoice.partsTotal, currency),
-            "0%",
-            format_currency(invoice.partsTotal, currency)
-        ])
     
     items_table = Table(table_data, colWidths=[2.5*inch, 1*inch, 0.7*inch, 0.9*inch, 0.7*inch, 1*inch])
     table_style = [
@@ -493,19 +470,7 @@ def create_totals_section(invoice, styles: Dict[str, ParagraphStyle], colors: Di
     return elements
 
 def create_workshop_sections(invoice, customization: Optional[Dict[str, Any]], styles: Dict[str, ParagraphStyle]) -> List:
-    elements = []
-    
-    if hasattr(invoice, 'jobDescription') and invoice.jobDescription and customization.get('show_labour_section', True):
-        elements.append(Paragraph("Job Description", styles['header']))
-        elements.append(Paragraph(invoice.jobDescription, styles['body']))
-        elements.append(Spacer(1, 5))
-    
-    if hasattr(invoice, 'partsDescription') and invoice.partsDescription and customization.get('show_parts_section', True):
-        elements.append(Paragraph("Parts & Materials", styles['header']))
-        elements.append(Paragraph(invoice.partsDescription, styles['body']))
-        elements.append(Spacer(1, 5))
-    
-    return elements
+    return []
 
 def create_notes_section(invoice, customization: Optional[Dict[str, Any]], styles: Dict[str, ParagraphStyle]) -> List:
     elements = []

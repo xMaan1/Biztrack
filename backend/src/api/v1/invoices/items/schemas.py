@@ -79,12 +79,7 @@ class InvoiceBase(BaseModel):
     status: InvoiceStatus = InvoiceStatus.DRAFT
     items: List[InvoiceItem] = []
     vehicleReg: Optional[str] = None
-    documentNo: Optional[str] = None
     jobCardId: Optional[str] = None
-    jobDescription: Optional[str] = None
-    partsDescription: Optional[str] = None
-    labourTotal: Optional[float] = 0.0
-    partsTotal: Optional[float] = 0.0
 
 
 class InvoiceCreate(BaseModel):
@@ -109,12 +104,7 @@ class InvoiceCreate(BaseModel):
     quoteId: Optional[str] = None
     projectId: Optional[str] = None
     vehicleReg: Optional[str] = None
-    documentNo: Optional[str] = None
     jobCardId: Optional[str] = None
-    jobDescription: Optional[str] = None
-    partsDescription: Optional[str] = None
-    labourTotal: Optional[float] = 0.0
-    partsTotal: Optional[float] = 0.0
 
 
 class InvoiceUpdate(BaseModel):
@@ -136,12 +126,7 @@ class InvoiceUpdate(BaseModel):
     status: Optional[InvoiceStatus] = None
     items: Optional[List[InvoiceItemCreate]] = None
     vehicleReg: Optional[str] = None
-    documentNo: Optional[str] = None
     jobCardId: Optional[str] = None
-    jobDescription: Optional[str] = None
-    partsDescription: Optional[str] = None
-    labourTotal: Optional[float] = None
-    partsTotal: Optional[float] = None
 
 
 class Invoice(InvoiceBase):

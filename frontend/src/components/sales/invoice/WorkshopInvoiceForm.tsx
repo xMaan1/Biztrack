@@ -45,7 +45,6 @@ export function WorkshopInvoiceForm({ mode, form, error }: WorkshopInvoiceFormPr
 
       {form.isWorkshop && (
         <InvoiceFormVehicleSection
-          formData={form.formData}
           selectedVehicle={form.selectedVehicle}
           onVehicleSelect={form.setSelectedVehicle}
           onInputChange={form.handleInputChange}
@@ -76,7 +75,6 @@ export function WorkshopInvoiceForm({ mode, form, error }: WorkshopInvoiceFormPr
       <InvoiceFormTotalsSummary
         formData={form.formData}
         totals={form.totals}
-        showWorkshopTotals={form.isWorkshop}
       />
 
       <InvoiceFormNotesSection formData={form.formData} onInputChange={form.handleInputChange} />

@@ -2,7 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { LayoutDashboard, AlertTriangle, FileText } from 'lucide-react';
+import { LayoutDashboard, Clock, FileText } from 'lucide-react';
 import { DashboardLayout } from '@/src/components/layout';
 import { Button } from '@/src/components/ui/button';
 import {
@@ -12,15 +12,13 @@ import {
   TabsTrigger,
 } from '@/src/components/ui/tabs';
 import { InvoiceDashboard as InvoiceDashboardComponent } from '@/src/components/sales/InvoiceDashboard';
-import { InvoiceOverduePanel } from '@/src/components/sales/InvoiceOverduePanel';
 import { InvoiceManagementPanel } from '@/src/components/sales/InvoiceManagementPanel';
-import { InvoiceDialog } from '@/src/components/sales/InvoiceDialog';
 import InvoiceService from '@/src/services/InvoiceService';
-import type { Invoice, InvoiceCreate, InvoiceDashboard } from '@/src/models/sales';
+import type { InvoiceDashboard } from '@/src/models/sales';
 import { extractErrorMessage } from '@/src/utils/errorUtils';
 import { usePermissions } from '@/src/hooks/usePermissions';
 
-const VALID_TABS = ['dashboard', 'overdue', 'invoices'] as const;
+const VALID_TABS = ['dashboard', 'outstanding', 'invoices'] as const;
 type InvoiceTab = (typeof VALID_TABS)[number];
 
 function isInvoiceTab(value: string | null): value is InvoiceTab {
@@ -35,10 +33,12 @@ function InvoiceDashboardPageContent() {
   const showInvoices = canViewInvoices();
   const tabParam = searchParams.get('tab');
   const activeTab = useMemo<InvoiceTab>(() => {
-    if (isInvoiceTab(tabParam)) {
-      if (tabParam === 'invoices' && showInvoices) return 'invoices';
-      if (tabParam === 'overdue' && showDashboard) return 'overdue';
-      if (tabParam === 'dashboard' && showDashboard) return 'dashboard';
+    const normalizedTab =
+      tabParam === 'overdue' ? 'outstanding' : tabParam;
+    if (isInvoiceTab(normalizedTab)) {
+      if (normalizedTab === 'invoices' && showInvoices) return 'invoices';
+      if (normalizedTab === 'outstanding' && showInvoices) return 'outstanding';
+      if (normalizedTab === 'dashboard' && showDashboard) return 'dashboard';
     }
     if (showDashboard) return 'dashboard';
     if (showInvoices) return 'invoices';
@@ -48,9 +48,6 @@ function InvoiceDashboardPageContent() {
   const [dashboard, setDashboard] = useState<InvoiceDashboard | null>(null);
   const [loading, setLoading] = useState(showDashboard);
   const [error, setError] = useState<string | null>(null);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-  const [updateError, setUpdateError] = useState<string | null>(null);
   const loadingRef = useRef(false);
 
   const loadDashboard = useCallback(async () => {
@@ -80,36 +77,6 @@ function InvoiceDashboardPageContent() {
     params.set('tab', value);
     const query = params.toString();
     router.replace(query ? `/sales/invoice-dashboard?${query}` : '/sales/invoice-dashboard');
-  };
-
-  const handleMarkAsPaid = async (invoiceId: string) => {
-    try {
-      await InvoiceService.markInvoiceAsPaid(invoiceId);
-      loadDashboard();
-    } catch (err) {
-      setError(extractErrorMessage(err, 'Failed to mark invoice as paid'));
-    }
-  };
-
-  const handleEdit = (invoice: Invoice) => {
-    setSelectedInvoice(invoice);
-    setUpdateError(null);
-    setShowEditDialog(true);
-  };
-
-  const handleUpdateInvoice = async (
-    invoiceId: string,
-    invoiceData: Partial<InvoiceCreate>,
-  ) => {
-    try {
-      setUpdateError(null);
-      await InvoiceService.updateInvoice(invoiceId, invoiceData);
-      setShowEditDialog(false);
-      setSelectedInvoice(null);
-      loadDashboard();
-    } catch (err) {
-      setUpdateError(extractErrorMessage(err, 'Failed to update invoice'));
-    }
   };
 
   if (!showDashboard && !showInvoices) {
@@ -143,7 +110,7 @@ function InvoiceDashboardPageContent() {
     );
   }
 
-  const visibleTabCount = (showDashboard ? 2 : 0) + (showInvoices ? 1 : 0);
+  const visibleTabCount = (showDashboard ? 1 : 0) + (showInvoices ? 2 : 0);
   const tabsListClass =
     visibleTabCount === 3
       ? 'grid-cols-3'
@@ -157,7 +124,7 @@ function InvoiceDashboardPageContent() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Invoicing</h1>
           <p className="text-gray-600">
-            Manage invoices, monitor metrics, and track overdue payments
+            Manage paid and outstanding invoices, and monitor metrics
           </p>
         </div>
 
@@ -175,10 +142,10 @@ function InvoiceDashboardPageContent() {
                 Invoices
               </TabsTrigger>
             )}
-            {showDashboard && (
-              <TabsTrigger value="overdue" className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4" />
-                Overdue
+            {showInvoices && (
+              <TabsTrigger value="outstanding" className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Outstanding
               </TabsTrigger>
             )}
           </TabsList>
@@ -191,38 +158,22 @@ function InvoiceDashboardPageContent() {
 
           {showInvoices && (
             <TabsContent value="invoices" className="space-y-6">
-              <InvoiceManagementPanel onInvoicesChange={loadDashboard} />
+              <InvoiceManagementPanel
+                scope="paid"
+                onInvoicesChange={loadDashboard}
+              />
             </TabsContent>
           )}
 
-          {showDashboard && (
-            <TabsContent value="overdue" className="space-y-6">
-              <InvoiceOverduePanel
-                dashboard={dashboard}
-                onMarkAsPaid={handleMarkAsPaid}
-                onEdit={handleEdit}
+          {showInvoices && (
+            <TabsContent value="outstanding" className="space-y-6">
+              <InvoiceManagementPanel
+                scope="outstanding"
+                onInvoicesChange={loadDashboard}
               />
             </TabsContent>
           )}
         </Tabs>
-
-        {showDashboard && (
-          <InvoiceDialog
-            open={showEditDialog && !!selectedInvoice}
-            onOpenChange={(open) => {
-              setShowEditDialog(open);
-              if (!open) setUpdateError(null);
-            }}
-            onSubmit={(data) => {
-              if (selectedInvoice) {
-                void handleUpdateInvoice(selectedInvoice.id, data);
-              }
-            }}
-            mode="edit"
-            invoice={selectedInvoice}
-            error={updateError}
-          />
-        )}
       </div>
     </DashboardLayout>
   );

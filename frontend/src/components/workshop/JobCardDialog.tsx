@@ -24,19 +24,20 @@ import { VehicleSearch } from '../ui/vehicle-search';
 import { AssigneeSearch, AssigneeOption } from '../ui/assignee-search';
 import { CreateCustomerDialog } from '../crm/CreateCustomerDialog';
 import VehicleDialog from './VehicleDialog';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { apiService } from '../../services/ApiService';
 import { Customer } from '../../services/CustomerService';
-import { JobCard, JobCardCreate, JobCardUpdate, Vehicle } from '../../models/workshop';
+import { JobCard, JobCardCreate, JobCardItem, JobCardUpdate, Vehicle } from '../../models/workshop';
 import { WorkshopDocumentLinks, WorkshopDocumentLinksValue } from './WorkshopDocumentLinks';
 import { usePlanInfo } from '../../hooks/usePlanInfo';
+import type { Product } from '../../models/pos';
 
 interface JobCardDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mode: 'create' | 'edit';
   jobCard?: JobCard | null;
-  onSuccess: () => void;
+  onSuccess: (jobCard?: JobCard) => void;
 }
 
 export default function JobCardDialog({
@@ -56,6 +57,16 @@ export default function JobCardDialog({
   const [showCreateCustomer, setShowCreateCustomer] = useState(false);
   const [showCreateVehicle, setShowCreateVehicle] = useState(false);
   const [documentLinks, setDocumentLinks] = useState<WorkshopDocumentLinksValue>({});
+  const [products, setProducts] = useState<Product[]>([]);
+  const [items, setItems] = useState<JobCardItem[]>([]);
+  const [newItem, setNewItem] = useState<JobCardItem>({
+    productId: '',
+    description: '',
+    sku: '',
+    quantity: 1,
+    unitPrice: 0,
+    unit: 'piece',
+  });
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -80,6 +91,10 @@ export default function JobCardDialog({
 
   useEffect(() => {
     if (open) {
+      apiService
+        .get('/pos/products?limit=1000&page=1')
+        .then((res: any) => setProducts(res.products || []))
+        .catch(() => setProducts([]));
       if (mode === 'edit' && jobCard?.customer_id) {
         apiService.get(`/crm/customers/${jobCard.customer_id}`).then((c: Customer) => setSelectedCustomer(c)).catch(() => setSelectedCustomer(null));
       } else {
@@ -114,6 +129,18 @@ export default function JobCardDialog({
         vat_rate: jobCard.vat_rate != null ? Math.round((jobCard.vat_rate as number) * 100) : 15,
         notes: jobCard.notes || '',
       });
+      setItems(
+        Array.isArray(jobCard.items)
+          ? jobCard.items.map((it) => ({
+              productId: it.productId || '',
+              description: it.description || '',
+              sku: it.sku || '',
+              quantity: it.quantity || 1,
+              unitPrice: it.unitPrice || 0,
+              unit: it.unit || 'piece',
+            }))
+          : [],
+      );
       setSelectedVehicle(null);
       setSelectedAssignee(
         jobCard.assigned_to_id
@@ -149,12 +176,38 @@ export default function JobCardDialog({
         vat_rate: 15,
         notes: '',
       });
+      setItems([]);
+      setNewItem({
+        productId: '',
+        description: '',
+        sku: '',
+        quantity: 1,
+        unitPrice: 0,
+        unit: 'piece',
+      });
       setSelectedVehicle(null);
       setSelectedAssignee(null);
       setDocumentLinks({});
     }
     setErrorMessage('');
   }, [jobCard, mode]);
+
+  const handleAddItem = () => {
+    if (!newItem.productId || !newItem.description || newItem.quantity <= 0) {
+      setErrorMessage('Select a product and enter a valid quantity');
+      return;
+    }
+    setItems((prev) => [...prev, { ...newItem }]);
+    setNewItem({
+      productId: '',
+      description: '',
+      sku: '',
+      quantity: 1,
+      unitPrice: 0,
+      unit: 'piece',
+    });
+    setErrorMessage('');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -189,13 +242,15 @@ export default function JobCardDialog({
         vat_rate: formData.vat_rate / 100,
         notes: formData.notes || undefined,
         purchase_order_id: documentLinks.purchaseOrderId,
+        items,
       };
+      let saved: JobCard | undefined;
       if (mode === 'create') {
-        await apiService.post('/job-cards', payload);
+        saved = (await apiService.post('/job-cards', payload)) as JobCard;
       } else if (jobCard) {
-        await apiService.put(`/job-cards/${jobCard.id}`, payload);
+        saved = (await apiService.put(`/job-cards/${jobCard.id}`, payload)) as JobCard;
       }
-      onSuccess();
+      onSuccess(saved);
       onOpenChange(false);
     } catch {
       setErrorMessage('Failed to save job card.');
@@ -294,15 +349,15 @@ export default function JobCardDialog({
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                   <div>
                     <Label>Labor estimate</Label>
-                    <Input type="number" step="0.01" min={0} value={formData.labor_estimate} onChange={(e) => setFormData({ ...formData, labor_estimate: parseFloat(e.target.value) || 0 })} />
+                    <Input type="number" step="0.01" min={0} value={formData.labor_estimate || ''} onChange={(e) => setFormData({ ...formData, labor_estimate: e.target.value === '' ? 0 : parseFloat(e.target.value) || 0 })} />
                   </div>
                   <div>
                     <Label>Parts estimate</Label>
-                    <Input type="number" step="0.01" min={0} value={formData.parts_estimate} onChange={(e) => setFormData({ ...formData, parts_estimate: parseFloat(e.target.value) || 0 })} />
+                    <Input type="number" step="0.01" min={0} value={formData.parts_estimate || ''} onChange={(e) => setFormData({ ...formData, parts_estimate: e.target.value === '' ? 0 : parseFloat(e.target.value) || 0 })} />
                   </div>
                   <div>
                     <Label>VAT %</Label>
-                    <Input type="number" step="0.01" min={0} max={100} value={formData.vat_rate} onChange={(e) => setFormData({ ...formData, vat_rate: parseFloat(e.target.value) || 0 })} placeholder="15" />
+                    <Input type="number" step="0.01" min={0} max={100} value={formData.vat_rate || ''} onChange={(e) => setFormData({ ...formData, vat_rate: e.target.value === '' ? 0 : parseFloat(e.target.value) || 0 })} placeholder="15" />
                   </div>
                 </div>
 
@@ -399,6 +454,107 @@ export default function JobCardDialog({
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div className="mt-4 space-y-3 rounded-lg border p-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-base font-semibold">Products</Label>
+                <Button type="button" variant="outline" size="sm" onClick={handleAddItem}>
+                  <Plus className="mr-1 h-4 w-4" />
+                  Add
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+                <div className="md:col-span-2">
+                  <Label>Product</Label>
+                  <Select
+                    value={newItem.productId || ''}
+                    onValueChange={(value) => {
+                      const product = products.find((p) => p.id === value);
+                      setNewItem((prev) => ({
+                        ...prev,
+                        productId: value,
+                        description: product?.name || '',
+                        sku: product?.sku || '',
+                        unitPrice: product?.unitPrice || 0,
+                        unit: product?.unitOfMeasure || 'piece',
+                      }));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select product" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {products.length === 0 ? (
+                        <SelectItem value="no-products" disabled>
+                          No products available
+                        </SelectItem>
+                      ) : (
+                        products.map((product) => (
+                          <SelectItem key={product.id} value={product.id}>
+                            {product.name} ({product.sku})
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Qty</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={newItem.quantity || ''}
+                    onChange={(e) =>
+                      setNewItem((prev) => ({
+                        ...prev,
+                        quantity: e.target.value === '' ? 0 : parseFloat(e.target.value) || 0,
+                      }))
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Unit price</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={newItem.unitPrice || ''}
+                    onChange={(e) =>
+                      setNewItem((prev) => ({
+                        ...prev,
+                        unitPrice: e.target.value === '' ? 0 : parseFloat(e.target.value) || 0,
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+              {items.length > 0 && (
+                <div className="space-y-2">
+                  {items.map((item, index) => (
+                    <div
+                      key={`${item.productId}-${index}`}
+                      className="flex items-center justify-between rounded-md border px-3 py-2"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate font-medium">{item.description}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {item.quantity} × {item.unitPrice}
+                          {item.sku ? ` · ${item.sku}` : ''}
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setItems((prev) => prev.filter((_, i) => i !== index))}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

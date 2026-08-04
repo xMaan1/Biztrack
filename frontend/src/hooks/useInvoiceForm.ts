@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Invoice, InvoiceCreate, InvoiceItemCreate } from '@/src/models/sales';
 import type { Product } from '@/src/models/pos';
-import type { Vehicle } from '@/src/models/workshop';
+import type { Vehicle, JobCard } from '@/src/models/workshop';
 import type { Customer } from '@/src/services/CustomerService';
 import InvoiceService from '@/src/services/InvoiceService';
 import { apiService } from '@/src/services/ApiService';
@@ -19,6 +19,7 @@ import {
   EMPTY_NEW_ITEM,
   invoiceFormDataFromInvoice,
   invoiceItemsFromInvoice,
+  invoiceItemsFromJobCard,
   validateInvoiceForm,
   validateNewItem,
 } from '@/src/utils/sales/invoiceFormUtils';
@@ -189,6 +190,35 @@ export function useInvoiceForm({
       }));
     }
   };
+
+  const handleJobCardSelect = useCallback(async (id?: string) => {
+    setJobCardId(id);
+    if (!id) return;
+    try {
+      const jc = (await apiService.get(`/job-cards/${id}`)) as JobCard;
+      const mapped = invoiceItemsFromJobCard(jc);
+      if (mapped.length > 0) {
+        setItems(mapped);
+      }
+      const vi = (jc.vehicle_info || {}) as Record<string, unknown>;
+      const reg = vi.registration_number ? String(vi.registration_number) : '';
+      setFormData((prev) => ({
+        ...prev,
+        vehicleReg: reg || prev.vehicleReg,
+        customerId: jc.customer_id || prev.customerId,
+        customerName: jc.customer_name || prev.customerName,
+        customerPhone: jc.customer_phone || prev.customerPhone,
+        taxRate: jc.vat_rate != null ? Math.round(jc.vat_rate * 100) : prev.taxRate,
+        notes: jc.notes || prev.notes,
+      }));
+      if (jc.customer_id) {
+        InvoiceService.getCustomerById(jc.customer_id)
+          .then(setSelectedCustomer)
+          .catch(() => {});
+      }
+    } catch {
+    }
+  }, []);
 
   const clearFieldError = (key: string) => {
     if (errors[key]) {
@@ -395,7 +425,7 @@ export function useInvoiceForm({
     showCreateCustomerDialog,
     setShowCreateCustomerDialog,
     jobCardId,
-    setJobCardId,
+    setJobCardId: handleJobCardSelect,
     totals,
     handleInputChange,
     handleCustomerSelect,

@@ -37,13 +37,31 @@ import { InvoiceCustomizationDialog } from './InvoiceCustomizationDialog';
 import { usePermissions } from '@/src/hooks/usePermissions';
 import { extractErrorMessage } from '@/src/utils/errorUtils';
 
+export type InvoiceListScope = 'paid' | 'outstanding';
+
+const OUTSTANDING_STATUS_OPTIONS = [
+  { value: 'all', label: 'All Statuses' },
+  { value: 'draft', label: 'Draft' },
+  { value: 'sent', label: 'Sent' },
+  { value: 'viewed', label: 'Viewed' },
+  { value: 'partially_paid', label: 'Partially Paid' },
+  { value: 'overdue', label: 'Overdue' },
+  { value: 'cancelled', label: 'Cancelled' },
+  { value: 'void', label: 'Void' },
+] as const;
+
 type InvoiceManagementPanelProps = {
   onInvoicesChange?: () => void;
+  scope?: InvoiceListScope;
 };
 
-export function InvoiceManagementPanel({ onInvoicesChange }: InvoiceManagementPanelProps) {
+export function InvoiceManagementPanel({
+  onInvoicesChange,
+  scope = 'paid',
+}: InvoiceManagementPanelProps) {
   const { canViewInvoices, isOwner } = usePermissions();
-  const canCustomizeInvoice = isOwner();
+  const canCustomizeInvoice = isOwner() && scope === 'paid';
+  const isOutstanding = scope === 'outstanding';
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,6 +81,11 @@ export function InvoiceManagementPanel({ onInvoicesChange }: InvoiceManagementPa
 
   const hasViewPermission = useMemo(() => canViewInvoices(), [canViewInvoices]);
   const loadingRef = useRef(false);
+  const resolvedStatus = isOutstanding
+    ? statusFilter === 'all'
+      ? 'outstanding'
+      : statusFilter
+    : 'paid';
 
   const notifyChange = useCallback(() => {
     onInvoicesChange?.();
@@ -81,7 +104,7 @@ export function InvoiceManagementPanel({ onInvoicesChange }: InvoiceManagementPa
           ...filters,
           search: searchTerm || undefined,
           orderPrefix: orderPrefix.trim() || undefined,
-          status: statusFilter !== 'all' ? statusFilter : undefined,
+          status: resolvedStatus,
         },
         currentPage,
         10,
@@ -94,14 +117,14 @@ export function InvoiceManagementPanel({ onInvoicesChange }: InvoiceManagementPa
       setLoading(false);
       loadingRef.current = false;
     }
-  }, [filters, searchTerm, orderPrefix, statusFilter, currentPage, hasViewPermission]);
+  }, [filters, searchTerm, orderPrefix, resolvedStatus, currentPage, hasViewPermission]);
 
   const filtersString = useMemo(() => JSON.stringify(filters), [filters]);
 
   useEffect(() => {
     if (!hasViewPermission) return;
     loadData();
-  }, [currentPage, filtersString, searchTerm, orderPrefix, statusFilter, loadData, hasViewPermission]);
+  }, [currentPage, filtersString, searchTerm, orderPrefix, resolvedStatus, loadData, hasViewPermission]);
 
   const handleUpdateInvoice = async (
     invoiceId: string,
@@ -268,7 +291,11 @@ export function InvoiceManagementPanel({ onInvoicesChange }: InvoiceManagementPa
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
+          <div
+            className={`grid grid-cols-1 gap-4 ${
+              isOutstanding ? 'md:grid-cols-5' : 'md:grid-cols-4'
+            }`}
+          >
             <div>
               <Label htmlFor="search">Search</Label>
               <Input
@@ -289,22 +316,29 @@ export function InvoiceManagementPanel({ onInvoicesChange }: InvoiceManagementPa
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               />
             </div>
-            <div>
-              <Label htmlFor="status">Status</Label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Statuses" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="sent">Sent</SelectItem>
-                  <SelectItem value="viewed">Viewed</SelectItem>
-                  <SelectItem value="paid">Paid</SelectItem>
-                  <SelectItem value="overdue">Overdue</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {isOutstanding && (
+              <div>
+                <Label htmlFor="status">Status</Label>
+                <Select
+                  value={statusFilter}
+                  onValueChange={(value) => {
+                    setStatusFilter(value);
+                    setCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger id="status">
+                    <SelectValue placeholder="All Statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {OUTSTANDING_STATUS_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div>
               <Label htmlFor="dateFrom">From Date</Label>
               <Input
