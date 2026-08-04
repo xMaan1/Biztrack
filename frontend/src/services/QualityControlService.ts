@@ -48,8 +48,6 @@ export class QualityControlService {
       queryParams.append('quality_standard', filters.quality_standard);
     if (filters.production_plan_id)
       queryParams.append('production_plan_id', filters.production_plan_id);
-    if (filters.work_order_id)
-      queryParams.append('work_order_id', filters.work_order_id);
     if (filters.project_id)
       queryParams.append('project_id', filters.project_id);
     if (filters.assigned_to_id)

@@ -16,7 +16,6 @@ import {
   createQualityCheck,
   updateQualityCheck,
   deleteQualityCheck,
-  getWorkOrders,
   getTenantUsers,
 } from '../../../services/workshop/workshopMobileApi';
 import { extractErrorMessage } from '../../../utils/errorUtils';
@@ -53,11 +52,7 @@ export function MobileWorkshopQualityScreen() {
   const [statusF, setStatusF] = useState<string>('all');
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<QualityCheckResponse | null>(null);
-  const [woPick, setWoPick] = useState(false);
   const [userPick, setUserPick] = useState(false);
-  const [workOrders, setWorkOrders] = useState<
-    { id: string; work_order_number: string; title: string }[]
-  >([]);
   const [users, setUsers] = useState<
     { id: string; name?: string; username?: string }[]
   >([]);
@@ -71,7 +66,6 @@ export function MobileWorkshopQualityScreen() {
     criteriaText: '',
     estimated_duration_minutes: '30',
     scheduled_date: '',
-    work_order_id: '',
     assigned_to_id: '',
   });
 
@@ -80,14 +74,7 @@ export function MobileWorkshopQualityScreen() {
   }, [setSidebarActivePath]);
 
   const loadRefs = useCallback(async () => {
-    const [wo, u] = await Promise.all([getWorkOrders(), getTenantUsers()]);
-    setWorkOrders(
-      wo.map((w: { id: string; work_order_number: string; title: string }) => ({
-        id: w.id,
-        work_order_number: w.work_order_number,
-        title: w.title,
-      })),
-    );
+    const u = await getTenantUsers();
     setUsers(u);
   }, []);
 
@@ -137,7 +124,6 @@ export function MobileWorkshopQualityScreen() {
       criteriaText: '',
       estimated_duration_minutes: '30',
       scheduled_date: '',
-      work_order_id: '',
       assigned_to_id: '',
     });
     setModalOpen(true);
@@ -154,7 +140,6 @@ export function MobileWorkshopQualityScreen() {
       criteriaText: (q.criteria || []).join(', '),
       estimated_duration_minutes: String(q.estimated_duration_minutes ?? 30),
       scheduled_date: q.scheduled_date ? q.scheduled_date.split('T')[0] : '',
-      work_order_id: q.work_order_id || '',
       assigned_to_id: q.assigned_to_id || '',
     });
     setModalOpen(true);
@@ -187,7 +172,6 @@ export function MobileWorkshopQualityScreen() {
           estimated_duration_minutes:
             parseInt(form.estimated_duration_minutes, 10) || 30,
           scheduled_date: scheduled,
-          work_order_id: form.work_order_id || undefined,
           assigned_to_id: form.assigned_to_id || undefined,
         };
         await updateQualityCheck(editing.id, up);
@@ -206,7 +190,6 @@ export function MobileWorkshopQualityScreen() {
           estimated_duration_minutes:
             parseInt(form.estimated_duration_minutes, 10) || 30,
           scheduled_date: scheduled,
-          work_order_id: form.work_order_id || undefined,
           assigned_to_id: form.assigned_to_id || undefined,
           tags: [],
         };
@@ -238,10 +221,6 @@ export function MobileWorkshopQualityScreen() {
     });
   };
 
-  const woItems = workOrders.map((w) => ({
-    id: w.id,
-    label: `${w.work_order_number} · ${w.title}`,
-  }));
   const userItems = users.map((u) => ({
     id: u.id,
     label: u.name || u.username || u.id,
@@ -310,7 +289,6 @@ export function MobileWorkshopQualityScreen() {
         />
       )}
 
-      <PickerModal visible={woPick} title="Work order" items={woItems} onSelect={(x) => setForm((f) => ({ ...f, work_order_id: x.id }))} onClose={() => setWoPick(false)} />
       <PickerModal visible={userPick} title="Assign to" items={[{ id: '', label: 'None' }, ...userItems]} onSelect={(x) => setForm((f) => ({ ...f, assigned_to_id: x.id }))} onClose={() => setUserPick(false)} />
 
       <WorkshopFormSheet
@@ -338,7 +316,6 @@ export function MobileWorkshopQualityScreen() {
         <WorkshopFieldLabel>Duration (minutes)</WorkshopFieldLabel>
         <WorkshopTextInput keyboardType="number-pad" value={form.estimated_duration_minutes} onChangeText={(v) => setForm((f) => ({ ...f, estimated_duration_minutes: v }))} />
         <WorkshopDatePickerField label="Scheduled date" value={form.scheduled_date} onChange={(v) => setForm((f) => ({ ...f, scheduled_date: v }))} />
-        <WorkshopPickerField label="Work order" value={form.work_order_id ? woItems.find((x) => x.id === form.work_order_id)?.label ?? '' : ''} placeholder="Optional" onPress={() => setWoPick(true)} />
         <WorkshopPickerField label="Assign to" value={form.assigned_to_id ? userItems.find((x) => x.id === form.assigned_to_id)?.label ?? '' : ''} placeholder="Optional" onPress={() => setUserPick(true)} />
       </WorkshopFormSheet>
     </WorkshopChrome>

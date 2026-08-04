@@ -22,33 +22,6 @@ import type {
   MaintenanceDashboardStats,
 } from '../../models/maintenance';
 
-export async function getWorkOrders(params?: {
-  skip?: number;
-  limit?: number;
-  status?: string;
-}): Promise<any[]> {
-  const searchParams = new URLSearchParams();
-  searchParams.set('limit', String(params?.limit ?? 500));
-  if (params?.skip != null) searchParams.set('skip', String(params.skip));
-  if (params?.status) searchParams.set('status', params.status);
-  const data = await apiService.get<any>(
-    `/work-orders?${searchParams.toString()}`,
-  );
-  return Array.isArray(data) ? data : [];
-}
-
-export async function createWorkOrder(body: Record<string, unknown>) {
-  return apiService.post('/work-orders', body);
-}
-
-export async function updateWorkOrder(id: string, body: Record<string, unknown>) {
-  return apiService.put(`/work-orders/${id}`, body);
-}
-
-export async function deleteWorkOrder(id: string) {
-  return apiService.delete(`/work-orders/${id}`);
-}
-
 export async function getJobCards(): Promise<JobCard[]> {
   const data = await apiService.get<JobCard[] | unknown>('/job-cards?limit=500');
   return Array.isArray(data) ? data : [];

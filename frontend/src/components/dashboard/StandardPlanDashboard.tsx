@@ -16,7 +16,6 @@ interface DashboardStats extends Partial<AgencyStats> {
   completedProjects: number;
   totalTeamMembers: number;
   averageProgress: number;
-  workOrders?: number;
   equipmentMaintenance?: number;
   qualityIssues?: number;
   productionEfficiency?: number;
@@ -64,17 +63,9 @@ export default function StandardPlanDashboard({ planInfo }: { planInfo: PlanInfo
         dueDate: project.dueDate,
       })),
       teamMembers,
-      workOrders: dashboardData.workOrders.stats.total,
-      equipmentMaintenance: dashboardData.workOrders.stats.draft,
-      qualityIssues: dashboardData.workOrders.stats.in_progress,
-      productionEfficiency:
-        dashboardData.workOrders.stats.total > 0
-          ? Math.round(
-              (dashboardData.workOrders.stats.completed /
-                dashboardData.workOrders.stats.total) *
-                100,
-            )
-          : 0,
+      equipmentMaintenance: 0,
+      qualityIssues: 0,
+      productionEfficiency: averageProgress,
     };
   })() : {
     totalProjects: 0,

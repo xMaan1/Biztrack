@@ -4,7 +4,6 @@ import { useSidebarDrawer } from '../../contexts/SidebarDrawerContext';
 import { useRBAC } from '../../contexts/RBACContext';
 import { evalSidebarPathPermission } from '../../hooks/useSidebarFilteredMenu';
 import { MenuHeaderButton } from '../../components/layout/MenuHeaderButton';
-import { MobileWorkshopWorkOrdersScreen } from './screens/MobileWorkshopWorkOrdersScreen';
 import { MobileWorkshopJobCardsScreen } from './screens/MobileWorkshopJobCardsScreen';
 import { MobileWorkshopVehiclesScreen } from './screens/MobileWorkshopVehiclesScreen';
 import { MobileWorkshopProductionScreen } from './screens/MobileWorkshopProductionScreen';
@@ -83,8 +82,6 @@ export function WorkshopRouter() {
   }
 
   switch (workspacePath) {
-    case '/workshop-management/work-orders':
-      return <MobileWorkshopWorkOrdersScreen />;
     case '/workshop-management/job-cards':
       return <MobileWorkshopJobCardsScreen />;
     case '/workshop-management/vehicles':

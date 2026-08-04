@@ -64,19 +64,6 @@ def get_production_plans_by_project(
         query = query.filter(ProductionPlan.tenant_id == tenant_id)
     return query.offset(skip).limit(limit).all()
 
-def get_production_plans_by_work_order(
-    work_order_id: str, 
-    db: Session, 
-    tenant_id: Optional[str] = None,
-    skip: int = 0, 
-    limit: int = 100
-) -> List[ProductionPlan]:
-    """Get production plans by work order with tenant isolation"""
-    query = db.query(ProductionPlan).filter(ProductionPlan.work_order_id == work_order_id)
-    if tenant_id:
-        query = query.filter(ProductionPlan.tenant_id == tenant_id)
-    return query.offset(skip).limit(limit).all()
-
 def get_production_plans_by_assigned_user(
     assigned_to_id: str, 
     db: Session, 

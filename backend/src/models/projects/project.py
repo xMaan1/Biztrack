@@ -39,7 +39,6 @@ class Project(Base):
     creator = relationship("User", foreign_keys=[createdById], back_populates="projects_created")
     teamMembers = relationship("User", secondary=project_team_members, back_populates="team_projects")
     tasks = relationship("Task", back_populates="project")
-    work_orders = relationship("WorkOrder", back_populates="project")
     production_plans = relationship("ProductionPlan", back_populates="project")
     events = relationship("Event", back_populates="project")
     quality_checks = relationship("QualityCheck", back_populates="project")

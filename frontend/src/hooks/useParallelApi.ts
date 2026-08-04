@@ -71,10 +71,6 @@ export const useDashboardParallel = () => {
       promise: fetch('/api/projects').then(res => res.json())
     },
     {
-      key: 'workOrdersStats',
-      promise: fetch('/api/work-orders/stats').then(res => res.json())
-    },
-    {
       key: 'invoicesOverview',
       promise: fetch('/api/invoices/dashboard/overview').then(res => res.json())
     },

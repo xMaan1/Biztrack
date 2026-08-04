@@ -14,9 +14,6 @@ export interface WorkshopDashStats {
   completedProjects: number;
   totalTeamMembers: number;
   averageProgress: number;
-  workOrders: number;
-  equipmentMaintenance: number;
-  qualityIssues: number;
   productionEfficiency: number;
 }
 
@@ -28,9 +25,6 @@ function buildWorkshopStats(data: DashboardData | null): WorkshopDashStats {
       completedProjects: 0,
       totalTeamMembers: 0,
       averageProgress: 0,
-      workOrders: 0,
-      equipmentMaintenance: 0,
-      qualityIssues: 0,
       productionEfficiency: 0,
     };
   }
@@ -43,19 +37,16 @@ function buildWorkshopStats(data: DashboardData | null): WorkshopDashStats {
           ) / data.projects.recent.length,
         )
       : 0;
-  const woTotal = data.workOrders.stats.total;
-  const woDone = data.workOrders.stats.completed;
+  const total = data.projects.stats.total;
+  const completed = data.projects.stats.completed;
   return {
-    totalProjects: data.projects.stats.total,
+    totalProjects: total,
     activeProjects: data.projects.stats.active,
-    completedProjects: data.projects.stats.completed,
+    completedProjects: completed,
     totalTeamMembers: data.users.total,
     averageProgress: avgProgress,
-    workOrders: woTotal,
-    equipmentMaintenance: data.workOrders.stats.draft,
-    qualityIssues: data.workOrders.stats.in_progress,
     productionEfficiency:
-      woTotal > 0 ? Math.round((woDone / woTotal) * 100) : 0,
+      total > 0 ? Math.round((completed / total) * 100) : 0,
   };
 }
 
@@ -66,7 +57,6 @@ const quickLinks: {
   color: string;
   bg: string;
 }[] = [
-  { path: '/workshop-management/work-orders', label: 'Work orders', icon: 'hammer', color: '#4f46e5', bg: '#eef2ff' },
   { path: '/workshop-management/job-cards', label: 'Job cards', icon: 'clipboard', color: '#4f46e5', bg: '#eef2ff' },
   { path: '/workshop-management/vehicles', label: 'Vehicles', icon: 'car', color: '#7c3aed', bg: '#f5f3ff' },
   { path: '/workshop-management/production', label: 'Production', icon: 'cog', color: '#0891b2', bg: '#ecfeff' },
@@ -148,7 +138,7 @@ export function MobileWorkshopDashboardScreen() {
 
   const statTiles = [
     { label: 'Active projects', value: stats.activeProjects, sub: `${stats.totalProjects} total · ${completionRate}% done`, icon: 'pulse' as const, accent: '#4f46e5', accentBg: '#eef2ff' },
-    { label: 'Work orders', value: stats.workOrders, sub: 'In queue', icon: 'hammer' as const, accent: '#4f46e5', accentBg: '#eef2ff' },
+    { label: 'Completed', value: stats.completedProjects, sub: 'Projects done', icon: 'checkmark-circle' as const, accent: '#059669', accentBg: '#ecfdf5' },
     { label: 'Efficiency', value: `${stats.productionEfficiency}%`, sub: 'Completed / total', icon: 'flash' as const, accent: '#10b981', accentBg: '#ecfdf5' },
     { label: 'Team', value: stats.totalTeamMembers, sub: 'Members', icon: 'people' as const, accent: '#7c3aed', accentBg: '#f5f3ff' },
   ];
@@ -198,10 +188,10 @@ export function MobileWorkshopDashboardScreen() {
             <Text style={{ fontWeight: '700', color: WS.primary }}>New project</Text>
           </Pressable>
           <Pressable
-            onPress={() => void navigateMenuPath('/workshop-management/work-orders')}
+            onPress={() => void navigateMenuPath('/workshop-management/job-cards')}
             style={{ flex: 1, alignItems: 'center', borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.15)', paddingVertical: 13, borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)' }}
           >
-            <Text style={{ fontWeight: '700', color: '#fff' }}>Work order</Text>
+            <Text style={{ fontWeight: '700', color: '#fff' }}>Job card</Text>
           </Pressable>
         </View>
       </View>

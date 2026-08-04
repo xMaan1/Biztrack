@@ -43,7 +43,6 @@ export interface ProductionPlanBase {
   inspection_points: InspectionPoint[];
   tolerance_specs: ToleranceSpec[];
   project_id?: string;
-  work_order_id?: string;
   assigned_to_id?: string;
   tags: string[];
 }
@@ -106,7 +105,6 @@ export interface ProductionPlanUpdate {
   inspection_points?: InspectionPoint[];
   tolerance_specs?: ToleranceSpec[];
   project_id?: string;
-  work_order_id?: string;
   assigned_to_id?: string;
   completion_percentage?: number;
   current_step?: string;
@@ -222,7 +220,6 @@ export interface ProductionPlanFilters {
   priority?: ProductionPriority;
   production_type?: ProductionType;
   project_id?: string;
-  work_order_id?: string;
   assigned_to_id?: string;
   planned_start_date_from?: string;
   planned_start_date_to?: string;

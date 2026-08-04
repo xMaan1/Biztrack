@@ -15,7 +15,6 @@ import {
   Package,
   BarChart3,
   Plus,
-  Clock,
   Calendar,
   Activity,
   Settings,
@@ -35,7 +34,6 @@ interface WorkshopStats {
   completedProjects: number;
   totalTeamMembers: number;
   averageProgress: number;
-  workOrders?: number;
   equipmentMaintenance?: number;
   qualityIssues?: number;
   productionEfficiency?: number;
@@ -50,7 +48,6 @@ export default function WorkshopDashboard({
   stats,
   onNavigate,
 }: WorkshopDashboardProps) {
-  const workOrders = stats.workOrders || 0;
   const equipmentMaintenance = stats.equipmentMaintenance || 0;
   const productionEfficiency = stats.productionEfficiency || 85;
   const qualityIssues = stats.qualityIssues || 0;
@@ -60,7 +57,6 @@ export default function WorkshopDashboard({
     : 0;
 
   const handleCreateProject = () => onNavigate('/projects');
-  const handleCreateWorkOrder = () => onNavigate('/workshop-management/work-orders');
   const handleViewProduction = () => onNavigate('/workshop-management/production');
   const handleViewMaintenance = () => onNavigate('/workshop-management/maintenance');
   const handleAddInvestment = () => onNavigate('/ledger/investments');
@@ -92,12 +88,12 @@ export default function WorkshopDashboard({
             New Project
           </Button>
           <Button
-            onClick={handleCreateWorkOrder}
+            onClick={handleViewProduction}
             variant="outline"
             className="border-indigo-200 text-indigo-700 hover:bg-indigo-50"
           >
-            <Wrench className="mr-2 h-4 w-4" />
-            Work Order
+            <Factory className="mr-2 h-4 w-4" />
+            Production
           </Button>
         </div>
       </div>
@@ -129,16 +125,16 @@ export default function WorkshopDashboard({
         <Card className="relative overflow-hidden border-l-4 border-l-blue-500 hover:shadow-lg transition-shadow">
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-transparent rounded-bl-full"></div>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Work Orders</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle>
             <div className="p-2 bg-blue-100 rounded-lg">
-              <Wrench className="h-4 w-4 text-blue-600" />
+              <CheckCircle2 className="h-4 w-4 text-blue-600" />
             </div>
           </CardHeader>
           <CardContent className="relative z-10">
-            <div className="text-3xl font-bold text-blue-600 mb-1">{workOrders}</div>
+            <div className="text-3xl font-bold text-blue-600 mb-1">{stats.completedProjects}</div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Clock className="h-3 w-3" />
-              <span>In queue</span>
+              <CheckCircle2 className="h-3 w-3" />
+              <span>Finished projects</span>
             </div>
           </CardContent>
         </Card>
@@ -234,12 +230,12 @@ export default function WorkshopDashboard({
                 
                 <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-lg border border-blue-200">
                   <div className="text-2xl font-bold text-blue-600 mb-1">
-                    {workOrders}
+                    {stats.activeProjects}
                   </div>
-                  <div className="text-xs font-medium text-blue-700">Work Orders</div>
+                  <div className="text-xs font-medium text-blue-700">Active</div>
                   <div className="flex items-center justify-center gap-1 mt-1">
-                    <Clock className="h-3 w-3 text-blue-500" />
-                    <span className="text-xs text-blue-600">Pending</span>
+                    <Activity className="h-3 w-3 text-blue-500" />
+                    <span className="text-xs text-blue-600">In progress</span>
                   </div>
                 </div>
 
@@ -349,17 +345,17 @@ export default function WorkshopDashboard({
             </CardHeader>
             <CardContent className="space-y-2">
               <Button
-                onClick={handleCreateWorkOrder}
+                onClick={handleViewProduction}
                 variant="outline"
                 className="w-full justify-start h-auto py-3 hover:bg-indigo-50 hover:border-indigo-300"
               >
                 <div className="flex items-center gap-3 w-full">
                   <div className="p-2 bg-indigo-100 rounded-lg">
-                    <Wrench className="h-4 w-4 text-indigo-600" />
+                    <Factory className="h-4 w-4 text-indigo-600" />
                   </div>
                   <div className="flex-1 text-left">
-                    <div className="font-medium">Create Work Order</div>
-                    <div className="text-xs text-muted-foreground">New production task</div>
+                    <div className="font-medium">View Production</div>
+                    <div className="text-xs text-muted-foreground">Production plans</div>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>

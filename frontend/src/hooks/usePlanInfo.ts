@@ -40,7 +40,6 @@ export function usePlanInfo() {
         features: [
           'Project Management',
           'Production Planning',
-          'Work Order Management',
         ],
         maxProjects: 100,
         maxUsers: 50,

@@ -4,8 +4,6 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 from ..core.cache import cached_sync
 
-# Import models
-from .workshop_models import WorkOrder, WorkOrderStatus, WorkOrderPriority
 from .hrm_models import Employee, LeaveRequest
 from .inventory_models import Product, Warehouse, PurchaseOrder
 from ..models.invoices import Invoice, Payment
@@ -19,46 +17,6 @@ def get_reports_dashboard_data(db: Session, tenant_id: str, filters: Optional[Di
     
     if filters is None:
         filters = {}
-    
-    # Build date filter conditions
-    date_conditions = []
-    if 'start_date' in filters:
-        date_conditions.append(func.date(WorkOrder.created_at) >= filters['start_date'].date())
-    if 'end_date' in filters:
-        date_conditions.append(func.date(WorkOrder.created_at) <= filters['end_date'].date())
-    
-    # Work Order Metrics
-    work_order_stats = db.query(
-        func.count(WorkOrder.id).label('total'),
-        func.sum(case((WorkOrder.status == WorkOrderStatus.COMPLETED, 1), else_=0)).label('completed'),
-        func.sum(case((WorkOrder.status == WorkOrderStatus.IN_PROGRESS, 1), else_=0)).label('in_progress'),
-        func.sum(case((WorkOrder.status == WorkOrderStatus.ON_HOLD, 1), else_=0)).label('on_hold'),
-        func.sum(case((WorkOrder.status == WorkOrderStatus.DRAFT, 1), else_=0)).label('draft'),
-        func.sum(case((WorkOrder.priority == WorkOrderPriority.URGENT, 1), else_=0)).label('urgent'),
-        func.sum(WorkOrder.actual_hours).label('total_hours'),
-        func.avg(WorkOrder.completion_percentage).label('avg_completion')
-    ).filter(
-        WorkOrder.tenant_id == tenant_id,
-        WorkOrder.is_active == True,
-        *date_conditions
-    ).first()
-    
-    # Calculate completion rate
-    completion_rate = 0.0
-    if work_order_stats.total and work_order_stats.total > 0:
-        completion_rate = (work_order_stats.completed or 0) / work_order_stats.total * 100
-    
-    work_order_metrics = {
-        "total_work_orders": work_order_stats.total or 0,
-        "completed_work_orders": work_order_stats.completed or 0,
-        "in_progress_work_orders": work_order_stats.in_progress or 0,
-        "on_hold_work_orders": work_order_stats.on_hold or 0,
-        "draft_work_orders": work_order_stats.draft or 0,
-        "urgent_work_orders": work_order_stats.urgent or 0,
-        "average_completion_time": 0.0,  
-        "total_hours_logged": work_order_stats.total_hours or 0.0,
-        "completion_rate": completion_rate
-    }
     
     # Project Metrics
     project_date_conditions = []
@@ -83,9 +41,9 @@ def get_reports_dashboard_data(db: Session, tenant_id: str, filters: Optional[Di
         "total_projects": project_stats.total or 0,
         "active_projects": project_stats.active or 0,
         "completed_projects": project_stats.completed or 0,
-        "overdue_projects": 0,  # Placeholder - would need due date logic
-        "total_project_value": 0.0,  # Placeholder - would need budget tracking
-        "average_project_duration": 0.0  # Placeholder - would need duration calculation
+        "overdue_projects": 0,
+        "total_project_value": 0.0,
+        "average_project_duration": 0.0
     }
     
     # HRM Metrics
@@ -100,10 +58,10 @@ def get_reports_dashboard_data(db: Session, tenant_id: str, filters: Optional[Di
     hrm_metrics = {
         "total_employees": employee_stats.total or 0,
         "active_employees": employee_stats.active or 0,
-        "total_job_postings": 0,  # Placeholder - would need job postings query
-        "active_job_postings": 0,  # Placeholder - would need job postings query
-        "pending_applications": 0,  # Placeholder - would need applications query
-        "pending_leave_requests": 0  # Placeholder - would need leave requests query
+        "total_job_postings": 0,
+        "active_job_postings": 0,
+        "pending_applications": 0,
+        "pending_leave_requests": 0
     }
     
     # Inventory Metrics
@@ -121,13 +79,12 @@ def get_reports_dashboard_data(db: Session, tenant_id: str, filters: Optional[Di
         "total_products": inventory_stats.total_products or 0,
         "low_stock_products": inventory_stats.low_stock or 0,
         "out_of_stock_products": inventory_stats.out_of_stock or 0,
-        "total_warehouses": 0,  # Placeholder - would need warehouse count query
+        "total_warehouses": 0,
         "total_stock_value": inventory_stats.total_value or 0.0,
-        "pending_purchase_orders": 0  # Placeholder - would need purchase orders query
+        "pending_purchase_orders": 0
     }
     
     # Financial Metrics
-    # Build date conditions for financial data
     invoice_date_conditions = []
     po_date_conditions = []
     if 'start_date' in filters:
@@ -137,7 +94,6 @@ def get_reports_dashboard_data(db: Session, tenant_id: str, filters: Optional[Di
         invoice_date_conditions.append(func.date(Invoice.createdAt) <= filters['end_date'].date())
         po_date_conditions.append(func.date(PurchaseOrder.createdAt) <= filters['end_date'].date())
     
-    # Get total revenue from invoices
     revenue_stats = db.query(
         func.sum(Invoice.total).label('total_revenue'),
         func.sum(case((Invoice.status == 'paid', Invoice.total), else_=0)).label('paid_amount'),
@@ -148,7 +104,6 @@ def get_reports_dashboard_data(db: Session, tenant_id: str, filters: Optional[Di
         *invoice_date_conditions
     ).first()
     
-    # Get total expenses from purchase orders
     expense_stats = db.query(
         func.sum(PurchaseOrder.totalAmount).label('total_expenses'),
         func.count(PurchaseOrder.id).label('total_orders')
@@ -162,8 +117,8 @@ def get_reports_dashboard_data(db: Session, tenant_id: str, filters: Optional[Di
         "total_expenses": expense_stats.total_expenses or 0.0,
         "net_profit": (revenue_stats.total_revenue or 0) - (expense_stats.total_expenses or 0),
         "outstanding_invoices": revenue_stats.pending_amount or 0.0,
-        "paid_invoices": 0,  # Placeholder - would need paid invoice count
-        "overdue_invoices": 0  # Placeholder - would need overdue invoice count
+        "paid_invoices": 0,
+        "overdue_invoices": 0
     }
     
     # POS Metrics (if applicable)
@@ -190,14 +145,13 @@ def get_reports_dashboard_data(db: Session, tenant_id: str, filters: Optional[Di
         "average_transaction_value": pos_stats.avg_transaction or 0.0,
         "cash_sales": pos_stats.cash_sales or 0.0,
         "card_sales": pos_stats.card_sales or 0.0,
-        "sales_growth": 0.0  # Calculate from actual data
+        "sales_growth": 0.0
     }
     
     # Monthly Trends (last 6 months or date range)
     trend_start_date = filters.get('start_date', datetime.now() - timedelta(days=180))
     trend_end_date = filters.get('end_date', datetime.now())
     
-    # Project trends
     project_trends = db.query(
         func.date_trunc('month', Project.createdAt).label('month'),
         func.count(Project.id).label('count')
@@ -209,19 +163,6 @@ def get_reports_dashboard_data(db: Session, tenant_id: str, filters: Optional[Di
         func.date_trunc('month', Project.createdAt)
     ).order_by('month').all()
     
-    # Work order trends
-    work_order_trends = db.query(
-        func.date_trunc('month', WorkOrder.created_at).label('month'),
-        func.count(WorkOrder.id).label('count')
-    ).filter(
-        WorkOrder.tenant_id == tenant_id,
-        WorkOrder.created_at >= trend_start_date,
-        WorkOrder.created_at <= trend_end_date
-    ).group_by(
-        func.date_trunc('month', WorkOrder.created_at)
-    ).order_by('month').all()
-    
-    # Revenue trends
     revenue_trends = db.query(
         func.date_trunc('month', Invoice.createdAt).label('month'),
         func.sum(Invoice.total).label('amount')
@@ -235,15 +176,7 @@ def get_reports_dashboard_data(db: Session, tenant_id: str, filters: Optional[Di
     
     monthly_trends = []
     
-    # Combine all trends into a single list
     for trend in project_trends:
-        monthly_trends.append({
-            "month": trend.month.isoformat(),
-            "value": float(trend.count),
-            "count": trend.count
-        })
-    
-    for trend in work_order_trends:
         monthly_trends.append({
             "month": trend.month.isoformat(),
             "value": float(trend.count),
@@ -273,63 +206,22 @@ def get_reports_dashboard_data(db: Session, tenant_id: str, filters: Optional[Di
     dept_performance = [
         {
             "department": dept.department,
-            "completed_tasks": 0,  # Placeholder - would need task completion query
-            "total_tasks": 0,  # Placeholder - would need task count query
-            "completion_rate": 0.0,  # Placeholder - would need completion calculation
-            "average_time": 0.0  # Placeholder - would need time tracking
+            "completed_tasks": 0,
+            "total_tasks": 0,
+            "completion_rate": 0.0,
+            "average_time": 0.0
         }
         for dept in department_performance
     ]
     
     return {
-        "work_orders": work_order_metrics,
         "projects": project_metrics,
         "hrm": hrm_metrics,
         "inventory": inventory_metrics,
         "financial": financial_metrics,
         "monthly_trends": monthly_trends,
         "department_performance": dept_performance,
-        "recent_activities": []  # Placeholder - would need activity tracking
-    }
-
-def get_work_order_analytics(db: Session, tenant_id: str, filters: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Get detailed work order analytics"""
-    query = db.query(WorkOrder).filter(WorkOrder.tenant_id == tenant_id)
-    
-    if filters:
-        if 'start_date' in filters:
-            query = query.filter(WorkOrder.created_at >= filters['start_date'])
-        if 'end_date' in filters:
-            query = query.filter(WorkOrder.created_at <= filters['end_date'])
-    
-    work_orders = query.all()
-    
-    # Calculate detailed metrics
-    total_orders = len(work_orders)
-    completed_orders = len([wo for wo in work_orders if wo.status == WorkOrderStatus.COMPLETED])
-    in_progress_orders = len([wo for wo in work_orders if wo.status == WorkOrderStatus.IN_PROGRESS])
-    
-    # Priority breakdown
-    priority_breakdown = {}
-    for wo in work_orders:
-        priority = wo.priority.value if wo.priority else 'normal'
-        priority_breakdown[priority] = priority_breakdown.get(priority, 0) + 1
-    
-    # Status breakdown
-    status_breakdown = {}
-    for wo in work_orders:
-        status = wo.status.value if wo.status else 'draft'
-        status_breakdown[status] = status_breakdown.get(status, 0) + 1
-    
-    return {
-        "total_work_orders": total_orders,
-        "completed_work_orders": completed_orders,
-        "in_progress_work_orders": in_progress_orders,
-        "completion_rate": (completed_orders / total_orders * 100) if total_orders > 0 else 0,
-        "priority_breakdown": priority_breakdown,
-        "status_breakdown": status_breakdown,
-        "average_completion_time": 0.0,  # Calculate from actual data
-        "total_hours_logged": sum(wo.actual_hours or 0 for wo in work_orders)
+        "recent_activities": []
     }
 
 def get_project_analytics(db: Session, tenant_id: str, filters: Dict[str, Any] = None) -> Dict[str, Any]:

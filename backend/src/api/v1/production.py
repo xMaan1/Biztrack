@@ -9,7 +9,7 @@ from ...api.dependencies import get_current_user, get_tenant_context, require_pe
 from ...models.common import ModulePermission
 from ...config.production_crud import (
     get_production_plan_by_id, get_all_production_plans, get_production_plans_by_status,
-    get_production_plans_by_priority, get_production_plans_by_project, get_production_plans_by_work_order,
+    get_production_plans_by_priority, get_production_plans_by_project,
     get_production_plans_by_assigned_user, create_production_plan, update_production_plan,
     delete_production_plan, get_next_production_plan_number, get_production_plan_stats,
     get_production_step_by_id, get_production_steps_by_plan, create_production_step,
@@ -36,7 +36,6 @@ async def get_production_plans(
     priority: Optional[str] = Query(None),
     production_type: Optional[str] = Query(None),
     project_id: Optional[str] = Query(None),
-    work_order_id: Optional[str] = Query(None),
     assigned_to_id: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
     current_user = Depends(get_current_user),
@@ -56,8 +55,6 @@ async def get_production_plans(
             production_plans = get_production_plans_by_project(production_type, db, tenant_id, skip, limit)
         elif project_id:
             production_plans = get_production_plans_by_project(project_id, db, tenant_id, skip, limit)
-        elif work_order_id:
-            production_plans = get_production_plans_by_work_order(work_order_id, db, tenant_id, skip, limit)
         elif assigned_to_id:
             production_plans = get_production_plans_by_assigned_user(assigned_to_id, db, tenant_id, skip, limit)
         else:

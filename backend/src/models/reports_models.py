@@ -3,17 +3,6 @@ from typing import Optional, List, Dict, Any, Literal
 from datetime import datetime
 from uuid import UUID
 
-class WorkOrderMetrics(BaseModel):
-    total_work_orders: int
-    completed_work_orders: int
-    in_progress_work_orders: int
-    on_hold_work_orders: int
-    draft_work_orders: int
-    urgent_work_orders: int
-    average_completion_time: float
-    total_hours_logged: float
-    completion_rate: float
-
 class ProjectMetrics(BaseModel):
     total_projects: int
     active_projects: int
@@ -59,7 +48,6 @@ class DepartmentPerformance(BaseModel):
     average_time: float
 
 class ReportsDashboard(BaseModel):
-    work_orders: WorkOrderMetrics
     projects: ProjectMetrics
     hrm: HRMMetrics
     inventory: InventoryMetrics

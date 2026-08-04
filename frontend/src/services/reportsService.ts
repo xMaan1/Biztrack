@@ -1,17 +1,5 @@
 import { apiClient } from './apiClient';
 
-export interface WorkOrderMetrics {
-  total_work_orders: number;
-  completed_work_orders: number;
-  in_progress_work_orders: number;
-  on_hold_work_orders: number;
-  draft_work_orders: number;
-  urgent_work_orders: number;
-  average_completion_time: number;
-  total_hours_logged: number;
-  completion_rate: number;
-}
-
 export interface ProjectMetrics {
   total_projects: number;
   active_projects: number;
@@ -63,7 +51,6 @@ export interface DepartmentPerformance {
 }
 
 export interface ReportsDashboard {
-  work_orders: WorkOrderMetrics;
   projects: ProjectMetrics;
   hrm: HRMMetrics;
   inventory: InventoryMetrics;
@@ -74,8 +61,6 @@ export interface ReportsDashboard {
 }
 
 export interface ReportsSummary {
-  total_work_orders: number;
-  completed_work_orders: number;
   completion_rate: number;
   total_projects: number;
   active_projects: number;
@@ -84,17 +69,6 @@ export interface ReportsSummary {
   total_revenue: number;
   net_profit: number;
   total_stock_value: number;
-}
-
-export interface WorkOrderAnalytics {
-  total_work_orders: number;
-  status_distribution: Record<string, number>;
-  priority_distribution: Record<string, number>;
-  type_distribution: Record<string, number>;
-  total_hours: number;
-  total_cost: number;
-  average_hours_per_order: number;
-  average_cost_per_order: number;
 }
 
 export interface ProjectAnalytics {
@@ -135,20 +109,6 @@ class ReportsService {
     } catch (error) {
       throw error;
     }
-  }
-
-  async getWorkOrderAnalytics(filters?: {
-    start_date?: string;
-    end_date?: string;
-    user_id?: string;
-  }): Promise<WorkOrderAnalytics> {
-    const params = new URLSearchParams();
-    if (filters?.start_date) params.append('start_date', filters.start_date);
-    if (filters?.end_date) params.append('end_date', filters.end_date);
-    if (filters?.user_id) params.append('user_id', filters.user_id);
-
-    const response = await apiClient.get(`/reports/work-orders/analytics?${params.toString()}`);
-    return response.data.data;
   }
 
   async getProjectAnalytics(filters?: {

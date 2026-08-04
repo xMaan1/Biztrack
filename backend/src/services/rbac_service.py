@@ -65,7 +65,6 @@ GRANULAR_PERMISSIONS = {
         *_crud("projects:time_tracking"),
     ],
     "production": [
-        *_crud("production:work_orders"),
         *_crud("production:job_cards"),
         *_crud("production:vehicles"),
     ],
@@ -186,7 +185,7 @@ DEFAULT_ROLE_PERMISSIONS = {
 
 OWNER_ACCESSIBLE_MODULES = [
     'crm', 'sales', 'pos', 'inventory', 'hrm', 'projects', 'reports', 'events',
-    'work-orders', 'production', 'quality', 'maintenance', 'banking', 'ledger',
+    'production', 'quality', 'maintenance', 'banking', 'ledger',
     'finance', 'settings', 'notifications', 'users', 'dashboard', 'healthcare', 'ngo',
 ]
 

@@ -125,7 +125,6 @@ class PlanFeature(str, Enum):
     EMAIL_MARKETING = "Email Marketing"
     PROJECT_MANAGEMENT = "Project Management"
     PRODUCTION_PLANNING = "Production Planning"
-    WORK_ORDER_MANAGEMENT = "Work Order Management"
     QUALITY_CONTROL = "Quality Control"
     EQUIPMENT_MAINTENANCE = "Equipment Maintenance"
     TIME_TRACKING = "Time Tracking"

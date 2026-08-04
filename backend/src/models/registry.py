@@ -51,7 +51,6 @@ def register_all_models():
         StorageLocation,
         StockMovement,
     )
-    from ..config.workshop_models import WorkOrder, WorkOrderTask
     from ..config.job_card_models import JobCard
     from ..config.vehicle_models import Vehicle
     from ..config.production_models import ProductionPlan, ProductionStep, ProductionSchedule
@@ -152,8 +151,6 @@ def register_all_models():
         Receiving,
         StorageLocation,
         StockMovement,
-        WorkOrder,
-        WorkOrderTask,
         JobCard,
         Vehicle,
         ProductionPlan,

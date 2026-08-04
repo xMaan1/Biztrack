@@ -56,7 +56,6 @@ class QualityCheckBase(BaseModel):
     required_skills: List[str] = Field(default_factory=list, description="Required skills for inspector")
     estimated_duration_minutes: int = Field(0, description="Estimated duration in minutes")
     production_plan_id: Optional[str] = Field(None, description="Associated production plan ID")
-    work_order_id: Optional[str] = Field(None, description="Associated work order ID")
     project_id: Optional[str] = Field(None, description="Associated project ID")
     assigned_to_id: Optional[str] = Field(None, description="Assigned inspector ID")
     scheduled_date: Optional[datetime] = Field(None, description="Scheduled inspection date")
@@ -86,7 +85,6 @@ class QualityDefectBase(BaseModel):
     detected_by_id: str = Field(..., description="User who detected the defect")
     quality_check_id: Optional[str] = Field(None, description="Associated quality check ID")
     production_plan_id: Optional[str] = Field(None, description="Associated production plan ID")
-    work_order_id: Optional[str] = Field(None, description="Associated work order ID")
     status: str = Field("open", description="Defect status")
     priority: QualityPriority = Field(QualityPriority.MEDIUM, description="Defect priority")
     assigned_to_id: Optional[str] = Field(None, description="Assigned user for resolution")
@@ -135,7 +133,6 @@ class QualityCheckUpdate(BaseModel):
     required_skills: Optional[List[str]] = None
     estimated_duration_minutes: Optional[int] = None
     production_plan_id: Optional[str] = None
-    work_order_id: Optional[str] = None
     project_id: Optional[str] = None
     assigned_to_id: Optional[str] = None
     scheduled_date: Optional[datetime] = None
@@ -268,7 +265,6 @@ class QualityCheckFilters(BaseModel):
     inspection_type: Optional[InspectionType] = None
     quality_standard: Optional[QualityStandard] = None
     production_plan_id: Optional[str] = None
-    work_order_id: Optional[str] = None
     project_id: Optional[str] = None
     assigned_to_id: Optional[str] = None
     scheduled_date_from: Optional[datetime] = None

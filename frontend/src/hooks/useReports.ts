@@ -38,22 +38,6 @@ export const useReportsSummary = () => {
   return result;
 };
 
-export const useWorkOrderAnalytics = (filters?: {
-  start_date?: string;
-  end_date?: string;
-  user_id?: string;
-}) => {
-  const cacheKey = `work-order-analytics-${JSON.stringify(filters || {})}`;
-  
-  return useCachedApi(
-    cacheKey,
-    () => reportsService.getWorkOrderAnalytics(filters),
-    {
-      ttl: 10 * 60 * 1000, // 10 minutes
-    }
-  );
-};
-
 export const useProjectAnalytics = (filters?: {
   start_date?: string;
   end_date?: string;

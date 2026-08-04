@@ -546,13 +546,6 @@ export const allMenuItems: MenuItemDef[] = [
     gradient: 'from-orange-500 to-red-500',
     subItems: [
       {
-        text: 'Work Orders',
-        icon: 'build-outline' as const,
-        path: '/workshop-management/work-orders',
-        roles: ['*'],
-        planTypes: ['workshop'],
-      },
-      {
         text: 'Job Cards',
         icon: 'clipboard-outline' as const,
         path: '/workshop-management/job-cards',

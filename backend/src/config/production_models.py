@@ -32,8 +32,7 @@ class ProductionPlan(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=True)
-    work_order_id = Column(UUID(as_uuid=True), ForeignKey("work_orders.id"), nullable=True)
-    
+
     # Basic Information
     plan_number = Column(String, nullable=False, index=True)
     title = Column(String, nullable=False)
@@ -88,7 +87,6 @@ class ProductionPlan(Base):
     # Relationships
     tenant = relationship("Tenant", back_populates="production_plans")
     project = relationship("Project", back_populates="production_plans")
-    work_order = relationship("WorkOrder", back_populates="production_plans")
     assigned_to = relationship("User", foreign_keys=[assigned_to_id], back_populates="assigned_production_plans")
     created_by = relationship("User", foreign_keys=[created_by_id], back_populates="created_production_plans")
     approved_by = relationship("User", foreign_keys=[approved_by_id], back_populates="approved_production_plans")

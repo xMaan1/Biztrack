@@ -18,21 +18,6 @@ export interface DashboardData {
       dueDate: string;
     }>;
   };
-  workOrders: {
-    stats: {
-      total: number;
-      draft: number;
-      in_progress: number;
-      completed: number;
-    };
-    recent: Array<{
-      id: string;
-      title: string;
-      status: string;
-      priority: string;
-      assignedTo: string;
-    }>;
-  };
   users: {
     total: number;
     active: number;

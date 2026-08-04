@@ -44,7 +44,6 @@ class ProductionPlanBase(BaseModel):
     inspection_points: List[Dict[str, Any]] = Field(default_factory=list, description="Inspection points")
     tolerance_specs: List[Dict[str, Any]] = Field(default_factory=list, description="Tolerance specifications")
     project_id: Optional[str] = Field(None, description="Associated project ID")
-    work_order_id: Optional[str] = Field(None, description="Associated work order ID")
     assigned_to_id: Optional[str] = Field(None, description="Assigned user ID")
     tags: List[str] = Field(default_factory=list, description="Tags for categorization")
 
@@ -105,7 +104,6 @@ class ProductionPlanUpdate(BaseModel):
     inspection_points: Optional[List[Dict[str, Any]]] = None
     tolerance_specs: Optional[List[Dict[str, Any]]] = None
     project_id: Optional[str] = None
-    work_order_id: Optional[str] = None
     assigned_to_id: Optional[str] = None
     completion_percentage: Optional[float] = None
     current_step: Optional[str] = None
@@ -209,7 +207,6 @@ class ProductionPlanResponse(ProductionPlanBase):
             'inspection_points': obj.inspection_points or [],
             'tolerance_specs': obj.tolerance_specs or [],
             'project_id': str(obj.project_id) if obj.project_id else None,
-            'work_order_id': str(obj.work_order_id) if obj.work_order_id else None,
             'assigned_to_id': str(obj.assigned_to_id) if obj.assigned_to_id else None,
             'estimated_duration_hours': obj.estimated_duration_hours,
             'actual_duration_hours': obj.actual_duration_hours,
@@ -264,7 +261,6 @@ class ProductionPlanFilters(BaseModel):
     priority: Optional[ProductionPriority] = None
     production_type: Optional[ProductionType] = None
     project_id: Optional[str] = None
-    work_order_id: Optional[str] = None
     assigned_to_id: Optional[str] = None
     planned_start_date_from: Optional[datetime] = None
     planned_start_date_to: Optional[datetime] = None

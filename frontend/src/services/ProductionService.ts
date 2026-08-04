@@ -40,8 +40,6 @@ export class ProductionService {
       queryParams.append('production_type', filters.production_type);
     if (filters.project_id)
       queryParams.append('project_id', filters.project_id);
-    if (filters.work_order_id)
-      queryParams.append('work_order_id', filters.work_order_id);
     if (filters.assigned_to_id)
       queryParams.append('assigned_to_id', filters.assigned_to_id);
     if (filters.planned_start_date_from)
@@ -203,15 +201,6 @@ export class ProductionService {
   ): Promise<ProductionPlan[]> {
     const response = await apiService.get(
       `${this.baseUrl}/?project_id=${projectId}`,
-    );
-    return response;
-  }
-
-  async getProductionPlansByWorkOrder(
-    workOrderId: string,
-  ): Promise<ProductionPlan[]> {
-    const response = await apiService.get(
-      `${this.baseUrl}/?work_order_id=${workOrderId}`,
     );
     return response;
   }

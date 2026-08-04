@@ -385,7 +385,6 @@ type ListAction = {
 };
 
 type CardKind =
-  | 'work-order'
   | 'job-card'
   | 'vehicle'
   | 'production'
@@ -406,15 +405,6 @@ const CARD_KIND: Record<
     iconColor: string;
   }
 > = {
-  'work-order': {
-    label: 'Work order',
-    headerBg: '#fff7ed',
-    headerBorder: '#fed7aa',
-    labelColor: '#c2410c',
-    accent: '#ea580c',
-    icon: 'hammer',
-    iconColor: '#ea580c',
-  },
   'job-card': {
     label: 'Job card',
     headerBg: '#eff6ff',

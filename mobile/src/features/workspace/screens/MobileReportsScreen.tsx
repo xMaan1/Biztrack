@@ -113,7 +113,6 @@ export function MobileReportsScreen() {
     void loadDash();
   }, [loadDash]);
 
-  const wo = (dash?.work_orders ?? {}) as Record<string, unknown>;
   const pr = (dash?.projects ?? {}) as Record<string, unknown>;
   const hrm = (dash?.hrm ?? {}) as Record<string, unknown>;
   const inv = (dash?.inventory ?? {}) as Record<string, unknown>;
@@ -389,14 +388,6 @@ export function MobileReportsScreen() {
               Overview
             </Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-              <WorkshopStatCard
-                label="Work orders"
-                value={num(wo.total_work_orders)}
-                sub={`${num(wo.completed_work_orders)} completed · ${num(wo.completion_rate)}% rate`}
-                icon="construct-outline"
-                accent="#4f46e5"
-                accentBg="#eef2ff"
-              />
               <WorkshopStatCard
                 label="Projects"
                 value={num(pr.total_projects)}

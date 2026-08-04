@@ -769,13 +769,6 @@ export const allMenuItems: MenuItem[] = [
     gradient: 'from-orange-500 to-red-500',
     subItems: [
       {
-        text: 'Work Orders',
-        icon: Wrench,
-        path: '/workshop-management/work-orders',
-        roles: ['*'],
-        planTypes: ['workshop'],
-      },
-      {
         text: 'Job Cards',
         icon: ClipboardList,
         path: '/workshop-management/job-cards',

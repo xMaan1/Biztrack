@@ -18,14 +18,11 @@ def get_all_job_cards(
     skip: int = 0,
     limit: int = 100,
     status: Optional[str] = None,
-    work_order_id: Optional[str] = None,
     assigned_to_id: Optional[str] = None,
 ) -> List[JobCard]:
     query = db.query(JobCard).filter(JobCard.tenant_id == tenant_id, JobCard.is_active == True)
     if status:
         query = query.filter(JobCard.status == status)
-    if work_order_id:
-        query = query.filter(JobCard.work_order_id == work_order_id)
     if assigned_to_id:
         query = query.filter(JobCard.assigned_to_id == assigned_to_id)
     return query.options(joinedload(JobCard.assigned_to)).order_by(JobCard.created_at.desc()).offset(skip).limit(limit).all()

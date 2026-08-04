@@ -15,7 +15,6 @@ import {
   createProductionPlan,
   updateProductionPlan,
   deleteProductionPlan,
-  getWorkOrders,
   getTenantUsers,
 } from '../../../services/workshop/workshopMobileApi';
 import { extractErrorMessage } from '../../../utils/errorUtils';
@@ -51,11 +50,7 @@ export function MobileWorkshopProductionScreen() {
   const [statusF, setStatusF] = useState<string>('all');
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<ProductionPlanResponse | null>(null);
-  const [woPick, setWoPick] = useState(false);
   const [userPick, setUserPick] = useState(false);
-  const [workOrders, setWorkOrders] = useState<
-    { id: string; work_order_number: string; title: string }[]
-  >([]);
   const [users, setUsers] = useState<
     { id: string; name?: string; username?: string }[]
   >([]);
@@ -74,7 +69,6 @@ export function MobileWorkshopProductionScreen() {
     estimated_material_cost: '0',
     estimated_labor_cost: '0',
     quality_standards: '',
-    work_order_id: '',
     assigned_to_id: '',
   });
 
@@ -83,14 +77,7 @@ export function MobileWorkshopProductionScreen() {
   }, [setSidebarActivePath]);
 
   const loadRefs = useCallback(async () => {
-    const [wo, u] = await Promise.all([getWorkOrders(), getTenantUsers()]);
-    setWorkOrders(
-      wo.map((w: { id: string; work_order_number: string; title: string }) => ({
-        id: w.id,
-        work_order_number: w.work_order_number,
-        title: w.title,
-      })),
-    );
+    const u = await getTenantUsers();
     setUsers(u);
   }, []);
 
@@ -145,7 +132,6 @@ export function MobileWorkshopProductionScreen() {
       estimated_material_cost: '0',
       estimated_labor_cost: '0',
       quality_standards: '',
-      work_order_id: '',
       assigned_to_id: '',
     });
     setModalOpen(true);
@@ -171,7 +157,6 @@ export function MobileWorkshopProductionScreen() {
       estimated_material_cost: String(p.estimated_material_cost ?? 0),
       estimated_labor_cost: String(p.estimated_labor_cost ?? 0),
       quality_standards: p.quality_standards || '',
-      work_order_id: p.work_order_id || '',
       assigned_to_id: p.assigned_to_id || '',
     });
     setModalOpen(true);
@@ -204,7 +189,6 @@ export function MobileWorkshopProductionScreen() {
             parseFloat(form.estimated_material_cost) || 0,
           estimated_labor_cost: parseFloat(form.estimated_labor_cost) || 0,
           quality_standards: form.quality_standards || undefined,
-          work_order_id: form.work_order_id || undefined,
           assigned_to_id: form.assigned_to_id || undefined,
         };
         await updateProductionPlan(editing.id, up);
@@ -232,7 +216,6 @@ export function MobileWorkshopProductionScreen() {
           quality_standards: form.quality_standards || undefined,
           inspection_points: [],
           tolerance_specs: [],
-          work_order_id: form.work_order_id || undefined,
           assigned_to_id: form.assigned_to_id || undefined,
           tags: [],
         };
@@ -264,10 +247,6 @@ export function MobileWorkshopProductionScreen() {
     });
   };
 
-  const woItems = workOrders.map((w) => ({
-    id: w.id,
-    label: `${w.work_order_number} · ${w.title}`,
-  }));
   const userItems = users.map((u) => ({
     id: u.id,
     label: u.name || u.username || u.id,
@@ -344,7 +323,6 @@ export function MobileWorkshopProductionScreen() {
         />
       )}
 
-      <PickerModal visible={woPick} title="Work order" items={woItems} onSelect={(x) => setForm((f) => ({ ...f, work_order_id: x.id }))} onClose={() => setWoPick(false)} />
       <PickerModal visible={userPick} title="Assign to" items={[{ id: '', label: 'None' }, ...userItems]} onSelect={(x) => setForm((f) => ({ ...f, assigned_to_id: x.id }))} onClose={() => setUserPick(false)} />
 
       <WorkshopFormSheet
@@ -391,7 +369,6 @@ export function MobileWorkshopProductionScreen() {
         </View>
         <WorkshopFieldLabel>Quality standards</WorkshopFieldLabel>
         <WorkshopTextInput value={form.quality_standards} onChangeText={(v) => setForm((f) => ({ ...f, quality_standards: v }))} multiline />
-        <WorkshopPickerField label="Work order" value={form.work_order_id ? woItems.find((x) => x.id === form.work_order_id)?.label ?? '' : ''} placeholder="Optional" onPress={() => setWoPick(true)} />
         <WorkshopPickerField label="Assign to" value={form.assigned_to_id ? userItems.find((x) => x.id === form.assigned_to_id)?.label ?? '' : ''} placeholder="Optional" onPress={() => setUserPick(true)} />
       </WorkshopFormSheet>
     </WorkshopChrome>

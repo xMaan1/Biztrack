@@ -49,7 +49,6 @@ export default function JobCardDialog({
   const isWorkshop = planInfo?.planType === 'workshop';
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [workOrders, setWorkOrders] = useState<{ id: string; work_order_number: string; title: string }[]>([]);
   const [users, setUsers] = useState<{ id: string; name?: string; username?: string }[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
@@ -61,7 +60,6 @@ export default function JobCardDialog({
     description: '',
     status: 'draft',
     priority: 'medium',
-    work_order_id: '',
     vehicle_make: '',
     vehicle_model: '',
     vehicle_year: '',
@@ -81,9 +79,6 @@ export default function JobCardDialog({
 
   useEffect(() => {
     if (open) {
-      apiService.get('/work-orders?limit=500').then((data: any) => {
-        setWorkOrders(Array.isArray(data) ? data : []);
-      }).catch(() => setWorkOrders([]));
       const tenantId = apiService.getTenantId();
       if (!tenantId) {
         setUsers([]);
@@ -122,7 +117,6 @@ export default function JobCardDialog({
         description: jobCard.description || '',
         status: jobCard.status || 'draft',
         priority: jobCard.priority || 'medium',
-        work_order_id: jobCard.work_order_id || '',
         vehicle_make: vi.make || '',
         vehicle_model: vi.model || '',
         vehicle_year: vi.year || '',
@@ -150,7 +144,6 @@ export default function JobCardDialog({
         description: '',
         status: 'draft',
         priority: 'medium',
-        work_order_id: '',
         vehicle_make: '',
         vehicle_model: '',
         vehicle_year: '',
@@ -187,7 +180,6 @@ export default function JobCardDialog({
         description: formData.description || undefined,
         status: formData.status,
         priority: formData.priority,
-        work_order_id: formData.work_order_id || undefined,
         customer_id: selectedCustomer?.id || undefined,
         vehicle_info: {
           make: formData.vehicle_make || undefined,
@@ -265,18 +257,6 @@ export default function JobCardDialog({
                   <SelectItem value="medium">Medium</SelectItem>
                   <SelectItem value="high">High</SelectItem>
                   <SelectItem value="urgent">Urgent</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Work Order</Label>
-              <Select value={formData.work_order_id || 'none'} onValueChange={(v) => setFormData({ ...formData, work_order_id: v === 'none' ? '' : v })}>
-                <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {workOrders.map((wo) => (
-                    <SelectItem key={wo.id} value={wo.id}>{wo.work_order_number} – {wo.title}</SelectItem>
-                  ))}
                 </SelectContent>
               </Select>
             </div>

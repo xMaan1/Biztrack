@@ -57,7 +57,6 @@ class Tenant(Base):
     applications = relationship("Application", back_populates="tenant")
     customEventTypes = relationship("CustomEventType", back_populates="tenant")
     events = relationship("Event", back_populates="tenant")
-    work_orders = relationship("WorkOrder", back_populates="tenant")
     production_plans = relationship("ProductionPlan", back_populates="tenant")
     production_schedules = relationship("ProductionSchedule", back_populates="tenant")
     chart_of_accounts = relationship("ChartOfAccounts", back_populates="tenant")

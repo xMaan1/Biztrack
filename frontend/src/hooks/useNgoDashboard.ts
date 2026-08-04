@@ -58,7 +58,7 @@ export function useNgoDashboard() {
       teamMembers: dashboardData.users?.total ?? 0,
       annualProgressPercent,
       lowStockItems: dashboardData.inventory?.lowStock ?? 0,
-      pendingDonations: dashboardData.workOrders?.stats?.draft ?? 0,
+      pendingDonations: 0,
       giftDonationsToday: Math.round(totalDonations * 0.026),
     };
   }, [dashboardData, donorTotal]);
