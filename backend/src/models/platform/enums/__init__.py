@@ -82,6 +82,10 @@ class ModulePermission(str, Enum):
     NGO_CREATE = "ngo:create"
     NGO_UPDATE = "ngo:update"
     NGO_DELETE = "ngo:delete"
+    LMS_VIEW = "lms:view"
+    LMS_CREATE = "lms:create"
+    LMS_UPDATE = "lms:update"
+    LMS_DELETE = "lms:delete"
 
 
 class SubscriptionStatus(str, Enum):
@@ -100,6 +104,7 @@ class PlanType(str, Enum):
     COMMERCE = "commerce"
     WORKSHOP = "workshop"
     HEALTHCARE = "healthcare"
+    LMS = "lms"
 
 
 class PlanFeature(str, Enum):

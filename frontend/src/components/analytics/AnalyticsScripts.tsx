@@ -21,12 +21,9 @@ t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
 y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
 })(window,document,"clarity","script","${CLARITY_ID}");`}
       </Script>
-      <Script
-        src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-        strategy="afterInteractive"
-      />
       <Script id="google-analytics" strategy="afterInteractive">
-        {`window.dataLayer=window.dataLayer||[];
+        {`(function(w,d,s,o,g,r,a,m){w['GoogleAnalyticsObject']=g;w[g]=w[g]||function(){(w[g].q=w[g].q||[]).push(arguments)};w[g].l=1*new Date();a=d.createElement(s);r=d.getElementsByTagName(s)[0];a.async=1;a.src=o;r.parentNode.insertBefore(a,r);})(window,document,'script','https://www.googletagmanager.com/gtag/js?id=${GA_ID}','gtag');
+window.dataLayer=window.dataLayer||[];
 function gtag(){dataLayer.push(arguments);}
 gtag('js',new Date());
 gtag('config','${GA_ID}');`}

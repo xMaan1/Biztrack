@@ -6,6 +6,7 @@ import {
   Wrench,
   HeartPulse,
   HeartHandshake,
+  GraduationCap,
   type LucideIcon,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
@@ -16,7 +17,7 @@ const PLAN_MODULES: {
   title: string;
   planType: string;
   description: string;
-  accent: 'indigo' | 'emerald' | 'orange' | 'rose' | 'violet';
+  accent: 'indigo' | 'emerald' | 'orange' | 'rose' | 'violet' | 'teal';
 }[] = [
   {
     icon: Building2,
@@ -58,6 +59,14 @@ const PLAN_MODULES: {
       'Programs, donors, grants, volunteers, beneficiaries, and impact reporting for nonprofits.',
     accent: 'violet',
   },
+  {
+    icon: GraduationCap,
+    title: 'LMS Module',
+    planType: 'lms',
+    description:
+      'Courses, video lectures, assignments, grades, and progress tracking for schools and academies.',
+    accent: 'teal',
+  },
 ];
 
 const accentStyles = {
@@ -86,6 +95,11 @@ const accentStyles = {
     icon: 'bg-violet-600 text-white',
     badge: 'bg-violet-100 text-violet-800',
   },
+  teal: {
+    card: 'border-teal-200/80 bg-gradient-to-br from-teal-50/90 to-white hover:border-teal-300',
+    icon: 'bg-teal-600 text-white',
+    badge: 'bg-teal-100 text-teal-800',
+  },
 };
 
 export function LandingPlanModulesSection() {
@@ -97,7 +111,7 @@ export function LandingPlanModulesSection() {
       <div className="container mx-auto max-w-6xl">
         <div className="text-center mb-12 sm:mb-16">
           <p className="text-sm font-semibold uppercase tracking-wider text-indigo-700 mb-3">
-            Five industry modules
+            Six industry modules
           </p>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 mb-4">
             Pick the workspace that fits your organization

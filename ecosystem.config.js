@@ -44,5 +44,52 @@ module.exports = {
       watch: false,
       max_memory_restart: '1G',
     },
+    {
+      // LMS backend - auto-started with the BizTrack stack.
+      // Uses start.sh (bash) so it works on the Linux production server;
+      // local dev uses start-all.bat instead of PM2.
+      name: 'lms-backend',
+      script: 'start.sh',
+      interpreter: 'bash',
+      cwd: './lms-platform/backend',
+      instances: 1,
+      exec_mode: 'fork',
+      env: {
+        PYTHONUNBUFFERED: '1',
+      },
+      error_file: './logs/lms-backend-error.log',
+      out_file: './logs/lms-backend-out.log',
+      log_file: './logs/lms-backend-combined.log',
+      time: true,
+      autorestart: true,
+      max_restarts: 10,
+      min_uptime: '10s',
+      watch: false,
+      max_memory_restart: '1G',
+      kill_timeout: 10000,
+    },
+    {
+      // LMS frontend - auto-started with the BizTrack stack.
+      // Users reach it at http://localhost:3000/lms (proxied by BizTrack).
+      name: 'lms-frontend',
+      script: 'npm',
+      args: ['run', 'start'],
+      cwd: './lms-platform/frontend',
+      instances: 1,
+      exec_mode: 'fork',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3001,
+      },
+      error_file: './logs/lms-frontend-error.log',
+      out_file: './logs/lms-frontend-out.log',
+      log_file: './logs/lms-frontend-combined.log',
+      time: true,
+      autorestart: true,
+      max_restarts: 10,
+      min_uptime: '10s',
+      watch: false,
+      max_memory_restart: '1G',
+    },
   ],
 };

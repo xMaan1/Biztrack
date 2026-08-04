@@ -376,6 +376,8 @@ export function useSidebar() {
         return 'Healthcare Suite';
       case 'ngo':
         return 'Charity Pro';
+      case 'lms':
+        return 'LMS Suite';
       default:
         return planInfo.planName;
     }

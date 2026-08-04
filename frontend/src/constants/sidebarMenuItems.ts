@@ -828,6 +828,15 @@ export const allMenuItems: MenuItem[] = [
   },
   // Banking - Available for all plan types
   {
+    text: 'LMS',
+    icon: GraduationCap,
+    path: '/lms',
+    roles: ['*'],
+    planTypes: ['*'], // Available for all plans
+    gradient: 'from-teal-500 to-cyan-500',
+  },
+  // Banking - Available for all plan types
+  {
     text: 'Banking',
     icon: Banknote,
     roles: ['*'],
