@@ -17,7 +17,7 @@ import type { MenuItem, SubMenuItem } from '@/src/types/sidebar';
 const TENANT_MOT_BOOK_PATH = '__tenant_mot_book__';
 
 const EMPLOYEE_TASKS_ONLY_ITEM: MenuItem = {
-  text: 'Tasks',
+  text: 'Task Management',
   icon: CheckSquare,
   path: '/tasks',
   roles: ['*'],
