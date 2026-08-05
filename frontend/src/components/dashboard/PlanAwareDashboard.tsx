@@ -10,7 +10,6 @@ interface PlanAwareDashboardProps {
 }
 
 export default function PlanAwareDashboard({
-  planType,
   stats,
   onNavigate,
 }: PlanAwareDashboardProps) {

@@ -242,7 +242,6 @@ function ContactDetailContent() {
   const smsCount = 0;
   const notesCallCount = contactActivities.length;
   const coAddresses = nonEmptyAddressRows(contact.addresses || []);
-  const firstAddress = coAddresses.length > 0 ? coAddresses[0] : null;
 
   function switchTab(tabId: string) {
     setActiveTab(tabId);

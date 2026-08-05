@@ -6,13 +6,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/src/components/ui/dropdown-menu';
-import { ChevronDown, Phone, Mail, MoreHorizontal, Flag } from 'lucide-react';
+import { ChevronDown, Phone, Mail, MoreHorizontal } from 'lucide-react';
 import { Contact, Company } from '@/src/models/crm';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
-import {
-  contactTypeDisplayLabel,
-  contactAddressCountriesDisplay,
-} from './contactUtils';
+import { contactAddressCountriesDisplay } from './contactUtils';
 
 type ContactsListCardProps = {
   contacts: Contact[];
