@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   Dialog,
   DialogContent,
@@ -26,6 +25,7 @@ import HRMService from '../../services/HRMService';
 import {
   PurchaseOrderCreate,
   PurchaseOrder,
+  PurchaseOrderStatus,
 } from '../../models/inventory';
 import { Supplier } from '../../models/hrm';
 import { toast } from 'sonner';
@@ -35,6 +35,12 @@ import { Vehicle } from '../../models/workshop';
 import { usePlanInfo } from '../../hooks/usePlanInfo';
 import { getApiErrorMessage } from '../../lib/apiError';
 import { WorkshopDocumentLinks, WorkshopDocumentLinksValue } from '../workshop/WorkshopDocumentLinks';
+import { SupplierFormDialog } from '../hrm/suppliers/SupplierFormDialog';
+import {
+  emptySupplierForm,
+  validateSupplierForm,
+} from '../hrm/suppliers/supplierUtils';
+import type { SupplierFormData } from '../hrm/suppliers/types';
 
 interface PurchaseOrderModalProps {
   isOpen: boolean;
@@ -62,8 +68,12 @@ export default function PurchaseOrderModal({
   const { planInfo } = usePlanInfo();
   const isHealthcare = planInfo?.planType === 'healthcare';
   const isWorkshop = planInfo?.planType === 'workshop';
-  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAddSupplierOpen, setIsAddSupplierOpen] = useState(false);
+  const [supplierFormData, setSupplierFormData] = useState<SupplierFormData>(
+    emptySupplierForm(),
+  );
+  const [isSavingSupplier, setIsSavingSupplier] = useState(false);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [warehouses, setWarehouses] = useState<any[]>([]);
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -77,6 +87,7 @@ export default function PurchaseOrderModal({
     warehouseId: '',
     orderDate: new Date().toISOString().split('T')[0],
     expectedDeliveryDate: '',
+    status: PurchaseOrderStatus.DRAFT,
     vehicleReg: '',
     purchaseForType: undefined,
     vehicleId: undefined,
@@ -87,6 +98,11 @@ export default function PurchaseOrderModal({
     notes: '',
     ...initialData,
   });
+
+  const orderStatus = newOrder.status ?? PurchaseOrderStatus.DRAFT;
+  const requiresDelivery =
+    orderStatus !== PurchaseOrderStatus.ARRIVED &&
+    orderStatus !== PurchaseOrderStatus.CANCELLED;
 
   useEffect(() => {
     if (isOpen) {
@@ -128,7 +144,7 @@ export default function PurchaseOrderModal({
     const requiredFields = [
       !newOrder.supplierId,
       !newOrder.warehouseId,
-      !newOrder.expectedDeliveryDate,
+      ...(requiresDelivery ? [!newOrder.expectedDeliveryDate] : []),
     ];
 
     if (showOrderDate) {
@@ -165,6 +181,9 @@ export default function PurchaseOrderModal({
             vehicleId: newOrder.purchaseForType === 'vehicle' ? newOrder.vehicleId : undefined,
             purchaseForType: newOrder.purchaseForType,
           };
+      payload.expectedDeliveryDate = requiresDelivery
+        ? newOrder.expectedDeliveryDate
+        : undefined;
       const created = await inventoryService.createPurchaseOrder(payload);
       
       if (useToastNotifications) {
@@ -197,6 +216,7 @@ export default function PurchaseOrderModal({
       warehouseId: warehouses.length > 0 ? warehouses[0].id : '',
       orderDate: new Date().toISOString().split('T')[0],
       expectedDeliveryDate: '',
+      status: PurchaseOrderStatus.DRAFT,
       vehicleReg: initialData?.vehicleReg || '',
       purchaseForType: initialData?.purchaseForType,
       vehicleId: initialData?.vehicleId,
@@ -215,8 +235,48 @@ export default function PurchaseOrderModal({
     resetForm();
   };
 
+  const openAddSupplier = () => {
+    setSupplierFormData(emptySupplierForm());
+    setIsAddSupplierOpen(true);
+  };
+
+  const handleSupplierFormChange = (
+    field: keyof SupplierFormData,
+    value: string | number | boolean | undefined,
+  ) => {
+    setSupplierFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleCreateSupplier = async () => {
+    const validationError = validateSupplierForm(supplierFormData);
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
+    setIsSavingSupplier(true);
+    try {
+      const response = await HRMService.createSupplier(supplierFormData);
+      toast.success('Supplier created successfully');
+      setIsAddSupplierOpen(false);
+      setSupplierFormData(emptySupplierForm());
+      const suppliersResponse = await HRMService.getSuppliers();
+      setSuppliers(suppliersResponse.suppliers);
+      setNewOrder((prev) => ({
+        ...prev,
+        supplierId: response.supplier.id,
+        supplierName: response.supplier.name,
+      }));
+    } catch (error) {
+      const message = getApiErrorMessage(error, 'Failed to create supplier');
+      toast.error(message);
+    } finally {
+      setIsSavingSupplier(false);
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <>
+      <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
@@ -272,19 +332,52 @@ export default function PurchaseOrderModal({
                 />
               </div>
             )}
+            {requiresDelivery && (
+              <div className="space-y-2">
+                <Label htmlFor="expectedDeliveryDate">Expected Delivery *</Label>
+                <Input
+                  id="expectedDeliveryDate"
+                  type="date"
+                  value={newOrder.expectedDeliveryDate}
+                  onChange={(e) =>
+                    setNewOrder((prev) => ({
+                      ...prev,
+                      expectedDeliveryDate: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+            )}
             <div className="space-y-2">
-              <Label htmlFor="expectedDeliveryDate">Expected Delivery *</Label>
-              <Input
-                id="expectedDeliveryDate"
-                type="date"
-                value={newOrder.expectedDeliveryDate}
-                onChange={(e) =>
-                  setNewOrder((prev) => ({
-                    ...prev,
-                    expectedDeliveryDate: e.target.value,
-                  }))
+              <Label htmlFor="status">Status</Label>
+              <Select
+                value={newOrder.status ?? PurchaseOrderStatus.DRAFT}
+                onValueChange={(value) =>
+                  setNewOrder((prev) => {
+                    const nextStatus = value as PurchaseOrderStatus;
+                    const nextRequiresDelivery =
+                      nextStatus !== PurchaseOrderStatus.ARRIVED &&
+                      nextStatus !== PurchaseOrderStatus.CANCELLED;
+                    return {
+                      ...prev,
+                      status: nextStatus,
+                      expectedDeliveryDate: nextRequiresDelivery
+                        ? prev.expectedDeliveryDate
+                        : '',
+                    };
+                  })
                 }
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={PurchaseOrderStatus.DRAFT}>Draft</SelectItem>
+                  <SelectItem value={PurchaseOrderStatus.ORDERED}>Ordered</SelectItem>
+                  <SelectItem value={PurchaseOrderStatus.ARRIVED}>Arrived</SelectItem>
+                  <SelectItem value={PurchaseOrderStatus.CANCELLED}>Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -326,10 +419,7 @@ export default function PurchaseOrderModal({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    onClose();
-                    router.push('/hrm/suppliers?openAdd=true');
-                  }}
+                  onClick={openAddSupplier}
                   className="whitespace-nowrap"
                 >
                   <Plus className="h-4 w-4 mr-2" />
@@ -520,5 +610,17 @@ export default function PurchaseOrderModal({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+      <SupplierFormDialog
+        open={isAddSupplierOpen}
+        editingSupplier={null}
+        formData={supplierFormData}
+        submitting={isSavingSupplier}
+        onOpenChange={setIsAddSupplierOpen}
+        onFormChange={handleSupplierFormChange}
+        onSubmit={handleCreateSupplier}
+        onCancel={() => setIsAddSupplierOpen(false)}
+      />
+    </>
   );
 }

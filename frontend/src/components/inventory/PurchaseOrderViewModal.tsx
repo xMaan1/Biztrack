@@ -103,7 +103,11 @@ export default function PurchaseOrderViewModal({
                 <Label className="text-sm font-medium text-gray-600">Expected Delivery</Label>
                 <div className="flex items-center gap-2 mt-1">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-lg">{formatDate(purchaseOrder.expectedDeliveryDate)}</span>
+                  <span className="text-lg">
+                    {purchaseOrder.expectedDeliveryDate
+                      ? formatDate(purchaseOrder.expectedDeliveryDate)
+                      : '—'}
+                  </span>
                 </div>
               </div>
             </div>

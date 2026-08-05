@@ -229,6 +229,7 @@ export enum PurchaseOrderStatus {
   SUBMITTED = 'submitted',
   APPROVED = 'approved',
   ORDERED = 'ordered',
+  ARRIVED = 'arrived',
   PARTIALLY_RECEIVED = 'partially_received',
   RECEIVED = 'received',
   CANCELLED = 'cancelled',
@@ -244,7 +245,7 @@ export interface PurchaseOrder {
   supplierName: string;
   warehouseId: string;
   orderDate: string;
-  expectedDeliveryDate: string;
+  expectedDeliveryDate?: string;
   status: PurchaseOrderStatus | string;
   subtotal: number;
   vatAmount: number;
@@ -262,7 +263,8 @@ export interface PurchaseOrderCreate {
   supplierName: string;
   warehouseId: string;
   orderDate: string;
-  expectedDeliveryDate: string;
+  expectedDeliveryDate?: string;
+  status?: PurchaseOrderStatus;
   notes?: string;
   vehicleReg?: string;
 }

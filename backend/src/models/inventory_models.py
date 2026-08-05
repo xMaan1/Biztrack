@@ -60,6 +60,7 @@ class PurchaseOrderStatus(str, Enum):
     SUBMITTED = "submitted"
     APPROVED = "approved"
     ORDERED = "ordered"
+    ARRIVED = "arrived"
     PARTIALLY_RECEIVED = "partially_received"
     RECEIVED = "received"
     CANCELLED = "cancelled"
@@ -322,7 +323,7 @@ class PurchaseOrderBase(BaseModel):
     supplierName: str
     warehouseId: str
     orderDate: str
-    expectedDeliveryDate: str
+    expectedDeliveryDate: Optional[str] = None
     status: PurchaseOrderStatus
     subtotal: float = 0.0
     vatAmount: float = 0.0
@@ -347,7 +348,8 @@ class PurchaseOrderCreate(BaseModel):
     supplierName: str
     warehouseId: str
     orderDate: str
-    expectedDeliveryDate: str
+    expectedDeliveryDate: Optional[str] = None
+    status: PurchaseOrderStatus = PurchaseOrderStatus.DRAFT
     notes: Optional[str] = None
     department: Optional[str] = None
     deliveryLocation: Optional[str] = None

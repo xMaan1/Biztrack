@@ -16,6 +16,7 @@ from ...models.inventory_models import (
     StockMovement, StockMovementCreate, StockMovementUpdate, StockMovementResponse, StockMovementsResponse,
     StockMovementWithProduct, StockMovementsWithProductResponse,
     PurchaseOrderCreate, PurchaseOrderUpdate, PurchaseOrderResponse, PurchaseOrdersResponse,
+    PurchaseOrderStatus,
     Receiving, ReceivingCreate, ReceivingUpdate, ReceivingResponse, ReceivingsResponse,
     InventoryDashboardStats, StockAlert
 )
@@ -697,11 +698,15 @@ def create_purchase_order_endpoint(
     if order_data.get("expectedDeliveryDate"):
         order_data["expectedDeliveryDate"] = datetime.strptime(order_data["expectedDeliveryDate"], "%Y-%m-%d").date()
     
+    po_status = order_data.get("status") or PurchaseOrderStatus.DRAFT
+    if isinstance(po_status, PurchaseOrderStatus):
+        po_status = po_status.value
+
     order_data.update({
         "id": str(uuid.uuid4()),
         "tenant_id": str(tenant_context["tenant_id"]),
         "createdBy": str(current_user.id),
-        "status": "draft",
+        "status": po_status,
         "subtotal": 0.0,
         "vatAmount": 0.0,
         "totalAmount": 0.0,

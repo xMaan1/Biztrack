@@ -12,6 +12,7 @@ import {
   getWarehouses,
 } from '../../../services/inventory/inventoryMobileApi';
 import { fetchSuppliers } from '../../../services/inventory/hrmSuppliersApi';
+import { PurchaseOrderStatus } from '../../../models/inventory';
 import type {
   Warehouse,
   PurchaseOrder,
@@ -105,7 +106,11 @@ export function MobilePurchaseOrdersScreen() {
   const [warehouseId, setWarehouseId] = useState('');
   const [orderDate, setOrderDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [expectedDeliveryDate, setExpectedDeliveryDate] = useState(defaultExpectedDate);
+  const [status, setStatus] = useState<PurchaseOrderStatus>(PurchaseOrderStatus.DRAFT);
   const [notes, setNotes] = useState('');
+
+  const requiresDelivery =
+    status !== PurchaseOrderStatus.ARRIVED && status !== PurchaseOrderStatus.CANCELLED;
 
   const load = useCallback(async () => {
     const res = await getPurchaseOrders();
@@ -154,8 +159,10 @@ export function MobilePurchaseOrdersScreen() {
 
   const submit = async () => {
     const sup = suppliers.find((s) => s.id === supplierId);
-    if (!sup || !warehouseId || !expectedDeliveryDate.trim()) {
-      appAlert('Purchase orders', 'Supplier, warehouse, and expected delivery are required.');
+    if (!sup || !warehouseId || (requiresDelivery && !expectedDeliveryDate.trim())) {
+      appAlert('Purchase orders', requiresDelivery
+        ? 'Supplier, warehouse, and expected delivery are required.'
+        : 'Supplier and warehouse are required.');
       return;
     }
     const payload: PurchaseOrderCreate = {
@@ -163,7 +170,8 @@ export function MobilePurchaseOrdersScreen() {
       supplierName: sup.name,
       warehouseId,
       orderDate: orderDate.trim(),
-      expectedDeliveryDate: expectedDeliveryDate.trim(),
+      expectedDeliveryDate: requiresDelivery ? expectedDeliveryDate.trim() : undefined,
+      status,
       notes: notes.trim() || undefined,
     };
     try {
@@ -173,6 +181,7 @@ export function MobilePurchaseOrdersScreen() {
       setNotes('');
       setOrderDate(new Date().toISOString().slice(0, 10));
       setExpectedDeliveryDate(defaultExpectedDate());
+      setStatus(PurchaseOrderStatus.DRAFT);
       await run(false);
     } catch (e) {
       appError('Purchase orders', extractErrorMessage(e, 'Failed to save'));
@@ -280,13 +289,31 @@ export function MobilePurchaseOrdersScreen() {
           value={warehouseId}
           onChange={setWarehouseId}
         />
+        <OptionChips
+          label="Status"
+          options={[
+            { id: PurchaseOrderStatus.DRAFT, label: 'Draft' },
+            { id: PurchaseOrderStatus.ORDERED, label: 'Ordered' },
+            { id: PurchaseOrderStatus.ARRIVED, label: 'Arrived' },
+            { id: PurchaseOrderStatus.CANCELLED, label: 'Cancelled' },
+          ]}
+          value={status}
+          onChange={(id) => {
+            setStatus(id as PurchaseOrderStatus);
+            const nextRequiresDelivery =
+              id !== PurchaseOrderStatus.ARRIVED && id !== PurchaseOrderStatus.CANCELLED;
+            if (!nextRequiresDelivery) setExpectedDeliveryDate('');
+          }}
+        />
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <View style={{ flex: 1 }}>
             <WorkshopDatePickerField label="Order date" value={orderDate} onChange={setOrderDate} />
           </View>
-          <View style={{ flex: 1 }}>
-            <WorkshopDatePickerField label="Expected delivery" value={expectedDeliveryDate} onChange={setExpectedDeliveryDate} />
-          </View>
+          {requiresDelivery && (
+            <View style={{ flex: 1 }}>
+              <WorkshopDatePickerField label="Expected delivery" value={expectedDeliveryDate} onChange={setExpectedDeliveryDate} />
+            </View>
+          )}
         </View>
         <WorkshopFieldLabel>Notes</WorkshopFieldLabel>
         <WorkshopTextInput value={notes} onChangeText={setNotes} multiline style={{ minHeight: 64 }} />

@@ -43,6 +43,7 @@ import HRMService from '../../../services/HRMService';
 import {
   PurchaseOrder,
   PurchaseOrderUpdate,
+  PurchaseOrderStatus,
 } from '../../../models/inventory';
 import { DashboardLayout } from '../../../components/layout';
 import { formatDate } from '../../../lib/utils';
@@ -65,6 +66,12 @@ import { usePlanInfo } from '../../../hooks/usePlanInfo';
 import { VehicleSearch } from '../../../components/ui/vehicle-search';
 import { Vehicle } from '../../../models/workshop';
 import { WorkshopDocumentLinks, WorkshopDocumentLinksValue } from '../../../components/workshop/WorkshopDocumentLinks';
+import { SupplierFormDialog } from '../../../components/hrm/suppliers/SupplierFormDialog';
+import {
+  emptySupplierForm,
+  validateSupplierForm,
+} from '../../../components/hrm/suppliers/supplierUtils';
+import type { SupplierFormData } from '../../../components/hrm/suppliers/types';
 
 export default function PurchaseOrdersPage() {
   return (
@@ -103,7 +110,7 @@ function PurchaseOrdersContent() {
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Use cached API calls with longer TTL for static data
-  const { data: suppliersData, loading: suppliersLoading } = useCachedApi(
+  const { data: suppliersData, loading: suppliersLoading, refetch: refetchSuppliers } = useCachedApi(
     'suppliers',
     () => HRMService.getSuppliers(),
     { ttl: 15 * 60 * 1000 } // 15 minutes cache for suppliers
@@ -144,6 +151,16 @@ function PurchaseOrdersContent() {
   });
   const [editDocumentLinks, setEditDocumentLinks] = useState<WorkshopDocumentLinksValue>({});
   const [editSelectedVehicle, setEditSelectedVehicle] = useState<Vehicle | null>(null);
+  const [isEditAddSupplierOpen, setIsEditAddSupplierOpen] = useState(false);
+  const [editSupplierFormData, setEditSupplierFormData] = useState<SupplierFormData>(
+    emptySupplierForm(),
+  );
+  const [isSavingEditSupplier, setIsSavingEditSupplier] = useState(false);
+
+  const editOrderStatus = editOrder.status ?? PurchaseOrderStatus.DRAFT;
+  const editRequiresDelivery =
+    editOrderStatus !== PurchaseOrderStatus.ARRIVED &&
+    editOrderStatus !== PurchaseOrderStatus.CANCELLED;
 
 
 
@@ -228,6 +245,7 @@ function PurchaseOrdersContent() {
       warehouseId: order.warehouseId,
       orderDate: order.orderDate ? order.orderDate.split('T')[0] : '',
       expectedDeliveryDate: order.expectedDeliveryDate ? order.expectedDeliveryDate.split('T')[0] : '',
+      status: order.status,
       notes: order.notes || '',
       vehicleReg: order.vehicleReg || '',
       purchaseForType: order.purchaseForType,
@@ -244,14 +262,56 @@ function PurchaseOrdersContent() {
     setIsEditModalOpen(true);
   };
 
+  const openEditAddSupplier = () => {
+    setEditSupplierFormData(emptySupplierForm());
+    setIsEditAddSupplierOpen(true);
+  };
+
+  const handleEditSupplierFormChange = (
+    field: keyof SupplierFormData,
+    value: string | number | boolean | undefined,
+  ) => {
+    setEditSupplierFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleCreateEditSupplier = async () => {
+    const validationError = validateSupplierForm(editSupplierFormData);
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
+    setIsSavingEditSupplier(true);
+    try {
+      const response = await HRMService.createSupplier(editSupplierFormData);
+      toast.success('Supplier created successfully');
+      setIsEditAddSupplierOpen(false);
+      setEditSupplierFormData(emptySupplierForm());
+      refetchSuppliers();
+      setEditOrder((prev) => ({
+        ...prev,
+        supplierId: response.supplier.id,
+        supplierName: response.supplier.name,
+      }));
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'Failed to create supplier'));
+    } finally {
+      setIsSavingEditSupplier(false);
+    }
+  };
+
   const handleUpdateOrder = async () => {
     if (!selectedOrder) return;
+
+    const editStatus = editOrder.status ?? PurchaseOrderStatus.DRAFT;
+    const editRequiresDelivery =
+      editStatus !== PurchaseOrderStatus.ARRIVED &&
+      editStatus !== PurchaseOrderStatus.CANCELLED;
 
     if (
       !editOrder.supplierId ||
       !editOrder.warehouseId ||
       !editOrder.orderDate ||
-      !editOrder.expectedDeliveryDate
+      (editRequiresDelivery && !editOrder.expectedDeliveryDate)
     ) {
       toast.error('Please fill in all required fields');
       return;
@@ -260,6 +320,9 @@ function PurchaseOrdersContent() {
     try {
       setIsSubmitting(true);
       const updatePayload: PurchaseOrderUpdate = { ...editOrder };
+      if (!editRequiresDelivery) {
+        delete updatePayload.expectedDeliveryDate;
+      }
       if (!isHealthcare) {
         delete updatePayload.department;
         delete updatePayload.deliveryLocation;
@@ -296,6 +359,7 @@ function PurchaseOrdersContent() {
         submitted: { variant: 'default', label: 'Submitted' },
         approved: { variant: 'default', label: 'Approved' },
         ordered: { variant: 'default', label: 'Ordered' },
+        arrived: { variant: 'default', label: 'Arrived' },
         received: { variant: 'default', label: 'Received' },
         cancelled: { variant: 'destructive', label: 'Cancelled' },
       };
@@ -383,6 +447,7 @@ function PurchaseOrdersContent() {
                   <SelectItem value="submitted">Submitted</SelectItem>
                   <SelectItem value="approved">Approved</SelectItem>
                   <SelectItem value="ordered">Ordered</SelectItem>
+                  <SelectItem value="arrived">Arrived</SelectItem>
                   <SelectItem value="received">Received</SelectItem>
                   <SelectItem value="cancelled">Cancelled</SelectItem>
                 </SelectContent>
@@ -437,7 +502,11 @@ function PurchaseOrdersContent() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <span>{formatDate(order.expectedDeliveryDate)}</span>
+                          <span>
+                            {order.expectedDeliveryDate
+                              ? formatDate(order.expectedDeliveryDate)
+                              : '—'}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -687,21 +756,54 @@ function PurchaseOrdersContent() {
                     }
                   />
                 </div>
+                {editRequiresDelivery && (
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-expectedDeliveryDate">
+                      Expected Delivery *
+                    </Label>
+                    <Input
+                      id="edit-expectedDeliveryDate"
+                      type="date"
+                      value={editOrder.expectedDeliveryDate}
+                      onChange={(e) =>
+                        setEditOrder((prev) => ({
+                          ...prev,
+                          expectedDeliveryDate: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                )}
                 <div className="space-y-2">
-                  <Label htmlFor="edit-expectedDeliveryDate">
-                    Expected Delivery *
-                  </Label>
-                  <Input
-                    id="edit-expectedDeliveryDate"
-                    type="date"
-                    value={editOrder.expectedDeliveryDate}
-                    onChange={(e) =>
-                      setEditOrder((prev) => ({
-                        ...prev,
-                        expectedDeliveryDate: e.target.value,
-                      }))
+                  <Label htmlFor="edit-status">Status</Label>
+                  <Select
+                    value={editOrder.status ?? PurchaseOrderStatus.DRAFT}
+                    onValueChange={(value) =>
+                      setEditOrder((prev) => {
+                        const nextStatus = value as PurchaseOrderStatus;
+                        const nextRequiresDelivery =
+                          nextStatus !== PurchaseOrderStatus.ARRIVED &&
+                          nextStatus !== PurchaseOrderStatus.CANCELLED;
+                        return {
+                          ...prev,
+                          status: nextStatus,
+                          expectedDeliveryDate: nextRequiresDelivery
+                            ? prev.expectedDeliveryDate
+                            : '',
+                        };
+                      })
                     }
-                  />
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={PurchaseOrderStatus.DRAFT}>Draft</SelectItem>
+                      <SelectItem value={PurchaseOrderStatus.ORDERED}>Ordered</SelectItem>
+                      <SelectItem value={PurchaseOrderStatus.ARRIVED}>Arrived</SelectItem>
+                      <SelectItem value={PurchaseOrderStatus.CANCELLED}>Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -770,10 +872,7 @@ function PurchaseOrdersContent() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => {
-                      setIsEditModalOpen(false);
-                      window.open('/hrm/suppliers?openAdd=true', '_blank');
-                    }}
+                    onClick={openEditAddSupplier}
                     className="whitespace-nowrap"
                   >
                     <Plus className="h-4 w-4 mr-2" />
@@ -942,6 +1041,17 @@ function PurchaseOrdersContent() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <SupplierFormDialog
+          open={isEditAddSupplierOpen}
+          editingSupplier={null}
+          formData={editSupplierFormData}
+          submitting={isSavingEditSupplier}
+          onOpenChange={setIsEditAddSupplierOpen}
+          onFormChange={handleEditSupplierFormChange}
+          onSubmit={handleCreateEditSupplier}
+          onCancel={() => setIsEditAddSupplierOpen(false)}
+        />
       </div>
     </DashboardLayout>
   );
