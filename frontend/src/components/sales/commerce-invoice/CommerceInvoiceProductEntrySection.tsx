@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from '@/src/components/ui/select';
 import type { Product } from '@/src/models/pos';
-import type { InvoiceCreate, InvoiceItemCreate } from '@/src/models/sales';
+import type { InvoiceItemCreate } from '@/src/models/sales';
 import { resolveItemUnit } from '@/src/utils/sales/commerceInvoiceUtils';
 import { UnitOfMeasureSelect } from '../UnitOfMeasureSelect';
 import { COMMERCE_INPUT_CLS } from './constants';
@@ -31,7 +31,6 @@ type CommerceInvoiceProductEntrySectionProps = {
   onNewItemChange: (item: InvoiceItemCreate) => void;
   onAddItem: () => void;
   onAddExtraItem: () => void | Promise<void>;
-  onInputChange: (field: keyof InvoiceCreate, value: string | number) => void;
   onSetPaidAmount: (value: number) => void;
   clearFieldError: (key: string) => void;
 };
@@ -49,7 +48,6 @@ export function CommerceInvoiceProductEntrySection({
   onNewItemChange,
   onAddItem,
   onAddExtraItem,
-  onInputChange,
   onSetPaidAmount,
   clearFieldError,
 }: CommerceInvoiceProductEntrySectionProps) {
@@ -210,7 +208,6 @@ export function CommerceInvoiceProductEntrySection({
             size="sm"
             className="h-9 text-xs font-semibold"
             onClick={() => {
-              onInputChange('paymentTerms', 'Cash');
               onSetPaidAmount(totals.total);
             }}
           >

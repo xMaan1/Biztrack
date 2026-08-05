@@ -67,15 +67,10 @@ class InvoiceBase(BaseModel):
     dueDate: datetime
     orderNumber: Optional[str] = None
     orderTime: Optional[datetime] = None
-    paymentTerms: str = "Net 30"
-    currency: str = "USD"
     subtotal: float = 0.0
-    taxRate: float = 0.0
     taxAmount: float = 0.0
-    discount: float = 0.0
     labourCost: float = 0.0
     total: float = 0.0
-    notes: Optional[str] = None
     terms: Optional[str] = None
     status: InvoiceStatus = InvoiceStatus.DRAFT
     items: List[InvoiceItem] = []
@@ -94,12 +89,7 @@ class InvoiceCreate(BaseModel):
     dueDate: str
     orderNumber: Optional[str] = None
     orderTime: Optional[str] = None
-    paymentTerms: str = "Net 30"
-    currency: str = "USD"
-    taxRate: float = 0.0
-    discount: float = 0.0
     labourCost: float = 0.0
-    notes: Optional[str] = None
     terms: Optional[str] = None
     items: List[InvoiceItemCreate] = []
     opportunityId: Optional[str] = None
@@ -119,12 +109,7 @@ class InvoiceUpdate(BaseModel):
     dueDate: Optional[str] = None
     orderNumber: Optional[str] = None
     orderTime: Optional[str] = None
-    paymentTerms: Optional[str] = None
-    currency: Optional[str] = None
-    taxRate: Optional[float] = None
-    discount: Optional[float] = None
     labourCost: Optional[float] = None
-    notes: Optional[str] = None
     terms: Optional[str] = None
     status: Optional[InvoiceStatus] = None
     items: Optional[List[InvoiceItemCreate]] = None

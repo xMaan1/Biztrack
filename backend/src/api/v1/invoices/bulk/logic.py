@@ -51,7 +51,7 @@ def bulk_send_invoices_endpoint(
                     "customer_name": invoice.customerName,
                     "invoice_number": invoice.invoiceNumber,
                     "total": invoice.total,
-                    "currency": invoice.currency,
+                    "currency": "USD",
                     "due_date": invoice.dueDate.strftime("%Y-%m-%d") if invoice.dueDate else None,
                     "pdf_path": None,
                 })

@@ -4,8 +4,7 @@ import type { InvoiceCreate, InvoiceItemCreate } from '@/src/models/sales';
 
 export interface CommerceInvoiceTotals {
   subtotal: number;
-  discount: number;
-  taxAmount: number;
+  labourCost: number;
   total: number;
 }
 

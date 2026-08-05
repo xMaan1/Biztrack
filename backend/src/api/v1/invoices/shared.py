@@ -122,8 +122,6 @@ def generate_order_number(tenant_id: str, db: Session) -> str:
 
 def calculate_invoice_totals(
     items: List,
-    tax_rate: float,
-    discount: float,
     labour_cost: float = 0.0,
 ) -> dict:
     subtotal = 0
@@ -133,15 +131,12 @@ def calculate_invoice_totals(
         else:
             subtotal += item.quantity * item.unitPrice
 
-    discount_amount = subtotal * (discount / 100) if discount > 0 else 0
-    taxable_amount = subtotal + (labour_cost or 0) - discount_amount
-    tax_amount = taxable_amount * (tax_rate / 100) if tax_rate > 0 else 0
-    total = taxable_amount + tax_amount
+    total = subtotal + (labour_cost or 0)
 
     return {
         "subtotal": round(subtotal, 2),
-        "discountAmount": round(discount_amount, 2),
-        "taxAmount": round(tax_amount, 2),
+        "discountAmount": 0.0,
+        "taxAmount": 0.0,
         "total": round(total, 2),
     }
 
@@ -194,15 +189,10 @@ def transform_invoice_to_pydantic(db_invoice: Invoice):
         dueDate=db_invoice.dueDate,
         orderNumber=db_invoice.orderNumber,
         orderTime=db_invoice.orderTime,
-        paymentTerms=db_invoice.paymentTerms,
-        currency=db_invoice.currency,
         subtotal=db_invoice.subtotal,
-        taxRate=db_invoice.taxRate,
         taxAmount=db_invoice.taxAmount,
-        discount=db_invoice.discount,
         labourCost=getattr(db_invoice, "labourCost", 0) or 0,
         total=db_invoice.total,
-        notes=db_invoice.notes,
         terms=db_invoice.terms,
         status=db_invoice.status,
         items=invoice_items,

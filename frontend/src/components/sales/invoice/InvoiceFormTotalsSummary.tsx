@@ -2,20 +2,15 @@
 
 import { Input } from '@/src/components/ui/input';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
-import type { InvoiceCreate } from '@/src/models/sales';
 import type { InvoiceFormTotals } from '@/src/types/sales/invoiceForm';
 import { COMMERCE_INPUT_CLS } from '../commerce-invoice/constants';
 import { InlineField } from '../commerce-invoice/InlineField';
 
 type InvoiceFormTotalsSummaryProps = {
-  formData: InvoiceCreate;
   totals: InvoiceFormTotals;
 };
 
-export function InvoiceFormTotalsSummary({
-  formData,
-  totals,
-}: InvoiceFormTotalsSummaryProps) {
+export function InvoiceFormTotalsSummary({ totals }: InvoiceFormTotalsSummaryProps) {
   const { formatCurrency } = useCurrency();
 
   return (
@@ -36,24 +31,9 @@ export function InvoiceFormTotalsSummary({
               className={`${COMMERCE_INPUT_CLS} bg-background`}
             />
           </InlineField>
-          <InlineField label="Discount %:">
-            <Input
-              readOnly
-              value={`${formData.discount}% (−${formatCurrency(totals.discount)})`}
-              className={`${COMMERCE_INPUT_CLS} bg-background`}
-            />
-          </InlineField>
         </div>
 
-        <div className="space-y-1.5">
-          <InlineField label="Tax %:">
-            <Input
-              readOnly
-              value={`${formData.taxRate}% (${formatCurrency(totals.taxAmount)})`}
-              className={`${COMMERCE_INPUT_CLS} bg-background`}
-            />
-          </InlineField>
-        </div>
+        <div className="space-y-1.5" />
 
         <div className="space-y-1.5">
           <InlineField label="Total Amount:">

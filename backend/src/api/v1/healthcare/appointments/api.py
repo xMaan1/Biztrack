@@ -109,8 +109,5 @@ async def create_appointment_invoice_endpoint(
         line_items,
         str(current_user.id),
         db,
-        currency=body.currency,
-        tax_rate=body.tax_rate,
-        discount=body.discount,
     )
     return {"invoice_id": str(inv.id), "invoice_number": inv.invoiceNumber}

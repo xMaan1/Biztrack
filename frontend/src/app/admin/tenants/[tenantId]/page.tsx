@@ -888,19 +888,11 @@ function TenantDetailsContent() {
                       <span className="font-medium">Due Date:</span>
                       <p className="text-sm text-gray-600">{new Date(selectedInvoice.dueDate).toLocaleDateString()}</p>
                     </div>
-                    <div>
-                      <span className="font-medium">Payment Terms:</span>
-                      <p className="text-sm text-gray-600">{selectedInvoice.paymentTerms}</p>
-                    </div>
                   </div>
                   <div className="space-y-2">
                     <div>
                       <span className="font-medium">Order Number:</span>
                       <p className="text-sm text-gray-600">{selectedInvoice.orderNumber || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium">Currency:</span>
-                      <p className="text-sm text-gray-600">{selectedInvoice.currency}</p>
                     </div>
                     <div>
                       <span className="font-medium">Created:</span>
@@ -1045,14 +1037,12 @@ function TenantDetailsContent() {
                         <span>Subtotal:</span>
                         <span>{formatCurrency(selectedInvoice.subtotal)}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>Discount ({selectedInvoice.discount}%):</span>
-                        <span>-{formatCurrency(selectedInvoice.subtotal * selectedInvoice.discount / 100)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Tax ({selectedInvoice.taxRate}%):</span>
-                        <span>{formatCurrency(selectedInvoice.taxAmount)}</span>
-                      </div>
+                      {selectedInvoice.labourCost ? (
+                        <div className="flex justify-between">
+                          <span>Labour Cost:</span>
+                          <span>{formatCurrency(selectedInvoice.labourCost)}</span>
+                        </div>
+                      ) : null}
                       <Separator />
                       <div className="flex justify-between font-bold text-lg">
                         <span>Total:</span>
@@ -1072,18 +1062,12 @@ function TenantDetailsContent() {
               </Card>
 
               {/* Additional Information */}
-              {(selectedInvoice.notes || selectedInvoice.terms) && (
+              {selectedInvoice.terms && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Additional Information</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {selectedInvoice.notes && (
-                      <div>
-                        <span className="font-medium">Notes:</span>
-                        <p className="text-sm text-gray-600 whitespace-pre-line">{selectedInvoice.notes}</p>
-                      </div>
-                    )}
                     {selectedInvoice.terms && (
                       <div>
                         <span className="font-medium">Terms & Conditions:</span>

@@ -42,7 +42,7 @@ export function CommerceInvoiceDetailsSection({
 }: CommerceInvoiceDetailsSectionProps) {
   return (
     <section className="rounded-lg border border-border bg-card px-3 pb-3 pt-2">
-      <div className="grid grid-cols-1 gap-x-6 gap-y-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-x-6 gap-y-2 lg:grid-cols-2">
         <div className="space-y-1.5">
           <InlineField label="Order Number:">
             <Input
@@ -52,22 +52,6 @@ export function CommerceInvoiceDetailsSection({
               placeholder="Auto-generated (ORD-YYYYMMDD-0001)"
               className={`${COMMERCE_INPUT_CLS} bg-muted`}
             />
-          </InlineField>
-          <InlineField label="Bill Type:" required>
-            <Select
-              value={formData.paymentTerms}
-              onValueChange={(value) => onInputChange('paymentTerms', value)}
-            >
-              <SelectTrigger className={`${COMMERCE_INPUT_CLS} w-full`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Cash">Cash</SelectItem>
-                <SelectItem value="Credit">Credit</SelectItem>
-                <SelectItem value="Card">Card</SelectItem>
-                <SelectItem value="Due Payments">Due Payments</SelectItem>
-              </SelectContent>
-            </Select>
           </InlineField>
         </div>
 
@@ -96,18 +80,6 @@ export function CommerceInvoiceDetailsSection({
           {errors.issueDate && (
             <p className="pl-[116px] text-xs text-destructive">{errors.issueDate}</p>
           )}
-        </div>
-
-        <div className="space-y-1.5">
-          <InlineField label="Description:">
-            <Input
-              id="notes"
-              value={formData.notes || ''}
-              onChange={(e) => onInputChange('notes', e.target.value)}
-              placeholder="Enter Description"
-              className={COMMERCE_INPUT_CLS}
-            />
-          </InlineField>
         </div>
       </div>
 

@@ -301,15 +301,12 @@ export class HealthcareCommands {
 
   async createAppointmentInvoice(
     appointmentId: string,
-    data: { line_items: Array<{ description: string; amount: number }>; currency?: string; tax_rate?: number; discount?: number }
+    data: { line_items: Array<{ description: string; amount: number }> }
   ): Promise<{ invoice_id: string; invoice_number: string }> {
     return apiService.post<{ invoice_id: string; invoice_number: string }>(
       `/healthcare/appointments/${appointmentId}/invoice`,
       {
         line_items: data.line_items,
-        currency: data.currency ?? 'USD',
-        tax_rate: data.tax_rate ?? 0,
-        discount: data.discount ?? 0,
       }
     );
   }
@@ -328,15 +325,12 @@ export class HealthcareCommands {
 
   async createAdmissionInvoice(
     admissionId: string,
-    data: { line_items: Array<{ description: string; amount: number }>; currency?: string; tax_rate?: number; discount?: number }
+    data: { line_items: Array<{ description: string; amount: number }> }
   ): Promise<{ invoice_id: string; invoice_number: string }> {
     return apiService.post<{ invoice_id: string; invoice_number: string }>(
       `/healthcare/admissions/${admissionId}/invoice`,
       {
         line_items: data.line_items,
-        currency: data.currency ?? 'USD',
-        tax_rate: data.tax_rate ?? 0,
-        discount: data.discount ?? 0,
       }
     );
   }

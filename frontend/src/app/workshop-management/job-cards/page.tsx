@@ -80,8 +80,6 @@ function JobCardsContent() {
       customerId: jc.customer_id || '',
       customerName: jc.customer_name || '',
       customerPhone: jc.customer_phone || '',
-      taxRate: (jc.vat_rate ?? 0.15) * 100,
-      notes: jc.notes || '',
       vehicleReg: str(vi.registration_number),
       jobCardId: jc.id,
       items,

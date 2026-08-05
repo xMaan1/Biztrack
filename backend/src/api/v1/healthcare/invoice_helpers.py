@@ -41,18 +41,15 @@ def line_items_from_healthcare_input(line_items: List[Dict[str, Any]]) -> List[d
     return invoice_items
 
 
-def calculate_invoice_totals(items: List[Dict], tax_rate: float, discount: float) -> dict:
+def calculate_invoice_totals(items: List[Dict]) -> dict:
     subtotal = sum(
         (x.get("quantity", 0) or 0) * (x.get("unitPrice", 0) or 0) for x in items
     )
-    discount_amount = subtotal * (discount / 100) if discount > 0 else 0
-    taxable = subtotal - discount_amount
-    tax_amount = taxable * (tax_rate / 100) if tax_rate > 0 else 0
     return {
         "subtotal": round(subtotal, 2),
-        "discountAmount": round(discount_amount, 2),
-        "taxAmount": round(tax_amount, 2),
-        "total": round(taxable + tax_amount, 2),
+        "discountAmount": 0.0,
+        "taxAmount": 0.0,
+        "total": round(subtotal, 2),
     }
 
 
@@ -70,12 +67,8 @@ def build_draft_invoice_payload(
     customer_id: str,
     customer_name: str,
     customer_phone: str,
-    notes: str,
     invoice_items: List[dict],
     totals: dict,
-    currency: str,
-    tax_rate: float,
-    discount: float,
     db: Session,
 ) -> dict:
     issue_date = datetime.utcnow()
@@ -96,11 +89,6 @@ def build_draft_invoice_payload(
         "dueDate": due_date,
         "orderNumber": order_number,
         "orderTime": issue_date,
-        "paymentTerms": "Net 30",
-        "currency": currency,
-        "taxRate": tax_rate,
-        "discount": discount,
-        "notes": notes,
         "terms": None,
         "status": "draft",
         "subtotal": totals["subtotal"],
@@ -125,10 +113,6 @@ def create_healthcare_draft_invoice(
     customer_id: str,
     customer_name: str,
     customer_phone: str,
-    notes: str,
-    currency: str = "USD",
-    tax_rate: float = 0.0,
-    discount: float = 0.0,
 ):
     if not line_items:
         raise HTTPException(
@@ -136,7 +120,7 @@ def create_healthcare_draft_invoice(
             detail="At least one line item is required",
         )
     invoice_items = line_items_from_healthcare_input(line_items)
-    totals = calculate_invoice_totals(invoice_items, tax_rate, discount)
+    totals = calculate_invoice_totals(invoice_items)
     payload = build_draft_invoice_payload(
         tenant_id=tenant_id,
         created_by_user_id=created_by_user_id,
@@ -144,12 +128,8 @@ def create_healthcare_draft_invoice(
         customer_id=customer_id,
         customer_name=customer_name,
         customer_phone=customer_phone,
-        notes=notes,
         invoice_items=invoice_items,
         totals=totals,
-        currency=currency,
-        tax_rate=tax_rate,
-        discount=discount,
         db=db,
     )
     return create_invoice(payload, db)

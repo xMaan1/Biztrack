@@ -166,8 +166,6 @@ def create_invoice_endpoint(
             order_number = generate_order_number(tenant_id, db)
         totals = calculate_invoice_totals(
             invoice_data.items,
-            invoice_data.taxRate,
-            invoice_data.discount,
             invoice_data.labourCost or 0,
         )
 
@@ -186,12 +184,7 @@ def create_invoice_endpoint(
             dueDate=due_date,
             orderNumber=order_number,
             orderTime=datetime.fromisoformat(invoice_data.orderTime) if invoice_data.orderTime else None,
-            paymentTerms=invoice_data.paymentTerms,
-            currency=invoice_data.currency,
-            taxRate=invoice_data.taxRate,
-            discount=invoice_data.discount,
             labourCost=invoice_data.labourCost or 0,
-            notes=invoice_data.notes,
             terms=invoice_data.terms,
             opportunityId=invoice_data.opportunityId,
             quoteId=invoice_data.quoteId,
@@ -333,10 +326,10 @@ def create_invoice_endpoint(
                         invoice_amount=db_invoice.total,
                         amount_paid=db_invoice.totalPaid or 0.0,
                         outstanding_balance=db_invoice.total,
-                        currency=db_invoice.currency,
+                        currency="USD",
                         status=AccountReceivableStatus.PENDING if days_overdue == 0 else AccountReceivableStatus.OVERDUE,
-                        payment_terms=db_invoice.paymentTerms,
-                        notes=db_invoice.notes,
+                        payment_terms=None,
+                        notes=None,
                         days_overdue=days_overdue,
                         created_by=current_user.id,
                     )
@@ -563,8 +556,6 @@ def update_invoice_endpoint(
                 invoice.items = converted_items
                 totals = calculate_invoice_totals(
                     value,
-                    invoice.taxRate,
-                    invoice.discount,
                     invoice.labourCost or 0,
                 )
                 invoice.subtotal = totals["subtotal"]
@@ -589,11 +580,9 @@ def update_invoice_endpoint(
             except Exception:
                 pass
 
-        if any(k in update_data for k in ("items", "taxRate", "discount", "labourCost")):
+        if any(k in update_data for k in ("items", "labourCost")):
             totals = calculate_invoice_totals(
                 invoice.items or [],
-                invoice.taxRate or 0,
-                invoice.discount or 0,
                 invoice.labourCost or 0,
             )
             invoice.subtotal = totals["subtotal"]

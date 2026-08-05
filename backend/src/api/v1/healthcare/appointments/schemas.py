@@ -60,6 +60,3 @@ class AppointmentInvoiceLineItem(BaseModel):
 
 class AppointmentInvoiceCreate(BaseModel):
     line_items: List[AppointmentInvoiceLineItem]
-    currency: str = "USD"
-    tax_rate: float = 0.0
-    discount: float = 0.0

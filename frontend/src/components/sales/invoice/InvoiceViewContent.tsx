@@ -75,8 +75,6 @@ export function InvoiceViewContent({ invoice, onClose }: InvoiceViewContentProps
         <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <InvoiceDetailField label="Issue Date" value={InvoiceService.formatDate(invoice.issueDate)} />
           <InvoiceDetailField label="Due Date" value={InvoiceService.formatDate(invoice.dueDate)} />
-          <InvoiceDetailField label="Payment Terms" value={invoice.paymentTerms || '-'} />
-          <InvoiceDetailField label="Currency" value={invoice.currency || '-'} />
           <InvoiceDetailField label="Order Number" value={invoice.orderNumber || '-'} />
           <InvoiceDetailField
             label="Order Time"
@@ -145,14 +143,6 @@ export function InvoiceViewContent({ invoice, onClose }: InvoiceViewContentProps
             />
           ) : null}
           <InvoiceDetailField
-            label={`Discount (${invoice.discount}%)`}
-            value={`-${formatCurrency((invoice.subtotal * invoice.discount) / 100)}`}
-          />
-          <InvoiceDetailField
-            label={`Tax (${invoice.taxRate}%)`}
-            value={formatCurrency(invoice.taxAmount)}
-          />
-          <InvoiceDetailField
             label="Total"
             value={<span className="font-semibold">{formatCurrency(invoice.total)}</span>}
           />
@@ -166,7 +156,6 @@ export function InvoiceViewContent({ invoice, onClose }: InvoiceViewContentProps
           <CardTitle>Additional Information</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <InvoiceDetailField label="Notes" value={invoice.notes || '-'} />
           <InvoiceDetailField label="Terms & Conditions" value={invoice.terms || '-'} />
         </CardContent>
       </Card>

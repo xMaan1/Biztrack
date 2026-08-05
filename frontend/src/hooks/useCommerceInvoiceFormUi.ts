@@ -30,7 +30,6 @@ export function useCommerceInvoiceFormUi({
   const [customerSearch, setCustomerSearch] = useState('');
   const [customerOptions, setCustomerOptions] = useState<Customer[]>([]);
   const [paidAmount, setPaidAmount] = useState(0);
-  const [addBalanceToDiscount, setAddBalanceToDiscount] = useState(true);
   const [itemFieldDrafts, setItemFieldDrafts] = useState<Record<string, string>>({});
 
   const filteredProducts = useMemo(
@@ -156,8 +155,6 @@ export function useCommerceInvoiceFormUi({
     customerOptions,
     paidAmount,
     setPaidAmount,
-    addBalanceToDiscount,
-    setAddBalanceToDiscount,
     filteredProducts,
     totalQuantity,
     totalItemDiscount,

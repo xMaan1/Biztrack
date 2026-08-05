@@ -1,33 +1,24 @@
 'use client';
 
 import { Input } from '@/src/components/ui/input';
-import type { InvoiceCreate } from '@/src/models/sales';
 import { COMMERCE_INPUT_CLS } from './constants';
 import { InlineField } from './InlineField';
 import type { CommerceInvoiceTotals } from './types';
 
 type CommerceInvoiceTotalsSectionProps = {
-  formData: InvoiceCreate;
   totals: CommerceInvoiceTotals;
   totalQuantity: number;
   totalItemDiscount: number;
   paidAmount: number;
-  addBalanceToDiscount: boolean;
-  onInputChange: (field: keyof InvoiceCreate, value: string | number) => void;
   onPaidAmountChange: (value: number) => void;
-  onAddBalanceToDiscountChange: (value: boolean) => void;
 };
 
 export function CommerceInvoiceTotalsSection({
-  formData,
   totals,
   totalQuantity,
   totalItemDiscount,
   paidAmount,
-  addBalanceToDiscount,
-  onInputChange,
   onPaidAmountChange,
-  onAddBalanceToDiscountChange,
 }: CommerceInvoiceTotalsSectionProps) {
   const billBalance = Math.max(0, totals.total - paidAmount);
 
@@ -39,17 +30,6 @@ export function CommerceInvoiceTotalsSection({
             <Input
               readOnly
               value={totalQuantity}
-              className={`${COMMERCE_INPUT_CLS} bg-background`}
-            />
-          </InlineField>
-          <InlineField label="Total GST:">
-            <Input
-              type="number"
-              step="0.01"
-              min="0"
-              max="100"
-              value={formData.taxRate}
-              onChange={(e) => onInputChange('taxRate', parseFloat(e.target.value) || 0)}
               className={`${COMMERCE_INPUT_CLS} bg-background`}
             />
           </InlineField>
@@ -70,29 +50,6 @@ export function CommerceInvoiceTotalsSection({
               className={`${COMMERCE_INPUT_CLS} bg-background`}
             />
           </InlineField>
-          <InlineField label="Flat Discount:">
-            <Input
-              type="number"
-              step="0.01"
-              min="0"
-              max="100"
-              value={formData.discount}
-              onChange={(e) => onInputChange('discount', parseFloat(e.target.value) || 0)}
-              className={`${COMMERCE_INPUT_CLS} bg-background`}
-            />
-          </InlineField>
-          <div className="flex min-h-[34px] items-center gap-2 pl-[116px]">
-            <input
-              type="checkbox"
-              id="addBalanceToDiscount"
-              checked={addBalanceToDiscount}
-              onChange={(e) => onAddBalanceToDiscountChange(e.target.checked)}
-              className="rounded border-input text-primary focus:ring-ring"
-            />
-            <label htmlFor="addBalanceToDiscount" className="text-xs text-muted-foreground">
-              Add remaining balance to Discount
-            </label>
-          </div>
         </div>
 
         <div className="space-y-1.5">

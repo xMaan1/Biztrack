@@ -130,12 +130,7 @@ export function MobileInvoicesScreen() {
   const [customerEmail, setCustomerEmail] = useState('');
   const [issueDate, setIssueDate] = useState('');
   const [dueDate, setDueDate] = useState('');
-  const [paymentTerms, setPaymentTerms] = useState('Net 30');
-  const [currency, setCurrency] = useState('USD');
-  const [taxRate, setTaxRate] = useState('0');
-  const [discount, setDiscount] = useState('0');
   const [labourCost, setLabourCost] = useState('0');
-  const [notes, setNotes] = useState('');
   const [terms, setTerms] = useState('');
   const [lineRows, setLineRows] = useState<InvoiceItemCreate[]>([
     { description: '', quantity: 1, unitPrice: 0, discount: 0, taxRate: 0 },
@@ -226,12 +221,7 @@ export function MobileInvoicesScreen() {
     const due = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
     setIssueDate(today);
     setDueDate(due);
-    setPaymentTerms('Net 30');
-    setCurrency('USD');
-    setTaxRate('0');
-    setDiscount('0');
     setLabourCost('0');
-    setNotes('');
     setTerms('');
     setLineRows([
       { description: '', quantity: 1, unitPrice: 0, discount: 0, taxRate: 0 },
@@ -252,8 +242,6 @@ export function MobileInvoicesScreen() {
       appAlert('Invoices', 'Add at least one line item.');
       return;
     }
-    const tr = parseFloat(taxRate) || 0;
-    const disc = parseFloat(discount) || 0;
     const labour = parseFloat(labourCost) || 0;
     const payload: InvoiceCreate = {
       customerId,
@@ -265,12 +253,7 @@ export function MobileInvoicesScreen() {
       dueDate: new Date(`${dueDate}T12:00:00`).toISOString(),
       orderNumber: '',
       orderTime: new Date().toISOString().slice(0, 16),
-      paymentTerms,
-      currency,
-      taxRate: tr,
-      discount: disc,
       labourCost: labour,
-      notes: notes.trim() || undefined,
       terms: terms.trim() || undefined,
       items,
     };
@@ -278,15 +261,10 @@ export function MobileInvoicesScreen() {
       setSaving(true);
       const created = await createInvoice(payload);
       const subtotalAmount = items.reduce(
-        (sum, item) => sum + item.quantity * item.unitPrice * (1 - item.discount / 100),
+        (sum, item) => sum + item.quantity * item.unitPrice,
         0,
       );
-      const discountPct = parseFloat(discount) || 0;
-      const taxPct = parseFloat(taxRate) || 0;
-      const discountAmount = subtotalAmount * (discountPct / 100);
-      const taxableAmount = subtotalAmount + labour - discountAmount;
-      const taxAmount = taxableAmount * (taxPct / 100);
-      const totalAmount = taxableAmount + taxAmount;
+      const totalAmount = subtotalAmount + labour;
       if (createInstallmentPlan && totalAmount > 0) {
         await createInstallmentPlanApi({
           invoice_id: created.id,
@@ -294,7 +272,7 @@ export function MobileInvoicesScreen() {
           number_of_installments: Math.max(1, parseInt(installmentCount, 10) || 1),
           frequency: installmentFrequency,
           first_due_date: `${(installmentFirstDueDate || dueDate).trim()}T00:00:00Z`,
-          currency,
+          currency: 'USD',
         });
       }
       setCreateOpen(false);
@@ -395,18 +373,12 @@ export function MobileInvoicesScreen() {
       lineRows.reduce((sum, row) => {
         const qty = Math.max(1, Number(row.quantity) || 1);
         const unit = Number(row.unitPrice) || 0;
-        const rowDiscount = Number(row.discount) || 0;
-        return sum + qty * unit * (1 - rowDiscount / 100);
+        return sum + qty * unit;
       }, 0),
     [lineRows],
   );
-  const invoiceDiscountPct = Number(discount) || 0;
-  const invoiceTaxPct = Number(taxRate) || 0;
   const invoiceLabourCost = Number(labourCost) || 0;
-  const invoiceDiscountAmount = lineSubtotal * (invoiceDiscountPct / 100);
-  const taxableAmount = lineSubtotal + invoiceLabourCost - invoiceDiscountAmount;
-  const invoiceTaxAmount = taxableAmount * (invoiceTaxPct / 100);
-  const invoiceTotal = taxableAmount + invoiceTaxAmount;
+  const invoiceTotal = lineSubtotal + invoiceLabourCost;
 
   const statusChipOptions = STATUS_OPTS.map((o) => o.value);
 
@@ -688,25 +660,8 @@ export function MobileInvoicesScreen() {
           </View>
         </View>
 
-        <WorkshopFieldLabel>Currency</WorkshopFieldLabel>
-        <WorkshopTextInput value={currency} onChangeText={setCurrency} />
-
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          <View style={{ flex: 1 }}>
-            <WorkshopFieldLabel>Tax %</WorkshopFieldLabel>
-            <WorkshopTextInput value={taxRate} onChangeText={setTaxRate} keyboardType="decimal-pad" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <WorkshopFieldLabel>Discount %</WorkshopFieldLabel>
-            <WorkshopTextInput value={discount} onChangeText={setDiscount} keyboardType="decimal-pad" />
-          </View>
-        </View>
-
         <WorkshopFieldLabel>Labour Cost</WorkshopFieldLabel>
         <WorkshopTextInput value={labourCost} onChangeText={setLabourCost} keyboardType="decimal-pad" placeholder="0" />
-
-        <WorkshopFieldLabel>Payment terms</WorkshopFieldLabel>
-        <WorkshopTextInput value={paymentTerms} onChangeText={setPaymentTerms} />
 
         <Text style={{ fontSize: 15, fontWeight: '700', color: WS.text, marginTop: 8, marginBottom: 10 }}>
           Line items
@@ -776,9 +731,7 @@ export function MobileInvoicesScreen() {
               <Text style={{ fontSize: 12, color: WS.textMuted }}>Line total</Text>
               <Text style={{ fontSize: 14, fontWeight: '700', color: WS.text }}>
                 {formatUsd(
-                  Math.max(1, Number(row.quantity) || 1) *
-                    (Number(row.unitPrice) || 0) *
-                    (1 - (Number(row.discount) || 0) / 100),
+                  Math.max(1, Number(row.quantity) || 1) * (Number(row.unitPrice) || 0),
                 )}
               </Text>
             </View>
@@ -806,14 +759,6 @@ export function MobileInvoicesScreen() {
               <Text style={{ fontWeight: '700', color: WS.text }}>{formatUsd(invoiceLabourCost)}</Text>
             </View>
           ) : null}
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
-            <Text style={{ color: WS.textMuted }}>Discount ({invoiceDiscountPct}%)</Text>
-            <Text style={{ fontWeight: '700', color: WS.text }}>-{formatUsd(invoiceDiscountAmount)}</Text>
-          </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
-            <Text style={{ color: WS.textMuted }}>Tax ({invoiceTaxPct}%)</Text>
-            <Text style={{ fontWeight: '700', color: WS.text }}>{formatUsd(invoiceTaxAmount)}</Text>
-          </View>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#f1f5f9' }}>
             <Text style={{ fontSize: 16, fontWeight: '800', color: WS.text }}>Total</Text>
             <Text style={{ fontSize: 16, fontWeight: '800', color: WS.primary }}>{formatUsd(invoiceTotal)}</Text>
@@ -961,8 +906,6 @@ export function MobileInvoicesScreen() {
             <WorkshopDetailRow label="Email" value={selected.customerEmail || '—'} />
             <WorkshopDetailRow label="Issue date" value={new Date(selected.issueDate).toLocaleDateString()} />
             <WorkshopDetailRow label="Due date" value={new Date(selected.dueDate).toLocaleDateString()} />
-            <WorkshopDetailRow label="Payment terms" value={selected.paymentTerms || '—'} />
-            <WorkshopDetailRow label="Currency" value={selected.currency || '—'} />
 
             <Text style={{ fontSize: 15, fontWeight: '700', color: WS.text, marginTop: 16, marginBottom: 8 }}>
               Line items
@@ -991,12 +934,6 @@ export function MobileInvoicesScreen() {
             <WorkshopDetailRow label="Subtotal" value={formatUsd(selected.subtotal)} />
             {selected.labourCost ? (
               <WorkshopDetailRow label="Labour Cost" value={formatUsd(selected.labourCost)} />
-            ) : null}
-            {selected.taxAmount > 0 ? (
-              <WorkshopDetailRow label={`Tax (${selected.taxRate}%)`} value={formatUsd(selected.taxAmount)} />
-            ) : null}
-            {selected.discount > 0 ? (
-              <WorkshopDetailRow label="Discount" value={`-${formatUsd(selected.discount)}`} />
             ) : null}
             <WorkshopDetailRow label="Total" value={formatUsd(selected.total)} />
 

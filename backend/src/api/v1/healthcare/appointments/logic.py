@@ -234,9 +234,6 @@ def create_appointment_invoice(
     line_items: List[Dict[str, Any]],
     created_by_user_id: str,
     db: Session,
-    currency: str = "USD",
-    tax_rate: float = 0.0,
-    discount: float = 0.0,
 ):
     apt = get_appointment_by_id(appointment_id, db, tenant_id)
     if not apt:
@@ -250,8 +247,4 @@ def create_appointment_invoice(
         customer_id=str(apt.patient_id) if apt.patient_id else "",
         customer_name=getattr(apt, "patient_name", "") or "Patient",
         customer_phone=getattr(apt, "patient_phone", "") or "",
-        notes=f"Invoice for appointment on {apt.appointment_date}",
-        currency=currency,
-        tax_rate=tax_rate,
-        discount=discount,
     )

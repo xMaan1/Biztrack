@@ -4,13 +4,12 @@ import type { UseInvoiceFormReturn } from '@/src/hooks/useInvoiceForm';
 import type { InvoiceFormMode } from '@/src/types/sales/invoiceForm';
 import { CommerceInvoiceFormHeader } from '../commerce-invoice/CommerceInvoiceFormHeader';
 import { InvoiceFormDetailsSection } from './InvoiceFormDetailsSection';
-import { InvoiceFormVehicleSection } from './InvoiceFormVehicleSection';
 import { InvoiceFormItemsSection } from './InvoiceFormItemsSection';
 import { InvoiceFormTotalsSummary } from './InvoiceFormTotalsSummary';
+import { InvoiceLabourCostSection } from './InvoiceLabourCostSection';
 import { InvoiceFormNotesSection } from './InvoiceFormNotesSection';
 import { InvoiceInstallmentSection } from './InvoiceInstallmentSection';
 import { InvoiceFormActions } from './InvoiceFormActions';
-import { InvoiceJobCardLink } from './InvoiceJobCardLink';
 
 type WorkshopInvoiceFormProps = {
   mode: InvoiceFormMode;
@@ -38,26 +37,15 @@ export function WorkshopInvoiceForm({ mode, form, error }: WorkshopInvoiceFormPr
         formData={form.formData}
         errors={form.errors}
         selectedCustomer={form.selectedCustomer}
+        selectedVehicle={form.selectedVehicle}
+        jobCardId={form.jobCardId}
+        showWorkshop={form.isWorkshop}
         onInputChange={form.handleInputChange}
         onCustomerSelect={form.handleCustomerSelect}
+        onVehicleSelect={form.setSelectedVehicle}
+        onJobCardSelect={form.setJobCardId}
         onNewCustomer={() => form.setShowCreateCustomerDialog(true)}
       />
-
-      {form.isWorkshop && (
-        <InvoiceFormVehicleSection
-          selectedVehicle={form.selectedVehicle}
-          onVehicleSelect={form.setSelectedVehicle}
-          onInputChange={form.handleInputChange}
-        />
-      )}
-
-      {form.isWorkshop && (
-        <InvoiceJobCardLink
-          value={form.jobCardId}
-          onChange={form.setJobCardId}
-          dense
-        />
-      )}
 
       <InvoiceFormItemsSection
         mode={mode}
@@ -72,10 +60,13 @@ export function WorkshopInvoiceForm({ mode, form, error }: WorkshopInvoiceFormPr
         clearNewItemErrors={clearNewItemErrors}
       />
 
-      <InvoiceFormTotalsSummary
-        formData={form.formData}
-        totals={form.totals}
+      <InvoiceLabourCostSection
+        mode={mode}
+        value={form.formData.labourCost}
+        onInputChange={form.handleInputChange}
       />
+
+      <InvoiceFormTotalsSummary totals={form.totals} />
 
       <InvoiceFormNotesSection formData={form.formData} onInputChange={form.handleInputChange} />
 

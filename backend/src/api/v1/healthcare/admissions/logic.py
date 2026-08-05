@@ -206,9 +206,6 @@ def create_admission_invoice(
     line_items: List[Dict[str, Any]],
     created_by_user_id: str,
     db: Session,
-    currency: str = "USD",
-    tax_rate: float = 0.0,
-    discount: float = 0.0,
 ):
     from ..patients.logic import get_patient_by_id
 
@@ -225,10 +222,6 @@ def create_admission_invoice(
         customer_id=str(adm.patient_id),
         customer_name=patient.full_name if patient else "Patient",
         customer_phone=patient.phone if patient else "",
-        notes=f"Invoice for admission from {adm.admit_date}",
-        currency=currency,
-        tax_rate=tax_rate,
-        discount=discount,
     )
 
 

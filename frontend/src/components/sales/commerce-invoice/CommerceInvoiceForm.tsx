@@ -97,7 +97,6 @@ export function CommerceInvoiceForm({
         onNewItemChange={onNewItemChange}
         onAddItem={onAddItem}
         onAddExtraItem={onAddExtraItem}
-        onInputChange={onInputChange}
         onSetPaidAmount={ui.setPaidAmount}
         clearFieldError={clearFieldError}
       />
@@ -119,15 +118,11 @@ export function CommerceInvoiceForm({
       />
 
       <CommerceInvoiceTotalsSection
-        formData={formData}
         totals={totals}
         totalQuantity={ui.totalQuantity}
         totalItemDiscount={ui.totalItemDiscount}
         paidAmount={ui.paidAmount}
-        addBalanceToDiscount={ui.addBalanceToDiscount}
-        onInputChange={onInputChange}
         onPaidAmountChange={ui.setPaidAmount}
-        onAddBalanceToDiscountChange={ui.setAddBalanceToDiscount}
       />
 
       <CommerceInvoiceInstallmentSection
@@ -142,7 +137,6 @@ export function CommerceInvoiceForm({
       />
 
       <input type="hidden" value={formData.issueDate} readOnly />
-      <input type="hidden" value={formData.currency} readOnly />
 
       <div className="hidden">
         <Textarea

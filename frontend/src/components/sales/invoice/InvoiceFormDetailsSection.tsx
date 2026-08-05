@@ -1,19 +1,15 @@
 'use client';
 
 import { Input } from '@/src/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/src/components/ui/select';
 import type { InvoiceCreate } from '@/src/models/sales';
 import type { InvoiceFormErrors } from '@/src/types/sales/invoiceForm';
 import { COMMERCE_INPUT_CLS } from '../commerce-invoice/constants';
 import { InlineField } from '../commerce-invoice/InlineField';
 import { InvoiceFormCustomerSection } from './InvoiceFormCustomerSection';
+import { InvoiceFormVehicleSection } from './InvoiceFormVehicleSection';
+import { InvoiceJobCardLink } from './InvoiceJobCardLink';
 import type { Customer } from '@/src/services/CustomerService';
+import type { Vehicle } from '@/src/models/workshop';
 import type { InvoiceFormMode } from '@/src/types/sales/invoiceForm';
 
 type InvoiceFormDetailsSectionProps = {
@@ -21,8 +17,13 @@ type InvoiceFormDetailsSectionProps = {
   formData: InvoiceCreate;
   errors: InvoiceFormErrors;
   selectedCustomer: Customer | null;
+  selectedVehicle: Vehicle | null;
+  jobCardId?: string;
+  showWorkshop: boolean;
   onInputChange: (field: keyof InvoiceCreate, value: string | number) => void;
   onCustomerSelect: (customer: Customer | null) => void;
+  onVehicleSelect: (vehicle: Vehicle | null) => void;
+  onJobCardSelect: (jobCardId: string | undefined) => void;
   onNewCustomer: () => void;
 };
 
@@ -31,13 +32,18 @@ export function InvoiceFormDetailsSection({
   formData,
   errors,
   selectedCustomer,
+  selectedVehicle,
+  jobCardId,
+  showWorkshop,
   onInputChange,
   onCustomerSelect,
+  onVehicleSelect,
+  onJobCardSelect,
   onNewCustomer,
 }: InvoiceFormDetailsSectionProps) {
   return (
     <section className="rounded-lg border border-border bg-card px-3 pb-3 pt-2">
-      <div className="grid grid-cols-1 gap-x-6 gap-y-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-x-6 gap-y-2 lg:grid-cols-2">
         <div className="space-y-1.5">
           <InlineField label="Issue Date:" required>
             <Input
@@ -72,9 +78,6 @@ export function InvoiceFormDetailsSection({
               className={COMMERCE_INPUT_CLS}
             />
           </InlineField>
-        </div>
-
-        <div className="space-y-1.5">
           <InlineField label="Order Time:">
             <Input
               id="orderTime"
@@ -84,88 +87,18 @@ export function InvoiceFormDetailsSection({
               className={COMMERCE_INPUT_CLS}
             />
           </InlineField>
-          <InlineField label="Payment Terms:">
-            <Select
-              value={formData.paymentTerms}
-              onValueChange={(value) => onInputChange('paymentTerms', value)}
-            >
-              <SelectTrigger className={`${COMMERCE_INPUT_CLS} w-full`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Credit">Credit</SelectItem>
-                <SelectItem value="Card">Card</SelectItem>
-                <SelectItem value="Cash">Cash</SelectItem>
-                <SelectItem value="Due Payments">Due Payments</SelectItem>
-              </SelectContent>
-            </Select>
-          </InlineField>
-          <InlineField label="Currency:">
-            <Select
-              value={formData.currency}
-              onValueChange={(value) => onInputChange('currency', value)}
-            >
-              <SelectTrigger className={`${COMMERCE_INPUT_CLS} w-full`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="USD">USD ($)</SelectItem>
-                <SelectItem value="EUR">EUR (€)</SelectItem>
-                <SelectItem value="GBP">GBP (£)</SelectItem>
-                <SelectItem value="CAD">CAD (C$)</SelectItem>
-                <SelectItem value="PKR">PKR (Rs)</SelectItem>
-                <SelectItem value="INR">INR (₹)</SelectItem>
-              </SelectContent>
-            </Select>
-          </InlineField>
         </div>
 
-        <div className="space-y-1.5">
-          <InlineField label="Tax Rate %:">
-            <Input
-              id="taxRate"
-              type="number"
-              step="0.01"
-              min="0"
-              max="100"
-              value={formData.taxRate}
-              onChange={(e) => onInputChange('taxRate', parseFloat(e.target.value) || 0)}
-              className={COMMERCE_INPUT_CLS}
+        {showWorkshop && (
+          <div className="space-y-2">
+            <InvoiceFormVehicleSection
+              selectedVehicle={selectedVehicle}
+              onVehicleSelect={onVehicleSelect}
+              onInputChange={onInputChange}
             />
-          </InlineField>
-          <InlineField label="Discount %:">
-            <Input
-              id="discount"
-              type="number"
-              step="0.01"
-              min="0"
-              max="100"
-              value={formData.discount}
-              onChange={(e) => onInputChange('discount', parseFloat(e.target.value) || 0)}
-              className={COMMERCE_INPUT_CLS}
-            />
-          </InlineField>
-          <InlineField label="Labour Cost:">
-            <Input
-              id="labourCost"
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.labourCost}
-              onChange={(e) => onInputChange('labourCost', parseFloat(e.target.value) || 0)}
-              className={COMMERCE_INPUT_CLS}
-            />
-          </InlineField>
-          <InlineField label="Notes:">
-            <Input
-              id="notes"
-              value={formData.notes || ''}
-              onChange={(e) => onInputChange('notes', e.target.value)}
-              placeholder="Enter notes"
-              className={COMMERCE_INPUT_CLS}
-            />
-          </InlineField>
-        </div>
+            <InvoiceJobCardLink value={jobCardId} onChange={onJobCardSelect} dense />
+          </div>
+        )}
       </div>
 
       <InvoiceFormCustomerSection

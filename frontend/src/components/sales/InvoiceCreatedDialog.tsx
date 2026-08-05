@@ -173,7 +173,7 @@ export function InvoiceCreatedDialog({
                       Labour Cost
                     </span>
                     <span className="font-medium text-gray-900">
-                      {formatCurrency(invoice.labourCost, invoice.currency)}
+                      {formatCurrency(invoice.labourCost)}
                     </span>
                   </div>
                 ) : null}
@@ -182,7 +182,7 @@ export function InvoiceCreatedDialog({
                     Total Amount
                   </span>
                   <span className="text-lg font-bold text-blue-600">
-                    {formatCurrency(invoice.total, invoice.currency)}
+                    {formatCurrency(invoice.total)}
                   </span>
                 </div>
               </div>

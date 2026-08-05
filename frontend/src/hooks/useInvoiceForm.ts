@@ -66,7 +66,7 @@ export function useInvoiceForm({
   const [installmentCount, setInstallmentCount] = useState(3);
   const [installmentFrequency, setInstallmentFrequency] = useState('monthly');
   const [installmentFirstDueDate, setInstallmentFirstDueDate] = useState('');
-  const [formData, setFormData] = useState<InvoiceCreate>(() => emptyInvoiceForm(currency));
+  const [formData, setFormData] = useState<InvoiceCreate>(() => emptyInvoiceForm());
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -91,12 +91,6 @@ export function useInvoiceForm({
       setProducts([]);
     }
   }, []);
-
-  useEffect(() => {
-    if (mode === 'create') {
-      setFormData((prev) => ({ ...prev, currency }));
-    }
-  }, [currency, mode]);
 
   useEffect(() => {
     if (!isActive || mode === 'view') return;
@@ -128,10 +122,8 @@ export function useInvoiceForm({
     } else if (isActive) {
       const seed = initialDataRef.current;
       const seedCustomer = initialCustomerRef.current;
-      const base = emptyInvoiceForm(currency);
-      let seededForm: InvoiceCreate = seed
-        ? { ...base, ...seed, currency }
-        : base;
+      const base = emptyInvoiceForm();
+      let seededForm: InvoiceCreate = seed ? { ...base, ...seed } : base;
       if (seedCustomer) {
         seededForm = {
           ...seededForm,
@@ -155,7 +147,7 @@ export function useInvoiceForm({
       }
     }
     setErrors({});
-  }, [invoice, mode, isActive, currency, useCommerceInvoiceLayout]);
+  }, [invoice, mode, isActive, useCommerceInvoiceLayout]);
 
   const handleInputChange = (field: keyof InvoiceCreate, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -208,8 +200,6 @@ export function useInvoiceForm({
         customerId: jc.customer_id || prev.customerId,
         customerName: jc.customer_name || prev.customerName,
         customerPhone: jc.customer_phone || prev.customerPhone,
-        taxRate: jc.vat_rate != null ? Math.round(jc.vat_rate * 100) : prev.taxRate,
-        notes: jc.notes || prev.notes,
       }));
       if (jc.customer_id) {
         InvoiceService.getCustomerById(jc.customer_id)
@@ -317,7 +307,7 @@ export function useInvoiceForm({
   };
 
   const clearInvoice = useCallback(() => {
-    const nextForm = emptyInvoiceForm(currency);
+    const nextForm = emptyInvoiceForm();
     setFormData(nextForm);
     setItems([]);
     setSelectedCustomer(null);
@@ -337,7 +327,7 @@ export function useInvoiceForm({
         })
         .catch(() => {});
     }
-  }, [currency, useCommerceInvoiceLayout]);
+  }, [useCommerceInvoiceLayout]);
 
   const removeItem = (index: number) => {
     setItems((prev) => prev.filter((_, i) => i !== index));
@@ -387,7 +377,7 @@ export function useInvoiceForm({
                 number_of_installments: installmentCount,
                 frequency: installmentFrequency,
                 first_due_date: (installmentFirstDueDate || formData.dueDate) + 'T00:00:00Z',
-                currency: formData.currency,
+                currency,
               } as InstallmentPlanCreateOption,
             }
           : undefined;

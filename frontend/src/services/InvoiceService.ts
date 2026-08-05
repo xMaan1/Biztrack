@@ -267,20 +267,16 @@ class InvoiceService {
   }
 
   // Helper methods
-  calculateInvoiceTotals(items: any[], taxRate: number, discount: number) {
+  calculateInvoiceTotals(items: any[], labourCost = 0) {
     const subtotal = items.reduce(
       (sum, item) => sum + item.quantity * item.unitPrice,
       0,
     );
-    const discountAmount = subtotal * (discount / 100);
-    const taxableAmount = subtotal - discountAmount;
-    const taxAmount = taxableAmount * (taxRate / 100);
-    const total = taxableAmount + taxAmount;
+    const total = subtotal + labourCost;
 
     return {
       subtotal: Math.round(subtotal * 100) / 100,
-      discount: Math.round(discountAmount * 100) / 100,
-      taxAmount: Math.round(taxAmount * 100) / 100,
+      labourCost: Math.round(labourCost * 100) / 100,
       total: Math.round(total * 100) / 100,
     };
   }

@@ -85,7 +85,7 @@ def send_invoice_endpoint(
             customer_name=invoice.customerName,
             invoice_number=invoice.invoiceNumber,
             invoice_total=invoice.total,
-            currency=invoice.currency,
+            currency="USD",
             due_date=invoice.dueDate.strftime("%Y-%m-%d") if invoice.dueDate else None,
             invoice_pdf_bytes=pdf_bytes,
             custom_message=custom_message,
@@ -125,10 +125,10 @@ def send_invoice_endpoint(
                     invoice_amount=invoice.total,
                     amount_paid=0.0,
                     outstanding_balance=invoice.total,
-                    currency=invoice.currency,
+                    currency="USD",
                     status=AccountReceivableStatus.PENDING if days_overdue == 0 else AccountReceivableStatus.OVERDUE,
-                    payment_terms=invoice.paymentTerms,
-                    notes=invoice.notes,
+                    payment_terms=None,
+                    notes=None,
                     days_overdue=days_overdue,
                     created_by=current_user.id,
                 )
@@ -181,7 +181,7 @@ def send_invoice_whatsapp_endpoint(
         message = (
             f"Hi! Here is your invoice {invoice.invoiceNumber} "
             f"for {invoice.customerName}. "
-            f"Amount: {invoice.currency} {invoice.total:.2f}. "
+            f"Amount: USD {invoice.total:.2f}. "
             f"View/download PDF: {pdf_url}"
         )
 
