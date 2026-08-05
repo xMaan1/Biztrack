@@ -82,7 +82,7 @@ export function ProductCrmOverviewSection() {
             One Platform for CRM &amp; Operations
           </h2>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            BizTrack connects customer relationships, sales, projects, and
+            HiTech connects customer relationships, sales, projects, and
             inventory so your team works from a single trusted system.
           </p>
         </div>

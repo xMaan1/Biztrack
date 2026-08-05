@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -63,6 +64,7 @@ export const TaskList: React.FC<TaskListProps> = ({
   projectId,
   showProjectFilter = true,
 }) => {
+  const router = useRouter();
   const { canCreateTasks, canUpdateTasks, canDeleteTasks } = usePermissions();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -378,8 +380,7 @@ export const TaskList: React.FC<TaskListProps> = ({
       key={task.id}
       task={task}
       onViewDetails={(t) => {
-        setEditingTask(t);
-        setTaskDialogOpen(true);
+        router.push(`/tasks/${t.id}`);
       }}
       onEdit={canUpdateTasks() ? handleEditTask : undefined}
       onDelete={

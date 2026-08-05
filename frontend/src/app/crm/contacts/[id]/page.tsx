@@ -978,7 +978,7 @@ function ContactDetailContent() {
         </div>
 
         <div className="mt-4 text-center text-[10px] text-gray-500 pb-2">
-          &copy; 2026 - BizTrack | <a href="#" className="text-blue-500 hover:underline">Terms of Service</a> | <a href="#" className="text-blue-500 hover:underline">Privacy Policy</a>
+          &copy; 2026 - HiTech | <a href="#" className="text-blue-500 hover:underline">Terms of Service</a> | <a href="#" className="text-blue-500 hover:underline">Privacy Policy</a>
         </div>
       </div>
     </DashboardLayout>

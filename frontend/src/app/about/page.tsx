@@ -5,9 +5,9 @@ import { COMPANY_REGISTRATION } from '@/src/constants/companyRegistration';
 import { Button } from '@/src/components/ui/button';
 
 export const metadata: Metadata = {
-  title: 'About - BizTrack UK LTD',
+  title: 'About - HiTech UK LTD',
   description:
-    'Learn about BizTrack UK LTD — our mission, vision, and business management solutions.',
+    'Learn about HiTech UK LTD — our mission, vision, and business management solutions.',
 };
 
 const OFFERINGS = [
@@ -50,7 +50,7 @@ export default function AboutPage() {
       <section className="mt-10">
         <h2 className="text-2xl font-semibold text-slate-900">Who We Are</h2>
         <p className="mt-3 text-slate-600 leading-relaxed">
-          BizTrack UK LTD is a modern SaaS technology company focused on building
+          HiTech UK LTD is a modern SaaS technology company focused on building
           intelligent business management systems that help organizations
           streamline operations, improve productivity, and scale efficiently.
         </p>

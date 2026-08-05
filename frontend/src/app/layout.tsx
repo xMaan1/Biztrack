@@ -25,15 +25,12 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'BizTrack - Project Management System',
+  title: 'HiTech - Project Management System',
   description:
     'Professional project management and team collaboration platform',
   icons: {
-    icon: [
-      { url: '/favicon.ico' },
-      { url: '/biztrack-icon.png', type: 'image/png', sizes: '256x256' },
-    ],
-    apple: '/apple-icon.png',
+    icon: [{ url: '/hitech.png', type: 'image/png', sizes: '1227x864' }],
+    apple: '/hitech.png',
   },
 };
 

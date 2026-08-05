@@ -1,6 +1,6 @@
 'use client';
 
-import { BizTrackLogo } from '@/src/components/brand/BizTrackLogo';
+import { HiTechLogo } from '@/src/components/brand/HiTechLogo';
 import { VerifiedCompanyBadge } from '@/src/components/common/VerifiedCompanyBadge';
 
 export function LandingFooter() {
@@ -9,7 +9,7 @@ export function LandingFooter() {
       <div className="container mx-auto">
         <div className="grid gap-8 md:grid-cols-4">
           <div>
-            <BizTrackLogo size="md" showText className="mb-4" />
+            <HiTechLogo size="md" showText className="mb-4" />
             <p className="text-sm text-muted-foreground">
               Complete business management platform for modern enterprises.
             </p>
@@ -139,7 +139,7 @@ export function LandingFooter() {
         </div>
         <div className="mt-8 flex flex-col items-center gap-4 border-t pt-8 text-center text-sm text-muted-foreground">
           <VerifiedCompanyBadge />
-          <p>&copy; 2024 BizTrack. All rights reserved.</p>
+          <p>&copy; 2026 HiTech. All rights reserved.</p>
         </div>
       </div>
     </footer>

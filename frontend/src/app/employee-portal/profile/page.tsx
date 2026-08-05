@@ -189,7 +189,7 @@ export default function EmployeePortalProfilePage() {
         <Card>
           <CardHeader>
             <CardTitle>Profile photo</CardTitle>
-            <CardDescription>This photo appears on your employee profile across BizTrack.</CardDescription>
+            <CardDescription>This photo appears on your employee profile across HiTech.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
             <input

@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/src/lib/utils';
 
-const LOGO_ASPECT = 671 / 503;
+const LOGO_ASPECT = 1227 / 864;
 
 const HEIGHTS = {
   sm: 28,
@@ -13,33 +13,32 @@ const HEIGHTS = {
   hero: 96,
 } as const;
 
-type BizTrackLogoSize = keyof typeof HEIGHTS;
+type HiTechLogoSize = keyof typeof HEIGHTS;
 
-interface BizTrackLogoProps {
-  size?: BizTrackLogoSize;
+interface HiTechLogoProps {
+  size?: HiTechLogoSize;
   variant?: 'full' | 'icon';
   showText?: boolean;
   className?: string;
   href?: string;
 }
 
-export function BizTrackLogo({
+export function HiTechLogo({
   size = 'md',
   variant = 'full',
   showText = false,
   className,
   href,
-}: BizTrackLogoProps) {
+}: HiTechLogoProps) {
   const height = HEIGHTS[size];
-  const src =
-    variant === 'icon' ? '/biztrack-icon.png' : '/biztrack-logo.png';
+  const src = '/hitech.png';
   const width =
     variant === 'icon' ? height : Math.round(height * LOGO_ASPECT);
 
   const image = (
     <Image
       src={src}
-      alt="BizTrack"
+      alt="HiTech"
       height={height}
       width={width}
       className="object-contain"
@@ -51,7 +50,7 @@ export function BizTrackLogo({
     <div className={cn('flex items-center gap-2.5', className)}>
       {image}
       {showText ? (
-        <span className="text-xl font-bold tracking-tight">BizTrack</span>
+        <span className="text-xl font-bold tracking-tight">HiTech</span>
       ) : null}
     </div>
   );

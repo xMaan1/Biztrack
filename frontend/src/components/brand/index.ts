@@ -1,1 +1,1 @@
-export { BizTrackLogo } from './BizTrackLogo';
+export { HiTechLogo } from './HiTechLogo';

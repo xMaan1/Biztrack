@@ -136,7 +136,7 @@ export function MotBookingPrintSheet({ booking }: MotBookingPrintSheetProps) {
             <p className="font-bold uppercase">{booking.status}</p>
           </div>
           <div className="text-right">
-            <p className="text-xs text-slate-500">Powered by BizTrack Workshop</p>
+            <p className="text-xs text-slate-500">Powered by HiTech</p>
             <p className="text-xs text-slate-400">
               Printed {new Date().toLocaleString('en-GB')}
             </p>

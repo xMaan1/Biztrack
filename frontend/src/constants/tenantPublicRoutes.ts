@@ -35,6 +35,7 @@ export const RESERVED_ROOT_SEGMENTS = new Set([
   'i',
   '_next',
   'favicon.ico',
+  'hitech.png',
   'manifest.json',
 ]);
 

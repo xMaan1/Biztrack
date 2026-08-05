@@ -20,7 +20,7 @@ export function CompanyVerificationSection() {
             Registered &amp; Verified in the UK
           </h2>
           <p className="text-slate-600 max-w-xl mx-auto">
-            BizTrack is operated by a UK-registered company for transparency and
+            HiTech is operated by a UK-registered company for transparency and
             trust.
           </p>
         </div>

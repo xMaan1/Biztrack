@@ -1,4 +1,4 @@
-import { BizTrackLogo } from '../../brand/BizTrackLogo';
+import { HiTechLogo } from '../../brand/HiTechLogo';
 
 interface SidebarHeaderProps {
   planLabel?: string;
@@ -9,7 +9,7 @@ export function SidebarHeader({ planLabel, collapsed = false }: SidebarHeaderPro
   return (
     <div className={collapsed ? 'border-b border-gray-200 p-2' : 'border-b border-gray-200 p-4'}>
       <div className="flex items-center justify-center">
-        <BizTrackLogo size={collapsed ? 'sm' : 'md'} href="/dashboard" />
+        <HiTechLogo size={collapsed ? 'sm' : 'md'} href="/dashboard" />
       </div>
       {planLabel && (
         <div className="mt-2 text-center">

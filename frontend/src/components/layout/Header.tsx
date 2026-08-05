@@ -19,7 +19,7 @@ import { isTauriApp } from '@/src/lib/isTauriApp';
 import { usePermissions } from '@/src/hooks/usePermissions';
 import { getInitials } from '../../lib/utils';
 import NotificationBell from '../notifications/NotificationBell';
-import { BizTrackLogo } from '../brand/BizTrackLogo';
+import { HiTechLogo } from '../brand/HiTechLogo';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -75,7 +75,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <BizTrackLogo
+          <HiTechLogo
             size="sm"
             href="/dashboard"
             className="md:hidden"

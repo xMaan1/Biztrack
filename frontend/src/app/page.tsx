@@ -20,7 +20,7 @@ import { apiService } from '../services/ApiService';
 import dynamic from 'next/dynamic';
 import { LandingNav } from '../components/landing/LandingNav';
 import { LazyLandingSection } from '../components/landing/LazyLandingSection';
-import { BizTrackLogo } from '../components/brand/BizTrackLogo';
+import { HiTechLogo } from '../components/brand/HiTechLogo';
 import { LandingFooter } from '../components/landing/LandingFooter';
 import type { LandingPlan } from '../components/landing/LandingPricingSection';
 
@@ -155,7 +155,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
               required
             />
             <p className="text-sm text-muted-foreground">
-              This will be the name of your workspace in BizTrack
+              This will be the name of your workspace in HiTech
             </p>
           </div>
 
@@ -393,7 +393,7 @@ export default function LandingPage() {
         <div className="container mx-auto relative z-10 max-w-4xl">
           <div className="text-center mx-auto">
             <div className="flex justify-center mb-6 sm:mb-8">
-              <BizTrackLogo size="hero" />
+              <HiTechLogo size="hero" />
             </div>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80 mb-6">
               <Star className="h-4 w-4 fill-emerald-600 text-emerald-600" />

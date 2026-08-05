@@ -23,7 +23,7 @@ export function SidebarFooter({ collapsed = false }: SidebarFooterProps) {
       <div className="text-center">
         <p className="text-xs text-gray-500 mb-1">Powered by</p>
         <p className="text-sm font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          BizTrack Technologies
+          HiTech Technologies
         </p>
       </div>
     </div>

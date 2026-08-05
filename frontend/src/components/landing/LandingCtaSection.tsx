@@ -18,7 +18,7 @@ export function LandingCtaSection() {
           Get Started
         </p>
         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
-          Ready to See BizTrack in Action?
+          Ready to See HiTech in Action?
         </h2>
         <p className="text-lg text-blue-50/95 mb-10 max-w-2xl mx-auto">
           Book a demo or get in touch with our team. We will help you find the

@@ -29,6 +29,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     '/api',
     '/_next',
     '/favicon.ico',
+    '/hitech.png',
     '/manifest.json',
   ];
 

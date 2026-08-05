@@ -228,7 +228,7 @@ export function ReviewsReputationSection() {
             Trusted by Teams Like Yours
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            See how customers rate BizTrack on independent review platforms.
+            See how customers rate HiTech on independent review platforms.
             Sample data shown until live feeds are connected.
           </p>
         </div>

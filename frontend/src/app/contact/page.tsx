@@ -4,8 +4,8 @@ import { ContactMessageForm } from '@/src/components/marketing/ContactMessageFor
 import { COMPANY_REGISTRATION } from '@/src/constants/companyRegistration';
 
 export const metadata: Metadata = {
-  title: 'Contact - BizTrack UK LTD',
-  description: 'Contact BizTrack UK LTD for support and enquiries.',
+  title: 'Contact - HiTech UK LTD',
+  description: 'Contact HiTech UK LTD for support and enquiries.',
 };
 
 export default function ContactPage() {

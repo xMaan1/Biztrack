@@ -13,7 +13,7 @@ const PLAN_MODULES: {
 }[] = [
   {
     icon: Building2,
-    title: 'Agency Module',
+    title: 'Agency Pro',
     planType: 'agency',
     description:
       'CRM, sales, POS, and inventory for agencies managing clients and campaigns.',

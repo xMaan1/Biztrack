@@ -10,6 +10,7 @@ const publicRoutes = [
   '/api',
   '/_next',
   '/favicon.ico',
+  '/hitech.png',
   '/manifest.json',
   '/events/google/callback',
   '/i/',

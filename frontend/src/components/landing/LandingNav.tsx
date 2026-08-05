@@ -12,7 +12,7 @@ import { Button } from '../ui/button';
 
 import { useAuth } from '../../contexts/AuthContext';
 
-import { BizTrackLogo } from '../brand/BizTrackLogo';
+import { HiTechLogo } from '../brand/HiTechLogo';
 
 
 
@@ -56,7 +56,7 @@ export function LandingNav() {
 
         <div className="flex h-14 sm:h-16 items-center justify-between gap-4">
 
-          <BizTrackLogo size="md" showText href="/" />
+          <HiTechLogo size="md" showText href="/" />
 
 
 

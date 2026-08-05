@@ -13,7 +13,7 @@ export const TRUSTPILOT_DUMMY_REVIEWS: ReviewItem[] = [
     rating: 5,
     date: '2 weeks ago',
     excerpt:
-      'BizTrack streamlined our operations. Onboarding was smooth and support responded quickly.',
+      'HiTech streamlined our operations. Onboarding was smooth and support responded quickly.',
   },
   {
     id: 'tp-2',
@@ -80,6 +80,6 @@ export const GOOGLE_DUMMY_REVIEWS: ReviewItem[] = [
     rating: 5,
     date: '1 month ago',
     excerpt:
-      'We migrated from spreadsheets to BizTrack in weeks. Visibility across teams is much better.',
+      'We migrated from spreadsheets to HiTech in weeks. Visibility across teams is much better.',
   },
 ];
