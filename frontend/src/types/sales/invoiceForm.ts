@@ -11,6 +11,7 @@ export type InvoiceFormErrors = Record<string, string>;
 
 export type InvoiceFormTotals = {
   subtotal: number;
+  labourCost: number;
   discount: number;
   taxAmount: number;
   total: number;

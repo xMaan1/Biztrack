@@ -9,6 +9,7 @@ import {
   Loader2,
   Sparkles,
   User,
+  Wrench,
 } from 'lucide-react';
 import {
   Dialog,
@@ -165,6 +166,17 @@ export function InvoiceCreatedDialog({
                     {formatDate(invoice.issueDate || invoice.createdAt)}
                   </span>
                 </div>
+                {invoice.labourCost ? (
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 text-gray-500">
+                      <Wrench className="h-4 w-4 text-blue-500" />
+                      Labour Cost
+                    </span>
+                    <span className="font-medium text-gray-900">
+                      {formatCurrency(invoice.labourCost, invoice.currency)}
+                    </span>
+                  </div>
+                ) : null}
                 <div className="mt-1 flex items-center justify-between border-t border-dashed pt-2.5">
                   <span className="text-sm font-medium text-gray-500">
                     Total Amount

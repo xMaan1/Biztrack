@@ -29,6 +29,13 @@ export function InvoiceFormTotalsSummary({
               className={`${COMMERCE_INPUT_CLS} bg-background`}
             />
           </InlineField>
+          <InlineField label="Labour Cost:">
+            <Input
+              readOnly
+              value={formatCurrency(totals.labourCost)}
+              className={`${COMMERCE_INPUT_CLS} bg-background`}
+            />
+          </InlineField>
           <InlineField label="Discount %:">
             <Input
               readOnly

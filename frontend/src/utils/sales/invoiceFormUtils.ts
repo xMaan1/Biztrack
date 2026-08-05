@@ -61,6 +61,7 @@ export function emptyInvoiceForm(currency: string): InvoiceCreate {
     currency,
     taxRate: 0,
     discount: 0,
+    labourCost: 0,
     notes: '',
     terms: '',
     items: [],
@@ -89,6 +90,7 @@ export function invoiceFormDataFromInvoice(invoice: Invoice): InvoiceCreate {
     currency: invoice.currency,
     taxRate: invoice.taxRate,
     discount: invoice.discount,
+    labourCost: invoice.labourCost || 0,
     notes: invoice.notes || '',
     terms: invoice.terms || '',
     items: [],
@@ -167,13 +169,15 @@ export function calculateInvoiceTotals(
     (sum, item) => sum + item.quantity * item.unitPrice * (1 - item.discount / 100),
     0,
   );
+  const labourCost = formData.labourCost || 0;
   const discountAmount = subtotal * (formData.discount / 100);
-  const taxableAmount = subtotal - discountAmount;
+  const taxableAmount = subtotal + labourCost - discountAmount;
   const taxAmount = taxableAmount * (formData.taxRate / 100);
   const total = taxableAmount + taxAmount;
 
   return {
     subtotal: Math.round(subtotal * 100) / 100,
+    labourCost: Math.round(labourCost * 100) / 100,
     discount: Math.round(discountAmount * 100) / 100,
     taxAmount: Math.round(taxAmount * 100) / 100,
     total: Math.round(total * 100) / 100,

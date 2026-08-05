@@ -145,6 +145,17 @@ export function InvoiceFormDetailsSection({
               className={COMMERCE_INPUT_CLS}
             />
           </InlineField>
+          <InlineField label="Labour Cost:">
+            <Input
+              id="labourCost"
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.labourCost}
+              onChange={(e) => onInputChange('labourCost', parseFloat(e.target.value) || 0)}
+              className={COMMERCE_INPUT_CLS}
+            />
+          </InlineField>
           <InlineField label="Notes:">
             <Input
               id="notes"

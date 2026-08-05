@@ -134,6 +134,7 @@ export function MobileInvoicesScreen() {
   const [currency, setCurrency] = useState('USD');
   const [taxRate, setTaxRate] = useState('0');
   const [discount, setDiscount] = useState('0');
+  const [labourCost, setLabourCost] = useState('0');
   const [notes, setNotes] = useState('');
   const [terms, setTerms] = useState('');
   const [lineRows, setLineRows] = useState<InvoiceItemCreate[]>([
@@ -229,6 +230,7 @@ export function MobileInvoicesScreen() {
     setCurrency('USD');
     setTaxRate('0');
     setDiscount('0');
+    setLabourCost('0');
     setNotes('');
     setTerms('');
     setLineRows([
@@ -252,6 +254,7 @@ export function MobileInvoicesScreen() {
     }
     const tr = parseFloat(taxRate) || 0;
     const disc = parseFloat(discount) || 0;
+    const labour = parseFloat(labourCost) || 0;
     const payload: InvoiceCreate = {
       customerId,
       customerName: customerName.trim(),
@@ -266,6 +269,7 @@ export function MobileInvoicesScreen() {
       currency,
       taxRate: tr,
       discount: disc,
+      labourCost: labour,
       notes: notes.trim() || undefined,
       terms: terms.trim() || undefined,
       items,
@@ -280,7 +284,7 @@ export function MobileInvoicesScreen() {
       const discountPct = parseFloat(discount) || 0;
       const taxPct = parseFloat(taxRate) || 0;
       const discountAmount = subtotalAmount * (discountPct / 100);
-      const taxableAmount = subtotalAmount - discountAmount;
+      const taxableAmount = subtotalAmount + labour - discountAmount;
       const taxAmount = taxableAmount * (taxPct / 100);
       const totalAmount = taxableAmount + taxAmount;
       if (createInstallmentPlan && totalAmount > 0) {
@@ -398,8 +402,9 @@ export function MobileInvoicesScreen() {
   );
   const invoiceDiscountPct = Number(discount) || 0;
   const invoiceTaxPct = Number(taxRate) || 0;
+  const invoiceLabourCost = Number(labourCost) || 0;
   const invoiceDiscountAmount = lineSubtotal * (invoiceDiscountPct / 100);
-  const taxableAmount = lineSubtotal - invoiceDiscountAmount;
+  const taxableAmount = lineSubtotal + invoiceLabourCost - invoiceDiscountAmount;
   const invoiceTaxAmount = taxableAmount * (invoiceTaxPct / 100);
   const invoiceTotal = taxableAmount + invoiceTaxAmount;
 
@@ -697,6 +702,9 @@ export function MobileInvoicesScreen() {
           </View>
         </View>
 
+        <WorkshopFieldLabel>Labour Cost</WorkshopFieldLabel>
+        <WorkshopTextInput value={labourCost} onChangeText={setLabourCost} keyboardType="decimal-pad" placeholder="0" />
+
         <WorkshopFieldLabel>Payment terms</WorkshopFieldLabel>
         <WorkshopTextInput value={paymentTerms} onChangeText={setPaymentTerms} />
 
@@ -792,6 +800,12 @@ export function MobileInvoicesScreen() {
             <Text style={{ color: WS.textMuted }}>Subtotal</Text>
             <Text style={{ fontWeight: '700', color: WS.text }}>{formatUsd(lineSubtotal)}</Text>
           </View>
+          {invoiceLabourCost > 0 ? (
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
+              <Text style={{ color: WS.textMuted }}>Labour Cost</Text>
+              <Text style={{ fontWeight: '700', color: WS.text }}>{formatUsd(invoiceLabourCost)}</Text>
+            </View>
+          ) : null}
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
             <Text style={{ color: WS.textMuted }}>Discount ({invoiceDiscountPct}%)</Text>
             <Text style={{ fontWeight: '700', color: WS.text }}>-{formatUsd(invoiceDiscountAmount)}</Text>
@@ -975,6 +989,9 @@ export function MobileInvoicesScreen() {
             ))}
 
             <WorkshopDetailRow label="Subtotal" value={formatUsd(selected.subtotal)} />
+            {selected.labourCost ? (
+              <WorkshopDetailRow label="Labour Cost" value={formatUsd(selected.labourCost)} />
+            ) : null}
             {selected.taxAmount > 0 ? (
               <WorkshopDetailRow label={`Tax (${selected.taxRate}%)`} value={formatUsd(selected.taxAmount)} />
             ) : null}

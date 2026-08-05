@@ -73,6 +73,7 @@ class InvoiceBase(BaseModel):
     taxRate: float = 0.0
     taxAmount: float = 0.0
     discount: float = 0.0
+    labourCost: float = 0.0
     total: float = 0.0
     notes: Optional[str] = None
     terms: Optional[str] = None
@@ -97,6 +98,7 @@ class InvoiceCreate(BaseModel):
     currency: str = "USD"
     taxRate: float = 0.0
     discount: float = 0.0
+    labourCost: float = 0.0
     notes: Optional[str] = None
     terms: Optional[str] = None
     items: List[InvoiceItemCreate] = []
@@ -121,6 +123,7 @@ class InvoiceUpdate(BaseModel):
     currency: Optional[str] = None
     taxRate: Optional[float] = None
     discount: Optional[float] = None
+    labourCost: Optional[float] = None
     notes: Optional[str] = None
     terms: Optional[str] = None
     status: Optional[InvoiceStatus] = None

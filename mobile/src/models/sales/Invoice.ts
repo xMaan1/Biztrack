@@ -65,6 +65,7 @@ export interface Invoice {
   taxRate: number;
   taxAmount: number;
   discount: number;
+  labourCost?: number;
   total: number;
   notes?: string;
   terms?: string;
@@ -101,6 +102,7 @@ export interface InvoiceCreate {
   currency: string;
   taxRate: number;
   discount: number;
+  labourCost?: number;
   notes?: string;
   terms?: string;
   items: InvoiceItemCreate[];
@@ -124,6 +126,7 @@ export interface InvoiceUpdate {
   currency?: string;
   taxRate?: number;
   discount?: number;
+  labourCost?: number;
   notes?: string;
   terms?: string;
   status?: InvoiceStatus;

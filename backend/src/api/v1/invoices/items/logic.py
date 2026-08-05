@@ -168,6 +168,7 @@ def create_invoice_endpoint(
             invoice_data.items,
             invoice_data.taxRate,
             invoice_data.discount,
+            invoice_data.labourCost or 0,
         )
 
         db_invoice = Invoice(
@@ -189,6 +190,7 @@ def create_invoice_endpoint(
             currency=invoice_data.currency,
             taxRate=invoice_data.taxRate,
             discount=invoice_data.discount,
+            labourCost=invoice_data.labourCost or 0,
             notes=invoice_data.notes,
             terms=invoice_data.terms,
             opportunityId=invoice_data.opportunityId,
@@ -563,6 +565,7 @@ def update_invoice_endpoint(
                     value,
                     invoice.taxRate,
                     invoice.discount,
+                    invoice.labourCost or 0,
                 )
                 invoice.subtotal = totals["subtotal"]
                 invoice.discountAmount = totals["discountAmount"]
@@ -586,11 +589,12 @@ def update_invoice_endpoint(
             except Exception:
                 pass
 
-        if any(k in update_data for k in ("items", "taxRate", "discount")):
+        if any(k in update_data for k in ("items", "taxRate", "discount", "labourCost")):
             totals = calculate_invoice_totals(
                 invoice.items or [],
                 invoice.taxRate or 0,
                 invoice.discount or 0,
+                invoice.labourCost or 0,
             )
             invoice.subtotal = totals["subtotal"]
             invoice.discountAmount = totals["discountAmount"]

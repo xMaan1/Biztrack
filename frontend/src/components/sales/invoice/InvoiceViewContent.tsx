@@ -138,6 +138,12 @@ export function InvoiceViewContent({ invoice, onClose }: InvoiceViewContentProps
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <InvoiceDetailField label="Subtotal" value={formatCurrency(invoice.subtotal)} />
+          {invoice.labourCost ? (
+            <InvoiceDetailField
+              label="Labour Cost"
+              value={formatCurrency(invoice.labourCost)}
+            />
+          ) : null}
           <InvoiceDetailField
             label={`Discount (${invoice.discount}%)`}
             value={`-${formatCurrency((invoice.subtotal * invoice.discount) / 100)}`}

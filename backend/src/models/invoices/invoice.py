@@ -34,6 +34,7 @@ class Invoice(Base):
     subtotal = Column(Float, default=0.0)
     discountAmount = Column(Float, default=0.0)
     taxAmount = Column(Float, default=0.0)
+    labourCost = Column(Float, default=0.0)
     total = Column(Float, default=0.0)
     notes = Column(Text, nullable=True)
     terms = Column(Text, nullable=True)

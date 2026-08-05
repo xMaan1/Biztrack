@@ -429,11 +429,15 @@ def create_totals_section(invoice, styles: Dict[str, ParagraphStyle], colors: Di
     discount_amount = getattr(invoice, 'discountAmount', 0) or 0
     tax_rate = getattr(invoice, 'taxRate', 0) or 0
     tax_amount = getattr(invoice, 'taxAmount', 0) or 0
+    labour_cost = getattr(invoice, 'labourCost', 0) or 0
     total = getattr(invoice, 'total', 0) or 0
     
     totals_data = [
         ['Subtotal:', format_currency(subtotal, currency)],
     ]
+    
+    if labour_cost > 0:
+        totals_data.append([f'Labour Cost:', format_currency(labour_cost, currency)])
     
     if discount_rate > 0:
         totals_data.append([f'Discount ({discount_rate:.1f}%):', f"-{format_currency(discount_amount, currency)}"])
