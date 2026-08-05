@@ -9,6 +9,14 @@ export enum PurchaseOrderStatus {
   CANCELLED = 'cancelled',
 }
 
+export interface PurchaseOrderItem {
+  productId?: string;
+  productName?: string;
+  sku?: string;
+  quantity: number;
+  unitCost: number;
+}
+
 export interface PurchaseOrder {
   id: string;
   tenantId: string;
@@ -32,6 +40,7 @@ export interface PurchaseOrder {
   department?: string;
   deliveryLocation?: string;
   requisitionNumber?: string;
+  items?: PurchaseOrderItem[];
   createdAt: string;
   updatedAt: string;
 }
@@ -53,6 +62,7 @@ export interface PurchaseOrderCreate {
   department?: string;
   deliveryLocation?: string;
   requisitionNumber?: string;
+  items?: PurchaseOrderItem[];
 }
 
 export interface PurchaseOrderUpdate {
@@ -75,6 +85,7 @@ export interface PurchaseOrderUpdate {
   department?: string;
   deliveryLocation?: string;
   requisitionNumber?: string;
+  items?: PurchaseOrderItem[];
 }
 
 export interface PurchaseOrderResponse {

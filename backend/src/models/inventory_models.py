@@ -336,6 +336,7 @@ class PurchaseOrderBase(BaseModel):
     department: Optional[str] = None
     deliveryLocation: Optional[str] = None
     requisitionNumber: Optional[str] = None
+    items: Optional[List[dict]] = None
 
 class PurchaseOrderCreate(BaseModel):
     vehicleReg: Optional[str] = None
@@ -354,6 +355,7 @@ class PurchaseOrderCreate(BaseModel):
     department: Optional[str] = None
     deliveryLocation: Optional[str] = None
     requisitionNumber: Optional[str] = None
+    items: Optional[List[dict]] = None
 
 class PurchaseOrderUpdate(BaseModel):
     orderNumber: Optional[str] = None

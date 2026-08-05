@@ -98,6 +98,7 @@ def _purchase_order_api_payload(order: PurchaseOrderDB, supplier_name: str) -> d
         "department": getattr(order, "department", None),
         "deliveryLocation": getattr(order, "deliveryLocation", None),
         "requisitionNumber": getattr(order, "requisitionNumber", None),
+        "items": order.items or [],
         "createdBy": str(order.createdBy) if hasattr(order, "createdBy") else "",
         "createdAt": order.createdAt,
         "updatedAt": order.updatedAt,
@@ -702,14 +703,24 @@ def create_purchase_order_endpoint(
     if isinstance(po_status, PurchaseOrderStatus):
         po_status = po_status.value
 
+    po_items = order_data.get("items") or []
+    order_data["items"] = po_items
+    po_subtotal = round(
+        sum(
+            float(item.get("unitCost") or 0) * float(item.get("quantity") or 0)
+            for item in po_items
+        ),
+        2,
+    )
+
     order_data.update({
         "id": str(uuid.uuid4()),
         "tenant_id": str(tenant_context["tenant_id"]),
         "createdBy": str(current_user.id),
         "status": po_status,
-        "subtotal": 0.0,
+        "subtotal": po_subtotal,
         "vatAmount": 0.0,
-        "totalAmount": 0.0,
+        "totalAmount": po_subtotal,
         "createdAt": datetime.utcnow(),
         "updatedAt": datetime.utcnow()
     })
@@ -776,7 +787,20 @@ def update_purchase_order_endpoint(
         order_update["orderDate"] = datetime.strptime(order_update["orderDate"], "%Y-%m-%d").date()
     if order_update.get("expectedDeliveryDate"):
         order_update["expectedDeliveryDate"] = datetime.strptime(order_update["expectedDeliveryDate"], "%Y-%m-%d").date()
-    
+
+    if "items" in order_update:
+        po_items = order_update.get("items") or []
+        order_update["items"] = po_items
+        po_subtotal = round(
+            sum(
+                float(item.get("unitCost") or 0) * float(item.get("quantity") or 0)
+                for item in po_items
+            ),
+            2,
+        )
+        order_update["subtotal"] = po_subtotal
+        order_update["totalAmount"] = po_subtotal
+
     order_update["updatedAt"] = datetime.utcnow()
     
     db_order = update_purchase_order(order_id, order_update, db, str(tenant_context["tenant_id"]))

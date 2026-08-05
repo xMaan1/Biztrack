@@ -19,15 +19,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { inventoryService } from '../../services/InventoryService';
+import { apiService } from '../../services/ApiService';
 import HRMService from '../../services/HRMService';
 import {
   PurchaseOrderCreate,
   PurchaseOrder,
   PurchaseOrderStatus,
+  PurchaseOrderItem,
 } from '../../models/inventory';
 import { Supplier } from '../../models/hrm';
+import type { Product } from '../../models/pos';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '../ui/alert';
 import { VehicleSearch } from '../ui/vehicle-search';
@@ -41,6 +44,7 @@ import {
   validateSupplierForm,
 } from '../hrm/suppliers/supplierUtils';
 import type { SupplierFormData } from '../hrm/suppliers/types';
+import { CreateProductDialog } from '../pos/products/CreateProductDialog';
 
 interface PurchaseOrderModalProps {
   isOpen: boolean;
@@ -78,6 +82,12 @@ export default function PurchaseOrderModal({
   const [isSavingSupplier, setIsSavingSupplier] = useState(false);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [warehouses, setWarehouses] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [orderItems, setOrderItems] = useState<PurchaseOrderItem[]>([]);
+  const [newItemProductId, setNewItemProductId] = useState('');
+  const [newItemQuantity, setNewItemQuantity] = useState(1);
+  const [newItemUnitCost, setNewItemUnitCost] = useState(0);
+  const [isCreateProductOpen, setIsCreateProductOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [documentLinks, setDocumentLinks] = useState<WorkshopDocumentLinksValue>({});
@@ -140,6 +150,13 @@ export default function PurchaseOrderModal({
       }
     } catch (error) {
     }
+    try {
+      apiService
+        .get('/pos/products?limit=1000&page=1')
+        .then((res: any) => setProducts(res.products || []))
+        .catch(() => setProducts([]));
+    } catch (error) {
+    }
   };
 
   const handleCreateOrder = async () => {
@@ -186,12 +203,13 @@ export default function PurchaseOrderModal({
       payload.expectedDeliveryDate = requiresDelivery
         ? newOrder.expectedDeliveryDate
         : undefined;
+      payload.items = orderItems;
       const created = await inventoryService.createPurchaseOrder(payload);
-      
+
       if (useToastNotifications) {
         toast.success('Purchase order created successfully');
       }
-      
+
       onClose();
       resetForm();
       onSuccess?.(created.purchaseOrder);
@@ -210,6 +228,10 @@ export default function PurchaseOrderModal({
   const resetForm = () => {
     setSelectedVehicle(null);
     setDocumentLinks({});
+    setOrderItems([]);
+    setNewItemProductId('');
+    setNewItemQuantity(1);
+    setNewItemUnitCost(0);
     setNewOrder({
       orderNumber: '',
       batchNumber: '',
@@ -240,6 +262,34 @@ export default function PurchaseOrderModal({
   const openAddSupplier = () => {
     setSupplierFormData(emptySupplierForm());
     setIsAddSupplierOpen(true);
+  };
+
+  const handleAddItem = () => {
+    const product = products.find((p) => p.id === newItemProductId);
+    if (!product || newItemQuantity <= 0) {
+      setErrorMessage('Select a product and enter a valid quantity');
+      return;
+    }
+    setOrderItems((prev) => [
+      ...prev,
+      {
+        productId: product.id,
+        productName: product.name,
+        sku: product.sku,
+        quantity: newItemQuantity,
+        unitCost: newItemUnitCost > 0 ? newItemUnitCost : product.costPrice,
+      },
+    ]);
+    setNewItemProductId('');
+    setNewItemQuantity(1);
+    setNewItemUnitCost(0);
+    setErrorMessage('');
+  };
+
+  const handleProductCreated = (product: Product) => {
+    setProducts((prev) => [product, ...prev.filter((p) => p.id !== product.id)]);
+    setNewItemProductId(product.id);
+    setNewItemUnitCost(product.costPrice);
   };
 
   const handleSupplierFormChange = (
@@ -587,6 +637,109 @@ export default function PurchaseOrderModal({
           )}
 
           <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Products</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsCreateProductOpen(true)}
+              >
+                <Plus className="mr-1 h-4 w-4" />
+                New Product
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+              <div className="md:col-span-2">
+                <Select
+                  value={newItemProductId}
+                  onValueChange={(value) => {
+                    const product = products.find((p) => p.id === value);
+                    setNewItemProductId(value);
+                    if (product) setNewItemUnitCost(product.costPrice);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select product" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {products.length === 0 ? (
+                      <SelectItem value="no-products" disabled>
+                        No products available
+                      </SelectItem>
+                    ) : (
+                      products.map((product) => (
+                        <SelectItem key={product.id} value={product.id}>
+                          {product.name} ({product.sku})
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Input
+                  type="number"
+                  min={1}
+                  value={newItemQuantity || ''}
+                  onChange={(e) =>
+                    setNewItemQuantity(
+                      e.target.value === '' ? 0 : parseFloat(e.target.value) || 0,
+                    )
+                  }
+                  placeholder="Quantity"
+                />
+              </div>
+              <div>
+                <Input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={newItemUnitCost || ''}
+                  onChange={(e) =>
+                    setNewItemUnitCost(
+                      e.target.value === '' ? 0 : parseFloat(e.target.value) || 0,
+                    )
+                  }
+                  placeholder="Unit cost"
+                />
+              </div>
+            </div>
+            <Button type="button" variant="outline" size="sm" onClick={handleAddItem} className="w-full">
+              <Plus className="mr-1 h-4 w-4" />
+              Add Item
+            </Button>
+            {orderItems.length > 0 && (
+              <div className="space-y-2">
+                {orderItems.map((item, index) => (
+                  <div
+                    key={`${item.productId}-${index}`}
+                    className="flex items-center justify-between rounded-md border px-3 py-2"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-medium">{item.productName}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {item.quantity} × {item.unitCost}
+                        {item.sku ? ` · ${item.sku}` : ''}
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        setOrderItems((prev) => prev.filter((_, i) => i !== index))
+                      }
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="notes">Notes</Label>
             <Textarea
               id="notes"
@@ -622,6 +775,12 @@ export default function PurchaseOrderModal({
         onFormChange={handleSupplierFormChange}
         onSubmit={handleCreateSupplier}
         onCancel={() => setIsAddSupplierOpen(false)}
+      />
+
+      <CreateProductDialog
+        open={isCreateProductOpen}
+        onOpenChange={setIsCreateProductOpen}
+        onSaved={handleProductCreated}
       />
     </>
   );

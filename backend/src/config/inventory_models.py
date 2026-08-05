@@ -94,6 +94,7 @@ class PurchaseOrder(Base):
     department = Column(String, nullable=True)
     deliveryLocation = Column("delivery_location", String, nullable=True)
     requisitionNumber = Column("requisition_number", String, nullable=True)
+    items = Column(JSON, default=list)
     approvedBy = Column(UUID(as_uuid=True), ForeignKey("users.id"))
     approvedAt = Column(DateTime)
     createdAt = Column(DateTime, default=datetime.utcnow)
