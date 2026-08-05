@@ -11,7 +11,7 @@ class VehicleCreate(BaseModel):
     vin: Optional[str] = None
     registration_number: str = Field(..., min_length=1)
     mileage: Optional[str] = None
-    customer_id: Optional[str] = None
+    engine_number: Optional[str] = None
     notes: Optional[str] = None
 
     @field_validator("make", "model", "registration_number")
@@ -31,7 +31,7 @@ class VehicleUpdate(BaseModel):
     vin: Optional[str] = None
     registration_number: Optional[str] = None
     mileage: Optional[str] = None
-    customer_id: Optional[str] = None
+    engine_number: Optional[str] = None
     notes: Optional[str] = None
     is_active: Optional[bool] = None
 
@@ -46,7 +46,7 @@ class VehicleResponse(BaseModel):
     vin: Optional[str] = None
     registration_number: Optional[str] = None
     mileage: Optional[str] = None
-    customer_id: Optional[str] = None
+    engine_number: Optional[str] = None
     notes: Optional[str] = None
     is_active: bool
     created_at: datetime

@@ -8,7 +8,7 @@ export interface Vehicle {
   vin?: string;
   registration_number?: string;
   mileage?: string;
-  customer_id?: string;
+  engine_number?: string;
   notes?: string;
   is_active: boolean;
   created_at: string;
@@ -23,7 +23,7 @@ export interface VehicleCreate {
   vin?: string;
   registration_number?: string;
   mileage?: string;
-  customer_id?: string;
+  engine_number?: string;
   notes?: string;
 }
 
@@ -35,7 +35,7 @@ export interface VehicleUpdate {
   vin?: string;
   registration_number?: string;
   mileage?: string;
-  customer_id?: string;
+  engine_number?: string;
   notes?: string;
   is_active?: boolean;
 }

@@ -18,14 +18,13 @@ class Vehicle(Base):
     vin = Column(String, nullable=True)
     registration_number = Column(String, nullable=True)
     mileage = Column(String, nullable=True)
-    customer_id = Column(UUID(as_uuid=True), ForeignKey("customers.id"), nullable=True)
+    engine_number = Column(String, nullable=True)
     notes = Column(Text, nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     tenant = relationship("Tenant")
-    customer = relationship("Customer", foreign_keys=[customer_id])
 
     __table_args__ = (
         Index("idx_vehicles_tenant_id", "tenant_id"),

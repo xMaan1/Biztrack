@@ -163,9 +163,9 @@ export function VehicleSearch({
           <Car className="h-4 w-4 text-gray-500 shrink-0" />
           <div className="min-w-0 text-sm">
             <div className="font-medium text-gray-900">{displayLine(selectedVehicle)}</div>
-            {(selectedVehicle.vin || selectedVehicle.color || selectedVehicle.mileage) && (
+            {(selectedVehicle.vin || selectedVehicle.color || selectedVehicle.mileage || selectedVehicle.engine_number) && (
               <div className="text-gray-600 truncate">
-                {[selectedVehicle.vin, selectedVehicle.color, selectedVehicle.mileage].filter(Boolean).join(' · ')}
+                {[selectedVehicle.vin, selectedVehicle.engine_number, selectedVehicle.color, selectedVehicle.mileage].filter(Boolean).join(' · ')}
               </div>
             )}
           </div>

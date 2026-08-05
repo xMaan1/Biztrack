@@ -28,7 +28,7 @@ def _vehicle_to_response(v) -> VehicleResponse:
         vin=v.vin,
         registration_number=v.registration_number,
         mileage=v.mileage,
-        customer_id=str(v.customer_id) if v.customer_id else None,
+        engine_number=v.engine_number,
         notes=v.notes,
         is_active=v.is_active,
         created_at=v.created_at,

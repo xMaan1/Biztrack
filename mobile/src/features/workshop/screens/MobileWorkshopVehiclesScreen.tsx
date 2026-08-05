@@ -45,7 +45,7 @@ export function MobileWorkshopVehiclesScreen() {
     vin: '',
     registration_number: '',
     mileage: '',
-    customer_id: '',
+    engine_number: '',
     notes: '',
   });
 
@@ -99,7 +99,7 @@ export function MobileWorkshopVehiclesScreen() {
       vin: '',
       registration_number: '',
       mileage: '',
-      customer_id: '',
+      engine_number: '',
       notes: '',
     });
     setModalOpen(true);
@@ -115,7 +115,7 @@ export function MobileWorkshopVehiclesScreen() {
       vin: v.vin || '',
       registration_number: v.registration_number || '',
       mileage: v.mileage || '',
-      customer_id: v.customer_id || '',
+      engine_number: v.engine_number || '',
       notes: v.notes || '',
     });
     setModalOpen(true);
@@ -262,8 +262,8 @@ export function MobileWorkshopVehiclesScreen() {
         </View>
         <WorkshopFieldLabel>Mileage</WorkshopFieldLabel>
         <WorkshopTextInput value={form.mileage} onChangeText={(v) => setForm((f) => ({ ...f, mileage: v }))} />
-        <WorkshopFieldLabel>Customer ID</WorkshopFieldLabel>
-        <WorkshopTextInput value={form.customer_id} onChangeText={(v) => setForm((f) => ({ ...f, customer_id: v }))} autoCapitalize="none" />
+        <WorkshopFieldLabel>Engine Number</WorkshopFieldLabel>
+        <WorkshopTextInput value={form.engine_number} onChangeText={(v) => setForm((f) => ({ ...f, engine_number: v }))} />
         <WorkshopFieldLabel>Notes</WorkshopFieldLabel>
         <WorkshopTextInput value={form.notes} onChangeText={(v) => setForm((f) => ({ ...f, notes: v }))} multiline />
       </WorkshopFormSheet>

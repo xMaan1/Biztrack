@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session
 
 from .....models.crm import Customer, CustomerGuarantor
 from .....config.job_card_models import JobCard
-from .....config.vehicle_models import Vehicle
 from ..db_common import (
     attachment_item_to_dict,
     attachment_url_from_stored,
@@ -245,10 +244,6 @@ def delete_customer(db: Session, customer_id: str, tenant_id: str) -> bool:
         db.query(JobCard).filter(
             and_(JobCard.customer_id == cust_uuid, JobCard.tenant_id == tenant_uuid)
         ).update({JobCard.customer_id: None}, synchronize_session=False)
-
-        db.query(Vehicle).filter(
-            and_(Vehicle.customer_id == cust_uuid, Vehicle.tenant_id == tenant_uuid)
-        ).update({Vehicle.customer_id: None}, synchronize_session=False)
 
         db.delete(customer)
         db.commit()

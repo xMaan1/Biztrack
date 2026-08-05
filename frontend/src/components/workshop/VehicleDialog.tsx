@@ -12,10 +12,8 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Alert, AlertDescription } from '../ui/alert';
-import { CustomerSearch } from '../ui/customer-search';
-import { Customer } from '../../services/CustomerService';
-import { apiService } from '../../services/ApiService';
 import { Vehicle, VehicleCreate, VehicleUpdate } from '../../models/workshop';
+import { apiService } from '../../services/ApiService';
 import axios from 'axios';
 
 interface VehicleDialogProps {
@@ -25,7 +23,6 @@ interface VehicleDialogProps {
   vehicle?: Vehicle | null;
   onSuccess: () => void;
   onCreated?: (vehicle: Vehicle) => void;
-  defaultCustomer?: Customer | null;
 }
 
 export default function VehicleDialog({
@@ -35,11 +32,9 @@ export default function VehicleDialog({
   vehicle,
   onSuccess,
   onCreated,
-  defaultCustomer,
 }: VehicleDialogProps) {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [formData, setFormData] = useState({
     make: '',
     model: '',
@@ -48,16 +43,9 @@ export default function VehicleDialog({
     vin: '',
     registration_number: '',
     mileage: '',
+    engine_number: '',
     notes: '',
   });
-
-  useEffect(() => {
-    if (open && mode === 'edit' && vehicle?.customer_id) {
-      apiService.get(`/crm/customers/${vehicle.customer_id}`).then((c: Customer) => setSelectedCustomer(c)).catch(() => setSelectedCustomer(null));
-    } else if (open && mode === 'create') {
-      setSelectedCustomer(defaultCustomer ?? null);
-    }
-  }, [open, mode, vehicle?.customer_id, defaultCustomer]);
 
   useEffect(() => {
     if (vehicle && mode === 'edit') {
@@ -69,6 +57,7 @@ export default function VehicleDialog({
         vin: vehicle.vin ?? '',
         registration_number: vehicle.registration_number ?? '',
         mileage: vehicle.mileage ?? '',
+        engine_number: vehicle.engine_number ?? '',
         notes: vehicle.notes ?? '',
       });
     } else if (mode === 'create') {
@@ -80,6 +69,7 @@ export default function VehicleDialog({
         vin: '',
         registration_number: '',
         mileage: '',
+        engine_number: '',
         notes: '',
       });
     }
@@ -109,7 +99,7 @@ export default function VehicleDialog({
           vin: formData.vin.trim() || undefined,
           registration_number: registrationNumber,
           mileage: formData.mileage.trim() || undefined,
-          customer_id: selectedCustomer?.id || undefined,
+          engine_number: formData.engine_number.trim() || undefined,
           notes: formData.notes.trim() || undefined,
         };
         const created = await apiService.post('/vehicles', payload) as Vehicle;
@@ -123,7 +113,7 @@ export default function VehicleDialog({
           vin: formData.vin.trim() || undefined,
           registration_number: registrationNumber,
           mileage: formData.mileage.trim() || undefined,
-          customer_id: selectedCustomer?.id || undefined,
+          engine_number: formData.engine_number.trim() || undefined,
           notes: formData.notes.trim() || undefined,
         };
         await apiService.put(`/vehicles/${vehicle.id}`, payload);
@@ -196,13 +186,9 @@ export default function VehicleDialog({
               <Label>Mileage</Label>
               <Input value={formData.mileage} onChange={(e) => setFormData({ ...formData, mileage: e.target.value })} placeholder="e.g. 50000 km" />
             </div>
-            <div className="md:col-span-2">
-              <CustomerSearch
-                label="Customer (optional)"
-                value={selectedCustomer}
-                onSelect={setSelectedCustomer}
-                placeholder="Search customer..."
-              />
+            <div>
+              <Label>Engine Number</Label>
+              <Input value={formData.engine_number} onChange={(e) => setFormData({ ...formData, engine_number: e.target.value })} placeholder="Engine no." />
             </div>
             <div className="md:col-span-2">
               <Label>Notes</Label>

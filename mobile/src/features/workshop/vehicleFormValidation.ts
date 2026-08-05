@@ -8,7 +8,7 @@ export type VehicleFormState = {
   vin: string;
   registration_number: string;
   mileage: string;
-  customer_id: string;
+  engine_number: string;
   notes: string;
 };
 
@@ -43,7 +43,7 @@ export function vehiclePayloadForSubmit(
     color: t(form.color) || undefined,
     vin: t(form.vin) || undefined,
     mileage: t(form.mileage) || undefined,
-    customer_id: t(form.customer_id) || undefined,
+    engine_number: t(form.engine_number) || undefined,
     notes: t(form.notes) || undefined,
   };
   if (isCreate) {

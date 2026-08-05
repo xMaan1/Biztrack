@@ -402,6 +402,7 @@ export default function JobCardDialog({
                             vehicle_color: v.color ?? '',
                             vehicle_reg: v.registration_number ?? '',
                             vehicle_mileage: v.mileage ?? '',
+                            vehicle_engine_number: v.engine_number ?? '',
                           }));
                         }
                       }}
@@ -576,7 +577,6 @@ export default function JobCardDialog({
         onOpenChange={setShowCreateVehicle}
         mode="create"
         onSuccess={() => {}}
-        defaultCustomer={selectedCustomer}
         onCreated={(v) => {
           setSelectedVehicle(v);
           setFormData((prev) => ({
@@ -588,10 +588,8 @@ export default function JobCardDialog({
             vehicle_color: v.color ?? '',
             vehicle_reg: v.registration_number ?? '',
             vehicle_mileage: v.mileage ?? '',
+            vehicle_engine_number: v.engine_number ?? '',
           }));
-          if (v.customer_id && (!selectedCustomer || selectedCustomer.id !== v.customer_id)) {
-            apiService.get(`/crm/customers/${v.customer_id}`).then((c: Customer) => setSelectedCustomer(c)).catch(() => {});
-          }
         }}
       />
     </Dialog>
