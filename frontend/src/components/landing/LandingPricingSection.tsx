@@ -3,7 +3,6 @@
 import { Check, Loader2 } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
 import {
   Card,
   CardContent,
@@ -11,13 +10,7 @@ import {
   CardTitle,
 } from '../ui/card';
 
-const PLAN_DISPLAY_ORDER = [
-  'agency',
-  'commerce',
-  'workshop',
-  'healthcare',
-  'ngo',
-] as const;
+const PLAN_DISPLAY_ORDER = ['agency'] as const;
 
 function sortPlansForDisplay(plans: LandingPlan[]): LandingPlan[] {
   return [...plans].sort((a, b) => {
@@ -73,35 +66,13 @@ function LandingPlanCard({
   isAuthenticated,
   onSubscribe,
 }: LandingPlanCardProps) {
-  const highlightBadge =
-    plan.planType === 'ngo' ? (
-      <Badge className="bg-violet-600 px-4 py-1.5 text-white">For Nonprofits</Badge>
-    ) : plan.planType === 'enterprise' ? (
-      <Badge className="bg-blue-600 px-4 py-1.5 text-white">Most Popular</Badge>
-    ) : null;
-
   return (
     <Card
       className={cn(
-        'relative flex h-full flex-col border shadow-sm transition-all duration-300 hover:shadow-lg',
-        plan.planType === 'ngo' &&
-          'border-violet-400 ring-2 ring-violet-200/60',
-        plan.planType === 'enterprise' &&
-          'border-blue-400 ring-2 ring-blue-200/60 lg:scale-[1.02]',
-        plan.planType !== 'ngo' &&
-          plan.planType !== 'enterprise' &&
-          'border-slate-200 hover:border-blue-200',
+        'relative flex h-full flex-col border shadow-sm transition-all duration-300 hover:shadow-lg border-slate-200 hover:border-blue-200',
       )}
     >
-      <CardHeader
-        className={cn(
-          'pb-4 text-center',
-          highlightBadge ? 'space-y-3 pt-6' : 'pt-8',
-        )}
-      >
-        {highlightBadge && (
-          <div className="flex justify-center">{highlightBadge}</div>
-        )}
+      <CardHeader className="pb-4 text-center pt-8">
         <CardTitle className="text-2xl text-slate-900">{plan.name}</CardTitle>
         <div className="mt-2 text-4xl font-bold text-slate-900">
           {currencySymbol}

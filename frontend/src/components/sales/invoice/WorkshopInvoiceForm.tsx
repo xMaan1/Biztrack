@@ -4,13 +4,11 @@ import type { UseInvoiceFormReturn } from '@/src/hooks/useInvoiceForm';
 import type { InvoiceFormMode } from '@/src/types/sales/invoiceForm';
 import { InvoiceFormCustomerSection } from './InvoiceFormCustomerSection';
 import { InvoiceFormDetailsSection } from './InvoiceFormDetailsSection';
-import { InvoiceFormVehicleSection } from './InvoiceFormVehicleSection';
 import { InvoiceFormItemsSection } from './InvoiceFormItemsSection';
 import { InvoiceFormTotalsSummary } from './InvoiceFormTotalsSummary';
 import { InvoiceFormNotesSection } from './InvoiceFormNotesSection';
 import { InvoiceInstallmentSection } from './InvoiceInstallmentSection';
 import { InvoiceFormActions } from './InvoiceFormActions';
-import { WorkshopDocumentLinks } from '../../workshop/WorkshopDocumentLinks';
 
 type WorkshopInvoiceFormProps = {
   mode: InvoiceFormMode;
@@ -40,21 +38,6 @@ export function WorkshopInvoiceForm({ mode, form, error }: WorkshopInvoiceFormPr
         errors={form.errors}
         onInputChange={form.handleInputChange}
       />
-      {form.isWorkshop && (
-        <InvoiceFormVehicleSection
-          formData={form.formData}
-          selectedVehicle={form.selectedVehicle}
-          onVehicleSelect={form.setSelectedVehicle}
-          onInputChange={form.handleInputChange}
-        />
-      )}
-      {form.isWorkshop && (
-        <WorkshopDocumentLinks
-          excludeType="invoice"
-          value={form.documentLinks}
-          onChange={form.setDocumentLinks}
-        />
-      )}
       <InvoiceFormItemsSection
         items={form.items}
         newItem={form.newItem}
@@ -67,7 +50,7 @@ export function WorkshopInvoiceForm({ mode, form, error }: WorkshopInvoiceFormPr
       />
       <InvoiceFormTotalsSummary formData={form.formData} totals={form.totals} />
       <InvoiceFormNotesSection formData={form.formData} onInputChange={form.handleInputChange} />
-      {form.isCommerceOrAgency && mode !== 'view' && (
+      {mode !== 'view' && (
         <InvoiceInstallmentSection
           createInstallmentPlan={form.createInstallmentPlan}
           installmentCount={form.installmentCount}

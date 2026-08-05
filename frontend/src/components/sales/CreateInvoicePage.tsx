@@ -10,15 +10,11 @@ import { InvoiceCustomizationDialog } from './InvoiceCustomizationDialog';
 import { InstallmentPlanCreateOption } from './InvoiceDialog';
 import InvoiceService from '@/src/services/InvoiceService';
 import type { InvoiceCreate } from '@/src/models/sales';
-import { usePlanInfo } from '@/src/hooks/usePlanInfo';
 import { usePermissions } from '@/src/hooks/usePermissions';
 import { extractErrorMessage } from '@/src/utils/errorUtils';
 
 function CreateInvoicePageContent() {
-  const { planInfo } = usePlanInfo();
   const { isOwner } = usePermissions();
-  const isCommerce =
-    planInfo?.planType === 'commerce' || planInfo?.planType === 'agency';
   const [createError, setCreateError] = useState<string | null>(null);
   const [showCustomizeDialog, setShowCustomizeDialog] = useState(false);
   const canCustomizeInvoice = isOwner();
@@ -47,12 +43,10 @@ function CreateInvoicePageContent() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
-              {isCommerce ? 'Create Sales Invoice' : 'Create Invoice'}
+              Create Sales Invoice
             </h1>
             <p className="text-gray-600">
-              {isCommerce
-                ? 'Create a new sales invoice'
-                : 'Create a new invoice'}
+              Create a new sales invoice
             </p>
           </div>
           {canCustomizeInvoice && (

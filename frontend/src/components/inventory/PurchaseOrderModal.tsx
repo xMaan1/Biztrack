@@ -33,10 +33,6 @@ import { useCurrency } from '../../contexts/CurrencyContext';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '../ui/alert';
 import { apiService } from '../../services/ApiService';
-import { VehicleSearch } from '../ui/vehicle-search';
-import { Vehicle } from '../../models/workshop';
-import { usePlanInfo } from '../../hooks/usePlanInfo';
-import { WorkshopDocumentLinks, WorkshopDocumentLinksValue } from '../workshop/WorkshopDocumentLinks';
 
 interface PurchaseOrderModalProps {
   isOpen: boolean;
@@ -62,17 +58,12 @@ export default function PurchaseOrderModal({
   initialData = {},
 }: PurchaseOrderModalProps) {
   const { formatCurrency } = useCurrency();
-  const { planInfo } = usePlanInfo();
-  const isHealthcare = planInfo?.planType === 'healthcare';
-  const isWorkshop = planInfo?.planType === 'workshop';
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [warehouses, setWarehouses] = useState<any[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
-  const [documentLinks, setDocumentLinks] = useState<WorkshopDocumentLinksValue>({});
   const [newOrder, setNewOrder] = useState<PurchaseOrderCreate>({
     orderNumber: '',
     batchNumber: '',
@@ -224,25 +215,14 @@ export default function PurchaseOrderModal({
     try {
       setIsSubmitting(true);
       setErrorMessage('');
-      const payload: PurchaseOrderCreate = isHealthcare
-        ? {
-            ...newOrder,
-            vehicleReg: undefined,
-            purchaseForType: undefined,
-            vehicleId: undefined,
-            jobCardId: undefined,
-            invoiceId: undefined,
-          }
-        : {
-            ...newOrder,
-            department: undefined,
-            deliveryLocation: undefined,
-            requisitionNumber: undefined,
-            jobCardId: documentLinks.jobCardId,
-            invoiceId: documentLinks.invoiceId,
-            vehicleId: newOrder.purchaseForType === 'vehicle' ? newOrder.vehicleId : undefined,
-            purchaseForType: newOrder.purchaseForType,
-          };
+      const payload: PurchaseOrderCreate = {
+        ...newOrder,
+        vehicleReg: newOrder.purchaseForType === 'vehicle' ? newOrder.vehicleReg : undefined,
+        purchaseForType: newOrder.purchaseForType,
+        department: undefined,
+        deliveryLocation: undefined,
+        requisitionNumber: undefined,
+      };
       await inventoryService.createPurchaseOrder(payload);
       
       if (useToastNotifications) {
@@ -265,8 +245,6 @@ export default function PurchaseOrderModal({
   };
 
   const resetForm = () => {
-    setSelectedVehicle(null);
-    setDocumentLinks({});
     setNewOrder({
       orderNumber: '',
       batchNumber: '',
@@ -329,9 +307,7 @@ export default function PurchaseOrderModal({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="batchNumber">
-                {isHealthcare ? 'Lot / batch reference' : 'Batch Number'}
-              </Label>
+              <Label htmlFor="batchNumber">Batch Number</Label>
               <Input
                 id="batchNumber"
                 value={newOrder.batchNumber}
@@ -341,9 +317,7 @@ export default function PurchaseOrderModal({
                     batchNumber: e.target.value,
                   }))
                 }
-                placeholder={
-                  isHealthcare ? 'e.g. cold chain lot, supplier batch' : 'Enter batch number'
-                }
+                placeholder="Enter batch number"
               />
             </div>
             {showOrderDate && (
@@ -430,7 +404,7 @@ export default function PurchaseOrderModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="warehouseId">{isWorkshop ? 'Garage / Warehouse *' : 'Warehouse *'}</Label>
+            <Label htmlFor="warehouseId">Warehouse *</Label>
             <Select
               value={newOrder.warehouseId}
               onValueChange={(value) => {
@@ -458,131 +432,6 @@ export default function PurchaseOrderModal({
               </SelectContent>
             </Select>
           </div>
-
-          {isHealthcare ? (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="department">Department</Label>
-                <Input
-                  id="department"
-                  value={newOrder.department ?? ''}
-                  onChange={(e) =>
-                    setNewOrder((prev) => ({
-                      ...prev,
-                      department: e.target.value,
-                    }))
-                  }
-                  placeholder="e.g. Pharmacy, ICU, General ward"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="deliveryLocation">Delivery location</Label>
-                <Input
-                  id="deliveryLocation"
-                  value={newOrder.deliveryLocation ?? ''}
-                  onChange={(e) =>
-                    setNewOrder((prev) => ({
-                      ...prev,
-                      deliveryLocation: e.target.value,
-                    }))
-                  }
-                  placeholder="e.g. Main store, Ward 3, Central pharmacy"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="requisitionNumber">Internal requisition #</Label>
-                <Input
-                  id="requisitionNumber"
-                  value={newOrder.requisitionNumber ?? ''}
-                  onChange={(e) =>
-                    setNewOrder((prev) => ({
-                      ...prev,
-                      requisitionNumber: e.target.value,
-                    }))
-                  }
-                  placeholder="Optional reference from your approval workflow"
-                />
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="space-y-2">
-                <Label>Purchase for</Label>
-                <Select
-                  value={newOrder.purchaseForType || 'none'}
-                  onValueChange={(v) => {
-                    const purchaseForType = v === 'none' ? undefined : (v as 'vehicle' | 'garage');
-                    setNewOrder((prev) => ({
-                      ...prev,
-                      purchaseForType,
-                      vehicleId: purchaseForType === 'vehicle' ? prev.vehicleId : undefined,
-                      vehicleReg: purchaseForType === 'vehicle' ? prev.vehicleReg : '',
-                    }));
-                    if (v !== 'vehicle') {
-                      setSelectedVehicle(null);
-                    }
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select destination" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Not specified</SelectItem>
-                    <SelectItem value="vehicle">Existing vehicle</SelectItem>
-                    <SelectItem value="garage">Garage</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {newOrder.purchaseForType === 'vehicle' && (
-                <>
-                  <div className="space-y-2">
-                    <VehicleSearch
-                      label="Vehicle"
-                      value={selectedVehicle}
-                      onSelect={(v) => {
-                        setSelectedVehicle(v);
-                        if (v) {
-                          setNewOrder((prev) => ({
-                            ...prev,
-                            vehicleId: v.id,
-                            vehicleReg: v.registration_number ?? '',
-                          }));
-                        }
-                      }}
-                      placeholder="Search by reg, VIN, make, model..."
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="vehicleReg">Vehicle Registration</Label>
-                    <Input
-                      id="vehicleReg"
-                      value={newOrder.vehicleReg}
-                      onChange={(e) =>
-                        setNewOrder((prev) => ({
-                          ...prev,
-                          vehicleReg: e.target.value,
-                        }))
-                      }
-                      placeholder="Vehicle registration"
-                    />
-                  </div>
-                </>
-              )}
-              {newOrder.purchaseForType === 'garage' && (
-                <p className="text-sm text-muted-foreground">
-                  Parts will be delivered to the selected garage/warehouse above.
-                </p>
-              )}
-            </>
-          )}
-
-          {isWorkshop && (
-            <WorkshopDocumentLinks
-              excludeType="purchase_order"
-              value={documentLinks}
-              onChange={setDocumentLinks}
-            />
-          )}
 
           <div className="space-y-2">
             <Label htmlFor="vatRate">VAT Rate (%)</Label>

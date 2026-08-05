@@ -7,10 +7,7 @@ import { DashboardLayout } from '../../components/layout';
 import { PermissionGuard } from '../../components/guards/PermissionGuard';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePlanInfo } from '../../hooks/usePlanInfo';
-import HealthcareDashboard from '../../components/dashboard/HealthcareDashboard';
-import NgoDashboard from '../../components/dashboard/NgoDashboard';
 import StandardPlanDashboard from '../../components/dashboard/StandardPlanDashboard';
-import { PLAN_TYPE_NGO } from '../../constants/planTypes';
 
 export default function DashboardPage() {
   return (
@@ -70,14 +67,6 @@ function DashboardGate() {
         </div>
       </DashboardLayout>
     );
-  }
-
-  if (planInfo.planType === 'healthcare') {
-    return <HealthcareDashboard />;
-  }
-
-  if (planInfo.planType === PLAN_TYPE_NGO) {
-    return <NgoDashboard />;
   }
 
   return <StandardPlanDashboard planInfo={planInfo} />;

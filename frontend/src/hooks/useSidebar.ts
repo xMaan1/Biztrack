@@ -110,11 +110,8 @@ export function useSidebar() {
   const [persistReady, setPersistReady] = useState(false);
 
   const purchaseOrdersNavLabel = useCallback(
-    (subItem: SubMenuItem) =>
-      subItem.path === '/inventory/purchase-orders' && planInfo?.planType === 'healthcare'
-        ? 'Medical supply orders'
-        : subItem.text,
-    [planInfo?.planType],
+    (subItem: SubMenuItem) => subItem.text,
+    [],
   );
 
   const isSuperAdmin = user?.userRole === 'super_admin';
@@ -384,20 +381,12 @@ export function useSidebar() {
     if (!planInfo) return 'Loading...';
 
     switch (planInfo.planType) {
-      case 'workshop':
-        return 'Workshop Master';
-      case 'commerce':
-        return 'Commerce Pro';
       case 'agency':
         return 'Agency Pro';
-      case 'healthcare':
-        return 'Healthcare Suite';
-      case 'ngo':
-        return 'Charity Pro';
       default:
         return planInfo.planName;
     }
-  }, [planInfo, user?.userRole]);
+  }, [planInfo]);
 
   const isSubItemAvailable = useCallback(
     (subItem: SubMenuItem) => {

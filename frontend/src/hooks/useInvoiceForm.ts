@@ -8,7 +8,6 @@ import type { Customer } from '@/src/services/CustomerService';
 import InvoiceService from '@/src/services/InvoiceService';
 import { apiService } from '@/src/services/ApiService';
 import { useCurrency } from '@/src/contexts/CurrencyContext';
-import { usePlanInfo } from '@/src/hooks/usePlanInfo';
 import { getCustomerDisplayName } from '@/src/utils/customerUtils';
 import { resolveCustomerPhone } from '@/src/utils/phoneUtils';
 import {
@@ -26,7 +25,6 @@ import type {
   InstallmentPlanCreateOption,
   InvoiceFormMode,
 } from '@/src/types/sales/invoiceForm';
-import type { WorkshopDocumentLinksValue } from '@/src/components/workshop/WorkshopDocumentLinks';
 
 type UseInvoiceFormOptions = {
   open: boolean;
@@ -55,11 +53,6 @@ export function useInvoiceForm({
   onOpenChange,
 }: UseInvoiceFormOptions) {
   const { currency } = useCurrency();
-  const { planInfo } = usePlanInfo();
-  const isWorkshop = planInfo?.planType === 'workshop';
-  const isCommerceOrAgency =
-    planInfo?.planType === 'commerce' || planInfo?.planType === 'agency';
-  const useCommerceInvoiceLayout = planInfo?.planType === 'commerce';
   const isActive = inline || open;
 
   const [createInstallmentPlan, setCreateInstallmentPlan] = useState(false);
@@ -75,8 +68,6 @@ export function useInvoiceForm({
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showCreateCustomerDialog, setShowCreateCustomerDialog] = useState(false);
-  const [documentLinks, setDocumentLinks] = useState<WorkshopDocumentLinksValue>({});
-  const [commerceFormKey, setCommerceFormKey] = useState(0);
 
   const initialDataRef = useRef(initialData);
   const initialCustomerRef = useRef(initialCustomer);
@@ -116,10 +107,6 @@ export function useInvoiceForm({
     if (invoice && (mode === 'edit' || mode === 'view')) {
       setFormData(invoiceFormDataFromInvoice(invoice));
       setItems(invoiceItemsFromInvoice(invoice));
-      setDocumentLinks({
-        purchaseOrderId: invoice.purchaseOrderId,
-        jobCardId: invoice.jobCardId,
-      });
       if (invoice.customerId) {
         InvoiceService.getCustomerById(invoice.customerId)
           .then(setSelectedCustomer)
@@ -148,17 +135,9 @@ export function useInvoiceForm({
       setItems(seed?.items ?? []);
       setSelectedCustomer(seedCustomer ?? null);
       setSelectedVehicle(null);
-      setDocumentLinks({});
-      if (mode === 'create' && useCommerceInvoiceLayout && !seededForm.orderNumber) {
-        InvoiceService.getNextOrderNumber()
-          .then((orderNumber) => {
-            setFormData((prev) => ({ ...prev, orderNumber }));
-          })
-          .catch(() => {});
-      }
     }
     setErrors({});
-  }, [invoice, mode, isActive, currency, useCommerceInvoiceLayout]);
+  }, [invoice, mode, isActive, currency]);
 
   const handleInputChange = (field: keyof InvoiceCreate, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -228,7 +207,7 @@ export function useInvoiceForm({
   const resetNewItem = () => setNewItem({ ...EMPTY_NEW_ITEM });
 
   const addItem = async () => {
-    const itemErrors = validateNewItem(newItem, isCommerceOrAgency);
+    const itemErrors = validateNewItem(newItem, true);
     if (Object.keys(itemErrors).length > 0) {
       setErrors((prev) => ({ ...prev, ...itemErrors }));
       return;
@@ -297,21 +276,12 @@ export function useInvoiceForm({
     setSelectedCustomer(null);
     setSelectedVehicle(null);
     resetNewItem();
-    setDocumentLinks({});
     setCreateInstallmentPlan(false);
     setInstallmentCount(3);
     setInstallmentFrequency('monthly');
     setInstallmentFirstDueDate(defaultDueDate());
     setErrors({});
-    setCommerceFormKey((k) => k + 1);
-    if (useCommerceInvoiceLayout) {
-      InvoiceService.getNextOrderNumber()
-        .then((orderNumber) => {
-          setFormData((prev) => ({ ...prev, orderNumber }));
-        })
-        .catch(() => {});
-    }
-  }, [currency, useCommerceInvoiceLayout]);
+  }, [currency]);
 
   const removeItem = (index: number) => {
     setItems((prev) => prev.filter((_, i) => i !== index));
@@ -351,8 +321,6 @@ export function useInvoiceForm({
       const submitData: InvoiceCreate = {
         ...formData,
         items,
-        purchaseOrderId: documentLinks.purchaseOrderId,
-        jobCardId: documentLinks.jobCardId,
       };
       const options =
         createInstallmentPlan && totals.total > 0
@@ -379,9 +347,6 @@ export function useInvoiceForm({
   };
 
   return {
-    isWorkshop,
-    isCommerceOrAgency,
-    useCommerceInvoiceLayout,
     formData,
     items,
     newItem,
@@ -396,11 +361,8 @@ export function useInvoiceForm({
     installmentCount,
     installmentFrequency,
     installmentFirstDueDate,
-    commerceFormKey,
     showCreateCustomerDialog,
     setShowCreateCustomerDialog,
-    documentLinks,
-    setDocumentLinks,
     totals,
     handleInputChange,
     handleCustomerSelect,

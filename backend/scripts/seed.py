@@ -23,7 +23,7 @@ DEFAULT_SUPER_ADMIN = {
     "password": "SuperAdmin@123",
 }
 
-PLAN_ORDER = ("agency", "commerce", "workshop", "ngo", "healthcare")
+PLAN_ORDER = ("agency",)
 
 
 def get_engine():

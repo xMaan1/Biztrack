@@ -33,7 +33,7 @@ export function InvoiceDialog({
   });
 
   const contentClassName = getInvoiceDialogContentClassName(
-    form.useCommerceInvoiceLayout,
+    false,
     mode === 'view',
     inline,
   );
@@ -54,9 +54,7 @@ export function InvoiceDialog({
               }
             }}
           >
-            <DialogHeader
-              className={form.useCommerceInvoiceLayout && mode !== 'view' ? 'sr-only' : undefined}
-            >
+            <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
                 {mode === 'create'

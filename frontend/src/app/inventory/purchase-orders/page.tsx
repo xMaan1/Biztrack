@@ -60,10 +60,6 @@ import { Textarea } from '../../../components/ui/textarea';
 import { toast } from 'sonner';
 import PurchaseOrderModal from '../../../components/inventory/PurchaseOrderModal';
 import PurchaseOrderViewModal from '../../../components/inventory/PurchaseOrderViewModal';
-import { usePlanInfo } from '../../../hooks/usePlanInfo';
-import { VehicleSearch } from '../../../components/ui/vehicle-search';
-import { Vehicle } from '../../../models/workshop';
-import { WorkshopDocumentLinks, WorkshopDocumentLinksValue } from '../../../components/workshop/WorkshopDocumentLinks';
 
 export default function PurchaseOrdersPage() {
   return (
@@ -75,9 +71,6 @@ export default function PurchaseOrdersPage() {
 
 function PurchaseOrdersContent() {
   const { } = useAuth();
-  const { planInfo } = usePlanInfo();
-  const isHealthcare = planInfo?.planType === 'healthcare';
-  const isWorkshop = planInfo?.planType === 'workshop';
   const { formatCurrency } = useCurrency();
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -142,8 +135,6 @@ function PurchaseOrdersContent() {
     deliveryLocation: '',
     requisitionNumber: '',
   });
-  const [editDocumentLinks, setEditDocumentLinks] = useState<WorkshopDocumentLinksValue>({});
-  const [editSelectedVehicle, setEditSelectedVehicle] = useState<Vehicle | null>(null);
 
 
 
@@ -239,11 +230,6 @@ function PurchaseOrdersContent() {
       deliveryLocation: order.deliveryLocation || '',
       requisitionNumber: order.requisitionNumber || '',
     });
-    setEditDocumentLinks({
-      jobCardId: order.jobCardId ?? undefined,
-      invoiceId: order.invoiceId ?? undefined,
-    });
-    setEditSelectedVehicle(null);
     setIsEditModalOpen(true);
   };
 
@@ -263,25 +249,9 @@ function PurchaseOrdersContent() {
     try {
       setIsSubmitting(true);
       const updatePayload: PurchaseOrderUpdate = { ...editOrder };
-      if (!isHealthcare) {
-        delete updatePayload.department;
-        delete updatePayload.deliveryLocation;
-        delete updatePayload.requisitionNumber;
-        if (isWorkshop) {
-          updatePayload.jobCardId = editDocumentLinks.jobCardId ?? null;
-          updatePayload.invoiceId = editDocumentLinks.invoiceId ?? null;
-        }
-        updatePayload.vehicleId = editOrder.purchaseForType === 'vehicle' ? editOrder.vehicleId : null;
-        if (editOrder.purchaseForType !== 'vehicle') {
-          updatePayload.vehicleReg = null;
-        }
-      } else {
-        delete updatePayload.vehicleReg;
-        delete updatePayload.purchaseForType;
-        delete updatePayload.vehicleId;
-        delete updatePayload.jobCardId;
-        delete updatePayload.invoiceId;
-      }
+      delete updatePayload.department;
+      delete updatePayload.deliveryLocation;
+      delete updatePayload.requisitionNumber;
       await inventoryService.updatePurchaseOrder(selectedOrder.id, updatePayload);
       toast.success('Purchase order updated successfully');
       setIsEditModalOpen(false);
@@ -344,12 +314,10 @@ function PurchaseOrdersContent() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
-              {isHealthcare ? 'Medical supplies orders' : 'Purchase Orders'}
+              Purchase Orders
             </h1>
             <p className="text-muted-foreground">
-              {isHealthcare
-                ? 'Raise and track purchase orders for wards, pharmacy, and clinical stock'
-                : 'Manage purchase orders and supplier procurement'}
+              Manage purchase orders and supplier procurement
             </p>
           </div>
           <Button onClick={() => setIsAddModalOpen(true)}>
@@ -368,11 +336,7 @@ function PurchaseOrdersContent() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
-                  placeholder={
-                    isHealthcare
-                      ? 'Search PO, supplier, department, location, requisition…'
-                      : 'Search by PO number or supplier name...'
-                  }
+                  placeholder={'Search by PO number or supplier name...'}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -596,9 +560,7 @@ function PurchaseOrdersContent() {
           onClose={() => setIsAddModalOpen(false)}
           onSuccess={refetchPurchaseOrders}
           title={
-            isHealthcare
-              ? 'Create medical supplies purchase order'
-              : 'Create New Purchase Order'
+            'Create New Purchase Order'
           }
           showOrderDate={true}
           showSupplierCount={true}
@@ -662,7 +624,7 @@ function PurchaseOrdersContent() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-batchNumber">
-                    {isHealthcare ? 'Lot / batch reference' : 'Batch Number'}
+                    Batch Number
                   </Label>
                   <Input
                     id="edit-batchNumber"
@@ -673,9 +635,7 @@ function PurchaseOrdersContent() {
                         batchNumber: e.target.value,
                       }))
                     }
-                    placeholder={
-                      isHealthcare ? 'e.g. cold chain lot, supplier batch' : 'Enter batch number'
-                    }
+                    placeholder={'Enter batch number'}
                   />
                 </div>
                 <div className="space-y-2">
@@ -711,7 +671,7 @@ function PurchaseOrdersContent() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-warehouseId">{isWorkshop ? 'Garage / Warehouse *' : 'Warehouse *'} ({warehouses.length} available)</Label>
+                <Label htmlFor="edit-warehouseId">Warehouse * ({warehouses.length} available)</Label>
                 <Select
                   value={editOrder.warehouseId}
                   onValueChange={(value) => {
@@ -786,126 +746,6 @@ function PurchaseOrdersContent() {
                   </Button>
                 </div>
               </div>
-
-              {isHealthcare && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-department">Department</Label>
-                    <Input
-                      id="edit-department"
-                      value={editOrder.department ?? ''}
-                      onChange={(e) =>
-                        setEditOrder((prev) => ({ ...prev, department: e.target.value }))
-                      }
-                      placeholder="e.g. Pharmacy, ICU"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-deliveryLocation">Delivery location</Label>
-                    <Input
-                      id="edit-deliveryLocation"
-                      value={editOrder.deliveryLocation ?? ''}
-                      onChange={(e) =>
-                        setEditOrder((prev) => ({
-                          ...prev,
-                          deliveryLocation: e.target.value,
-                        }))
-                      }
-                      placeholder="e.g. Main store, Ward 3"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-requisitionNumber">Internal requisition #</Label>
-                    <Input
-                      id="edit-requisitionNumber"
-                      value={editOrder.requisitionNumber ?? ''}
-                      onChange={(e) =>
-                        setEditOrder((prev) => ({
-                          ...prev,
-                          requisitionNumber: e.target.value,
-                        }))
-                      }
-                      placeholder="Optional"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {!isHealthcare && (
-                <>
-                  <div className="space-y-2">
-                    <Label>Purchase for</Label>
-                    <Select
-                      value={editOrder.purchaseForType || 'none'}
-                      onValueChange={(v) => {
-                        const purchaseForType = v === 'none' ? undefined : (v as 'vehicle' | 'garage');
-                        setEditOrder((prev) => ({
-                          ...prev,
-                          purchaseForType,
-                          vehicleId: purchaseForType === 'vehicle' ? prev.vehicleId : undefined,
-                          vehicleReg: purchaseForType === 'vehicle' ? prev.vehicleReg : '',
-                        }));
-                        if (v !== 'vehicle') {
-                          setEditSelectedVehicle(null);
-                        }
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select destination" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Not specified</SelectItem>
-                        <SelectItem value="vehicle">Existing vehicle</SelectItem>
-                        <SelectItem value="garage">Garage</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {editOrder.purchaseForType === 'vehicle' && (
-                    <>
-                      <div className="space-y-2">
-                        <VehicleSearch
-                          label="Vehicle"
-                          value={editSelectedVehicle}
-                          onSelect={(v) => {
-                            setEditSelectedVehicle(v);
-                            if (v) {
-                              setEditOrder((prev) => ({
-                                ...prev,
-                                vehicleId: v.id,
-                                vehicleReg: v.registration_number ?? '',
-                              }));
-                            }
-                          }}
-                          placeholder="Search by reg, VIN, make, model..."
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-vehicleReg">Vehicle Registration</Label>
-                        <Input
-                          id="edit-vehicleReg"
-                          value={editOrder.vehicleReg ?? ''}
-                          onChange={(e) =>
-                            setEditOrder((prev) => ({ ...prev, vehicleReg: e.target.value }))
-                          }
-                        />
-                      </div>
-                    </>
-                  )}
-                  {editOrder.purchaseForType === 'garage' && (
-                    <p className="text-sm text-muted-foreground">
-                      Parts will be delivered to the selected garage/warehouse above.
-                    </p>
-                  )}
-                </>
-              )}
-
-              {isWorkshop && (
-                <WorkshopDocumentLinks
-                  excludeType="purchase_order"
-                  value={editDocumentLinks}
-                  onChange={setEditDocumentLinks}
-                />
-              )}
 
               <div className="space-y-2">
                 <Label htmlFor="edit-vatRate">VAT Rate (%)</Label>

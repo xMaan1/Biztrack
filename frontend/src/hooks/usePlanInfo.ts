@@ -35,15 +35,15 @@ export function usePlanInfo() {
       };
     } else {
       return {
-        planType: 'workshop',
-        planName: 'Workshop Master',
+        planType: 'agency',
+        planName: 'Agency Pro',
         features: [
           'Project Management',
-          'Production Planning',
-          'Work Order Management',
+          'Task Management',
+          'Time Tracking',
         ],
-        maxProjects: 100,
-        maxUsers: 50,
+        maxProjects: 50,
+        maxUsers: 15,
         subscriptionStatus: 'active',
       };
     }
