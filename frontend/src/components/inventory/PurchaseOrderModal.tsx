@@ -33,6 +33,7 @@ import { Alert, AlertDescription } from '../ui/alert';
 import { VehicleSearch } from '../ui/vehicle-search';
 import { Vehicle } from '../../models/workshop';
 import { usePlanInfo } from '../../hooks/usePlanInfo';
+import { getApiErrorMessage } from '../../lib/apiError';
 import { WorkshopDocumentLinks, WorkshopDocumentLinksValue } from '../workshop/WorkshopDocumentLinks';
 
 interface PurchaseOrderModalProps {
@@ -174,7 +175,7 @@ export default function PurchaseOrderModal({
       resetForm();
       onSuccess?.(created.purchaseOrder);
     } catch (error) {
-      const message = 'Failed to create purchase order. Please try again.';
+      const message = getApiErrorMessage(error, 'Failed to create purchase order. Please try again.');
       if (useToastNotifications) {
         toast.error(message);
       } else {

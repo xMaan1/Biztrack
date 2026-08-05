@@ -1,5 +1,6 @@
 import type { Supplier, SupplierCreate } from '@/src/models/hrm';
 import type { SupplierFormData, SupplierStats } from './types';
+import { getApiErrorMessage } from '@/src/lib/apiError';
 
 export function emptySupplierForm(): SupplierFormData {
   return {
@@ -70,6 +71,5 @@ export function validateSupplierForm(formData: SupplierCreate): string | null {
 }
 
 export function getSupplierApiError(error: unknown, fallback: string): string {
-  const err = error as { response?: { data?: { detail?: string } }; message?: string };
-  return err?.response?.data?.detail || err?.message || fallback;
+  return getApiErrorMessage(error, fallback);
 }

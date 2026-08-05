@@ -46,6 +46,7 @@ import {
 } from '../../../models/inventory';
 import { DashboardLayout } from '../../../components/layout';
 import { formatDate } from '../../../lib/utils';
+import { getApiErrorMessage } from '../../../lib/apiError';
 import { useCurrency } from '../../../contexts/CurrencyContext';
 import {
   Dialog,
@@ -196,7 +197,7 @@ function PurchaseOrdersContent() {
       refetchPurchaseOrders();
       closeDeleteModal();
     } catch (error) {
-      toast.error('Failed to delete purchase order. Please try again.');
+      toast.error(getApiErrorMessage(error, 'Failed to delete purchase order. Please try again.'));
     } finally {
       setDeleteLoading(false);
     }
@@ -213,7 +214,7 @@ function PurchaseOrdersContent() {
       toast.success(`Purchase order status updated to ${newStatus}`);
       refetchPurchaseOrders();
     } catch (error) {
-      toast.error('Failed to update purchase order status. Please try again.');
+      toast.error(getApiErrorMessage(error, 'Failed to update purchase order status. Please try again.'));
     }
   };
 
@@ -281,7 +282,7 @@ function PurchaseOrdersContent() {
       setIsEditModalOpen(false);
       refetchPurchaseOrders();
     } catch (error) {
-      toast.error('Failed to update purchase order. Please try again.');
+      toast.error(getApiErrorMessage(error, 'Failed to update purchase order. Please try again.'));
     } finally {
       setIsSubmitting(false);
     }
