@@ -6,10 +6,11 @@ import { DashboardLayout } from '@/src/components/layout';
 import { PermissionGuard } from '@/src/components/guards/PermissionGuard';
 import { Button } from '@/src/components/ui/button';
 import { CreateInvoiceSection } from './CreateInvoiceSection';
+import { InvoiceCreatedDialog } from './InvoiceCreatedDialog';
 import { InvoiceCustomizationDialog } from './InvoiceCustomizationDialog';
 import { InstallmentPlanCreateOption } from './InvoiceDialog';
 import InvoiceService from '@/src/services/InvoiceService';
-import type { InvoiceCreate } from '@/src/models/sales';
+import type { Invoice, InvoiceCreate } from '@/src/models/sales';
 import { usePlanInfo } from '@/src/hooks/usePlanInfo';
 import { usePermissions } from '@/src/hooks/usePermissions';
 import { extractErrorMessage } from '@/src/utils/errorUtils';
@@ -21,6 +22,7 @@ function CreateInvoicePageContent() {
     planInfo?.planType === 'commerce' || planInfo?.planType === 'agency';
   const [createError, setCreateError] = useState<string | null>(null);
   const [showCustomizeDialog, setShowCustomizeDialog] = useState(false);
+  const [createdInvoice, setCreatedInvoice] = useState<Invoice | null>(null);
   const canCustomizeInvoice = isOwner();
 
   const handleCreateInvoice = async (
@@ -36,6 +38,7 @@ function CreateInvoicePageContent() {
         });
       }
       setCreateError(null);
+      setCreatedInvoice(created);
     } catch (err) {
       setCreateError(extractErrorMessage(err, 'Failed to create invoice'));
     }
@@ -68,6 +71,13 @@ function CreateInvoicePageContent() {
         </div>
 
         <CreateInvoiceSection onSubmit={handleCreateInvoice} error={createError} />
+
+        <InvoiceCreatedDialog
+          invoice={createdInvoice}
+          onOpenChange={(open) => {
+            if (!open) setCreatedInvoice(null);
+          }}
+        />
 
         {canCustomizeInvoice && (
           <InvoiceCustomizationDialog
