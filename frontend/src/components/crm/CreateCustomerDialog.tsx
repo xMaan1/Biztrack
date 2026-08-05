@@ -13,6 +13,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
+import { CountrySelect } from '../ui/country-select';
 import {
   Select,
   SelectContent,
@@ -65,12 +66,12 @@ const defaultFormData = (): CustomerCreate => ({
   address: '',
   city: '',
   state: '',
-  country: 'Pakistan',
+  country: '',
   postalCode: '',
   customerType: 'individual',
   customerStatus: 'active',
-  creditLimit: 0,
-  currentBalance: 0,
+  creditLimit: undefined,
+  currentBalance: undefined,
   paymentTerms: 'Cash',
   tags: [],
   description: '',
@@ -374,14 +375,17 @@ export function CreateCustomerDialog({
               <Input
                 id="creditLimit"
                 type="number"
-                value={formData.creditLimit}
+                value={formData.creditLimit ?? ''}
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    creditLimit: parseFloat(e.target.value) || 0,
+                    creditLimit:
+                      e.target.value === ''
+                        ? undefined
+                        : parseFloat(e.target.value) || 0,
                   }))
                 }
-                placeholder="0.00"
+                placeholder="e.g. 50000"
               />
             </div>
             <div>
@@ -425,7 +429,7 @@ export function CreateCustomerDialog({
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, city: e.target.value }))
                 }
-                placeholder="Karachi"
+                placeholder="Enter city"
               />
             </div>
             <div>
@@ -436,18 +440,16 @@ export function CreateCustomerDialog({
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, state: e.target.value }))
                 }
-                placeholder="Sindh"
+                placeholder="Enter state/province"
               />
             </div>
             <div>
-              <Label htmlFor="country">Country</Label>
-              <Input
-                id="country"
+              <CountrySelect
                 value={formData.country}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, country: e.target.value }))
+                onChange={(country) =>
+                  setFormData((prev) => ({ ...prev, country }))
                 }
-                placeholder="Pakistan"
+                placeholder="Select country"
               />
             </div>
             <div>

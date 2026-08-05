@@ -29,12 +29,12 @@ class CustomerBase(BaseModel):
     address: Optional[str] = None
     city: Optional[str] = Field(None, max_length=100)
     state: Optional[str] = Field(None, max_length=100)
-    country: Optional[str] = Field(default="Pakistan", max_length=100)
+    country: Optional[str] = Field(default=None, max_length=100)
     postalCode: Optional[str] = Field(None, max_length=20)
     customerType: Optional[str] = Field(default="individual", pattern=r"^(individual|business)$")
     customerStatus: Optional[str] = Field(default="active", pattern=r"^(active|inactive|blocked)$")
-    creditLimit: Optional[float] = Field(default=0.0, ge=0)
-    currentBalance: Optional[float] = Field(default=0.0)
+    creditLimit: Optional[float] = Field(default=None, ge=0)
+    currentBalance: Optional[float] = Field(default=None)
     paymentTerms: Optional[str] = Field(default="Cash", pattern=r"^(Credit|Card|Cash|Due Payments|immediate|net30|net60)$")
     assignedToId: Optional[UUID] = None
     notes: Optional[str] = None

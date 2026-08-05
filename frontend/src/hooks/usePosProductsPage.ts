@@ -220,7 +220,7 @@ export function usePosProductsPage() {
   );
 
   const handleSupplierFormChange = useCallback(
-    (field: keyof SupplierFormData, value: string | number | boolean) => {
+    (field: keyof SupplierFormData, value: string | number | boolean | undefined) => {
       setSupplierFormData((prev) => ({
         ...prev,
         [field]: value,

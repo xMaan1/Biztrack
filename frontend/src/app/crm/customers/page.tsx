@@ -13,6 +13,7 @@ import { Button } from '@/src/components/ui/button';
 import { Badge } from '@/src/components/ui/badge';
 import { Input } from '@/src/components/ui/input';
 import { Label } from '@/src/components/ui/label';
+import { CountrySelect } from '@/src/components/ui/country-select';
 import {
   Select,
   SelectContent,
@@ -130,12 +131,12 @@ function CustomersContent() {
     address: '',
     city: '',
     state: '',
-    country: 'Pakistan',
+    country: '',
     postalCode: '',
     customerType: 'individual',
     customerStatus: 'active',
-    creditLimit: 0,
-    currentBalance: 0,
+    creditLimit: undefined,
+    currentBalance: undefined,
       paymentTerms: 'Cash',
     tags: [],
     description: '',
@@ -274,12 +275,12 @@ function CustomersContent() {
       address: '',
       city: '',
       state: '',
-      country: 'Pakistan',
+      country: '',
       postalCode: '',
       customerType: 'individual',
       customerStatus: 'active',
-      creditLimit: 0,
-      currentBalance: 0,
+      creditLimit: undefined,
+      currentBalance: undefined,
       paymentTerms: 'Cash',
       tags: [],
       description: '',
@@ -305,7 +306,7 @@ function CustomersContent() {
       address: customer.address || '',
       city: customer.city || '',
       state: customer.state || '',
-      country: customer.country || 'Pakistan',
+      country: customer.country || '',
       postalCode: customer.postalCode || '',
       customerType: customer.customerType,
       customerStatus: customer.customerStatus,
@@ -768,11 +769,11 @@ function CustomersContent() {
                         <TableCell>
                           <div className="text-right">
                             <div className="font-medium">
-                              Rs. {customer.creditLimit.toLocaleString()}
+                              Rs. {(customer.creditLimit ?? 0).toLocaleString()}
                             </div>
                             <div className="text-sm text-muted-foreground">
                               Balance: Rs.{' '}
-                              {customer.currentBalance.toLocaleString()}
+                              {(customer.currentBalance ?? 0).toLocaleString()}
                             </div>
                           </div>
                         </TableCell>
@@ -961,14 +962,17 @@ function CustomersContent() {
                 <Input
                   id="editCreditLimit"
                   type="number"
-                  value={formData.creditLimit}
+                  value={formData.creditLimit ?? ''}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      creditLimit: parseFloat(e.target.value) || 0,
+                      creditLimit:
+                        e.target.value === ''
+                          ? undefined
+                          : parseFloat(e.target.value) || 0,
                     })
                   }
-                  placeholder="0.00"
+                  placeholder="e.g. 50000"
                 />
               </div>
               <div>
@@ -1012,7 +1016,7 @@ function CustomersContent() {
                   onChange={(e) =>
                     setFormData({ ...formData, city: e.target.value })
                   }
-                  placeholder="Karachi"
+                  placeholder="Enter city"
                 />
               </div>
               <div>
@@ -1023,18 +1027,16 @@ function CustomersContent() {
                   onChange={(e) =>
                     setFormData({ ...formData, state: e.target.value })
                   }
-                  placeholder="Sindh"
+                  placeholder="Enter state/province"
                 />
               </div>
               <div>
-                <Label htmlFor="editCountry">Country</Label>
-                <Input
-                  id="editCountry"
+                <CountrySelect
                   value={formData.country}
-                  onChange={(e) =>
-                    setFormData({ ...formData, country: e.target.value })
+                  onChange={(country) =>
+                    setFormData({ ...formData, country })
                   }
-                  placeholder="Pakistan"
+                  placeholder="Select country"
                 />
               </div>
               <div>

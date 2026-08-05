@@ -80,7 +80,7 @@ export function useSuppliersPage() {
   }, []);
 
   const handleFormInputChange = useCallback(
-    (field: keyof SupplierFormData, value: string | number | boolean) => {
+    (field: keyof SupplierFormData, value: string | number | boolean | undefined) => {
       setFormData((prev) => ({
         ...prev,
         [field]: value,

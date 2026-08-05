@@ -16,7 +16,7 @@ export function emptySupplierForm(): SupplierFormData {
     postalCode: '',
     website: '',
     paymentTerms: '',
-    creditLimit: 0,
+    creditLimit: undefined,
     isActive: true,
   };
 }
@@ -35,7 +35,7 @@ export function supplierToFormData(supplier: Supplier): SupplierFormData {
     postalCode: supplier.postalCode || '',
     website: supplier.website || '',
     paymentTerms: supplier.paymentTerms || '',
-    creditLimit: supplier.creditLimit || 0,
+    creditLimit: supplier.creditLimit,
     isActive: supplier.isActive,
   };
 }

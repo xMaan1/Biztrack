@@ -8,7 +8,7 @@ import { Switch } from '@/src/components/ui/switch';
 
 type SupplierFormFieldsProps = {
   formData: SupplierFormData;
-  onChange: (field: keyof SupplierFormData, value: string | number | boolean) => void;
+  onChange: (field: keyof SupplierFormData, value: string | number | boolean | undefined) => void;
 };
 
 export function SupplierFormFields({ formData, onChange }: SupplierFormFieldsProps) {
@@ -145,8 +145,10 @@ export function SupplierFormFields({ formData, onChange }: SupplierFormFieldsPro
             id="creditLimit"
             type="number"
             value={formData.creditLimit ?? ''}
-            onChange={(e) => onChange('creditLimit', parseFloat(e.target.value) || 0)}
-            placeholder="0.00"
+            onChange={(e) =>
+              onChange('creditLimit', e.target.value === '' ? undefined : parseFloat(e.target.value) || 0)
+            }
+            placeholder="e.g. 50000"
           />
         </div>
       </div>

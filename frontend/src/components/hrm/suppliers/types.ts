@@ -35,7 +35,7 @@ export type SupplierFormDialogProps = {
   formData: SupplierFormData;
   submitting: boolean;
   onOpenChange: (open: boolean) => void;
-  onFormChange: (field: keyof SupplierFormData, value: string | number | boolean) => void;
+  onFormChange: (field: keyof SupplierFormData, value: string | number | boolean | undefined) => void;
   onSubmit: () => void;
   onCancel: () => void;
 };
