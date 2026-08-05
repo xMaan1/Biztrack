@@ -1,7 +1,6 @@
 import { apiService } from '../ApiService';
 import type {
   EmployeePortalDashboard,
-  Employee,
   EmployeeProfileUpdate,
   LeaveRequestSelfCreate,
   EmployeeTaskCreate,
@@ -10,7 +9,7 @@ import type {
   EmployeeDeviceCreate,
   PortalTasksResponse,
 } from '../../models/employeePortal';
-import type { LeaveRequest } from '../../models/hrm';
+import type { Employee, LeaveRequest } from '../../models/hrm';
 import type { ProjectTimeEntry } from '../../models/project/pmApiTypes';
 
 export async function getEmployeePortalDashboard(): Promise<EmployeePortalDashboard> {

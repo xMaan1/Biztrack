@@ -5,7 +5,7 @@ import { Input } from './input';
 import { Label } from './label';
 import { Button } from './button';
 import { Badge } from './badge';
-import { Search, User, Users, X, Check, Briefcase } from 'lucide-react';
+import { Search, User, Users, X, Briefcase } from 'lucide-react';
 import { apiService } from '../../services/ApiService';
 import HRMService from '../../services/HRMService';
 import { EmploymentStatus } from '../../models/hrm';
@@ -248,7 +248,6 @@ export function AssigneeSearch({
                             Employee
                           </Badge>
                         )}
-                        {selected?.id === option.id && <Check className="h-4 w-4 text-green-600" />}
                       </div>
                     </div>
                   </div>

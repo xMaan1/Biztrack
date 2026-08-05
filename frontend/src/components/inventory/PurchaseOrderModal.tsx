@@ -52,6 +52,7 @@ interface PurchaseOrderModalProps {
   showAddSupplierButton?: boolean;
   useToastNotifications?: boolean;
   initialData?: Partial<PurchaseOrderCreate>;
+  hideJobCardLink?: boolean;
 }
 
 export default function PurchaseOrderModal({
@@ -64,6 +65,7 @@ export default function PurchaseOrderModal({
   showAddSupplierButton = false,
   useToastNotifications = true,
   initialData = {},
+  hideJobCardLink = false,
 }: PurchaseOrderModalProps) {
   const { planInfo } = usePlanInfo();
   const isHealthcare = planInfo?.planType === 'healthcare';
@@ -581,6 +583,7 @@ export default function PurchaseOrderModal({
               excludeType="purchase_order"
               value={documentLinks}
               onChange={setDocumentLinks}
+              hideJobCard={hideJobCardLink}
             />
           )}
 

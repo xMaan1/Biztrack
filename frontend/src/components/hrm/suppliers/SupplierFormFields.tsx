@@ -5,6 +5,7 @@ import { Input } from '@/src/components/ui/input';
 import { Label } from '@/src/components/ui/label';
 import { Textarea } from '@/src/components/ui/textarea';
 import { Switch } from '@/src/components/ui/switch';
+import { CountrySelect } from '@/src/components/ui/country-select';
 
 type SupplierFormFieldsProps = {
   formData: SupplierFormData;
@@ -120,12 +121,10 @@ export function SupplierFormFields({ formData, onChange }: SupplierFormFieldsPro
       </div>
 
       <div>
-        <Label htmlFor="country">Country</Label>
-        <Input
-          id="country"
+        <CountrySelect
           value={formData.country || ''}
-          onChange={(e) => onChange('country', e.target.value)}
-          placeholder="Country"
+          onChange={(value) => onChange('country', value)}
+          placeholder="Select country..."
         />
       </div>
 

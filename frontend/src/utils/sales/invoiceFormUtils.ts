@@ -118,7 +118,7 @@ export function invoiceItemsFromJobCard(jc: JobCard): InvoiceItemCreate[] {
   const rawItems = Array.isArray(jc.items) ? jc.items : [];
   const mapped: InvoiceItemCreate[] = [];
   for (const it of rawItems) {
-    const r = it as Record<string, unknown>;
+    const r = it as unknown as Record<string, unknown>;
     const description = String(r.description ?? r.part_description ?? r.part_no ?? r.partNo ?? '');
     const quantityRaw = typeof r.quantity === 'number' ? r.quantity : parseFloat(String(r.qty ?? r.quantity ?? 1));
     const quantity = Number.isFinite(quantityRaw) && quantityRaw > 0 ? quantityRaw : 1;
