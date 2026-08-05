@@ -578,12 +578,11 @@ export default function PurchaseOrderModal({
             </>
           )}
 
-          {isWorkshop && (
+          {isWorkshop && !hideJobCardLink && (
             <WorkshopDocumentLinks
               excludeType="purchase_order"
               value={documentLinks}
               onChange={setDocumentLinks}
-              hideJobCard={hideJobCardLink}
             />
           )}
 

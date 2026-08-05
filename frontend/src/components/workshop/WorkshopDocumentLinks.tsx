@@ -37,7 +37,6 @@ type WorkshopDocumentLinksProps = {
   onChange: (value: WorkshopDocumentLinksValue) => void;
   purchaseOrderInitialData?: Partial<PurchaseOrderCreate>;
   dense?: boolean;
-  hideJobCard?: boolean;
 };
 
 export function WorkshopDocumentLinks({
@@ -46,7 +45,6 @@ export function WorkshopDocumentLinks({
   onChange,
   purchaseOrderInitialData,
   dense = false,
-  hideJobCard = false,
 }: WorkshopDocumentLinksProps) {
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderOption[]>([]);
   const [jobCards, setJobCards] = useState<{ id: string; job_card_number: string; title: string }[]>([]);
@@ -191,7 +189,7 @@ export function WorkshopDocumentLinks({
   };
 
   const showPurchaseOrder = excludeType !== 'purchase_order';
-  const showJobCard = excludeType !== 'job_card' && !hideJobCard;
+  const showJobCard = excludeType !== 'job_card';
   const showInvoice =
     excludeType !== 'invoice' && excludeType !== 'job_card' && excludeType !== 'purchase_order';
 
@@ -371,7 +369,7 @@ export function WorkshopDocumentLinks({
           showAddSupplierButton={true}
           useToastNotifications={true}
           initialData={purchaseOrderInitialData}
-          hideJobCardLink={excludeType === 'job_card' || hideJobCard}
+          hideJobCardLink={excludeType === 'job_card'}
         />
       )}
     </div>
