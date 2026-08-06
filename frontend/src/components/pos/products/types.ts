@@ -9,8 +9,8 @@ export type ProductFormData = {
   packSize: number;
   brand: string;
   supplierId: string;
-  unitPrice: number;
-  costPrice: number;
+  salePrice: number;
+  costPerUnitPrice: number;
   stockQuantity: number;
   minStockLevel: number;
   unitOfMeasure: UnitOfMeasure;

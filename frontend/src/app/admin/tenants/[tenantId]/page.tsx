@@ -967,7 +967,7 @@ function TenantDetailsContent() {
                         <tr className="border-b">
                           <th className="text-left p-2">Description</th>
                           <th className="text-right p-2">Qty</th>
-                          <th className="text-right p-2">Unit Price</th>
+                          <th className="text-right p-2">Sale Price</th>
                           <th className="text-right p-2">Discount</th>
                           <th className="text-right p-2">Tax Rate</th>
                           <th className="text-right p-2">Total</th>
@@ -991,7 +991,7 @@ function TenantDetailsContent() {
                               </div>
                             </td>
                             <td className="text-right p-2">{item.quantity}</td>
-                            <td className="text-right p-2">{formatCurrency(item.unitPrice)}</td>
+                            <td className="text-right p-2">{formatCurrency(item.salePrice)}</td>
                             <td className="text-right p-2">{item.discount}%</td>
                             <td className="text-right p-2">{item.taxRate}%</td>
                             <td className="text-right p-2 font-medium">{formatCurrency(item.total)}</td>

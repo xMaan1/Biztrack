@@ -34,8 +34,8 @@ export function ProductListItem({ item, canEdit, onView, onEdit }: Props) {
           <Text style={{ color: '#64748b', fontSize: 12, marginTop: 2 }}>SKU: {item.sku}</Text>
         </View>
         <View style={{ alignItems: 'flex-end' }}>
-          <Text style={{ fontWeight: '700', fontSize: 15, color: '#1d4ed8' }}>{formatUsd(item.unitPrice)}</Text>
-          <Text style={{ fontSize: 11, color: '#94a3b8' }}>cost {formatUsd(item.costPrice)}</Text>
+          <Text style={{ fontWeight: '700', fontSize: 15, color: '#1d4ed8' }}>{formatUsd(item.salePrice)}</Text>
+          <Text style={{ fontSize: 11, color: '#94a3b8' }}>cost {formatUsd(item.costPerUnitPrice)}</Text>
         </View>
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, gap: 8 }}>

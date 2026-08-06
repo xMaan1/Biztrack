@@ -55,7 +55,7 @@ export function ProductCard({
       <CardContent className="space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Price</span>
-          <span className="font-semibold">{formatCurrency(product.unitPrice)}</span>
+          <span className="font-semibold">{formatCurrency(product.salePrice)}</span>
         </div>
 
         <div className="flex items-center justify-between">

@@ -22,7 +22,7 @@ def line_items_from_healthcare_input(line_items: List[Dict[str, Any]]) -> List[d
                 "id": str(uuid.uuid4()),
                 "description": descr,
                 "quantity": 1,
-                "unitPrice": amount,
+                "salePrice": amount,
                 "discount": 0,
                 "taxRate": 0,
                 "taxAmount": 0,
@@ -43,7 +43,7 @@ def line_items_from_healthcare_input(line_items: List[Dict[str, Any]]) -> List[d
 
 def calculate_invoice_totals(items: List[Dict]) -> dict:
     subtotal = sum(
-        (x.get("quantity", 0) or 0) * (x.get("unitPrice", 0) or 0) for x in items
+        (x.get("quantity", 0) or 0) * ((x.get("salePrice", 0) or 0) or (x.get("unitPrice", 0) or 0)) for x in items
     )
     return {
         "subtotal": round(subtotal, 2),

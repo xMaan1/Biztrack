@@ -419,7 +419,7 @@ const POSDashboardContent = () => {
                         </div>
                         <div className="text-right">
                           <p className="font-medium">
-                            {formatCurrency(product.unitPrice)}
+                            {formatCurrency(product.salePrice)}
                           </p>
                           <div className="flex items-center space-x-2">
                             <Badge variant="destructive">

@@ -47,7 +47,7 @@ export function productToTableRow(product: Product): ProductTableRow {
     company: product.brand || '—',
     vendor: product.supplierName || '—',
     category: product.category || '—',
-    salePrice: product.unitPrice ?? 0,
+    salePrice: product.salePrice ?? 0,
     totalQty: product.stockQuantity ?? 0,
     totalUnits: formatTotalUnits(product.stockQuantity ?? 0, packSize, product.unitOfMeasure),
   };

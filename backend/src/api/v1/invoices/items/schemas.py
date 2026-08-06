@@ -20,7 +20,7 @@ class InvoiceItem(BaseModel):
     id: Any
     description: str
     quantity: float
-    unitPrice: float
+    salePrice: float
     discount: float = 0.0
     taxRate: float = 0.0
     taxAmount: float = 0.0
@@ -34,7 +34,7 @@ class InvoiceItem(BaseModel):
 class InvoiceItemCreate(BaseModel):
     description: str
     quantity: float
-    unitPrice: float
+    salePrice: float
     discount: float = 0.0
     taxRate: float = 0.0
     unit: Optional[str] = None
@@ -46,7 +46,7 @@ class InvoiceItemCreate(BaseModel):
 class InvoiceItemUpdate(BaseModel):
     description: Optional[str] = None
     quantity: Optional[float] = None
-    unitPrice: Optional[float] = None
+    salePrice: Optional[float] = None
     discount: Optional[float] = None
     taxRate: Optional[float] = None
     unit: Optional[str] = None

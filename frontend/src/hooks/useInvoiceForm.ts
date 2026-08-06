@@ -222,7 +222,7 @@ export function useInvoiceForm({
       ...prev,
       productId,
       description: product?.name || prev.description,
-      unitPrice: product?.unitPrice ?? prev.unitPrice,
+      salePrice: product?.salePrice ?? prev.salePrice,
       unit: product?.unitOfMeasure || prev.unit || 'piece',
     }));
   };
@@ -282,8 +282,8 @@ export function useInvoiceForm({
           name: description,
           sku,
           category: 'other',
-          unitPrice: newItem.unitPrice,
-          costPrice: newItem.unitPrice,
+          salePrice: newItem.salePrice,
+          costPerUnitPrice: newItem.salePrice,
           stockQuantity: 0,
           minStockLevel: 0,
           unitOfMeasure: unit,

@@ -16,8 +16,8 @@ export function emptyProductFormData(): ProductFormData {
     packSize: 1,
     brand: '',
     supplierId: '',
-    unitPrice: 0,
-    costPrice: 0,
+    salePrice: 0,
+    costPerUnitPrice: 0,
     stockQuantity: 0,
     minStockLevel: 5,
     unitOfMeasure: UnitOfMeasureEnum.PIECE,
@@ -41,8 +41,8 @@ export function productToFormData(product: Product): ProductFormData {
     packSize: product.packSize ?? 1,
     brand: product.brand || '',
     supplierId: product.supplierId || '',
-    unitPrice: product.unitPrice,
-    costPrice: product.costPrice,
+    salePrice: product.salePrice,
+    costPerUnitPrice: product.costPerUnitPrice,
     stockQuantity: product.stockQuantity,
     minStockLevel: product.minStockLevel,
     unitOfMeasure: product.unitOfMeasure || UnitOfMeasureEnum.PIECE,
@@ -66,8 +66,8 @@ export function formDataToPayload(formData: ProductFormData): ProductCreate {
     packSize: formData.packSize || 1,
     brand: formData.brand || undefined,
     supplierId: formData.supplierId || undefined,
-    unitPrice: formData.unitPrice,
-    costPrice: formData.costPrice,
+    salePrice: formData.salePrice,
+    costPerUnitPrice: formData.costPerUnitPrice,
     stockQuantity: formData.stockQuantity,
     minStockLevel: formData.minStockLevel,
     unitOfMeasure: formData.unitOfMeasure,
@@ -111,9 +111,9 @@ export function formatCategoryLabel(category: string): string {
   return category.charAt(0).toUpperCase() + category.slice(1).replace(/_/g, ' ');
 }
 
-export function profitMarginPercent(unitPrice: number, costPrice: number): string {
-  if (!costPrice) return '0.0';
-  return (((unitPrice - costPrice) / costPrice) * 100).toFixed(1);
+export function profitMarginPercent(salePrice: number, costPerUnitPrice: number): string {
+  if (!costPerUnitPrice) return '0.0';
+  return (((salePrice - costPerUnitPrice) / costPerUnitPrice) * 100).toFixed(1);
 }
 
 export function defaultFilters(): ProductFiltersState {

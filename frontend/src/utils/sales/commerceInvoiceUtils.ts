@@ -2,11 +2,11 @@ import type { Product } from '@/src/models/pos';
 import type { InvoiceItemCreate } from '@/src/models/sales';
 import { lineItemTotal } from '@/src/utils/sales/invoiceFormUtils';
 
-export type CommerceItemNumericField = 'quantity' | 'unitPrice' | 'discount';
+export type CommerceItemNumericField = 'quantity' | 'salePrice' | 'discount';
 export type CommerceItemTextField = 'description' | 'unit';
 
 export function lineGross(item: InvoiceItemCreate): number {
-  return item.quantity * item.unitPrice;
+  return item.quantity * item.salePrice;
 }
 
 export function lineNet(item: InvoiceItemCreate): number {

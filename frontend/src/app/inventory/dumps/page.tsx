@@ -665,7 +665,7 @@ function DumpsContent() {
                        setNewDamage(prev => ({
                          ...prev,
                          productId: value,
-                         unitCost: product?.costPrice || 0,
+                         unitCost: product?.costPerUnitPrice || 0,
                        }));
                      }}
                    >
@@ -805,7 +805,7 @@ function DumpsContent() {
                        setEditDamage(prev => ({
                          ...prev,
                          productId: value,
-                         unitCost: product?.costPrice || 0,
+                         unitCost: product?.costPerUnitPrice || 0,
                        }));
                      }}
                    >

@@ -166,8 +166,8 @@ export function MobileInventoryProductsScreen({
       name: form.name.trim(),
       sku: form.sku.trim(),
       description: form.description.trim() || undefined,
-      unitPrice: parseFloat(form.unitPrice) || 0,
-      costPrice: parseFloat(form.costPrice) || 0,
+      salePrice: parseFloat(form.salePrice) || 0,
+      costPerUnitPrice: parseFloat(form.costPerUnitPrice) || 0,
       stockQuantity: parseInt(form.stockQuantity, 10) || 0,
       minStockLevel: parseInt(form.minStockLevel, 10) || 0,
       category: form.category,
@@ -268,7 +268,7 @@ export function MobileInventoryProductsScreen({
               iconBg="#fffbeb"
               title={item.name}
               subtitle={`SKU ${item.sku}`}
-              meta={`${formatUsd(item.unitPrice)} · Stock ${item.stockQuantity}`}
+              meta={`${formatUsd(item.salePrice)} · Stock ${item.stockQuantity}`}
               badges={stockBadge(item)}
               onPress={() => {
                 setDetail(item);

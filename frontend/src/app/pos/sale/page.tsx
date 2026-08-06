@@ -106,7 +106,7 @@ const POSSale = () => {
             ? {
                 ...item,
                 quantity: item.quantity + 1,
-                total: (item.quantity + 1) * product.unitPrice,
+                total: (item.quantity + 1) * product.salePrice,
               }
             : item,
         ),
@@ -117,7 +117,7 @@ const POSSale = () => {
         {
           product,
           quantity: 1,
-          total: product.unitPrice,
+          total: product.salePrice,
         },
       ]);
     }
@@ -137,7 +137,7 @@ const POSSale = () => {
           ? {
               ...item,
               quantity: newQuantity,
-              total: newQuantity * item.product.unitPrice,
+              total: newQuantity * item.product.salePrice,
             }
           : item,
       ),
@@ -181,7 +181,7 @@ const POSSale = () => {
           productName: item.product.name,
           sku: item.product.sku,
           quantity: item.quantity,
-          unitPrice: item.product.unitPrice,
+          unitPrice: item.product.salePrice,
           discount: 0,
           taxRate: 0,
           taxAmount: 0,
@@ -278,7 +278,7 @@ const POSSale = () => {
                           </div>
                           <div className="text-right">
                             <p className="font-semibold">
-                              {formatCurrency(product.unitPrice)}
+                              {formatCurrency(product.salePrice)}
                             </p>
                             <Badge variant="outline" className="text-xs">
                               {product.category}
@@ -322,7 +322,7 @@ const POSSale = () => {
                         <div className="flex-1">
                           <p className="font-medium">{item.product.name}</p>
                           <p className="text-sm text-muted-foreground">
-                            {formatCurrency(item.product.unitPrice)} each
+                            {formatCurrency(item.product.salePrice)} each
                           </p>
                         </div>
 

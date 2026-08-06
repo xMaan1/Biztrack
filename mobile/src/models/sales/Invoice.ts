@@ -24,7 +24,7 @@ export interface InvoiceItem {
   id: string;
   description: string;
   quantity: number;
-  unitPrice: number;
+  salePrice: number;
   discount: number;
   taxRate: number;
   taxAmount: number;
@@ -38,7 +38,7 @@ export interface InvoiceItem {
 export interface InvoiceItemCreate {
   description: string;
   quantity: number;
-  unitPrice: number;
+  salePrice: number;
   discount: number;
   taxRate: number;
   productId?: string;

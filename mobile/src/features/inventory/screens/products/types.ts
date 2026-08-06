@@ -4,8 +4,8 @@ export type ProductFormState = {
   name: string;
   sku: string;
   description: string;
-  unitPrice: string;
-  costPrice: string;
+  salePrice: string;
+  costPerUnitPrice: string;
   stockQuantity: string;
   minStockLevel: string;
   category: string;
@@ -23,8 +23,8 @@ export const BLANK_PRODUCT_FORM: ProductFormState = {
   name: '',
   sku: '',
   description: '',
-  unitPrice: '',
-  costPrice: '',
+  salePrice: '',
+  costPerUnitPrice: '',
   stockQuantity: '0',
   minStockLevel: '0',
   category: ProductCategory.OTHER,
@@ -43,8 +43,8 @@ export function productToForm(product: Product): ProductFormState {
     name: product.name,
     sku: product.sku,
     description: product.description ?? '',
-    unitPrice: String(product.unitPrice),
-    costPrice: String(product.costPrice),
+    salePrice: String(product.salePrice),
+    costPerUnitPrice: String(product.costPerUnitPrice),
     stockQuantity: String(product.stockQuantity),
     minStockLevel: String(product.minStockLevel),
     category: product.category,

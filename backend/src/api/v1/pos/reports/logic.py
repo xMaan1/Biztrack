@@ -114,7 +114,7 @@ def get_pos_inventory_report_endpoint(
         products = get_products(db, tenant_context["tenant_id"], 0, 1000)
 
         def get_price(product):
-            return float(getattr(product, "unitPrice", getattr(product, "price", 0.0)) or 0.0)
+            return float(getattr(product, "salePrice", getattr(product, "unitPrice", getattr(product, "price", 0.0))) or 0.0)
 
         def get_low_stock_threshold(product):
             return int(getattr(product, "minStockLevel", getattr(product, "lowStockThreshold", 0)) or 0)

@@ -59,8 +59,8 @@ export interface Product {
   name: string;
   sku: string;
   description?: string;
-  unitPrice: number;
-  costPrice: number;
+  salePrice: number;
+  costPerUnitPrice: number;
   stockQuantity: number;
   minStockLevel: number;
   category: string;
@@ -82,8 +82,8 @@ export interface ProductCreate {
   name: string;
   sku: string;
   description?: string;
-  unitPrice: number;
-  costPrice: number;
+  salePrice: number;
+  costPerUnitPrice: number;
   stockQuantity: number;
   minStockLevel: number;
   category: string;
@@ -101,8 +101,8 @@ export interface ProductUpdate {
   name?: string;
   sku?: string;
   description?: string;
-  unitPrice?: number;
-  costPrice?: number;
+  salePrice?: number;
+  costPerUnitPrice?: number;
   stockQuantity?: number;
   minStockLevel?: number;
   category?: string;

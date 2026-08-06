@@ -91,19 +91,19 @@ export function ProductViewDialog({
                 <h4 className="mb-3 font-medium text-gray-900">Pricing Information</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-sm font-medium text-gray-600">Unit Price</Label>
-                    <p className="text-2xl font-bold text-green-600">{formatCurrency(product.unitPrice)}</p>
+                    <Label className="text-sm font-medium text-gray-600">Sale Price</Label>
+                    <p className="text-2xl font-bold text-green-600">{formatCurrency(product.salePrice)}</p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-gray-600">Cost Price</Label>
-                    <p className="text-2xl font-bold text-blue-600">{formatCurrency(product.costPrice)}</p>
+                    <Label className="text-sm font-medium text-gray-600">Cost Per Unit Price</Label>
+                    <p className="text-2xl font-bold text-blue-600">{formatCurrency(product.costPerUnitPrice)}</p>
                   </div>
                 </div>
                 <div className="mt-2">
                   <Label className="text-sm font-medium text-gray-600">Profit Margin</Label>
                   <p className="text-lg font-semibold text-purple-600">
-                    {formatCurrency(product.unitPrice - product.costPrice)} (
-                    {profitMarginPercent(product.unitPrice, product.costPrice)}%)
+                    {formatCurrency(product.salePrice - product.costPerUnitPrice)} (
+                    {profitMarginPercent(product.salePrice, product.costPerUnitPrice)}%)
                   </p>
                 </div>
               </div>

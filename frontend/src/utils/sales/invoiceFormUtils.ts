@@ -6,7 +6,7 @@ import type { JobCard } from '@/src/models/workshop';
 export const EMPTY_NEW_ITEM: InvoiceItemCreate = {
   description: '',
   quantity: 1,
-  unitPrice: 0,
+  salePrice: 0,
   discount: 0,
   taxRate: 0,
   productId: '',
@@ -96,7 +96,7 @@ export function invoiceItemsFromInvoice(invoice: Invoice): InvoiceItemCreate[] {
   return invoice.items.map((item) => ({
     description: item.description,
     quantity: item.quantity,
-    unitPrice: item.unitPrice,
+    salePrice: item.salePrice,
     discount: item.discount,
     taxRate: item.taxRate,
     unit: item.unit,
@@ -114,14 +114,14 @@ export function invoiceItemsFromJobCard(jc: JobCard): InvoiceItemCreate[] {
     const description = String(r.description ?? r.part_description ?? r.part_no ?? r.partNo ?? '');
     const quantityRaw = typeof r.quantity === 'number' ? r.quantity : parseFloat(String(r.qty ?? r.quantity ?? 1));
     const quantity = Number.isFinite(quantityRaw) && quantityRaw > 0 ? quantityRaw : 1;
-    const unitPriceRaw = typeof r.unitPrice === 'number' ? r.unitPrice : parseFloat(String(r.unit_price ?? r.unitPrice ?? 0));
-    const unitPrice = Number.isFinite(unitPriceRaw) ? unitPriceRaw : 0;
+    const salePriceRaw = typeof r.unitPrice === 'number' ? r.unitPrice : parseFloat(String(r.unit_price ?? r.unitPrice ?? 0));
+    const salePrice = Number.isFinite(salePriceRaw) ? salePriceRaw : 0;
     const productId = r.productId ? String(r.productId) : '';
-    if (!description && !unitPrice && !productId) continue;
+    if (!description && !salePrice && !productId) continue;
     mapped.push({
       description: description || 'Item',
       quantity,
-      unitPrice,
+      salePrice,
       discount: 0,
       taxRate: 0,
       unit: String(r.unit ?? 'piece'),
@@ -156,7 +156,7 @@ export function calculateInvoiceTotals(
   items: InvoiceItemCreate[],
 ): InvoiceFormTotals {
   const subtotal = items.reduce(
-    (sum, item) => sum + item.quantity * item.unitPrice,
+    (sum, item) => sum + item.quantity * item.salePrice,
     0,
   );
   const labourCost = formData.labourCost || 0;
@@ -200,8 +200,8 @@ export function validateInvoiceForm(
     if (item.quantity <= 0) {
       newErrors[`item_${index}_quantity`] = 'Quantity must be greater than 0';
     }
-    if (item.unitPrice < 0) {
-      newErrors[`item_${index}_unitPrice`] = 'Unit price cannot be negative';
+    if (item.salePrice < 0) {
+      newErrors[`item_${index}_salePrice`] = 'Sale price cannot be negative';
     }
   });
 
@@ -222,8 +222,8 @@ export function validateNewItem(
   if (newItem.quantity <= 0) {
     itemErrors.newItemQuantity = 'Quantity must be greater than 0';
   }
-  if (newItem.unitPrice < 0) {
-    itemErrors.newItemUnitPrice = 'Unit price cannot be negative';
+  if (newItem.salePrice < 0) {
+    itemErrors.newItemSalePrice = 'Sale price cannot be negative';
   }
   return itemErrors;
 }
@@ -244,5 +244,5 @@ export function getInvoiceDialogContentClassName(
 }
 
 export function lineItemTotal(item: InvoiceItemCreate): number {
-  return item.quantity * item.unitPrice;
+  return item.quantity * item.salePrice;
 }

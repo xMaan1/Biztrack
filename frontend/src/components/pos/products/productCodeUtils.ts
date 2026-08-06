@@ -38,8 +38,8 @@ export function mergeLookupIntoFormData(
     packSize: pickNumber(suggested.packSize, current.packSize ?? base.packSize),
     brand: pickString(suggested.brand, current.brand || base.brand),
     supplierId: pickString(suggested.supplierId, current.supplierId || base.supplierId),
-    unitPrice: pickNumber(suggested.unitPrice, current.unitPrice ?? base.unitPrice),
-    costPrice: pickNumber(suggested.costPrice, current.costPrice ?? base.costPrice),
+    salePrice: pickNumber(suggested.salePrice, current.salePrice ?? base.salePrice),
+    costPerUnitPrice: pickNumber(suggested.costPerUnitPrice, current.costPerUnitPrice ?? base.costPerUnitPrice),
     stockQuantity: pickNumber(suggested.stockQuantity, current.stockQuantity ?? base.stockQuantity),
     minStockLevel: pickNumber(suggested.minStockLevel, current.minStockLevel ?? base.minStockLevel),
     unitOfMeasure: pickString(

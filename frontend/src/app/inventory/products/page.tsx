@@ -234,10 +234,10 @@ function ProductsContent() {
                         <TableCell>
                           <div className="space-y-1">
                             <div className="font-medium">
-                              {formatCurrency(product.unitPrice || 0)}
+                              {formatCurrency(product.salePrice || 0)}
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              Cost: {formatCurrency(product.costPrice || 0)}
+                              Cost: {formatCurrency(product.costPerUnitPrice || 0)}
                             </div>
                           </div>
                         </TableCell>
@@ -434,19 +434,19 @@ function ProductsContent() {
                   <h4 className="font-medium text-gray-900 mb-3">Pricing Information</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-sm font-medium text-gray-600">Unit Price</Label>
-                      <p className="text-2xl font-bold text-green-600">{formatCurrency(viewingProduct.unitPrice || 0)}</p>
+                      <Label className="text-sm font-medium text-gray-600">Sale Price</Label>
+                      <p className="text-2xl font-bold text-green-600">{formatCurrency(viewingProduct.salePrice || 0)}</p>
                     </div>
                     <div>
-                      <Label className="text-sm font-medium text-gray-600">Cost Price</Label>
-                      <p className="text-2xl font-bold text-blue-600">{formatCurrency(viewingProduct.costPrice || 0)}</p>
+                      <Label className="text-sm font-medium text-gray-600">Cost Per Unit Price</Label>
+                      <p className="text-2xl font-bold text-blue-600">{formatCurrency(viewingProduct.costPerUnitPrice || 0)}</p>
                     </div>
                   </div>
                   <div className="mt-2">
                     <Label className="text-sm font-medium text-gray-600">Profit Margin</Label>
                     <p className="text-lg font-semibold text-purple-600">
-                      {formatCurrency((viewingProduct.unitPrice || 0) - (viewingProduct.costPrice || 0))} 
-                      ({viewingProduct.costPrice ? ((((viewingProduct.unitPrice || 0) - (viewingProduct.costPrice || 0)) / (viewingProduct.costPrice || 0)) * 100).toFixed(1) : '0.0'}%)
+                      {formatCurrency((viewingProduct.salePrice || 0) - (viewingProduct.costPerUnitPrice || 0))} 
+                      ({viewingProduct.costPerUnitPrice ? ((((viewingProduct.salePrice || 0) - (viewingProduct.costPerUnitPrice || 0)) / (viewingProduct.costPerUnitPrice || 0)) * 100).toFixed(1) : '0.0'}%)
                     </p>
                   </div>
                 </div>

@@ -43,7 +43,7 @@ export function ProductDetailSheet({
                   <Text style={{ color: '#64748b', fontSize: 13 }}>SKU: {detail.sku}</Text>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={{ fontSize: 22, fontWeight: '800', color: '#1d4ed8' }}>{formatUsd(detail.unitPrice)}</Text>
+                  <Text style={{ fontSize: 22, fontWeight: '800', color: '#1d4ed8' }}>{formatUsd(detail.salePrice)}</Text>
                 </View>
               </View>
 
@@ -53,7 +53,7 @@ export function ProductDetailSheet({
 
               <View style={{ marginTop: 16, backgroundColor: '#f8fafc', borderRadius: 14, padding: 14 }}>
                 {[
-                  { label: 'Cost Price', value: formatUsd(detail.costPrice) },
+                  { label: 'Cost Per Unit Price', value: formatUsd(detail.costPerUnitPrice) },
                   { label: 'Stock', value: String(detail.stockQuantity), color: stockColor(detail.stockQuantity, detail.minStockLevel) },
                   { label: 'Min Stock', value: String(detail.minStockLevel) },
                   { label: 'Category', value: detail.category },

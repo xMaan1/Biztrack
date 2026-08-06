@@ -202,13 +202,13 @@ def create_invoice_endpoint(
                 raise HTTPException(status_code=400, detail="Item description is required")
             if item_data.quantity <= 0:
                 raise HTTPException(status_code=400, detail="Item quantity must be greater than 0")
-            if item_data.unitPrice < 0:
-                raise HTTPException(status_code=400, detail="Item unit price cannot be negative")
+            if item_data.salePrice < 0:
+                raise HTTPException(status_code=400, detail="Item sale price cannot be negative")
             if is_commerce_plan and not item_data.productId:
                 raise HTTPException(status_code=400, detail="Product is required for commerce invoices")
 
             product_description = item_data.description
-            product_unit_price = item_data.unitPrice
+            product_unit_price = item_data.salePrice
             product_sku = ""
             item_unit = item_data.unit or "piece"
 
@@ -222,7 +222,7 @@ def create_invoice_endpoint(
                     ).first()
                     if product:
                         product_description = product.name
-                        product_unit_price = product.unitPrice
+                        product_unit_price = product.salePrice
                         product_sku = product.sku
                         if not item_data.unit and product.unit:
                             item_unit = product.unit
@@ -242,7 +242,7 @@ def create_invoice_endpoint(
                 "id": str(uuid.uuid4()),
                 "description": product_description,
                 "quantity": float(item_data.quantity),
-                "unitPrice": float(product_unit_price),
+                "salePrice": float(product_unit_price),
                 "discount": float(item_data.discount or 0),
                 "taxRate": float(item_data.taxRate or 0),
                 "taxAmount": round(item_tax, 2),
@@ -493,7 +493,7 @@ def update_invoice_endpoint(
                     if isinstance(item_data, dict):
                         description = item_data.get("description", "")
                         quantity = item_data.get("quantity", 0)
-                        unit_price = item_data.get("unitPrice", 0)
+                        unit_price = item_data.get("salePrice") or item_data.get("unitPrice", 0)
                         discount = item_data.get("discount", 0)
                         tax_rate = item_data.get("taxRate", 0)
                         unit = item_data.get("unit")
@@ -503,7 +503,7 @@ def update_invoice_endpoint(
                     else:
                         description = item_data.description
                         quantity = item_data.quantity
-                        unit_price = item_data.unitPrice
+                        unit_price = item_data.salePrice
                         discount = item_data.discount
                         tax_rate = item_data.taxRate
                         unit = item_data.unit
@@ -516,7 +516,7 @@ def update_invoice_endpoint(
                     if quantity <= 0:
                         raise HTTPException(status_code=400, detail="Item quantity must be greater than 0")
                     if unit_price < 0:
-                        raise HTTPException(status_code=400, detail="Item unit price cannot be negative")
+                        raise HTTPException(status_code=400, detail="Item sale price cannot be negative")
                     if is_commerce_plan and not product_id:
                         raise HTTPException(status_code=400, detail="Product is required for commerce invoices")
 
@@ -542,7 +542,7 @@ def update_invoice_endpoint(
                         "id": str(uuid.uuid4()),
                         "description": description,
                         "quantity": float(quantity),
-                        "unitPrice": float(unit_price),
+                        "salePrice": float(unit_price),
                         "discount": float(discount or 0),
                         "taxRate": float(tax_rate or 0),
                         "taxAmount": round(item_tax, 2),

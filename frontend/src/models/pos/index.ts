@@ -64,8 +64,8 @@ export interface Product {
   packSize?: number;
   supplierId?: string;
   supplierName?: string;
-  unitPrice: number;
-  costPrice: number;
+  salePrice: number;
+  costPerUnitPrice: number;
   stockQuantity: number;
   minStockLevel: number;
   category: string;
@@ -91,8 +91,8 @@ export interface ProductCreate {
   productType?: string;
   packSize?: number;
   supplierId?: string;
-  unitPrice: number;
-  costPrice: number;
+  salePrice: number;
+  costPerUnitPrice: number;
   stockQuantity: number;
   minStockLevel: number;
   category: string;
@@ -114,8 +114,8 @@ export interface ProductUpdate {
   productType?: string;
   packSize?: number;
   supplierId?: string;
-  unitPrice?: number;
-  costPrice?: number;
+  salePrice?: number;
+  costPerUnitPrice?: number;
   stockQuantity?: number;
   minStockLevel?: number;
   category?: string;

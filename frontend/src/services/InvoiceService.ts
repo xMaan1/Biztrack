@@ -269,7 +269,7 @@ class InvoiceService {
   // Helper methods
   calculateInvoiceTotals(items: any[], labourCost = 0) {
     const subtotal = items.reduce(
-      (sum, item) => sum + item.quantity * item.unitPrice,
+      (sum, item) => sum + item.quantity * item.salePrice,
       0,
     );
     const total = subtotal + labourCost;

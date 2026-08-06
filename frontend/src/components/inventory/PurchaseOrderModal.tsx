@@ -277,7 +277,7 @@ export default function PurchaseOrderModal({
         productName: product.name,
         sku: product.sku,
         quantity: newItemQuantity,
-        unitCost: newItemUnitCost > 0 ? newItemUnitCost : product.costPrice,
+        unitCost: newItemUnitCost > 0 ? newItemUnitCost : product.costPerUnitPrice,
       },
     ]);
     setNewItemProductId('');
@@ -289,7 +289,7 @@ export default function PurchaseOrderModal({
   const handleProductCreated = (product: Product) => {
     setProducts((prev) => [product, ...prev.filter((p) => p.id !== product.id)]);
     setNewItemProductId(product.id);
-    setNewItemUnitCost(product.costPrice);
+    setNewItemUnitCost(product.costPerUnitPrice);
   };
 
   const handleSupplierFormChange = (
@@ -656,7 +656,7 @@ export default function PurchaseOrderModal({
                   onValueChange={(value) => {
                     const product = products.find((p) => p.id === value);
                     setNewItemProductId(value);
-                    if (product) setNewItemUnitCost(product.costPrice);
+                    if (product) setNewItemUnitCost(product.costPerUnitPrice);
                   }}
                 >
                   <SelectTrigger>

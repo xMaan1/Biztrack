@@ -477,7 +477,7 @@ export default function JobCardDialog({
                         productId: value,
                         description: product?.name || '',
                         sku: product?.sku || '',
-                        unitPrice: product?.unitPrice || 0,
+                        unitPrice: product?.salePrice || 0,
                         unit: product?.unitOfMeasure || 'piece',
                       }));
                     }}

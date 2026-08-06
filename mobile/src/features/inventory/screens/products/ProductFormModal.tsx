@@ -181,10 +181,10 @@ export function ProductFormModal({
             </Text>
             <View style={{ flexDirection: 'row', gap: 10 }}>
               <View style={{ flex: 1 }}>
-                <ProductFieldRow label="Selling Price" value={form.unitPrice} onChange={(v) => onFieldChange('unitPrice', v)} keyboardType="decimal-pad" placeholder="0.00" />
+                <ProductFieldRow label="Sale Price" value={form.salePrice} onChange={(v) => onFieldChange('salePrice', v)} keyboardType="decimal-pad" placeholder="0.00" />
               </View>
               <View style={{ flex: 1 }}>
-                <ProductFieldRow label="Cost Price" value={form.costPrice} onChange={(v) => onFieldChange('costPrice', v)} keyboardType="decimal-pad" placeholder="0.00" />
+                <ProductFieldRow label="Cost Per Unit Price" value={form.costPerUnitPrice} onChange={(v) => onFieldChange('costPerUnitPrice', v)} keyboardType="decimal-pad" placeholder="0.00" />
               </View>
             </View>
 

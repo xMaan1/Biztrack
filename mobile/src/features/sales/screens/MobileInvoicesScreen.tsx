@@ -74,7 +74,7 @@ function buildItemsPayload(rows: InvoiceItemCreate[]): InvoiceItemCreate[] {
     .map((r) => ({
       description: r.description.trim(),
       quantity: Math.max(1, r.quantity || 1),
-      unitPrice: Number(r.unitPrice) || 0,
+      salePrice: Number(r.salePrice) || 0,
       discount: Number(r.discount) || 0,
       taxRate: Number(r.taxRate) || 0,
       productId: r.productId || undefined,
@@ -133,7 +133,7 @@ export function MobileInvoicesScreen() {
   const [labourCost, setLabourCost] = useState('0');
   const [terms, setTerms] = useState('');
   const [lineRows, setLineRows] = useState<InvoiceItemCreate[]>([
-    { description: '', quantity: 1, unitPrice: 0, discount: 0, taxRate: 0 },
+    { description: '', quantity: 1, salePrice: 0, discount: 0, taxRate: 0 },
   ]);
   const [createInstallmentPlan, setCreateInstallmentPlan] = useState(false);
   const [installmentCount, setInstallmentCount] = useState('3');
@@ -224,7 +224,7 @@ export function MobileInvoicesScreen() {
     setLabourCost('0');
     setTerms('');
     setLineRows([
-      { description: '', quantity: 1, unitPrice: 0, discount: 0, taxRate: 0 },
+      { description: '', quantity: 1, salePrice: 0, discount: 0, taxRate: 0 },
     ]);
     setCreateInstallmentPlan(false);
     setInstallmentCount('3');
@@ -261,7 +261,7 @@ export function MobileInvoicesScreen() {
       setSaving(true);
       const created = await createInvoice(payload);
       const subtotalAmount = items.reduce(
-        (sum, item) => sum + item.quantity * item.unitPrice,
+        (sum, item) => sum + item.quantity * item.salePrice,
         0,
       );
       const totalAmount = subtotalAmount + labour;
@@ -372,7 +372,7 @@ export function MobileInvoicesScreen() {
     () =>
       lineRows.reduce((sum, row) => {
         const qty = Math.max(1, Number(row.quantity) || 1);
-        const unit = Number(row.unitPrice) || 0;
+        const unit = Number(row.salePrice) || 0;
         return sum + qty * unit;
       }, 0),
     [lineRows],
@@ -714,12 +714,12 @@ export function MobileInvoicesScreen() {
                 />
               </View>
               <View style={{ flex: 1 }}>
-                <WorkshopFieldLabel>Unit price</WorkshopFieldLabel>
+                <WorkshopFieldLabel>Sale price</WorkshopFieldLabel>
                 <WorkshopTextInput
-                  value={String(row.unitPrice)}
+                  value={String(row.salePrice)}
                   onChangeText={(t) => {
                     const next = [...lineRows];
-                    next[idx] = { ...row, unitPrice: parseFloat(t) || 0 };
+                    next[idx] = { ...row, salePrice: parseFloat(t) || 0 };
                     setLineRows(next);
                   }}
                   keyboardType="decimal-pad"
@@ -731,7 +731,7 @@ export function MobileInvoicesScreen() {
               <Text style={{ fontSize: 12, color: WS.textMuted }}>Line total</Text>
               <Text style={{ fontSize: 14, fontWeight: '700', color: WS.text }}>
                 {formatUsd(
-                  Math.max(1, Number(row.quantity) || 1) * (Number(row.unitPrice) || 0),
+                  Math.max(1, Number(row.quantity) || 1) * (Number(row.salePrice) || 0),
                 )}
               </Text>
             </View>
@@ -743,7 +743,7 @@ export function MobileInvoicesScreen() {
           onPress={() =>
             setLineRows((r) => [
               ...r,
-              { description: '', quantity: 1, unitPrice: 0, discount: 0, taxRate: 0 },
+              { description: '', quantity: 1, salePrice: 0, discount: 0, taxRate: 0 },
             ])
           }
         />
@@ -832,7 +832,7 @@ export function MobileInvoicesScreen() {
                     ...line,
                     productId: product.id,
                     description: line.description?.trim() ? line.description : product.name,
-                    unitPrice: Number(line.unitPrice) > 0 ? line.unitPrice : product.unitPrice,
+                    salePrice: Number(line.salePrice) > 0 ? line.salePrice : product.salePrice,
                   }
                 : line,
             ),
@@ -924,7 +924,7 @@ export function MobileInvoicesScreen() {
                 <View style={{ flex: 1, paddingRight: 12 }}>
                   <Text style={{ fontWeight: '700', color: WS.text }}>{item.description}</Text>
                   <Text style={{ fontSize: 12, color: WS.textMuted }}>
-                    Qty {item.quantity} × {formatUsd(item.unitPrice)}
+                    Qty {item.quantity} × {formatUsd(item.salePrice)}
                   </Text>
                 </View>
                 <Text style={{ fontWeight: '800', color: WS.text }}>{formatUsd(item.total)}</Text>

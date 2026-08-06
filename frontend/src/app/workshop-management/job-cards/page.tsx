@@ -54,7 +54,7 @@ function JobCardsContent() {
           {
             description: 'Parts',
             quantity: 1,
-            unitPrice: jc.parts_estimate,
+            salePrice: jc.parts_estimate,
             discount: 0,
             taxRate: 0,
             unit: 'piece',
@@ -67,7 +67,7 @@ function JobCardsContent() {
           {
             description: 'Labour',
             quantity: 1,
-            unitPrice: jc.labor_estimate,
+            salePrice: jc.labor_estimate,
             discount: 0,
             taxRate: 0,
             unit: 'hour',

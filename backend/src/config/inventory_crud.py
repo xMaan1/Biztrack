@@ -466,7 +466,7 @@ def get_inventory_dashboard_stats(db: Session, tenant_id: str) -> Dict[str, Any]
     
     # Calculate total stock value
     total_stock_value = db.query(
-        func.sum(Product.stockQuantity * Product.costPrice)
+        func.sum(Product.stockQuantity * Product.costPerUnitPrice)
     ).filter(
         Product.tenant_id == tenant_id,
         Product.isActive == True

@@ -150,17 +150,17 @@ export function CommerceInvoiceProductEntrySection({
               className={`${COMMERCE_INPUT_CLS} ${errors.newItemQuantity ? 'border-destructive' : ''}`}
             />
           </InlineField>
-          <InlineField label="Price:">
+          <InlineField label="Sale Price:">
             <Input
               type="number"
               min="0"
               step="0.01"
-              value={newItem.unitPrice}
+              value={newItem.salePrice}
               onChange={(e) => {
-                updateNewItem({ unitPrice: parseFloat(e.target.value) || 0 });
-                clearFieldError('newItemUnitPrice');
+                updateNewItem({ salePrice: parseFloat(e.target.value) || 0 });
+                clearFieldError('newItemSalePrice');
               }}
-              className={`${COMMERCE_INPUT_CLS} ${errors.newItemUnitPrice ? 'border-destructive' : ''}`}
+              className={`${COMMERCE_INPUT_CLS} ${errors.newItemSalePrice ? 'border-destructive' : ''}`}
             />
           </InlineField>
         </div>

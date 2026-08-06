@@ -63,7 +63,7 @@ export function InvoiceFormItemsSection({
                   patchNewItem({
                     productId: value,
                     description: product?.name || '',
-                    unitPrice: product?.unitPrice || 0,
+                    salePrice: product?.salePrice || 0,
                   });
                   clearNewItemErrors();
                 }}
@@ -137,22 +137,22 @@ export function InvoiceFormItemsSection({
             {errors.newItemQuantity && (
               <p className="pl-[116px] text-xs text-destructive">{errors.newItemQuantity}</p>
             )}
-            <InlineField label="Unit Price:" required>
+            <InlineField label="Sale Price:" required>
               <Input
-                id="unitPrice"
+                id="salePrice"
                 type="number"
                 min="0"
                 step="0.01"
-                value={newItem.unitPrice}
+                value={newItem.salePrice}
                 onChange={(e) => {
-                  patchNewItem({ unitPrice: parseFloat(e.target.value) || 0 });
-                  if (errors.newItemUnitPrice) clearNewItemErrors();
+                  patchNewItem({ salePrice: parseFloat(e.target.value) || 0 });
+                  if (errors.newItemSalePrice) clearNewItemErrors();
                 }}
-                className={`${COMMERCE_INPUT_CLS} ${errors.newItemUnitPrice ? 'border-destructive' : ''}`}
+                className={`${COMMERCE_INPUT_CLS} ${errors.newItemSalePrice ? 'border-destructive' : ''}`}
               />
             </InlineField>
-            {errors.newItemUnitPrice && (
-              <p className="pl-[116px] text-xs text-destructive">{errors.newItemUnitPrice}</p>
+            {errors.newItemSalePrice && (
+              <p className="pl-[116px] text-xs text-destructive">{errors.newItemSalePrice}</p>
             )}
             <InlineField label="Line Total:">
               <Input
@@ -240,7 +240,7 @@ export function InvoiceFormItemsSection({
                       </td>
                       <td className="border border-border px-2 py-1 text-right">{item.quantity}</td>
                       <td className="border border-border px-2 py-1 text-right">
-                        {formatCurrency(item.unitPrice)}
+                        {formatCurrency(item.salePrice)}
                       </td>
                       <td className="border border-border px-2 py-1 text-right">{item.discount}%</td>
                       <td className="border border-border px-2 py-1 text-right font-medium">

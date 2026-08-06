@@ -880,7 +880,7 @@ async def get_profit_loss_dashboard(
             Product.isActive == True
         )
         total_inventory_value = inventory_query.with_entities(
-            func.sum(Product.stockQuantity * Product.costPrice)
+            func.sum(Product.stockQuantity * Product.costPerUnitPrice)
         ).scalar() or 0
         total_products = inventory_query.count()
         

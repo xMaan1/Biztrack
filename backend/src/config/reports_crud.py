@@ -68,7 +68,7 @@ def get_reports_dashboard_data(db: Session, tenant_id: str, filters: Optional[Di
     inventory_stats = db.query(
         func.count(Product.id).label('total_products'),
         func.sum(Product.stockQuantity).label('total_stock'),
-        func.sum(Product.unitPrice * Product.stockQuantity).label('total_value'),
+        func.sum(Product.salePrice * Product.stockQuantity).label('total_value'),
         func.sum(case((Product.stockQuantity <= Product.minStockLevel, 1), else_=0)).label('low_stock'),
         func.sum(case((Product.stockQuantity == 0, 1), else_=0)).label('out_of_stock')
     ).filter(

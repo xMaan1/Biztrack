@@ -127,7 +127,7 @@ class InventorySyncService:
         try:
             product_id = item.get("productId")
             quantity = item.get("quantity", 0)
-            unit_price = item.get("unitPrice", 0)
+            unit_price = item.get("salePrice") or item.get("unitPrice", 0)
             
             # Validate item data
             if not product_id:
@@ -165,7 +165,7 @@ class InventorySyncService:
                 "warehouseId": product.warehouseId or "default",  # Use default warehouse if not specified
                 "movementType": "outbound",
                 "quantity": quantity,
-                "unitCost": product.costPrice,
+                "unitCost": product.costPerUnitPrice,
                 "referenceNumber": invoice_id,
                 "referenceType": "Invoice",
                 "notes": f"Stock deduction for invoice {invoice_id}",

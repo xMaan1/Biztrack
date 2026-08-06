@@ -136,9 +136,9 @@ export function CommerceInvoiceLineItemsTable({
                   <Input
                     type="text"
                     inputMode="decimal"
-                    value={getItemFieldValue(index, 'unitPrice', item.unitPrice)}
-                    onChange={(e) => onItemFieldChange(index, 'unitPrice', e.target.value)}
-                    onBlur={() => onItemFieldBlur(index, 'unitPrice')}
+                    value={getItemFieldValue(index, 'salePrice', item.salePrice)}
+                    onChange={(e) => onItemFieldChange(index, 'salePrice', e.target.value)}
+                    onBlur={() => onItemFieldBlur(index, 'salePrice')}
                     className={`${COMMERCE_INLINE_EDIT_CLS} ml-auto w-24 text-right`}
                   />
                 </td>

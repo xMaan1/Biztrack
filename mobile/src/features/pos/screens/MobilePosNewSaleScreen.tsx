@@ -86,7 +86,7 @@ export function MobilePosNewSaleScreen() {
             ? {
                 ...c,
                 quantity: c.quantity + 1,
-                total: (c.quantity + 1) * product.unitPrice,
+                total: (c.quantity + 1) * product.salePrice,
               }
             : c,
         ),
@@ -94,7 +94,7 @@ export function MobilePosNewSaleScreen() {
     } else {
       setCart([
         ...cart,
-        { product, quantity: 1, total: product.unitPrice },
+        { product, quantity: 1, total: product.salePrice },
       ]);
     }
   };
@@ -110,7 +110,7 @@ export function MobilePosNewSaleScreen() {
           ? {
               ...line,
               quantity: qty,
-              total: qty * line.product.unitPrice,
+              total: qty * line.product.salePrice,
             }
           : line,
       ),
@@ -142,7 +142,7 @@ export function MobilePosNewSaleScreen() {
         productName: line.product.name,
         sku: line.product.sku,
         quantity: line.quantity,
-        unitPrice: line.product.unitPrice,
+        unitPrice: line.product.salePrice,
         discount: 0,
         taxRate: 0,
         taxAmount: 0,
@@ -214,7 +214,7 @@ export function MobilePosNewSaleScreen() {
                   <Text className="font-medium text-slate-900">{item.name}</Text>
                   <Text className="text-xs text-slate-500">{item.sku}</Text>
                   <Text className="mt-1 text-slate-800">
-                    {formatUsd(item.unitPrice)}
+                    {formatUsd(item.salePrice)}
                   </Text>
                 </Pressable>
               )}

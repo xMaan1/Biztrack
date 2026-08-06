@@ -696,7 +696,7 @@ function StockMovementsContent() {
                       setNewMovement((prev) => ({
                         ...prev,
                         productId: value,
-                        unitCost: product?.costPrice || 0,
+                        unitCost: product?.costPerUnitPrice || 0,
                       }));
                     }}
                   >
@@ -1074,7 +1074,7 @@ function StockMovementsContent() {
                       setEditMovement((prev) => ({
                         ...prev,
                         productId: value,
-                        unitCost: product?.costPrice || 0,
+                        unitCost: product?.costPerUnitPrice || 0,
                       }));
                     }}
                   >

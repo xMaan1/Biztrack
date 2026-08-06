@@ -96,8 +96,8 @@ class ProductBase(BaseModel):
     brand: Optional[str] = None
     productType: Optional[str] = None
     packSize: int = 1
-    unitPrice: float
-    costPrice: float
+    salePrice: float
+    costPerUnitPrice: float
     stockQuantity: int
     minStockLevel: int = 0
     maxStockLevel: Optional[int] = None
@@ -134,8 +134,8 @@ class ProductCreate(BaseModel):
     productType: Optional[str] = None
     packSize: int = 1
     supplierId: Optional[str] = None
-    unitPrice: float
-    costPrice: float
+    salePrice: float
+    costPerUnitPrice: float
     stockQuantity: int
     minStockLevel: int = 0
     maxStockLevel: Optional[int] = None
@@ -159,8 +159,8 @@ class ProductUpdate(BaseModel):
     productType: Optional[str] = None
     packSize: Optional[int] = None
     supplierId: Optional[str] = None
-    unitPrice: Optional[float] = None
-    costPrice: Optional[float] = None
+    salePrice: Optional[float] = None
+    costPerUnitPrice: Optional[float] = None
     stockQuantity: Optional[int] = None
     minStockLevel: Optional[int] = None
     maxStockLevel: Optional[int] = None

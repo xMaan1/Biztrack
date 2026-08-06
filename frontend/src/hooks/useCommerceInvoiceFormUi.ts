@@ -80,7 +80,7 @@ export function useCommerceInvoiceFormUi({
     if (field === 'quantity') {
       return Math.max(0.01, parsed);
     }
-    if (field === 'unitPrice') {
+    if (field === 'salePrice') {
       return Math.max(0, parsed);
     }
     return parsed;

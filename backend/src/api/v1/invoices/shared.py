@@ -127,9 +127,9 @@ def calculate_invoice_totals(
     subtotal = 0
     for item in items:
         if isinstance(item, dict):
-            subtotal += item.get("quantity", 0) * item.get("unitPrice", 0)
+            subtotal += item.get("quantity", 0) * (item.get("salePrice") or item.get("unitPrice", 0))
         else:
-            subtotal += item.quantity * item.unitPrice
+            subtotal += item.quantity * item.salePrice
 
     total = subtotal + (labour_cost or 0)
 
@@ -156,7 +156,7 @@ def transform_invoice_to_pydantic(db_invoice: Invoice):
                         id=str(item.get("id", "")),
                         description=item.get("description", ""),
                         quantity=item.get("quantity", 0),
-                        unitPrice=item.get("unitPrice", 0),
+                        salePrice=item.get("salePrice") or item.get("unitPrice", 0),
                         discount=item.get("discount", 0),
                         taxRate=item.get("taxRate", 0),
                         taxAmount=item.get("taxAmount", 0),

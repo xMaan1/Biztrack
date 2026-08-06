@@ -153,26 +153,26 @@ export function ProductFormFields({
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="unitPrice">Price *</Label>
+          <Label htmlFor="salePrice">Sale Price *</Label>
           <Input
-            id="unitPrice"
+            id="salePrice"
             type="number"
             step="0.01"
             min="0"
-            value={formData.unitPrice}
-            onChange={(e) => onChange({ unitPrice: parseFloat(e.target.value) || 0 })}
+            value={formData.salePrice}
+            onChange={(e) => onChange({ salePrice: parseFloat(e.target.value) || 0 })}
             required
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="costPrice">Cost Price *</Label>
+          <Label htmlFor="costPerUnitPrice">Cost Per Unit Price *</Label>
           <Input
-            id="costPrice"
+            id="costPerUnitPrice"
             type="number"
             step="0.01"
             min="0"
-            value={formData.costPrice}
-            onChange={(e) => onChange({ costPrice: parseFloat(e.target.value) || 0 })}
+            value={formData.costPerUnitPrice}
+            onChange={(e) => onChange({ costPerUnitPrice: parseFloat(e.target.value) || 0 })}
             required
           />
         </div>

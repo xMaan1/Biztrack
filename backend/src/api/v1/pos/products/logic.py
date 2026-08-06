@@ -40,8 +40,8 @@ def convert_db_product_to_pydantic(db_product, supplier_name: Optional[str] = No
         brand=getattr(db_product, "brand", None),
         productType=getattr(db_product, "productType", None),
         packSize=pack_size,
-        unitPrice=db_product.unitPrice,
-        costPrice=db_product.costPrice,
+        salePrice=db_product.salePrice,
+        costPerUnitPrice=db_product.costPerUnitPrice,
         stockQuantity=db_product.stockQuantity,
         minStockLevel=db_product.minStockLevel,
         maxStockLevel=db_product.maxStockLevel,
@@ -290,8 +290,8 @@ def create_pos_product(
             "productType": opt(product_dict.get("productType")),
             "packSize": product_dict.get("packSize", 1),
             "supplierId": opt(product_dict.get("supplierId")),
-            "costPrice": product_dict.get("costPrice"),
-            "unitPrice": product_dict.get("unitPrice", 0),
+            "costPerUnitPrice": product_dict.get("costPerUnitPrice"),
+            "salePrice": product_dict.get("salePrice", 0),
             "stockQuantity": product_dict.get("stockQuantity", 0),
             "minStockLevel": product_dict.get("minStockLevel", 0),
             "maxStockLevel": product_dict.get("maxStockLevel"),
@@ -358,8 +358,8 @@ def update_pos_product(
             "productType": "productType",
             "packSize": "packSize",
             "supplierId": "supplierId",
-            "costPrice": "costPrice",
-            "unitPrice": "unitPrice",
+            "costPerUnitPrice": "costPerUnitPrice",
+            "salePrice": "salePrice",
             "stockQuantity": "stockQuantity",
             "minStockLevel": "minStockLevel",
             "maxStockLevel": "maxStockLevel",
@@ -372,7 +372,7 @@ def update_pos_product(
         for src, dst in field_map.items():
             if src in product_dict:
                 val = product_dict[src]
-                mapped_data[dst] = val if src in ("isActive", "packSize", "costPrice", "unitPrice", "stockQuantity", "minStockLevel", "maxStockLevel") else (val or None)
+                mapped_data[dst] = val if src in ("isActive", "packSize", "costPerUnitPrice", "salePrice", "stockQuantity", "minStockLevel", "maxStockLevel") else (val or None)
         if "unitOfMeasure" in product_dict:
             mapped_data["unit"] = product_dict["unitOfMeasure"]
         for date_field in ("expiryDate", "mfgDate", "dateOfPurchase"):

@@ -375,11 +375,12 @@ def create_items_table(invoice, styles: Dict[str, ParagraphStyle], colors: Dict[
     
     elements.append(Paragraph("Items & Services", styles['header']))
     
-    headers = ['Description', 'SKU', 'Qty', 'Unit Price', 'Discount', 'Total']
+    headers = ['Description', 'SKU', 'Qty', 'Sale Price', 'Discount', 'Total']
     table_data = [headers]
     if hasattr(invoice, 'items') and invoice.items:
         for item in invoice.items:
-            item_total = item['quantity'] * item['unitPrice'] * (1 - item.get('discount', 0) / 100)
+            item_unit_price = item.get('salePrice') or item.get('unitPrice', 0)
+            item_total = item['quantity'] * item_unit_price * (1 - item.get('discount', 0) / 100)
             
             # Include SKU if available from product selection
             sku = item.get('productSku', '') if item.get('productSku') else ''
@@ -388,7 +389,7 @@ def create_items_table(invoice, styles: Dict[str, ParagraphStyle], colors: Dict[
                 item['description'],
                 sku,
                 f"{item['quantity']:.2f}",
-                format_currency(item['unitPrice'], currency),
+                format_currency(item_unit_price, currency),
                 f"{item.get('discount', 0):.1f}%",
                 format_currency(item_total, currency)
             ]

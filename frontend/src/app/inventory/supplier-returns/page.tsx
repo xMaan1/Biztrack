@@ -663,7 +663,7 @@ function SupplierReturnsContent() {
                       setNewReturn(prev => ({
                         ...prev,
                         productId: value,
-                        unitCost: product?.costPrice || 0,
+                        unitCost: product?.costPerUnitPrice || 0,
                       }));
                     }}
                   >
@@ -794,7 +794,7 @@ function SupplierReturnsContent() {
                       setEditReturn(prev => ({
                         ...prev,
                         productId: value,
-                        unitCost: product?.costPrice || 0,
+                        unitCost: product?.costPerUnitPrice || 0,
                       }));
                     }}
                   >

@@ -118,7 +118,7 @@ export function InvoiceViewContent({ invoice, onClose }: InvoiceViewContentProps
                   className="md:col-span-2"
                 />
                 <InvoiceDetailField label="Quantity" value={item.quantity} />
-                <InvoiceDetailField label="Unit Price" value={formatCurrency(item.unitPrice)} />
+                <InvoiceDetailField label="Sale Price" value={formatCurrency(item.salePrice)} />
                 <InvoiceDetailField label="Discount" value={`${item.discount}%`} />
                 <InvoiceDetailField label="Tax" value={`${item.taxRate}%`} />
                 <InvoiceDetailField label="Line Total" value={formatCurrency(item.total)} />
