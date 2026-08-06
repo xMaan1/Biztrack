@@ -1,25 +1,25 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { ModuleGuard } from '../../../components/guards/PermissionGuard';
+import React, { useState, useEffect, useCallback } from "react";
+import { ModuleGuard } from "../../../components/guards/PermissionGuard";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
-import { Textarea } from '@/src/components/ui/textarea';
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import { Textarea } from "@/src/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
+} from "@/src/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -27,9 +27,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/src/components/ui/dialog';
-import { Badge } from '@/src/components/ui/badge';
-import { Alert, AlertDescription } from '@/src/components/ui/alert';
+} from "@/src/components/ui/dialog";
+import { Badge } from "@/src/components/ui/badge";
+import { Alert, AlertDescription } from "@/src/components/ui/alert";
 import {
   Calendar,
   Plus,
@@ -44,20 +44,23 @@ import {
   FileText,
   Calculator,
   CreditCard,
-} from 'lucide-react';
-import HRMService from '@/src/services/HRMService';
+} from "lucide-react";
+import HRMService from "@/src/services/HRMService";
 import {
   Payroll,
   PayrollCreate,
   PayrollStatus,
   Employee,
-} from '@/src/models/hrm';
-import { DashboardLayout } from '@/src/components/layout';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
+} from "@/src/models/hrm";
+import { DashboardLayout } from "@/src/components/layout";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
 
 export default function HRMPayrollPage() {
   return (
-    <ModuleGuard module="hrm" fallback={<div>You don't have access to HRM module</div>}>
+    <ModuleGuard
+      module="hrm"
+      fallback={<div>You don't have access to HRM module</div>}
+    >
       <HRMPayrollContent />
     </ModuleGuard>
   );
@@ -75,7 +78,7 @@ function HRMPayrollContent() {
     payPeriod?: string;
     paymentDate?: string;
   }>({});
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingPayroll, setEditingPayroll] = useState<Payroll | null>(null);
   const [viewingPayroll, setViewingPayroll] = useState<Payroll | null>(null);
@@ -84,10 +87,10 @@ function HRMPayrollContent() {
   const [deleting, setDeleting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [formData, setFormData] = useState<PayrollCreate>({
-    employeeId: '',
-    payPeriod: '',
-    startDate: new Date().toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0],
+    employeeId: "",
+    payPeriod: "",
+    startDate: new Date().toISOString().split("T")[0],
+    endDate: new Date().toISOString().split("T")[0],
     basicSalary: 0,
     allowances: 0,
     deductions: 0,
@@ -95,8 +98,8 @@ function HRMPayrollContent() {
     bonus: 0,
     netPay: 0,
     status: PayrollStatus.DRAFT,
-    paymentDate: new Date().toISOString().split('T')[0],
-    notes: '',
+    paymentDate: new Date().toISOString().split("T")[0],
+    notes: "",
   });
 
   const loadPayrolls = useCallback(async () => {
@@ -106,8 +109,8 @@ function HRMPayrollContent() {
       const response = await HRMService.getPayroll(filters, 1, 100);
       setPayrolls(response.payroll);
     } catch (err) {
-      setError('Failed to load payroll records');
-      } finally {
+      setError("Failed to load payroll records");
+    } finally {
       setLoading(false);
     }
   }, [filters]);
@@ -116,8 +119,7 @@ function HRMPayrollContent() {
     try {
       const response = await HRMService.getEmployees({}, 1, 100);
       setEmployees(response.employees);
-    } catch (err) {
-      }
+    } catch (err) {}
   }, []);
 
   useEffect(() => {
@@ -132,15 +134,15 @@ function HRMPayrollContent() {
 
   const resetFilters = () => {
     setFilters({});
-    setSearch('');
+    setSearch("");
   };
 
   const resetForm = () => {
     setFormData({
-      employeeId: '',
-      payPeriod: '',
-      startDate: new Date().toISOString().split('T')[0],
-      endDate: new Date().toISOString().split('T')[0],
+      employeeId: "",
+      payPeriod: "",
+      startDate: new Date().toISOString().split("T")[0],
+      endDate: new Date().toISOString().split("T")[0],
       basicSalary: 0,
       allowances: 0,
       deductions: 0,
@@ -148,8 +150,8 @@ function HRMPayrollContent() {
       bonus: 0,
       netPay: 0,
       status: PayrollStatus.DRAFT,
-      paymentDate: new Date().toISOString().split('T')[0],
-      notes: '',
+      paymentDate: new Date().toISOString().split("T")[0],
+      notes: "",
     });
     setEditingPayroll(null);
     setError(null);
@@ -177,7 +179,7 @@ function HRMPayrollContent() {
         formData.basicSalary <= 0
       ) {
         setError(
-          'Please fill in all required fields (Employee, Pay Period, and Basic Salary)',
+          "Please fill in all required fields (Employee, Pay Period, and Basic Salary)",
         );
         return;
       }
@@ -200,10 +202,10 @@ function HRMPayrollContent() {
           notes: formData.notes,
         };
         await HRMService.updatePayroll(editingPayroll.id, updateData);
-        setSuccessMessage('Payroll record updated successfully!');
+        setSuccessMessage("Payroll record updated successfully!");
       } else {
         await HRMService.createPayroll(formData);
-        setSuccessMessage('Payroll record created successfully!');
+        setSuccessMessage("Payroll record created successfully!");
       }
 
       setShowCreateDialog(false);
@@ -214,8 +216,8 @@ function HRMPayrollContent() {
         await loadPayrolls();
       }, 100);
     } catch (err) {
-      setError('Failed to save payroll record. Please try again.');
-      } finally {
+      setError("Failed to save payroll record. Please try again.");
+    } finally {
       setSubmitting(false);
     }
   };
@@ -226,11 +228,11 @@ function HRMPayrollContent() {
       employeeId: payroll.employeeId,
       payPeriod: payroll.payPeriod,
       startDate:
-        payroll.startDate?.split('T')[0] ||
-        new Date().toISOString().split('T')[0],
+        payroll.startDate?.split("T")[0] ||
+        new Date().toISOString().split("T")[0],
       endDate:
-        payroll.endDate?.split('T')[0] ||
-        new Date().toISOString().split('T')[0],
+        payroll.endDate?.split("T")[0] ||
+        new Date().toISOString().split("T")[0],
       basicSalary: payroll.basicSalary,
       allowances: payroll.allowances || 0,
       deductions: payroll.deductions || 0,
@@ -239,9 +241,9 @@ function HRMPayrollContent() {
       netPay: payroll.netPay,
       status: payroll.status,
       paymentDate:
-        payroll.paymentDate?.split('T')[0] ||
-        new Date().toISOString().split('T')[0],
-      notes: payroll.notes || '',
+        payroll.paymentDate?.split("T")[0] ||
+        new Date().toISOString().split("T")[0],
+      notes: payroll.notes || "",
     });
     setShowCreateDialog(true);
   };
@@ -260,31 +262,31 @@ function HRMPayrollContent() {
     try {
       setDeleting(true);
       await HRMService.deletePayroll(deletingPayroll.id);
-      setSuccessMessage('Payroll record deleted successfully!');
+      setSuccessMessage("Payroll record deleted successfully!");
       setDeletingPayroll(null);
       loadPayrolls();
     } catch (err) {
-      setError('Failed to delete payroll record. Please try again.');
-      } finally {
+      setError("Failed to delete payroll record. Please try again.");
+    } finally {
       setDeleting(false);
     }
   };
 
   const getStatusColor = (status: PayrollStatus) => {
     const statusColors: { [key: string]: string } = {
-      draft: 'bg-blue-100 text-blue-800',
-      processed: 'bg-green-100 text-green-800',
-      paid: 'bg-blue-100 text-blue-800',
-      cancelled: 'bg-gray-100 text-gray-800',
+      draft: "bg-blue-100 text-blue-800",
+      processed: "bg-green-100 text-green-800",
+      paid: "bg-blue-100 text-blue-800",
+      cancelled: "bg-gray-100 text-gray-800",
     };
-    return statusColors[status] || 'bg-gray-100 text-gray-800';
+    return statusColors[status] || "bg-gray-100 text-gray-800";
   };
 
   const getEmployeeName = (employeeId: string) => {
     const employee = employees.find((emp) => emp.id === employeeId);
     return employee
       ? `${employee.firstName} ${employee.lastName}`
-      : 'Unknown Employee';
+      : "Unknown Employee";
   };
 
   useEffect(() => {
@@ -368,7 +370,7 @@ function HRMPayrollContent() {
                     placeholder="Search records..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                    onKeyPress={(e) => e.key === "Enter" && handleSearch()}
                   />
                   <Button onClick={handleSearch}>
                     <Search className="w-4 h-4" />
@@ -378,11 +380,11 @@ function HRMPayrollContent() {
               <div>
                 <label className="text-sm font-medium">Employee</label>
                 <Select
-                  value={filters.employeeId || 'all'}
+                  value={filters.employeeId || "all"}
                   onValueChange={(value) =>
                     setFilters((prev) => ({
                       ...prev,
-                      employeeId: value === 'all' ? undefined : value,
+                      employeeId: value === "all" ? undefined : value,
                     }))
                   }
                 >
@@ -402,11 +404,11 @@ function HRMPayrollContent() {
               <div>
                 <label className="text-sm font-medium">Status</label>
                 <Select
-                  value={filters.status || 'all'}
+                  value={filters.status || "all"}
                   onValueChange={(value) =>
                     setFilters((prev) => ({
                       ...prev,
-                      status: value === 'all' ? undefined : value,
+                      status: value === "all" ? undefined : value,
                     }))
                   }
                 >
@@ -427,7 +429,7 @@ function HRMPayrollContent() {
                 <label className="text-sm font-medium">Pay Period</label>
                 <Input
                   placeholder="e.g., January 2024"
-                  value={filters.payPeriod || ''}
+                  value={filters.payPeriod || ""}
                   onChange={(e) =>
                     setFilters((prev) => ({
                       ...prev,
@@ -440,7 +442,7 @@ function HRMPayrollContent() {
                 <label className="text-sm font-medium">Payment Date</label>
                 <Input
                   type="date"
-                  value={filters.paymentDate || ''}
+                  value={filters.paymentDate || ""}
                   onChange={(e) =>
                     setFilters((prev) => ({
                       ...prev,
@@ -502,15 +504,15 @@ function HRMPayrollContent() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-               <CardTitle className="text-sm font-medium">
-                 Total Net Pay
-               </CardTitle>
-               <Calculator className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">
+                Total Net Pay
+              </CardTitle>
+              <Calculator className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
                 {formatCurrency(
-                  payrolls.reduce((sum, payroll) => sum + payroll.netPay, 0)
+                  payrolls.reduce((sum, payroll) => sum + payroll.netPay, 0),
                 )}
               </div>
             </CardContent>
@@ -537,16 +539,16 @@ function HRMPayrollContent() {
                         <CreditCard className="w-5 h-5 text-gray-500" />
                         <div>
                           <div className="font-medium text-lg">
-                            {getEmployeeName(payroll.employeeId)} -{' '}
+                            {getEmployeeName(payroll.employeeId)} -{" "}
                             {payroll.payPeriod}
                           </div>
                           <div className="text-sm text-gray-500">
-                            Payment Date:{' '}
+                            Payment Date:{" "}
                             {payroll.paymentDate
                               ? new Date(
                                   payroll.paymentDate,
                                 ).toLocaleDateString()
-                              : 'Not set'}
+                              : "Not set"}
                           </div>
                         </div>
                       </div>
@@ -556,10 +558,10 @@ function HRMPayrollContent() {
                         {payroll.status.charAt(0).toUpperCase() +
                           payroll.status.slice(1)}
                       </Badge>
-                       <Badge variant="outline">
-                         <Calculator className="w-3 h-3 mr-1" />
-                         Net: {formatCurrency(payroll.netPay)}
-                       </Badge>
+                      <Badge variant="outline">
+                        <Calculator className="w-3 h-3 mr-1" />
+                        Net: {formatCurrency(payroll.netPay)}
+                      </Badge>
                       <Badge variant="outline">
                         <Calculator className="w-3 h-3 mr-1" />
                         Basic: {formatCurrency(payroll.basicSalary)}
@@ -579,41 +581,41 @@ function HRMPayrollContent() {
                       <div className="flex items-center space-x-1">
                         <Calendar className="w-3 h-3" />
                         <span>
-                          Payment Date:{' '}
+                          Payment Date:{" "}
                           {payroll.paymentDate
                             ? new Date(payroll.paymentDate).toLocaleDateString()
-                            : 'Not set'}
+                            : "Not set"}
                         </span>
                       </div>
                       <div className="flex items-center space-x-1">
                         <Clock className="w-3 h-3" />
                         <span>
-                          Created:{' '}
+                          Created:{" "}
                           {new Date(payroll.createdAt).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
                     <div className="grid grid-cols-4 gap-4 mt-2 text-xs">
                       <div>
-                        <span className="font-medium">Allowances:</span>{' '}
+                        <span className="font-medium">Allowances:</span>{" "}
                         {formatCurrency(payroll.allowances)}
                       </div>
                       <div>
-                        <span className="font-medium">Deductions:</span>{' '}
+                        <span className="font-medium">Deductions:</span>{" "}
                         {formatCurrency(payroll.deductions)}
                       </div>
                       <div>
-                        <span className="font-medium">Overtime:</span>{' '}
+                        <span className="font-medium">Overtime:</span>{" "}
                         {formatCurrency(payroll.overtimePay)}
                       </div>
                       <div>
-                        <span className="font-medium">Bonus:</span>{' '}
+                        <span className="font-medium">Bonus:</span>{" "}
                         {formatCurrency(payroll.bonus)}
                       </div>
                     </div>
                     {payroll.notes && (
                       <div className="mt-2 text-sm text-gray-600">
-                        <strong>Notes:</strong>{' '}
+                        <strong>Notes:</strong>{" "}
                         {payroll.notes.length > 100
                           ? `${payroll.notes.substring(0, 100)}...`
                           : payroll.notes}
@@ -656,15 +658,15 @@ function HRMPayrollContent() {
         </Card>
 
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {editingPayroll ? 'Edit Payroll Record' : 'New Payroll Record'}
+                {editingPayroll ? "Edit Payroll Record" : "New Payroll Record"}
               </DialogTitle>
               <DialogDescription>
                 {editingPayroll
-                  ? 'Update payroll record information'
-                  : 'Create a new payroll record for an employee'}
+                  ? "Update payroll record information"
+                  : "Create a new payroll record for an employee"}
               </DialogDescription>
             </DialogHeader>
 
@@ -674,7 +676,7 @@ function HRMPayrollContent() {
               </Alert>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-4 gap-4">
               <div>
                 <Label htmlFor="employeeId">Employee *</Label>
                 <Select
@@ -862,7 +864,7 @@ function HRMPayrollContent() {
                 <Input
                   id="paymentDate"
                   type="date"
-                  value={formData.paymentDate || ''}
+                  value={formData.paymentDate || ""}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
@@ -871,7 +873,7 @@ function HRMPayrollContent() {
                   }
                 />
               </div>
-              <div className="col-span-2">
+              <div className="col-span-4">
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea
                   id="notes"
@@ -880,7 +882,7 @@ function HRMPayrollContent() {
                     setFormData((prev) => ({ ...prev, notes: e.target.value }))
                   }
                   placeholder="Additional notes or comments..."
-                  rows={3}
+                  rows={2}
                 />
               </div>
             </div>
@@ -894,10 +896,10 @@ function HRMPayrollContent() {
               </Button>
               <Button onClick={handleSubmit} disabled={submitting}>
                 {submitting
-                  ? 'Saving...'
+                  ? "Saving..."
                   : editingPayroll
-                    ? 'Update Record'
-                    : 'Create Record'}
+                    ? "Update Record"
+                    : "Create Record"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -948,7 +950,7 @@ function HRMPayrollContent() {
                         ? new Date(
                             viewingPayroll.paymentDate,
                           ).toLocaleDateString()
-                        : 'Not set'}
+                        : "Not set"}
                     </p>
                   </div>
                 </div>
@@ -1060,7 +1062,7 @@ function HRMPayrollContent() {
                 Are you sure you want to delete the payroll record for &quot;
                 {deletingPayroll
                   ? getEmployeeName(deletingPayroll.employeeId)
-                  : ''}
+                  : ""}
                 &quot; ({deletingPayroll?.payPeriod})? This action cannot be
                 undone.
               </DialogDescription>
@@ -1078,7 +1080,7 @@ function HRMPayrollContent() {
                 onClick={confirmDelete}
                 disabled={deleting}
               >
-                {deleting ? 'Deleting...' : 'Delete Record'}
+                {deleting ? "Deleting..." : "Delete Record"}
               </Button>
             </DialogFooter>
           </DialogContent>
