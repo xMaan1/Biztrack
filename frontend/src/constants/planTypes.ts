@@ -3,6 +3,7 @@ export const PLAN_TYPE_COMMERCE = 'commerce';
 export const PLAN_TYPE_WORKSHOP = 'workshop';
 export const PLAN_TYPE_HEALTHCARE = 'healthcare';
 export const PLAN_TYPE_NGO = 'ngo';
+export const PLAN_TYPE_LMS = 'lms';
 
 export const ALL_PLAN_TYPES = [
   PLAN_TYPE_AGENCY,
@@ -10,6 +11,7 @@ export const ALL_PLAN_TYPES = [
   PLAN_TYPE_WORKSHOP,
   PLAN_TYPE_HEALTHCARE,
   PLAN_TYPE_NGO,
+  PLAN_TYPE_LMS,
 ] as const;
 
 export const RETAIL_PLAN_TYPES = [PLAN_TYPE_COMMERCE, PLAN_TYPE_AGENCY] as const;
@@ -41,6 +43,8 @@ export function getPlanDisplayLabel(planType?: string | null, planName?: string)
       return 'Healthcare Suite';
     case PLAN_TYPE_NGO:
       return 'NGO Impact';
+    case PLAN_TYPE_LMS:
+      return 'LMS Suite';
     default:
       return planName || 'Unknown Plan';
   }

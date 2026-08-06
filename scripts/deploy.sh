@@ -37,6 +37,23 @@ fi
 
 cd ..
 
+echo "Setting up LMS backend..."
+cd lms-platform/backend
+if [ ! -d "venv" ]; then
+  python3 -m venv venv
+fi
+venv/bin/pip install --upgrade pip
+venv/bin/pip install -r requirements.txt
+cd "$PROJECT_ROOT"
+
+echo "Building LMS frontend..."
+cd lms-platform/frontend
+npm ci
+# Public API base for the LMS. Override with LMS_API_URL to point at a
+# dedicated public backend; defaults to the same origin under /lms-api.
+NEXT_PUBLIC_API_URL="${LMS_API_URL:-${PUBLIC_BASE_URL:-http://localhost:8001}/lms-api}" npm run build
+cd "$PROJECT_ROOT"
+
 echo "Restarting PM2 processes..."
 pm2 restart ecosystem.config.js --update-env || pm2 start ecosystem.config.js
 

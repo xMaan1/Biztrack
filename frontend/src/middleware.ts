@@ -13,6 +13,8 @@ const publicRoutes = [
   '/manifest.json',
   '/events/google/callback',
   '/i/',
+  // The LMS app is embedded/proxied under /lms and handles its own auth.
+  '/lms',
 ];
 
 // List of protected routes that require authentication

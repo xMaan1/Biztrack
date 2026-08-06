@@ -19,6 +19,10 @@ def is_agency_plan(plan_type: Optional[str]) -> bool:
     return (plan_type or "").lower() == "agency"
 
 
+def is_lms_plan(plan_type: Optional[str]) -> bool:
+    return (plan_type or "").lower() == "lms"
+
+
 def get_plan_excluded_modules(plan_type: Optional[str]) -> frozenset[str]:
     return PLAN_EXCLUDED_MODULES.get((plan_type or "").lower(), frozenset())
 

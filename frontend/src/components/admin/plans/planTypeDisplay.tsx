@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import {
   Building2,
   CreditCard,
+  GraduationCap,
   Heart,
   HeartHandshake,
   Package,
@@ -35,6 +36,8 @@ function getPlanTypeIconComponent(planType: string): LucideIcon {
       return Heart;
     case 'ngo':
       return HeartHandshake;
+    case 'lms':
+      return GraduationCap;
     default:
       return CreditCard;
   }
@@ -58,6 +61,8 @@ function getPlanTypeIconClassName(planType: string): string {
       return 'h-5 w-5 text-rose-500';
     case 'ngo':
       return 'h-5 w-5 text-violet-600';
+    case 'lms':
+      return 'h-5 w-5 text-teal-600';
     default:
       return 'h-5 w-5 text-gray-500';
   }
@@ -81,6 +86,8 @@ export function getPlanTypeColor(planType: string): string {
       return 'bg-rose-100 text-rose-800';
     case 'ngo':
       return 'bg-violet-100 text-violet-800';
+    case 'lms':
+      return 'bg-teal-100 text-teal-800';
     default:
       return 'bg-gray-100 text-gray-800';
   }

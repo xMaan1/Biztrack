@@ -296,6 +296,14 @@ export default function LandingPage() {
   };
 
   const handleSubscribe = (plan: Plan) => {
+    if (plan.planType === 'lms') {
+      // Open the LMS login inside BizTrack (same origin, proxied via /lms).
+      // The LMS handles its own auth (admin/teacher/student logins by ID).
+      const lmsUrl = process.env.NEXT_PUBLIC_LMS_URL || '/lms';
+      router.push(`${lmsUrl}/login`);
+      return;
+    }
+
     if (!isAuthenticated) {
       // Store the selected plan in localStorage and redirect to signup
       localStorage.setItem('selectedPlanForSignup', JSON.stringify(plan));

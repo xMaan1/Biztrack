@@ -17,6 +17,7 @@ const PLAN_DISPLAY_ORDER = [
   'workshop',
   'healthcare',
   'ngo',
+  'lms',
 ] as const;
 
 function sortPlansForDisplay(plans: LandingPlan[]): LandingPlan[] {
@@ -76,6 +77,8 @@ function LandingPlanCard({
   const highlightBadge =
     plan.planType === 'ngo' ? (
       <Badge className="bg-violet-600 px-4 py-1.5 text-white">For Nonprofits</Badge>
+    ) : plan.planType === 'lms' ? (
+      <Badge className="bg-teal-600 px-4 py-1.5 text-white">Learning Suite</Badge>
     ) : plan.planType === 'enterprise' ? (
       <Badge className="bg-blue-600 px-4 py-1.5 text-white">Most Popular</Badge>
     ) : null;
@@ -86,9 +89,12 @@ function LandingPlanCard({
         'relative flex h-full flex-col border shadow-sm transition-all duration-300 hover:shadow-lg',
         plan.planType === 'ngo' &&
           'border-violet-400 ring-2 ring-violet-200/60',
+        plan.planType === 'lms' &&
+          'border-teal-400 ring-2 ring-teal-200/60',
         plan.planType === 'enterprise' &&
           'border-blue-400 ring-2 ring-blue-200/60 lg:scale-[1.02]',
         plan.planType !== 'ngo' &&
+          plan.planType !== 'lms' &&
           plan.planType !== 'enterprise' &&
           'border-slate-200 hover:border-blue-200',
       )}

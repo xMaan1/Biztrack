@@ -95,6 +95,8 @@ function getPlanDisplayName(
       return 'Healthcare Suite';
     case 'ngo':
       return 'NGO Impact';
+    case 'lms':
+      return 'LMS Suite';
     default:
       return planInfo.planName;
   }

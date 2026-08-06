@@ -106,6 +106,14 @@ GRANULAR_PERMISSIONS = {
         *_crud("ngo:donors"),
         *_crud("ngo:partner-organizations"),
     ],
+    "lms": [
+        *_crud("lms:courses"),
+        *_crud("lms:lectures"),
+        *_crud("lms:assignments"),
+        *_crud("lms:grades"),
+        *_crud("lms:enrollments"),
+        *_crud("lms:attendance"),
+    ],
     "users": _crud("users"),
     "dashboard": ["dashboard:view"],
 }
@@ -136,7 +144,8 @@ DEFAULT_ROLE_PERMISSIONS = {
         ModulePermission.USERS_VIEW, ModulePermission.USERS_CREATE, ModulePermission.USERS_UPDATE, ModulePermission.USERS_DELETE,
         ModulePermission.REPORTS_VIEW, ModulePermission.REPORTS_EXPORT,
         ModulePermission.HEALTHCARE_VIEW, ModulePermission.HEALTHCARE_CREATE, ModulePermission.HEALTHCARE_UPDATE, ModulePermission.HEALTHCARE_DELETE,
-        ModulePermission.NGO_VIEW, ModulePermission.NGO_CREATE, ModulePermission.NGO_UPDATE, ModulePermission.NGO_DELETE
+        ModulePermission.NGO_VIEW, ModulePermission.NGO_CREATE, ModulePermission.NGO_UPDATE, ModulePermission.NGO_DELETE,
+        ModulePermission.LMS_VIEW, ModulePermission.LMS_CREATE, ModulePermission.LMS_UPDATE, ModulePermission.LMS_DELETE
     ], *[permissions for permissions in GRANULAR_PERMISSIONS.values()]),
     TenantRole.CRM_MANAGER: _merge_permissions([
         ModulePermission.CRM_VIEW, ModulePermission.CRM_CREATE, ModulePermission.CRM_UPDATE, ModulePermission.CRM_DELETE,
@@ -176,6 +185,7 @@ OWNER_ACCESSIBLE_MODULES = [
     'crm', 'sales', 'pos', 'inventory', 'hrm', 'projects', 'reports', 'events',
     'production', 'quality', 'banking', 'ledger',
     'finance', 'settings', 'notifications', 'users', 'dashboard', 'healthcare', 'ngo',
+    'lms',
 ]
 
 

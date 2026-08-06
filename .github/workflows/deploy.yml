@@ -11,6 +11,7 @@ jobs:
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
+      lms: ${{ steps.filter.outputs.lms }}
       migrations: ${{ steps.filter.outputs.migrations }}
     steps:
       - name: Checkout code
@@ -29,6 +30,9 @@ jobs:
               - 'scripts/run-migrations.sh'
             frontend:
               - 'frontend/**'
+            lms:
+              - 'lms-platform/**'
+              - 'ecosystem.config.js'
             migrations:
               - 'backend/alembic/versions/**'
               - '!backend/alembic/versions/.gitkeep'
@@ -184,14 +188,16 @@ jobs:
           SERVER_USER: ${{ secrets.SERVER_USER }}
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          BACKEND_URL: ${{ secrets.BACKEND_URL }}
         run: |
-          ssh -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_HOST} "DEPLOY_PATH='${DEPLOY_PATH}' bash" << 'ENDSSH'
+          ssh -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_HOST} "DEPLOY_PATH='${DEPLOY_PATH}' BACKEND_URL='${BACKEND_URL}' bash" << 'ENDSSH'
             set -euo pipefail
             echo "🚀 Setting up frontend..."
-            cd "${DEPLOY_PATH}/frontend"
+            cd ${DEPLOY_PATH}/frontend
             echo "Installing dependencies..."
             npm ci
             echo "Building frontend..."
+            export NEXT_PUBLIC_API_URL="${BACKEND_URL:-http://localhost:8000}"
             npm run build
             echo "Preparing standalone static assets..."
             node scripts/prepare-standalone.js
@@ -206,16 +212,58 @@ jobs:
             echo "✅ Frontend setup completed successfully!"
           ENDSSH
 
+  deploy-lms:
+    runs-on: ubuntu-latest
+    needs: [check-changes, sync-code]
+    if: needs.check-changes.outputs.lms == 'true'
+    steps:
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known hosts
+        run: |
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy LMS (backend + frontend)
+        env:
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          BACKEND_URL: ${{ secrets.BACKEND_URL }}
+          LMS_API_URL: ${{ secrets.LMS_API_URL }}
+        run: |
+          ssh -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_HOST} "DEPLOY_PATH='${DEPLOY_PATH}' BACKEND_URL='${BACKEND_URL}' LMS_API_URL='${LMS_API_URL}' bash" << 'ENDSSH'
+            set -euo pipefail
+            echo "🚀 Setting up LMS backend..."
+            cd "${DEPLOY_PATH}/lms-platform/backend"
+            if [ ! -d "venv" ]; then
+              python3 -m venv venv
+            fi
+            venv/bin/pip install --upgrade pip
+            venv/bin/pip install -r requirements.txt
+
+            echo "🚀 Building LMS frontend..."
+            cd "${DEPLOY_PATH}/lms-platform/frontend"
+            npm ci
+            # Public API base for the LMS. Override with LMS_API_URL secret;
+            # defaults to the same public origin under /lms-api.
+            NEXT_PUBLIC_API_URL="${LMS_API_URL:-${BACKEND_URL:-http://localhost:8001}/lms-api}" npm run build
+            echo "✅ LMS setup completed successfully!"
+          ENDSSH
+
   restart-services:
     runs-on: ubuntu-latest
-    needs: [check-changes, sync-code, deploy-backend, run-migrations, deploy-frontend]
+    needs: [check-changes, sync-code, deploy-backend, run-migrations, deploy-frontend, deploy-lms]
     if: |
       always() &&
       needs.check-changes.result == 'success' &&
-      (needs.check-changes.outputs.backend == 'true' || needs.check-changes.outputs.frontend == 'true') &&
+      (needs.check-changes.outputs.backend == 'true' || needs.check-changes.outputs.frontend == 'true' || needs.check-changes.outputs.lms == 'true') &&
       (needs.deploy-backend.result == 'success' || needs.deploy-backend.result == 'skipped') &&
       (needs.run-migrations.result == 'success' || needs.run-migrations.result == 'skipped') &&
-      (needs.deploy-frontend.result == 'success' || needs.deploy-frontend.result == 'skipped')
+      (needs.deploy-frontend.result == 'success' || needs.deploy-frontend.result == 'skipped') &&
+      (needs.deploy-lms.result == 'success' || needs.deploy-lms.result == 'skipped')
     steps:
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
@@ -237,7 +285,7 @@ jobs:
             export PATH="${HOME}/.local/bin:${PATH}"
             echo "🔄 Restarting PM2 processes..."
             cd "${DEPLOY_PATH}"
-            pm2 delete biztrack-backend biztrack-frontend 2>/dev/null || true
+            pm2 delete biztrack-backend biztrack-frontend lms-backend lms-frontend 2>/dev/null || true
             pm2 start ecosystem.config.js --update-env
             if [ $? -ne 0 ]; then
               echo "❌ Error: Failed to start PM2 processes"
@@ -251,10 +299,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: [check-changes, restart-services]
     if: |
-      needs.check-changes.outputs.backend == 'true' &&
+      (needs.check-changes.outputs.backend == 'true' || needs.check-changes.outputs.lms == 'true') &&
       needs.restart-services.result == 'success'
     env:
       BACKEND_URL: ${{ secrets.BACKEND_URL }}
+      LMS_API_URL: ${{ secrets.LMS_API_URL }}
     steps:
       - name: Health check
         run: |
@@ -266,4 +315,11 @@ jobs:
             exit 1
           fi
           echo "✅ Health check passed: Backend is healthy"
+          echo "Checking LMS health..."
+          LMS_HEALTH="${LMS_API_URL:-${BACKEND_URL}/lms-api}/health"
+          if ! curl -f ${LMS_HEALTH}; then
+            echo "❌ Health check failed: LMS backend is not responding (${LMS_HEALTH})"
+            exit 1
+          fi
+          echo "✅ Health check passed: LMS backend is healthy"
 
